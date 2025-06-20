@@ -309,7 +309,7 @@ namespace GumFormsSample.Screens
             var splitter = new Splitter();
             panelWithSplitter.AddChild(splitter);
             splitter.Dock(Gum.Wireframe.Dock.FillHorizontally);
-            splitter.Height = 40;
+            splitter.Height = 5;
 
             var button2 = new Button();
             button2.Width = 200;

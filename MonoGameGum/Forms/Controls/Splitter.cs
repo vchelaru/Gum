@@ -165,6 +165,17 @@ public class Splitter : FrameworkElement
             secondVisual = parent.Children[index + 1] as GraphicalUiElement;
         }
 
+        if(firstVisual != null)
+        {
+            var absoluteHeight = firstVisual.GetAbsoluteHeight();
+            changeInPixels = Math.Max(-absoluteHeight, changeInPixels);
+        }
+        if (secondVisual != null)
+        {
+            var absoluteHeight = secondVisual.GetAbsoluteHeight();
+            changeInPixels = Math.Min(absoluteHeight, changeInPixels);
+        }
+
         DimensionUnitType? firstUnits;
         DimensionUnitType? secondUnits;
 

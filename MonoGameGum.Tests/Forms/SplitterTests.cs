@@ -149,6 +149,27 @@ public class SplitterTests
         additionalSibling.Visual.GetAbsoluteHeight().ShouldBe(additionalAbsoluteHeight, .01f);
     }
 
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldNotResize_PastHeight0()
+    {
+        SetupVerticalStack();
+
+        _firstPanel.Height = 10;
+        _secondPanel.Height = 10;
+
+        _splitter.ApplyResizeChangeInPixels(20);
+
+        _firstPanel.Height.ShouldBe(20);
+        _secondPanel.Height.ShouldBe(0);
+
+        _splitter.ApplyResizeChangeInPixels(-30);
+
+
+        _firstPanel.Height.ShouldBe(0);
+        _secondPanel.Height.ShouldBe(20);
+
+    }
+
     void SetupVerticalStack()
     {
         _parentPanel = new();
