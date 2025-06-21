@@ -177,6 +177,64 @@ public class TextBoxTests
         innerTextObject.WrappedText[2].Trim().ShouldBe("3");
     }
 
+    [Fact]
+    public void TextBox_ShouldRestrictLinesWhenMaxLinesSetBefore()
+    {
+        var textBox = new TextBox();
+        textBox.MaxNumberOfLines = 3;
+        textBox.Text = "line1\nline2\nline3\nline4\nline5";
+        
+        var textInstance = (TextRuntime)textBox
+            .Visual.GetChildByNameRecursively("TextInstance")!;
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.WrappedText.Count.ShouldBe(3);
+        innerTextObject.WrappedText[0].ShouldBe("line1\n");
+        innerTextObject.WrappedText[1].ShouldBe("line2\n");
+        innerTextObject.WrappedText[2].ShouldBe("line3\n");
+    }
+
+    [Fact]
+    public void TextBox_ShouldRestrictLinesWhenMaxLinesSetAfter()
+    {
+        var textBox = new TextBox();
+        textBox.Text = "line1\nline2\nline3\nline4\nline5";
+        textBox.MaxNumberOfLines = 3;
+
+        var textInstance = (TextRuntime)textBox
+            .Visual.GetChildByNameRecursively("TextInstance")!;
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.WrappedText.Count.ShouldBe(3);
+        innerTextObject.WrappedText[0].ShouldBe("line1\n");
+        innerTextObject.WrappedText[1].ShouldBe("line2\n");
+        innerTextObject.WrappedText[2].ShouldBe("line3\n");
+    }
+
+    [Fact]
+    public void TextBox_ShouldNotRestrictLinesWhenMaxLinesIsNull()
+    {
+        var textBox = new TextBox();
+        textBox.Text = "line1\nline2\nline3\nline4\nline5";
+        textBox.MaxNumberOfLines = null;
+
+        var textInstance = (TextRuntime)textBox
+            .Visual.GetChildByNameRecursively("TextInstance")!;
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.WrappedText.Count.ShouldBe(5);
+        innerTextObject.WrappedText[0].ShouldBe("line1\n");
+        innerTextObject.WrappedText[1].ShouldBe("line2\n");
+        innerTextObject.WrappedText[2].ShouldBe("line3\n");
+        innerTextObject.WrappedText[3].ShouldBe("line4\n");
+        innerTextObject.WrappedText[4].ShouldBe("line5");
+    }
+
+
+
     #region ViewModels
 
     class TestViewModel : ViewModel
