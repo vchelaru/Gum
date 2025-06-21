@@ -1,6 +1,8 @@
 ﻿using Gum.Wireframe;
 using GumFormsSample.Components;
+using GumFormsSample.CustomForms;
 using GumFormsSample.CustomRuntimes;
+using MonoGameGum;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using System;
@@ -14,10 +16,31 @@ namespace GumFormsSample.Screens;
 
 internal class FormsCustomizationScreen : ContainerRuntime
 {
-
+    StackPanel _mainStackPanel;
     public FormsCustomizationScreen()
     {
+        this.Dock(Gum.Wireframe.Dock.Fill);
+
+        _mainStackPanel = new StackPanel();
+        this.AddChild(_mainStackPanel);
+        _mainStackPanel.Dock(Gum.Wireframe.Dock.Fill);
+        _mainStackPanel.Spacing = 5;
+        _mainStackPanel.Visual.WrapsChildren = true;
+
+        CreateCustomButton();
+
+        CreateListBoxWithCustomVisuals();
+
+        CreateListBoxWithCustomUpdateToObject();
+
+        CreateColorPicker();
+    }
+
+
+    private void CreateCustomButton()
+    {
         var button = new Button();
+        _mainStackPanel.AddChild(button.Visual);
 
         var category = button.Visual.Categories["ButtonCategory"];
         var highlightedState = category.States.FirstOrDefault(item => item.Name == FrameworkElement.HighlightedState);
@@ -30,25 +53,15 @@ internal class FormsCustomizationScreen : ContainerRuntime
             Value = Microsoft.Xna.Framework.Color.Yellow
         });
 
-        this.Children.Add(button.Visual);
-        button.X = 0;
-        button.Y = 10;
         button.Width = 100;
         button.Height = 42;
         button.Text = $"My highlight is yellow";
-
-        CreateListBoxWithCustomVisuals();
-
-        CreateListBoxWithCustomUpdateToObject();
-
     }
 
     private void CreateListBoxWithCustomVisuals()
     {
         var listBox = new ListBox();
-        this.Children.Add(listBox.Visual);
-        listBox.X = 0;
-        listBox.Y = 100;
+        _mainStackPanel.AddChild(listBox.Visual);
         listBox.Width = 220;
         listBox.Height = 200;
 
@@ -73,10 +86,8 @@ internal class FormsCustomizationScreen : ContainerRuntime
     private void CreateListBoxWithCustomUpdateToObject()
     {
         var listBox = new ListBox();
-        this.Children.Add(listBox.Visual);
+        _mainStackPanel.AddChild(listBox.Visual);
 
-        listBox.X = 0;
-        listBox.Y = 350;
         listBox.Width = 220;
         listBox.Height = 200;
 
@@ -87,6 +98,14 @@ internal class FormsCustomizationScreen : ContainerRuntime
             var date = DateTime.Now.AddDays(-20 + i);
             listBox.Items.Add(date);
         }
+    }
+
+    private void CreateColorPicker()
+    {
+        var picker = new ColorPicker();
+        _mainStackPanel.AddChild(picker);
+
+
     }
 }
 
