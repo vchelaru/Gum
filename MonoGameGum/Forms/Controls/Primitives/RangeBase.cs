@@ -17,6 +17,10 @@ using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls.Primitives;
 #endif
 
+/// <summary>
+/// Base class for controls which display or allow a user to change a value between a Minimum and Maximum.
+/// This is the base class for ScrollBar and Slider.
+/// </summary>
 public abstract class RangeBase : FrameworkElement
 {
     #region Fields/Properties
@@ -210,7 +214,19 @@ public abstract class RangeBase : FrameworkElement
     {
         base.ReactToVisualChanged();
 
-        var thumbVisual = this.Visual.GetGraphicalUiElementByName("ThumbInstance") as InteractiveGue;
+        var thumbInstanceUncasted =
+            this.Visual.GetGraphicalUiElementByName("ThumbInstance");
+        var thumbVisual = thumbInstanceUncasted as InteractiveGue;
+
+#if DEBUG
+        if(thumbInstanceUncasted != null && thumbVisual == null)
+        {
+            throw new InvalidOperationException(
+                $"The {this.GetType()} contains a visual {thumbInstanceUncasted} which is not an InteractiveGue. " +
+                "The type of the thumb should be an InteractiveGue");
+        }
+#endif
+
         RefreshInternalVisualReferences();
 
         if (thumbVisual != null)
@@ -246,6 +262,9 @@ public abstract class RangeBase : FrameworkElement
             Track.HoverOver += HandleTrackHover;
         }
 #endif
+
+        Track.Dragging += HandleTrackDragging;
+
 
         // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
         //var thumbParent = thumb.Visual.Parent as GraphicalUiElement;
@@ -324,7 +343,9 @@ public abstract class RangeBase : FrameworkElement
         Track.Push -= HandleTrackPush;
         Track.HoverOver -= HandleTrackHover;
 #endif
+        Track.Dragging -= HandleTrackDragging;
     }
+
 
     #endregion
 
@@ -337,6 +358,18 @@ public abstract class RangeBase : FrameworkElement
         TrackPushedSignRelativeToValue = GetCurrentSignRelativeToValue();
     }
 
+    /// <summary>
+    /// Handles the user pushing and holding the mouse button
+    /// on the track. If IsMoveToPointEnabled is true, this 
+    /// moves the position immediately. Otherwise, it only does
+    /// so using the track's repeat rate values.
+    /// </summary>
+    /// <remarks>
+    /// If IsMoveToPointEnabled is set to true, then 
+    /// Value is also updated immediately in HandleTrackDragging;
+    /// </remarks>
+    /// <param name="sender">The sender of the event.</param>
+    /// <param name="e">Args for the event.</param>
     private void HandleTrackHover(object? sender, EventArgs e)
     {
         var cursor = MainCursor;
@@ -347,7 +380,9 @@ public abstract class RangeBase : FrameworkElement
             if(IsMoveToPointEnabled)
             {
                 // do this immediately!
-                ApplyTrackDownRepeatRate();
+                // Update June 21, 2025:
+                // This is handled in HandleTrackDragging
+                //ApplyTrackDownRepeatRate();
             }
             else
             {
@@ -361,6 +396,17 @@ public abstract class RangeBase : FrameworkElement
                     LastRepeatRate = InteractiveGue.CurrentGameTime;
                 }
             }
+        }
+    }
+
+    private void HandleTrackDragging(object? sender, EventArgs e)
+    {
+        if (IsMoveToPointEnabled)
+        {
+            // do this immediately!
+            // Update June 21, 2025:
+            // This is handled in HandleTrackDragging
+            ApplyTrackDownRepeatRate();
         }
     }
 
@@ -478,12 +524,20 @@ public abstract class RangeBase : FrameworkElement
     }
     #endregion
 
-
+    #region Value Methods
     protected virtual double ApplyValueConsideringSnapping(double newValue)
     {
         Value = newValue;
         return newValue;
     }
+
+    protected virtual void OnValueChanged(double oldValue, double newValue) { }
+
+    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
+
+    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, EventArgs.Empty);
+
+    #endregion
 
     protected virtual void OnMaximumChanged(double oldMaximum, double newMaximum)
     {
@@ -499,12 +553,6 @@ public abstract class RangeBase : FrameworkElement
             Value = Minimum;
         }
     }
-
-    protected virtual void OnValueChanged(double oldValue, double newValue) { }
-
-    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
-
-    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, EventArgs.Empty);
 
 #if FRB
     protected abstract void UpdateThumbPositionToCursorDrag(Cursor cursor);
