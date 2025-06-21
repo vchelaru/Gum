@@ -249,7 +249,7 @@ public abstract class RangeBase : FrameworkElement
         Visual.RollOver += HandleThisRollOverFrb;
         Track.Push += HandleTrackPushFrb;
         Track.RollOver += HandleTrackHoverFrb;
-
+        Track.DragOver += HandleTrackDraggingFrb;
 #else
         if (thumb != null)
         {
@@ -260,10 +260,10 @@ public abstract class RangeBase : FrameworkElement
         {
             Track.Push += HandleTrackPush;
             Track.HoverOver += HandleTrackHover;
+            Track.Dragging += HandleTrackDragging;
         }
 #endif
 
-        Track.Dragging += HandleTrackDragging;
 
 
         // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
@@ -322,7 +322,7 @@ public abstract class RangeBase : FrameworkElement
     void HandleThisRollOverFrb(IWindow _) => HandleThisRollOver(this, EventArgs.Empty);
     void HandleTrackPushFrb(IWindow _) => HandleTrackPush(this, EventArgs.Empty);
     void HandleTrackHoverFrb(IWindow _) => HandleTrackHover(this, EventArgs.Empty);
-
+    void HandleTrackDraggingFrb(IWindow _) => HandleTrackDragging(this, EventArgs.Empty);
 #endif
 
     /// <inheritdoc/>
@@ -336,14 +336,14 @@ public abstract class RangeBase : FrameworkElement
         Visual.RollOver -= HandleThisRollOverFrb;
         Track.Push -= HandleTrackPushFrb;
         Track.RollOver -= HandleTrackHoverFrb;
-
+        Track.DragOver -= HandleTrackDraggingFrb;
 #else
         thumb.Visual.Dragging -= HandleDragOver;
         Visual.RollOver -= HandleThisRollOver;
         Track.Push -= HandleTrackPush;
         Track.HoverOver -= HandleTrackHover;
-#endif
         Track.Dragging -= HandleTrackDragging;
+#endif
     }
 
 
