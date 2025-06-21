@@ -377,6 +377,12 @@
     </Variable>
     <Variable>
       <Type>int?</Type>
+      <Name>TextInstance.MaxLettersToShow</Name>
+      <ExposedAsName>MaxLettersToShow</ExposedAsName>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int?</Type>
       <Name>TextInstance.MaxNumberOfLines</Name>
       <ExposedAsName>MaxNumberOfLines</ExposedAsName>
       <SetsValue>false</SetsValue>

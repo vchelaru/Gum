@@ -38,6 +38,26 @@ public class TextBox : TextBoxBase
         }
     }
 
+    /// <summary>
+    /// The maximum letters to display. This can be used to 
+    /// create an effect where the text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => coreTextObject.MaxLettersToShow;
+        set
+        {
+            if (value != MaxLettersToShow)
+            {
+                coreTextObject.MaxLettersToShow = value;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The maximum number of lines to display. This can be used to 
+    /// limit how many lines of text are displayed at one time.
+    /// </summary>
     public int? MaxNumberOfLines
     {
         get => coreTextObject.MaxNumberOfLines;
