@@ -220,7 +220,7 @@ public class ListBoxItem : FrameworkElement
         {
             Visual.SetProperty(category, SelectedStateName);
         }
-        else if (IsHighlighted)
+        else if (IsHighlighted && (cursor.WindowPushed == null))
         {
             // If the cursor has moved, highlight. This prevents highlighting from
             // happening when the cursor is not moving, and the user is moving the focus

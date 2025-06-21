@@ -59,6 +59,7 @@ public class FormsUtilities
         TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
         TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
         TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
+        TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
         TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
 
         void TryAdd(Type formsType, Type runtimeType)

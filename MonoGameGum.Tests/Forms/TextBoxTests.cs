@@ -1,4 +1,5 @@
 ﻿using Gum.Mvvm;
+using Gum.Wireframe;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
 using MonoGameGum.GueDeriving;
@@ -88,6 +89,92 @@ public class TextBoxTests
         selection.Color = Microsoft.Xna.Framework.Color.Blue;
 
         selection.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void CaretIndex_ShouldAdjustCaretPosition()
+    {
+        TextBox textBox = new();
+        textBox.Text = "Hello";
+
+        GraphicalUiElement caret = 
+            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+
+        textBox.CaretIndex = 0;
+        float absolutePosition = caret.AbsoluteLeft;
+
+        textBox.CaretIndex = 2;
+        caret.AbsoluteLeft.ShouldBeGreaterThan(absolutePosition);
+        float positionAt2 = caret.AbsoluteLeft;
+
+        textBox.CaretIndex = 4;
+        caret.AbsoluteLeft.ShouldBeGreaterThan(positionAt2);
+
+        textBox.CaretIndex = 5;
+        float positionAt5 = caret.AbsoluteLeft;
+        textBox.CaretIndex = 6;
+        caret.AbsoluteLeft.ShouldBe(positionAt5);
+    }
+
+    [Fact]
+    public void CaretIndex_ShouldAdjustCaretPosition_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('\n');
+
+        // give it focus so that the caret is visible:
+        textBox.IsFocused = true;
+
+        GraphicalUiElement caret =
+            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+
+        textBox.CaretIndex = 0;
+        float absolutePosition = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 1;
+        caret.AbsoluteTop.ShouldBeGreaterThan(absolutePosition);
+        float positionAt1 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 2;
+        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt1);
+        float positionAt2 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 3;
+        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt2);
+        float positionAt3 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 4;
+        caret.AbsoluteTop.ShouldBe(positionAt3); // Should not move past the last line
+    }
+
+    [Fact]
+    public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+
+        textBox.HandleCharEntered('1');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('2');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('3');
+
+
+        var textInstance =
+            (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.WrappedText.Count.ShouldBe(3);
+        innerTextObject.WrappedText[0].Trim().ShouldBe("1");
+        innerTextObject.WrappedText[1].Trim().ShouldBe("2");
+        innerTextObject.WrappedText[2].Trim().ShouldBe("3");
     }
 
     #region ViewModels

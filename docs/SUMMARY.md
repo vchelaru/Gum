@@ -257,6 +257,7 @@
         * [VerticalScrollBarValue](code/monogame/gum-forms/controls/scrollviewer/verticalscrollbarvalue.md)
       * [StackPanel](code/monogame/gum-forms/controls/stackpanel.md)
       * [Slider](code/monogame/gum-forms/controls/slider.md)
+      * [Splitter](code/monogame/gum-forms/controls/splitter.md)
       * [TextBox](code/monogame/gum-forms/controls/textbox.md)
       * [Window](code/monogame/gum-forms/controls/window.md)
     * [Control Customization In Code](code/monogame/gum-forms/control-customization/README.md)

@@ -546,7 +546,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         if (child.Visual == null)
         {
-            throw new InvalidOperationException("The child must have a Visual before being added to the parent");
+            throw new InvalidOperationException($"The child of type {child.GetType()} must have a Visual before being added to the parent");
         }
         if (this.Visual == null)
         {
@@ -1320,7 +1320,7 @@ public class FrameworkElement : INotifyPropertyChanged
             // cursor got its input from a touch screen then the cursor really isn't
             // over anything. Therefore, we only show the highlighted state if the cursor
             // is a physical on-screen cursor
-            else if (!isTouchScreen)
+            else if (!isTouchScreen && (cursor.WindowPushed == null || cursor.WindowPushed == visual))
             {
                 return HighlightedStateName;
             }

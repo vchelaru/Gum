@@ -38,6 +38,8 @@ namespace GumFormsSample.Screens
 
             CreateColumn2Ui();
 
+            CreateColumn3Ui();
+
             // This requires custom roots which adds a lot of complexity so removing this for now
             //CreateLayeredUi();
 
@@ -237,6 +239,7 @@ namespace GumFormsSample.Screens
             var wrappedTextBox = new TextBox();
             wrappedTextBox.Width = 200;
             wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+            wrappedTextBox.AcceptsReturn = true;
             wrappedTextBox.Height = 140;
             wrappedTextBox.Placeholder = "Placeholder Text...";
             stackPanel.AddChild(wrappedTextBox);
@@ -285,6 +288,35 @@ namespace GumFormsSample.Screens
                 ShowPopup("This is a modal popup", isModal:true);
             };
             stackPanel.AddChild(showModalPopupButton);
+        }
+
+        private void CreateColumn3Ui()
+        {
+            var stackPanel = new StackPanel();
+            stackPanel.Y = 40;
+            stackPanel.X = 520;
+            stackPanel.Spacing = 4;
+            this.AddChild(stackPanel);
+
+            var panelWithSplitter = new StackPanel();
+            stackPanel.AddChild(panelWithSplitter);
+
+            var button = new Button();
+            button.Width = 200;
+            button.Height = 200;
+            panelWithSplitter.AddChild(button);
+            button.Text = "Button above splitter";
+
+            var splitter = new Splitter();
+            panelWithSplitter.AddChild(splitter);
+            splitter.Dock(Gum.Wireframe.Dock.FillHorizontally);
+            splitter.Height = 5;
+
+            var button2 = new Button();
+            button2.Width = 200;
+            button2.Height = 200;
+            panelWithSplitter.AddChild(button2);
+            button2.Text = "Button below splitter";
         }
 
         void CreateLayeredUi()

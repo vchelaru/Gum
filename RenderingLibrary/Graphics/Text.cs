@@ -692,12 +692,11 @@ namespace RenderingLibrary.Graphics
             HorizontalAlignment = Graphics.HorizontalAlignment.Left;
             VerticalAlignment = Graphics.VerticalAlignment.Top;
 
-#if !TEST
             if (DefaultBitmapFont != null)
             {
                 this.BitmapFont = DefaultBitmapFont;
             }
-#endif
+
             UpdateLinePrimitive();
         }
 
