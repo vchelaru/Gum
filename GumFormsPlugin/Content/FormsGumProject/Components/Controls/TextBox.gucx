@@ -376,6 +376,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>int?</Type>
+      <Name>TextInstance.MaxNumberOfLines</Name>
+      <ExposedAsName>MaxNumberOfLines</ExposedAsName>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
       <Type>StyleCategory</Type>
       <Name>TextInstance.StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Normal</Value>
