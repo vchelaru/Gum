@@ -142,6 +142,23 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// The maximum letters to display. This can be used to 
+    /// create an effect where the text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => mContainedText.MaxLettersToShow;
+        set
+        {
+            mContainedText.MaxLettersToShow = value;
+        }
+    }
+
+    /// <summary>
+    /// The maximum number of lines to display. This can be used to 
+    /// limit how many lines of text are displayed at one time.
+    /// </summary>
     public int? MaxNumberOfLines
     {
         get => mContainedText.MaxNumberOfLines;

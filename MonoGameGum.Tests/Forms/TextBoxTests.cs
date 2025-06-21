@@ -233,6 +233,26 @@ public class TextBoxTests
         innerTextObject.WrappedText[4].ShouldBe("line5");
     }
 
+    [Fact]
+    public void TextBox_ShouldPassDownMaxLettersToShowToInnerTextInstance()
+    {
+        var textBox = new TextBox();
+
+        // Unfortuentely the MaxLettersToShow is only used during the RENDERING 
+        // in the Text.DrawWithInlineVariables method.  This means that we
+        // have no way to get the actual "Displayed" or "Drawn" text in a unit test (yet?).
+        //textBox.Text = "abcdefghijklmnopqrstuvwxyz";
+        textBox.MaxLettersToShow = 3;
+
+        var textInstance = (TextRuntime)textBox
+            .Visual.GetChildByNameRecursively("TextInstance")!;
+
+        textInstance.MaxLettersToShow.ShouldBe(3);
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.MaxLettersToShow.ShouldBe(3);
+    }
 
 
     #region ViewModels
