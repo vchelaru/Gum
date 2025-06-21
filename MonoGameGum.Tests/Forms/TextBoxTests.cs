@@ -116,6 +116,31 @@ public class TextBoxTests
         caret.AbsoluteLeft.ShouldBe(positionAt5);
     }
 
+    [Fact]
+    public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+
+        textBox.HandleCharEntered('1');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('2');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('3');
+
+
+        var textInstance =
+            (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+
+        innerTextObject.WrappedText.Count.ShouldBe(3);
+        innerTextObject.WrappedText[0].Trim().ShouldBe("1");
+        innerTextObject.WrappedText[1].Trim().ShouldBe("2");
+        innerTextObject.WrappedText[2].Trim().ShouldBe("3");
+    }
+
     #region ViewModels
 
     class TestViewModel : ViewModel
