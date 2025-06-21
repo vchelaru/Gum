@@ -117,6 +117,42 @@ public class TextBoxTests
     }
 
     [Fact]
+    public void CaretIndex_ShouldAdjustCaretPosition_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('\n');
+
+        // give it focus so that the caret is visible:
+        textBox.IsFocused = true;
+
+        GraphicalUiElement caret =
+            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+
+        textBox.CaretIndex = 0;
+        float absolutePosition = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 1;
+        caret.AbsoluteTop.ShouldBeGreaterThan(absolutePosition);
+        float positionAt1 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 2;
+        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt1);
+        float positionAt2 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 3;
+        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt2);
+        float positionAt3 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 4;
+        caret.AbsoluteTop.ShouldBe(positionAt3); // Should not move past the last line
+    }
+
+    [Fact]
     public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
     {
         TextBox textBox = new();
@@ -140,6 +176,8 @@ public class TextBoxTests
         innerTextObject.WrappedText[1].Trim().ShouldBe("2");
         innerTextObject.WrappedText[2].Trim().ShouldBe("3");
     }
+
+
 
     #region ViewModels
 
