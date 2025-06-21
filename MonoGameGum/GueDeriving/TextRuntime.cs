@@ -142,6 +142,15 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    public int? MaxNumberOfLines
+    {
+        get => mContainedText.MaxNumberOfLines;
+        set
+        {
+            mContainedText.MaxNumberOfLines = value;
+        }
+    }
+
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {
         // Currently GraphicalUiElement doesn't expose this property so we have to go through setting it by string:
