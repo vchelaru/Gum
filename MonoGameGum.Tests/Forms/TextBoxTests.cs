@@ -1,4 +1,5 @@
 ﻿using Gum.Mvvm;
+using Gum.Wireframe;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
 using MonoGameGum.GueDeriving;
@@ -88,6 +89,31 @@ public class TextBoxTests
         selection.Color = Microsoft.Xna.Framework.Color.Blue;
 
         selection.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void CaretIndex_ShouldAdjustCaretPosition()
+    {
+        TextBox textBox = new();
+        textBox.Text = "Hello";
+
+        GraphicalUiElement caret = 
+            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+
+        textBox.CaretIndex = 0;
+        float absolutePosition = caret.AbsoluteLeft;
+
+        textBox.CaretIndex = 2;
+        caret.AbsoluteLeft.ShouldBeGreaterThan(absolutePosition);
+        float positionAt2 = caret.AbsoluteLeft;
+
+        textBox.CaretIndex = 4;
+        caret.AbsoluteLeft.ShouldBeGreaterThan(positionAt2);
+
+        textBox.CaretIndex = 5;
+        float positionAt5 = caret.AbsoluteLeft;
+        textBox.CaretIndex = 6;
+        caret.AbsoluteLeft.ShouldBe(positionAt5);
     }
 
     #region ViewModels
