@@ -177,8 +177,6 @@ public class TextBoxTests
         innerTextObject.WrappedText[2].Trim().ShouldBe("3");
     }
 
-
-
     #region ViewModels
 
     class TestViewModel : ViewModel
