@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MonoGameAndGum.DataDefinitions;
-internal class ShopItem
+public class ShopItem
 {
     public string Name { get; set; }
     public int Cost { get; set; }
