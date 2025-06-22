@@ -242,6 +242,10 @@ namespace RenderingLibrary.Graphics
         }
 
         int? maxNumberOfLines;
+        /// <summary>
+        /// The maximum number of lines to display. This can be used to 
+        /// limit how many lines of text are displayed at one time.
+        /// </summary>
         public int? MaxNumberOfLines
         {
             get => maxNumberOfLines;
