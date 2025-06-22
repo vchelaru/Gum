@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>MainMenu</Name>
   <State>
     <Name>Default</Name>
@@ -42,13 +42,37 @@
     <Variable>
       <Type>float</Type>
       <Name>BuyButton.Y</Name>
-      <Value xsi:type="xsd:float">386</Value>
+      <Value xsi:type="xsd:float">216</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryLabel.LabelText</Name>
+      <Value xsi:type="xsd:string">Total Value: $0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryLabel.Width</Name>
+      <Value xsi:type="xsd:float">307</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryLabel.X</Name>
+      <Value xsi:type="xsd:float">35</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryLabel.Y</Name>
+      <Value xsi:type="xsd:float">294</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>ListBoxInstance.Height</Name>
-      <Value xsi:type="xsd:float">316</Value>
+      <Value xsi:type="xsd:float">116</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -66,7 +90,7 @@
     <Variable>
       <Type>float</Type>
       <Name>ListBoxInstance.Y</Name>
-      <Value xsi:type="xsd:float">31</Value>
+      <Value xsi:type="xsd:float">63</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -132,13 +156,18 @@
     <Variable>
       <Type>float</Type>
       <Name>NotEnoughMoney.Y</Name>
-      <Value xsi:type="xsd:float">358</Value>
+      <Value xsi:type="xsd:float">188</Value>
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
   <Instance>
     <Name>ListBoxInstance</Name>
     <BaseType>Controls/ListBox</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>InventoryLabel</Name>
+    <BaseType>Elements/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

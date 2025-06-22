@@ -317,6 +317,17 @@ namespace GumFormsSample.Screens
             button2.Height = 200;
             panelWithSplitter.AddChild(button2);
             button2.Text = "Button below splitter";
+
+
+            var text = new TextRuntime();
+            // Set this value before changing width-related properties.
+            // This is a global value, so it is used by all TextRuntime
+            // instances:
+            RenderingLibrary.Graphics.Text.IsMidWordLineBreakEnabled = true;
+            text.Width = 100;
+            text.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            text.Text = "abcdefghijklmnopqrstuvwxyz";
+            stackPanel.AddChild(text);
         }
 
         void CreateLayeredUi()
