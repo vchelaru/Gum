@@ -42,7 +42,8 @@ public class DefaultButtonRuntime : InteractiveGue
         if (fullInstantiation)
         {
             this.Width = 128;
-            this.Height = 32;
+            this.Height = 5;
+            this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
             var background = new ColoredRectangleRuntime();
             background.Width = 0;
@@ -56,10 +57,10 @@ public class DefaultButtonRuntime : InteractiveGue
             TextInstance.X = 0;
             TextInstance.Y = 0;
             TextInstance.Width = 0;
-            TextInstance.Height = 0;
+            TextInstance.Height = 5;
             TextInstance.Name = "TextInstance";
             TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             TextInstance.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
             TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
             TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
