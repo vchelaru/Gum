@@ -1402,11 +1402,22 @@ public class BitmapFont : IDisposable
         {
             XmlSerializer serializer = FileManager.GetXmlSerializer(typeof(XMLFont));
             using var reader = new StringReader(contents);
-            var xmlFont = (XMLFont)serializer.Deserialize(reader);
+            var xmlFont = (XMLFont?)serializer.Deserialize(reader);
 
-            Info = new FontFileInfoLine(xmlFont);
+            if (xmlFont == null)
+            { 
+                throw new InvalidOperationException("Unable to load XML Font file, deserialization failed!");
+            }
 
-            Common = new FontFileCommonLine(xmlFont);
+            if (xmlFont.Info != null)
+            {
+                Info = new FontFileInfoLine(xmlFont);
+            }
+
+            if (xmlFont.Common != null)
+            {
+                Common = new FontFileCommonLine(xmlFont);
+            }
 
             foreach (XMLFont.XMLChar charLine in xmlFont.Chars)
             {
@@ -1427,6 +1438,11 @@ public class BitmapFont : IDisposable
             {
                 throw new InvalidOperationException("Font file did not have an info or common tag");
             }
+        }
+
+        private void ParseBinaryText(string contents)
+        {
+
         }
 
         private void ParsePlainText(string contents)
@@ -1478,8 +1494,7 @@ public class BitmapFont : IDisposable
             while (currentIndexIntoFile != -1)
             {
                 // Right now we'll assume that the pages come in order and they're sequential
-                // If this isn' the case then the logic may need to be modified to support this
-                // instead of just returning a string[].
+                // If this isn't the case then the logic may need to be modified to support this
                 int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
 
                 int openingQuotesIndex = fontPattern.IndexOf('"', currentIndexIntoFile);
@@ -1514,8 +1529,11 @@ public class BitmapFont : IDisposable
 
         public FontFileInfoLine(XMLFont xmlFont)
         {
-            Outline = xmlFont.Info.Outline;
-            Size = xmlFont.Info.Size;
+            if (xmlFont.Info != null)
+            {
+                Outline = xmlFont.Info.Outline;
+                Size = xmlFont.Info.Size;
+            }
         }
     }
 
@@ -1532,8 +1550,11 @@ public class BitmapFont : IDisposable
 
         public FontFileCommonLine(XMLFont xmlFont)
         {
-            LineHeight = xmlFont.Common.LineHeight;
-            Base = xmlFont.Common.Base;
+            if (xmlFont.Common != null)
+            {
+                LineHeight = xmlFont.Common.LineHeight;
+                Base = xmlFont.Common.Base;
+            }
         }
     }
 
