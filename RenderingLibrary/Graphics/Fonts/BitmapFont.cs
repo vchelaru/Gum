@@ -328,8 +328,9 @@ public class BitmapFont : IDisposable
         return GetCharacterScaleX(asciiNumber) * 2;
     }
 
-    public void SetFontPattern()
+    public void SetFontPattern(int? forcedTextureWidth = null, int? forcedTextureHeight = null)
     {
+
         var parsedData = _ParsedFontFile;
 
         this.mOutlineThickness = parsedData.Info?.Outline ?? 0;
@@ -339,98 +340,120 @@ public class BitmapFont : IDisposable
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
 
-        if (mTextures.Length > 0 && mTextures[0] != null)
+        ///////////////////////////////Early Out/////////////////////////////////
+        if(mTextures.Length == 0 || mTextures[0] == null)
         {
-            //ToDo: Atlas support  **************************************************************
-            var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
-
-            // Hiero "Extended" does not include the space character.
-            // This used to cause a rendering crash. That was fixed but
-            // even with it fixed we want to make sure we have a valid space
-            // character since it's so common.
-            bool wasSpaceCreatedDynamically = false;
-            if(spaceCharInfo == null)
+            if(forcedTextureHeight == null || forcedTextureWidth == null)
             {
-                wasSpaceCreatedDynamically = true;
+                return;
+            }
+        }
+        ////////////////////////////End Early Out///////////////////////////////
 
-                var fontSize = 18;
+        int textureWidth = 0;
+        int textureHeight = 0;
 
-                var absFontSize = System.Math.Abs(parsedData.Info.Size);
-                if (absFontSize > 0)
-                {
-                    // bmfc uses negative values for fonts
-                    // that "match char height":
-                    fontSize = absFontSize;
+        if(forcedTextureWidth != null && forcedTextureHeight != null)
+        {
+            textureWidth = forcedTextureWidth.Value;
+            textureHeight = forcedTextureHeight.Value;
+        }
+        else
+        {
+            textureWidth = mTextures[0].Width;
+            textureHeight = mTextures[0].Height;
+        }
 
-                }
 
-                // Arial 32 has 9 spacing for 32, so let's try 3
-                int spaceSize = fontSize / 3;
+        //ToDo: Atlas support  **************************************************************
+        var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
 
-                spaceCharInfo = new FontFileCharLine
-                {
-                    Id = (char)' ',
-                    XAdvance = spaceSize,
-                    Width = spaceSize
-                };
+        // Hiero "Extended" does not include the space character.
+        // This used to cause a rendering crash. That was fixed but
+        // even with it fixed we want to make sure we have a valid space
+        // character since it's so common.
+        bool wasSpaceCreatedDynamically = false;
+        if(spaceCharInfo == null)
+        {
+            wasSpaceCreatedDynamically = true;
+
+            var fontSize = 18;
+
+            var absFontSize = System.Math.Abs(parsedData.Info.Size);
+            if (absFontSize > 0)
+            {
+                // bmfc uses negative values for fonts
+                // that "match char height":
+                fontSize = absFontSize;
+
             }
 
-            // Added null check for space since some special fonts might not have a space inside them.
-            if (spaceCharInfo != null)
+            // Arial 32 has 9 spacing for 32, so let's try 3
+            int spaceSize = fontSize / 3;
+
+            spaceCharInfo = new FontFileCharLine
             {
-                var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
-                    mLineHeightInPixels);
+                Id = (char)' ',
+                XAdvance = spaceSize,
+                Width = spaceSize
+            };
+        }
 
-                for (int i = 0; i < charArraySize; i++)
-                {
-                    mCharacterInfo[i] = space;
-                }
+        // Added null check for space since some special fonts might not have a space inside them.
+        if (spaceCharInfo != null)
+        {
+            var space = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight,
+                mLineHeightInPixels);
 
-                if (mCharacterInfo.Length > (int)'\t')
-                {
-                    // Make the tab character be equivalent to 4 spaces:
-                    mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
-                    mCharacterInfo['\t'].Spacing = space.Spacing * 4;
-                    mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
-                    mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
-                }
-                if(mCharacterInfo.Length > (int)'\n')
-                {
-                    mCharacterInfo['\n'].ScaleX = 0;
-                    mCharacterInfo['\n'].Spacing = 0;
-                    mCharacterInfo['\n'].TURight = 0;
-                    mCharacterInfo['\n'].TULeft = 0;
-                    //mCharacterInfo['\n'].XOffset = 0;
-                    mCharacterInfo['\n'].XOffsetInPixels = 0;
-                }
+            for (int i = 0; i < charArraySize; i++)
+            {
+                mCharacterInfo[i] = space;
             }
+
+            if (mCharacterInfo.Length > (int)'\t')
+            {
+                // Make the tab character be equivalent to 4 spaces:
+                mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
+                mCharacterInfo['\t'].Spacing = space.Spacing * 4;
+                mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
+                mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
+            }
+            if(mCharacterInfo.Length > (int)'\n')
+            {
+                mCharacterInfo['\n'].ScaleX = 0;
+                mCharacterInfo['\n'].Spacing = 0;
+                mCharacterInfo['\n'].TURight = 0;
+                mCharacterInfo['\n'].TULeft = 0;
+                //mCharacterInfo['\n'].XOffset = 0;
+                mCharacterInfo['\n'].XOffsetInPixels = 0;
+            }
+        }
 
             
-            foreach (var charInfo in parsedData.Chars)
+        foreach (var charInfo in parsedData.Chars)
+        {
+            // TODO: Ask VIC why BMFont generator will create a char id="-1" entry, which crashes this code.
+            // This is a temporary fix until he can tell me
+            if (charInfo.Id == -1)
             {
-                // TODO: Ask VIC why BMFont generator will create a char id="-1" entry, which crashes this code.
-                // This is a temporary fix until he can tell me
-                if (charInfo.Id == -1)
-                {
-                    continue;
-                }
-                mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, mTextures[0].Width,
-                    mTextures[0].Height, mLineHeightInPixels);
+                continue;
             }
+            mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, textureWidth,
+                textureHeight, mLineHeightInPixels);
+        }
 
-            if(wasSpaceCreatedDynamically)
-            {
-                mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width,
-                    mTextures[0].Height, mLineHeightInPixels);
-            }
+        if(wasSpaceCreatedDynamically)
+        {
+            mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, textureWidth,
+                textureHeight, mLineHeightInPixels);
+        }
 
-            foreach (var kerning in parsedData.Kernings)
+        foreach (var kerning in parsedData.Kernings)
+        {
+            var character = mCharacterInfo[kerning.First];
+            if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
             {
-                var character = mCharacterInfo[kerning.First];
-                if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
-                {
-                    character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
-                }
+                character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
             }
         }
     }
@@ -1363,7 +1386,7 @@ public class BitmapFont : IDisposable
                 // Process Binary File 
                 throw new InvalidOperationException("Unable to load Binary Font files, please convert to XML or TEXT.");
             }
-            else if (firstChar == 'i')
+            else if (firstChar == 'i') // first word is "info"
             {
                 ParsePlainText(contents);
             }
