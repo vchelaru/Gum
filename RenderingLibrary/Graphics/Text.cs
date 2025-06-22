@@ -149,6 +149,9 @@ namespace RenderingLibrary.Graphics
 
         public bool mIsTextureCreationSuppressed;
 
+        // Defaulting to false, will be turned on in future version
+        public static bool IsMidWordLineBreakEnabled = false;
+
         SystemManagers mManagers;
 
         bool mNeedsBitmapFontRefresh = true;
@@ -706,7 +709,6 @@ namespace RenderingLibrary.Graphics
 
         char[] whatToSplitOn = new char[] { ' ' };
 
-        public static bool UseNewLineWrapping = false;
         static char[] preservedNewlinableCharacters = new char[] { ',', '-', ':', '.', '?', '!', '&', 
             // 
             ')' };
@@ -773,163 +775,128 @@ namespace RenderingLibrary.Graphics
                 wrappingWidth = mWidth.Value / mFontScale;
             }
 
-            if (UseNewLineWrapping)
+
+            // This allocates like crazy but we're
+            // on the PC and prob won't be calling this
+            // very frequently so let's 
+            String line = String.Empty;
+            String returnString = String.Empty;
+
+            // The user may have entered "\n" in the string, which would 
+            // be written as "\\n".  Let's replace that, shall we?
+            List<string> wordList = new();
+
+            if (!string.IsNullOrEmpty(mRawText))
             {
-                if (MeasureString(stringToUse) <= wrappingWidth && stringToUse?.Contains("\n") == false)
-                {
-                    lines.Add(stringToUse);
-                }
-                else
-                {
-                    StringBuilder currentLine = new StringBuilder();
-                    int? lastWrappableCharacterOnLine = null;
-                    int? lastWrappableCharacterAbsolute = null;
-
-                    // loop through each letter, adding to the lines. If the new letter can cause a newline then we push to the next line
-                    for (int i = 0; i < stringToUse.Length; i++)
-                    {
-                        var letter = stringToUse[i];
-
-                        if (letter == '\n')
-                        {
-                            AddLine(currentLine.ToString());
-                        }
-                        else
-                        {
-                            var widthAfterLetter = MeasureString(currentLine.ToString() + letter);
-
-                            if (widthAfterLetter > wrappingWidth && currentLine.Length > 0)
-                            {
-                                string textToAdd = String.Empty;
-                                if (lastWrappableCharacterOnLine != null)
-                                {
-                                    textToAdd = currentLine.ToString().Substring(0, lastWrappableCharacterOnLine.Value + 1);
-                                    i = lastWrappableCharacterAbsolute.Value + 1;
-                                    letter = stringToUse[i];
-                                }
-                                else
-                                {
-                                    textToAdd = currentLine.ToString();
-                                }
-                                AddLine(textToAdd);
-                            }
-                            // do this before appending since length will tell us the index of the next letter to add
-                            if (char.IsWhiteSpace(letter) || preservedNewlinableCharacters.Contains(letter))
-                            {
-                                lastWrappableCharacterOnLine = currentLine.Length;
-                                lastWrappableCharacterAbsolute = i;
-                            }
-                            currentLine.Append(letter);
-                        }
-                    }
-                    if (currentLine.Length > 0)
-                    {
-                        AddLine(currentLine.ToString());
-                    }
-
-
-                    void AddLine(string text)
-                    {
-                        // We toss the leading space on newlines.
-                        if (text.Length > 0 && text[0] == ' ' && lines.Count > 0)
-                        {
-                            text = text.Substring(1);
-                        }
-                        lines.Add(text);
-                        lastWrappableCharacterOnLine = null;
-                        lastWrappableCharacterAbsolute = null;
-                        currentLine.Clear();
-                    }
-                }
+                // multiline text editing in Gum can add \r's, so get rid of those:
+                stringToUse = mRawText.Replace("\r\n", "\n");
+                wordList.AddRange(stringToUse.Split(whatToSplitOn));
             }
-            else
+
+
+            bool isLastLine = false;
+            while (wordList.Count != 0)
             {
-                // This allocates like crazy but we're
-                // on the PC and prob won't be calling this
-                // very frequently so let's 
-                String line = String.Empty;
-                String returnString = String.Empty;
+                isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
 
-                // The user may have entered "\n" in the string, which would 
-                // be written as "\\n".  Let's replace that, shall we?
-                List<string> wordArray = new List<string>();
+                string word = wordList[0];
+                var wordBeforeNewlineRemoval = word;
+                var isLastWord = wordList.Count == 1;
 
-                if (!string.IsNullOrEmpty(mRawText))
+                bool containsNewline = false;
+                bool startsWithNewline = false;
+
+                if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
                 {
-                    // multiline text editing in Gum can add \r's, so get rid of those:
-                    stringToUse = mRawText.Replace("\r\n", "\n");
-                    wordArray.AddRange(stringToUse.Split(whatToSplitOn));
+                    startsWithNewline = word.StartsWith("\n");
+
+                    // Newline is an explicit character that the user might
+                    // enter in a textbox. We don't want to lose this character
+                    // becuse it can be deleted.
+                    //word = word.Substring(0, word.IndexOf('\n'));
+                    word = word.Substring(0, word.IndexOf('\n') + 1);
+                    containsNewline = true;
                 }
 
+                // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
+                // to include part of the word:
 
-                bool isLastLine = false;
-                while (wordArray.Count != 0)
+                float linePlusWordWidth = MeasureString(line + word);
+
+                var shouldAddEllipsis =
+                    IsTruncatingWithEllipsisOnLastLine &&
+                    isLastLine &&
+                    // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
+                    ((isLastWord && linePlusWordWidth > wrappingWidth) ||
+                     // it's not the last word so we need to see if ellipsis fit
+                     (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
+                if (shouldAddEllipsis)
                 {
-                    isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
-
-                    string word = wordArray[0];
-                    var wordBeforeNewlineRemoval = word;
-                    var isLastWord = wordArray.Count == 1;
-
-                    bool containsNewline = false;
-                    bool startsWithNewline = false;
-
-                    if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
+                    var addedEllipsis = false;
+                    for (int i = 1; i < word.Length; i++)
                     {
-                        startsWithNewline = word.StartsWith("\n");
+                        var substringEnd = word.SubstringEnd(i);
 
-                        // Newline is an explicit character that the user might
-                        // enter in a textbox. We don't want to lose this character
-                        // becuse it can be deleted.
-                        //word = word.Substring(0, word.IndexOf('\n'));
-                        word = word.Substring(0, word.IndexOf('\n') + 1);
-                        containsNewline = true;
+                        float linePlusWordSub = MeasureString(line + substringEnd);
+
+                        if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                        {
+                            lines.Add(line + substringEnd + ellipsis);
+                            addedEllipsis = true;
+                            break;
+                        }
                     }
 
-                    // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
-                    // to include part of the word:
-
-                    float linePlusWordWidth = MeasureString(line + word);
-
-                    var shouldAddEllipsis =
-                        IsTruncatingWithEllipsisOnLastLine &&
-                        isLastLine &&
-                        // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
-                        ((isLastWord && linePlusWordWidth > wrappingWidth) ||
-                         // it's not the last word so we need to see if ellipsis fit
-                         (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
-                    if (shouldAddEllipsis)
+                    if (!addedEllipsis && line.EndsWith(" "))
                     {
-                        var addedEllipsis = false;
+                        lines.Add(line.SubstringEnd(1) + ellipsis);
+
+                    }
+                    break;
+                }
+                bool didLineWrapWithBrokenWord = false;
+
+                if (linePlusWordWidth > wrappingWidth)
+                {
+                    if (!string.IsNullOrEmpty(line))
+                    {
+                        // We already have a line started, so let's add it
+                        // and start the next line
+                        lines.Add(line);
+                        if (lines.Count == effectiveMaxNumberOfLines)
+                        {
+                            break;
+                        }
+
+                        line = String.Empty;
+                    }
+                    // we don't have a line started, but we have a word that is too
+                    // long. if we're not using ellipses, then we should measure the 
+                    // string, add what we can, and go to the next line:
+                    else if(IsMidWordLineBreakEnabled)
+                    {
                         for (int i = 1; i < word.Length; i++)
                         {
-                            var substringEnd = word.SubstringEnd(i);
-
-                            float linePlusWordSub = MeasureString(line + substringEnd);
-
-                            if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                            var substring = word.Substring(0, i+1);
+                            float substringLength = MeasureString(substring);
+                            if (substringLength == wrappingWidth)
                             {
-                                lines.Add(line + substringEnd + ellipsis);
-                                addedEllipsis = true;
+                                // add this word to the lines, and subtract what was added
+                                // from the current word:
+                                var stringToAdd = substring;
+                                wordList[0] = word.Substring(i+1);
+                                word = stringToAdd;
+                                wordList.Insert(0, stringToAdd);
+                                didLineWrapWithBrokenWord = true;
                                 break;
                             }
-                        }
-
-                        if (!addedEllipsis && line.EndsWith(" "))
-                        {
-                            lines.Add(line.SubstringEnd(1) + ellipsis);
-
-                        }
-                        break;
-                    }
-
-                    if (linePlusWordWidth > wrappingWidth)
-                    {
-                        if (!string.IsNullOrEmpty(line))
-                        {
-                            lines.Add(line);
-                            if (lines.Count == effectiveMaxNumberOfLines)
+                            else if (substringLength > wrappingWidth)
                             {
+                                var stringToAdd = word.Substring(0, i );
+                                wordList[0] = word.Substring(i );
+                                word = stringToAdd;
+                                wordList.Insert(0, stringToAdd);
+                                didLineWrapWithBrokenWord = true;
                                 break;
                             }
                         }
@@ -937,80 +904,53 @@ namespace RenderingLibrary.Graphics
                         //returnString = returnString + line + '\n';
                         line = String.Empty;
                     }
+                }
 
-                    // If it's the first word and it's empty, don't add anything
-                    // update - but this prevents the word from starting with a space, which it should be able to 
-                    //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
+                // If it's the first word and it's empty, don't add anything
+                // update - but this prevents the word from starting with a space, which it should be able to 
+                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
+                {
+
+                    if ((wordList.Count > 1 || word == "") &&
+                        // Update Feb 19, 2023
+                        // don't insert space after if it's a newline. That messes up indexes.
+                        !containsNewline && !didLineWrapWithBrokenWord)
                     {
-
-                        if ((wordArray.Count > 1 || word == "") &&
-                            // Update Feb 19, 2023
-                            // don't insert space after if it's a newline. That messes up indexes.
-                            !containsNewline)
-                        {
-                            line = line + word + ' ';
-                        }
-                        else
-                        {
-                            line = line + word;
-                        }
+                        line = line + word + ' ';
                     }
-
-                    wordArray.RemoveAt(0);
-
-                    if (containsNewline)
+                    else
                     {
-                        lines.Add(line);
-
-
-                        if (lines.Count == effectiveMaxNumberOfLines)
-                        {
-                            break;
-                        }
-                        line = string.Empty;
-                        int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
-                        wordArray.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
+                        line = line + word;
                     }
                 }
 
-                if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
+                wordList.RemoveAt(0);
+
+                if (containsNewline || didLineWrapWithBrokenWord)
                 {
                     lines.Add(line);
+
+
+                    if (lines.Count == effectiveMaxNumberOfLines)
+                    {
+                        break;
+                    }
+                    line = string.Empty;
+
+                    if(!didLineWrapWithBrokenWord)
+                    {
+                        int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
+                        wordList.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
+                    }
                 }
             }
-            //if(didTruncate && AddEllipsisOnLastLine && mWrappedText.Count > 0)
-            //{
-            //    var lastLine = mWrappedText[mWrappedText.Count-1];
 
-            //    int numberOfCharactersToRemove = 1;
-
-            //    while(numberOfCharactersToRemove < lastLine.Length)
-            //    {
-            //        var endSubstring = lastLine.Substring(lastLine.Length - numberOfCharactersToRemove);
-
-            //        var isLongEnough = MeasureString(endSubstring) > ellipsisWidth;
-
-            //        if(isLongEnough)
-            //        {
-            //            break;
-            //        }
-            //        else
-            //        {
-            //            numberOfCharactersToRemove++;
-            //        }
-            //    }
-
-            //    mWrappedText[mWrappedText.Count-1] = lastLine.Substring(0, lastLine.Length - numberOfCharactersToRemove) + "...";
-
-            //}
-            //if (mManagers == null || mManagers.IsCurrentThreadPrimary)
-            //{
-            //    UpdateTextureToRender();
-            //}
-            //else
+            if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
             {
-                mNeedsBitmapFontRefresh = true;
+                lines.Add(line);
             }
+
+            mNeedsBitmapFontRefresh = true;
         }
 
         private float MeasureString(string whatToMeasure)
