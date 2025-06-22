@@ -80,6 +80,26 @@ public class TextBoxTests
     }
 
     [Fact]
+    public void HandleCharEntered_ShouldAddMultipleLines_IfWrap()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.IsFocused = true;
+        textBox.Width = 50;
+        textBox.AcceptsReturn = true;
+
+        for(int i = 0; i < 10; i++)
+        {
+            textBox.HandleCharEntered('a');
+            textBox.HandleCharEntered(' ');
+        }
+
+        var textInstance = (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
+        var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
+        innerTextObject.WrappedText.Count.ShouldBe(3);
+    }
+
+    [Fact]
     public void TextBox_ShouldHaveSelectionInstance()
     {
         var textBox = new TextBox();
