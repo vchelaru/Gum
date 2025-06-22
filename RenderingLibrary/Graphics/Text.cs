@@ -874,16 +874,16 @@ namespace RenderingLibrary.Graphics
                     // string, add what we can, and go to the next line:
                     else if(BreakWordsWithNoWhitespace)
                     {
-                        for (int i = 2; i < word.Length; i++)
+                        for (int i = 1; i < word.Length; i++)
                         {
-                            var substring = word.Substring(0, i);
+                            var substring = word.Substring(0, i+1);
                             float substringLength = MeasureString(substring);
                             if (substringLength == wrappingWidth)
                             {
                                 // add this word to the lines, and subtract what was added
                                 // from the current word:
                                 var stringToAdd = substring;
-                                wordList[0] = word.Substring(i);
+                                wordList[0] = word.Substring(i+1);
                                 word = stringToAdd;
                                 wordList.Insert(0, stringToAdd);
                                 didLineWrapWithBrokenWord = true;
@@ -891,8 +891,8 @@ namespace RenderingLibrary.Graphics
                             }
                             else if (substringLength > wrappingWidth)
                             {
-                                var stringToAdd = word.Substring(0, i - 1);
-                                wordList[0] = word.Substring(i - 1);
+                                var stringToAdd = word.Substring(0, i );
+                                wordList[0] = word.Substring(i );
                                 word = stringToAdd;
                                 wordList.Insert(0, stringToAdd);
                                 didLineWrapWithBrokenWord = true;
