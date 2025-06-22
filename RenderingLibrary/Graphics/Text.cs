@@ -149,7 +149,8 @@ namespace RenderingLibrary.Graphics
 
         public bool mIsTextureCreationSuppressed;
 
-        public static bool BreakWordsWithNoWhitespace = false;
+        // Defaulting to false, will be turned on in future version
+        public static bool IsMidWordLineBreakEnabled = false;
 
         SystemManagers mManagers;
 
@@ -872,7 +873,7 @@ namespace RenderingLibrary.Graphics
                     // we don't have a line started, but we have a word that is too
                     // long. if we're not using ellipses, then we should measure the 
                     // string, add what we can, and go to the next line:
-                    else if(BreakWordsWithNoWhitespace)
+                    else if(IsMidWordLineBreakEnabled)
                     {
                         for (int i = 1; i < word.Length; i++)
                         {

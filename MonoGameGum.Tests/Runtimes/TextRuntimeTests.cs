@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
+
+// keeps all tests in the same collection running sequentially so they an change static values:
+[Collection("Text-related Tests")]
 public class TextRuntimeTests
 {
     [Fact]
     public void TextRuntime_ShouldWrap_WithFixedWidth()
     {
-        Text.BreakWordsWithNoWhitespace = false;
+        Text.IsMidWordLineBreakEnabled = false;
 
         TextRuntime textRuntime = new ();
         textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
@@ -33,7 +36,7 @@ public class TextRuntimeTests
     [Fact]
     public void TextRuntime_ShouldNotBreakWords_IfBreakWordsWithNoWhitespaceIsFalse()
     {
-        Text.BreakWordsWithNoWhitespace = false;
+        Text.IsMidWordLineBreakEnabled = false;
         TextRuntime textRuntime = new();
         textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         textRuntime.Width = 100; // Set a fixed width
@@ -48,7 +51,7 @@ public class TextRuntimeTests
     [Fact]
     public void TextRuntime_ShouldWrap_IfOnlyLettersExist()
     {
-        Text.BreakWordsWithNoWhitespace = true;
+        Text.IsMidWordLineBreakEnabled = true;
         TextRuntime textRuntime = new();
         textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         textRuntime.Width = 100; // Set a fixed width
