@@ -38,6 +38,8 @@ namespace GumFormsSample
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
+            // temporary until this is pulled from .gumx
+            RenderingLibrary.Graphics.Text.IsMidWordLineBreakEnabled = true;
             Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
             _currentScreen = _screenFactory.DefaultScreen;
