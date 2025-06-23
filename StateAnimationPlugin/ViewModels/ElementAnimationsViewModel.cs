@@ -284,6 +284,11 @@ public class ElementAnimationsViewModel : ViewModel
             deleteAnimation.Header = "Delete Animation";
             deleteAnimation.Click += HandleDeleteAnimation;
             AnimationRightClickItems.Add(deleteAnimation);
+
+            var duplicateAnimation = new MenuItem();
+            duplicateAnimation.Header = "Duplicate Animation";
+            duplicateAnimation.Click += HandleDuplicateAnimation;
+            AnimationRightClickItems.Add(duplicateAnimation);
         }
     }
 
@@ -385,7 +390,19 @@ public class ElementAnimationsViewModel : ViewModel
         {
             Animations.Remove(SelectedAnimation);
         }
-    } 
+    }
+
+    private void HandleDuplicateAnimation(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var copyOfAnimation = SelectedAnimation.Clone();
+
+        copyOfAnimation.Name = $"Copy of {copyOfAnimation.Name}";
+        StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+            copyOfAnimation,
+            SelectedAnimation.Name, Animations, Element);
+
+        Animations.Add(copyOfAnimation);
+    }
 
     private void OnAnyChange(object sender, string propertyName)
     {
