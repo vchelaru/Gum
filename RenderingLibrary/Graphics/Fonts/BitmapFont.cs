@@ -1494,7 +1494,8 @@ public class BitmapFont : IDisposable
             while (currentIndexIntoFile != -1)
             {
                 // Right now we'll assume that the pages come in order and they're sequential
-                // If this isn't the case then the logic may need to be modified to support this
+                // If this isn' the case then the logic may need to be modified to support this
+                // instead of just returning a string[].
                 int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
 
                 int openingQuotesIndex = fontPattern.IndexOf('"', currentIndexIntoFile);

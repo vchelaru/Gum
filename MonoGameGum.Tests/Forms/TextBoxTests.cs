@@ -2,6 +2,7 @@
 using Gum.Wireframe;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
+using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using Shouldly;
 using System;
@@ -174,6 +175,39 @@ public class TextBoxTests
         textBox.CaretIndex = 4;
         caret.AbsoluteTop.ShouldBe(positionAt3); // Should not move past the last line
     }
+
+    [Fact]
+    public void TextWrapping_NoWrap_ShouldRenderCorrectlyWithAcceptsReturn()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.NoWrap;
+        textBox.AcceptsReturn = true;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual =
+            (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        var originaCaretX = visual.CaretInstance.X;
+        var originalCaretY = visual.CaretInstance.Y;
+
+        var textInstanceX = visual.TextInstance.X;
+
+
+        for(int i = 0; i < 40; i++)
+        {
+            textBox.HandleCharEntered('a');
+        }
+
+        visual.CaretInstance.X.ShouldBeGreaterThan(originaCaretX);
+        visual.CaretInstance.Y.ShouldBe(originalCaretY);
+        visual.TextInstance.X.ShouldBeLessThan(textInstanceX, "because the text scrolled to the left");
+
+        textBox.HandleCharEntered('\n');
+        visual.CaretInstance.X.ShouldBe(originaCaretX, "because the caret should reset to the start of the line after a newline");
+        visual.CaretInstance.Y.ShouldBeGreaterThan(originalCaretY, "because the caret should move down after a newline");
+        visual.TextInstance.X.ShouldBe(textInstanceX, "because the text should not scroll to the left after a newline in NoWrap mode");
+    }
+
 
     [Fact]
     public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
