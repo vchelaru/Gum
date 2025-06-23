@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Services.Dialogs;
 using GumCommon;
 using Gum.Services.Dialogs;
 
@@ -57,7 +58,6 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
         services.AddSingleton<UndoManager>();
-        services.AddSingleton<IDialogService, DialogService>();
         
         //logic
         services.AddSingleton<VariableReferenceLogic>();
@@ -68,6 +68,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
         services.AddSingleton<ElementCommands>();
+        
+        services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
+        services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
+        services.AddSingleton<IDialogService, DialogService>();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.

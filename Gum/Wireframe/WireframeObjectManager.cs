@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -9,11 +9,11 @@ using RenderingLibrary.Content;
 using RenderingLibrary;
 using Gum.RenderingLibrary;
 using Gum.Plugins;
-using Gum.Services;
-using GumCommon;
-using Color = System.Drawing.Color;
-using Rectangle = System.Drawing.Rectangle;
-using Matrix = System.Numerics.Matrix4x4;
+using Gum.Services.Dialogs; 
+using GumCommon; 
+using Color = System.Drawing.Color; 
+using Rectangle = System.Drawing.Rectangle; 
+using Matrix = System.Numerics.Matrix4x4; 
 using GumRuntime;
 
 namespace Gum.Wireframe;
