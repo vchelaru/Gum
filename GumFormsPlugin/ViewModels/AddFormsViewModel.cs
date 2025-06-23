@@ -11,6 +11,8 @@ using Gum.Mvvm;
 using GumFormsPlugin.Services;
 using Gum.Managers;
 using System.Reflection.Metadata.Ecma335;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using Newtonsoft.Json;
 
 namespace GumFormsPlugin.ViewModels;
@@ -20,6 +22,7 @@ public class AddFormsViewModel : ViewModel
     #region Fields/Properties
 
     private readonly FormsFileService _formsFileService;
+    private readonly IDialogService _dialogService;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -29,9 +32,10 @@ public class AddFormsViewModel : ViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService)
+    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService)
     {
         _formsFileService = formsFileService;
+        _dialogService = dialogService;
     }
 
     public void DoIt()
@@ -55,7 +59,7 @@ public class AddFormsViewModel : ViewModel
             }
             else
             {
-                GumCommands.Self.GuiCommands.ShowMessage("You must Save, then close/reopen the project.");
+                _dialogService.ShowMessage("You must Save, then close/reopen the project.");
             }
         }
     }
@@ -135,7 +139,7 @@ public class AddFormsViewModel : ViewModel
         {
             var message = "Cannot add Forms controls because the following file(s) would get overwritten:"
                 + "\n\n" + string.Join("\n", nonStandardFiles);
-            GumCommands.Self.GuiCommands.ShowMessage(message);
+            _dialogService.ShowMessage(message);
         }
         else if (doStandardsExist)
         {
@@ -176,7 +180,7 @@ public class AddFormsViewModel : ViewModel
             if(standardFiles.Any() || otherFiles.Any())
             {
                 message += "\n\nProceed?";
-                shouldSave = GumCommands.Self.GuiCommands.ShowYesNoMessageBox(message, caption:"Ovewrite files?") == System.Windows.MessageBoxResult.Yes;
+                shouldSave = _dialogService.ShowYesNoMessage(message, "Ovewrite files?");
             }
             else
             {

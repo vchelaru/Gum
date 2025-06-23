@@ -14,7 +14,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Managers
 {
@@ -24,13 +27,16 @@ namespace Gum.Managers
         private readonly ISelectedState _selectedState;
         private readonly ElementCommands _elementCommands;
         private readonly UndoManager _undoManager;
+        private readonly IDialogService _dialogService;
 
         public DeleteLogic()
         {
             _projectCommands = ProjectCommands.Self;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
 
@@ -379,14 +385,14 @@ namespace Gum.Managers
             {
                 if (deleteResponse.ShouldShowMessage)
                 {
-                    GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
+                    _dialogService.ShowMessage(deleteResponse.Message);
                 }
             }
             else
             {
-                var response = MessageBox.Show($"Are you sure you want to delete the category {category.Name}?", "Delete category?", MessageBoxButtons.YesNo);
+                var response = _dialogService.ShowYesNoMessage($"Are you sure you want to delete the category {category.Name}?", "Delete category?");
 
-                if (response == DialogResult.Yes)
+                if (response)
                 {
                     Remove(category);
                 }

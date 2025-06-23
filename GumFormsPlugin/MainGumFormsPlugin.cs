@@ -13,6 +13,9 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using GumCommon;
 using ToolsUtilities;
 
 namespace GumFormsPlugin;
@@ -27,12 +30,14 @@ internal class MainGumFormsPlugin : PluginBase
 
     System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
     private readonly FormsFileService _formsFileService;
+    private readonly IDialogService _dialogService;
 
     #endregion
 
     public MainGumFormsPlugin()
     {
         _formsFileService = new FormsFileService();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     public override void StartUp()
@@ -79,12 +84,12 @@ internal class MainGumFormsPlugin : PluginBase
 
         if (GumState.Self.ProjectState.NeedsToSaveProject)
         {
-            GumCommands.Self.GuiCommands.ShowMessage("You must first save the project before importing forms");
+            _dialogService.ShowMessage("You must first save the project before importing forms");
             return;
         }
         #endregion
 
-        var viewModel = new AddFormsViewModel(_formsFileService);
+        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService);
 
         var view = new AddFormsWindow(viewModel);
         view.ShowDialog();
