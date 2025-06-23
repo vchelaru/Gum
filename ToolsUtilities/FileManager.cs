@@ -65,7 +65,7 @@ namespace ToolsUtilities
             {
                 if (IsRelative(value))
                 {
-                    if(IsMobile)
+                    if (IsMobile)
                     {
                         mRelativeDirectory = "./" + value;
                     }
@@ -136,7 +136,7 @@ namespace ToolsUtilities
             fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
             if (!ignoreExtensions)
             {
-                if(IsMobile)
+                if (IsMobile)
                 {
                     try
                     {
@@ -384,7 +384,7 @@ namespace ToolsUtilities
                 throw new System.ArgumentException("Cannot check if a null file name is relative.");
             }
 
-            if(IsMobile)
+            if (IsMobile)
             {
                 // Justin Johnson 6/6/2017: this compiler flagged code might be eliminated now that 
                 // this whole method is more cross platform friendly!
@@ -481,7 +481,7 @@ namespace ToolsUtilities
         public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo, bool preserveCase)
         {
             // If it's a URL we can't make it relative
-            if(IsUrl(pathToMakeRelative))
+            if (IsUrl(pathToMakeRelative))
             {
                 return pathToMakeRelative;
             }
@@ -680,7 +680,7 @@ namespace ToolsUtilities
             newFileName = newFileName.Replace('\\', Path.DirectorySeparatorChar)
                 .Replace('/', Path.DirectorySeparatorChar);
 
-            if(newFileName.Contains(".." + Path.DirectorySeparatorChar))
+            if (newFileName.Contains(".." + Path.DirectorySeparatorChar))
             {
                 newFileName = RemoveDotDotSlash(newFileName);
             }
@@ -703,10 +703,10 @@ namespace ToolsUtilities
             //ThrowExceptionIfFileDoesntExist(fileName);
 
 
-            if(IsMobile)
+            if (IsMobile)
             {
                 // Mobile platforms don't like ./ at the start of the file name, but that's what we use to identify an absolute path
-			    fileName = TryRemoveLeadingDotSlash (fileName);
+                fileName = TryRemoveLeadingDotSlash(fileName);
             }
 
 
@@ -752,7 +752,7 @@ namespace ToolsUtilities
                 }
                 else
                 {
-                    if(IsRelative(fileName))
+                    if (IsRelative(fileName))
                     {
                         fileName = FileManager.MakeAbsolute(fileName);
                     }
@@ -785,23 +785,26 @@ namespace ToolsUtilities
 
         public static XmlSerializer GetXmlSerializer(Type type)
         {
-            if (mXmlSerializers.ContainsKey(type))
+            lock (mXmlSerializers)
             {
-                return mXmlSerializers[type];
-            }
-            else
-            {
+                if (mXmlSerializers.ContainsKey(type))
+                {
+                    return mXmlSerializers[type];
+                }
+                else
+                {
 
-                // For info on this block, see:
-                // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
+                    // For info on this block, see:
+                    // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
 #if DEBUG
-                XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0];
+                    XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0];
 #else
                 XmlSerializer newSerializer = null;
                 newSerializer = new XmlSerializer(type);
 #endif
-                mXmlSerializers.Add(type, newSerializer);
-                return newSerializer;
+                    mXmlSerializers.Add(type, newSerializer);
+                    return newSerializer;
+                }
             }
         }
 
