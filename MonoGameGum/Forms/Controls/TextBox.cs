@@ -72,13 +72,7 @@ public class TextBox : TextBoxBase
 
     protected override string CategoryName => "TextBoxCategoryState";
 
-    /// <summary>
-    /// Whether pressing the return key adds a newline to the text box. If false, the return key does not add a newline.
-    /// </summary>
-    public bool AcceptsReturn
-    {
-        get; set;
-    }
+
 
     #endregion
 
