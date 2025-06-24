@@ -16,6 +16,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Commands;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 using ToolsUtilities;
 
@@ -32,6 +34,7 @@ namespace SkiaPlugin
         
         private readonly ISelectedState _selectedState;
         private readonly WireframeCommands _wireframeCommands;
+        private readonly IDialogService _dialogService;
 
         #endregion
 
@@ -39,7 +42,9 @@ namespace SkiaPlugin
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
+        
         public override bool ShutDown(PluginShutDownReason shutDownReason)
         {
             return true;
@@ -66,7 +71,7 @@ namespace SkiaPlugin
             {
                 if(GumState.Self.ProjectState.NeedsToSaveProject)
                 {
-                    GumCommands.Self.GuiCommands.ShowMessage("You must first save your project before adding Skia Standard Elements");
+                    _dialogService.ShowMessage("You must first save your project before adding Skia Standard Elements");
                 }
                 else
                 {

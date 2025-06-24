@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 using ToolsUtilities;
 
@@ -45,6 +47,7 @@ public class AddVariableViewModel : ViewModel
     private readonly ElementCommands _elementCommands;
     private readonly FileCommands _fileCommands;
     private readonly NameVerifier _nameVerifier;
+    private readonly IDialogService _dialogService;
 
     public List<string> AvailableTypes
     {
@@ -106,6 +109,7 @@ public class AddVariableViewModel : ViewModel
         _fileCommands = fileCommands;
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
@@ -157,7 +161,7 @@ public class AddVariableViewModel : ViewModel
 
         if (!isValid)
         {
-            _guiCommands.ShowMessage(whyNotValid);
+            _dialogService.ShowMessage(whyNotValid);
         }
         else
         {

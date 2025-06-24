@@ -4,12 +4,22 @@ using Gum.Plugins.BaseClasses;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Text;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 {
     [Export(typeof(PluginBase))]
     internal class MainDuplicateVariablePlugin : InternalPlugin
     {
+        private readonly IDialogService _dialogService;
+        
+        public MainDuplicateVariablePlugin()
+        {
+            _dialogService = Locator.GetRequiredService<IDialogService>();
+        }
+        
         public override void StartUp()
         {
             this.ElementSelected += HandleElementSelected;
@@ -98,7 +108,7 @@ namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 
             if(!string.IsNullOrEmpty(message))
             {
-                GumCommands.Self.GuiCommands.ShowMessage(message);
+                _dialogService.ShowMessage(message);
             }
 
         }

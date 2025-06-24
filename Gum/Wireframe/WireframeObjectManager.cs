@@ -9,6 +9,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary;
 using Gum.RenderingLibrary;
 using Gum.Plugins;
+using Gum.Services;
 using GumCommon;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -197,7 +198,7 @@ public partial class WireframeObjectManager
                 {
                     RootGue = null;
                     GumCommands.Self.GuiCommands.PrintOutput(e.ToString());
-                    GumCommands.Self.GuiCommands.ShowMessage($"Error loading {elementSave}. See output window for more details");
+                    _dialogService.ShowMessage($"Error loading {elementSave}. See output window for more details");
                 }
                 GraphicalUiElement.IsAllLayoutSuspended = false;
 

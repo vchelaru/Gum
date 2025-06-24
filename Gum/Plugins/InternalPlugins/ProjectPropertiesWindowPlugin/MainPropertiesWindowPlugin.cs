@@ -15,6 +15,7 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 
 namespace Gum.Plugins.PropertiesWindowPlugin;
@@ -40,11 +41,13 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
     private readonly FontManager _fontManager;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly IDialogService _dialogService;
 
     public MainPropertiesWindowPlugin()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     public override void StartUp()
@@ -150,7 +153,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 {
                     if (isValid == false)
                     {
-                        GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
+                        _dialogService.ShowMessage("The entered Font Range is not valid.");
                     }
                     else
                     {
@@ -169,7 +172,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                                 var message =
                                     "Attempted to delete font cache folder to re-create it with the new font range values " +
                                     $"but was unable to do so:\n\n{exception}";
-                                GumCommands.Self.GuiCommands.ShowMessage(message);
+                                _dialogService.ShowMessage(message);
                             }
 
 

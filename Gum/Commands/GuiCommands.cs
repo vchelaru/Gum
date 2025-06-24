@@ -26,7 +26,9 @@ using Microsoft.Extensions.Hosting;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Media;
+using Gum.Services.Dialogs;
 using GumCommon;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
@@ -46,6 +48,7 @@ public class GuiCommands
     private readonly RenameLogic _renameLogic;
     private readonly ElementCommands _elementCommands;
     private readonly UndoManager _undoManager;
+    private readonly IDialogService _dialogService;
 
     #endregion
 
@@ -56,6 +59,7 @@ public class GuiCommands
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -298,34 +302,6 @@ public class GuiCommands
         PluginManager.Self.FocusSearch();
     }
 
-    #region Show General Messages
-
-    public void ShowMessage(string message, string caption = "")
-    {
-        MessageBox.Show(message, caption);
-    }
-
-    public System.Windows.MessageBoxResult ShowYesNoMessageBox(string message, string caption = "Confirm", Action yesAction = null, Action noAction = null)
-    {
-        caption ??= "Confirm";
-        var result = System.Windows.MessageBoxResult.None;
-
-        result = System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.YesNo);
-
-        if (result == System.Windows.MessageBoxResult.Yes)
-        {
-            yesAction?.Invoke();
-        }
-        else if (result == System.Windows.MessageBoxResult.No)
-        {
-            noAction?.Invoke();
-        }
-
-        return result;
-    }
-
-    #endregion
-
     #region Show Add XXX Widows
     public void ShowAddVariableWindow()
     {
@@ -425,7 +401,7 @@ public class GuiCommands
 
                 if (!_nameVerifier.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
                 {
-                    GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
+                    _dialogService.ShowMessage(whyNotValid);
                 }
                 else
                 {

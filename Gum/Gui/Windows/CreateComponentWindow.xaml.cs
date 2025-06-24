@@ -28,8 +28,8 @@ namespace Gum.Gui.Windows
 
         public CreateComponentWindow()
         {
-            InitializeComponent();
             _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            InitializeComponent();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

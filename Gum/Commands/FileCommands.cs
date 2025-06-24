@@ -9,6 +9,8 @@ using Gum.Undo;
 using Gum.Plugins;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 
 namespace Gum.Commands
@@ -18,6 +20,7 @@ namespace Gum.Commands
         private LocalizationManager _localizationManager;
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
+        private readonly IDialogService _dialogService;
         
         MainWindow mainWindow;
 
@@ -25,6 +28,7 @@ namespace Gum.Commands
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
         
         public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
@@ -245,7 +249,7 @@ namespace Gum.Commands
                     catch (Exception e)
                     {
                         // This can happen if the CSV has duplicate entries
-                        GumCommands.Self.GuiCommands.ShowMessage($"Error loading CSV {file.FullPath}\n\n{e}");
+                        _dialogService.ShowMessage($"Error loading CSV {file.FullPath}\n\n{e}");
                     }
                 }
             }

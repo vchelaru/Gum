@@ -16,6 +16,7 @@ using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
+using Gum.Services.Dialogs;
 using GumCommon;
 using GumRuntime;
 
@@ -53,14 +54,13 @@ namespace Gum
                 System.Diagnostics.SourceLevels.Critical;
 #endif
             _ = GumBuilder.BuildGum();
-
+            
             InitializeComponent();
 
             CreateMainWpfPanel();
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
-
 
             // Initialize before the StateView is created...
             GumCommands.Self.Initialize(this, mainPanelControl, Locator.GetRequiredService<LocalizationManager>());

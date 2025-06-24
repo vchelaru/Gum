@@ -18,6 +18,8 @@ using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 using ToolsUtilities;
 
@@ -28,6 +30,7 @@ public class VariableReferenceLogic
 
     private readonly GuiCommands _guiCommands;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly IDialogService _dialogService;
 
     #endregion
 
@@ -35,6 +38,7 @@ public class VariableReferenceLogic
     {
         _guiCommands = guiCommands;
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _dialogService =  Locator.GetRequiredService<IDialogService>();
     }
 
     public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
@@ -209,7 +213,7 @@ public class VariableReferenceLogic
 
             message += "\n\nInvalid lines will be commented out";
 
-            GumCommands.Self.GuiCommands.ShowMessage(message, "Invalid Variable Reference");
+            _dialogService.ShowMessage(message, "Invalid Variable Reference");
         }
     }
 

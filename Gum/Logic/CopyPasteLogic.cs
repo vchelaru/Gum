@@ -8,6 +8,8 @@ using Gum.Wireframe;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 using ToolsUtilities;
 
@@ -49,6 +51,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly IDialogService _dialogService;
     
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -70,6 +73,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     #region Copy
@@ -278,7 +282,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         if(element == null)
         {
-            GumCommands.Self.GuiCommands.ShowMessage("Select a target Screen or component to paste the copied instance(s).");
+            _dialogService.ShowMessage("Select a target Screen or component to paste the copied instance(s).");
         }
         else if(topOrRecursive == TopOrRecursive.Recursive)
         {
@@ -340,7 +344,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     {
         if(targetElement is StandardElementSave)
         {
-            GumCommands.Self.GuiCommands.ShowMessage($"Cannot create an instance in {targetElement} because it is a standard element");
+            _dialogService.ShowMessage($"Cannot create an instance in {targetElement} because it is a standard element");
             return;
         }
 

@@ -12,9 +12,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.Commands;
+using Gum.Services.Dialogs;
 using Gum.Undo;
 using GumCommon;
 using ToolsUtilities;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Services;
 
@@ -36,6 +38,7 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly RenameLogic _renameLogic;
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
+    private readonly IDialogService _dialogService;
 
     public ExposeVariableService(GuiCommands guiCommands, FileCommands fileCommands)
     {
@@ -45,6 +48,7 @@ internal class ExposeVariableService : IExposeVariableService
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     public void HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
@@ -59,7 +63,7 @@ internal class ExposeVariableService : IExposeVariableService
         if(canExpose.Succeeded == false)
         {
             // show message
-            _guiCommands.ShowMessage(canExpose.Message);
+            _dialogService.ShowMessage(canExpose.Message);
             return;
         }
 
@@ -212,7 +216,7 @@ internal class ExposeVariableService : IExposeVariableService
         var response = GetIfCanUnexposeVariable(variableSave, elementSave);
         if (response.Succeeded == false)
         {
-            _guiCommands.ShowMessage(response.Message);
+            _dialogService.ShowMessage(response.Message);
             return;
         }
 
