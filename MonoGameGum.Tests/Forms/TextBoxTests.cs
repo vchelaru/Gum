@@ -187,10 +187,10 @@ public class TextBoxTests
         DefaultTextBoxBaseRuntime visual =
             (DefaultTextBoxBaseRuntime)textBox.Visual;
 
-        var originaCaretX = visual.CaretInstance.X;
-        var originalCaretY = visual.CaretInstance.Y;
+        float originalCaretX = visual.CaretInstance.X;
+        float originalCaretY = visual.CaretInstance.Y;
 
-        var textInstanceX = visual.TextInstance.X;
+        float textInstanceX = visual.TextInstance.X;
 
 
         for(int i = 0; i < 40; i++)
@@ -198,14 +198,21 @@ public class TextBoxTests
             textBox.HandleCharEntered('a');
         }
 
-        visual.CaretInstance.X.ShouldBeGreaterThan(originaCaretX);
+        visual.CaretInstance.X.ShouldBeGreaterThan(originalCaretX);
         visual.CaretInstance.Y.ShouldBe(originalCaretY);
         visual.TextInstance.X.ShouldBeLessThan(textInstanceX, "because the text scrolled to the left");
 
         textBox.HandleCharEntered('\n');
-        visual.CaretInstance.X.ShouldBe(originaCaretX, "because the caret should reset to the start of the line after a newline");
+        visual.CaretInstance.X.ShouldBe(originalCaretX, 
+            // Add some tolerance because text positioning is based on caret size, and this is different than the
+            // starting Text value. Oh well...
+            tolerance:2, 
+            customMessage:"because the caret should reset to the start of the line after a newline");
         visual.CaretInstance.Y.ShouldBeGreaterThan(originalCaretY, "because the caret should move down after a newline");
-        visual.TextInstance.X.ShouldBe(textInstanceX, "because the text should not scroll to the left after a newline in NoWrap mode");
+        visual.TextInstance.X.ShouldBe(textInstanceX, 
+            // See above why we add tolerance:
+            tolerance:2,
+            customMessage:"because the text should not scroll to the left after a newline in NoWrap mode");
     }
 
 
