@@ -658,7 +658,7 @@ public class BitmapFont : IDisposable
             var line = lines[i];
 
             // scoot over to leave room for the outline
-            currentLetterOrigin.X = mOutlineThickness;
+            currentLetterOrigin.X = mOutlineThickness * scaleX;
 
             float offsetFromAlignment = 0;
 
@@ -911,7 +911,7 @@ public class BitmapFont : IDisposable
             currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, fontScale, lineHeightMultiplier);
             destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
-            // Shift it back.
+            // Shift it back now that we have the destinationRectangle
             currentCharacterDrawPosition.X -= xOffset * fontScale;
             currentCharacterDrawPosition.X += 
                 //characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
