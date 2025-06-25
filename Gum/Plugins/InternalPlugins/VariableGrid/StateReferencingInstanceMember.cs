@@ -237,10 +237,10 @@ namespace Gum.PropertyGridHelpers
         public event Action<string> SetToDefault;
 
 
-        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, 
+        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd,
             StateSave stateSave,
             StateSaveCategory stateSaveCategory,
-            string variableName, InstanceSave instanceSave, 
+            string variableName, InstanceSave instanceSave,
             IStateContainer stateListCategoryContainer,
             UndoManager undoManager) :
             base(variableName, stateSave)
@@ -298,61 +298,39 @@ namespace Gum.PropertyGridHelpers
 
             ModifyContextMenu(instanceSave, stateListCategoryContainer, ispd);
 
-            // This could be slow since we have to check it for every variable in an object.
-            // Maybe we'll want to pass this in to the function?
-            StandardElementSave standardElement = null;
-            if (instanceSave != null)
-            {
-                standardElement = _objectFinder.GetRootStandardElementSave(instanceSave);
-            }
-            else if (stateListCategoryContainer is ElementSave elementSave)
-            {
-                standardElement = _objectFinder.GetRootStandardElementSave(elementSave);
-            }
-
-
             VariableSave standardVariable = null;
-
-            if (standardElement != null)
+            if (stateListCategoryContainer is ElementSave elementSave)
             {
-                standardVariable = standardElement.DefaultState.Variables.FirstOrDefault(item => item.Name == RootVariableName);
+                standardVariable = _objectFinder.GetRootVariable(mVariableName, elementSave);
             }
 
+            // todo - this needs to go to the standard elements manager
             if (standardVariable != null)
             {
-                var defaultStates = StandardElementsManager.Self.DefaultStates;
+                var standardElement = _objectFinder.GetContainerOf(standardVariable);
 
-                StateSave defaultState = null;
-                if (defaultStates.ContainsKey(standardElement?.Name))
+                if (standardElement != null)
                 {
-                    defaultState = defaultStates[standardElement.Name];
-                }
-                else
-                {
-                    // check plugin:
-                    defaultState = PluginManager.Self.GetDefaultStateFor(standardElement.Name);
-                }
+                    var defaultState = StandardElementsManager.Self.GetDefaultStateFor(standardElement.Name);
 
-                if (defaultState != null)
-                {
-                    var defaultStateVariable = defaultState.Variables.FirstOrDefault(item => item.Name == RootVariableName);
+                    var definingVariable = defaultState?.Variables.FirstOrDefault(item => item.Name == standardVariable.Name);
 
-                    if (defaultStateVariable != null)
+                    if (definingVariable != null)
                     {
-                        if (defaultStateVariable.PreferredDisplayer != null)
+                        if(definingVariable.PreferredDisplayer != null)
                         {
-                            this.PreferredDisplayer = defaultStateVariable.PreferredDisplayer;
+                            this.PreferredDisplayer = definingVariable.PreferredDisplayer;
                         }
-                        this.DetailText = defaultStateVariable?.DetailText;
+                        this.DetailText = definingVariable.DetailText;
 
-                        foreach (var kvp in defaultStateVariable.PropertiesToSetOnDisplayer)
+                        foreach (var kvp in definingVariable.PropertiesToSetOnDisplayer)
                         {
                             this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
                         }
+
+                        this.SortValue = definingVariable.DesiredOrder;
                     }
                 }
-
-                this.SortValue = standardVariable.DesiredOrder;
             }
 
         }
@@ -378,7 +356,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     asTextBox.KeyDown += (s, e) =>
                     {
-                        if(_hotkeyManager.GoToDefinition.IsPressed(e))
+                        if (_hotkeyManager.GoToDefinition.IsPressed(e))
                         {
                             HandleGotoDefinition(asTextBox);
                         }
@@ -469,7 +447,7 @@ namespace Gum.PropertyGridHelpers
                 });
             }
 
-            
+
             if (VariableSave != null && _deleteVariableLogic.CanDeleteVariable(this.VariableSave))
             {
                 ContextMenuEvents.Add($"Delete Variable [{VariableSave.Name}]", (sender, e) =>
@@ -503,7 +481,7 @@ namespace Gum.PropertyGridHelpers
                 var rootName = Gum.DataTypes.Variables.VariableSave.GetRootName(mVariableName);
 
                 var isVariableList = false;
-                if(instance?.ParentContainer != null)
+                if (instance?.ParentContainer != null)
                 {
                     var rootVariableList = _objectFinder.GetRootVariableList(mVariableName, instance.ParentContainer);
                     isVariableList = rootVariableList != null;
@@ -646,7 +624,7 @@ namespace Gum.PropertyGridHelpers
 
                 var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, setPropertyArgs.CommitType, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
 
-                if(response.Succeeded == false)
+                if (response.Succeeded == false)
                 {
                     setPropertyArgs.IsAssignmentCancelled = true;
                 }
@@ -714,11 +692,11 @@ namespace Gum.PropertyGridHelpers
 
         private bool CanSetValue(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
         {
-            if(this.RootVariableName == "Points")
+            if (this.RootVariableName == "Points")
             {
                 var value = setPropertyArgs.Value as List<System.Numerics.Vector2>;
 
-                if(value?.Count < 4)
+                if (value?.Count < 4)
                 {
                     return false;
                 }
@@ -866,7 +844,7 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                if(selectedElement != null)
+                if (selectedElement != null)
                 {
                     ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
                 }
@@ -939,9 +917,9 @@ namespace Gum.PropertyGridHelpers
                 var element = gumElementOrInstanceSaveAsObject as ElementSave ??
                     (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
                 response = SetVariableLogic.Self.PropertyValueChanged(
-                    name, 
-                    LastOldFullCommitValue, 
-                    gumElementOrInstanceSaveAsObject as InstanceSave, 
+                    name,
+                    LastOldFullCommitValue,
+                    gumElementOrInstanceSaveAsObject as InstanceSave,
                     element?.DefaultState,
                     refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
