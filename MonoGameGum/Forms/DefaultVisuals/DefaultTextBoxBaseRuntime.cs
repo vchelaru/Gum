@@ -14,7 +14,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public abstract class DefaultTextBoxBaseRuntime : InteractiveGue
     {
-        TextRuntime TextInstance;
+        public TextRuntime TextInstance { get; private set; }
+
+        public ColoredRectangleRuntime CaretInstance { get; private set; } 
+
         protected abstract string CategoryName { get; }
 
         public DefaultTextBoxBaseRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -37,7 +40,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.Name = "PlaceholderTextInstance";
                 var FocusedIndicator = new ColoredRectangleRuntime();
                 FocusedIndicator.Name = "FocusedIndicator";
-                var CaretInstance = new ColoredRectangleRuntime();
+                CaretInstance = new ColoredRectangleRuntime();
                 CaretInstance.Name = "CaretInstance";
 
                 this.Children.Add(Background);
@@ -244,7 +247,47 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     }
                 };
                 lineModeCategory.States.Add(multiLineState);
+
+                var multiLineNoWrapState = new StateSave()
+                {
+                    Name = "MultiNoWrap",
+                    Variables = new()
+                    {
+                        new ()
+                        {
+                            Name = "SelectionInstance.Height",
+                            Value = 20f
+                        },
+                        new ()
+                        {
+                            Name = "SelectionInstance.HeightUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.Absolute
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.Width",
+                            Value = 0f
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.WidthUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren
+                        },
+                        new ()
+                        {
+                            Name = "PlaceholderTextInstance.VerticalAlignment",
+                            Value = VerticalAlignment.Top
+                        },
+                        new ()
+                        {
+                            Name = "TextInstance.VerticalAlignment",
+                            Value = VerticalAlignment.Top
+                        }
+                    }
+                };
+                lineModeCategory.States.Add(multiLineNoWrapState);
             }
+
 
 
         }

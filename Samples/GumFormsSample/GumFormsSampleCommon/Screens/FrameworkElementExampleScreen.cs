@@ -238,6 +238,9 @@ namespace GumFormsSample.Screens
 
             var wrappedTextBox = new TextBox();
             wrappedTextBox.Width = 200;
+            
+            // Make it no wrap to still accept return but not automatically wrap
+            //wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.NoWrap;
             wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
             wrappedTextBox.AcceptsReturn = true;
             wrappedTextBox.Height = 140;
