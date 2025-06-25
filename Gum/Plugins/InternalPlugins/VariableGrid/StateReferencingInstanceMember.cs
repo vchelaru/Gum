@@ -25,6 +25,7 @@ using GumCommon;
 using ToolsUtilities;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -309,26 +310,34 @@ namespace Gum.PropertyGridHelpers
             {
                 var standardElement = _objectFinder.GetContainerOf(standardVariable);
 
-                if (standardElement != null)
+                if (standardElement != null && standardElement is StandardElementSave)
                 {
-                    var defaultState = StandardElementsManager.Self.GetDefaultStateFor(standardElement.Name);
-
-                    var definingVariable = defaultState?.Variables.FirstOrDefault(item => item.Name == standardVariable.Name);
-
-                    if (definingVariable != null)
+                    try
                     {
-                        if(definingVariable.PreferredDisplayer != null)
-                        {
-                            this.PreferredDisplayer = definingVariable.PreferredDisplayer;
-                        }
-                        this.DetailText = definingVariable.DetailText;
+                        var defaultState = StandardElementsManager.Self.GetDefaultStateFor(standardElement.Name);
 
-                        foreach (var kvp in definingVariable.PropertiesToSetOnDisplayer)
-                        {
-                            this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
-                        }
+                        var definingVariable = defaultState?.Variables.FirstOrDefault(item => item.Name == standardVariable.Name);
 
-                        this.SortValue = definingVariable.DesiredOrder;
+                        if (definingVariable != null)
+                        {
+                            if(definingVariable.PreferredDisplayer != null)
+                            {
+                                this.PreferredDisplayer = definingVariable.PreferredDisplayer;
+                            }
+                            this.DetailText = definingVariable.DetailText;
+
+                            foreach (var kvp in definingVariable.PropertiesToSetOnDisplayer)
+                            {
+                                this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+                            }
+
+                            this.SortValue = definingVariable.DesiredOrder;
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        // this could be a missing standard element save, print output but tolerate it:
+                        GumCommands.Self.GuiCommands.PrintOutput("Error getting standard element variable:\n" + e);
                     }
                 }
             }
