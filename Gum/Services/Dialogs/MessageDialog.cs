@@ -1,16 +1,31 @@
-﻿namespace Gum.Services.Dialogs;
+namespace Gum.Services.Dialogs;
 
 public enum MessageDialogResult
 {
     Canceled = -1,
     Negative = 0,
-    Affirmative = 1
+    Affirmative = 1,
 }
 
 public class MessageDialogStyle
 {
-    private MessageDialogStyle(){}
-    public static MessageDialogStyle OK { get; } = new();
-    public static MessageDialogStyle OKCancel { get; } = new();
-    public static MessageDialogStyle YesNo { get; } = new();
+    public string? AffirmativeText { get; set; }
+    public string? NegativeText { get; set; }
+
+    public static MessageDialogStyle Ok => new()
+    {
+        AffirmativeText = "Ok",
+    };
+
+    public static MessageDialogStyle OkCancel => new()
+    {
+        AffirmativeText = "Ok",
+        NegativeText = "Cancel",
+    };
+
+    public static MessageDialogStyle YesNo => new()
+    {
+        AffirmativeText = "Yes",
+        NegativeText = "No",
+    };
 }

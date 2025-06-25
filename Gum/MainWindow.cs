@@ -54,6 +54,7 @@ namespace Gum
                 System.Diagnostics.SourceLevels.Critical;
 #endif
             _ = GumBuilder.BuildGum();
+            ((MainFormWindowHandleProvider)Locator.GetRequiredService<IMainWindowHandleProvider>()).Initialize(() => Handle);
             
             InitializeComponent();
 
