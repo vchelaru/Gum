@@ -20,8 +20,13 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Install required workloads
-        run: dotnet workload install wasm-tools-net8 ios android
+      - name: Install workloads (Windows)
+        if: runner.os == 'Windows'
+        run: dotnet workload install wasm-tools-net8 ios android maui
+
+      - name: Install workloads (Linux)
+        if: runner.os == 'Linux'
+        run: dotnet workload install wasm-tools-net8
 
       # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
       # In both cases the caching slowed down the total execution time.
