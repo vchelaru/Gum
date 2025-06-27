@@ -50,19 +50,6 @@ jobs:
     - name: Pack NuGet packages
       run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs --include-symbols --include-source
     
-    # Debug: List what was created
-    - name: List packed files
-      run: |
-        echo "Contents of nupkgs directory:"
-        if (Test-Path "./nupkgs") {
-          Get-ChildItem "./nupkgs" -Recurse | ForEach-Object { echo $_.FullName }
-        } else {
-          echo "nupkgs directory does not exist"
-        }
-        echo ""
-        echo "Current directory contents:"
-        Get-ChildItem . | ForEach-Object { echo $_.Name }
-    
     # Upload artifacts for inspection (both .nupkg and .snupkg)
     - name: Upload NuGet packages as artifacts
       uses: actions/upload-artifact@v4
@@ -72,17 +59,18 @@ jobs:
           ./nupkgs/*.nupkg
           ./nupkgs/*.snupkg
     
-    # Debug: Check if API key is available (will show *** if secret exists)
-    - name: Debug API Key
-      if: github.event.inputs.publish_to_nuget == 'true'
-      run: echo "API Key length is ${{ secrets.NUGET_API_KEY != '' && 'present' || 'missing' }}"
-    
     # Publish to NuGet.org (when explicitly requested)
     - name: Publish to NuGet.org
       if: github.event.inputs.publish_to_nuget == 'true'
-      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: |
+        Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        }
     
     # Publish to GitHub Packages (when explicitly requested)
     - name: Publish to GitHub Packages
       if: github.event.inputs.publish_to_github == 'true'
-      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+      run: |
+        Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        }
