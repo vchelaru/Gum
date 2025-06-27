@@ -62,17 +62,9 @@ jobs:
     # Publish to NuGet.org (when explicitly requested)
     - name: Publish to NuGet.org
       if: github.event.inputs.publish_to_nuget == 'true'
-      run: |
-        dotnet nuget push ./nupkgs/*.nupkg `
-          --api-key ${{ secrets.NUGET_API_KEY }} `
-          --source https://api.nuget.org/v3/index.json `
-          --skip-duplicate
+      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
     
     # Publish to GitHub Packages (when explicitly requested)
     - name: Publish to GitHub Packages
       if: github.event.inputs.publish_to_github == 'true'
-      run: |
-        dotnet nuget push ./nupkgs/*.nupkg `
-          --api-key ${{ secrets.GITHUB_TOKEN }} `
-          --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json `
-          --skip-duplicate
+      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
