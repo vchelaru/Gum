@@ -41,6 +41,7 @@ jobs:
           dotnet build "Gum.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
       - name: Build AllLibraries
+        if: runner.os == 'Windows'
         run: |
           dotnet restore "AllLibraries.sln"
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
