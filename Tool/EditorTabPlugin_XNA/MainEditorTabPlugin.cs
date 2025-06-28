@@ -131,6 +131,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public override void StartUp()
