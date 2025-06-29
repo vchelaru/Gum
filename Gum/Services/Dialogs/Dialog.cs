@@ -8,7 +8,6 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-using GumCommon;
 using Xceed.Wpf.AvalonDock.Controls;
 
 namespace Gum.Services.Dialogs;

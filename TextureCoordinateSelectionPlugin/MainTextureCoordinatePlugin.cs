@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -18,7 +19,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GumCommon;
 
 namespace TextureCoordinateSelectionPlugin;
 

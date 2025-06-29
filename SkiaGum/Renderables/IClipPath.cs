@@ -5,11 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SkiaGum.Renderables
-{
-    public interface IClipPath
-    {
-        SKPath GetClipPath();
+namespace SkiaGum.Renderables;
 
-    }
+public interface IClipPath
+{
+    SKPath GetClipPath();
+
 }

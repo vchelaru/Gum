@@ -6,7 +6,6 @@ using System.ComponentModel.Composition;
 using System.Text;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 {

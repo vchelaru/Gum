@@ -1,8 +1,8 @@
-# Migrating to 2025 June Preview
+# Migrating to 2025 June 27
 
 ## Introduction
 
-This page discusses breaking changes when migrating from `2025 May 28` to `2025 June Preview` .
+This page discusses breaking changes when migrating from `2025 May 28` to `2025 June 27`.
 
 ## Default TextBox and PasswordBox States
 
@@ -25,3 +25,5 @@ var category = textBox.Visual.Categories["TextBoxCategory"];
 var state = category.States.First(item => item.Name == "Focused");
 // make modifications to the Focused state
 ```
+
+The reason for this change is because all other Forms types have a `Focused` state which is used when the control's `IsFocused` property is set to true. `TextBox` used an incorrectly-named `Selected` state, which is used by controls which can display a selected visual state (such as `ListBoxItem` ) even when they do not have focus. This change makes `TextBox` consistent with other controls such as `Button` and `CheckBox`.
