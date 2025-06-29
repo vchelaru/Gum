@@ -205,7 +205,8 @@ namespace SkiaGum.GueDeriving
 
                 this.Height = 0;
                 this.HeightUnits = DimensionUnitType.RelativeToChildren;
-
+                this.Width = 0;
+                this.WidthUnits = DimensionUnitType.RelativeToChildren;
 
                 // These values are default values matching Gum defaults. Not sure how to handle this - ultimately the Gum project
                 // could change these values, in which case these would no longer be valid. We need a way to push the default states
@@ -217,8 +218,6 @@ namespace SkiaGum.GueDeriving
                 Blue = 255;
 
                 this.Text = "Hello";
-
-                Width = 100;
             }
         }
     }
