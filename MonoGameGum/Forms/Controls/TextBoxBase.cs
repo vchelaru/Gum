@@ -592,6 +592,14 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         return index;
     }
 
+    /// <summary>
+    /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]
+    /// Data comes from the MonogameGum.Input.Keyboard.Activity() method earlier in the call stack, which gets the data from Monogame's Keyboard.GetState()
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="isShiftDown"></param>
+    /// <param name="isAltDown"></param>
+    /// <param name="isCtrlDown"></param>
     public void HandleKeyDown(Microsoft.Xna.Framework.Input.Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
         if (isFocused)
@@ -664,7 +672,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     }
                     break;
                 case Keys.Back:
-                    if(!IsReadOnly)
+                    if (!IsReadOnly)
                     {
                         HandleBackspace(isCtrlDown);
                     }
@@ -766,8 +774,6 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             var keyEventArg = new KeyEventArgs();
             keyEventArg.Key = key;
             KeyDown?.Invoke(this, keyEventArg);
-
-
         }
     }
 
@@ -940,6 +946,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         IsFocused = false;
     }
 
+    /// <summary>
+    /// Performs key actions based on the keyboard input gathered during Keyboard.cs's Activity() method
+    /// </summary>
+    /// <param name="keyboard">State of keyboard from TextInput and Keyboard.GetKeys</param>
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
 #if !FRB
@@ -958,11 +968,14 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         var asMonoGameKeyboard = (IInputReceiverKeyboardMonoGame)keyboard;
 
+        // Handle all the special situations only based on Keyboard.GetState
+        //   Situations: LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A
         foreach (var key in asMonoGameKeyboard.KeysTyped)
         {
             HandleKeyDown(key, shift, alt, ctrl);
         }
 
+        // String of letters typed and captured via the TextInput() Monogame event
         var stringTyped = keyboard.GetStringTyped();
 
         if (stringTyped != null)

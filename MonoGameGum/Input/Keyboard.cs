@@ -272,7 +272,13 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 
     }
 
-
+    /// <summary>
+    /// Gathers all the keyboard input since the last frame using Monogame's TextInput and Keyboard.GetKeys()
+    /// Since Keyboard.GetKeys() doesn't handle repeate rate, attempts to handle that also by ignorning keys 
+    /// pressed too fast.
+    /// </summary>
+    /// <param name="currentTime"></param>
+    /// <param name="game"></param>
     public void Activity(double currentTime, Game? game = null)
     {
 #if ANDROID
@@ -285,6 +291,8 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         {
             try
             {
+                // Only happens once per run of the application/game
+                // Probably should't attempt to do this on platforms that don't support it?
                 TrySubscribeToGameWindowInput(game);
             }
             catch
@@ -292,6 +300,9 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 
             }
         }
+
+        // Check for any new keys found by the TextInput event and store them in processedStringFromWindow 
+        // which we will later handle in TextBox.HandleCharEntered() via Property GetStringTyped()
         if (windowTextInputBuffer != null)
         {
             lock(windowTextInputBuffer)
@@ -301,8 +312,23 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             }
         }
 
+        // Gather all the keys from Keyboard.GetState()
         keyboardStateProcessor.Update();
 
+        // Process any fresh key presses from Keyboard.GetState()
+        HandleFreshKeyPress(currentTime);
+
+        // Process any held down keys from Keyboard.GetState()
+        HandleKeyStillDown(currentTime);
+    }
+
+    // Handles initial Key press
+    //  Reset all possible ascii keys (0->NumberOfKeys [255])
+    //  Then look at the current state of each key
+    //  Set that key's pressed time
+    //  so we can manually handle initial repeat rate and repeat interval later
+    private void HandleFreshKeyPress(double currentTime)
+    {
         for (int i = 0; i < NumberOfKeys; i++)
         {
             mKeysIgnoredForThisFrame[i] = false;
@@ -313,29 +339,51 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
                 mKeysTyped[i] = true;
                 mLastTimeKeyTyped[i] = currentTime;
                 mLastTypedFromPush[i] = true;
+
+                HandleNumPadEnter(i);
             }
-
-
         }
+    }
 
+    // Handles key already pressed, remains down
+    //  Go over each key to see if it is currently down
+    //  If it is, validate it wasn't pressed too recently
+    //  or validate it's been enough time since the last keydown event
+    //  so we can record another key being pressed
+    private void HandleKeyStillDown(double currentTime)
+    {
         const double timeAfterInitialPushForRepeat = .5;
         const double timeBetweenRepeats = .07;
 
         for (int i = 0; i < NumberOfKeys; i++)
         {
-
-
             if (KeyDown((Keys)(i)))
             {
-                if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > timeAfterInitialPushForRepeat) ||
-                    (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > timeBetweenRepeats)
+                if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > timeAfterInitialPushForRepeat) ||   // Fresh key press, with long enough initial press delay
+                    (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > timeBetweenRepeats)        // held key, with long enough repeat rate between
                   )
                 {
                     mLastTypedFromPush[i] = false;
                     mLastTimeKeyTyped[i] = currentTime;
                     mKeysTyped[i] = true;
+
+                    HandleNumPadEnter(i);
                 }
             }
+        }
+    }
+
+    // The ENTER key (char 13 \r) is normally handled by TextInput
+    // However, when the Number Pad ENTER key is pressed, TextInput does not receive it.
+    // It is however detected during during Keyboard.GetKeys.
+    // But, we don't want the normal ENTER key to fire twice, so we check that first.
+    private void HandleNumPadEnter(int key)
+    {
+        if ((key == 13 || key == 10)
+            && !processedStringFromWindow.Contains('\n') 
+            && !processedStringFromWindow.Contains('\r'))
+        {
+            processedStringFromWindow += '\n';
         }
     }
 
