@@ -22,7 +22,6 @@ using Gum.Commands;
 using Gum.Graphics;
 using Gum.ToolCommands;
 using Gum.Undo;
-using GumCommon;
 
 namespace Gum.PropertyGridHelpers
 {
