@@ -19,7 +19,6 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using GumCommon;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
@@ -31,6 +30,7 @@ public class EditCommands
     private NameVerifier _nameVerifier;
     private RenameLogic _renameLogic;
     private UndoManager _undoManager;
+    private GuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
 
     public EditCommands()
@@ -40,7 +40,6 @@ public class EditCommands
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
-
     }
     #region State
 
@@ -160,6 +159,7 @@ public class EditCommands
             }
 
             MessageBox.Show(message);
+            return;
         }
 
         //////////////////End Early Out /////////////////////
@@ -167,7 +167,7 @@ public class EditCommands
 
 
 
-            oldCategory.States.Remove(stateToMove);
+        oldCategory.States.Remove(stateToMove);
         newCategory.States.Add(stateToMove);
 
         GumCommands.Self.GuiCommands.RefreshStateTreeView();
