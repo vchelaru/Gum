@@ -315,11 +315,20 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         // Gather all the keys from Keyboard.GetState()
         keyboardStateProcessor.Update();
 
-        // Handles initial Key press
-        //  Reset all possible ascii keys (0->NumberOfKeys [255])
-        //  Then look at the current state of each key
-        //  Set that key's pressed time
-        //  so we can manually handle initial repeat rate and repeat interval later
+        // Process any fresh key presses from Keyboard.GetState()
+        HandleFreshKeyPress(currentTime);
+
+        // Process any held down keys from Keyboard.GetState()
+        HandleKeyStillDown(currentTime);
+    }
+
+    // Handles initial Key press
+    //  Reset all possible ascii keys (0->NumberOfKeys [255])
+    //  Then look at the current state of each key
+    //  Set that key's pressed time
+    //  so we can manually handle initial repeat rate and repeat interval later
+    private void HandleFreshKeyPress(double currentTime)
+    {
         for (int i = 0; i < NumberOfKeys; i++)
         {
             mKeysIgnoredForThisFrame[i] = false;
@@ -334,21 +343,24 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
                 HandleNumPadEnter(i);
             }
         }
+    }
 
+    // Handles key already pressed, remains down
+    //  Go over each key to see if it is currently down
+    //  If it is, validate it wasn't pressed too recently
+    //  or validate it's been enough time since the last keydown event
+    //  so we can record another key being pressed
+    private void HandleKeyStillDown(double currentTime)
+    {
         const double timeAfterInitialPushForRepeat = .5;
         const double timeBetweenRepeats = .07;
 
-        // Handles key already pressed, remains down
-        //  Go over each key to see if it is currently down
-        //  If it is, validate it wasn't pressed too recently
-        //  or validate it's been enough time since the last keydown event
-        //  so we can record another key being pressed
         for (int i = 0; i < NumberOfKeys; i++)
         {
             if (KeyDown((Keys)(i)))
             {
-                if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > timeAfterInitialPushForRepeat)  ||   // Fresh key press, with long enough initial press delay
-                    (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > timeBetweenRepeats)         // held key, with long enough repeat rate between
+                if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > timeAfterInitialPushForRepeat) ||   // Fresh key press, with long enough initial press delay
+                    (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > timeBetweenRepeats)        // held key, with long enough repeat rate between
                   )
                 {
                     mLastTypedFromPush[i] = false;
