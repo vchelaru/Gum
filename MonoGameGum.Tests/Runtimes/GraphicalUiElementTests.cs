@@ -214,6 +214,36 @@ public class GraphicalUiElementTests
 
     #endregion
 
+    #region Layout-related
+
+    [Fact]
+    public void XValues_ShouldUpdateLayoutImmediately()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 1000;
+        parent.Height = 1000;
+
+        ContainerRuntime child = new();
+        parent.AddChild(child);
+
+        child.AbsoluteX.ShouldBe(0);
+
+        child.X = 80;
+        child.AbsoluteX.ShouldBe(80);
+
+        child.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        child.AbsoluteX.ShouldBe(800, 
+            "because changing XUnits should immediately update parent");
+
+        parent.Width = 500;
+        child.AbsoluteX.ShouldBe(400,
+            "because changing the parent width should immediately update the child");
+    }
+
+
+
+    #endregion
+
     [Fact]
     public void FillListWithChildrenByType_ShouldFillRecursively()
     {

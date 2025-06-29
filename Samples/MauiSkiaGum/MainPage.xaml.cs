@@ -21,20 +21,28 @@ namespace MauiSkiaGum
             MainStack = new ContainerRuntime();
             SkiaGumCanvasView.AddChild(MainStack);
             MainStack.Dock(Gum.Wireframe.Dock.Fill);
-            MainStack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-            MainStack.StackSpacing = 4;
+            MainStack.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            MainStack.StackSpacing = 16;
 
             var roundedRectangle = new RoundedRectangleRuntime();
             MainStack.Children.Add(roundedRectangle);
             roundedRectangle.Width = 100;
             roundedRectangle.Height = 100;
-            // set a default corner radius:
-            roundedRectangle.CornerRadius = 20;
-            // overwrite some:
-            roundedRectangle.CustomRadiusTopLeft = 0;
-            roundedRectangle.CustomRadiusTopRight = 40;
-            roundedRectangle.CustomRadiusBottomLeft = 10;
             roundedRectangle.Color = SKColors.Blue;
+
+            // This is the default radius:
+            roundedRectangle.CornerRadius = 20;
+
+            // But we can overwite each one by setting a value:
+            roundedRectangle.CustomRadiusTopRight = 40;
+            roundedRectangle.CustomRadiusBottomLeft = 0;
+            roundedRectangle.CustomRadiusBottomRight = 0;
+
+            // undo assignments by setting the value back to null:
+            roundedRectangle.CustomRadiusTopLeft = 50;
+            roundedRectangle.CustomRadiusTopLeft = null;
+
+
 
             var text = new TextRuntime();
             MainStack.AddChild(text);
