@@ -8,6 +8,7 @@ namespace SkiaGum.GueDeriving
 {
     public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
     {
+        #region Contained Renderable
         protected override RenderableBase ContainedRenderable => ContainedRoundedRectangle;
 
         RoundedRectangle mContainedRoundedRectangle;
@@ -23,11 +24,19 @@ namespace SkiaGum.GueDeriving
             }
         }
 
+        #endregion
+
         public float CornerRadius
         {
             get;
             set;
         }
+
+
+        public float? CustomRadiusTopLeft { get; set; } = null;
+        public float? CustomRadiusTopRight { get; set; } = null;
+        public float? CustomRadiusBottomRight { get; set; } = null;
+        public float? CustomRadiusBottomLeft { get; set; } = null;
 
         public DimensionUnitType CornerRadiusUnits
         {
@@ -219,6 +228,11 @@ namespace SkiaGum.GueDeriving
             {
                 var camera = this.EffectiveManagers.Renderer.Camera;
                 var cornerRadius = CornerRadius;
+                var topLeft = CustomRadiusTopLeft;
+                var topRight = CustomRadiusTopRight;
+                var bottomLeft = CustomRadiusBottomLeft;
+                var bottomRight = CustomRadiusBottomRight;
+
                 switch (CornerRadiusUnits)
                 {
                     case DimensionUnitType.Absolute:
@@ -226,9 +240,19 @@ namespace SkiaGum.GueDeriving
                         break;
                     case DimensionUnitType.ScreenPixel:
                         cornerRadius /= camera.Zoom;
+
+                        topLeft /= camera.Zoom;
+                        topRight /= camera.Zoom;
+                        bottomLeft /= camera.Zoom;
+                        bottomRight /= camera.Zoom;
+
                         break;
                 }
                 ContainedRoundedRectangle.CornerRadius = cornerRadius;
+                ContainedRoundedRectangle.CustomRadiusTopLeft = topLeft;
+                ContainedRoundedRectangle.CustomRadiusTopRight = topRight;
+                ContainedRoundedRectangle.CustomRadiusBottomLeft = bottomLeft;
+                ContainedRoundedRectangle.CustomRadiusBottomRight = bottomRight;
             }
             base.PreRender();
         }
