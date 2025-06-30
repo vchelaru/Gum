@@ -9,5 +9,5 @@
              d:DataContext="{d:DesignInstance Type={x:Type local:MessageDialogViewModel}, IsDesignTimeCreatable=False}"
              local:Dialog.DialogTitle="{Binding Title}"
              MaxWidth="400">
-    <TextBlock Text="{Binding Message}" />
+    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
 </UserControl>
