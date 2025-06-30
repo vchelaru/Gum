@@ -243,8 +243,7 @@ public class CodeGenerator
 
     #region Using Statements
 
-
-    private static void GenerateUsingStatements(CodeOutputElementSettings elementSettings,
+    private void GenerateUsingStatements(CodeOutputElementSettings elementSettings,
         CodeGenerationContext context)
     {
 
@@ -252,17 +251,18 @@ public class CodeGenerator
         // https://github.com/vchelaru/Gum/issues/598
         HashSet<string> neededUsings = new HashSet<string>();
         neededUsings.Add("GumRuntime");
-        context.StringBuilder.AppendLine($"using GumRuntime;");
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+            context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
-            context.StringBuilder.AppendLine("using MonoGameGum;");
-            context.StringBuilder.AppendLine("using MonoGameGum.GueDeriving;");
+            neededUsings.Add("MonoGameGum");
+            neededUsings.Add("MonoGameGum.GueDeriving");
         }
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
         {
-            context.StringBuilder.AppendLine("using MonoGameGum;");
-            context.StringBuilder.AppendLine("using MonoGameGum.GueDeriving;");
+            // https://github.com/vchelaru/Gum/issues/895
+            neededUsings.Add("SkiaGum.GueDeriving");
         }
 
         foreach (var instance in context.Element.Instances)
@@ -278,10 +278,15 @@ public class CodeGenerator
                 if (!string.IsNullOrEmpty(elementNamespace) && !neededUsings.Contains(elementNamespace))
                 {
                     neededUsings.Add(elementNamespace);
-                    context.StringBuilder.AppendLine($"using {elementNamespace};");
                 }
             }
         }
+
+        foreach(var neededUsing in neededUsings)
+        {
+            context.StringBuilder.AppendLine($"using {neededUsing};");
+        }
+
 
         // The regex's here fix this bug:
         // https://github.com/vchelaru/Gum/issues/242
