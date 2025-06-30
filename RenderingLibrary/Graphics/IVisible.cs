@@ -1,21 +1,20 @@
-﻿namespace RenderingLibrary.Graphics
+﻿namespace RenderingLibrary.Graphics;
+
+public interface IVisible
 {
-    public interface IVisible
+    bool Visible
     {
-        bool Visible
-        {
-            get;
-            set;
-        }
+        get;
+        set;
+    }
 
-        bool AbsoluteVisible
-        {
-            get;
-        }
+    bool AbsoluteVisible
+    {
+        get;
+    }
 
-        IVisible Parent
-        {
-            get;
-        }
+    IVisible Parent
+    {
+        get;
     }
 }

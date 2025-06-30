@@ -22,15 +22,22 @@ public class ColorPickerLogic
     private readonly IExposeVariableService _exposeVariableService;
     private readonly UndoManager _undoManager;
     private readonly GuiCommands _guiCommands;
-    public ColorPickerLogic()
+    private readonly ObjectFinder _objectFinder;
+    private readonly SetVariableLogic _setVariableLogic;
+
+    public ColorPickerLogic(ISelectedState selectedState,
+        IExposeVariableService exposeVariableService,
+        UndoManager undoManager,
+        GuiCommands guiCommands,
+        ObjectFinder objectFinder,
+        SetVariableLogic setVariableLogic)
     {
-        _selectedState =
-            Locator.GetRequiredService<ISelectedState>();
-        _exposeVariableService =
-            Locator.GetRequiredService<IExposeVariableService>();
-        _undoManager =
-            Locator.GetRequiredService<UndoManager>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _selectedState = selectedState;
+        _exposeVariableService = exposeVariableService;
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
+        _objectFinder = objectFinder;
+        _setVariableLogic = setVariableLogic;
     }
 
     public void UpdateColorCategory(List<MemberCategory> categories, ElementSave element, InstanceSave instance)
@@ -46,11 +53,11 @@ public class ColorPickerLogic
                     VariableSave rootVariable = null;
                     if (instance != null)
                     {
-                        rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, instance);
+                        rootVariable = _objectFinder.GetRootVariable(variable.Name, instance);
                     }
                     else
                     {
-                        rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, element);
+                        rootVariable = _objectFinder.GetRootVariable(variable.Name, element);
                     }
 
                     if (rootVariable?.Name == "Red")
@@ -63,7 +70,7 @@ public class ColorPickerLogic
         }
     }
 
-    private void AddColorVariable(ElementSave element, InstanceSave instance, MemberCategory category, InstanceMember? variable)
+    private void AddColorVariable(ElementSave element, InstanceSave? instance, MemberCategory category, InstanceMember? variable)
     {
         //var indexOfRed = variable.Name.IndexOf("Red");
         //var before = variable.Name.Substring(0, indexOfRed);
@@ -178,7 +185,7 @@ public class ColorPickerLogic
 
             if(shouldPushValueChanged)
             {
-                SetVariableLogic.Self.PropertyValueChanged(
+                _setVariableLogic.PropertyValueChanged(
                     variableSave.GetRootName(),
                     oldValue,
                     _selectedState.SelectedInstance, 
@@ -216,17 +223,77 @@ public class ColorPickerLogic
     {
         // expose 3 variables: Red, Green, and Blue
         var instance = _selectedState.SelectedInstance;
+        var element = _selectedState.SelectedElement;
 
-        _exposeVariableService.HandleExposeVariableClick(
+        ////////////////////////Early Out////////////////////////
+
+        if(instance == null || element == null)
+        {
+            return;
+        }
+
+        //////////////////////End Early Out/////////////////////
+
+        using var undoLock = _undoManager.RequestLock();
+
+        List<VariableSave> toRevert = new ();
+
+        var redResponse = _exposeVariableService.HandleExposeVariableClick(
             instance, "Red");
-        _exposeVariableService.HandleExposeVariableClick(
-            instance, "Green");
-        _exposeVariableService.HandleExposeVariableClick(
-            instance, "Blue");
+        bool shouldRevert = false;
+
+        if(redResponse.DidAttempt && redResponse.Succeeded == false)
+        {
+            shouldRevert = true;
+        }
+        if(redResponse.Data != null)
+        {
+            toRevert.Add(redResponse.Data);
+        }
+
+        if(!shouldRevert)
+        {
+            var greenResponse = _exposeVariableService.HandleExposeVariableClick(
+                instance, "Green");
+
+            if(greenResponse.DidAttempt && greenResponse.Succeeded == false)
+            {
+                shouldRevert = true;
+            }
+            if (greenResponse.Data != null)
+            {
+                toRevert.Add(greenResponse.Data);
+            }
+        }
+
+
+        if(!shouldRevert)
+        {
+            var blueResponse = _exposeVariableService.HandleExposeVariableClick(
+                instance, "Blue");
+
+            if(blueResponse.DidAttempt && blueResponse.Succeeded == false)
+            {
+                shouldRevert = true;
+            }
+
+            if(blueResponse.Data != null)
+            {
+                toRevert.Add(blueResponse.Data);
+            }
+        }
+
+        if(shouldRevert)
+        {
+            foreach(var item in toRevert)
+            {
+                _exposeVariableService.HandleUnexposeVariableClick(item, element);
+            }
+        }
     }
 
 
-    private static void TryGetGreenBlueVariables(ElementSave element, InstanceSave instance, MemberCategory category, InstanceMember? variable, out string beforeRed, out string afterRed, out InstanceMember greenVariable, out InstanceMember blueVariable)
+    private void TryGetGreenBlueVariables(ElementSave element, InstanceSave? instance, MemberCategory category, InstanceMember? variable, out string beforeRed, out string afterRed, out InstanceMember greenVariable, out InstanceMember blueVariable)
     {
         List<InstanceMember> greenVariables = new List<InstanceMember>();
         List<InstanceMember> blueVariables = new List<InstanceMember>();
@@ -235,12 +302,12 @@ public class ColorPickerLogic
             greenVariables.AddRange(category.Members.Where(item =>
             {
                 return
-                    ObjectFinder.Self.GetRootVariable(item.Name, instance)?.Name == "Green";
+                    _objectFinder.GetRootVariable(item.Name, instance)?.Name == "Green";
             }));
             blueVariables.AddRange(category.Members.Where(item =>
             {
                 return
-                    ObjectFinder.Self.GetRootVariable(item.Name, instance)?.Name == "Blue";
+                    _objectFinder.GetRootVariable(item.Name, instance)?.Name == "Blue";
             }));
         }
         else
@@ -248,12 +315,12 @@ public class ColorPickerLogic
             greenVariables.AddRange(category.Members.Where(item =>
             {
                 return
-                    ObjectFinder.Self.GetRootVariable(item.Name, element)?.Name == "Green";
+                    _objectFinder.GetRootVariable(item.Name, element)?.Name == "Green";
             }));
             blueVariables.AddRange(category.Members.Where(item =>
             {
                 return
-                    ObjectFinder.Self.GetRootVariable(item.Name, element)?.Name == "Blue";
+                    _objectFinder.GetRootVariable(item.Name, element)?.Name == "Blue";
             }));
         }
 
@@ -381,9 +448,9 @@ public class ColorPickerLogic
 
         var shouldSave = args.CommitType == SetPropertyCommitType.Full;
 
-        SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)valueBeforeSet.R, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
-        SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)valueBeforeSet.G, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
-        SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)valueBeforeSet.B, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+        _setVariableLogic.PropertyValueChanged(unqualifiedRed, (int)valueBeforeSet.R, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+        _setVariableLogic.PropertyValueChanged(unqualifiedGreen, (int)valueBeforeSet.G, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+        _setVariableLogic.PropertyValueChanged(unqualifiedBlue, (int)valueBeforeSet.B, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
 
         if (args.CommitType == SetPropertyCommitType.Full)
         {

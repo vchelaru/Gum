@@ -21,9 +21,9 @@ namespace Gum.Services;
 
 #region IExposeVariableService Interface
 
-internal interface IExposeVariableService
+public interface IExposeVariableService
 {
-    void HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName);
+    OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName);
     void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave);
 }
 
@@ -50,7 +50,7 @@ internal class ExposeVariableService : IExposeVariableService
         _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
-    public void HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
+    public OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
     {
         // find the variable if it exists:
         var parentElement = instanceSave.ParentContainer;
@@ -63,7 +63,7 @@ internal class ExposeVariableService : IExposeVariableService
         {
             // show message
             _dialogService.ShowMessage(canExpose.Message);
-            return;
+            return OptionallyAttemptedGeneralResponse<VariableSave>.SuccessfulWithoutAttempt;
         }
 
         var tiw = new TextInputWindow();
@@ -77,12 +77,18 @@ internal class ExposeVariableService : IExposeVariableService
 
         DialogResult result = tiw.ShowDialog();
 
+        var toReturn = new OptionallyAttemptedGeneralResponse<VariableSave>();
+        toReturn.DidAttempt = true;
+        toReturn.Succeeded = false;
+
         if (result == DialogResult.OK)
         {
             string whyNot;
             if (!_nameVerifier.IsVariableNameValid(tiw.Result, _selectedState.SelectedElement, variableSave, out whyNot))
             {
+                toReturn.Message = whyNot;
                 MessageBox.Show(whyNot);
+
             }
             else
             {
@@ -138,8 +144,11 @@ internal class ExposeVariableService : IExposeVariableService
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
                 GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                toReturn.Data = variableSave;
+                toReturn.Succeeded = true;
             }
         }
+        return toReturn;
     }
 
     private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
