@@ -36,6 +36,15 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 
     char[] mKeyToChar;
 
+    /// <summary>
+    /// Delay that happens after initial keypress, before the key is repeated.
+    /// </summary>
+    public TimeSpan RepeatDelay { get; set; } = TimeSpan.FromMilliseconds(500);
+    /// <summary>
+    /// Time to wait before repeating the character (letter, number, symbol) that is held down
+    /// </summary>
+    public TimeSpan RepeatRate { get; set; } = TimeSpan.FromMilliseconds(70);
+
 
     public bool IsShiftDown => KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift);
 
@@ -352,15 +361,13 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     //  so we can record another key being pressed
     private void HandleKeyStillDown(double currentTime)
     {
-        const double timeAfterInitialPushForRepeat = .5;
-        const double timeBetweenRepeats = .07;
 
         for (int i = 0; i < NumberOfKeys; i++)
         {
             if (KeyDown((Keys)(i)))
             {
-                if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > timeAfterInitialPushForRepeat) ||   // Fresh key press, with long enough initial press delay
-                    (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > timeBetweenRepeats)        // held key, with long enough repeat rate between
+                if ((mLastTypedFromPush[i] && currentTime - mLastTimeKeyTyped[i] > RepeatDelay.TotalSeconds) ||      // Fresh key press, with long enough initial press delay
+                    (mLastTypedFromPush[i] == false && currentTime - mLastTimeKeyTyped[i] > RepeatRate.TotalSeconds) // held key, with long enough repeat rate between
                   )
                 {
                     mLastTypedFromPush[i] = false;
