@@ -89,4 +89,19 @@
 
 
     }
+
+    public class OptionallyAttemptedGeneralResponse<T> : OptionallyAttemptedGeneralResponse
+    {
+        public static new OptionallyAttemptedGeneralResponse<T> SuccessfulWithoutAttempt =>
+            new OptionallyAttemptedGeneralResponse<T> { Succeeded = true, DidAttempt = false };
+
+        public static new OptionallyAttemptedGeneralResponse<T> UnsuccessfulWithoutAttempt =>
+            new OptionallyAttemptedGeneralResponse<T> { Succeeded = false, DidAttempt = false };
+
+        public static new OptionallyAttemptedGeneralResponse<T> SuccessfulAttempt =>
+            new OptionallyAttemptedGeneralResponse<T> { Succeeded = true, DidAttempt = true };
+
+        public T? Data { get; set; }
+
+    }
 }
