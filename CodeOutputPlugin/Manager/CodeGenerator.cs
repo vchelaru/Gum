@@ -4494,7 +4494,8 @@ public class CodeGenerator
         var shouldInclude =
                                 item.Value != null &&
                                 item.SetsValue &&
-                                item.SourceObject == instance?.Name;
+                                item.SourceObject == instance?.Name &&
+                                item.GetRootName() != "ContainedType";
 
         if (shouldInclude)
         {
