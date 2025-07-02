@@ -756,7 +756,9 @@ public class BitmapFont : IDisposable
                     if (isFreeFloating)
                     {
                         var scale = new Vector2(scaleX, scaleY);
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, 
+                            color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
                     else
                     {
@@ -766,7 +768,9 @@ public class BitmapFont : IDisposable
 
                         var position = new Vector2(destRect.X, destRect.Y);
 
-                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, 
+                            new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
 
                     numberOfLettersRendered++;

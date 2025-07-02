@@ -401,7 +401,8 @@ public class SpriteRenderer
         float depth, 
         object objectRequestingChange, 
         Renderer renderer = null, 
-        bool offsetPixel = true)
+        bool offsetPixel = true,
+        DimensionSnapping dimensionSnapping = DimensionSnapping.SideSnapping)
     {
 #if DEBUG
         if(float.IsPositiveInfinity(scale.X))
@@ -430,13 +431,13 @@ public class SpriteRenderer
         // don't attempt to do adjustments unless the scale is integer scale
         var isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(CurrentZoom) - CurrentZoom) < .01f;
 
-        if(!isIntegerScale && scale.X == scale.Y)
+        if (!isIntegerScale && scale.X == scale.Y)
         {
             var zoomScale = CurrentZoom * scale.X;
             isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(zoomScale) - zoomScale) < .01f;
         }
 
-        if(radiansFromPerfectRotation < errorToTolerate && isIntegerScale && offsetPixel)
+        if (radiansFromPerfectRotation < errorToTolerate && isIntegerScale && offsetPixel)
         {
             var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
             var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
@@ -492,11 +493,25 @@ public class SpriteRenderer
                 }
 
                 // See above where float x and y are rounded for information on why we do this:
-                float worldRightRounded = MathFunctions.RoundToInt(worldRight * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
-                float worldBottomRounded = MathFunctions.RoundToInt(worldBottom * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+                float worldRightRounded;
+                float worldBottomRounded;
+                float roundedWidth;
+                float roundedHeight;
 
-                var roundedWidth = worldRightRounded - x;
-                var roundedHeight = worldBottomRounded - y;
+                if (dimensionSnapping == DimensionSnapping.SideSnapping)
+                {
+                    worldRightRounded = MathFunctions.RoundToInt(worldRight * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
+                    worldBottomRounded = MathFunctions.RoundToInt(worldBottom * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+                    
+                    roundedWidth = worldRightRounded - x;
+                    roundedHeight = worldBottomRounded - y;
+                }
+                else // size snapping
+                {
+                    roundedWidth = MathFunctions.RoundToInt(worldWidth * CurrentZoom) / CurrentZoom;
+                    roundedHeight = MathFunctions.RoundToInt(worldHeight * CurrentZoom) / CurrentZoom;
+                }
+
 
                 if(flipVerticalHorizontal)
                 {
