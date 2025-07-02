@@ -743,14 +743,22 @@ public class BitmapFont : IDisposable
                     }
 #endif
 
-                    if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
+                    var isFreeFloating = effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                         // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotation != 0 ||
+                        rotation != 0;
+
+                    if(!isFreeFloating)
+                    {
                         // If scaled up/down, don't use free floating
-                        scaleX != 1)
+                        isFreeFloating = scaleX != 1;
+                    }
+
+                    if (isFreeFloating)
                     {
                         var scale = new Vector2(scaleX, scaleY);
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, 
+                            color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
                     else
                     {
@@ -760,7 +768,9 @@ public class BitmapFont : IDisposable
 
                         var position = new Vector2(destRect.X, destRect.Y);
 
-                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, 
+                            new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
 
                     numberOfLettersRendered++;
