@@ -21,6 +21,8 @@ public class ButtonVisual : InteractiveGue
 
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
+    public Gum.DataTypes.Variables.StateSaveCategory ButtonCategory { get;  set; }
+
 
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -91,9 +93,9 @@ public class ButtonVisual : InteractiveGue
             FocusedIndicator.Name = "FocusedIndicator";
             this.Children.Add(FocusedIndicator);
 
-            var buttonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            buttonCategory.Name = "ButtonCategory";
-            this.AddCategory(buttonCategory);
+            ButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            ButtonCategory.Name = "ButtonCategory";
+            this.AddCategory(ButtonCategory);
 
             StateSave currentState;
 
@@ -101,7 +103,7 @@ public class ButtonVisual : InteractiveGue
             {
                 var state = new StateSave();
                 state.Name = name;
-                buttonCategory.States.Add(state);
+                ButtonCategory.States.Add(state);
                 currentState = state;
             }
 
