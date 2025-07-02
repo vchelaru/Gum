@@ -743,11 +743,17 @@ public class BitmapFont : IDisposable
                     }
 #endif
 
-                    if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
+                    var isFreeFloating = effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                         // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotation != 0 ||
+                        rotation != 0;
+
+                    if(!isFreeFloating)
+                    {
                         // If scaled up/down, don't use free floating
-                        scaleX != 1)
+                        isFreeFloating = scaleX != 1;
+                    }
+
+                    if (isFreeFloating)
                     {
                         var scale = new Vector2(scaleX, scaleY);
                         spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
