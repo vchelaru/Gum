@@ -141,8 +141,7 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="..\**\obj\**\*.g.cs" />
-    <Compile Remove="..\**\obj\**\*.AssemblyAttributes.cs" />
+    <Compile Remove="..\**\obj\**\*.*" />
   </ItemGroup>
 
 </Project>
