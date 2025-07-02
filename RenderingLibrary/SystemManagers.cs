@@ -254,6 +254,9 @@ namespace RenderingLibrary
                 LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic");
                 LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic_Bold");
 
+                var uiSpriteSheet = LoadEmberddedTexture2d(graphicsDevice, "UISpriteSheet.png");
+                Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{AssemblyPrefix}.UISpriteSheet.png", uiSpriteSheet);
+
                 GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
                 GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
                 GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
@@ -283,7 +286,7 @@ namespace RenderingLibrary
             }
         }
 
-        public string AssemblyPrefix =>
+        public static string AssemblyPrefix =>
 #if KNI
             "KniGum";
 #elif FNA
@@ -292,24 +295,45 @@ namespace RenderingLibrary
             "MonoGameGum.Content";
 #endif
 
+        /// <summary>
+        /// Loads a font and associated PNG file.  Files are embedded and stored with names like:
+        ///     {AssemblyPrefix}.{filename}.{extension}
+        ///     KniGum.Font18Arial_0.png
+        ///     FnaGum.Font18Arial_0.png
+        ///     MonoGameGum.Content.Font18Arial_0.png
+        /// </summary>
+        /// <param name="graphicsDevice"></param>
+        /// <param name="fontName">The filename without the extension</param>
+        /// <returns></returns>
         private BitmapFont LoadEmbeddedFont(GraphicsDevice graphicsDevice, string fontName)
         {
             var assembly = typeof(SystemManagers).Assembly;
 
-            var prefix = AssemblyPrefix;
+            var resourceName = $"{AssemblyPrefix}.{fontName}.fnt";
 
-            var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, $"{prefix}.{fontName}.fnt");
-            using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{prefix}.{fontName}_0.png");
-            var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
+            var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, resourceName);
+            var defaultFontTexture = LoadEmberddedTexture2d(graphicsDevice, $"{fontName}_0.png");
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
-            var resourceName =
-                $"EmbeddedResource.{prefix}.{fontName}.fnt";
-
             // qualify for Android:
-            Content.LoaderManager.Self.AddDisposable(resourceName, bitmapFont);
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont);
 
             return bitmapFont;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="graphicsDevice"></param>
+        /// <param name="embeddedTexture2dName"></param>
+        /// <returns></returns>
+        private Texture2D LoadEmberddedTexture2d(GraphicsDevice graphicsDevice, string embeddedTexture2dName)
+        {
+            var assembly = typeof(SystemManagers).Assembly;
+
+            using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{AssemblyPrefix}.{embeddedTexture2dName}");
+
+            return Texture2D.FromStream(graphicsDevice, stream);
         }
 
 #if USE_GUMCOMMON

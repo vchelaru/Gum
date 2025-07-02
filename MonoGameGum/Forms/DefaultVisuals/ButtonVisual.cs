@@ -1,0 +1,164 @@
+﻿using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
+using Gum.Wireframe;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Framework.Utilities;
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.GueDeriving;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
+
+namespace MonoGameGum.Forms.DefaultVisuals;
+
+
+
+public class ButtonVisual : InteractiveGue
+{
+    public NineSliceRuntime Background { get; private set; }
+
+    public TextRuntime TextInstance { get; private set; }
+
+    public NineSliceRuntime FocusedIndicator { get; private set; }
+
+
+    public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
+    {
+        if (fullInstantiation)
+        {
+            this.Width = 128;
+            this.Height = 5;
+            this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+            var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+
+            Background = new NineSliceRuntime();
+            Background.X = 0;
+            Background.Y = 0;
+            Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            Background.XOrigin = HorizontalAlignment.Center;
+            Background.YOrigin = VerticalAlignment.Center;
+            Background.Width = 0;
+            Background.Height = 0;
+            Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Name = "Background";
+            Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            Background.Texture = uiSpriteSheetTexture;
+            Background.TextureLeft = 24;
+            Background.TextureTop = 48;
+            Background.TextureWidth = 24;
+            Background.TextureHeight = 24;
+            //Background.Color = new Color(6, 159, 177);
+            this.Children.Add(Background);
+
+            TextInstance = new TextRuntime();
+            TextInstance.X = 0;
+            TextInstance.Y = 0;
+            TextInstance.Width = 0;
+            TextInstance.Height = 5;
+            TextInstance.Name = "TextInstance";
+            TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            TextInstance.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            TextInstance.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.Children.Add(TextInstance);
+
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.X = 0;
+            FocusedIndicator.Y = 2;
+            FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = VerticalAlignment.Top;
+            FocusedIndicator.Width = 0;
+            FocusedIndicator.Height = 2;
+            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.TextureLeft = 0;
+            FocusedIndicator.TextureTop = 48;
+            FocusedIndicator.TextureWidth = 24;
+            FocusedIndicator.TextureHeight = 24;
+            FocusedIndicator.Visible = false;
+            FocusedIndicator.Color = Styling.Colors.Warning;
+            FocusedIndicator.Name = "FocusedIndicator";
+            this.Children.Add(FocusedIndicator);
+
+            var buttonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            buttonCategory.Name = "ButtonCategory";
+            this.AddCategory(buttonCategory);
+
+            StateSave currentState;
+
+            void AddState(string name)
+            {
+                var state = new StateSave();
+                state.Name = name;
+                buttonCategory.States.Add(state);
+                currentState = state;
+            }
+
+            void AddVariable(string name, object value)
+            {
+                currentState.Variables.Add(new VariableSave
+                {
+                    Name = name,
+                    Value = value
+                });
+            }
+
+            // AddState is called first and the currentState is set
+            // Then we add variables that belong to that state
+            AddState(FrameworkElement.EnabledStateName);
+            AddVariable("Background.Color", Styling.Colors.Primary);
+            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.DisabledStateName);
+            AddVariable("Background.Color", Styling.Colors.DarkGray);
+            AddVariable("TextInstance.Color", Styling.Colors.Gray);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.HighlightedStateName);
+            AddVariable("Background.Color", Styling.Colors.PrimaryLight);
+            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.PushedStateName);
+            AddVariable("Background.Color", Styling.Colors.PrimaryDark);
+            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.HighlightedFocusedStateName);
+            AddVariable("Background.Color", Styling.Colors.PrimaryLight);
+            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("FocusedIndicator.Visible", true);
+
+            AddState(FrameworkElement.FocusedStateName);
+            AddVariable("Background.Color", Styling.Colors.Primary);
+            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("FocusedIndicator.Visible", true);
+
+            AddState(FrameworkElement.DisabledFocusedStateName);
+            AddVariable("Background.Color", Styling.Colors.DarkGray);
+            AddVariable("TextInstance.Color", Styling.Colors.Gray);
+            AddVariable("FocusedIndicator.Visible", true);
+
+        }
+
+        if (tryCreateFormsObject)
+        {
+            FormsControlAsObject = new Button(this);
+        }
+
+    }
+
+    public Button FormsControl => FormsControlAsObject as Button;
+}
