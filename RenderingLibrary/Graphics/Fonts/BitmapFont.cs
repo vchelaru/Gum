@@ -621,8 +621,13 @@ public class BitmapFont : IDisposable
 
         int lineNumber = 0;
 
+        // int is used if pixel perfect
         int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
         int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
+
+        // otherwise, we use rounded to the zoom value, to try to get close:
+        float xOffsetRoundedToZoom = MathFunctions.RoundFloat(xOffset, scaleX);
+        float yOffsetRoundedToZoom = MathFunctions.RoundFloat(yOffset, scaleY);
 
         // Custom effect already does premultiply alpha on the shader so we skip that in this case
         if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
@@ -731,10 +736,6 @@ public class BitmapFont : IDisposable
                     toReturn.Height = System.Math.Max(toReturn.Height, currentLetterOrigin.Y);
 
 
-                    var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
-
-                    finalPosition.X += xOffset;
-                    finalPosition.Y += yOffset;
 
 #if DEBUG
                     if(mTextures.Length <= pageIndex)
@@ -755,6 +756,13 @@ public class BitmapFont : IDisposable
 
                     if (isFreeFloating)
                     {
+
+                        var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
+
+                        finalPosition.X += xOffsetRoundedToZoom;
+                        finalPosition.Y += yOffsetRoundedToZoom;
+
+
                         var scale = new Vector2(scaleX, scaleY);
                         spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, 
                             color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this,
