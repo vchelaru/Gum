@@ -46,13 +46,10 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        // Get the UI Spite Sheet that we loaded in SystemManager.Initialize()
-        var uiSpriteSheetTexture2D = RenderingLibrary.Content.LoaderManager.Self.GetDisposable("UISpriteSheet.png");
-
-        TryAdd(typeof(Button), typeof(ButtonVisual));
+        TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
         TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
         TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
-        TryAdd(typeof(Label), typeof(LabelVisual));
+        TryAdd(typeof(Label), typeof(DefaultLabelRuntime));
         TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
         TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
         TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));

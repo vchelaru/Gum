@@ -1,17 +1,12 @@
-﻿using Gum.DataTypes.Behaviors;
-using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes.Variables;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Framework.Utilities;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
 namespace MonoGameGum.Forms.DefaultVisuals;
-
-
 
 public class ButtonVisual : InteractiveGue
 {
@@ -21,13 +16,25 @@ public class ButtonVisual : InteractiveGue
 
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
-    public Gum.DataTypes.Variables.StateSaveCategory ButtonCategory { get;  set; }
+    public class ButtonCategoryStates
+    {
+        public StateSave Enabled { get; set; }
+        public StateSave Disabled { get; set; }
+        public StateSave Highlighted { get; set; }
+        public StateSave Pushed { get; set; }
+        public StateSave HighlightedFocused { get; set; }
+        public StateSave Focused { get; set; }
+        public StateSave DisabledFocused { get; set; }
+    }
 
+    public ButtonCategoryStates States;
 
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         if (fullInstantiation)
         {
+            this.States = new ButtonCategoryStates();
+
             this.Width = 128;
             this.Height = 5;
             this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
@@ -52,7 +59,6 @@ public class ButtonVisual : InteractiveGue
             Background.TextureTop = 48;
             Background.TextureWidth = 24;
             Background.TextureHeight = 24;
-            //Background.Color = new Color(6, 159, 177);
             this.Children.Add(Background);
 
             TextInstance = new TextRuntime();
@@ -93,9 +99,9 @@ public class ButtonVisual : InteractiveGue
             FocusedIndicator.Name = "FocusedIndicator";
             this.Children.Add(FocusedIndicator);
 
-            ButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            ButtonCategory.Name = "ButtonCategory";
-            this.AddCategory(ButtonCategory);
+            var buttonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            buttonCategory.Name = "ButtonCategory";
+            this.AddCategory(buttonCategory);
 
             StateSave currentState;
 
@@ -103,7 +109,7 @@ public class ButtonVisual : InteractiveGue
             {
                 var state = new StateSave();
                 state.Name = name;
-                ButtonCategory.States.Add(state);
+                buttonCategory.States.Add(state);
                 currentState = state;
             }
 
@@ -122,36 +128,43 @@ public class ButtonVisual : InteractiveGue
             AddVariable("Background.Color", Styling.Colors.Primary);
             AddVariable("TextInstance.Color", Styling.Colors.White);
             AddVariable("FocusedIndicator.Visible", false);
+            this.States.Enabled = currentState;
 
             AddState(FrameworkElement.DisabledStateName);
             AddVariable("Background.Color", Styling.Colors.DarkGray);
             AddVariable("TextInstance.Color", Styling.Colors.Gray);
             AddVariable("FocusedIndicator.Visible", false);
+            this.States.Disabled = currentState;
 
             AddState(FrameworkElement.HighlightedStateName);
             AddVariable("Background.Color", Styling.Colors.PrimaryLight);
             AddVariable("TextInstance.Color", Styling.Colors.White);
             AddVariable("FocusedIndicator.Visible", false);
+            this.States.Highlighted = currentState;
 
             AddState(FrameworkElement.PushedStateName);
             AddVariable("Background.Color", Styling.Colors.PrimaryDark);
             AddVariable("TextInstance.Color", Styling.Colors.White);
             AddVariable("FocusedIndicator.Visible", false);
+            this.States.Pushed = currentState;
 
             AddState(FrameworkElement.HighlightedFocusedStateName);
             AddVariable("Background.Color", Styling.Colors.PrimaryLight);
             AddVariable("TextInstance.Color", Styling.Colors.White);
             AddVariable("FocusedIndicator.Visible", true);
+            this.States.HighlightedFocused = currentState;
 
             AddState(FrameworkElement.FocusedStateName);
             AddVariable("Background.Color", Styling.Colors.Primary);
             AddVariable("TextInstance.Color", Styling.Colors.White);
             AddVariable("FocusedIndicator.Visible", true);
+            this.States.Focused = currentState;
 
             AddState(FrameworkElement.DisabledFocusedStateName);
             AddVariable("Background.Color", Styling.Colors.DarkGray);
             AddVariable("TextInstance.Color", Styling.Colors.Gray);
             AddVariable("FocusedIndicator.Visible", true);
+            this.States.DisabledFocused = currentState;
 
         }
 
