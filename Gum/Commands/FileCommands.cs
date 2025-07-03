@@ -176,7 +176,7 @@ namespace Gum.Commands
                     }
                     else
                     {
-                        FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath, DateTime.Now.AddSeconds(1));
+                        FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath);
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
@@ -279,7 +279,7 @@ namespace Gum.Commands
                     //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                     string fileName = GetFullPathXmlFile( behavior).FullPath;
-                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName, DateTime.Now.AddSeconds(1));
+                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName);
                     // if it's readonly, let's warn the user
                     bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 

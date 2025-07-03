@@ -687,7 +687,7 @@ namespace Gum
                         }
 
                         // todo - this should go through the plugin...
-                        FileWatchManager.Self.IgnoreNextChangeUntil(GumProjectSave.FullFileName, DateTime.Now.AddSeconds(5));
+                        FileWatchManager.Self.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
                         succeeded = true;
