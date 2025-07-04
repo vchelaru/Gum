@@ -1240,13 +1240,15 @@ namespace RenderingLibrary.Graphics
                         }
                     }
 
-
-                    foreach (var substring in substrings)
+                    for(int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
                     {
+
                         if (lettersLeft <= 0)
                         {
                             break;
                         }
+
+                        var substring = substrings[substringIndex];
 
                         lineByLineList[0] = substring.Substring;
                         color = Color;
@@ -1292,7 +1294,9 @@ namespace RenderingLibrary.Graphics
                             requiredWidth, individualLineWidth, spriteRenderer, color,
                             absoluteLeft,
                             effectiveTopOfLine,
-                            rotation, fontScale, fontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                            rotation, fontScale, fontScale, lettersLeft, 
+                            OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                            shiftForOutline:substringIndex == 0);
 
                         if (lettersLeft != null)
                         {
