@@ -219,7 +219,6 @@ public class BitmapFont : IDisposable
     }
 
 
-    #region Public Methods
 
     public void AssignCharacterTextureCoordinates(int asciiNumber, out float tVTop, out float tVBottom,
         out float tULeft, out float tURight)
@@ -605,8 +604,12 @@ public class BitmapFont : IDisposable
         object objectRequestingChange, int requiredWidth, List<int> widths,
         SpriteRenderer spriteRenderer,
         Color color,
-        float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
-        int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null, float lineHeightMultiplier = 1)
+        float xOffset = 0, float yOffset = 0, 
+        float rotation = 0, float scaleX = 1, float scaleY = 1,
+        int? numberOfLettersToRender = null, 
+        TextRenderingPositionMode? overrideTextRenderingPositionMode = null, 
+        float lineHeightMultiplier = 1,
+        bool shiftForOutline = true)
     {
         ///////////Early Out////////////////
         if (numberOfLettersToRender == 0)
@@ -662,8 +665,11 @@ public class BitmapFont : IDisposable
         {
             var line = lines[i];
 
-            // scoot over to leave room for the outline
-            currentLetterOrigin.X = mOutlineThickness * scaleX;
+            if(shiftForOutline)
+            {
+                // scoot over to leave room for the outline
+                currentLetterOrigin.X = mOutlineThickness * scaleX;
+            }
 
             float offsetFromAlignment = 0;
 
@@ -1210,7 +1216,6 @@ public class BitmapFont : IDisposable
 
     }
 
-    #endregion
 
     #region Private Methods
 
@@ -1268,6 +1273,8 @@ public class BitmapFont : IDisposable
     {
         return mFontFile;
     }
+
+    #region Internal Font Pattern Parsing classes
 
     private class ParsedFontLine
     {
@@ -1750,4 +1757,7 @@ public class BitmapFont : IDisposable
             [XmlAttribute("amount")] public int Amount { get; set; }
         }
     }
+
+    #endregion
+
 }
