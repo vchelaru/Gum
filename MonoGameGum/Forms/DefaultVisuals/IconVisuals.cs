@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Gum.DataTypes.Variables;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 
 namespace MonoGameGum.Forms.DefaultVisuals
@@ -32,76 +33,89 @@ namespace MonoGameGum.Forms.DefaultVisuals
         }
 
 
-        public IconTextureInfo Arrow1 { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 256, TextureWidth = 32, TextureHeight = 32 }; 
-        public IconTextureInfo Arrow2 { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 256, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Arrow3 { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 256, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Basket { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 224, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Battery { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 224, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Check { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 128, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo CheckeredFlag { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 288, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Circle1 { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 128, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Circle2 { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 128, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Close { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 192, TextureWidth = 32, TextureHeight = 32 }; 
-        public IconTextureInfo Crosshairs { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 288, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Currency { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 224, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Cursor { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 32, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo CursorText { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 32, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Dash { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 204, TextureWidth = 32, TextureHeight = 20 };
-        public IconTextureInfo Delete { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Enter { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Expand { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 192, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Gamepad { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadNES { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadSNES { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadNintendo64 { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 352, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadGamecube { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 352, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadSwitchPro { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadXbox { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 320, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadPlaystationDualShock { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 352, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo GamepadSegaGenesis { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 352, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Gear { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 96, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo FastForward { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 160, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo FastForwardBar { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 160, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo FitToScreen { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 192, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Flame1 { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 64, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Flame2 { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 64, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Heart { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 128, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Info { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 256, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Keyboard { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 32, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Leaf { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 64, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Lightning { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 64, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Minimize { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 192, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Monitor { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 192, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Mouse { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 32, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Music { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 224, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Pause { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 160, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Pencil { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 96, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Play { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 160, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo PlayBar { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 160, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Power { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 288, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Radiation { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 64, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Reduce { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 192, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Shield { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 288, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Shot { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 288, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Skull { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 288, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Sliders { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 96, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo SoundMaximum { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 224, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo SoundMinimum { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 224, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Speech { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 96, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Star { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 128, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Stop { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 160, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Temperature { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 64, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Touch { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 32, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Trash { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 96, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Trophy { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 128, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo User { get; set; } = new IconTextureInfo { TextureLeft = 288, TextureTop = 0, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo UserAdd { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 0, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo UserDelete { get; set; } = new IconTextureInfo { TextureLeft = 416, TextureTop = 0, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo UserGear { get; set; } = new IconTextureInfo { TextureLeft = 352, TextureTop = 0, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo UserMulti { get; set; } = new IconTextureInfo { TextureLeft = 320, TextureTop = 0, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo UserRemove { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 0, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Warning { get; set; } = new IconTextureInfo { TextureLeft = 448, TextureTop = 256, TextureWidth = 32, TextureHeight = 32 };
-        public IconTextureInfo Wrench { get; set; } = new IconTextureInfo { TextureLeft = 384, TextureTop = 96, TextureWidth = 32, TextureHeight = 32 };
+        private static StateSave CreateTextureCoordinateState(int left, int top, int width, int height)
+        {
+            return new()
+            {
+                Variables = new()
+                {
+                    new() { Name = "TextureLeft", Type = "int", Value = left },
+                    new() { Name = "TextureTop", Type = "int", Value = top },
+                    new() { Name = "TextureWidth", Type = "int", Value = width },
+                    new() { Name = "TextureHeight", Type = "int", Value = height }
+                }
+            };
+        }
 
+        public static StateSave Arrow1 => CreateTextureCoordinateState(288, 256, 32, 32);
+        public static StateSave Arrow2 => CreateTextureCoordinateState(320, 256, 32, 32);
+        public static StateSave Arrow3 => CreateTextureCoordinateState(352, 256, 32, 32);
+        public static StateSave Basket => CreateTextureCoordinateState(288, 224, 32, 32);
+        public static StateSave Battery => CreateTextureCoordinateState(320, 224, 32, 32);
+        public static StateSave Check => CreateTextureCoordinateState(384, 128, 32, 32);
+        public static StateSave CheckeredFlag => CreateTextureCoordinateState(384, 288, 32, 32);
+        public static StateSave Circle1 => CreateTextureCoordinateState(448, 128, 32, 32);
+        public static StateSave Circle2 => CreateTextureCoordinateState(416, 128, 32, 32);
+        public static StateSave Close => CreateTextureCoordinateState(416, 192, 32, 32);
+        public static StateSave Crosshairs => CreateTextureCoordinateState(352, 288, 32, 32);
+        public static StateSave Currency => CreateTextureCoordinateState(352, 224, 32, 32);
+        public static StateSave Cursor => CreateTextureCoordinateState(384, 32, 32, 32);
+        public static StateSave CursorText => CreateTextureCoordinateState(416, 32, 32, 32);
+        public static StateSave Dash => CreateTextureCoordinateState(352, 204, 32, 20);
+        public static StateSave Delete => CreateTextureCoordinateState(288, 320, 32, 32);
+        public static StateSave Enter => CreateTextureCoordinateState(320, 320, 32, 32);
+        public static StateSave Expand => CreateTextureCoordinateState(384, 192, 32, 32);
+        public static StateSave Gamepad => CreateTextureCoordinateState(352, 320, 32, 32);
+        public static StateSave GamepadNES => CreateTextureCoordinateState(416, 320, 32, 32);
+        public static StateSave GamepadSNES => CreateTextureCoordinateState(448, 320, 32, 32);
+        public static StateSave GamepadNintendo64 => CreateTextureCoordinateState(384, 352, 32, 32);
+        public static StateSave GamepadGamecube => CreateTextureCoordinateState(416, 352, 32, 32);
+        public static StateSave GamepadSwitchPro => CreateTextureCoordinateState(352, 320, 32, 32);
+        public static StateSave GamepadXbox => CreateTextureCoordinateState(384, 320, 32, 32);
+        public static StateSave GamepadPlaystationDualShock => CreateTextureCoordinateState(352, 352, 32, 32);
+        public static StateSave GamepadSegaGenesis => CreateTextureCoordinateState(448, 352, 32, 32);
+        public static StateSave Gear => CreateTextureCoordinateState(320, 96, 32, 32);
+        public static StateSave FastForward => CreateTextureCoordinateState(384, 160, 32, 32);
+        public static StateSave FastForwardBar => CreateTextureCoordinateState(416, 160, 32, 32);
+        public static StateSave FitToScreen => CreateTextureCoordinateState(288, 192, 32, 32);
+        public static StateSave Flame1 => CreateTextureCoordinateState(320, 64, 32, 32);
+        public static StateSave Flame2 => CreateTextureCoordinateState(352, 64, 32, 32);
+        public static StateSave Heart => CreateTextureCoordinateState(320, 128, 32, 32);
+        public static StateSave Info => CreateTextureCoordinateState(416, 256, 32, 32);
+        public static StateSave Keyboard => CreateTextureCoordinateState(320, 32, 32, 32);
+        public static StateSave Leaf => CreateTextureCoordinateState(288, 64, 32, 32);
+        public static StateSave Lightning => CreateTextureCoordinateState(416, 64, 32, 32);
+        public static StateSave Minimize => CreateTextureCoordinateState(352, 192, 32, 32);
+        public static StateSave Monitor => CreateTextureCoordinateState(448, 192, 32, 32);
+        public static StateSave Mouse => CreateTextureCoordinateState(448, 32, 32, 32);
+        public static StateSave Music => CreateTextureCoordinateState(384, 224, 32, 32);
+        public static StateSave Pause => CreateTextureCoordinateState(320, 160, 32, 32);
+        public static StateSave Pencil => CreateTextureCoordinateState(288, 96, 32, 32);
+        public static StateSave Play => CreateTextureCoordinateState(288, 160, 32, 32);
+        public static StateSave PlayBar => CreateTextureCoordinateState(448, 160, 32, 32);
+        public static StateSave Power => CreateTextureCoordinateState(288, 288, 32, 32);
+        public static StateSave Radiation => CreateTextureCoordinateState(384, 64, 32, 32);
+        public static StateSave Reduce => CreateTextureCoordinateState(320, 192, 32, 32);
+        public static StateSave Shield => CreateTextureCoordinateState(416, 288, 32, 32);
+        public static StateSave Shot => CreateTextureCoordinateState(320, 288, 32, 32);
+        public static StateSave Skull => CreateTextureCoordinateState(448, 288, 32, 32);
+        public static StateSave Sliders => CreateTextureCoordinateState(352, 96, 32, 32);
+        public static StateSave SoundMaximum => CreateTextureCoordinateState(448, 224, 32, 32);
+        public static StateSave SoundMinimum => CreateTextureCoordinateState(416, 224, 32, 32);
+        public static StateSave Speech => CreateTextureCoordinateState(448, 96, 32, 32);
+        public static StateSave Star => CreateTextureCoordinateState(352, 128, 32, 32);
+        public static StateSave Stop => CreateTextureCoordinateState(352, 160, 32, 32);
+        public static StateSave Temperature => CreateTextureCoordinateState(448, 64, 32, 32);
+        public static StateSave Touch => CreateTextureCoordinateState(352, 32, 32, 32);
+        public static StateSave Trash => CreateTextureCoordinateState(416, 96, 32, 32);
+        public static StateSave Trophy => CreateTextureCoordinateState(288, 128, 32, 32);
+        public static StateSave User => CreateTextureCoordinateState(288, 0, 32, 32);
+        public static StateSave UserAdd => CreateTextureCoordinateState(384, 0, 32, 32);
+        public static StateSave UserDelete => CreateTextureCoordinateState(416, 0, 32, 32);
+        public static StateSave UserGear => CreateTextureCoordinateState(352, 0, 32, 32);
+        public static StateSave UserMulti => CreateTextureCoordinateState(320, 0, 32, 32);
+        public static StateSave UserRemove => CreateTextureCoordinateState(448, 0, 32, 32);
+        public static StateSave Warning => CreateTextureCoordinateState(448, 256, 32, 32);
+        public static StateSave Wrench => CreateTextureCoordinateState(384, 96, 32, 32);
     }
 }
