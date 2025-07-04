@@ -81,7 +81,7 @@
 
 		<Compile Include="..\**\*.cs" />
 
-	</ItemGroup>
+  </ItemGroup>
 
 	<ItemGroup>
 		<Compile Remove="obj\**" />
@@ -139,5 +139,9 @@
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\**\obj\**\*.*" />
+  </ItemGroup>
 
 </Project>

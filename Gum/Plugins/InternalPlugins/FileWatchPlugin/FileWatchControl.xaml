@@ -7,9 +7,10 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <StackPanel>
-        <TextBlock Text="{Binding WatchFolderInformation}"></TextBlock>
-        <TextBlock Text="{Binding NumberOfFilesToFlush}"></TextBlock>
-        <TextBlock Text="{Binding TimeToNextFlush}"></TextBlock>
-        <TextBlock Text="{Binding NextFilesToFlush}"></TextBlock>
+        <TextBlock Text="{Binding WatchFolderInformation}"/>
+        <TextBlock Text="{Binding NumberOfFilesToFlush}"/>
+        <TextBlock Text="{Binding TimeToNextFlush}"/>
+        <TextBlock Text="{Binding NextFilesToFlush}"/>
+        <TextBlock Text="{Binding IgnoredFilesInformation}"/>
     </StackPanel>
 </UserControl>

@@ -139,7 +139,18 @@ public struct CodeGenerationContext
         }
     }
 
-    public string InstanceNameInCode(InstanceSave instance) => instance.Name.Replace(" ", "_");
+    public string InstanceNameInCode => Instance == null ? string.Empty : GetInstanceNameInCode(Instance);
+
+    public string GetInstanceNameInCode(InstanceSave instance)
+    {
+        if(instance.Name.Length > 0 &&
+            char.IsDigit(instance.Name[0]))
+        {
+            return '_' + instance.Name.Replace(" ", "_");
+        }
+
+        return instance.Name.Replace(" ", "_");
+    }
 
     public string CodePrefixNoTabs
     {
@@ -169,22 +180,22 @@ public struct CodeGenerationContext
                 {
                     if (string.IsNullOrEmpty(ThisPrefix))
                     {
-                        return "this." + InstanceNameInCode(Instance) + "." + "Visual";
+                        return "this." + InstanceNameInCode + "." + "Visual";
                     }
                     else
                     {
-                        return ThisPrefix + "." + InstanceNameInCode(Instance) + "." + "Visual";
+                        return ThisPrefix + "." + InstanceNameInCode + "." + "Visual";
                     }
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(ThisPrefix))
                     {
-                        return "this." + InstanceNameInCode(Instance);
+                        return "this." + InstanceNameInCode;
                     }
                     else
                     {
-                        return ThisPrefix + "." + InstanceNameInCode(Instance);
+                        return ThisPrefix + "." + InstanceNameInCode;
                     }
                 }
             }
@@ -729,7 +740,7 @@ public class CodeGenerator
 
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
-        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.InstanceNameInCode(context.Instance)} {{ get; protected set; }}");
+        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.InstanceNameInCode} {{ get; protected set; }}");
     }
 
 
@@ -909,20 +920,20 @@ public class CodeGenerator
                 var classNameString = GetClassNameForType(context.Instance.BaseType, context.VisualApi, context);
 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = " +
+                    $"{context.Tabs}{context.InstanceNameInCode} = " +
                     $"MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
             }
             else
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
                     $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
             }
         }
         else
         {
             context.StringBuilder.AppendLine(
-                $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
                 $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
         }
     }
@@ -930,7 +941,7 @@ public class CodeGenerator
     private static void FillWithInstanceInstantiation(CodeGenerationContext context)
     {
         var instance = context.Instance;
-        var instanceName = context.InstanceNameInCode(instance);
+        var instanceName = context.InstanceNameInCode;
 
         var strippedType = instance.BaseType;
         if (strippedType.Contains("/"))
@@ -988,7 +999,7 @@ public class CodeGenerator
                 if (IsOfXamarinFormsType(context.Instance, "ActivityIndicator"))
                 {
                     // If we don't do this, it is invisible which is confusing for the user...
-                    context.StringBuilder.AppendLine($"{tabs}{context.InstanceNameInCode(instance)}.IsRunning = true;");
+                    context.StringBuilder.AppendLine($"{tabs}{instanceName}.IsRunning = true;");
                 }
             }
         }
@@ -2294,91 +2305,6 @@ public class CodeGenerator
 
     }
 
-    private static float CalculateAbsoluteWidth(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
-    {
-        string prefix = instance?.Name == null ? "" : instance.Name + ".";
-
-
-        var x = variableFinder.GetValue<float>(prefix + "X");
-        var width = variableFinder.GetValue<float>(prefix + "Width");
-
-        var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "XUnits");
-        var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "WidthUnits");
-
-        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "XOrigin");
-
-        var parentName = variableFinder.GetValue<string>(prefix + "Parent");
-
-        var parent = container.GetInstance(parentName);
-
-        float toReturn = 0;
-        if (instance == null)
-        {
-            toReturn = width; // handle this eventually?
-        }
-        else if (widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-        {
-            toReturn = width;
-        }
-        else if (widthUnits == DimensionUnitType.RelativeToParent)
-        {
-            if (parent == null)
-            {
-                toReturn = width + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasWidth;
-            }
-            else
-            {
-                var parentWidth = CalculateAbsoluteWidth(parent, container, variableFinder);
-
-                toReturn = parentWidth + width;
-            }
-        }
-
-        return toReturn;
-    }
-
-    private static float CalculateAbsoluteHeight(InstanceSave instance, ElementSave container, RecursiveVariableFinder variableFinder)
-    {
-        string prefix = instance?.Name == null ? "" : instance.Name + ".";
-
-
-        var y = variableFinder.GetValue<float>(prefix + "Y");
-        var height = variableFinder.GetValue<float>(prefix + "Height");
-
-        var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "YUnits");
-        var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "HeightUnits");
-
-        var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "YOrigin");
-
-        var parentName = variableFinder.GetValue<string>(prefix + "Parent");
-
-        var parent = container.GetInstance(parentName);
-
-        float toReturn = 0;
-        if (instance == null)
-        {
-            toReturn = height; // handle this eventually?
-        }
-        else if (heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-        {
-            toReturn = height;
-        }
-        else if (heightUnits == DimensionUnitType.RelativeToParent)
-        {
-            if (parent == null)
-            {
-                toReturn = height + GumState.Self.ProjectState.GumProjectSave.DefaultCanvasHeight;
-            }
-            else
-            {
-                var parentWidth = CalculateAbsoluteHeight(parent, container, variableFinder);
-
-                toReturn = parentWidth + height;
-            }
-        }
-
-        return toReturn;
-    }
 
     #endregion
 
@@ -2388,7 +2314,7 @@ public class CodeGenerator
     {
         var container = context.Element;
         var instance = context.Instance;
-        var instanceNameInCode = context.InstanceNameInCode(instance);
+        var instanceNameInCode = context.GetInstanceNameInCode(instance);
         //context.Instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings;
 
         // Some history on this:
@@ -2452,29 +2378,29 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({context.InstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({context.GetInstanceNameInCode(instance)});");
                     }
                     else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                     {
                         // If it's a screen it may have children, or it may not. We just don't know, so we need to check
 
-                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({context.InstanceNameInCode(instance)});");
-                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({context.InstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({context.GetInstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({context.GetInstanceNameInCode(instance)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({context.InstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({context.GetInstanceNameInCode(instance)});");
                     }
                 }
                 else
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({context.InstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({context.GetInstanceNameInCode(instance)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({context.InstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({context.GetInstanceNameInCode(instance)});");
                     }
                 }
             }
@@ -2791,8 +2717,8 @@ public class CodeGenerator
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
                     {
                         context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
-                        context.StringBuilder.AppendLine(context.Tabs + context.InstanceNameInCode(instance) + ".ForceGumLayout();");
-                        context.StringBuilder.AppendLine(context.Tabs + context.InstanceNameInCode(instance) + ".UpdateDimensionsFromAutoSize();");
+                        context.StringBuilder.AppendLine(context.Tabs + context.GetInstanceNameInCode(instance) + ".ForceGumLayout();");
+                        context.StringBuilder.AppendLine(context.Tabs + context.GetInstanceNameInCode(instance) + ".UpdateDimensionsFromAutoSize();");
                     }
                 }
             }
@@ -2836,6 +2762,7 @@ public class CodeGenerator
         context.Element = element;
         context.CodeOutputProjectSettings = projectSettings;
         context.StringBuilder = stringBuilder;
+        
 
 
         #endregion
@@ -2923,7 +2850,7 @@ public class CodeGenerator
 
         if (projectSettings.GenerateGumDataTypes)
         {
-            GenerateAssignGumReferences(element, visualApi, context.TabCount, stringBuilder);
+            GenerateAssignGumReferences(context);
         }
 
         GenerateApplyLocalizationMethod(element, context.TabCount, stringBuilder);
@@ -2943,8 +2870,13 @@ public class CodeGenerator
 
     #region Assign Gum References (this.ComponentSave = ...)
 
-    private static void GenerateAssignGumReferences(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
+    private static void GenerateAssignGumReferences(CodeGenerationContext context)
     {
+
+        var stringBuilder = context.StringBuilder;
+        var tabCount = context.TabCount;
+        var element = context.Element;
+
         var line = "private void AssignGumReferences()";
 
         stringBuilder.AppendLine(ToTabs(tabCount) + line);
@@ -2975,7 +2907,7 @@ public class CodeGenerator
             if (instanceVisualApi == VisualApi.Gum)
             {
                 // todo - will need Forms too, but we'll do this for now:
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == nameof({instance.Name}));");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"{context.GetInstanceNameInCode(instance)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
             }
         }
 
@@ -3111,11 +3043,11 @@ public class CodeGenerator
                 {
                     if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{context.GetInstanceNameInCode(item)}.InvalidateSurface();");
                     }
                     else if (GetVisualApiForInstance(item, element) == VisualApi.Gum)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.EffectiveManagers?.InvalidateSurface();");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{context.GetInstanceNameInCode(item)}.EffectiveManagers?.InvalidateSurface();");
                     }
                 }
                 if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
@@ -3597,7 +3529,7 @@ public class CodeGenerator
 
                 if (forceSetDirectlyOnInstance)
                 {
-                    return $"{context.Instance!.Name}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    return $"{context.InstanceNameInCode}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
@@ -3657,7 +3589,7 @@ public class CodeGenerator
 
                 if (isPolygon)
                 {
-                    context.StringBuilder.AppendLine(context.Tabs + $"this.{context.InstanceNameInCode(instance)}.SetPoints(new System.Numerics.Vector2[]{{");
+                    context.StringBuilder.AppendLine(context.Tabs + $"this.{context.InstanceNameInCode}.SetPoints(new System.Numerics.Vector2[]{{");
                     context.TabCount++;
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
@@ -4014,19 +3946,19 @@ public class CodeGenerator
 
                         stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
                         stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
-                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.InstanceNameInCode(contextInstance)};");
-                        stringBuilder.AppendLine($"{tabs}{context.InstanceNameInCode(parentInstance)}.{tabItemsProperty}.Add(tabItem);");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.GetInstanceNameInCode(contextInstance)};");
+                        stringBuilder.AppendLine($"{tabs}{context.GetInstanceNameInCode(parentInstance)}.{tabItemsProperty}.Add(tabItem);");
                         tabs = tabs.Substring(4);
                         stringBuilder.AppendLine($"{tabs}}}");
                         return stringBuilder.ToString();
                     }
                     else if (hasContent)
                     {
-                        return $"{parentName}.Content = {context.InstanceNameInCode(contextInstance)};";
+                        return $"{parentName}.Content = {context.GetInstanceNameInCode(contextInstance)};";
                     }
                     else
                     {
-                        return $"{parentName}.Children.Add({context.InstanceNameInCode(contextInstance)});";
+                        return $"{parentName}.Children.Add({context.GetInstanceNameInCode(contextInstance)});";
                     }
                 }
 
@@ -4228,7 +4160,7 @@ public class CodeGenerator
                 context.StringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
                 context.TabCount++;
                 context.StringBuilder.AppendLine(context.Tabs +
-                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({context.InstanceNameInCode(instance)}, {screenOrComponent}.DefaultState);");
+                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({context.GetInstanceNameInCode(instance)}, {screenOrComponent}.DefaultState);");
                 context.TabCount--;
 
             }
@@ -4370,12 +4302,12 @@ public class CodeGenerator
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                return $"{owner}.AddChild({context.InstanceNameInCode(instance)});";
+                return $"{owner}.AddChild({context.GetInstanceNameInCode(instance)});";
 
             }
             else
             {
-                return $"{owner}.Children.Add({context.InstanceNameInCode(instance)});";
+                return $"{owner}.Children.Add({context.GetInstanceNameInCode(instance)});";
             }
         }
         #endregion
@@ -4542,7 +4474,7 @@ public class CodeGenerator
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
-                stringBuilder.AppendLine(context.Tabs + $"{context.InstanceNameInCode(instance)}.ApplyLocalization();");
+                stringBuilder.AppendLine(context.Tabs + $"{context.GetInstanceNameInCode(instance)}.ApplyLocalization();");
 
             }
         }

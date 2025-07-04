@@ -86,7 +86,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         {
             var save = viewModel.ToSave();
 
-            FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath, DateTime.Now.AddSeconds(5));
+            FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath);
             FileManager.XmlSerialize(save, fileName.FullPath);
         }
     }
