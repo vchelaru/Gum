@@ -59,10 +59,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.Color = Styling.Colors.DarkGray;
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
-                Background.TextureLeft = 24;
-                Background.TextureTop = 48;
-                Background.TextureWidth = 24;
-                Background.TextureHeight = 24;
+                NineSliceStyles.ApplyIconTextureInfo(Background, NineSliceStyles.Bordered);
 
                 SelectionInstance = new NineSliceRuntime();
                 SelectionInstance.Name = "SelectionInstance";
@@ -77,11 +74,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 SelectionInstance.Y = 0f;
                 SelectionInstance.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 SelectionInstance.Texture = uiSpriteSheetTexture;
-                SelectionInstance.TextureLeft = 0;
-                SelectionInstance.TextureTop = 48;
-                SelectionInstance.TextureWidth = 24;
-                SelectionInstance.TextureHeight = 24;
-                
+                NineSliceStyles.ApplyIconTextureInfo(SelectionInstance, NineSliceStyles.Solid);
+
                 TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
                 TextInstance.X = 4f;
@@ -131,10 +125,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 FocusedIndicator.Texture = uiSpriteSheetTexture;
-                FocusedIndicator.TextureLeft = 0;
-                FocusedIndicator.TextureTop = 48;
-                FocusedIndicator.TextureWidth = 24;
-                FocusedIndicator.TextureHeight = 24;
+                NineSliceStyles.ApplyIconTextureInfo(FocusedIndicator, NineSliceStyles.Solid);
                 FocusedIndicator.Visible = false;
                 
                 CaretInstance = new SpriteRuntime();
@@ -144,10 +135,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 CaretInstance.Texture = uiSpriteSheetTexture;
                 CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-                CaretInstance.TextureHeight = 24;
-                CaretInstance.TextureLeft = 0;
-                CaretInstance.TextureTop = 48;
-                CaretInstance.TextureWidth = 24;
+                CaretInstance.TextureHeight = NineSliceStyles.Solid.TextureHeight;
+                CaretInstance.TextureLeft = NineSliceStyles.Solid.TextureLeft;
+                CaretInstance.TextureTop = NineSliceStyles.Solid.TextureTop;
+                CaretInstance.TextureWidth = NineSliceStyles.Solid.TextureWidth;
                 CaretInstance.Width = 1f;
                 CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 CaretInstance.X = 4f;
