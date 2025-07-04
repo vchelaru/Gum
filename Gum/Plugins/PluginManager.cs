@@ -355,7 +355,7 @@ namespace Gum.Plugins
         }
 
 
-        internal void ElementSelected(ElementSave elementSave) =>
+        internal void ElementSelected(ElementSave? elementSave) =>
             CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
         internal void TreeNodeSelected(TreeNode treeNode) =>

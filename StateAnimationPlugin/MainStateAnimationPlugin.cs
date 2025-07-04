@@ -24,6 +24,7 @@ using Gum.StateAnimation.SaveClasses;
 using Gum.Plugins;
 using System.Windows.Forms;
 using Gum.Services;
+using Gum.Commands;
 
 
 namespace StateAnimationPlugin;
@@ -32,10 +33,16 @@ namespace StateAnimationPlugin;
 public class MainStateAnimationPlugin : PluginBase
 {
     private readonly ISelectedState _selectedState;
+
     #region Fields
     private readonly DuplicateService _duplicateService;
     private readonly AnimationFilePathService _animationFilePathService;
     private readonly ElementDeleteService _elementDeleteService;
+    private readonly GuiCommands _gumCommands;
+    private readonly RenameManager _renameManager;
+    private readonly SettingsManager _settingsManager;
+    private readonly ProjectState _projectState;
+    private readonly AnimationCollectionViewModelManager _animationCollectionViewModelManager;
     ElementAnimationsViewModel _viewModel;
 
     StateAnimationPlugin.Views.MainWindow mMainWindow;
@@ -69,6 +76,11 @@ public class MainStateAnimationPlugin : PluginBase
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
+        _gumCommands = GumCommands.Self.GuiCommands;
+        _renameManager = RenameManager.Self;
+        _settingsManager = SettingsManager.Self;
+        _projectState = GumState.Self.ProjectState;
+        _animationCollectionViewModelManager = AnimationCollectionViewModelManager.Self;
     }
 
     public override void StartUp()
@@ -78,21 +90,17 @@ public class MainStateAnimationPlugin : PluginBase
         AssignEvents();
     }
 
-    public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
-    {
-        return true;
-    }
 
     private void CreateMenuItems()
     {
-        menuItem = AddMenuItem("View", "View Animations" );
+        menuItem = AddMenuItem("View", "View Animations");
 
         menuItem.Click += HandleToggleTabVisibility;
     }
 
     private void AssignEvents()
     {
-        this.ElementSelected += (_) => RefreshViewModel();
+        this.ElementSelected += HandleElementSelected;
 
         this.InstanceSelected += (_, _) => RefreshViewModel();
 
@@ -116,31 +124,51 @@ public class MainStateAnimationPlugin : PluginBase
         this.DeleteConfirm += _elementDeleteService.HandleConfirmDelete;
     }
 
+    private void HandleElementSelected(ElementSave? element)
+    {
+        RefreshViewModel();
+
+        if (element != null && !_gumCommands.IsTabVisible(pluginTab))
+        {
+            var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
+
+            if (fileName.Exists())
+            {
+                pluginTab.Show();
+            }
+        }
+    }
+
+    public override bool ShutDown(PluginShutDownReason shutDownReason)
+    {
+        return true;
+    }
+
     private void HandleVariableSet(ElementSave element, InstanceSave save2, string arg3, object arg4)
     {
         // This maybe a little inefficient but it should address all issues:
         // eventually this could be more targeted
         var state = _selectedState.SelectedStateSave;
-        if (_viewModel == null || state == null ) return;
+        if (_viewModel == null || state == null) return;
 
         var isDefault =
             state == _selectedState.SelectedElement?.DefaultState;
 
         var stateName = state.Name;
-        if(_selectedState.SelectedStateCategorySave != null)
+        if (_selectedState.SelectedStateCategorySave != null)
         {
             stateName = _selectedState.SelectedStateCategorySave.Name + "/" + stateName;
         }
 
-        foreach(var animation in _viewModel.Animations)
+        foreach (var animation in _viewModel.Animations)
         {
             var shouldRefresh = isDefault;
-            if(!shouldRefresh)
+            if (!shouldRefresh)
             {
                 // see if this state is referenced:
-                foreach(var keyframe in animation.Keyframes)
+                foreach (var keyframe in animation.Keyframes)
                 {
-                    if(keyframe.StateName == stateName)
+                    if (keyframe.StateName == stateName)
                     {
                         shouldRefresh = true;
                         break;
@@ -148,7 +176,7 @@ public class MainStateAnimationPlugin : PluginBase
                 }
             }
 
-            if(shouldRefresh)
+            if (shouldRefresh)
             {
                 animation.RefreshCumulativeStates(element);
             }
@@ -170,7 +198,7 @@ public class MainStateAnimationPlugin : PluginBase
             CreateViewModel();
         }
 
-        RenameManager.Self.HandleRename(element, oldName, _viewModel);
+        _renameManager.HandleRename(element, oldName, _viewModel);
     }
 
     private void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
@@ -182,7 +210,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (_selectedState.SelectedElement != null)
         {
-            RenameManager.Self.HandleRename(instanceSave, oldName, _viewModel);
+            _renameManager.HandleRename(instanceSave, oldName, _viewModel);
         }
     }
 
@@ -192,7 +220,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (_selectedState.SelectedElement != null)
         {
-            RenameManager.Self.HandleRename(stateSave, oldName, _viewModel);
+            _renameManager.HandleRename(stateSave, oldName, _viewModel);
         }
     }
 
@@ -214,16 +242,16 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         // We only care about this if we have an element. Otherwise, it could be a behavior:
-        if(_selectedState.SelectedElement != null)
+        if (_selectedState.SelectedElement != null)
         {
-            RenameManager.Self.HandleRename(category, oldName, _viewModel);
+            _renameManager.HandleRename(category, oldName, _viewModel);
         }
 
     }
 
     private void HandleToggleTabVisibility(object sender, EventArgs e)
     {
-        if (!GumCommands.Self.GuiCommands.IsTabVisible(pluginTab))
+        if (!_gumCommands.IsTabVisible(pluginTab))
         {
             pluginTab.Show();
         }
@@ -238,11 +266,11 @@ public class MainStateAnimationPlugin : PluginBase
         var shouldCreate = mMainWindow == null;
         if (mMainWindow == null)
         {
-            SettingsManager.Self.LoadOrCreateSettings();
+            _settingsManager.LoadOrCreateSettings();
 
             mMainWindow = new StateAnimationPlugin.Views.MainWindow();
 
-            var settings = SettingsManager.Self.GlobalSettings;
+            var settings = _settingsManager.GlobalSettings;
 
             mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
             mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
@@ -251,11 +279,11 @@ public class MainStateAnimationPlugin : PluginBase
             mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
         }
 
-        var wasShown = GumCommands.Self.GuiCommands.ShowTabForControl(mMainWindow);
+        var wasShown = _gumCommands.ShowTabForControl(mMainWindow);
 
-        if(!wasShown)
+        if (!wasShown)
         {
-            pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
+            pluginTab = _gumCommands.AddControl(mMainWindow, "Animations",
                 TabLocation.RightBottom);
 
             pluginTab.TabShown += HandleTabShown;
@@ -272,13 +300,13 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleAnimationColumnsResized()
     {
-        if(mMainWindow.SecondRowWidth.Value > 0)
+        if (mMainWindow.SecondRowWidth.Value > 0)
         {
             var ratio = mMainWindow.FirstRowWidth.Value / mMainWindow.SecondRowWidth.Value;
 
-            SettingsManager.Self.GlobalSettings.FirstToSecondColumnRatio = (decimal)ratio;
+            _settingsManager.GlobalSettings.FirstToSecondColumnRatio = (decimal)ratio;
 
-            SettingsManager.Self.SaveSettings();
+            _settingsManager.SaveSettings();
         }
     }
 
@@ -435,13 +463,13 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (currentlyReferencedElement != element)
         {
-            if(GumState.Self.ProjectState.GumProjectSave?.FullFileName == null)
+            if (_projectState.GumProjectSave?.FullFileName == null)
             {
                 _viewModel = null;
             }
             else
             {
-                _viewModel = AnimationCollectionViewModelManager.Self.GetAnimationCollectionViewModel(element);
+                _viewModel = _animationCollectionViewModelManager.GetAnimationCollectionViewModel(element);
             }
 
             if (_viewModel != null)
@@ -449,9 +477,9 @@ public class MainStateAnimationPlugin : PluginBase
                 _viewModel.PropertyChanged += HandlePropertyChanged;
                 _viewModel.AnyChange += HandleDataChange;
 
-                foreach(var item in _viewModel.Animations)
+                foreach (var item in _viewModel.Animations)
                 {
-                    foreach(var keyframe in item.Keyframes)
+                    foreach (var keyframe in item.Keyframes)
                     {
                         keyframe.AvailableStates = this.AvailableStates;
                         keyframe.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
@@ -461,7 +489,7 @@ public class MainStateAnimationPlugin : PluginBase
             }
         }
 
-        if(_viewModel == null)
+        if (_viewModel == null)
         {
             _viewModel = new ElementAnimationsViewModel();
         }
@@ -469,7 +497,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleAnimatedKeyframePropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        switch(e.PropertyName)
+        switch (e.PropertyName)
         {
             case nameof(AnimatedKeyframeViewModel.StateName):
                 // user may have changed a state that is currently being displayed so let's refresh it all!
@@ -484,7 +512,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (sender is ElementAnimationsViewModel)
         {
-            if(variableName == "DisplayedAnimationTime")
+            if (variableName == "DisplayedAnimationTime")
             {
                 SetWireframeStateFromDisplayedAnimTime();
             }
@@ -494,7 +522,7 @@ public class MainStateAnimationPlugin : PluginBase
     private void SetWireframeStateFromDisplayedAnimTime()
     {
         //////////////////////// EARLY OUT
-        if(_viewModel.SelectedAnimation == null)
+        if (_viewModel.SelectedAnimation == null)
         {
             return;
         }
@@ -505,7 +533,7 @@ public class MainStateAnimationPlugin : PluginBase
         var animation = _viewModel.SelectedAnimation;
         var element = _selectedState.SelectedElement;
 
-        animation.SetStateAtTime(animationTime, element, defaultIfNull:true);
+        animation.SetStateAtTime(animationTime, element, defaultIfNull: true);
     }
 
     private void HandleDataChange(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -514,14 +542,14 @@ public class MainStateAnimationPlugin : PluginBase
 
         bool shouldSave = true;
 
-        if(sender is  ElementAnimationsViewModel)
+        if (sender is ElementAnimationsViewModel)
         {
-            if(variableName == nameof(ElementAnimationsViewModel.SelectedAnimation) ||
+            if (variableName == nameof(ElementAnimationsViewModel.SelectedAnimation) ||
                 variableName == nameof(ElementAnimationsViewModel.OverLengthTime))
             {
                 shouldSave = false;
             }
-            else if(variableName == nameof(ElementAnimationsViewModel.DisplayedAnimationTime))
+            else if (variableName == nameof(ElementAnimationsViewModel.DisplayedAnimationTime))
             {
                 shouldSave = false;
             }
@@ -530,18 +558,18 @@ public class MainStateAnimationPlugin : PluginBase
         if (sender is AnimationViewModel)
         {
             // can this happen? I don't see anything on the view model
-            if(variableName == "SelectedState" || 
+            if (variableName == "SelectedState" ||
                 variableName == nameof(AnimationViewModel.SelectedKeyframe) ||
-                variableName == nameof(AnimationViewModel.Length) 
+                variableName == nameof(AnimationViewModel.Length)
                 )
             {
                 shouldSave = false;
             }
         }
 
-        if( sender is AnimatedKeyframeViewModel)
+        if (sender is AnimatedKeyframeViewModel)
         {
-            if(variableName == nameof(AnimatedKeyframeViewModel.DisplayString) || 
+            if (variableName == nameof(AnimatedKeyframeViewModel.DisplayString) ||
                 variableName == nameof(AnimatedKeyframeViewModel.AvailableStates))
             {
                 shouldSave = false;
@@ -552,11 +580,11 @@ public class MainStateAnimationPlugin : PluginBase
         {
             try
             {
-                AnimationCollectionViewModelManager.Self.Save(_viewModel);
+                _animationCollectionViewModelManager.Save(_viewModel);
             }
-            catch(Exception exc)
+            catch (Exception exc)
             {
-                GumCommands.Self.GuiCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
+                _gumCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
             }
         }
     }
@@ -596,10 +624,10 @@ public class MainStateAnimationPlugin : PluginBase
         response.ShouldDelete = true;
 
         var animatedStatesReferencingState = new HashSet<AnimationSave>();
-        
-        foreach(var state in category.States)
+
+        foreach (var state in category.States)
         {
-            foreach(var toAdd in GetAnimationsReferencingState(state, container as ElementSave))
+            foreach (var toAdd in GetAnimationsReferencingState(state, container as ElementSave))
             {
                 animatedStatesReferencingState.Add(toAdd);
             }
@@ -639,7 +667,7 @@ public class MainStateAnimationPlugin : PluginBase
             }
             else
             {
-                model = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
+                model = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
             }
 
 
@@ -651,7 +679,7 @@ public class MainStateAnimationPlugin : PluginBase
                 ? $"{category.Name}/{state.Name}"
                 : state.Name;
 
-            if(model != null)
+            if (model != null)
             {
                 foreach (var animation in model.Animations)
                 {
