@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -13,37 +14,46 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Forms.DefaultVisuals
 {
-    public class DefaultCheckboxRuntime : InteractiveGue
+    public class CheckBoxVisual : InteractiveGue
     {
+        public NineSliceRuntime CheckBoxBackground {  get; private set; }
         public RectangleRuntime FocusedIndicator { get; private set; }
 
 
-        public DefaultCheckboxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
+        public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
             if (fullInstantiation)
             {
                 this.Height = 32;
                 this.Width = 128;
 
-                var checkboxBackground = new ColoredRectangleRuntime();
-                checkboxBackground.Width = 24;
-                checkboxBackground.Height = 24;
-                checkboxBackground.Color = new Color(41, 55, 52);
-                checkboxBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                checkboxBackground.YOrigin = VerticalAlignment.Center;
-                checkboxBackground.Name = "CheckBoxBackground";
-                this.Children.Add(checkboxBackground);
+                var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
 
-                var innerCheck = new ColoredRectangleRuntime();
-                innerCheck.Width = 12;
-                innerCheck.Height = 12;
-                innerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                innerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                innerCheck.XOrigin = HorizontalAlignment.Center;
-                innerCheck.YOrigin = VerticalAlignment.Center;
+                CheckBoxBackground = new NineSliceRuntime();
+                CheckBoxBackground.Width = 24;
+                CheckBoxBackground.Height = 24;
+                CheckBoxBackground.Color = Styling.Colors.Warning;
+                CheckBoxBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                CheckBoxBackground.YOrigin = VerticalAlignment.Center;
+                CheckBoxBackground.Name = "CheckBoxBackground";
+                CheckBoxBackground.Texture = uiSpriteSheetTexture;
+                CheckBoxBackground.ApplyState(NineSliceStyles.Bordered);
+                this.Children.Add(CheckBoxBackground);
+
+                var innerCheck = new SpriteRuntime();
+                innerCheck.Width = 0;
+                innerCheck.Height = 0;
+                innerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                innerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                innerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                innerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                innerCheck.XOrigin = HorizontalAlignment.Left;
+                innerCheck.YOrigin = VerticalAlignment.Top;
                 innerCheck.Name = "InnerCheck";
                 innerCheck.Color = Styling.Colors.White;
-                checkboxBackground.Children.Add(innerCheck);
+                innerCheck.Texture = uiSpriteSheetTexture;
+                innerCheck.ApplyState(IconVisuals.Check);
+                CheckBoxBackground.Children.Add(innerCheck);
 
                 var text = new TextRuntime();
                 text.X = 28;
@@ -101,33 +111,45 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     });
                 }
 
+
+                void AddVariablesFromIconVIsual(string parentObject, StateSave iconSaveState )
+                {
+                    foreach( var variable in iconSaveState.Variables )
+                    {
+                        AddVariable($"{parentObject}.{variable.Name}", variable.Value);
+                    }
+                }
+
                 void AddOnOffState(string state, Color checkboxBackgroundColor, 
                     Color textColor, Color checkColor, bool isFocused)
                 {
                     AddState(state + "On");
                     AddVariable("InnerCheck.Visible", true);
                     AddVariable("InnerCheck.Color", checkColor);
-                    AddVariable("InnerCheck.Height", 12f);
+                    //AddVariable("InnerCheck.Height", 12f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
+                    AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Check);
 
 
                     AddState(state + "Off");
                     AddVariable("InnerCheck.Visible", false);
                     AddVariable("InnerCheck.Color", checkColor);
-                    AddVariable("InnerCheck.Height", 12f);
+                    //AddVariable("InnerCheck.Height", 12f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
+                    AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Check);
 
                     AddState(state + "Indeterminate");
                     AddVariable("InnerCheck.Visible", true);
                     AddVariable("InnerCheck.Color", checkColor);
-                    AddVariable("InnerCheck.Height", 4f);
+                    //AddVariable("InnerCheck.Height", 4f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
+                    AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Dash);
 
                 }
 

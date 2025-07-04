@@ -29,7 +29,8 @@ public static class NineSliceStyles
                 new () { Name = "TextureLeft", Type = "int", Value = left },
                 new () { Name = "TextureTop", Type = "int", Value = top },
                 new () { Name = "TextureWidth", Type = "int", Value = width },
-                new () { Name = "TextureHeight", Type = "int", Value = height }
+                new () { Name = "TextureHeight", Type = "int", Value = height },
+                new () { Name = "TextureAddress", Type = "int", Value = Gum.Managers.TextureAddress.Custom }
             }
         };
     }

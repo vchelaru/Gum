@@ -90,7 +90,7 @@ public class FormsUtilities
             case DefaultVisualsVersion.V2:
 
                 TryAdd(typeof(Button), typeof(ButtonVisual));
-                TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
+                TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
                 TryAdd(typeof(Label), typeof(LabelVisual));
                 TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
