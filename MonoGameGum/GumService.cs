@@ -92,6 +92,19 @@ public class GumService
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
     }
 
+    public void Initialize(Game game, DefaultVisualsVersion defaultVisualsVersion)
+    {
+        if (game.GraphicsDevice == null)
+        {
+            throw new InvalidOperationException(
+                "game.GraphicsDevice cannot be null. " +
+                "Be sure to call Initialize in the Game's Initialize method or later " +
+                "so that the Game has a valid GrahicsDevice");
+        }
+
+        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion:defaultVisualsVersion);
+    }
+
     public void Initialize(Game game, SystemManagers systemManagers)
     {
         InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
@@ -138,7 +151,8 @@ public class GumService
     }
 
     bool hasBeenInitialized = false;
-    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null)
+    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null, 
+        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
     {
         if(hasBeenInitialized)
         {

@@ -18,6 +18,23 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Forms;
 
+/// <summary>
+/// The version to use for default visuals in a code-only project.
+/// </summary>
+public enum DefaultVisualsVersion
+{
+    /// <summary>
+    /// The first version introduced with the first version of Gum Forms.
+    /// Most controls use solid colors and ColoredRectangles for their backgrounds.
+    /// </summary>
+    V1,
+    /// <summary>
+    /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
+    /// and respects a centralized styling.
+    /// </summary>
+    V2
+}
+
 public class FormsUtilities
 {
     static Cursor cursor;
@@ -36,7 +53,11 @@ public class FormsUtilities
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
-    public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null)
+    /// <param name="game">The Game instance, used for creating and updating input such as the Keyboard and Mouse</param>
+    /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
+    /// do not need to provide one.</param>
+    /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
+    public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
     {
         systemManagers = systemManagers ?? SystemManagers.Default;
 
@@ -46,22 +67,50 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
-        TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
-        TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
-        TryAdd(typeof(Label), typeof(DefaultLabelRuntime));
-        TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
-        TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
-        TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
-        TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
-        TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
-        TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
-        TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
-        TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
-        TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
-        TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
-        TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
-        TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+        switch(defaultVisualsVersion)
+        {
+            case DefaultVisualsVersion.V1:
+                TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
+                TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
+                TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
+                TryAdd(typeof(Label), typeof(DefaultLabelRuntime));
+                TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
+                TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
+                TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
+                TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
+                TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
+                TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
+                TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
+                TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
+                TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
+                TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+                break;
+            case DefaultVisualsVersion.V2:
+
+                TryAdd(typeof(Button), typeof(ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
+                TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
+                TryAdd(typeof(Label), typeof(LabelVisual));
+                TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
+                TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
+                TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
+                TryAdd(typeof(PasswordBox), typeof(PasswordBoxVisual));
+                TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
+                TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
+                TryAdd(typeof(TextBox), typeof(TextBoxVisual));
+                TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
+                TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
+                TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
+        }
+
 
         void TryAdd(Type formsType, Type runtimeType)
         {
