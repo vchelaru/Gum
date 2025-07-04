@@ -55,7 +55,7 @@ public class ButtonVisual : InteractiveGue
             Background.Name = "Background";
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
-            NineSliceStyles.ApplyIconTextureInfo(Background, NineSliceStyles.Bordered);
+            Background.ApplyState(NineSliceStyles.Bordered); 
             this.Children.Add(Background);
 
             TextInstance = new TextRuntime();
@@ -87,7 +87,7 @@ public class ButtonVisual : InteractiveGue
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
-            NineSliceStyles.ApplyIconTextureInfo(FocusedIndicator, NineSliceStyles.Solid);
+            FocusedIndicator.ApplyState(NineSliceStyles.Solid);
             FocusedIndicator.Visible = false;
             FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.Name = "FocusedIndicator";

@@ -59,7 +59,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.Color = Styling.Colors.DarkGray;
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
-                NineSliceStyles.ApplyIconTextureInfo(Background, NineSliceStyles.Bordered);
+                Background.ApplyState(NineSliceStyles.Bordered);
 
                 SelectionInstance = new NineSliceRuntime();
                 SelectionInstance.Name = "SelectionInstance";
@@ -74,7 +74,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 SelectionInstance.Y = 0f;
                 SelectionInstance.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 SelectionInstance.Texture = uiSpriteSheetTexture;
-                NineSliceStyles.ApplyIconTextureInfo(SelectionInstance, NineSliceStyles.Solid);
+                SelectionInstance.ApplyState(NineSliceStyles.Solid);
 
                 TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
@@ -125,7 +125,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 FocusedIndicator.Texture = uiSpriteSheetTexture;
-                NineSliceStyles.ApplyIconTextureInfo(FocusedIndicator, NineSliceStyles.Solid);
+                FocusedIndicator.ApplyState(NineSliceStyles.Solid);
                 FocusedIndicator.Visible = false;
                 
                 CaretInstance = new SpriteRuntime();
@@ -135,10 +135,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 CaretInstance.Texture = uiSpriteSheetTexture;
                 CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-                CaretInstance.TextureHeight = NineSliceStyles.Solid.TextureHeight;
-                CaretInstance.TextureLeft = NineSliceStyles.Solid.TextureLeft;
-                CaretInstance.TextureTop = NineSliceStyles.Solid.TextureTop;
-                CaretInstance.TextureWidth = NineSliceStyles.Solid.TextureWidth;
+                CaretInstance.ApplyState(NineSliceStyles.Solid);
                 CaretInstance.Width = 1f;
                 CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 CaretInstance.X = 4f;
