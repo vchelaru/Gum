@@ -22,25 +22,25 @@ namespace Gum.Plugins.BaseClasses
     {
         #region Events
 
-        public event Action<GumProjectSave> ProjectLoad;
-        public event Action<GumProjectSave> AfterProjectSave;
-        public event Action<GumProjectSave> BeforeProjectSave;
-        public event Action<FilePath> ProjectLocationSet;
-        public event Action<string> ProjectPropertySet;
+        public event Action<GumProjectSave>? ProjectLoad;
+        public event Action<GumProjectSave>? AfterProjectSave;
+        public event Action<GumProjectSave>? BeforeProjectSave;
+        public event Action<FilePath>? ProjectLocationSet;
+        public event Action<string>? ProjectPropertySet;
 
-        public event Action<ElementSave> BeforeElementSave;
-        public event Action<ElementSave> AfterElementSave;
-        public event Action GuidesChanged;
-        public event Action<ElementSave> Export;
-        public event Action<DeleteOptionsWindow, Array> DeleteOptionsWindowShow;
-        public event Action<DeleteOptionsWindow, Array> DeleteConfirm;
+        public event Action<ElementSave>? BeforeElementSave;
+        public event Action<ElementSave>? AfterElementSave;
+        public event Action? GuidesChanged;
+        public event Action<ElementSave>? Export;
+        public event Action<DeleteOptionsWindow, Array>? DeleteOptionsWindowShow;
+        public event Action<DeleteOptionsWindow, Array>? DeleteConfirm;
 
-        public event Action<ElementSave> ElementAdd;
-        public event Action<ElementSave> ElementDelete;
+        public event Action<ElementSave>? ElementAdd;
+        public event Action<ElementSave>? ElementDelete;
         /// <summary>
         /// Raised when an element is duplicated. First argument is the old element, second is the new.
         /// </summary>
-        public event Action<ElementSave, ElementSave> ElementDuplicate;
+        public event Action<ElementSave, ElementSave>? ElementDuplicate;
 
         /// <summary>
         /// Event raised when the element is renamed.
@@ -49,34 +49,34 @@ namespace Gum.Plugins.BaseClasses
         /// [ElementSave] is the element that was renamed
         /// [string] is the old name
         /// </remarks>
-        public event Action<ElementSave, string> ElementRename;
+        public event Action<ElementSave, string>? ElementRename;
         /// <summary>
         /// Action raised when a state is renamed. String parameter is the State's old name.
         /// </summary>
-        public event Action<StateSave, string> StateRename;
-        public event Action<StateSave> StateAdd;
+        public event Action<StateSave, string>? StateRename;
+        public event Action<StateSave>? StateAdd;
 
         /// <summary>
         /// Event raised when a state is moved to a new category. First argument is the state, second is the new category, third is the old category.
         /// </summary>
-        public event Action<StateSave, StateSaveCategory, StateSaveCategory> StateMovedToCategory;
-        public event Action<StateSave> StateDelete;
+        public event Action<StateSave, StateSaveCategory, StateSaveCategory>? StateMovedToCategory;
+        public event Action<StateSave>? StateDelete;
         public event Action<StateSave?>? ReactToStateSaveSelected;
         public event Action<StateSave?>? ReactToCustomStateSaveSelected;
 
-        public event Action RefreshStateTreeView;
-        public event Action<IInstanceContainer?> RefreshElementTreeView;
+        public event Action? RefreshStateTreeView;
+        public event Action<IInstanceContainer?>? RefreshElementTreeView;
 
-        public event Action AfterUndo;
+        public event Action? AfterUndo;
 
-        public event Action<StateSaveCategory, string> CategoryRename;
-        public event Action<StateSaveCategory> CategoryAdd;
-        public event Action<StateSaveCategory> CategoryDelete;
-        public event Action<string, StateSaveCategory> VariableRemovedFromCategory;
-        public event Action<StateSaveCategory> ReactToStateSaveCategorySelected;
+        public event Action<StateSaveCategory, string>? CategoryRename;
+        public event Action<StateSaveCategory>? CategoryAdd;
+        public event Action<StateSaveCategory>? CategoryDelete;
+        public event Action<string, StateSaveCategory>? VariableRemovedFromCategory;
+        public event Action<StateSaveCategory>? ReactToStateSaveCategorySelected;
 
-        public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
-        public event Action<string, StateSave> AddAndRemoveVariablesForType;
+        public event Action<VariableSave, List<Attribute>>? FillVariableAttributes;
+        public event Action<string, StateSave>? AddAndRemoveVariablesForType;
         /// <summary>
         /// Returns whether the argument variable should be excluded from editing in the UI.
         /// This allows plugins to limit the variables which are displayed in certain contexts. 
@@ -84,9 +84,9 @@ namespace Gum.Plugins.BaseClasses
         /// of Gum's properties. These variables could be excluded by a plugin to make the editing experience
         /// more natural and less error prone.
         /// </summary>
-        public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
-        public event Action WireframeRefreshed;
-        public event Action<string> WireframePropertyChanged;
+        public event Func<VariableSave, RecursiveVariableFinder, bool>? VariableExcluded;
+        public event Action? WireframeRefreshed;
+        public event Action<string>? WireframePropertyChanged;
         public event Func<bool>? GetIfShouldSuppressRemoveEditorHighlight;
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Gum.Plugins.BaseClasses
         /// [string] - name of the variable set. If an InstanceSave exists, this is the variable name on the instance without the instance name (the stripped name)
         /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
-        public event Action<ElementSave, InstanceSave, string, object> VariableSet;
+        public event Action<ElementSave, InstanceSave, string, object>? VariableSet;
 
         /// <summary>
         /// Event raised after a variable has been set - this can be used to perform action after most 
@@ -106,8 +106,8 @@ namespace Gum.Plugins.BaseClasses
         /// [string] - name of the variable set 
         /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
-        public event Action<ElementSave, InstanceSave, string, object> VariableSetLate;
-        public event Action<IStateContainer, VariableSave> VariableSelected;
+        public event Action<ElementSave, InstanceSave, string, object>? VariableSetLate;
+        public event Action<IStateContainer, VariableSave>? VariableSelected;
 
         /// <summary>
         /// Event raised when a new variable is added. At the time of this writing
@@ -120,50 +120,50 @@ namespace Gum.Plugins.BaseClasses
         /// is not a new variable but rather a "public" alias of an existing variable. However,
         /// plugins may need to respond to this so it is treated as an event.
         /// </remarks>
-        public event Action<ElementSave, string> VariableAdd;
-        public event Action<ElementSave, string> VariableDelete;
+        public event Action<ElementSave, string>? VariableAdd;
+        public event Action<ElementSave, string>? VariableDelete;
 
-        public event Action<ElementSave> ElementSelected;
-        public event Action<TreeNode> TreeNodeSelected;
-        public event Action<TreeNode> StateWindowTreeNodeSelected;
+        public event Action<ElementSave?>? ElementSelected;
+        public event Action<TreeNode>? TreeNodeSelected;
+        public event Action<TreeNode>? StateWindowTreeNodeSelected;
         public event Func<ITreeNode?>? GetTreeNodeOver;
         public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
         public event Action? FocusSearch;
 
-        public event Action<BehaviorSave> BehaviorSelected;
-        public event Action<BehaviorSave> BehaviorCreated;
-        public event Action<BehaviorSave> BehaviorDeleted;
-        public event Action<VariableSave> BehaviorVariableSelected;
+        public event Action<BehaviorSave>? BehaviorSelected;
+        public event Action<BehaviorSave>? BehaviorCreated;
+        public event Action<BehaviorSave>? BehaviorDeleted;
+        public event Action<VariableSave>? BehaviorVariableSelected;
 
 
-        public event Action<ElementBehaviorReference, ElementSave> BehaviorReferenceSelected;
-        public event Action<ElementSave> BehaviorReferencesChanged;
+        public event Action<ElementBehaviorReference, ElementSave>? BehaviorReferenceSelected;
+        public event Action<ElementSave>? BehaviorReferencesChanged;
 
-        public event Action<ElementSave, InstanceSave> InstanceSelected;
+        public event Action<ElementSave, InstanceSave>? InstanceSelected;
 
         /// <summary>
         /// Event raised whenever a new instance is added. Note that this can be called after the parent is set on the new instance.
         /// </summary>
-        public event Action<ElementSave, InstanceSave> InstanceAdd;
-        public event Action<ElementSave, InstanceSave> InstanceDelete;
-        public event Action<ElementSave, InstanceSave[]> InstancesDelete;
+        public event Action<ElementSave, InstanceSave>? InstanceAdd;
+        public event Action<ElementSave, InstanceSave>? InstanceDelete;
+        public event Action<ElementSave, InstanceSave[]>? InstancesDelete;
 
 
         /// <summary>
         /// Event raised whenever an instance is renamed. Third parameter is the old name.
         /// </summary>
-        public event Action<ElementSave, InstanceSave, string> InstanceRename;
-        public event Action<InstanceSave> InstanceReordered;
+        public event Action<ElementSave, InstanceSave, string>? InstanceRename;
+        public event Action<InstanceSave>? InstanceReordered;
 
-        public event Action RefreshBehaviorView;
-        public event Action<bool> RefreshVariableView;
+        public event Action? RefreshBehaviorView;
+        public event Action<bool>? RefreshVariableView;
 
         /// <summary>
         /// Method which allows a plugin to provide a default StateSave for a given type. This can be used
         /// to return a set of variables and their defaults for a completely custom StandardElementSave instead
         /// of relying on StandardElementsManager
         /// </summary>
-        public event Func<string, StateSave> GetDefaultStateForType;
+        public event Func<string, StateSave>? GetDefaultStateForType;
 
 
         public event Func<string, IRenderableIpso?>? CreateRenderableForType;
@@ -174,8 +174,8 @@ namespace Gum.Plugins.BaseClasses
         // has to be made in the PluginManager. Glue uses this approach.
         // Which is better? I don't know yet, so I'm going to keep Gum using the event approach and Glue using the non-event
         // approach to see if a preference emerges.
-        public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
-        public Func<StateSaveCategory, IStateContainer, DeleteResponse> GetDeleteStateCategoryResponse;
+        public Func<StateSave, IStateContainer, DeleteResponse>? GetDeleteStateResponse;
+        public Func<StateSaveCategory, IStateContainer, DeleteResponse>? GetDeleteStateCategoryResponse;
 
         public event Action? CameraChanged;
         public event Action? XnaInitialized;
@@ -446,7 +446,7 @@ namespace Gum.Plugins.BaseClasses
         public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave) =>
             AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
 
-        public void CallElementSelected(ElementSave element) => ElementSelected?.Invoke(element);
+        public void CallElementSelected(ElementSave? element) => ElementSelected?.Invoke(element);
 
         public void CallTreeNodeSelected(TreeNode treeNode) => TreeNodeSelected?.Invoke(treeNode);
 
