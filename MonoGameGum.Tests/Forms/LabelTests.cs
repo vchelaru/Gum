@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class LabelTests
+public class LabelTests : BaseTestClass
 {
     [Fact]
     public void Text_ShouldParseBbCodeTags()

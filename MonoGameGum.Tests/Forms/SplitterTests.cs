@@ -1,4 +1,8 @@
-﻿using MonoGameGum.Forms.Controls;
+﻿using Gum.DataTypes;
+using Gum.Managers;
+using MonoGameGum.Forms;
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.Forms.DefaultFromFileVisuals;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -8,7 +12,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class SplitterTests
+public class SplitterTests : BaseTestClass
 {
     StackPanel _parentPanel;
     Splitter _splitter;
@@ -168,6 +172,27 @@ public class SplitterTests
         _firstPanel.Height.ShouldBe(0);
         _secondPanel.Height.ShouldBe(20);
 
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_ShouldCreateFromFileSplitter_IfElementExists()
+    {
+        GumProjectSave gumProject = new GumProjectSave();
+        var splitterComponent = new ComponentSave();
+        // give it a default state:
+        splitterComponent.States.Add(new Gum.DataTypes.Variables.StateSave() { Name="Default" });
+        gumProject.Components.Add(splitterComponent);
+        splitterComponent.Name = "TestSplitterComponent";
+        splitterComponent.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        { BehaviorName = "SplitterBehavior" });
+
+        ObjectFinder.Self.GumProjectSave = gumProject;
+
+        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        var gue = splitterComponent.ToGraphicalUiElement();
+
+        (gue is DefaultFromFileSplitterRuntime).ShouldBeTrue();
     }
 
     void SetupVerticalStack()

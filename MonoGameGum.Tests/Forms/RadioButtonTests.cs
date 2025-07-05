@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class RadioButtonTests
+public class RadioButtonTests : BaseTestClass
 {
     public RadioButtonTests()
     {
