@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class WindowTests
+public class WindowTests : BaseTestClass
 {
     [Fact]
     public void Constructor_CreatesVisual()

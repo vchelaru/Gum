@@ -75,11 +75,7 @@ public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 
 #endregion
 
-public struct KeyCombo
-{
-    public Keys PushedKey;
-    public Keys? HeldKey;
-}
+
 
 public class FrameworkElement : INotifyPropertyChanged
 {
@@ -98,14 +94,15 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
-#if MONOGAME || KNI
+#if MONOGAME || KNI || FNA
     public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new List<IInputReceiverKeyboardMonoGame>();
 #endif
 
 #endif
 
 #if !FRB
-    // March 15, 2025 - should these be a part of FrameworkElement? Or instead should they be moved to GumService
+    // March 15, 2025 - should these be a part of FrameworkElement?
+    // Or instead should they be moved to GumService
 
     /// <summary>
     /// Container used to hold popups such as the ListBox which appears when clicking on a combo box.
@@ -944,30 +941,33 @@ public class FrameworkElement : INotifyPropertyChanged
 
 #if !FRB && (MONOGAME || KNI)
 
-    public static List<KeyCombo> TabKeyCombos = new List<KeyCombo>
+    /// <summary>
+    /// List of key combinations that will trigger shifting focus
+    /// to the next control (typically called "tabbing").
+    /// </summary>
+    public static List<KeyCombo> TabKeyCombos { get; set; } = new ()
     {
-        new KeyCombo { PushedKey = Keys.Tab }
+        new KeyCombo { PushedKey = Keys.Tab, IsTriggeredOnRepeat = true }
     };
 
-    public static List<KeyCombo> TabReverseKeyCombos = new List<KeyCombo>
+    /// <summary>
+    /// List of key combinations that will trigger shifting focus
+    /// to the previous control.
+    /// </summary>
+    public static List<KeyCombo> TabReverseKeyCombos { get; set; } = new ()
     {
-        new KeyCombo { HeldKey = Keys.LeftShift, PushedKey = Keys.Tab },
-        new KeyCombo { HeldKey = Keys.RightShift, PushedKey = Keys.Tab },
+        new KeyCombo { HeldKey = Keys.LeftShift, PushedKey = Keys.Tab, IsTriggeredOnRepeat = true },
+        new KeyCombo { HeldKey = Keys.RightShift, PushedKey = Keys.Tab, IsTriggeredOnRepeat = true },
     };
 
-    bool IsComboPushed(KeyCombo keyCombo)
+    /// <summary>
+    /// List of key combinations that will trigger a click action
+    /// on controls which can be clicked such as Button, ComboBox, and CheckBox
+    /// </summary>
+    public static List<KeyCombo> ClickCombos { get; set; } = new ()
     {
-        foreach (var keyboard in KeyboardsForUiControl)
-        {
-            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(keyCombo.HeldKey.Value);
-            if( isHeld && keyboard.KeysTyped.Contains(keyCombo.PushedKey))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
+        new KeyCombo { PushedKey = Keys.Enter }
+    };
 
     protected void HandleKeyboardFocusUpdate()
     {
@@ -975,7 +975,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             foreach(var tabKeyCombo in TabKeyCombos)
             {
-                if(IsComboPushed(tabKeyCombo))
+                if(tabKeyCombo.IsComboPushed())
                 {
                     // This allows TextBoes to set AcceptsTab to true
                     if(IsTabNavigationEnabled == true || tabKeyCombo.PushedKey != Keys.Tab)
@@ -988,7 +988,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
             foreach(var tabReverseKeyCombo in TabReverseKeyCombos)
             {
-                if(IsComboPushed(tabReverseKeyCombo))
+                if(tabReverseKeyCombo.IsComboPushed())
                 {
                     // This allows TextBoes to set AcceptsTab to true
                     if (IsTabNavigationEnabled == true || tabReverseKeyCombo.PushedKey != Keys.Tab)
@@ -1267,9 +1267,18 @@ public class FrameworkElement : INotifyPropertyChanged
         }
 
 #if (MONOGAME || KNI) && !FRB
-        for(int i = 0; i < KeyboardsForUiControl.Count; i++)
+        if(!pushedByInput)
         {
-            pushedByInput = pushedByInput || KeyboardsForUiControl[i].KeyDown(Keys.Enter);
+            for (int i = 0; i < KeyboardsForUiControl.Count; i++)
+            {
+                foreach(var combo in FrameworkElement.ClickCombos)
+                {
+                    if(combo.IsComboDown())
+                    {
+                        pushedByInput = true;
+                    }
+                }
+            }
         }
 #endif
 #endif

@@ -1,0 +1,44 @@
+﻿using MonoGameGum.Forms.Controls;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MonoGameGum.Tests;
+public class BaseTestClass : IDisposable
+{
+    public void Dispose()
+    {
+        FrameworkElement.KeyboardsForUiControl.Clear();
+        FrameworkElement.ClickCombos.Clear();
+        FrameworkElement.ClickCombos.Add(new KeyCombo
+        {
+            PushedKey = Microsoft.Xna.Framework.Input.Keys.Enter,
+            HeldKey = null,
+            IsTriggeredOnRepeat = false
+        });
+
+        FrameworkElement.TabKeyCombos.Clear();
+        FrameworkElement.TabKeyCombos.Add(new KeyCombo
+        {
+            PushedKey = Microsoft.Xna.Framework.Input.Keys.Tab,
+            HeldKey = null,
+            IsTriggeredOnRepeat = true
+        });
+
+        FrameworkElement.TabReverseKeyCombos.Clear();
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo
+        {
+            PushedKey = Microsoft.Xna.Framework.Input.Keys.Tab,
+            HeldKey = Microsoft.Xna.Framework.Input.Keys.LeftShift,
+            IsTriggeredOnRepeat = true
+        });
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo
+        {
+            PushedKey = Microsoft.Xna.Framework.Input.Keys.Tab,
+            HeldKey = Microsoft.Xna.Framework.Input.Keys.RightShift,
+            IsTriggeredOnRepeat = true
+        });
+    }
+}

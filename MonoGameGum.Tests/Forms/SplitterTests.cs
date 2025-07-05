@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class SplitterTests
+public class SplitterTests : BaseTestClass
 {
     StackPanel _parentPanel;
     Splitter _splitter;

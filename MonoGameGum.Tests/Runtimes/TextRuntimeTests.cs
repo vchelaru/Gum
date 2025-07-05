@@ -10,8 +10,6 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-// keeps all tests in the same collection running sequentially so they an change static values:
-[Collection("Text-related Tests")]
 public class TextRuntimeTests
 {
     [Fact]

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class FrameworkElementTests
+public class FrameworkElementTests : BaseTestClass
 {
     [Fact]
     public void Loaded_ShouldBeCalled_WhenAddedToRoot()
