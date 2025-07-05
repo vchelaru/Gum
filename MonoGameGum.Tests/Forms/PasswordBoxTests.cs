@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class PasswordBoxTests
+public class PasswordBoxTests : BaseTestClass
 {
     [Fact]
     public void HandleCharEntered_ShouldUpdateBindingSource_OnEnter()

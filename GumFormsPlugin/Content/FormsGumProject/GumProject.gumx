@@ -185,6 +185,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>Controls/SplitterStandard</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Controls/StackPanel</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -371,6 +376,9 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>SliderBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>SplitterBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
     <Name>StackPanelBehavior</Name>

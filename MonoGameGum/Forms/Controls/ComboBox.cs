@@ -631,20 +631,33 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            if (keyboard?.KeyPushed(Keys.Enter) == true)
+            var wasPushed = false;
+            var wasReleased = false;
+            foreach(var item in FrameworkElement.ClickCombos)
+            {
+                if(item.IsComboPushed())
+                {
+                    wasPushed = true;
+                }
+                if(item.IsComboReleased())
+                {
+                    wasReleased = true;
+                    UpdateState();
+                }
+            }
+            if(wasPushed)
             {
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 OpenAndFocusListBox();
                 UpdateState();
             }
-
-            if (keyboard?.KeyReleased(Keys.Enter) == true)
+            if(wasReleased)
             {
                 UpdateState();
             }
-
         }
+
 
         base.HandleKeyboardFocusUpdate();
 #endif
