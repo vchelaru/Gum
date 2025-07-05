@@ -18,6 +18,35 @@ namespace MonoGameGum.Forms.DefaultVisuals
     {
         public NineSliceRuntime CheckBoxBackground {  get; private set; }
         public RectangleRuntime FocusedIndicator { get; private set; }
+        public TextRuntime TextInstance { get; private set; }
+
+        public class CheckBoxCategoryStates
+        {
+            public StateSave EnabledOn { get; set; }
+            public StateSave EnabledOff { get; set; }
+            public StateSave EnabledIndeterminate { get; set; }
+            public StateSave DisabledOn { get; set; }
+            public StateSave DisabledOff { get; set; }
+            public StateSave DisabledIndeterminate { get; set; }
+            public StateSave HighlightedOn { get; set; }
+            public StateSave HighlightedOff { get; set; }
+            public StateSave HighlightedIndeterminate { get; set; }
+            public StateSave PushedOn { get; set; }
+            public StateSave PushedOff { get; set; }
+            public StateSave PushedIndeterminate { get; set; }
+            public StateSave FocusedOn { get; set; }
+            public StateSave FocusedOff { get; set; }
+            public StateSave FocusedIndeterminate { get; set; }
+            public StateSave HighlightedFocusedOn { get; set; }
+            public StateSave HighlightedFocusedOff { get; set; }
+            public StateSave HighlightedFocusedIndeterminate { get; set; }
+            public StateSave DisabledFocusedOn { get; set; }
+            public StateSave DisabledFocusedOff { get; set; }
+            public StateSave DisabledFocusedIndeterminate { get; set; }
+
+        }
+
+        public CheckBoxCategoryStates States;
 
 
         public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -26,6 +55,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
             {
                 this.Height = 32;
                 this.Width = 128;
+
+                this.States = new CheckBoxCategoryStates();
 
                 var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
 
@@ -55,16 +86,17 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 innerCheck.ApplyState(IconVisuals.Check);
                 CheckBoxBackground.Children.Add(innerCheck);
 
-                var text = new TextRuntime();
-                text.X = 28;
-                text.Y = 0;
-                text.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
-                text.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                text.Width = -36;
-                text.Height = 0;
-                text.Name = "TextInstance";
-                text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                this.Children.Add(text);
+                TextInstance = new TextRuntime();
+                TextInstance.X = 28;
+                TextInstance.Y = 0;
+                TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+                TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                TextInstance.Width = -36;
+                TextInstance.Height = 0;
+                TextInstance.Name = "TextInstance";
+                TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                TextInstance.ApplyState(TextStyles.Normal);
+                this.Children.Add(TextInstance);
 
                 FocusedIndicator = new RectangleRuntime();
                 FocusedIndicator.X = 0;
@@ -126,7 +158,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddState(state + "On");
                     AddVariable("InnerCheck.Visible", true);
                     AddVariable("InnerCheck.Color", checkColor);
-                    //AddVariable("InnerCheck.Height", 12f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
@@ -136,7 +167,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddState(state + "Off");
                     AddVariable("InnerCheck.Visible", false);
                     AddVariable("InnerCheck.Color", checkColor);
-                    //AddVariable("InnerCheck.Height", 12f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
@@ -145,7 +175,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddState(state + "Indeterminate");
                     AddVariable("InnerCheck.Visible", true);
                     AddVariable("InnerCheck.Color", checkColor);
-                    //AddVariable("InnerCheck.Height", 4f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
@@ -170,6 +199,36 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 //AddOnOffState(FrameworkElement.PushedState, Styling.Colors.PrimaryDark,
                 AddOnOffState(FrameworkElement.PushedStateName, Styling.Colors.Primary,
                     Styling.Colors.White, Styling.Colors.White, false);
+
+
+                // Attach the built up States to the exposed flatened States
+                this.States.EnabledOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.EnabledOn));
+                this.States.EnabledOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.EnabledOff));
+                this.States.EnabledIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.EnabledIndeterminate));
+
+                this.States.DisabledOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.DisabledOn));
+                this.States.DisabledOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.DisabledOff));
+                this.States.DisabledIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.DisabledIndeterminate));
+
+                this.States.HighlightedOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.HighlightedOn));
+                this.States.HighlightedOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.HighlightedOff));
+                this.States.HighlightedIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.HighlightedIndeterminate));
+
+                this.States.PushedOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.PushedOn));
+                this.States.PushedOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.PushedOff));
+                this.States.PushedIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.PushedIndeterminate));
+
+                this.States.FocusedOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.FocusedOn));
+                this.States.FocusedOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.FocusedOff));
+                this.States.FocusedIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.FocusedIndeterminate));
+
+                this.States.HighlightedFocusedOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.HighlightedFocusedOn));
+                this.States.HighlightedFocusedOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.HighlightedFocusedOff));
+                this.States.HighlightedFocusedIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.HighlightedFocusedIndeterminate));
+
+                this.States.DisabledFocusedOn = checkboxCategory.States.Find(x => x.Name == nameof(this.States.DisabledFocusedOn));
+                this.States.DisabledFocusedOff = checkboxCategory.States.Find(x => x.Name == nameof(this.States.DisabledFocusedOff));
+                this.States.DisabledFocusedIndeterminate = checkboxCategory.States.Find(x => x.Name == nameof(this.States.DisabledFocusedIndeterminate));
 
 
                 this.AddCategory(checkboxCategory);

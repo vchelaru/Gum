@@ -72,6 +72,7 @@ public class ButtonVisual : InteractiveGue
             TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             TextInstance.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
             TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.ApplyState(TextStyles.Normal);
             this.Children.Add(TextInstance);
 
             FocusedIndicator = new NineSliceRuntime();
