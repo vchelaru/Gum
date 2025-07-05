@@ -93,8 +93,8 @@ public class FormsUtilities
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(ComboBoxVisual));
                 TryAdd(typeof(Label), typeof(LabelVisual));
-                TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
-                TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
+                TryAdd(typeof(ListBox), typeof(ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(ListBoxItemVisual));
                 TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
                 TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
                 TryAdd(typeof(PasswordBox), typeof(PasswordBoxVisual));

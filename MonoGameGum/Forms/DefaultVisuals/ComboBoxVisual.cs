@@ -15,7 +15,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class ComboBoxVisual : InteractiveGue
     {
-        public DefaultListBoxRuntime ListBoxInstance;
+        public ListBoxVisual ListBoxInstance;
         public RectangleRuntime FocusedIndicator { get; private set; }
 
         public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -28,7 +28,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 var TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
 
-                ListBoxInstance = new DefaultListBoxRuntime(tryCreateFormsObject:false);
+                ListBoxInstance = new ListBoxVisual(tryCreateFormsObject:false);
                 ListBoxInstance.Name = "ListBoxInstance";
 
 
