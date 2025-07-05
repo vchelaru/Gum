@@ -1,6 +1,8 @@
 ﻿using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms;
+using MonoGameGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -23,6 +25,8 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
     {
         SystemManagers.Default = new();
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+        ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
+
         FormsUtilities.InitializeDefaults();
         CreateStubbedFonts();
 
