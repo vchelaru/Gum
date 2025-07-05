@@ -91,7 +91,7 @@ public class FormsUtilities
 
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
-                TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
+                TryAdd(typeof(ComboBox), typeof(ComboBoxVisual));
                 TryAdd(typeof(Label), typeof(LabelVisual));
                 TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
                 TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
