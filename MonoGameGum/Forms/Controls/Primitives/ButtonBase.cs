@@ -241,18 +241,34 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
         foreach(var keyboard in KeyboardsForUiControl)
         {
-            if(keyboard?.KeyPushed(Keys.Enter)== true)
+            bool wasPushed = false;
+            bool wasReleased = false;
+
+            foreach (var combo in FrameworkElement.ClickCombos)
+            {
+                if (combo.IsComboPushed())
+                {
+                    wasPushed = true;
+                    break;
+                }
+                else if (combo.IsComboReleased())
+                {
+                    wasReleased = true;
+                    break;
+                }
+            }
+
+            if(wasPushed)
             {
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 UpdateState();
-            }
 
-            if(keyboard?.KeyReleased(Keys.Enter) == true)
+            }
+            if(wasReleased)
             {
                 UpdateState();
             }
-
         }
 
         base.HandleKeyboardFocusUpdate();
