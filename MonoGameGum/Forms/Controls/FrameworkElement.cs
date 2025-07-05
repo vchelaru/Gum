@@ -939,7 +939,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public virtual bool IsTabNavigationEnabled => true;
 
-#if !FRB && (MONOGAME || KNI)
+#if !FRB && (MONOGAME || KNI || FNA)
 
     /// <summary>
     /// List of key combinations that will trigger shifting focus
