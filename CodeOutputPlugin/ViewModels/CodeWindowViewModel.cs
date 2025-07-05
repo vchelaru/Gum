@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.ViewModels;
@@ -34,6 +36,8 @@ public enum WhichElementsToGenerate
 
 public class CodeWindowViewModel : ViewModel
 {
+    private readonly IDialogService _dialogService;
+    
     public WhatToView WhatToView
     {
         get => Get<WhatToView>();
@@ -149,6 +153,10 @@ public class CodeWindowViewModel : ViewModel
         set => Set(value);
     }
 
+    public CodeWindowViewModel()
+    {
+        _dialogService = Locator.GetRequiredService<IDialogService>();
+    }
 
     public FilePath? GetCsprojDirectoryAboveGumx()
     {
@@ -192,7 +200,7 @@ public class CodeWindowViewModel : ViewModel
 
         if (csprojLocation == null)
         {
-            GumCommands.Self.GuiCommands.ShowMessage("No .csproj file found, so cannot automatically set up code generation.");
+            _dialogService.ShowMessage("No .csproj file found, so cannot automatically set up code generation.");
             shouldContinue = false;
         }
 

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<StandardElementSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<StandardElementSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Text</Name>
   <State>
     <Name>Default</Name>
@@ -151,6 +151,12 @@
     <Variable>
       <Type>int?</Type>
       <Name>MaxLettersToShow</Name>
+      <Category>Text</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int?</Type>
+      <Name>MaxNumberOfLines</Name>
       <Category>Text</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -798,6 +804,10 @@
           <string>FontSize = Components/Styles.Tiny.FontSize</string>
           <string>IsBold = Components/Styles.Tiny.IsBold</string>
           <string>IsItalic = Components/Styles.Tiny.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Tiny.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Tiny.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Tiny.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Tiny.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -841,6 +851,10 @@
           <string>FontSize = Components/Styles.Small.FontSize</string>
           <string>IsBold = Components/Styles.Small.IsBold</string>
           <string>IsItalic = Components/Styles.Small.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Small.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Small.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Small.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Small.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -885,6 +899,10 @@
           <string>FontSize = Components/Styles.Normal.FontSize</string>
           <string>IsBold = Components/Styles.Normal.IsBold</string>
           <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Normal.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Normal.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Normal.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Normal.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -928,6 +946,10 @@
           <string>FontSize = Components/Styles.Emphasis.FontSize</string>
           <string>IsBold = Components/Styles.Emphasis.IsBold</string>
           <string>IsItalic = Components/Styles.Emphasis.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Emphasis.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Emphasis.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Emphasis.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Emphasis.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -971,6 +993,10 @@
           <string>FontSize = Components/Styles.Strong.FontSize</string>
           <string>IsBold = Components/Styles.Strong.IsBold</string>
           <string>IsItalic = Components/Styles.Strong.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Strong.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Strong.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Strong.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Strong.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -1015,6 +1041,10 @@
           <string>FontSize = Components/Styles.H3.FontSize</string>
           <string>IsBold = Components/Styles.H3.IsBold</string>
           <string>IsItalic = Components/Styles.H3.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.H3.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.H3.CustomFontFile</string>
+          <string>FontScale = Components/Styles.H3.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.H3.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -1059,6 +1089,10 @@
           <string>FontSize = Components/Styles.H2.FontSize</string>
           <string>IsBold = Components/Styles.H2.IsBold</string>
           <string>IsItalic = Components/Styles.H2.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.H2.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.H2.CustomFontFile</string>
+          <string>FontScale = Components/Styles.H2.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.H2.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -1103,6 +1137,10 @@
           <string>FontSize = Components/Styles.H1.FontSize</string>
           <string>IsBold = Components/Styles.H1.IsBold</string>
           <string>IsItalic = Components/Styles.H1.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.H1.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.H1.CustomFontFile</string>
+          <string>FontScale = Components/Styles.H1.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.H1.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>
@@ -1147,6 +1185,10 @@
           <string>FontSize = Components/Styles.Title.FontSize</string>
           <string>IsBold = Components/Styles.Title.IsBold</string>
           <string>IsItalic = Components/Styles.Title.IsItalic</string>
+          <string>UseCustomFont = Components/Styles.Title.UseCustomFont</string>
+          <string>CustomFontFile = Components/Styles.Title.CustomFontFile</string>
+          <string>FontScale = Components/Styles.Title.FontScale</string>
+          <string>LineHeightMultiplier = Components/Styles.Title.LineHeightMultiplier</string>
         </Value>
       </VariableList>
     </State>

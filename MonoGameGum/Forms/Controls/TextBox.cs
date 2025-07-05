@@ -38,15 +38,41 @@ public class TextBox : TextBoxBase
         }
     }
 
-    protected override string CategoryName => "TextBoxCategoryState";
+    /// <summary>
+    /// The maximum letters to display. This can be used to 
+    /// create an effect where the text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => coreTextObject.MaxLettersToShow;
+        set
+        {
+            if (value != MaxLettersToShow)
+            {
+                coreTextObject.MaxLettersToShow = value;
+            }
+        }
+    }
 
     /// <summary>
-    /// Whether pressing the return key adds a newline to the text box. If false, the return key does not add a newline.
+    /// The maximum number of lines to display. This can be used to 
+    /// limit how many lines of text are displayed at one time.
     /// </summary>
-    public bool AcceptsReturn
+    public int? MaxNumberOfLines
     {
-        get; set;
+        get => coreTextObject.MaxNumberOfLines;
+        set
+        {
+            if (value != MaxNumberOfLines)
+            {
+                coreTextObject.MaxNumberOfLines = value;
+            }
+        }
     }
+
+    protected override string CategoryName => "TextBoxCategoryState";
+
+
 
     #endregion
 
@@ -77,6 +103,13 @@ public class TextBox : TextBoxBase
 
     #region Event Handler Methods
 
+    /// <summary>
+    /// Will update the Text based on what was pressed, if existing text was already selected, or enter pressed.  Also updates the caret position.  
+    /// Does not handle control keys like(LEFT, RIGHT, UP, DOWN, HOME, END, BACKSPACE, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A)
+    /// control key situations are handled by TextBoxBase.HandleKeyDown
+    /// Key information is gathered from Keyboard.cs in the Activity method, then passed during TextBoxBase.DoKeyboardAction
+    /// </summary>
+    /// <param name="character">The ascii code character that we need to perform an action on</param>
     public override void HandleCharEntered(char character)
     {
         // not sure why we require this to be focused. It blocks things like the
@@ -94,17 +127,15 @@ public class TextBox : TextBoxBase
             string? newlyAddedText = null;
             var addedCharacter = false;
 
-            // Do we want to handle backspace here or should it be in the Keys handler?
-            if (character == '\b'
-                // I think CTRL Backspace?
-                || character == (char)127
-                // esc
-                || character == (char)27)
+            // We handle these actions in TextBoxBase.HandleKeyDown based on Keyboard.GetState()
+            if (character == '\b'           // BACKSPACE key
+                || character == (char)127   // DEL key
+                || character == (char)27)   // ESC key (Not handled anywhere, unsure why we are ignoring it?)
             {
-                // handled by TextBoxBase
-                //    HandleBackspace();
+                //    HandleBackspace();    // handled by TextBoxBase
             }
-            else if (character == '\r' || character == '\n')
+            else if (character == '\r'      // \r is triggerd by CTRL+ENTER on windows
+                || character == '\n')
             {
                 if (AcceptsReturn)
                 {

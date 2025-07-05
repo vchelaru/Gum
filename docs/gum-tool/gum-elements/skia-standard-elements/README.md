@@ -7,7 +7,7 @@ Skia standard elements are a collection of elements which use SkiaSharp for rend
 Skia adds advanced vector graphics support for shapes such as Arc, ColoredCircle, and RoundedRectangle. Skia also adds support for vector file formats such as SVG and Lottie.
 
 {% hint style="warning" %}
-At the time of this writing, Skia standard elements are only supported in FlatRedBall projects. Future versions of MonoGame Gum will add support for Skia runtime objects. If your project needs Skia, please make a request in Discord or on GitHub.
+Using Skia Standard Elements may limit which platforms can run your Gum project. For more information, see the [SkiaGum Platform Support](../../../code/skiagum/skiagum-platform-support.md) page.
 {% endhint %}
 
 ### Enabling Skia Standard Elements

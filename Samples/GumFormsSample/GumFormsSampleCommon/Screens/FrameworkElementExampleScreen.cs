@@ -238,7 +238,11 @@ namespace GumFormsSample.Screens
 
             var wrappedTextBox = new TextBox();
             wrappedTextBox.Width = 200;
+            
+            // Make it no wrap to still accept return but not automatically wrap
+            //wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.NoWrap;
             wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+            wrappedTextBox.AcceptsReturn = true;
             wrappedTextBox.Height = 140;
             wrappedTextBox.Placeholder = "Placeholder Text...";
             stackPanel.AddChild(wrappedTextBox);
@@ -316,6 +320,17 @@ namespace GumFormsSample.Screens
             button2.Height = 200;
             panelWithSplitter.AddChild(button2);
             button2.Text = "Button below splitter";
+
+
+            var text = new TextRuntime();
+            // Set this value before changing width-related properties.
+            // This is a global value, so it is used by all TextRuntime
+            // instances:
+            RenderingLibrary.Graphics.Text.IsMidWordLineBreakEnabled = true;
+            text.Width = 100;
+            text.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            text.Text = "abcdefghijklmnopqrstuvwxyz";
+            stackPanel.AddChild(text);
         }
 
         void CreateLayeredUi()

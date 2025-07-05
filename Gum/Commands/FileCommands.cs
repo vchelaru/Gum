@@ -9,7 +9,8 @@ using Gum.Undo;
 using Gum.Plugins;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
-using GumCommon;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Commands
 {
@@ -18,6 +19,7 @@ namespace Gum.Commands
         private LocalizationManager _localizationManager;
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
+        private readonly IDialogService _dialogService;
         
         MainWindow mainWindow;
 
@@ -25,6 +27,7 @@ namespace Gum.Commands
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
         
         public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
@@ -173,7 +176,7 @@ namespace Gum.Commands
                     }
                     else
                     {
-                        FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath, DateTime.Now.AddSeconds(1));
+                        FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath);
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
@@ -245,7 +248,7 @@ namespace Gum.Commands
                     catch (Exception e)
                     {
                         // This can happen if the CSV has duplicate entries
-                        GumCommands.Self.GuiCommands.ShowMessage($"Error loading CSV {file.FullPath}\n\n{e}");
+                        _dialogService.ShowMessage($"Error loading CSV {file.FullPath}\n\n{e}");
                     }
                 }
             }
@@ -276,7 +279,7 @@ namespace Gum.Commands
                     //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                     string fileName = GetFullPathXmlFile( behavior).FullPath;
-                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName, DateTime.Now.AddSeconds(1));
+                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName);
                     // if it's readonly, let's warn the user
                     bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 

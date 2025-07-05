@@ -30,9 +30,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using Gum.Services.Dialogs;
 using Gum.Undo;
-using GumCommon;
 using ToolsUtilities;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
@@ -122,12 +123,14 @@ internal class MainEditorTabPlugin : InternalPlugin
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
         UndoManager undoManager = Locator.GetRequiredService<UndoManager>();
-        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager);
+        IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
+        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService);
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public override void StartUp()

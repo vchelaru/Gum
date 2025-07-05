@@ -9,7 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GumCommon;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
@@ -25,6 +26,7 @@ public class DeleteVariableService : IDeleteVariableService
     private readonly FileCommands _fileCommands;
     private readonly GuiCommands _guiCommands;
     private readonly RenameLogic _renameLogic;
+    private readonly IDialogService _dialogService;
 
     public DeleteVariableService(FileCommands fileCommands, GuiCommands guiCommands)
     {
@@ -32,6 +34,7 @@ public class DeleteVariableService : IDeleteVariableService
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     public bool CanDeleteVariable(VariableSave variable)
@@ -48,7 +51,7 @@ public class DeleteVariableService : IDeleteVariableService
 
         if(response.Succeeded == false)
         {
-            _guiCommands.ShowMessage(response.Message);
+            _dialogService.ShowMessage(response.Message);
         }
         else
         {

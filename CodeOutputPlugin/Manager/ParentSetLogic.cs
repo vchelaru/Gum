@@ -8,7 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GumCommon;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager
@@ -16,6 +17,7 @@ namespace CodeOutputPlugin.Manager
     public static class ParentSetLogic
     {
         private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
+        private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
         
         public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
@@ -55,12 +57,12 @@ namespace CodeOutputPlugin.Manager
 
                 // Maybe an output message is not obvious enough?
                 //GumCommands.Self.GuiCommands.PrintOutput(childResponse.Message);
-                GumCommands.Self.GuiCommands.ShowMessage(response.Message);
+                _dialogService.ShowMessage(response.Message);
             }
             else if(!string.IsNullOrEmpty(response.Message))
             {
                 // useful for warnings:
-                GumCommands.Self.GuiCommands.ShowMessage(response.Message);
+                _dialogService.ShowMessage(response.Message);
             }
         }
 
@@ -91,14 +93,14 @@ namespace CodeOutputPlugin.Manager
                     state.Variables.RemoveAll(item => item.SourceObject == instance.Name);
                 }
 
-                GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
+                _dialogService.ShowMessage(childResponse.Message);
 
                 GumCommands.Self.FileCommands.TryAutoSaveElement(element);
             }
             else if (!string.IsNullOrEmpty(childResponse.Message))
             {
                 // useful for warnings:
-                GumCommands.Self.GuiCommands.ShowMessage(childResponse.Message);
+                _dialogService.ShowMessage(childResponse.Message);
             }
         }
 

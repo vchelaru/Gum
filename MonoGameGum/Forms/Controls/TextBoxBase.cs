@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
+using Gum.DataTypes.Variables;
+using System.Linq;
+
+
 
 
 #if FRB
@@ -122,7 +126,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             if (value != textWrapping)
             {
                 textWrapping = value;
-                UpdateToTextWrappingChanged();
+                UpdateStateForSingleOrMultiLine();
                 // RefreshTemplateFromSelectionInstance after UpdateToTextWrappingChanged so the state has applied when we clone
                 RefreshTemplateFromSelectionInstance();
             }
@@ -358,7 +362,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             {
                 var toRemove = _selectionInstances[i];
                 var parent = toRemove.Parent;
-                parent.Children.Remove(toRemove);
+                parent?.Children.Remove(toRemove);
             }
         }
     }
@@ -502,7 +506,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         int index = 0;
 
-        if (TextWrapping == TextWrapping.NoWrap)
+        if (TextWrapping == TextWrapping.NoWrap && !AcceptsReturn)
         {
             var textToUse = DisplayedText;
             index = GetIndex(cursorOffset, textToUse);
@@ -588,6 +592,14 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         return index;
     }
 
+    /// <summary>
+    /// Handles special situations only like [LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A]
+    /// Data comes from the MonogameGum.Input.Keyboard.Activity() method earlier in the call stack, which gets the data from Monogame's Keyboard.GetState()
+    /// </summary>
+    /// <param name="key"></param>
+    /// <param name="isShiftDown"></param>
+    /// <param name="isAltDown"></param>
+    /// <param name="isCtrlDown"></param>
     public void HandleKeyDown(Microsoft.Xna.Framework.Input.Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
         if (isFocused)
@@ -660,7 +672,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     }
                     break;
                 case Keys.Back:
-                    if(!IsReadOnly)
+                    if (!IsReadOnly)
                     {
                         HandleBackspace(isCtrlDown);
                     }
@@ -762,8 +774,6 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             var keyEventArg = new KeyEventArgs();
             keyEventArg.Key = key;
             KeyDown?.Invoke(this, keyEventArg);
-
-
         }
     }
 
@@ -936,6 +946,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         IsFocused = false;
     }
 
+    /// <summary>
+    /// Performs key actions based on the keyboard input gathered during Keyboard.cs's Activity() method
+    /// </summary>
+    /// <param name="keyboard">State of keyboard from TextInput and Keyboard.GetKeys</param>
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
 #if !FRB
@@ -954,11 +968,14 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         var asMonoGameKeyboard = (IInputReceiverKeyboardMonoGame)keyboard;
 
+        // Handle all the special situations only based on Keyboard.GetState
+        //   Situations: LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A
         foreach (var key in asMonoGameKeyboard.KeysTyped)
         {
             HandleKeyDown(key, shift, alt, ctrl);
         }
 
+        // String of letters typed and captured via the TextInput() Monogame event
         var stringTyped = keyboard.GetStringTyped();
 
         if (stringTyped != null)
@@ -1092,7 +1109,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     protected void UpdateCaretPositionFromCaretIndex()
     {
-        if (TextWrapping == TextWrapping.NoWrap)
+        if (TextWrapping == TextWrapping.NoWrap && AcceptsReturn == false)
         {
             // make sure we measure a valid string
             var stringToMeasure = DisplayedText ?? "";
@@ -1204,15 +1221,49 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         caretComponent.Visible = isCaretVisible;
     }
 
-    private void UpdateToTextWrappingChanged()
+    bool _acceptsReturn;
+    /// <summary>
+    /// Whether pressing the return key adds a newline to the text box. If false, the return key does not add a newline.
+    /// </summary>
+    /// <remarks>
+    /// Setting this value to true makes the Visual use its 
+    /// LineModeCategoryState.Multi state.</remarks>
+    public bool AcceptsReturn
     {
-        if (textWrapping == TextWrapping.Wrap)
+        get => _acceptsReturn;
+        set
         {
-            Visual.SetProperty("LineModeCategoryState", "Multi");
+            if(_acceptsReturn != value)
+            {
+                _acceptsReturn = value;
+                UpdateStateForSingleOrMultiLine();
+                // RefreshTemplateFromSelectionInstance after UpdateToTextWrappingChanged so the state has applied when we clone
+                RefreshTemplateFromSelectionInstance();
+            }
         }
-        else // no wrap
+    }
+
+    private void UpdateStateForSingleOrMultiLine()
+    {
+        if( Visual.Categories.TryGetValue("LineModeCategory", out StateSaveCategory? category))
         {
-            Visual.SetProperty("LineModeCategoryState", "Single");
+            var stateToSet = "Single";
+
+
+            if (textWrapping == TextWrapping.Wrap || AcceptsReturn)
+            {
+                stateToSet = "Multi";
+
+                const string multiNoWrap = "MultiNoWrap";
+
+                if (textWrapping == TextWrapping.NoWrap && category.States.Any(item => item.Name == multiNoWrap))
+                {
+                    stateToSet = multiNoWrap;
+                }
+            }
+
+
+            Visual.SetProperty("LineModeCategoryState", stateToSet);
         }
     }
 
@@ -1267,7 +1318,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         selectionStartEnds.Clear();
         var substring = DisplayedText.Substring(0, selectionStart);
 
-        if (this.TextWrapping == TextWrapping.Wrap)
+        if (this.TextWrapping == TextWrapping.Wrap || AcceptsReturn)
         {
             GetLineNumber(selectionStart, out int startLineNumber, out int absoluteStartOfFirstLine, out int startRelativeIndexInLine);
 
@@ -1362,7 +1413,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     protected void OffsetTextToKeepCaretInView()
     {
-        if (this.TextWrapping == TextWrapping.NoWrap)
+        // intentionally don't check AcceptsReturn here:
+        if (this.TextWrapping == TextWrapping.NoWrap )
         {
             this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             this.caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;

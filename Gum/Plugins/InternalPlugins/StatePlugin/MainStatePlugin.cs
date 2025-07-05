@@ -15,8 +15,9 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolCommands;
-using GumCommon;
 
 namespace Gum.Plugins.StatePlugin;
 
@@ -47,7 +48,8 @@ public class MainStatePlugin : InternalPlugin
         _gumCommands = GumCommands.Self;
         var elementCommands = Locator.GetRequiredService<ElementCommands>();
         var editCommands = Locator.GetRequiredService<EditCommands>();
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands, elementCommands, editCommands);
+        var dialogService = Locator.GetRequiredService<IDialogService>();
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands, elementCommands, editCommands, dialogService);
         _hotkeyManager = HotkeyManager.Self;
         _objectFinder = ObjectFinder.Self;
     }

@@ -6,12 +6,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
 {
-    class DuplicateService
+    public class DuplicateService
     {
+        private readonly IDialogService _dialogService;
+        public DuplicateService()
+        {
+            _dialogService = Locator.GetRequiredService<IDialogService>();
+        }
+        
         public void HandleDuplicate(ElementSave oldElement, ElementSave newElement)
         {
             var projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
@@ -24,9 +32,7 @@ namespace StateAnimationPlugin.Managers
                 bool shouldCopy = true;
                 if(newFile.Exists())
                 {
-                    var result =
-                        GumCommands.Self.GuiCommands.ShowYesNoMessageBox($"The animation file already exists:\n{newFile}\n\nDo you want to copy the animations from {oldElement.Name} over the existing file?");
-                    shouldCopy = result == System.Windows.MessageBoxResult.Yes;
+                    shouldCopy = _dialogService.ShowYesNoMessage($"The animation file already exists:\n{newFile}\n\nDo you want to copy the animations from {oldElement.Name} over the existing file?");
                 }
 
                 if(shouldCopy)

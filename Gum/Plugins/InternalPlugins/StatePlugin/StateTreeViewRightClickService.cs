@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Gum.DataTypes.Variables;
 using Gum.ToolStates;
@@ -13,6 +13,8 @@ using Gum.Commands;
 using Gum.Mvvm;
 using System.Windows;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers;
 
@@ -23,16 +25,22 @@ public class StateTreeViewRightClickService
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
     private readonly EditCommands _editCommands;
+    private readonly IDialogService _dialogService;
 
     System.Windows.Controls.ContextMenu _menuStrip;
     GumCommands _gumCommands;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands, ElementCommands elementCommands, EditCommands editCommands)
+    public StateTreeViewRightClickService(ISelectedState selectedState, 
+        GumCommands gumCommands, 
+        ElementCommands elementCommands, 
+        EditCommands editCommands,
+        IDialogService dialogService)
     {
         _selectedState = selectedState;
         _gumCommands = gumCommands;
         _elementCommands = elementCommands;
         _editCommands = editCommands;
+        _dialogService = dialogService;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
@@ -304,12 +312,12 @@ public class StateTreeViewRightClickService
         // Is there a "custom" current state save, like an interpolation or animation?
         if (_selectedState.CustomCurrentStateSave != null)
         {
-            _gumCommands.GuiCommands.ShowMessage("Cannot duplicate state while a custom state is displaying. Are you creating or playing animations?");
+            _dialogService.ShowMessage("Cannot duplicate state while a custom state is displaying. Are you creating or playing animations?");
             return;
         }
         if (_selectedState.SelectedStateCategorySave == null)
         {
-            _gumCommands.GuiCommands.ShowMessage("Cannot duplicate uncategorized states. Select a state in a category first.");
+            _dialogService.ShowMessage("Cannot duplicate uncategorized states. Select a state in a category first.");
             return;
         }
         ////////End Early Out///////////////

@@ -20,7 +20,9 @@ using System.ComponentModel;
 using System.Management.Instrumentation;
 using Gum.ToolCommands;
 using System.Threading.Tasks;
-using GumCommon;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum
 {
@@ -36,6 +38,7 @@ namespace Gum
         
         private readonly ISelectedState _selectedState;
         private readonly ElementCommands _elementCommands;
+        private readonly IDialogService _dialogService;
 
         #endregion
 
@@ -83,6 +86,7 @@ namespace Gum
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
         public void LoadSettings()
@@ -683,7 +687,7 @@ namespace Gum
                         }
 
                         // todo - this should go through the plugin...
-                        FileWatchManager.Self.IgnoreNextChangeUntil(GumProjectSave.FullFileName, DateTime.Now.AddSeconds(5));
+                        FileWatchManager.Self.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
                         succeeded = true;
@@ -786,11 +790,11 @@ namespace Gum
 
                         if(files.Length > 0 || directories.Length > 0)
                         {
-                            var areYouSure = GumCommands.Self.GuiCommands.ShowYesNoMessageBox(
+                            var areYouSure = _dialogService.ShowYesNoMessage(
                                 $"The location\n\n{directory}\n\nis not empty. It's best to save new Gum projects in " +
                                 $"an empty folder. Do you want to continue?");
 
-                            result = areYouSure == System.Windows.MessageBoxResult.Yes ? DialogResult.OK : DialogResult.Cancel;
+                            result = areYouSure ? DialogResult.OK : DialogResult.Cancel;
                         }
                     }
                 }

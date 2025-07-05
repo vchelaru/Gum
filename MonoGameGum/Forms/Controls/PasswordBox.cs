@@ -112,28 +112,30 @@ public class PasswordBox : TextBoxBase
 
     #region Event Handler Methods
 
+    /// <summary>
+    /// Will update the Text based on what was pressed, if existing text was already selected, or enter pressed.  Also updates the caret position.
+    /// See TextBox.cs for more details
+    /// </summary>
+    /// <param name="character">The ascii code character that we need to perform an action on</param>
     public override void HandleCharEntered(char character)
     {
-        // See TextBox on why we don't check IsFocused
-        //if (HasFocus)
-        if(!IsReadOnly)
+        //if (HasFocus) // See TextBox on why we don't check IsFocused
+        if (!IsReadOnly)
         {
             if (selectionLength != 0)
             {
                 DeleteSelection();
             }
-            // If text is null force it to be an empty string so we can add characters
 
-            if (character == '\b'
-                // I think CTRL Backspace?
-                || character == (char)127
-                // esc
-                || character == (char)27)
+            // We handle these actions in TextBoxBase.HandleKeyDown based on Keyboard.GetState()
+            if (character == '\b'           // BACKSPACE key
+                || character == (char)127   // DEL key
+                || character == (char)27)   // ESC key (Not handled anywhere, unsure why we are ignoring it?)
             {
-                // do nothing, handled with a backspace above
-                //    HandleBackspace();
+                //    HandleBackspace();    // handled by TextBoxBase
             }
-            else if (character == '\r' || character == '\n')
+            else if (character == '\r'      // \r is triggerd by CTRL+ENTER on windows
+                || character == '\n')
             {
                 // no enter supported on passwords, do we send an event?
                 var passwordBinding = PropertyRegistry.GetBindingExpression(nameof(Password));
@@ -152,7 +154,6 @@ public class PasswordBox : TextBoxBase
                 CallMethodsInResponseToPasswordChanged();
             }
         }
-
     }
 
     private void CallMethodsInResponseToPasswordChanged()
@@ -191,7 +192,7 @@ public class PasswordBox : TextBoxBase
             else
             {
                 var whereToRemoveFrom = caretIndex - 1;
-                // Move the care to the left one before removing from the text. Otherwise, if the
+                // Move the caret to the left one before removing from the text. Otherwise, if the
                 // caret is at the end of the word, modifying the word will shift the caret to the left, 
                 // and that could cause it to shift over two times.
                 caretIndex--;

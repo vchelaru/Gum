@@ -1,20 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary.Content;
-using System.Collections;
-using System.Globalization;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Xml.Serialization;
 using ToolsUtilities;
 using BlendState = Gum.BlendState;
-using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
-using Vector2 = System.Numerics.Vector2;
-using Point = System.Drawing.Point;
 using Color = System.Drawing.Color;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Point = System.Drawing.Point;
 using Rectangle = System.Drawing.Rectangle;
+using Vector2 = System.Numerics.Vector2;
 
 namespace RenderingLibrary.Graphics;
 
@@ -43,6 +43,7 @@ public class BitmapFont : IDisposable
 
     private AtlasedTexture mAtlasedTexture;
     private LineRectangle mCharRect;
+    private ParsedFontFile _ParsedFontFile;
     #endregion
 
     #region Properties
@@ -106,15 +107,15 @@ public class BitmapFont : IDisposable
         string fontContents = FileManager.FromFileText(fontFile);
         mFontFile = FileManager.Standardize(fontFile, preserveCase:true);
 
-
+        _ParsedFontFile = new ParsedFontFile(fontContents);
         ReloadTextures(fontFile, fontContents);
 
-        SetFontPattern(fontContents);
+        SetFontPattern();
     }
 
     private void ReloadTextures(string fontFile, string fontContents)
     {
-        var unqualifiedTextureNames = GetSourceTextures(fontContents);
+        var unqualifiedTextureNames = _ParsedFontFile.GetPagesAsArrayOfStrings;
 
 
         mTextures = new Texture2D[unqualifiedTextureNames.Length];
@@ -212,11 +213,12 @@ public class BitmapFont : IDisposable
         mTextureNames = new string[1];
         mTextureNames[0] = mTextures[0]?.Name;
 
-        SetFontPattern(fontPattern);
+        _ParsedFontFile = new ParsedFontFile(fontPattern);
+
+        SetFontPattern();
     }
 
 
-    #region Public Methods
 
     public void AssignCharacterTextureCoordinates(int asciiNumber, out float tVTop, out float tVBottom,
         out float tULeft, out float tURight)
@@ -325,39 +327,10 @@ public class BitmapFont : IDisposable
         return GetCharacterScaleX(asciiNumber) * 2;
     }
 
-    public static string[] GetSourceTextures(string fontPattern)
+    public void SetFontPattern(int? forcedTextureWidth = null, int? forcedTextureHeight = null)
     {
-        List<string> texturesToLoad = new List<string>();
 
-        int currentIndexIntoFile = fontPattern.IndexOf("page id=");
-
-        if(fontPattern?.StartsWith("<?xml version=\"1.0\"?>") == true)
-        {
-            throw new Exception("Cannot load a font file that is in XML format. Please convert it to Text format.");
-        }
-
-        while (currentIndexIntoFile != -1)
-        {
-            // Right now we'll assume that the pages come in order and they're sequential
-            // If this isn' the case then the logic may need to be modified to support this
-            // instead of just returning a string[].
-            //int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
-
-            int openingQuotesIndex = fontPattern.IndexOf('"', currentIndexIntoFile);
-
-            int closingQuotesIndex = fontPattern.IndexOf('"', openingQuotesIndex + 1);
-
-            string textureName = fontPattern.Substring(openingQuotesIndex + 1, closingQuotesIndex - openingQuotesIndex - 1);
-            texturesToLoad.Add(textureName);
-
-            currentIndexIntoFile = fontPattern.IndexOf("page id=", closingQuotesIndex);
-        }
-        return texturesToLoad.ToArray();
-    }
-
-    public void SetFontPattern(string fontPattern)
-    {
-        var parsedData = new ParsedFontFile(fontPattern);
+        var parsedData = _ParsedFontFile;
 
         this.mOutlineThickness = parsedData.Info?.Outline ?? 0;
 
@@ -366,91 +339,120 @@ public class BitmapFont : IDisposable
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
 
-        if (mTextures.Length > 0 && mTextures[0] != null)
+        ///////////////////////////////Early Out/////////////////////////////////
+        if(mTextures.Length == 0 || mTextures[0] == null)
         {
-            //ToDo: Atlas support  **************************************************************
-            var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
-
-            // Hiero "Extended" does not include the space character.
-            // This used to cause a rendering crash. That was fixed but
-            // even with it fixed we want to make sure we have a valid space
-            // character since it's so common.
-            bool wasSpaceCreatedDynamically = false;
-            if(spaceCharInfo == null)
+            if(forcedTextureHeight == null || forcedTextureWidth == null)
             {
-                wasSpaceCreatedDynamically = true;
+                return;
+            }
+        }
+        ////////////////////////////End Early Out///////////////////////////////
 
-                var fontSize = 18;
+        int textureWidth = 0;
+        int textureHeight = 0;
 
-                var absFontSize = System.Math.Abs(parsedData.Info.Size);
-                if (absFontSize > 0)
-                {
-                    // bmfc uses negative values for fonts
-                    // that "match char height":
-                    fontSize = absFontSize;
+        if(forcedTextureWidth != null && forcedTextureHeight != null)
+        {
+            textureWidth = forcedTextureWidth.Value;
+            textureHeight = forcedTextureHeight.Value;
+        }
+        else
+        {
+            textureWidth = mTextures[0].Width;
+            textureHeight = mTextures[0].Height;
+        }
 
-                }
 
-                // Arial 32 has 9 spacing for 32, so let's try 3
-                int spaceSize = fontSize / 3;
+        //ToDo: Atlas support  **************************************************************
+        var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
 
-                spaceCharInfo = new FontFileCharLine
-                {
-                    Id = (char)' ',
-                    XAdvance = spaceSize,
-                    Width = spaceSize
-                };
+        // Hiero "Extended" does not include the space character.
+        // This used to cause a rendering crash. That was fixed but
+        // even with it fixed we want to make sure we have a valid space
+        // character since it's so common.
+        bool wasSpaceCreatedDynamically = false;
+        if(spaceCharInfo == null)
+        {
+            wasSpaceCreatedDynamically = true;
+
+            var fontSize = 18;
+
+            var absFontSize = System.Math.Abs(parsedData.Info.Size);
+            if (absFontSize > 0)
+            {
+                // bmfc uses negative values for fonts
+                // that "match char height":
+                fontSize = absFontSize;
+
             }
 
-            // Added null check for space since some special fonts might not have a space inside them.
-            if (spaceCharInfo != null)
+            // Arial 32 has 9 spacing for 32, so let's try 3
+            int spaceSize = fontSize / 3;
+
+            spaceCharInfo = new FontFileCharLine
             {
-                var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
-                    mLineHeightInPixels);
+                Id = (char)' ',
+                XAdvance = spaceSize,
+                Width = spaceSize
+            };
+        }
 
-                for (int i = 0; i < charArraySize; i++)
-                {
-                    mCharacterInfo[i] = space;
-                }
+        // Added null check for space since some special fonts might not have a space inside them.
+        if (spaceCharInfo != null)
+        {
+            var space = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight,
+                mLineHeightInPixels);
 
-                if (mCharacterInfo.Length > (int)'\t')
-                {
-                    // Make the tab character be equivalent to 4 spaces:
-                    mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
-                    mCharacterInfo['\t'].Spacing = space.Spacing * 4;
-                    mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
-                    mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
-                }
-                if(mCharacterInfo.Length > (int)'\n')
-                {
-                    mCharacterInfo['\n'].ScaleX = 0;
-                    mCharacterInfo['\n'].Spacing = 0;
-                    mCharacterInfo['\n'].TURight = 0;
-                    mCharacterInfo['\n'].TULeft = 0;
-                    //mCharacterInfo['\n'].XOffset = 0;
-                    mCharacterInfo['\n'].XOffsetInPixels = 0;
-                }
+            for (int i = 0; i < charArraySize; i++)
+            {
+                mCharacterInfo[i] = space;
             }
 
-            foreach (var charInfo in parsedData.Chars)
+            if (mCharacterInfo.Length > (int)'\t')
             {
-                mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, mTextures[0].Width,
-                    mTextures[0].Height, mLineHeightInPixels);
+                // Make the tab character be equivalent to 4 spaces:
+                mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
+                mCharacterInfo['\t'].Spacing = space.Spacing * 4;
+                mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
+                mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
             }
-
-            if(wasSpaceCreatedDynamically)
+            if(mCharacterInfo.Length > (int)'\n')
             {
-                mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width,
-                    mTextures[0].Height, mLineHeightInPixels);
+                mCharacterInfo['\n'].ScaleX = 0;
+                mCharacterInfo['\n'].Spacing = 0;
+                mCharacterInfo['\n'].TURight = 0;
+                mCharacterInfo['\n'].TULeft = 0;
+                //mCharacterInfo['\n'].XOffset = 0;
+                mCharacterInfo['\n'].XOffsetInPixels = 0;
             }
+        }
 
-            foreach (var kerning in parsedData.Kernings)
+            
+        foreach (var charInfo in parsedData.Chars)
+        {
+            // TODO: Ask VIC why BMFont generator will create a char id="-1" entry, which crashes this code.
+            // This is a temporary fix until he can tell me
+            if (charInfo.Id == -1)
             {
-                var character = mCharacterInfo[kerning.First];
-                if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
-                {
-                    character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
-                }
+                continue;
+            }
+            mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, textureWidth,
+                textureHeight, mLineHeightInPixels);
+        }
+
+        if(wasSpaceCreatedDynamically)
+        {
+            mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, textureWidth,
+                textureHeight, mLineHeightInPixels);
+        }
+
+        foreach (var kerning in parsedData.Kernings)
+        {
+            var character = mCharacterInfo[kerning.First];
+            if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
+            {
+                character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
             }
         }
     }
@@ -465,7 +467,9 @@ public class BitmapFont : IDisposable
         string fontPattern = FileManager.FromFileText(mFontFile);
         //sr.Close();
 
-        SetFontPattern(fontPattern);
+        _ParsedFontFile = new ParsedFontFile(fontPattern);
+
+        SetFontPattern();
     }
 
 
@@ -600,8 +604,12 @@ public class BitmapFont : IDisposable
         object objectRequestingChange, int requiredWidth, List<int> widths,
         SpriteRenderer spriteRenderer,
         Color color,
-        float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
-        int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null, float lineHeightMultiplier = 1)
+        float xOffset = 0, float yOffset = 0, 
+        float rotation = 0, float scaleX = 1, float scaleY = 1,
+        int? numberOfLettersToRender = null, 
+        TextRenderingPositionMode? overrideTextRenderingPositionMode = null, 
+        float lineHeightMultiplier = 1,
+        bool shiftForOutline = true)
     {
         ///////////Early Out////////////////
         if (numberOfLettersToRender == 0)
@@ -616,8 +624,13 @@ public class BitmapFont : IDisposable
 
         int lineNumber = 0;
 
+        // int is used if pixel perfect
         int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
         int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
+
+        // otherwise, we use rounded to the zoom value, to try to get close:
+        float xOffsetRoundedToZoom = MathFunctions.RoundFloat(xOffset, scaleX);
+        float yOffsetRoundedToZoom = MathFunctions.RoundFloat(yOffset, scaleY);
 
         // Custom effect already does premultiply alpha on the shader so we skip that in this case
         if (!Renderer.UseCustomEffectRendering && Renderer.NormalBlendState == BlendState.AlphaBlend)
@@ -652,8 +665,11 @@ public class BitmapFont : IDisposable
         {
             var line = lines[i];
 
-            // scoot over to leave room for the outline
-            currentLetterOrigin.X = mOutlineThickness;
+            if(shiftForOutline)
+            {
+                // scoot over to leave room for the outline
+                currentLetterOrigin.X = mOutlineThickness * scaleX;
+            }
 
             float offsetFromAlignment = 0;
 
@@ -726,10 +742,6 @@ public class BitmapFont : IDisposable
                     toReturn.Height = System.Math.Max(toReturn.Height, currentLetterOrigin.Y);
 
 
-                    var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
-
-                    finalPosition.X += xOffset;
-                    finalPosition.Y += yOffset;
 
 #if DEBUG
                     if(mTextures.Length <= pageIndex)
@@ -738,14 +750,29 @@ public class BitmapFont : IDisposable
                     }
 #endif
 
-                    if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
+                    var isFreeFloating = effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                         // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotation != 0 ||
-                        // If scaled up/down, don't use free floating
-                        scaleX != 1)
+                        rotation != 0;
+
+                    if(!isFreeFloating)
                     {
+                        // If scaled up/down, don't use free floating
+                        isFreeFloating = scaleX != 1;
+                    }
+
+                    if (isFreeFloating)
+                    {
+
+                        var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
+
+                        finalPosition.X += xOffsetRoundedToZoom;
+                        finalPosition.Y += yOffsetRoundedToZoom;
+
+
                         var scale = new Vector2(scaleX, scaleY);
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, 
+                            color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
                     else
                     {
@@ -755,7 +782,9 @@ public class BitmapFont : IDisposable
 
                         var position = new Vector2(destRect.X, destRect.Y);
 
-                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
+                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, 
+                            new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
 
                     numberOfLettersRendered++;
@@ -906,7 +935,7 @@ public class BitmapFont : IDisposable
             currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, fontScale, lineHeightMultiplier);
             destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
-            // Shift it back.
+            // Shift it back now that we have the destinationRectangle
             currentCharacterDrawPosition.X -= xOffset * fontScale;
             currentCharacterDrawPosition.X += 
                 //characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
@@ -1149,7 +1178,9 @@ public class BitmapFont : IDisposable
                 // might be so that icons sit snug
                 // against the end of their line of
                 // of text. 
-                if (isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight)
+                if (isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
+                    // This should never happen in real development, but we want to check for this with unit tests:
+                    Texture != null)
                 {
                     //toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
                     toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.XOffsetInPixels;
@@ -1185,7 +1216,6 @@ public class BitmapFont : IDisposable
 
     }
 
-    #endregion
 
     #region Private Methods
 
@@ -1243,6 +1273,8 @@ public class BitmapFont : IDisposable
     {
         return mFontFile;
     }
+
+    #region Internal Font Pattern Parsing classes
 
     private class ParsedFontLine
     {
@@ -1340,13 +1372,107 @@ public class BitmapFont : IDisposable
 
     private class ParsedFontFile
     {
-        public FontFileInfoLine Info { get; }
-        public FontFileCommonLine Common { get; }
+        public FontFileInfoLine Info { get; private set; }
+        public FontFileCommonLine Common { get; private set; }
         public List<FontFileCharLine> Chars { get; } = new List<FontFileCharLine>(300);
         public List<FontFileKerningLine> Kernings { get; } = new List<FontFileKerningLine>(300);
+        public List<FontFilePage> Pages { get; } = new List<FontFilePage>(10);
+
+        /// <summary>
+        /// Returns the Pages (List of texture filenames) as an array of strings
+        /// </summary>
+        public string[] GetPagesAsArrayOfStrings
+        {
+            get
+            {
+                List<string> texturesToLoad = new List<string>();
+                foreach(var page in Pages)
+                {
+                    texturesToLoad.Add(page.File);
+                }
+                return texturesToLoad.ToArray();
+            }
+        }
 
         public ParsedFontFile(string contents)
         {
+            // Determine file type https://www.angelcode.com/products/bmfont/doc/file_format.html
+            // Binary   starts with "BMF"
+            // XML      starts with "<" (An opening XML tag)
+            // Text     starts with "info"
+            char firstChar = contents[0];
+            if (firstChar == '<')
+            {
+                // Process XML file
+                ParseXmlText(contents);
+            }
+            else if (firstChar == 66) // 66 = 'B'
+            {
+                // Process Binary File 
+                throw new InvalidOperationException("Unable to load Binary Font files, please convert to XML or TEXT.");
+            }
+            else if (firstChar == 'i') // first word is "info"
+            {
+                ParsePlainText(contents);
+            }
+            else
+            {
+                // Error, unknown file type!
+                throw new InvalidOperationException("Unknown Font File format! Please convert to XML or TEXT!");
+            }
+
+        }
+
+        private void ParseXmlText(string contents)
+        {
+            XmlSerializer serializer = FileManager.GetXmlSerializer(typeof(XMLFont));
+            using var reader = new StringReader(contents);
+            var xmlFont = (XMLFont?)serializer.Deserialize(reader);
+
+            if (xmlFont == null)
+            { 
+                throw new InvalidOperationException("Unable to load XML Font file, deserialization failed!");
+            }
+
+            if (xmlFont.Info != null)
+            {
+                Info = new FontFileInfoLine(xmlFont);
+            }
+
+            if (xmlFont.Common != null)
+            {
+                Common = new FontFileCommonLine(xmlFont);
+            }
+
+            foreach (XMLFont.XMLChar charLine in xmlFont.Chars)
+            {
+                Chars.Add(new FontFileCharLine(charLine));
+            }
+
+            foreach (XMLFont.XMLKerning kerningLine in xmlFont.Kernings)
+            {
+                Kernings.Add(new FontFileKerningLine(kerningLine));
+            }
+
+            foreach (XMLFont.XMLPage page in xmlFont.Pages)
+            {
+                Pages.Add(new FontFilePage(page));
+            }
+
+            if (Info == null || Common == null)
+            {
+                throw new InvalidOperationException("Font file did not have an info or common tag");
+            }
+        }
+
+        private void ParseBinaryText(string contents)
+        {
+
+        }
+
+        private void ParsePlainText(string contents)
+        {
+
             var index = 0;
             while (index < contents.Length)
             {
@@ -1359,28 +1485,53 @@ public class BitmapFont : IDisposable
                         case "info":
                             Info = new FontFileInfoLine(parsedLine);
                             break;
-                        
+
                         case "common":
                             Common = new FontFileCommonLine(parsedLine);
                             break;
-                        
+
                         case "char":
                             Chars.Add(new FontFileCharLine(parsedLine));
                             break;
-                        
+
                         case "kerning":
                             Kernings.Add(new FontFileKerningLine(parsedLine));
                             break;
-                        
+
                         default:
                             break; // ignore unknown tags
                     }
                 }
             }
 
+            GetFontFileTextures(contents);
+
             if (Info == null || Common == null)
             {
                 throw new InvalidOperationException("Font file did not have an info or common tag");
+            }
+        }
+
+        private void GetFontFileTextures(string fontPattern)
+        {
+            int currentIndexIntoFile = fontPattern.IndexOf("page id=");
+
+            while (currentIndexIntoFile != -1)
+            {
+                // Right now we'll assume that the pages come in order and they're sequential
+                // If this isn' the case then the logic may need to be modified to support this
+                // instead of just returning a string[].
+                int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
+
+                int openingQuotesIndex = fontPattern.IndexOf('"', currentIndexIntoFile);
+
+                int closingQuotesIndex = fontPattern.IndexOf('"', openingQuotesIndex + 1);
+
+                string textureName = fontPattern.Substring(openingQuotesIndex + 1, closingQuotesIndex - openingQuotesIndex - 1);
+
+                Pages.Add(new FontFilePage(page, textureName));
+
+                currentIndexIntoFile = fontPattern.IndexOf("page id=", closingQuotesIndex);
             }
         }
     }
@@ -1401,6 +1552,15 @@ public class BitmapFont : IDisposable
                 Size = System.Math.Abs( line.NumericAttributes["size"] );
             }
         }
+
+        public FontFileInfoLine(XMLFont xmlFont)
+        {
+            if (xmlFont.Info != null)
+            {
+                Outline = xmlFont.Info.Outline;
+                Size = xmlFont.Info.Size;
+            }
+        }
     }
 
     private class FontFileCommonLine
@@ -1412,6 +1572,15 @@ public class BitmapFont : IDisposable
         {
             LineHeight = line.NumericAttributes["lineheight"];
             Base = line.NumericAttributes["base"];
+        }
+
+        public FontFileCommonLine(XMLFont xmlFont)
+        {
+            if (xmlFont.Common != null)
+            {
+                LineHeight = xmlFont.Common.LineHeight;
+                Base = xmlFont.Common.Base;
+            }
         }
     }
 
@@ -1445,6 +1614,19 @@ public class BitmapFont : IDisposable
             }
         }
 
+        public FontFileCharLine(XMLFont.XMLChar charLine)
+        {
+            Id = charLine.Id;
+            X = charLine.X;
+            Y = charLine.Y;
+            Width = charLine.Width;
+            Height = charLine.Height;
+            XOffset = charLine.XOffset;
+            YOffset = charLine.YOffset;
+            XAdvance = charLine.XAdvance;
+            Page = charLine.Page;
+        }
+
         public override string ToString()
         {
             return (char)Id + " on page " + Page;
@@ -1463,5 +1645,119 @@ public class BitmapFont : IDisposable
             Second = line.NumericAttributes["second"];
             Amount = line.NumericAttributes["amount"];
         }
+        
+        public FontFileKerningLine(XMLFont.XMLKerning kerningLine)
+        {
+            First = kerningLine.First;
+            Second = kerningLine.Second;
+            Amount = kerningLine.Amount;
+        }
     }
+
+    private class FontFilePage
+    {
+        public int Id { get; set; }
+        public string File {  get; set; }
+
+        public FontFilePage(int id, string file)
+        {
+            Id = id;
+            File = file;
+        }
+
+        public FontFilePage(XMLFont.XMLPage page)
+        {
+            Id = page.Id;
+            File = page.File;
+        }
+    }
+
+    // The below classes are entirely to import the BMFont XML format
+    // https://www.angelcode.com/products/bmfont/doc/file_format.html
+    [XmlRoot("font")]
+    public class XMLFont
+    {
+        [XmlElement("info")]
+        public XMLInfo Info { get; set; }
+
+        [XmlElement("common")]
+        public XMLCommon Common { get; set; }
+
+        [XmlArray("pages")]
+        [XmlArrayItem("page")]
+        public List<XMLPage> Pages { get; set; }
+
+        [XmlArray("chars")]
+        [XmlArrayItem("char")]
+        public List<XMLChar> Chars { get; set; }
+
+        [XmlArray("kernings")]
+        [XmlArrayItem("kerning")]
+        public List<XMLKerning> Kernings { get; set; }
+
+        [XmlType("info")]
+        public class XMLInfo
+        {
+            [XmlAttribute("face")] public string Face { get; set; }
+            [XmlAttribute("size")] public int Size { get; set; }
+            [XmlAttribute("bold")] public int Bold { get; set; }
+            [XmlAttribute("italic")] public int Italic { get; set; }
+            [XmlAttribute("charset")] public string Charset { get; set; }
+            [XmlAttribute("unicode")] public int Unicode { get; set; }
+            [XmlAttribute("stretchH")] public int StretchH { get; set; }
+            [XmlAttribute("smooth")] public int Smooth { get; set; }
+            [XmlAttribute("aa")] public int Aa { get; set; }
+            [XmlAttribute("padding")] public string Padding { get; set; }
+            [XmlAttribute("spacing")] public string Spacing { get; set; }
+            [XmlAttribute("outline")] public int Outline { get; set; }
+        }
+
+        [XmlType("common")]
+        public class XMLCommon
+        {
+            [XmlAttribute("lineHeight")] public int LineHeight { get; set; }
+            [XmlAttribute("base")] public int Base { get; set; }
+            [XmlAttribute("scaleW")] public int ScaleW { get; set; }
+            [XmlAttribute("scaleH")] public int ScaleH { get; set; }
+            [XmlAttribute("pages")] public int Pages { get; set; }
+            [XmlAttribute("packed")] public int Packed { get; set; }
+            [XmlAttribute("alphaChnl")] public int AlphaChnl { get; set; }
+            [XmlAttribute("redChnl")] public int RedChnl { get; set; }
+            [XmlAttribute("greenChnl")] public int GreenChnl { get; set; }
+            [XmlAttribute("blueChnl")] public int BlueChnl { get; set; }
+        }
+
+        [XmlType("page")]
+        public class XMLPage
+        {
+            [XmlAttribute("id")] public int Id { get; set; }
+            [XmlAttribute("file")] public string File { get; set; }
+        }
+
+        [XmlType("char")]
+        public class XMLChar
+        {
+            [XmlAttribute("id")] public int Id { get; set; }
+            [XmlAttribute("x")] public int X { get; set; }
+            [XmlAttribute("y")] public int Y { get; set; }
+            [XmlAttribute("width")] public int Width { get; set; }
+            [XmlAttribute("height")] public int Height { get; set; }
+            [XmlAttribute("xoffset")] public int XOffset { get; set; }
+            [XmlAttribute("yoffset")] public int YOffset { get; set; }
+            [XmlAttribute("xadvance")] public int XAdvance { get; set; }
+            [XmlAttribute("page")] public int Page { get; set; }
+            [XmlAttribute("chnl")] public int Chnl { get; set; }
+        }
+
+        [XmlType("kerning")]
+        public class XMLKerning
+        {
+            [XmlAttribute("first")] public int First { get; set; }
+            [XmlAttribute("second")] public int Second { get; set; }
+            [XmlAttribute("amount")] public int Amount { get; set; }
+        }
+    }
+
+    #endregion
+
 }

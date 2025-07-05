@@ -275,9 +275,8 @@ public class FontManager
             var fileWatchManager = FileWatchManager.Self;
 
             // arbitrary wait time
-            var timeUntil = DateTime.Now.AddSeconds(3f);
-            fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave, timeUntil);
-            fileWatchManager.IgnoreNextChangeUntil(desiredFntFile, timeUntil);
+            fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
+            fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
 
             var pngFileNameBase = desiredFntFile.RemoveExtension();
 
@@ -285,7 +284,7 @@ public class FontManager
             for (int i = 0; i < 10; i++)
             {
                 var pngWithNumber = $"{pngFileNameBase}_{i}.png";
-                fileWatchManager.IgnoreNextChangeUntil(pngWithNumber, timeUntil);
+                fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
             }
 
             bmfcSave.Save(bmfcFileToSave);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -9,10 +9,10 @@ using RenderingLibrary.Content;
 using RenderingLibrary;
 using Gum.RenderingLibrary;
 using Gum.Plugins;
-using GumCommon;
-using Color = System.Drawing.Color;
-using Rectangle = System.Drawing.Rectangle;
-using Matrix = System.Numerics.Matrix4x4;
+using Gum.Services.Dialogs; 
+using Color = System.Drawing.Color; 
+using Rectangle = System.Drawing.Rectangle; 
+using Matrix = System.Numerics.Matrix4x4; 
 using GumRuntime;
 
 namespace Gum.Wireframe;
@@ -197,7 +197,7 @@ public partial class WireframeObjectManager
                 {
                     RootGue = null;
                     GumCommands.Self.GuiCommands.PrintOutput(e.ToString());
-                    GumCommands.Self.GuiCommands.ShowMessage($"Error loading {elementSave}. See output window for more details");
+                    _dialogService.ShowMessage($"Error loading {elementSave}. See output window for more details");
                 }
                 GraphicalUiElement.IsAllLayoutSuspended = false;
 

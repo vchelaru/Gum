@@ -20,12 +20,19 @@ internal class ShopItemViewModel : ViewModel
         set => Set(value);
     }
 
+    public ShopItem ShopItem
+    {
+        get => Get<ShopItem>();
+        set => Set(value);
+    }
+
 
     [DependsOn(nameof(Cost))]
     public string CostDisplay => Cost.ToString("N0");
 
     public void SetFrom(ShopItem shopItem)
     {
+        ShopItem = shopItem;
         Name = shopItem.Name;
         Cost = shopItem.Cost;
     }

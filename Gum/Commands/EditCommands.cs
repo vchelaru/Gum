@@ -17,8 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Forms;
-using GumCommon;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
@@ -28,6 +30,8 @@ public class EditCommands
     private NameVerifier _nameVerifier;
     private RenameLogic _renameLogic;
     private UndoManager _undoManager;
+    private GuiCommands _guiCommands;
+    private readonly IDialogService _dialogService;
 
     public EditCommands()
     {
@@ -35,7 +39,7 @@ public class EditCommands
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
-
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
     #region State
 
@@ -83,7 +87,7 @@ public class EditCommands
         {
             if (deleteResponse.ShouldShowMessage)
             {
-                GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
+                _dialogService.ShowMessage(deleteResponse.Message);
             }
         }
         else
@@ -155,6 +159,7 @@ public class EditCommands
             }
 
             MessageBox.Show(message);
+            return;
         }
 
         //////////////////End Early Out /////////////////////
@@ -162,7 +167,7 @@ public class EditCommands
 
 
 
-            oldCategory.States.Remove(stateToMove);
+        oldCategory.States.Remove(stateToMove);
         newCategory.States.Add(stateToMove);
 
         GumCommands.Self.GuiCommands.RefreshStateTreeView();
@@ -528,7 +533,7 @@ public class EditCommands
             //    stringBuilder.AppendLine(reference.ToString());
             //}
 
-            //GumCommands.Self.GuiCommands.ShowMessage(stringBuilder.ToString());
+            //_dialogService.ShowMessage(stringBuilder.ToString());
 
             ListBoxMessageBox lbmb = new ListBoxMessageBox();
             lbmb.RequiresSelection = true;
@@ -600,7 +605,7 @@ public class EditCommands
         }
         else
         {
-            GumCommands.Self.GuiCommands.ShowMessage($"{element} is not referenced by any other Screen/Component");
+            _dialogService.ShowMessage($"{element} is not referenced by any other Screen/Component");
         }
     }
 

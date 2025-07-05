@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GumCommon;
+using Gum.Services.Dialogs;
 
 namespace Gum.Services;
 
@@ -66,6 +66,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
         services.AddSingleton<ElementCommands>();
+        
+        services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
+        services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
+        services.AddSingleton<IDialogService, DialogService>();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.

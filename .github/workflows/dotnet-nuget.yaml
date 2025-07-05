@@ -1,0 +1,76 @@
+name: Build and Publish NuGet Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_to_nuget:
+        description: 'Publish to NuGet.org'
+        required: false
+        default: false
+        type: boolean
+      publish_to_github:
+        description: 'Publish to GitHub Packages'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  DOTNET_VERSIONS: '6.0.x;8.0.x' # Multiple .NET versions
+  CONFIGURATION: Debug
+  SOLUTION_FILE: 'AllLibraries.sln' # Specify which solution to build
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch full history for version calculation
+        submodules: recursive # Fetch all submodules recursively
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          6.0.x
+          8.0.x
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+    
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore
+    
+    - name: Run tests
+      run: dotnet test ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+    
+    # Pack NuGet packages (Debug build) - includes both .nupkg and .snupkg
+    - name: Pack NuGet packages
+      run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs --include-symbols --include-source
+    
+    # Upload artifacts for inspection (both .nupkg and .snupkg)
+    - name: Upload NuGet packages as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: |
+          ./nupkgs/*.nupkg
+          ./nupkgs/*.snupkg
+    
+    # Publish to NuGet.org (when explicitly requested)
+    - name: Publish to NuGet.org
+      if: github.event.inputs.publish_to_nuget == 'true'
+      run: |
+        Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        }
+    
+    # Publish to GitHub Packages (when explicitly requested)
+    - name: Publish to GitHub Packages
+      if: github.event.inputs.publish_to_github == 'true'
+      run: |
+        Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+        }

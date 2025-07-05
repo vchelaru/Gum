@@ -5,6 +5,7 @@ using GumFormsSample.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
+using MonoGameGum.Forms.Controls;
 using System;
 
 namespace GumFormsSample
@@ -37,6 +38,8 @@ namespace GumFormsSample
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
+            // temporary until this is pulled from .gumx
+            RenderingLibrary.Graphics.Text.IsMidWordLineBreakEnabled = true;
             Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
             _currentScreen = _screenFactory.DefaultScreen;
@@ -49,22 +52,27 @@ namespace GumFormsSample
         protected override void Update(GameTime gameTime)
         {
             Gum.Update(gameTime);
-            int keyResult = _inputService.Update();
-            if (keyResult >= 0 && keyResult <= 5)
+            if(InteractiveGue.CurrentInputReceiver == null)
             {
-                if (_currentScreen != null)
+                int keyResult = _inputService.Update();
+                if (keyResult >= 0 && keyResult <= 5)
                 {
-                    Gum.Root.Children.Remove(_currentScreen);
-                }
+                    if (_currentScreen != null)
+                    {
+                        Gum.Root.Children.Remove(_currentScreen);
+                    }
 
-                _currentScreen = _screenFactory.CreateScreen(keyResult);
-                _currentScreen.AddToRoot();
+                    _currentScreen = _screenFactory.CreateScreen(keyResult);
+                    _currentScreen.AddToRoot();
+                }
             }
 
             foreach (var item in Gum.Root.Children)
             {
                 (item as IUpdateScreen)?.Update(gameTime);
             }
+
+            System.Diagnostics.Debug.WriteLine(Gum.Cursor.WindowOver);
 
             base.Update(gameTime);
         }

@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GumCommon;
+using Gum.Services.Dialogs;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Services;
@@ -47,10 +47,12 @@ public enum VariableEditMode
 public class EditVariableService : IEditVariableService
 {
     private readonly RenameLogic _renameLogic;
+    private readonly IDialogService _dialogService;
 
     public EditVariableService()
     {
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
@@ -269,7 +271,7 @@ public class EditVariableService : IEditVariableService
             var validityResponse = vm.Validate();
             if(validityResponse.Succeeded == false)
             {
-                GumCommands.Self.GuiCommands.ShowMessage(validityResponse.Message);
+                _dialogService.ShowMessage(validityResponse.Message);
             }
             else
             {

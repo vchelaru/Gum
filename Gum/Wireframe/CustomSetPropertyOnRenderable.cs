@@ -604,6 +604,11 @@ public class CustomSetPropertyOnRenderable
             handled = true;
 #endif
         }
+        else if (propertyName == "MaxNumberOfLines")
+        {
+            ((Text)mContainedObjectAsIpso).MaxNumberOfLines = (int?)value;
+            handled = true;
+        }
 
         else if (propertyName == nameof(TextOverflowHorizontalMode))
         {

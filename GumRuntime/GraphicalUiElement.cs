@@ -2374,7 +2374,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                     heightToSplit -= childAbsoluteWidth;
                                 }
                                 // this depends on the sibling being updated before this:
-                                else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren || gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension)
                                 {
                                     var childAbsoluteWidth = gue.GetAbsoluteHeight();
                                     heightToSplit -= childAbsoluteWidth;
@@ -2726,7 +2726,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                     widthToSplit -= childAbsoluteWidth;
                                 }
                                 // this depends on the sibling being updated before this:
-                                else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                                else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren || gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension)
                                 {
                                     var childAbsoluteWidth = gue.GetAbsoluteWidth();
                                     widthToSplit -= childAbsoluteWidth;

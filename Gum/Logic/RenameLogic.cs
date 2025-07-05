@@ -12,8 +12,10 @@ using CommonFormsAndControls;
 using Gum.Controls;
 using System.Drawing;
 using System.Windows.Documents.DocumentStructures;
-using GumCommon;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
+using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Logic;
 
@@ -67,11 +69,13 @@ public class RenameLogic
 
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
+    private readonly IDialogService _dialogService;
 
-    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier)
+    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier, IDialogService dialogService)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
+        _dialogService = dialogService;
     }
 
     #region StateSave
@@ -80,7 +84,7 @@ public class RenameLogic
     {
         if (!_nameVerifier.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
         {
-            GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
+            _dialogService.ShowMessage(whyNotValid);
         }
         else
         {

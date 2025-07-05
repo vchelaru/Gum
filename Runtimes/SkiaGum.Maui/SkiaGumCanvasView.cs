@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 namespace SkiaGum.Maui;
 
+#region TimeSpanExtensionMethods
 internal static class TimeSpanExtensionMethods
 {
     public enum TimeSpanFormat
@@ -69,8 +70,9 @@ internal static class TimeSpanExtensionMethods
         }
     }
 }
+#endregion
 
-public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasView, ISystemManagers
+public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasView, ISystemManagers, IDisposable
 {
     #region Fields/Properties
 
@@ -123,8 +125,15 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     public ISurfaceInvalidatable PageContainingThis { get; set; }
 
     #endregion
+
+    #region Events
+
     public event Action AfterLayoutBeforeDraw;
     public event Action AfterAutoSizeChanged;
+
+    public event Func<Task<bool>> CanProceedFunc;
+    public event Action ReleaseFunc;
+    #endregion
 
     public SkiaGumCanvasView()
     {
@@ -136,8 +145,6 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         base.Touch += HandleTouch;
     }
 
-    public event Func<Task<bool>> CanProceedFunc;
-    public event Action ReleaseFunc;
 
     public async Task<bool> CanProceed()
     {
@@ -778,5 +785,16 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         base.InvalidateSurface();
 
 
+    }
+
+    public void Dispose()
+    {
+        foreach(var child in Children)
+        {
+            if(child.RenderableComponent is IDisposable renderableDisposable)
+            {
+                renderableDisposable?.Dispose();
+            }
+        }
     }
 }

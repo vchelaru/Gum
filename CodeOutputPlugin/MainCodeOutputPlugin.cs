@@ -19,7 +19,7 @@ using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GumCommon;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin;
@@ -44,6 +44,8 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly LocalizationManager _localizationManager;
     private readonly GuiCommands _guiCommands;
     private readonly CodeGenerator _codeGenerator;
+    private readonly IDialogService _dialogService;
+    
     PluginTab pluginTab;
 
     // Not sure why this is null..., so getting it from the builder instead
@@ -63,12 +65,12 @@ public class MainCodeOutputPlugin : PluginBase
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
 
 
-
+        _dialogService = Locator.GetRequiredService<IDialogService>();
         _codeGenerator = new CodeGenerator();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService);
         _renameService = new RenameService(_codeGenerationService);
 
         // The methos in CodeGenerator need to be changed to not be static then we can get rid
@@ -414,7 +416,7 @@ public class MainCodeOutputPlugin : PluginBase
                     "Saving your Gum project relative to your .csproj is the recommended approach";
             }
 
-            _guiCommands.ShowMessage(message);
+            _dialogService.ShowMessage(message);
         }
         else if (_selectedState.SelectedElement != null)
         {
@@ -436,7 +438,7 @@ public class MainCodeOutputPlugin : PluginBase
                     }
                 }
 
-                _guiCommands.ShowMessage($"Generated code for {numberOfElements} element(s)");
+                _dialogService.ShowMessage($"Generated code for {numberOfElements} element(s)");
             }
             else
             {
@@ -459,7 +461,7 @@ public class MainCodeOutputPlugin : PluginBase
             _codeGenerationService.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
         }
 
-        _guiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
+        _dialogService.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
     }
 
     private void GenerateCodeForSelectedElement(bool showPopups)

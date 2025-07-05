@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.Managers;
 using Gum.Commands;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace CodeOutputPlugin.Manager;
 
@@ -17,12 +19,14 @@ internal class CodeGenerationService
     private readonly CodeGenerator _codeGenerator;
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     private readonly GuiCommands _guiCommands;
+    private readonly IDialogService _dialogService;
 
-    public CodeGenerationService(GuiCommands guiCommands, CodeGenerator codeGenerator)
+    public CodeGenerationService(GuiCommands guiCommands, CodeGenerator codeGenerator, IDialogService dialogService)
     {
         _codeGenerator = codeGenerator;
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
         _guiCommands = guiCommands;
+        _dialogService = dialogService;
     }
 
 
@@ -46,7 +50,7 @@ internal class CodeGenerationService
         {
             if(showPopups)
             {
-                _guiCommands.ShowMessage(errorMessage);
+                _dialogService.ShowMessage(errorMessage);
             }
             return;
         }
@@ -99,7 +103,7 @@ internal class CodeGenerationService
 
 
                     shouldGenerateMissingFiles =
-                        _guiCommands.ShowYesNoMessageBox(missingFileMessage, "Generate missing files?") == System.Windows.MessageBoxResult.Yes;
+                        _dialogService.ShowYesNoMessage(missingFileMessage, "Generate missing files?");
                 }
                 else
                 {
@@ -177,7 +181,7 @@ internal class CodeGenerationService
 
             if (showPopups)
             {
-                _guiCommands.ShowMessage(message);
+                _dialogService.ShowMessage(message);
             }
             else
             {

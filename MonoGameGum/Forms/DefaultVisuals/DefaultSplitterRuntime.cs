@@ -21,7 +21,7 @@ public class DefaultSplitterRuntime : InteractiveGue
             var background = new ColoredRectangleRuntime();
             background.Name = "Background";
             background.Dock(Gum.Wireframe.Dock.Fill);
-            background.Color = Styling.Colors.DarkGray;
+            background.Color = Styling.Colors.Gray;
             this.AddChild(background);
 
         }

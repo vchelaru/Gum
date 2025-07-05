@@ -22,7 +22,6 @@ using Gum.Managers;
 using Gum.Services;
 using RenderingLibrary;
 using System.Numerics;
-using GumCommon;
 
 namespace Gum.Plugins
 {
@@ -356,7 +355,7 @@ namespace Gum.Plugins
         }
 
 
-        internal void ElementSelected(ElementSave elementSave) =>
+        internal void ElementSelected(ElementSave? elementSave) =>
             CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
         internal void TreeNodeSelected(TreeNode treeNode) =>

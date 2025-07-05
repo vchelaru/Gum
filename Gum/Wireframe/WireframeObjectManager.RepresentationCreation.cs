@@ -11,7 +11,7 @@ using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
 using Gum.Plugins;
 using Gum.Services;
-using GumCommon;
+using Gum.Services.Dialogs;
 
 namespace Gum.Wireframe;
 
@@ -53,11 +53,13 @@ public partial class WireframeObjectManager
 
     FontManager _fontManager;
     private readonly ISelectedState _selectedState;
+    private readonly IDialogService _dialogService;
 
     public WireframeObjectManager()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     private bool GetIfSelectedStateIsSetRecursively()
