@@ -57,6 +57,7 @@
 		<None Remove="Content\Font18Arial_Italic_0.png" />
 		<None Remove="Content\Font18Arial_Italic_Bold.fnt" />
 		<None Remove="Content\Font18Arial_Italic_Bold_0.png" />
+		<None Remove="Content\UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -105,6 +106,7 @@
 		<EmbeddedResource Include="Content\Font18Arial_Italic_0.png" />
 		<EmbeddedResource Include="Content\Font18Arial_Italic_Bold.fnt" />
 		<EmbeddedResource Include="Content\Font18Arial_Italic_Bold_0.png" />
+		<EmbeddedResource Include="Content\UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>
