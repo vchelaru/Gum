@@ -16,9 +16,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class CheckBoxVisual : InteractiveGue
     {
-        public NineSliceRuntime CheckBoxBackground {  get; private set; }
-        public RectangleRuntime FocusedIndicator { get; private set; }
+        public NineSliceRuntime CheckBoxBackground { get; private set; }
+        public SpriteRuntime InnerCheckbox { get; private set; }
         public TextRuntime TextInstance { get; private set; }
+        public NineSliceRuntime FocusedIndicator { get; private set; }
 
         public class CheckBoxCategoryStates
         {
@@ -71,56 +72,54 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 CheckBoxBackground.ApplyState(NineSliceStyles.Bordered);
                 this.Children.Add(CheckBoxBackground);
 
-                var innerCheck = new SpriteRuntime();
-                innerCheck.Width = 0;
-                innerCheck.Height = 0;
-                innerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                innerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                innerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-                innerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-                innerCheck.XOrigin = HorizontalAlignment.Left;
-                innerCheck.YOrigin = VerticalAlignment.Top;
-                innerCheck.Name = "InnerCheck";
-                innerCheck.Color = Styling.Colors.White;
-                innerCheck.Texture = uiSpriteSheetTexture;
-                innerCheck.ApplyState(IconVisuals.Check);
-                CheckBoxBackground.Children.Add(innerCheck);
+                InnerCheckbox = new SpriteRuntime();
+                InnerCheckbox.Width = 0;
+                InnerCheckbox.Height = 0;
+                InnerCheckbox.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                InnerCheckbox.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                InnerCheckbox.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                InnerCheckbox.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                InnerCheckbox.XOrigin = HorizontalAlignment.Left;
+                InnerCheckbox.YOrigin = VerticalAlignment.Top;
+                InnerCheckbox.Name = "InnerCheck";
+                InnerCheckbox.Color = Styling.Colors.White;
+                InnerCheckbox.Texture = uiSpriteSheetTexture;
+                InnerCheckbox.ApplyState(IconVisuals.Check);
+                CheckBoxBackground.Children.Add(InnerCheckbox);
 
                 TextInstance = new TextRuntime();
-                TextInstance.X = 28;
+                TextInstance.X = 0;
                 TextInstance.Y = 0;
-                TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+                TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
                 TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                TextInstance.Width = -36;
+                TextInstance.XOrigin = HorizontalAlignment.Right;
+                TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+                TextInstance.Width = -28;
                 TextInstance.Height = 0;
                 TextInstance.Name = "TextInstance";
                 TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 TextInstance.ApplyState(TextStyles.Normal);
                 this.Children.Add(TextInstance);
 
-                FocusedIndicator = new RectangleRuntime();
+                FocusedIndicator = new NineSliceRuntime();
                 FocusedIndicator.X = 0;
-                FocusedIndicator.Y = 0;
+                FocusedIndicator.Y = 2;
                 FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
                 FocusedIndicator.XOrigin = HorizontalAlignment.Center;
-                FocusedIndicator.YOrigin = VerticalAlignment.Center;
+                FocusedIndicator.YOrigin = VerticalAlignment.Top;
                 FocusedIndicator.Width = 0;
-                FocusedIndicator.Height = 0;
+                FocusedIndicator.Height = 2;
                 FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                FocusedIndicator.Color = Color.White;
+                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+                FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
+                FocusedIndicator.Texture = uiSpriteSheetTexture;
+                FocusedIndicator.ApplyState(NineSliceStyles.Solid);
                 FocusedIndicator.Visible = false;
+                FocusedIndicator.Color = Styling.Colors.Warning;
                 FocusedIndicator.Name = "FocusedIndicator";
                 this.Children.Add(FocusedIndicator);
-
-                //DisabledState = "Disabled";
-                //DisabledFocusedState = "DisabledFocused";
-                //EnabledState = "Enabled";
-                //FocusedState = "Focused";
-                //HighlightedState = "Highlighted";
-                //HighlightedFocusedState = "HighlightedFocused";
-                //PushedState = "Pushed";
 
                 var checkboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 checkboxCategory.Name = "CheckBoxCategory";
@@ -162,7 +161,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
                     AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Check);
-
 
                     AddState(state + "Off");
                     AddVariable("InnerCheck.Visible", false);
