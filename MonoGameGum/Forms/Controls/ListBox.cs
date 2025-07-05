@@ -1014,22 +1014,27 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI) && !FRB
+#if (MONOGAME || KNI || FNA) && !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
             var pressedButton = false;
-            if (keyboard?.KeyPushed(Keys.Enter) == true)
+            foreach(var item in FrameworkElement.ClickCombos)
             {
-                pressedButton = true;
+                if(item.IsComboPushed())
+                {
+                    pressedButton = true;
+                    break;
+                }
             }
+
             RepositionDirections? direction = null;
 
-            if (keyboard?.KeyPushed(Keys.Up) == true)
+            if (keyboard.KeyPushed(Keys.Up) == true || keyboard.KeysTyped.Contains(Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
             }
-            if (keyboard?.KeyPushed(Keys.Down) == true)
+            if (keyboard.KeyPushed(Keys.Down) == true || keyboard.KeysTyped.Contains(Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
             }
@@ -1181,7 +1186,10 @@ public class ListBox : ItemsControl, IInputReceiver
 
         if (pressedButton)
         {
-            HandleListBoxItemPushed(this.ListBoxItemsInternal[SelectedIndex], EventArgs.Empty);
+            if(SelectedIndex != -1)
+            {
+                HandleListBoxItemPushed(this.ListBoxItemsInternal[SelectedIndex], EventArgs.Empty);
+            }
             if (CanListItemsLoseFocus)
             {
                 DoListItemsHaveFocus = false;
@@ -1257,6 +1265,21 @@ public class ListBox : ItemsControl, IInputReceiver
                     {
                         GenericGamepadButtonPushed?.Invoke(buttonIndex);
                     }
+                }
+            }
+        }
+#endif
+
+#if (MONOGAME || KNI) && !FRB
+
+        foreach (var keyboard in KeyboardsForUiControl)
+        {
+            foreach(var keyCombo in FrameworkElement.ClickCombos)
+            {
+                if(keyCombo.IsComboPushed())
+                {
+                    DoListItemsHaveFocus = true;
+                    break;
                 }
             }
         }

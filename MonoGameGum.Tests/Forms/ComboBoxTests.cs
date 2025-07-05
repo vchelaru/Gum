@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public  class ComboBoxTests
+public  class ComboBoxTests : BaseTestClass
 {
     [Fact]
     public void Visual_Assignment_ShouldSetVisualCorrectly()

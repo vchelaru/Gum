@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class SliderTests
+public class SliderTests : BaseTestClass
 {
     [Fact]
     public void Value_ShouldBeLimited_WhenOutsideOfMinimumAndMaximum()

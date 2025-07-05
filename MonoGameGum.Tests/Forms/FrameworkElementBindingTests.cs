@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
 
-public class FrameworkElementBindingTests
+public class FrameworkElementBindingTests : BaseTestClass
 {
     public FrameworkElementBindingTests()
     {
