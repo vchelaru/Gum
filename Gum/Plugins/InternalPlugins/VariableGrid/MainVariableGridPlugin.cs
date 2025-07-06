@@ -82,11 +82,7 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
     {
-        if(strippedName == "VariableReferences")
-        {
-            // force refresh:
-            _propertyGridManager.RefreshEntireGrid(force: true);
-        }
+        _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue);
     }
 
     private void HandleElementDeleted(ElementSave save)
