@@ -903,6 +903,40 @@ public partial class PropertyGridManager
         }
     }
 
+    internal void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
+    {
+        if (strippedName == "VariableReferences")
+        {
+            // force refresh:
+            RefreshEntireGrid(force: true);
+        }
+        if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null)
+        {
+            // If setting a value on a variable in a category, the variable may be newly-added to the state.
+            // If we don't already indicate that this is set by this category, we should update the grid immediately:
+            var nameToSearchFor = strippedName;
+            if(instance != null)
+            {
+                nameToSearchFor = instance.Name + "." + strippedName;
+            }
+
+            var existingSrim = mVariablesDataGrid.GetInstanceMember(nameToSearchFor);
+
+            if(existingSrim != null)
+            {
+                var alreadyShowsSetBy = 
+                    // We could get even more specific here, but doing so may
+                    // result in the app breaking if we change how we display it
+                    // so...this is good enough for now, should handle the most common cases:
+                    existingSrim.DetailText?.Contains("Set by") == true;
+                if(!alreadyShowsSetBy)
+                {
+                    RefreshEntireGrid(true);
+                }
+            }
+        }
+    }
+
     //private void ReactIfChangedMemberIsAnimation(ElementSave parentElement, string changedMember, object oldValue, out bool saveProject)
     //{
     //    const string sourceFileString = "SourceFile";
