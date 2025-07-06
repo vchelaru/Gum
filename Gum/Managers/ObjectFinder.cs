@@ -107,6 +107,12 @@ namespace Gum.Managers
             EnableCache();
         }
 
+        /// <summary>
+        /// Enables caching of all elements in the project. If cache was previously disabled,
+        /// then this creates the cache and holds it until DisableCache is called. If cache was
+        /// already enabled, this increments the count. Any call to enable cache should be paired
+        /// with a DisableCache call.
+        /// </summary>
         public void EnableCache()
         {
             cacheEnableCount++;
@@ -122,28 +128,19 @@ namespace Gum.Managers
                 foreach (var screen in gumProject.Screens)
                 {
                     var name = screen.Name;
-                    if(!cachedDictionary.ContainsKey(name))
-                    {
-                        cachedDictionary.Add(name, screen);
-                    }
+                    cachedDictionary[name] = screen;
                 }
 
                 foreach(var component in gumProject.Components)
                 {
                     var name = component.Name;
-                    if (!cachedDictionary.ContainsKey(name))
-                    {
-                        cachedDictionary.Add(name, component);
-                    }
+                    cachedDictionary[name] = component;
                 }
 
                 foreach (var standard in gumProject.StandardElements)
                 {
                     var name = standard.Name;
-                    if (!cachedDictionary.ContainsKey(name))
-                    {
-                        cachedDictionary.Add(name, standard);
-                    }
+                    cachedDictionary[name] = standard;
                 }
             }
         }
