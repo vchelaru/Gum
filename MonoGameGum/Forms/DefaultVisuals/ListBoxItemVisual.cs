@@ -17,8 +17,7 @@ public class ListBoxItemVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
     public TextRuntime TextInstance { get; private set; }
-
-    public RectangleRuntime FocusedIndicator { get; private set; }
+    public NineSliceRuntime FocusedIndicator { get; private set; }
 
     public class ListBoxItemCategoryStates
     {
@@ -44,17 +43,16 @@ public class ListBoxItemVisual : InteractiveGue
 
             Background = new NineSliceRuntime();
             Background.Name = "Background";
-            Background.Height = 0f;
-            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            Background.Visible = false;
-            Background.Width = 0f;
-            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.X = 0f;
-            Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             Background.XUnits = GeneralUnitType.PixelsFromMiddle;
             Background.Y = 0f;
-            Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             Background.YUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            Background.Width = 0f;
+            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Height = 0f;
+            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.Color = Styling.Colors.DarkGray;
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
@@ -63,30 +61,38 @@ public class ListBoxItemVisual : InteractiveGue
 
             TextInstance = new TextRuntime();
             TextInstance.Name = "TextInstance";
+            TextInstance.Text = "ListBox Item";
+            TextInstance.X = 0f;
+            TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            TextInstance.Y = 0f;
+            TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.Width = -8f;
+            TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             TextInstance.Height = 0f;
             TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            TextInstance.Text = "ListBox Item";
             TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TextInstance.Width = -8f;
-            TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            TextInstance.ApplyState(TextStyles.Normal);
+            TextInstance.Color = Styling.Colors.White;
             this.Children.Add(TextInstance);
 
-            FocusedIndicator = new RectangleRuntime();
+            FocusedIndicator = new NineSliceRuntime();
             FocusedIndicator.Name = "FocusedIndicator";
-            FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.Visible = false;
-            FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            FocusedIndicator.YUnits = GeneralUnitType.PixelsFromMiddle;
-            FocusedIndicator.Color = new Microsoft.Xna.Framework.Color(205, 142, 44);
-            FocusedIndicator.Width = 0;
-            FocusedIndicator.Height = 0;
-            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.X = 0f;
+            FocusedIndicator.XUnits = GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.Y = -2f;
+            FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+            FocusedIndicator.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            FocusedIndicator.Width = 0f;
+            FocusedIndicator.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.Height = 2f;
+            FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Color = Styling.Colors.Warning;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(NineSliceStyles.Solid);
             this.Children.Add(FocusedIndicator);
 
             var listBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();

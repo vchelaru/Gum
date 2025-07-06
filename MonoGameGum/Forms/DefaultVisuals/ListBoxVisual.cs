@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -15,7 +16,27 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 
 public class ListBoxVisual : InteractiveGue
 {
-    public RectangleRuntime FocusedIndicator { get; private set; }
+    public NineSliceRuntime Background { get; private set; }
+    public NineSliceRuntime FocusedIndicator { get; private set; }
+    public ContainerRuntime ClipAndScrollContainer { get; private set; }
+    public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
+    public ContainerRuntime ClipContainerParent { get; private set; }
+    public ContainerRuntime ClipContainerInstance { get; private set; }
+    public ContainerRuntime InnerPanelInstance { get; private set; }
+
+    public class ListBoxCategoryStates
+    {
+        public StateSave Enabled { get; set; }
+        public StateSave Disabled { get; set; }
+        public StateSave DisabledFocused { get; set; }
+        public StateSave Focused { get; set; }
+        public StateSave Highlighted { get; set; }
+        public StateSave HighlightedFocused { get; set; }
+        public StateSave Pushed { get; set; }
+    }
+
+    public ListBoxCategoryStates States;
+
 
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -23,32 +44,63 @@ public class ListBoxVisual : InteractiveGue
         {
             Width = 150;
             Height = 150;
+            this.States = new ListBoxCategoryStates();
+            var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
 
-            var background = new ColoredRectangleRuntime();
-            background.Name = "Background";
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            Background.X = 0f;
+            Background.XUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.Y = 0f;
+            Background.YUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            Background.Width = 0f;
+            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Height = 0f;
+            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Color = Styling.Colors.DarkGray;
+            Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            Background.Texture = uiSpriteSheetTexture;
+            Background.ApplyState(NineSliceStyles.Bordered);
+            this.Children.Add(Background);
 
-            var InnerPanel = new ContainerRuntime();
-            InnerPanel.Name = "InnerPanelInstance";
-            var ClipContainer = new ContainerRuntime();
-            ClipContainer.Name = "ClipContainerInstance";
-            var VerticalScrollBarInstance = new DefaultScrollBarRuntime();
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
+            FocusedIndicator.X = 0f;
+            FocusedIndicator.XUnits = GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.Y = -2f;
+            FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+            FocusedIndicator.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            FocusedIndicator.Width = 0f;
+            FocusedIndicator.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.Height = 2f;
+            FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Color = Styling.Colors.Warning;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(NineSliceStyles.Solid);
+            FocusedIndicator.Visible = false; // TODO: Vic! I shouldn't have to set this, the states should control this.
+            this.Children.Add(FocusedIndicator);
+
+            ClipAndScrollContainer = new ContainerRuntime();
+            ClipAndScrollContainer.Name = "ClipAndScrollContainer";
+            ClipAndScrollContainer.X = 0f;
+            ClipAndScrollContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
+            ClipAndScrollContainer.Y = 0f;
+            ClipAndScrollContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
+            ClipAndScrollContainer.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            ClipAndScrollContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            ClipAndScrollContainer.Width = 0f;
+            ClipAndScrollContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ClipAndScrollContainer.Height = 0f;
+            ClipAndScrollContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            this.Children.Add(ClipAndScrollContainer);
+
+
+            // TODO: Change this to ScrollBarVisual once it's created
+            VerticalScrollBarInstance = new ScrollBarVisual();
             VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
-            //var HorizontalScrollBarInstance = new DefaultScrollBarRuntime();
-            //HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
-
-            background.Height = 0f;
-            background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            background.Width = 0f;
-            background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            background.X = 0f;
-            background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            background.XUnits = GeneralUnitType.PixelsFromMiddle;
-            background.Y = 0f;
-            background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            background.YUnits = GeneralUnitType.PixelsFromMiddle;
-            background.Color = Styling.Colors.DarkGray;
-            this.Children.Add(background);
-
             VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
             VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
             VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -56,45 +108,43 @@ public class ListBoxVisual : InteractiveGue
             //VerticalScrollBarInstance.Width = 24;
             VerticalScrollBarInstance.Height = 0;
             VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            this.Children.Add(VerticalScrollBarInstance);
+            ClipAndScrollContainer.Children.Add(VerticalScrollBarInstance);
 
+            ClipContainerParent = new ContainerRuntime();
+            ClipContainerParent.Name = "ClipContainerParent";
+            ClipContainerParent.X = 0f;
+            ClipContainerParent.XUnits = GeneralUnitType.PixelsFromSmall;
+            ClipContainerParent.Y = 0f;
+            ClipContainerParent.YUnits = GeneralUnitType.PixelsFromMiddle;
+            ClipContainerParent.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            ClipContainerParent.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            ClipContainerParent.Width = 1f;
+            ClipContainerParent.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
+            ClipContainerParent.Height = 0f;
+            ClipContainerParent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ClipAndScrollContainer.Children.Add(ClipContainerParent);
 
-            ClipContainer.ClipsChildren = true;
-            ClipContainer.Height = -4f;
-            ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            ClipContainer.Width = -27f;
-            ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            ClipContainer.X = 2f;
-            ClipContainer.Y = 2f;
-            ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
-            this.Children.Add(ClipContainer);
+            ClipContainerInstance = new ContainerRuntime();
+            ClipContainerInstance.Name = "ClipContainerInstance";
+            ClipContainerInstance.ClipsChildren = true;
+            ClipContainerInstance.Height = -4f;
+            ClipContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ClipContainerInstance.Width = -4f;
+            ClipContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ClipContainerInstance.X = 2f;
+            ClipContainerInstance.Y = 2f;
+            ClipContainerInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            ClipContainerInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+            ClipContainerParent.Children.Add(ClipContainerInstance);
 
-
-            InnerPanel.Height = 0f;
-            InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            InnerPanel.Width = 0f;
-            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-            ClipContainer.Children.Add(InnerPanel);
-
-
-            FocusedIndicator = new RectangleRuntime();
-            FocusedIndicator.X = 0;
-            FocusedIndicator.Y = 0;
-            FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            FocusedIndicator.XOrigin = HorizontalAlignment.Center;
-            FocusedIndicator.YOrigin = VerticalAlignment.Center;
-            FocusedIndicator.Width = 0;
-            FocusedIndicator.Height = 0;
-            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.Color = Color.White;
-            FocusedIndicator.Visible = false;
-            FocusedIndicator.Name = "FocusedIndicator";
-            this.Children.Add(FocusedIndicator);
-
+            InnerPanelInstance = new ContainerRuntime();
+            InnerPanelInstance.Name = "InnerPanelInstance";
+            InnerPanelInstance.Height = 0f;
+            InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            InnerPanelInstance.Width = 0f;
+            InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            ClipContainerInstance.Children.Add(InnerPanelInstance);
 
             var listBoxCategory = new StateSaveCategory();
             listBoxCategory.Name = "ListBoxCategory";
@@ -120,31 +170,33 @@ public class ListBoxVisual : InteractiveGue
             }
 
             // For now let's just have the focus indicator show/hide.
+            AddState(FrameworkElement.EnabledStateName);
+            AddVariable("FocusedIndicator.Visible", false);
+            States.Enabled = currentState;
 
             AddState(FrameworkElement.DisabledStateName);
             AddVariable("FocusedIndicator.Visible", false);
+            States.Disabled = currentState;
 
             AddState(FrameworkElement.DisabledFocusedStateName);
             AddVariable("FocusedIndicator.Visible", true);
-
-            AddState(FrameworkElement.EnabledStateName);
-            AddVariable("FocusedIndicator.Visible", false);
+            States.DisabledFocused = currentState;
 
             AddState(FrameworkElement.FocusedStateName);
             AddVariable("FocusedIndicator.Visible", true);
+            States.Focused = currentState;
 
             AddState(FrameworkElement.HighlightedStateName);
             AddVariable("FocusedIndicator.Visible", false);
+            States.Highlighted = currentState;
 
             AddState(FrameworkElement.HighlightedFocusedStateName);
             AddVariable("FocusedIndicator.Visible", true);
+            States.HighlightedFocused = currentState;
 
             AddState(FrameworkElement.PushedStateName);
             AddVariable("FocusedIndicator.Visible", false);
-
-
-
-
+            States.Pushed = currentState;
         }
 
         if (tryCreateFormsObject)

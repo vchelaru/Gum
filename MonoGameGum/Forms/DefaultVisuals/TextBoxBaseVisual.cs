@@ -90,6 +90,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 TextInstance.VerticalAlignment = VerticalAlignment.Center;
+                TextInstance.Color = Styling.Colors.White;
                 TextInstance.ApplyState(TextStyles.Normal);
                 TextInstance.Text = "";
                 
