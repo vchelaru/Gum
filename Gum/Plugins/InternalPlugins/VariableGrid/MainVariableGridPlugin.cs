@@ -139,7 +139,9 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleCustomStateSelected(StateSave save)
     {
-        PropertyGridManager.Self.RefreshVariablesDataGridValues();
+        // custom states are states where an animation is playing. This slows down
+        // the animation considerably so let's not do it:
+        //PropertyGridManager.Self.RefreshVariablesDataGridValues();
     }
 
     private void HandleTreeNodeSelected(TreeNode node)
