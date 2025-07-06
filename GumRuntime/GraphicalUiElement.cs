@@ -2355,32 +2355,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     for (int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue)
+                        if (child != this && child is GraphicalUiElement gue && gue.Visible)
                         {
-                            if (gue.Visible)
+                            if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                             {
-                                if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                                {
-                                    heightToSplit -= gue.Height;
-                                }
-                                else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
-                                {
-                                    var childAbsoluteWidth = parentHeight - gue.Height;
-                                    heightToSplit -= childAbsoluteWidth;
-                                }
-                                else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
-                                {
-                                    var childAbsoluteWidth = parentHeight * gue.Height;
-                                    heightToSplit -= childAbsoluteWidth;
-                                }
-                                // this depends on the sibling being updated before this:
-                                else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren || gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension)
-                                {
-                                    var childAbsoluteWidth = gue.GetAbsoluteHeight();
-                                    heightToSplit -= childAbsoluteWidth;
-                                }
-                                numberOfVisibleChildren++;
+                                heightToSplit -= gue.Height;
                             }
+                            else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
+                            {
+                                var childAbsoluteWidth = parentHeight + gue.Height;
+                                heightToSplit -= childAbsoluteWidth;
+                            }
+                            else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
+                            {
+                                var childAbsoluteWidth = (parentHeight * gue.Height)/100f;
+                                heightToSplit -= childAbsoluteWidth;
+                            }
+                            // this depends on the sibling being updated before this:
+                            else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren || 
+                                gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                gue.HeightUnits == DimensionUnitType.PercentageOfSourceFile ||
+                                gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                                gue.HeightUnits == DimensionUnitType.ScreenPixel)
+                            {
+                                var childAbsoluteWidth = gue.GetAbsoluteHeight();
+                                heightToSplit -= childAbsoluteWidth;
+                            }
+                            numberOfVisibleChildren++;
                         }
                     }
                 }
@@ -2706,33 +2707,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     for (int i = 0; i < mParent.Children.Count; i++)
                     {
                         var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue)
+                        if (child != this && child is GraphicalUiElement gue && gue.Visible)
                         {
-
-                            if (gue.Visible)
+                            if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
                             {
-                                if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                                {
-                                    widthToSplit -= gue.Width;
-                                }
-                                else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
-                                {
-                                    var childAbsoluteWidth = parentWidth - gue.Width;
-                                    widthToSplit -= childAbsoluteWidth;
-                                }
-                                else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
-                                {
-                                    var childAbsoluteWidth = parentWidth * gue.Width;
-                                    widthToSplit -= childAbsoluteWidth;
-                                }
-                                // this depends on the sibling being updated before this:
-                                else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren || gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension)
-                                {
-                                    var childAbsoluteWidth = gue.GetAbsoluteWidth();
-                                    widthToSplit -= childAbsoluteWidth;
-                                }
-                                numberOfVisibleChildren++;
+                                widthToSplit -= gue.Width;
                             }
+                            else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
+                            {
+                                var childAbsoluteWidth = parentWidth + gue.Width;
+                                widthToSplit -= childAbsoluteWidth;
+                            }
+                            else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
+                            {
+                                var childAbsoluteWidth = (parentWidth * gue.Width)/100f;
+                                widthToSplit -= childAbsoluteWidth;
+                            }
+                            // this depends on the sibling being updated before this:
+                            else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren || 
+                                gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                gue.WidthUnits == DimensionUnitType.PercentageOfSourceFile ||
+                                gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                                gue.WidthUnits == DimensionUnitType.ScreenPixel)
+                            {
+                                var childAbsoluteWidth = gue.GetAbsoluteWidth();
+                                widthToSplit -= childAbsoluteWidth;
+                            }
+                            numberOfVisibleChildren++;
                         }
                     }
                 }
@@ -3172,6 +3173,19 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    bool DoesDimensionNeedUpdateFirstForRatio(DimensionUnitType unitType) => 
+        unitType == DimensionUnitType.RelativeToChildren ||
+        unitType == DimensionUnitType.PercentageOfOtherDimension ||
+        unitType == DimensionUnitType.PercentageOfSourceFile ||
+        unitType == DimensionUnitType.MaintainFileAspectRatio ||
+        unitType == DimensionUnitType.ScreenPixel;
+
+
+
+
+
+
+
     private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
     {
         bool CanDoFullUpdate(ChildType thisChildUpdateType, GraphicalUiElement childGue)
@@ -3237,24 +3251,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // If either is the case, then we will first update all children that have the relative properties. Then we'll loop through all of them
             // Note about optimization - if children using relative all come first, then a normal order will satisfy the dependencies.
             // But that makes the code slightly more complex, so I'll bother with that performance optimization later.
+            // Update July 6, 2025
+            // The above explanation is still true, but we also need to consider that a sibling may be using WidthUnits or HeightUnits that require an update
+            // first. Vic has expanded the unit types that also need to be updated first to be:
+            // * RelativeToChildren
+            // * PercentageOfOtherDimension
+            // * PercentageOfSourceFile
+            // * MaintainFileAspectRatio
+            // * ScreenPixel
+            // So we are going to do updates on all siblings that have these types first
 
-            bool useRatioWidth = false;
-            bool useRatioHeight = false;
-            bool useRelativeChildrenWidth = false;
-            bool useRelativeChildrenHeight = false;
+            bool doesAnyChildUseRatioWidth = false;
+            bool doesAnyChildUseRatioHeight = false;
+            bool doesAnyChildNeedWidthUpdatedFirst = false;
+            bool doesAnyChildNeedHeightUpdatedFirst = false;
 
             for (int i = 0; i < this.Children.Count; i++)
             {
                 var child = this.Children[i] as GraphicalUiElement;
 
-                useRatioWidth |= child.WidthUnits == DimensionUnitType.Ratio;
-                useRatioHeight |= child.HeightUnits == DimensionUnitType.Ratio;
+                doesAnyChildUseRatioWidth |= child.WidthUnits == DimensionUnitType.Ratio;
+                doesAnyChildUseRatioHeight |= child.HeightUnits == DimensionUnitType.Ratio;
 
-                useRelativeChildrenWidth |= child.WidthUnits == DimensionUnitType.RelativeToChildren;
-                useRelativeChildrenHeight |= child.HeightUnits == DimensionUnitType.RelativeToChildren;
+                doesAnyChildNeedWidthUpdatedFirst |= DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits);
+                doesAnyChildNeedHeightUpdatedFirst |= DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits);
             }
 
-            var shouldUpdateRelativeFirst = (useRatioWidth && useRelativeChildrenWidth) || (useRatioHeight && useRelativeChildrenHeight);
+            var shouldUpdateRelativeFirst = (doesAnyChildUseRatioWidth && doesAnyChildNeedWidthUpdatedFirst) || (doesAnyChildUseRatioHeight && doesAnyChildNeedHeightUpdatedFirst);
 
             // Update - if this item stacks, then it cannot mark the children as updated - it needs to do another
             // pass later to update the position of the children in order from top-to-bottom. If we flag as updated,
@@ -3271,36 +3294,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                     if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                     {
-                        if (child.WidthUnits == DimensionUnitType.RelativeToChildren || child.HeightUnits == DimensionUnitType.RelativeToChildren)
+                        if (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits))
                         {
                             UpdateChild(child, flagAsUpdated: false);
                         }
                     }
                 }
-
-                for (int i = 0; i < this.Children.Count; i++)
-                {
-                    var ipsoChild = this.Children[i];
-
-                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
-                    {
-                        // now do all:
-                        UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
-                    }
-                }
             }
-            else
-            {
-                // do a normal one:
-                for (int i = 0; i < this.Children.Count; i++)
-                {
-                    var ipsoChild = this.Children[i];
 
-                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
-                    {
-                        // now do all:
-                        UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
-                    }
+
+            // do a normal one:
+            for (int i = 0; i < this.Children.Count; i++)
+            {
+                var ipsoChild = this.Children[i];
+
+                if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                {
+                    // now do all:
+                    UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
                 }
             }
 
