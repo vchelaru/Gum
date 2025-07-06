@@ -11,6 +11,9 @@ using Gum.DataTypes.Variables;
 using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using Xunit;
+using Moq;
+using RenderingLibrary;
+using System.Collections.ObjectModel;
 
 namespace MonoGameGum.Tests.Runtimes;
 public class GraphicalUiElementTests
@@ -240,7 +243,86 @@ public class GraphicalUiElementTests
             "because changing the parent width should immediately update the child");
     }
 
+    [Fact]
+    public void WidthUnits_Ratio_ShouldUseAvailableSpace()
+    {
+        ContainerRuntime parent = new ();
+        parent.Width = 1000;
 
+        ContainerRuntime sut = new();
+        parent.Children.Add(sut);
+        sut.Width = 1;
+        sut.WidthUnits = DimensionUnitType.Ratio;
+
+        sut.GetAbsoluteWidth().ShouldBe(1000);
+
+        ContainerRuntime absoluteContainer = new();
+        parent.AddChild(absoluteContainer);
+        absoluteContainer.Width = 100;
+        absoluteContainer.WidthUnits = DimensionUnitType.Absolute;
+
+        sut.GetAbsoluteWidth().ShouldBe(900);
+
+        ContainerRuntime percentContainer = new();
+        parent.AddChild(percentContainer);
+        percentContainer.Width = 5;
+        percentContainer.WidthUnits = DimensionUnitType.PercentageOfParent;
+
+        sut.GetAbsoluteWidth().ShouldBe(850);
+
+        ContainerRuntime relativeToParentContainer = new();
+        parent.AddChild(relativeToParentContainer);
+        relativeToParentContainer.Width = -880; // 120 width
+        relativeToParentContainer.WidthUnits = DimensionUnitType.RelativeToParent;
+
+        sut.GetAbsoluteWidth().ShouldBe(850 - 120); // 730
+
+        var mockSprite = new Mock<IPositionedSizedObject>()
+            .As<IRenderable>()
+            .As<IRenderableIpso>()
+            .As<IVisible>()
+            .As<ITextureCoordinate>();
+
+        mockSprite
+            .Setup(m=>m.SourceRectangle)
+            .Returns(new System.Drawing.Rectangle(0, 0, 100, 100));
+        ObservableCollection<IRenderableIpso> spriteChildren = new();
+        mockSprite
+            .As<IRenderableIpso>()
+            .Setup(m => m.Children)
+            .Returns(spriteChildren);
+        mockSprite
+            .As<IRenderableIpso>()
+            .Setup(m => m.Width)
+            .Returns(50);
+
+        mockSprite
+            .As<IVisible>()
+            .Setup(m => m.AbsoluteVisible)
+            .Returns(true);
+        mockSprite
+            .As<IVisible>()
+            .Setup(m => m.Visible)
+            .Returns(true);
+
+
+        GraphicalUiElement percentOfSourceFile = new((IRenderable)mockSprite.Object);
+        parent.AddChild(percentOfSourceFile);
+        percentOfSourceFile.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+
+        sut.GetAbsoluteWidth().ShouldBe(680);
+
+
+        ContainerRuntime percentOtherDimension = new();
+        parent.AddChild(percentOtherDimension);
+        percentOtherDimension.Width = 50; // 50% of height
+        percentOtherDimension.WidthUnits = DimensionUnitType.PercentageOfOtherDimension;
+        percentOtherDimension.Height = 100; 
+        sut.GetAbsoluteWidth().ShouldBe(630); 
+
+
+
+    }
 
     #endregion
 
