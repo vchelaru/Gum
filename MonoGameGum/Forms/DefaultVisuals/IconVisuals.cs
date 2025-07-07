@@ -48,7 +48,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             };
         }
 
-        public static StateSave Arrow1 => CreateTextureCoordinateState(288, 256, 32, 32);
+        public static StateSave Arrow1 => CreateTextureCoordinateState(292, 260, 24, 24);
         public static StateSave Arrow2 => CreateTextureCoordinateState(320, 256, 32, 32);
         public static StateSave Arrow3 => CreateTextureCoordinateState(352, 256, 32, 32);
         public static StateSave Basket => CreateTextureCoordinateState(288, 224, 32, 32);
