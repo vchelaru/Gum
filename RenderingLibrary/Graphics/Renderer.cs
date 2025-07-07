@@ -617,11 +617,11 @@ public class Renderer : IRenderer
             GraphicsDevice.Viewport = oldViewport;
 
             // Uncomment this to test saving...
-            if (!System.IO.File.Exists("Output.png"))
-            {
-                using var stream = System.IO.File.OpenWrite("Output.png");
-                renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-            }
+            //if (!System.IO.File.Exists("Output.png"))
+            //{
+            //    using var stream = System.IO.File.OpenWrite("Output.png");
+            //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+            //}
 
         }
 
@@ -662,23 +662,12 @@ public class Renderer : IRenderer
                         renderableAlpha, Color.White
                         );
 
-                    var oldWidth = renderable.Width;
-                    var oldHeight = renderable.Height;
-
-                    var oldX = renderable.X;
-                    var oldY = renderable.Y;
-
-                    renderTargetRenderableSprite.X = System.Math.Max(renderable.X, Camera.AbsoluteLeft);
-                    renderTargetRenderableSprite.Y = System.Math.Max(renderable.Y, Camera.AbsoluteTop);
+                    renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
+                    renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
                     renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
                     renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
 
                     Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
-
-                    //renderable.X = oldX;
-                    //renderable.Y = oldY;
-                    //renderable.Width = oldWidth;
-                    //renderable.Height = oldHeight;
                 }
             }
             else
