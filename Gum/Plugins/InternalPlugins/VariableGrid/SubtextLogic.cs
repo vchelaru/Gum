@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExCSS;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class SubtextLogic
@@ -15,12 +16,14 @@ public class SubtextLogic
     /// Sets the property's subtext according to the initial subtext passed to the method plus any additional
     /// subtext as determined by the method.
     /// </summary>
-    /// <param name="defaultVariable"></param>
+    /// <param name="defaultVariable">The default variable, which is the variable as defined in the StandardElementsManager. This may not have the same name as the 
+    /// actual variable being displayed if it's exposed</param>
     /// <param name="subtext"></param>
     /// <param name="property"></param>
     /// <param name="elementSave">The element if no instance is specified, or the base type of the argument instance</param>
     /// <param name="instanceSave"></param>
-    public void GetDefaultSubtext(VariableSave defaultVariable, string subtext, 
+    public void GetDefaultSubtext(VariableSave defaultVariable, 
+        string subtext, 
         InstanceSavePropertyDescriptor property, 
         ElementSave elementSave, 
         InstanceSave instanceSave)
@@ -40,7 +43,11 @@ public class SubtextLogic
 
         if(variableOwner != null)
         {
-            foreach(var category in variableOwner.Categories)
+            var nameToSearchFor = instanceSave == null ? property.Name : instanceSave.Name + "." + property.Name;
+            var variableInOwner = variableOwner.DefaultState.GetVariableSave(nameToSearchFor);
+
+
+            foreach (var category in variableOwner.Categories)
             {
                 if(category.States.Count > 0)
                 {
@@ -48,7 +55,7 @@ public class SubtextLogic
 
                     foreach(var variable in firstState.Variables)
                     {
-                        if(variable.Name == topLevelVariableName)
+                        if(variable.Name == variableInOwner?.Name || variable.Name == topLevelVariableName)
                         {
                             if(categoryString == null)
                             {
