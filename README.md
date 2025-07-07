@@ -31,9 +31,6 @@ https://docs.flatredball.com/gum/
 ### Star Velocity
 [![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
 
-### Build Staus
-[![Build All](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml/badge.svg)](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml)
-
 ## Need Help?
 
 The fastest way to get help is to ask in our Discord: https://discord.gg/uQSam6w36d
