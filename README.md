@@ -1,9 +1,14 @@
+<div align="center">
+  <img align="center" src="https://github.com/user-attachments/assets/90d1625b-1d9a-4fca-b9a7-f0fb42badcbb" alt="gum-logo-normal-512"/>
+</div>
+<br/>
+<div align="center">
+  <a href="https://discord.gg/tG5RBgw"><img src="https://img.shields.io/discord/586997072373481494" alt="Join the chat" /></a>
+  <a href="https://twitter.com/FlatRedBall"><img src="https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall" alt="Twitter"/></a>
+  <img src="https://img.shields.io/github/last-commit/vchelaru/Gum/master" alt="Activity" />
+</div>
 
-![gum-logo-normal-512](https://github.com/user-attachments/assets/90d1625b-1d9a-4fca-b9a7-f0fb42badcbb)
-
-[![Join the chat](https://img.shields.io/discord/586997072373481494)](https://discord.gg/tG5RBgw)
-[![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall)](https://twitter.com/FlatRedBall)
-![Activity](https://img.shields.io/github/last-commit/vchelaru/Gum/master)
+---
 
 Gum is a general purpose UI layout tool built on object-oriented principles. 
 
