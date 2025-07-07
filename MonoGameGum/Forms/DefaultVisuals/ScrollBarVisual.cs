@@ -1,6 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -14,6 +15,15 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class ScrollBarVisual : InteractiveGue
     {
+        public ButtonVisual UpButtonInstance { get; set; }
+        public SpriteRuntime UpButtonIcon { get; set; }
+        public ButtonVisual DownButtonInstance { get; set; }
+        public SpriteRuntime DownButtonIcon { get; set; }
+        public ContainerRuntime ThumbContainer {  get; set; }
+        public NineSliceRuntime TrackBackground { get; set; }
+        public ButtonVisual ThumbInstance { get; set; }
+
+
         public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable()) 
         {
             if(fullInstantiation)
@@ -24,30 +34,59 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.Height = 128;
                 this.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-                var UpButtonInstance = new DefaultButtonRuntime();
+                var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+
+                UpButtonIcon = new SpriteRuntime();
+                UpButtonIcon.X = 0f;
+                UpButtonIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
+                UpButtonIcon.Y = 0f;
+                UpButtonIcon.YUnits = GeneralUnitType.PixelsFromMiddle;
+                UpButtonIcon.XOrigin = HorizontalAlignment.Center;
+                UpButtonIcon.YOrigin = VerticalAlignment.Center;
+                UpButtonIcon.Width = 0f;
+                UpButtonIcon.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                UpButtonIcon.Height = 0f;
+                UpButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                UpButtonIcon.TextureAddress = Gum.Managers.TextureAddress.Custom;
+                UpButtonIcon.ApplyState(IconVisuals.Arrow1);
+                UpButtonIcon.Color = Styling.Colors.White;
+                UpButtonIcon.Texture = uiSpriteSheetTexture;
+                UpButtonIcon.Visible = true;
+                UpButtonIcon.Rotation = 90;
+
+                UpButtonInstance = new ButtonVisual();
                 UpButtonInstance.Name = "UpButtonInstance";
-                var DownButtonInstance = new DefaultButtonRuntime();
-                DownButtonInstance.Name = "DownButtonInstance";
-                var ThumbContainer = new ContainerRuntime();
-                ThumbContainer.Name = "ThumbContainer";
-                var trackSolidRectangle = new SolidRectangle();
-                var TrackBackground = new InteractiveGue(trackSolidRectangle);
-                TrackBackground.Name = "TrackInstance";
-                var ThumbInstance = new DefaultButtonRuntime();
-                ThumbInstance.Name = "ThumbInstance";
-
-
-
-                UpButtonInstance.TextInstance.Text = "^";
+                UpButtonInstance.TextInstance.Text = "";
                 UpButtonInstance.Height = 24f;
                 UpButtonInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 UpButtonInstance.Width = 0;
                 UpButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 UpButtonInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 UpButtonInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                UpButtonInstance.Children.Add(UpButtonIcon);
                 this.Children.Add(UpButtonInstance);
 
-                DownButtonInstance.TextInstance.Text = "v";
+                DownButtonIcon = new SpriteRuntime();
+                DownButtonIcon.X = 0f;
+                DownButtonIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
+                DownButtonIcon.Y = 0f;
+                DownButtonIcon.YUnits = GeneralUnitType.PixelsFromMiddle;
+                DownButtonIcon.XOrigin = HorizontalAlignment.Center;
+                DownButtonIcon.YOrigin = VerticalAlignment.Center;
+                DownButtonIcon.Width = 0f;
+                DownButtonIcon.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                DownButtonIcon.Height = 0f;
+                DownButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                DownButtonIcon.TextureAddress = Gum.Managers.TextureAddress.Custom;
+                DownButtonIcon.ApplyState(IconVisuals.Arrow1);
+                DownButtonIcon.Color = Styling.Colors.White;
+                DownButtonIcon.Texture = uiSpriteSheetTexture;
+                DownButtonIcon.Visible = true;
+                DownButtonIcon.Rotation = -90;
+
+                DownButtonInstance = new ButtonVisual();
+                DownButtonInstance.Name = "DownButtonInstance";
+                DownButtonInstance.TextInstance.Text = "";
                 DownButtonInstance.Height = 24f;
                 DownButtonInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 DownButtonInstance.Width = 0f;
@@ -55,8 +94,12 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 DownButtonInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 DownButtonInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
                 DownButtonInstance.YUnits = GeneralUnitType.PixelsFromLarge;
+                DownButtonInstance.Children.Add(DownButtonIcon);
                 this.Children.Add(DownButtonInstance);
 
+
+                ThumbContainer = new ContainerRuntime();
+                ThumbContainer.Name = "ThumbContainer";
                 ThumbContainer.Height = -48f;
                 ThumbContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ThumbContainer.Width = 0f;
@@ -67,7 +110,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 ThumbContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
                 this.Children.Add(ThumbContainer);
 
-                trackSolidRectangle.Color = System.Drawing.Color.FromArgb(255, 130, 130, 130);
+
+                TrackBackground = new NineSliceRuntime();
+                TrackBackground.Name = "TrackInstance";
                 TrackBackground.Height = 0f;
                 TrackBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TrackBackground.Width = 0f;
@@ -78,8 +123,13 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TrackBackground.Y = 0f;
                 TrackBackground.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TrackBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
+                TrackBackground.ApplyState(NineSliceStyles.Solid);
+                TrackBackground.Color = Styling.Colors.Gray;
+                TrackBackground.Texture = uiSpriteSheetTexture;
                 ThumbContainer.Children.Add(TrackBackground);
 
+                ThumbInstance = new ButtonVisual();
+                ThumbInstance.Name = "ThumbInstance";
                 ThumbInstance.TextInstance.Text = String.Empty;
                 ThumbInstance.Width = 0f;
                 ThumbInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
