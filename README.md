@@ -34,6 +34,8 @@ https://docs.flatredball.com/gum/
 ### Build Staus
 [![Build All](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml/badge.svg)](https://github.com/vchelaru/Gum/.github/workflows/build-and-test.yaml)
 
+ ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/vchelaru/Gum/.github/workflows/build-and-test.yaml?style=flat-square)
+
 ## Need Help?
 
 The fastest way to get help is to ask in our Discord: https://discord.gg/uQSam6w36d
