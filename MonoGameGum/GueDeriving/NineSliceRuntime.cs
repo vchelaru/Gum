@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class NineSliceRuntime : BindableGue
+    public class NineSliceRuntime : InteractiveGue
     {
         #region Static Defaults
         public static string DefaultSourceFile { get; set; }

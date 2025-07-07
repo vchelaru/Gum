@@ -14,9 +14,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
 
-// keeps all tests in the same collection running sequentially so they an change static values:
-[Collection("Text-related Tests")]
-public class TextBoxTests
+public class TextBoxTests : BaseTestClass
 {
 
     [Fact]

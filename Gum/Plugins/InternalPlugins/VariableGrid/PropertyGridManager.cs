@@ -212,222 +212,230 @@ public partial class PropertyGridManager
     private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory stateCategory, List<InstanceSave> newInstances, 
         BehaviorSave behaviorSave, bool force = false)
     {
-
-        bool hasChangedObjectShowing = 
-            element != mLastElement || 
-            state != mLastState ||
-            stateCategory != mLastCategory ||
-            behaviorSave != mLastBehaviorSave ||
-            force;
-
-        if(!hasChangedObjectShowing)
+        ObjectFinder.Self.EnableCache();
+        try
         {
-            if(newInstances.Count != mLastInstanceSaves.Count)
+
+            bool hasChangedObjectShowing =
+                element != mLastElement ||
+                state != mLastState ||
+                stateCategory != mLastCategory ||
+                behaviorSave != mLastBehaviorSave ||
+                force;
+
+            if (!hasChangedObjectShowing)
             {
-                hasChangedObjectShowing= true;
-            }
-            else
-            {
-                for(int i = 0; i < newInstances.Count; i++)
+                if (newInstances.Count != mLastInstanceSaves.Count)
                 {
-                    if (newInstances[i] != mLastInstanceSaves[i])
-                    {
-                        hasChangedObjectShowing = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        var hasCustomState = _selectedState.CustomCurrentStateSave != null;
-
-        if (hasCustomState)
-        {
-            hasChangedObjectShowing = false;
-        }
-
-        mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
-
-        List<List<MemberCategory>> listOfCategories = new List<List<MemberCategory>>();
-
-        if(newInstances.Count > 0)
-        {
-            foreach(var instance in newInstances)
-            {
-                List<MemberCategory> categories = new List<MemberCategory>();
-                
-                if(element == null)
-                {
-                    categories = new List<MemberCategory>();
-
-                    var behavior = ObjectFinder.Self.GetBehaviorContainerOf(instance);
-                    if(behavior != null)
-                    {
-                        categories = GetMemberCategories(behavior, instance);
-                    }
-
+                    hasChangedObjectShowing = true;
                 }
                 else
                 {
-                    categories = GetMemberCategories(element, state, stateCategory, instance);
-                }
-
-                if(newInstances.Count > 1)
-                {
-                    RemoveMembersNotAllowedInMultiEdit(categories);
-                }
-
-
-                listOfCategories.Add(categories);
-            }
-        }
-        else
-        {
-            List<MemberCategory> categories = new List<MemberCategory>();
-            if (element == null)
-            {
-                // do nothing....
-                mLastInstanceSaves.Clear();
-                mLastInstanceSaves.AddRange(newInstances);
-            }
-            else
-            {
-
-                categories = GetMemberCategories(element, state, stateCategory, null);
-            }
-            listOfCategories.Add(categories);
-
-        }
-
-        if(element == null)
-        {
-            mLastElement = null;
-        }
-
-        mLastBehaviorSave = behaviorSave;
-
-        if (hasChangedObjectShowing)
-        {
-            // UI is fast, I dont' think we need this....
-            //Application.DoEvents();
-            SimultaneousCalls ++;
-            lock (lockObject)
-            {
-                if(SimultaneousCalls > 1)
-                {
-                    SimultaneousCalls--;
-                    return;
-                }
-                records.Add("in");
-
-                mVariablesDataGrid.Instance = (object)behaviorSave ?? _selectedState.SelectedStateSave;
-
-                mVariablesDataGrid.Categories.Clear();
-
-
-                // April 10, 2023
-                // I am adding multi-select
-                // editing support. To do this, 
-                // we call SetMultipleCategoryLists
-                // which creates wrappers for multi-select
-                // editing. Currently I do this only if more 
-                // than one object is selected, in case there
-                // are bugs in multi-select editing which would
-                // cause problems. We may consider having even single
-                // edits use the same code path in the future, but I don't
-                // feel confident in doing that just yet.                   
-                if (listOfCategories.Count == 1)
-                {
-                    foreach (var memberCategory in listOfCategories[0])
+                    for (int i = 0; i < newInstances.Count; i++)
                     {
-
-                        // We used to do this:
-                        // Application.DoEvents();
-                        // That made things go faster,
-                        // but it made the "lock" not work, which could make duplicate UI show up.
-                        mVariablesDataGrid.Categories.Add(memberCategory);
-                        if(SimultaneousCalls > 1)
+                        if (newInstances[i] != mLastInstanceSaves[i])
                         {
-                            SimultaneousCalls--;
-                            // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                            return;
+                            hasChangedObjectShowing = true;
+                            break;
                         }
                     }
                 }
+            }
+
+            var hasCustomState = _selectedState.CustomCurrentStateSave != null;
+
+            if (hasCustomState)
+            {
+                hasChangedObjectShowing = false;
+            }
+
+            mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
+
+            List<List<MemberCategory>> listOfCategories = new List<List<MemberCategory>>();
+
+            if (newInstances.Count > 0)
+            {
+                foreach (var instance in newInstances)
+                {
+                    List<MemberCategory> categories = new List<MemberCategory>();
+
+                    if (element == null)
+                    {
+                        categories = new List<MemberCategory>();
+
+                        var behavior = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+                        if (behavior != null)
+                        {
+                            categories = GetMemberCategories(behavior, instance);
+                        }
+
+                    }
+                    else
+                    {
+                        categories = GetMemberCategories(element, state, stateCategory, instance);
+                    }
+
+                    if (newInstances.Count > 1)
+                    {
+                        RemoveMembersNotAllowedInMultiEdit(categories);
+                    }
+
+
+                    listOfCategories.Add(categories);
+                }
+            }
+            else
+            {
+                List<MemberCategory> categories = new List<MemberCategory>();
+                if (element == null)
+                {
+                    // do nothing....
+                    mLastInstanceSaves.Clear();
+                    mLastInstanceSaves.AddRange(newInstances);
+                }
                 else
                 {
-                    mVariablesDataGrid.SetMultipleCategoryLists(listOfCategories);
 
-                    // remove the individual calls for setting variables, move it to the 
-                    // multi-select object:
-                    foreach(var categoryList in listOfCategories)
+                    categories = GetMemberCategories(element, state, stateCategory, null);
+                }
+                listOfCategories.Add(categories);
+
+            }
+
+            if (element == null)
+            {
+                mLastElement = null;
+            }
+
+            mLastBehaviorSave = behaviorSave;
+
+            if (hasChangedObjectShowing)
+            {
+                // UI is fast, I dont' think we need this....
+                //Application.DoEvents();
+                SimultaneousCalls++;
+                lock (lockObject)
+                {
+                    if (SimultaneousCalls > 1)
                     {
-                        foreach(var innerCategory in categoryList)
+                        SimultaneousCalls--;
+                        return;
+                    }
+                    records.Add("in");
+
+                    mVariablesDataGrid.Instance = (object)behaviorSave ?? _selectedState.SelectedStateSave;
+
+                    mVariablesDataGrid.Categories.Clear();
+
+
+                    // April 10, 2023
+                    // I am adding multi-select
+                    // editing support. To do this, 
+                    // we call SetMultipleCategoryLists
+                    // which creates wrappers for multi-select
+                    // editing. Currently I do this only if more 
+                    // than one object is selected, in case there
+                    // are bugs in multi-select editing which would
+                    // cause problems. We may consider having even single
+                    // edits use the same code path in the future, but I don't
+                    // feel confident in doing that just yet.                   
+                    if (listOfCategories.Count == 1)
+                    {
+                        foreach (var memberCategory in listOfCategories[0])
                         {
-                            foreach(var member in innerCategory.Members)
+
+                            // We used to do this:
+                            // Application.DoEvents();
+                            // That made things go faster,
+                            // but it made the "lock" not work, which could make duplicate UI show up.
+                            mVariablesDataGrid.Categories.Add(memberCategory);
+                            if (SimultaneousCalls > 1)
                             {
-                                if(member is StateReferencingInstanceMember srim)
+                                SimultaneousCalls--;
+                                // EARLY OUT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        mVariablesDataGrid.SetMultipleCategoryLists(listOfCategories);
+
+                        // remove the individual calls for setting variables, move it to the 
+                        // multi-select object:
+                        foreach (var categoryList in listOfCategories)
+                        {
+                            foreach (var innerCategory in categoryList)
+                            {
+                                foreach (var member in innerCategory.Members)
                                 {
-                                    srim.IsCallingRefresh = false;
+                                    if (member is StateReferencingInstanceMember srim)
+                                    {
+                                        srim.IsCallingRefresh = false;
+                                    }
                                 }
+                            }
+                        }
+
+                        foreach (var gridCategory in mVariablesDataGrid.Categories)
+                        {
+                            foreach (MultiSelectInstanceMember member in gridCategory.Members)
+                            {
+                                member.CustomSetPropertyEvent += (sender, args) =>
+                                {
+                                    //do just one undo:
+                                    _undoManager.RecordUndo();
+
+                                    // and loop through all instances and refrehs:
+                                    foreach (var item in member.InstanceMembers)
+                                    {
+                                        if (item is StateReferencingInstanceMember srim)
+                                        {
+                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, args.CommitType);
+
+                                        }
+                                        //RefreshInResponseToVariableChange()
+                                    }
+                                    //StateReferencingInstanceMember.NotifyVariableLogic(owner, )
+                                };
                             }
                         }
                     }
 
-                    foreach(var gridCategory in mVariablesDataGrid.Categories)
+                }
+
+                SimultaneousCalls--;
+            }
+            else
+            {
+                // todo: handle multiselect
+                foreach (var newCategory in listOfCategories[0])
+                {
+                    // let's see if any variables have changed
+                    var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
+
+                    if (oldCategory != null && DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
                     {
-                        foreach(MultiSelectInstanceMember member in gridCategory.Members)
-                        {
-                            member.CustomSetPropertyEvent += (sender, args) =>
-                            {
-                                //do just one undo:
-                                _undoManager.RecordUndo();
+                        int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
 
-                                // and loop through all instances and refrehs:
-                                foreach(var item in member.InstanceMembers)
-                                {
-                                    if(item is StateReferencingInstanceMember srim)
-                                    {
-                                        srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, args.CommitType);
-
-                                    }
-                                    //RefreshInResponseToVariableChange()
-                                }
-                                //StateReferencingInstanceMember.NotifyVariableLogic(owner, )
-                            };
-                        }
+                        mVariablesDataGrid.Categories.RemoveAt(index);
+                        mVariablesDataGrid.Categories.Insert(index, newCategory);
                     }
                 }
-
             }
 
-            SimultaneousCalls--;
+            RefreshErrors(element);
+
+            RefreshStateLabel(element, stateCategory, state);
+
+            RefreshBehaviorUi(behaviorSave, newInstances, state, stateCategory);
+
+            mVariablesDataGrid.Refresh();
         }
-        else
+        finally
         {
-            // todo: handle multiselect
-            foreach (var newCategory in listOfCategories[0])
-            {
-                // let's see if any variables have changed
-                var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
-
-                if ( oldCategory != null && DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
-                {
-                    int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
-
-                    mVariablesDataGrid.Categories.RemoveAt(index);
-                    mVariablesDataGrid.Categories.Insert(index, newCategory);
-                }
-            }
+            ObjectFinder.Self.DisableCache();
         }
-
-        RefreshErrors(element);
-
-        RefreshStateLabel(element, stateCategory, state);
-
-        RefreshBehaviorUi(behaviorSave, newInstances, state, stateCategory);
-
-        mVariablesDataGrid.Refresh();
         
     }
 
@@ -470,7 +478,15 @@ public partial class PropertyGridManager
 
     public void RefreshVariablesDataGridValues()
     {
-        mVariablesDataGrid.Refresh();
+        ObjectFinder.Self.EnableCache();
+        try
+        {
+            mVariablesDataGrid.Refresh();
+        }
+        finally
+        {
+            ObjectFinder.Self.DisableCache();
+        }
     }
 
     private void RefreshBehaviorUi(BehaviorSave behaviorSave, List<InstanceSave> instances, StateSave state, StateSaveCategory category)
@@ -884,6 +900,40 @@ public partial class PropertyGridManager
         {
             categories.Remove(categoryToMove);
             categories.Insert(2, categoryToMove);
+        }
+    }
+
+    internal void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
+    {
+        if (strippedName == "VariableReferences")
+        {
+            // force refresh:
+            RefreshEntireGrid(force: true);
+        }
+        if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null)
+        {
+            // If setting a value on a variable in a category, the variable may be newly-added to the state.
+            // If we don't already indicate that this is set by this category, we should update the grid immediately:
+            var nameToSearchFor = strippedName;
+            if(instance != null)
+            {
+                nameToSearchFor = instance.Name + "." + strippedName;
+            }
+
+            var existingSrim = mVariablesDataGrid.GetInstanceMember(nameToSearchFor);
+
+            if(existingSrim != null)
+            {
+                var alreadyShowsSetBy = 
+                    // We could get even more specific here, but doing so may
+                    // result in the app breaking if we change how we display it
+                    // so...this is good enough for now, should handle the most common cases:
+                    existingSrim.DetailText?.Contains("Set by") == true;
+                if(!alreadyShowsSetBy)
+                {
+                    RefreshEntireGrid(true);
+                }
+            }
         }
     }
 

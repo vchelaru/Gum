@@ -357,17 +357,23 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileScrollBarRuntime), overwriteIfAlreadyExists: false);
             }
+            else if(behaviorNames.Contains("ScrollViewerBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (behaviorNames.Contains("SliderBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileSliderRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("ScrollViewerBehavior"))
+            else if (behaviorNames.Contains("SplitterBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
-                    typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
+                    typeof(DefaultFromFileSplitterRuntime), overwriteIfAlreadyExists: false);
             }
             else if(behaviorNames.Contains("StackPanelBehavior"))
             {

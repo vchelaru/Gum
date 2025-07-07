@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -344,8 +345,7 @@ namespace WpfDataUi.Controls
         private void PopulateItems()
         {
             this.SuppressSettingProperty = true;
-            this.ComboBox.Items.Clear();
-            
+
             // July 17, 2022
             // Should this be 
             // a "smart refresh"
@@ -353,9 +353,39 @@ namespace WpfDataUi.Controls
             // removes individual items
             // which should be changed, rather
             // than a full refresh?
-            foreach(var item in CustomOptions)
+            // July 5, 2025
+            // Yes, it should because
+            // otherwise this can be slow
+            // on frequent refreshes like if
+            // playing animations in Gum:
+
+            var shouldRefresh = false;
+
+            if(this.ComboBox.Items.Count != CustomOptions.Count())
             {
-                this.ComboBox.Items.Add(item);
+                shouldRefresh = true;
+            }
+
+            if (shouldRefresh == false)
+            {
+                for (int i = 0; i < this.ComboBox.Items.Count; i++)
+                {
+                    var item = this.ComboBox.Items[i];
+                    if (CustomOptions.ElementAt(i)?.Equals(item) != true)
+                    {
+                        shouldRefresh = true;
+                        break;
+                    }
+                }
+            }
+
+            if(shouldRefresh)
+            {
+                this.ComboBox.Items.Clear();
+                foreach(var item in CustomOptions)
+                {
+                    this.ComboBox.Items.Add(item);
+                }
             }
 
             this.SuppressSettingProperty = false;

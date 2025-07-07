@@ -82,11 +82,7 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
     {
-        if(strippedName == "VariableReferences")
-        {
-            // force refresh:
-            _propertyGridManager.RefreshEntireGrid(force: true);
-        }
+        _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue);
     }
 
     private void HandleElementDeleted(ElementSave save)
@@ -139,7 +135,9 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleCustomStateSelected(StateSave save)
     {
-        PropertyGridManager.Self.RefreshVariablesDataGridValues();
+        // custom states are states where an animation is playing. This slows down
+        // the animation considerably so let's not do it:
+        //PropertyGridManager.Self.RefreshVariablesDataGridValues();
     }
 
     private void HandleTreeNodeSelected(TreeNode node)
