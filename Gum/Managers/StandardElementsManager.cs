@@ -469,6 +469,8 @@ namespace Gum.Managers
                 AddVariableReferenceList(stateSave);
 
                 AddEventVariables(stateSave);
+                // For NineSlice we want it to expose its children, but it should not have events itself, as that would break old projects:
+                stateSave.Variables.Find(item => item.Name == "ExposeChildrenEvents")!.Value = true;
 
                 AddStateVariable(stateSave);
 
@@ -574,8 +576,14 @@ namespace Gum.Managers
             stateSave.Variables.Add(hasEventsVariable);
             stateSave.Variables.Add(
                 new VariableSave
-                { SetsValue = true, Type = "bool", Value = defaultHasEvents, Name = "ExposeChildrenEvents", Category = "Behavior", CanOnlyBeSetInDefaultState = true, 
-                    // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
+                { 
+                    SetsValue = true, 
+                    Type = "bool", 
+                    Value = defaultHasEvents, 
+                    Name = "ExposeChildrenEvents", 
+                    Category = "Behavior", 
+                    CanOnlyBeSetInDefaultState = true,
+                    // We used to exclude ExposeChildrenEvents from instances, but there are plenty of situations where we want to modify this value on an instance-by-instance basis. It's similar to InputTransparent in Maui
                     //ExcludeFromInstances = true 
                 });
         }
