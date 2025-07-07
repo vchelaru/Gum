@@ -32,7 +32,7 @@ https://docs.flatredball.com/gum/
 [![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
 
 ### Build Staus
-[![Build All](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml/badge.svg)](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml)
+[![Build All](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml/badge.svg)](https://github.com/vchelaru/Gum/.github/workflows/build-and-test.yaml)
 
 ## Need Help?
 
