@@ -1,16 +1,14 @@
 <div align="center">
   <img align="center" src="https://github.com/user-attachments/assets/90d1625b-1d9a-4fca-b9a7-f0fb42badcbb" alt="gum-logo-normal-512"/>
 </div>
+<div align="center">A general purpose UI layout tool built on object-oriented principles.</div>
 <br/>
 <div align="center">
   <a href="https://discord.gg/tG5RBgw"><img src="https://img.shields.io/discord/586997072373481494" alt="Join the chat" /></a>
   <a href="https://twitter.com/FlatRedBall"><img src="https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall" alt="Twitter"/></a>
   <img src="https://img.shields.io/github/last-commit/vchelaru/Gum/master" alt="Activity" />
 </div>
-
----
-
-Gum is a general purpose UI layout tool built on object-oriented principles. 
+<br/>
 
 ![image](https://github.com/vchelaru/Gum/assets/729631/9f1d16b2-47a0-47d4-a6bc-0a3d6f100699)
 
