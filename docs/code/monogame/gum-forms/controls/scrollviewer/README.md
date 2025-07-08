@@ -34,7 +34,7 @@ for (int i = 0; i < 30; i++)
 
 ## Code Example: Creating a ScrollViewer With Non-Forms Children
 
-The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be be added to the ScrollViewer through its InnerPanel.
+The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be added to the ScrollViewer through its InnerPanel.
 
 ```csharp
 var scrollViewer = new ScrollViewer();
