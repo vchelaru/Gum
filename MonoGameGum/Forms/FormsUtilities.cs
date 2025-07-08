@@ -100,7 +100,7 @@ public class FormsUtilities
                 TryAdd(typeof(PasswordBox), typeof(PasswordBoxVisual));
                 TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
                 TryAdd(typeof(ScrollBar), typeof(ScrollBarVisual));
-                TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
+                TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
                 TryAdd(typeof(TextBox), typeof(TextBoxVisual));
                 TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
                 TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
