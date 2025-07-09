@@ -89,6 +89,9 @@ public class FormsUtilities
                 break;
             case DefaultVisualsVersion.V2:
 
+                systemManagers.LoadEmberddedTexture2d("UISpriteSheet.png");
+
+
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(ComboBoxVisual));

@@ -246,16 +246,13 @@ namespace RenderingLibrary
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 // Load the default font, and then the bold, italic, and italic_bold options for bbcode
-                var loadedFont = LoadEmbeddedFont(graphicsDevice, "Font18Arial");
+                var loadedFont = LoadEmbeddedFont("Font18Arial");
                 Text.DefaultBitmapFont = loadedFont;
                 Renderer.InternalShapesTexture = loadedFont.Texture;
 
-                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Bold");
-                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic");
-                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic_Bold");
-
-                var uiSpriteSheet = LoadEmberddedTexture2d(graphicsDevice, "UISpriteSheet.png");
-                Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{AssemblyPrefix}.UISpriteSheet.png", uiSpriteSheet);
+                LoadEmbeddedFont("Font18Arial_Bold");
+                LoadEmbeddedFont("Font18Arial_Italic");
+                LoadEmbeddedFont("Font18Arial_Italic_Bold");
 
                 GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
                 GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
@@ -305,14 +302,14 @@ namespace RenderingLibrary
         /// <param name="graphicsDevice"></param>
         /// <param name="fontName">The filename without the extension</param>
         /// <returns></returns>
-        private BitmapFont LoadEmbeddedFont(GraphicsDevice graphicsDevice, string fontName)
+        private BitmapFont LoadEmbeddedFont(string fontName)
         {
             var assembly = typeof(SystemManagers).Assembly;
 
             var resourceName = $"{AssemblyPrefix}.{fontName}.fnt";
 
             var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, resourceName);
-            var defaultFontTexture = LoadEmberddedTexture2d(graphicsDevice, $"{fontName}_0.png");
+            var defaultFontTexture = LoadEmberddedTexture2d($"{fontName}_0.png");
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
             // qualify for Android:
@@ -322,18 +319,22 @@ namespace RenderingLibrary
         }
 
         /// <summary>
-        /// 
+        /// Loads a texture into the Disposable cache from the Embedded Resource within the application
         /// </summary>
         /// <param name="graphicsDevice"></param>
         /// <param name="embeddedTexture2dName"></param>
         /// <returns></returns>
-        private Texture2D LoadEmberddedTexture2d(GraphicsDevice graphicsDevice, string embeddedTexture2dName)
+        public Texture2D LoadEmberddedTexture2d(string embeddedTexture2dName)
         {
             var assembly = typeof(SystemManagers).Assembly;
-
             using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{AssemblyPrefix}.{embeddedTexture2dName}");
 
-            return Texture2D.FromStream(graphicsDevice, stream);
+            Texture2D texture = Texture2D.FromStream(Renderer.GraphicsDevice, stream);
+
+            var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture);
+
+            return texture;
         }
 
 #if USE_GUMCOMMON
