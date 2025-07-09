@@ -13,7 +13,7 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class PanelStandard : MonoGameGum.Forms.Controls.FrameworkElement
+partial class PanelStandard : MonoGameGum.Forms.Controls.Panel
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()

@@ -16,8 +16,7 @@ partial class InventoryGrid
 
     public ItemSlot GetItemSlotByIndex(int index)
     {
-        var visualAtIndex = (InteractiveGue)MainGrid.Visual.Children[index];
-        return (ItemSlot)visualAtIndex.FormsControlAsObject;
+        return (ItemSlot)MainGrid.Children[index];
     }
 
     partial void CustomInitialize()
