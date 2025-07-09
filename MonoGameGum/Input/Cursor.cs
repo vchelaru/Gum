@@ -231,6 +231,14 @@ public class Cursor : ICursor
 
     public bool MiddleDoubleClick { get; private set; }
 
+    // This property follows the FRB naming conventions.
+    // This is confusing for a number of reasons:
+    // 1. What is a "window"? We have a Window class in forms, but property is not necessarily
+    //    a Window. It could be anything.
+    // 2. This actually represents a "runtime" or "visual", so we probably should have this be VisualPushed
+    //    to follow the more modern naming conventions.
+    // 3. Users may want to know which FrameworkElement was pushed without having to do casting. This should
+    //    change in .NET 10 with extension properties.
     public InteractiveGue WindowPushed { get; set; }
 
     /// <summary>

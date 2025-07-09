@@ -68,6 +68,10 @@ public class GumService
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
+    /// <inheritdoc/>
+    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+    /// <inheritdoc/>
+    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
     Game _game;
 

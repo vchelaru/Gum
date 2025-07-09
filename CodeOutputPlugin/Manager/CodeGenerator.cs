@@ -1166,6 +1166,7 @@ public class CodeGenerator
         { "ScrollBarBehavior", "MonoGameGum.Forms.Controls.ScrollBar" },
         { "ScrollViewerBehavior", "MonoGameGum.Forms.Controls.ScrollViewer" },
         { "SliderBehavior", "MonoGameGum.Forms.Controls.Slider" },
+        { "SplitterBehavior", "MonoGameGum.Forms.Controls.Splitter" },
         { "StackPanelBehavior", "MonoGameGum.Forms.Controls.StackPanel" },
         { "TextBoxBehavior", "MonoGameGum.Forms.Controls.TextBox" },
         { "WindowBehavior", "MonoGameGum.Forms.Window" },
