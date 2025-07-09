@@ -34,7 +34,7 @@ public class ListBoxItemVisual : InteractiveGue
         if (fullInstantiation)
         {
             this.States= new ListBoxItemCategoryStates();
-            var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
 
             this.Height = 6f;
             this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;

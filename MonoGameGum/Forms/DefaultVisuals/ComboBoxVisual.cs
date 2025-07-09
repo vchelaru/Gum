@@ -40,7 +40,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             if (fullInstantiation)
             {
                 this.States = new ComboBoxCategoryStates();
-                var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
 
                 this.Height = 24f;
                 this.Width = 256f;

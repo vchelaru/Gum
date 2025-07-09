@@ -15,12 +15,13 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 public class ScrollViewerVisual : InteractiveGue
 {
 
-    public NineSliceRuntime Background { get; set; }
-    public ScrollBarVisual VerticalScrollBarInstance { get; set; }
-    public ContainerRuntime InnerPanel { get; set; }
-    public ContainerRuntime ClipContainer { get; set; }
-    public ContainerRuntime ScrollAndClipContainer { get; set; }
-    public ContainerRuntime ClipContainerContainer { get; set; }
+    public NineSliceRuntime Background { get; private set; }
+    public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
+    public ContainerRuntime InnerPanel { get; private set; }
+    public ContainerRuntime ClipContainer { get; private set; }
+    public ContainerRuntime ScrollAndClipContainer { get; private set; }
+    public ContainerRuntime ClipContainerContainer { get; private set; }
+
     public void MakeSizedToChildren()
     {
         this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
@@ -49,7 +50,7 @@ public class ScrollViewerVisual : InteractiveGue
             this.Width = 150;
             this.Height = 200;
 
-            var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
 
             {
                 Background = new NineSliceRuntime();

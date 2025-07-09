@@ -15,13 +15,13 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class ScrollBarVisual : InteractiveGue
     {
-        public ButtonVisual UpButtonInstance { get; set; }
-        public SpriteRuntime UpButtonIcon { get; set; }
-        public ButtonVisual DownButtonInstance { get; set; }
-        public SpriteRuntime DownButtonIcon { get; set; }
-        public ContainerRuntime ThumbContainer {  get; set; }
-        public NineSliceRuntime TrackBackground { get; set; }
-        public ButtonVisual ThumbInstance { get; set; }
+        public ButtonVisual UpButtonInstance { get; private set; }
+        public SpriteRuntime UpButtonIcon { get; private set; }
+        public ButtonVisual DownButtonInstance { get; private set; }
+        public SpriteRuntime DownButtonIcon { get; private set; }
+        public ContainerRuntime ThumbContainer {  get; private set; }
+        public NineSliceRuntime TrackBackground { get; private set; }
+        public ButtonVisual ThumbInstance { get; private set; }
 
 
         public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable()) 
@@ -34,7 +34,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.Height = 128;
                 this.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-                var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
 
                 UpButtonIcon = new SpriteRuntime();
                 UpButtonIcon.X = 0f;

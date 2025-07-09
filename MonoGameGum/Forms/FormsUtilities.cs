@@ -2,6 +2,7 @@
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultFromFileVisuals;
 using MonoGameGum.Forms.DefaultVisuals;
@@ -89,8 +90,8 @@ public class FormsUtilities
                 break;
             case DefaultVisualsVersion.V2:
 
-                systemManagers.LoadEmberddedTexture2d("UISpriteSheet.png");
-
+                Texture2D uiSpriteSheet = systemManagers.LoadEmberddedTexture2d("UISpriteSheet.png");
+                IconVisuals.ActiveVisual = new IconVisuals(uiSpriteSheet);
 
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));

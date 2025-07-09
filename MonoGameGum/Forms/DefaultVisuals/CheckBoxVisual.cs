@@ -59,7 +59,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 this.States = new CheckBoxCategoryStates();
 
-                var uiSpriteSheetTexture = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{RenderingLibrary.SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
 
                 CheckBoxBackground = new NineSliceRuntime();
                 CheckBoxBackground.Width = 24;
