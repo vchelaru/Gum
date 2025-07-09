@@ -11,8 +11,12 @@ The following code adds a button which increments every time it is clicked:
 {% tabs %}
 {% tab title="Separate Method" %}
 ```csharp
+Button button;
+
+void SomeInitializationFunction()
+{
     ...
-    var button = new Button();
+    button = new Button();
     Root.Children.Add(button.Visual);
     button.X = 0;
     button.Y = 0;
