@@ -96,6 +96,7 @@ public class MainCodeOutputPlugin : PluginBase
         this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings);
         this.ElementAdd += HandleElementAdd;
         this.ElementDelete += HandleElementDeleted;
+        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
 
         this.VariableAdd += HandleVariableAdd;
         this.VariableSet += HandleVariableSet;
@@ -117,6 +118,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         this.ProjectLoad += HandleProjectLoaded;
     }
+
 
     #endregion
 
@@ -206,6 +208,12 @@ public class MainCodeOutputPlugin : PluginBase
         {
             control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
         }
+    }
+
+
+    private void HandleBehaviorReferencesChanged(ElementSave save)
+    {
+        HandleRefreshAndExport();
     }
 
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
