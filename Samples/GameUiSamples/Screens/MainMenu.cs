@@ -41,6 +41,10 @@ partial class MainMenu
             {
                 GoToScreen(new StardewHotbarScreen());
             }
+            else if(item == InventoryStardew)
+            {
+                GoToScreen(new StardewInventoryScreen());
+            }
             else if (item == FrbClicker)
             {
                 GoToScreen(new FrbClickerCodeOnly());

@@ -1,4 +1,5 @@
 ﻿using GameUiSamples.Screens;
+using GameUiSamples.Services;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
@@ -17,6 +18,8 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
 
     GumService Gum => MonoGameGum.GumService.Default;
+
+    public static GameServiceContainer ServiceContainer { get; private set; }
 
     public Game1()
     {
@@ -37,11 +40,15 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+        ServiceContainer = Services;
+
         var gumProject = Gum.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
         // This allows the keyboard to control the game (tabbing)
         FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
         FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Keys.Down });
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Up });
+
+        Services.AddService<InventoryService>(new InventoryService());
 
         var startScreen = new MainMenu();
         startScreen.AddToRoot();
