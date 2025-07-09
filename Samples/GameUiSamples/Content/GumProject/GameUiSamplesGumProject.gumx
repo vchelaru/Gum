@@ -39,6 +39,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
   <ScreenReference>
+    <Name>StardewInventoryScreen</Name>
+    <ElementType>Screen</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ScreenReference>
+  <ScreenReference>
     <Name>TestScreen</Name>
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -130,6 +135,11 @@
   </ComponentReference>
   <ComponentReference>
     <Name>Controls/MenuItem</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>Controls/PanelStandard</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
@@ -279,6 +289,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>StardewComponents/InventoryGrid</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>StardewComponents/ItemIcon</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -368,6 +383,9 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>OnScreenKeyboardBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>PanelBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
     <Name>PasswordBoxBehavior</Name>

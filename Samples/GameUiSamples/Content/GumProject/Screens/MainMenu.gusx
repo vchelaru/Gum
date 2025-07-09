@@ -100,6 +100,18 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>InventoryStardew.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Inventory (Stardew Valley)</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryStardew.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>bool</Type>
       <Name>IsOverrideInCodeGen</Name>
       <Value xsi:type="xsd:boolean">false</Value>
@@ -195,6 +207,11 @@
   </Instance>
   <Instance>
     <Name>HotbarStardew</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>InventoryStardew</Name>
     <BaseType>Controls/ListBoxItem</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
