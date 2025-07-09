@@ -15,13 +15,14 @@ using Microsoft.Xna.Framework;
 using MonoGameGum;
 using GameUiSamples.Components;
 using MonoGameGum.Forms;
+using MonoGameGum.ExtensionMethods;
 namespace GameUiSamples.Screens;
 
 partial class StardewInventoryScreen : IUpdateScreen
 {
     private InventoryService _inventoryService;
 
-    ItemSlot _grabbedItemSlot;
+    ItemIcon _grabbedIcon;
 
     int? inventoryIndexGrabbed = null;
 
@@ -29,15 +30,87 @@ partial class StardewInventoryScreen : IUpdateScreen
     {
         _inventoryService = Game1.ServiceContainer.GetService<InventoryService>();
 
-        _grabbedItemSlot = new ItemSlot();
-        _grabbedItemSlot.IsVisible = false;
-        GumService.Default.PopupRoot.AddChild(_grabbedItemSlot);
+        CreateGrabbedIcon();
+
+        GumService.Default.PopupRoot.AddChild(_grabbedIcon);
 
         InitializeZoom();
 
         InitializePlayerInventory();
 
+        InitializeInventoryItems();
+
         UpdateToInventory();
+    }
+
+    private void CreateGrabbedIcon()
+    {
+        _grabbedIcon = new ItemIcon();
+        _grabbedIcon.IsVisible = false;
+        _grabbedIcon.Name = "Grabbed icon";
+        // So that it doesn't register as the cursor being over it:
+        _grabbedIcon.Visual.HasEvents = false;
+
+        _grabbedIcon.Visual.XOrigin = HorizontalAlignment.Center;
+        _grabbedIcon.Visual.YOrigin = VerticalAlignment.Center;
+    }
+
+    private void InitializeInventoryItems()
+    {
+        foreach(ItemSlot item in InventoryGridInstance.MainGrid.Children)
+        {
+            item.Visual.Push += HandleInventoryItemPushed;
+
+            item.Visual.RemovedAsPushed += HandleInventoryItemRemovedAsPushed;
+        }
+    }
+
+    private void HandleInventoryItemRemovedAsPushed(object? sender, EventArgs e)
+    {
+        var visualPushed = sender as InteractiveGue;
+        var itemSlotPushed = visualPushed?.FormsControlAsObject as ItemSlot;
+
+        var didSwap = false;
+
+        if (itemSlotPushed != null)
+        {
+            _grabbedIcon.IsVisible = false;
+
+            var visualOver = GumService.Default.Cursor.WindowOver;
+
+            var itemSlotDropped = visualOver?.FormsControlAsObject as ItemSlot;
+
+            if(itemSlotDropped != null)
+            {
+                var oldInventoryType = itemSlotPushed.Visual.Tag as string;
+                var newInventoryType = itemSlotDropped.Visual.Tag as string;
+                var oldIndex = InventoryGridInstance.MainGrid.Children.IndexOf(itemSlotPushed);
+                var newIndex = InventoryGridInstance.MainGrid.Children.IndexOf(itemSlotDropped);
+
+                // swap them in the inventory:
+                var inventory = _inventoryService.PlayerInventory;
+
+                inventory[oldIndex] = newInventoryType;
+                inventory[newIndex] = oldInventoryType;
+
+            }
+        }
+        UpdateToInventory();
+
+    }
+
+    private void HandleInventoryItemPushed(object? sender, EventArgs e)
+    {
+        var visualPushed = sender as InteractiveGue;
+        var itemSlotPushed = visualPushed?.FormsControlAsObject as ItemSlot;
+
+        if (itemSlotPushed != null)
+        {
+            itemSlotPushed.ItemIconInstance.IsVisible = false;
+            _grabbedIcon.IsVisible = true;
+            _grabbedIcon.TextureLeft = itemSlotPushed.ItemIconInstance.TextureLeft;
+            _grabbedIcon.TextureTop = itemSlotPushed.ItemIconInstance.TextureTop;
+        }
     }
 
     private void InitializePlayerInventory()
@@ -103,27 +176,13 @@ partial class StardewInventoryScreen : IUpdateScreen
     public void Update(GameTime gameTime)
     {
         var cursor = GumService.Default.Cursor;
-        System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
-        if(cursor.PrimaryPush)
-        {
-            // Future versions of Gum should inclue a Cursor.FrameworkElementPushed, but until
-            // then we have to cast.
-            var visualPushed = cursor.WindowPushed as InteractiveGue;
-            var itemSlotPushed = visualPushed?.FormsControlAsObject as ItemSlot;
 
-            if(itemSlotPushed != null)
-            {
-                _grabbedItemSlot.IsVisible = true;
-                _grabbedItemSlot.ItemIconInstance.TextureLeft = itemSlotPushed.ItemIconInstance.TextureLeft;
-                _grabbedItemSlot.ItemIconInstance.TextureTop = itemSlotPushed.ItemIconInstance.TextureTop;
-            }
+        if(cursor.PrimaryDown && _grabbedIcon.IsVisible)
+        {
+            _grabbedIcon.X = cursor.XRespectingGumZoomAndBounds();
+            _grabbedIcon.Y = cursor.YRespectingGumZoomAndBounds(); 
         }
 
-        if(cursor.PrimaryDown && _grabbedItemSlot.IsVisible)
-        {
-            _grabbedItemSlot.X = cursor.X;
-            _grabbedItemSlot.Y = cursor.Y;
-        }
     }
 }
 
