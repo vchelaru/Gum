@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
+using MonoGameGum.Forms.Controls;
 using RenderingLibrary;
 using System;
 
@@ -29,12 +30,18 @@ public class Game1 : Game
 
     private void HandlePrepareDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
     {
+        // This allows Gum to use render targets without wipling whatever was previously rendered
+        // Without this, the background becomes black, and many of the rendered objects disappear
         e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
     }
 
     protected override void Initialize()
     {
         var gumProject = Gum.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
+        // This allows the keyboard to control the game (tabbing)
+        FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
+        FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Keys.Down });
+        FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Up });
 
         var startScreen = new MainMenu();
         startScreen.AddToRoot();
