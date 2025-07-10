@@ -28,6 +28,9 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
     public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink)
     {
         SystemManagers.Default = new();
+        SystemManagers.Default.Renderer = new Renderer();
+        SystemManagers.Default.Renderer.AddLayer(new Layer());
+
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 

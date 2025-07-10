@@ -688,7 +688,10 @@ namespace RenderingLibrary.Graphics
 
             mRawText = text;
             mNeedsBitmapFontRefresh = true;
-            mBounds = new LinePrimitive(managers.Renderer?.SinglePixelTexture);
+
+            // Vic says - this seems expensive to do for every text. Maybe we should lazy load this to save
+            // some performance?
+            mBounds = new LinePrimitive(managers.Renderer?.TryGetSinglePixelTexture());
             mBounds.Color = Color.LightGreen;
 
             mBounds.Add(0, 0);
