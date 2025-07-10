@@ -169,6 +169,8 @@ public class MenuItem : ItemsControl
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
 
         lastVisual = Visual;
+
+        RefreshSubmenuIndicatorVisibility();
     }
 
     private void HandleVisualChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
