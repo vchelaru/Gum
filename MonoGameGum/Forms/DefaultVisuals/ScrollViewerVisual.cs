@@ -24,6 +24,7 @@ public class ScrollViewerVisual : InteractiveGue
 
     public void MakeSizedToChildren()
     {
+        this.Height = 0;
         this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ClipContainerContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
@@ -32,7 +33,7 @@ public class ScrollViewerVisual : InteractiveGue
         ClipContainer.Height = 0;
         InnerPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-
+        this.Width = 0;
         this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ClipContainerContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
@@ -68,7 +69,7 @@ public class ScrollViewerVisual : InteractiveGue
                 Background.Color = Styling.Colors.DarkGray;
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(NineSliceStyles.Solid);
+                Background.ApplyState(NineSliceStyles.Bordered);
                 this.Children.Add(Background);
 
                 ScrollAndClipContainer = new ContainerRuntime();
