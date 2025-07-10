@@ -57,11 +57,14 @@ namespace RenderingLibrary
         }
 
 
-
+        /// <summary>
+        /// The Renderer used by this SystemManagers. This is created automatically when
+        /// calling Initialize, and this should only be set in unit tests.
+        /// </summary>
         public Renderer Renderer
         {
             get;
-            private set;
+            set;
         }
 
         IRenderer ISystemManagers.Renderer => Renderer;
