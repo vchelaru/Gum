@@ -13,12 +13,16 @@ using RenderingLibrary;
 using GameUiSamples.Components;
 using Microsoft.Xna.Framework;
 using System;
+using GameUiSamples.Services;
 namespace GameUiSamples.Screens;
 
 partial class StardewHotbarScreen : IUpdateScreen
 {
+    private InventoryService _inventoryService;
+
     partial void CustomInitialize()
     {
+        _inventoryService = Game1.ServiceContainer.GetService<InventoryService>();
         InitializeZoom();
         InitializeIcons();
 
@@ -39,15 +43,18 @@ partial class StardewHotbarScreen : IUpdateScreen
 
     private void InitializeIcons()
     {
-        AssignIconByCell(HotbarInstance.ItemSlotInstance1, 1, 1);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance2, 2, 8);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance3, 3, 6);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance4, 3, 8);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance5, 4, 8);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance6, 7, 5);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance7, 8, 3);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance8, 11, 3);
-        AssignIconByCell(HotbarInstance.ItemSlotInstance9, 3, 1);
+
+        // let's fill the bar with a few items. In this case we'll just assign the top and left coordinates
+        // but a real game may have items which have their own texture coordinates
+        AssignIcon(HotbarInstance.ItemSlotInstance1, "CopperBar"); // Copper Bar
+        AssignIcon(HotbarInstance.ItemSlotInstance2, "Apple"); // Apple
+        AssignIcon(HotbarInstance.ItemSlotInstance3, "Scroll"); // Scroll
+        AssignIcon(HotbarInstance.ItemSlotInstance4, "Meat"); // Meat
+        AssignIcon(HotbarInstance.ItemSlotInstance5, "Fish"); // Fish
+        AssignIcon(HotbarInstance.ItemSlotInstance6, "HealthPotion"); // HealthPotion
+        AssignIcon(HotbarInstance.ItemSlotInstance7, "Topaz"); // Topaz
+        AssignIcon(HotbarInstance.ItemSlotInstance8, "Book"); // Book
+        AssignIcon(HotbarInstance.ItemSlotInstance9, "SilverOre"); // Silver Ore
     }
 
     private void InitializeZoom()
@@ -57,8 +64,6 @@ partial class StardewHotbarScreen : IUpdateScreen
 
         this.Visual.UpdateLayout();
 
-        // let's fill the bar with a few items. In this case we'll just assign the top and left coordinates
-        // but a real game may have items which have their own texture coordinates
     }
 
     private static void SetZoom(float zoom)
@@ -68,13 +73,13 @@ partial class StardewHotbarScreen : IUpdateScreen
         GraphicalUiElement.CanvasHeight = SystemManagers.Default.Renderer.Camera.ClientHeight / zoom;
     }
 
-    private void AssignIconByCell(ItemSlot itemSlot, int x, int y)
+    private void AssignIcon(ItemSlot itemSlot, string itemName)
     {
-        var textureLeft = x * 16;
-        var textureTop = y * 16;
+        var definition = _inventoryService.InventoryItems[itemName];
 
-        itemSlot.ItemIconInstance.TextureLeft = textureLeft;
-        itemSlot.ItemIconInstance.TextureTop = textureTop;
+        itemSlot.ItemIconInstance.TextureTop = definition.PixelTop;
+
+        itemSlot.ItemIconInstance.TextureLeft = definition.PixelLeft;
     }
 
     public void Update(GameTime gameTime)

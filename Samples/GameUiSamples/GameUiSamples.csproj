@@ -4,7 +4,9 @@
     <TargetFramework>net6.0</TargetFramework>
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
-    <TieredCompilation>false</TieredCompilation>
+	 <Nullable>enable</Nullable>
+
+	  <TieredCompilation>false</TieredCompilation>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
