@@ -283,7 +283,7 @@ public class MenuItem : ItemsControl
         if (SubmenuIndicatorInstance != null)
         {
             SubmenuIndicatorInstance.Visible =
-                this.Items.Count > 0 &&
+                this.Items?.Count > 0 &&
                 // If ParentMenuItem is null, then this
                 // is a top-level menu item
                 this.ParentMenuItem != null;
