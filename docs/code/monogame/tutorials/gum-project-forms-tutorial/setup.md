@@ -70,6 +70,10 @@ Your project now includes Forms components.
 
 Now that we have our Gum project created, we can load it in our game.
 
+{% tabs %}
+{% tab title="Visual Studio" %}
+
+
 First, we'll set up our project so all Gum files are copied when the project is built. To do this:
 
 1. Right-click on any Gum file in your project, such as GumProject.gumx
@@ -94,6 +98,30 @@ First, we'll set up our project so all Gum files are copied when the project is 
 
 
     <figure><img src="../../../../.gitbook/assets/image (189).png" alt=""><figcaption><p>All Gum files automatically are marked as Copy if newer.</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Visual Studio Code" %}
+First, we'll set up our project so all Gum files are copied when the project is built. To do this:
+
+1. Open your game's .cproj in Visual Studio Code to edit the text
+2. Find an ItemGroup where you are loading other content. If you do not have one, you can create a new one (see below).
+3. Add an entry to copy all Gum files to the output directory. Use wildcards to include all Gum files including the main Gum project, Screens, Components, Standard Elements, fonts, and any other referenced files.
+
+For example, you may add something like this to your .csproj:
+
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+
+Notice that the folder includes the root of the Gum folder. You may need to adjust this path according to where your .gumx is located.
+{% endtab %}
+{% endtabs %}
+
+
 
 {% hint style="info" %}
 At the time of this writing, Gum does not use the MonoGame Content Builder to build XNBs for any of its files. This means that referenced image files (.png) will also be copied to the output folder.
