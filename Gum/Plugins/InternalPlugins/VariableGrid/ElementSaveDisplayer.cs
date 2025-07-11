@@ -531,7 +531,17 @@ namespace Gum.PropertyGridHelpers
                 stateToAddTo.VariableLists.AddRange(variableListsToAdd);
             }
 
+            // https://github.com/vchelaru/Gum/issues/1023
+            foreach (var category in elementSave.Categories)
+            {
+                var expectedName = category.Name + "State";
 
+                var variable = elementSave.GetVariableFromThisOrBase(expectedName);
+                if (variable != null)
+                {
+                    stateToAddTo.Variables.Add(variable);
+                }
+            }
 
             return stateToAddTo;
         }
