@@ -62,7 +62,7 @@ public class ListBoxVisual : InteractiveGue
             Background.Color = Styling.Colors.DarkGray;
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
-            Background.ApplyState(NineSliceStyles.Bordered);
+            Background.ApplyState(Styling.NineSlice.Bordered);
             this.Children.Add(Background);
 
             FocusedIndicator = new NineSliceRuntime();
@@ -79,7 +79,7 @@ public class ListBoxVisual : InteractiveGue
             FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
-            FocusedIndicator.ApplyState(NineSliceStyles.Solid);
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false; // TODO: Vic! I shouldn't have to set this, the states should control this.
             this.Children.Add(FocusedIndicator);
 

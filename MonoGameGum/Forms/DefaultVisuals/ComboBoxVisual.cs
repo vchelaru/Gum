@@ -60,7 +60,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.Color = Styling.Colors.DarkGray;
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(NineSliceStyles.Bordered);
+                Background.ApplyState(Styling.NineSlice.Bordered);
                 this.Children.Add(Background);
 
                 TextInstance = new TextRuntime();
@@ -79,7 +79,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TextInstance.Color = Styling.Colors.White;
-                TextInstance.ApplyState(TextStyles.Strong);
+                TextInstance.ApplyState(Styling.Text.Strong);
                 this.Children.Add(TextInstance);
 
                 ListBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
@@ -125,7 +125,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.Name = "FocusedIndicator";
                 FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 FocusedIndicator.Texture = uiSpriteSheetTexture;
-                FocusedIndicator.ApplyState(NineSliceStyles.Bordered);
+                FocusedIndicator.ApplyState(Styling.NineSlice.Bordered);
                 this.Children.Add(FocusedIndicator);
 
                 var comboBoxCategory = new StateSaveCategory();

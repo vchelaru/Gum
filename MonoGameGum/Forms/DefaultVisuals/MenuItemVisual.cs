@@ -58,7 +58,7 @@ public class MenuItemVisual : InteractiveGue
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
             Background.Visible = true;
-            Background.ApplyState(NineSliceStyles.Solid);
+            Background.ApplyState(Styling.NineSlice.Solid);
             this.Children.Add(Background);
 
             TextInstance = new TextRuntime();
@@ -77,7 +77,7 @@ public class MenuItemVisual : InteractiveGue
             TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
             TextInstance.VerticalAlignment = VerticalAlignment.Center;
             TextInstance.Color = Styling.Colors.White;
-            TextInstance.ApplyState(TextStyles.Normal);
+            TextInstance.ApplyState(Styling.Text.Normal);
             this.Children.Add(TextInstance);
 
             var menuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();

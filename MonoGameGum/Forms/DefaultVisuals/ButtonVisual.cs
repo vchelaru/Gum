@@ -55,7 +55,7 @@ public class ButtonVisual : InteractiveGue
             Background.Name = "Background";
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
-            Background.ApplyState(NineSliceStyles.Bordered); 
+            Background.ApplyState(Styling.NineSlice.Bordered); 
             this.Children.Add(Background);
 
             TextInstance = new TextRuntime();
@@ -72,7 +72,7 @@ public class ButtonVisual : InteractiveGue
             TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             TextInstance.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
             TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TextInstance.ApplyState(TextStyles.Normal);
+            TextInstance.ApplyState(Styling.Text.Normal);
             this.Children.Add(TextInstance);
 
             FocusedIndicator = new NineSliceRuntime();
@@ -88,7 +88,7 @@ public class ButtonVisual : InteractiveGue
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
-            FocusedIndicator.ApplyState(NineSliceStyles.Solid);
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false;
             FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.Name = "FocusedIndicator";

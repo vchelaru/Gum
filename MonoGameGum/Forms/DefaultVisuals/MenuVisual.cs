@@ -45,7 +45,7 @@ internal class MenuVisual : InteractiveGue
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
             Background.Visible = true;
-            Background.ApplyState(NineSliceStyles.Solid);
+            Background.ApplyState(Styling.NineSlice.Solid);
             this.Children.Add(Background);
 
             InnerPanelInstance = new ContainerRuntime();

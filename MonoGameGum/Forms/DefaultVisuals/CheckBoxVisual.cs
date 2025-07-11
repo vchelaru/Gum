@@ -69,7 +69,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 CheckBoxBackground.YOrigin = VerticalAlignment.Center;
                 CheckBoxBackground.Name = "CheckBoxBackground";
                 CheckBoxBackground.Texture = uiSpriteSheetTexture;
-                CheckBoxBackground.ApplyState(NineSliceStyles.Bordered);
+                CheckBoxBackground.ApplyState(Styling.NineSlice.Bordered);
                 this.Children.Add(CheckBoxBackground);
 
                 InnerCheckbox = new SpriteRuntime();
@@ -99,7 +99,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.Name = "TextInstance";
                 TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                TextInstance.ApplyState(TextStyles.Normal);
+                TextInstance.ApplyState(Styling.Text.Normal);
                 this.Children.Add(TextInstance);
 
                 FocusedIndicator = new NineSliceRuntime();
@@ -115,7 +115,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 FocusedIndicator.Texture = uiSpriteSheetTexture;
-                FocusedIndicator.ApplyState(NineSliceStyles.Solid);
+                FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
                 FocusedIndicator.Visible = false;
                 FocusedIndicator.Color = Styling.Colors.Warning;
                 FocusedIndicator.Name = "FocusedIndicator";

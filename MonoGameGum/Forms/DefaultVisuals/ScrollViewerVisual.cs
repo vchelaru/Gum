@@ -69,7 +69,7 @@ public class ScrollViewerVisual : InteractiveGue
                 Background.Color = Styling.Colors.DarkGray;
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(NineSliceStyles.Bordered);
+                Background.ApplyState(Styling.NineSlice.Bordered);
                 this.Children.Add(Background);
 
                 ScrollAndClipContainer = new ContainerRuntime();

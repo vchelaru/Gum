@@ -123,7 +123,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TrackBackground.Y = 0f;
                 TrackBackground.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TrackBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
-                TrackBackground.ApplyState(NineSliceStyles.Solid);
+                TrackBackground.ApplyState(Styling.NineSlice.Solid);
                 TrackBackground.Color = Styling.Colors.Gray;
                 TrackBackground.Texture = uiSpriteSheetTexture;
                 ThumbContainer.Children.Add(TrackBackground);

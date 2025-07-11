@@ -56,7 +56,7 @@ public class ListBoxItemVisual : InteractiveGue
             Background.Color = Styling.Colors.DarkGray;
             Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
-            Background.ApplyState(NineSliceStyles.Bordered);
+            Background.ApplyState(Styling.NineSlice.Bordered);
             this.Children.Add(Background);
 
             TextInstance = new TextRuntime();
@@ -74,7 +74,7 @@ public class ListBoxItemVisual : InteractiveGue
             TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
             TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TextInstance.ApplyState(TextStyles.Normal);
+            TextInstance.ApplyState(Styling.Text.Normal);
             TextInstance.Color = Styling.Colors.White;
             this.Children.Add(TextInstance);
 
@@ -92,7 +92,7 @@ public class ListBoxItemVisual : InteractiveGue
             FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
-            FocusedIndicator.ApplyState(NineSliceStyles.Solid);
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             this.Children.Add(FocusedIndicator);
 
             var listBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
