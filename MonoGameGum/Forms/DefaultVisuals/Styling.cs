@@ -55,6 +55,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
             public static StateSave Outlined = CreateTextureCoordinateState(0, 72, 24, 24);
             public static StateSave OutlinedHeavy = CreateTextureCoordinateState(24, 72, 24, 24);
             public static StateSave Panel = CreateTextureCoordinateState(96, 48, 24, 24);
+            public static StateSave CircleSolid = CreateTextureCoordinateState(0, 96, 24, 24);
+            public static StateSave CircleBordered = CreateTextureCoordinateState(24, 96, 24, 24);
+            public static StateSave CircleOutlined = CreateTextureCoordinateState(0, 120, 24, 24);
+            public static StateSave CircleOutlinedHeavy = CreateTextureCoordinateState(24, 120, 24, 24);
 
             private static StateSave CreateTextureCoordinateState(int left, int top, int width, int height)
             {

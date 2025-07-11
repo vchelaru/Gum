@@ -102,7 +102,7 @@ public class FormsUtilities
                 TryAdd(typeof(Menu), typeof(MenuVisual));
                 TryAdd(typeof(MenuItem), typeof(MenuItemVisual));
                 TryAdd(typeof(PasswordBox), typeof(PasswordBoxVisual));
-                TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
+                TryAdd(typeof(RadioButton), typeof(RadioButtonVisual));
                 TryAdd(typeof(ScrollBar), typeof(ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
                 TryAdd(typeof(TextBox), typeof(TextBoxVisual));
