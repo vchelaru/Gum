@@ -435,6 +435,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     private void HandleRollOver(object sender, EventArgs args)
     {
+    }
+
+    private void HandleDrag(object sender, EventArgs args)
+    {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
             if (MainCursor.WindowPushed == this.Visual && indexPushed != null && MainCursor.PrimaryDown && !MainCursor.PrimaryDoublePush)
@@ -449,10 +453,6 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                 SelectionLength = maxIndex - minIndex;
             }
         }
-    }
-
-    private void HandleDrag(object sender, EventArgs args)
-    {
         if (MainCursor.LastInputDevice == InputDevice.TouchScreen)
         {
             if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown)

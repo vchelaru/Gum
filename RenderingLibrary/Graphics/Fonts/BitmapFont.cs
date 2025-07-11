@@ -1178,9 +1178,9 @@ public class BitmapFont : IDisposable
                 // might be so that icons sit snug
                 // against the end of their line of
                 // of text. 
-                if (isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
+                if ((isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
                     // This should never happen in real development, but we want to check for this with unit tests:
-                    Texture != null)
+                    Texture != null) || char.IsWhiteSpace(character))
                 {
                     //toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
                     toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.XOffsetInPixels;
