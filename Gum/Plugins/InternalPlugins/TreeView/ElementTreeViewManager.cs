@@ -108,6 +108,8 @@ public partial class ElementTreeViewManager
 
     private readonly ISelectedState _selectedState;
     private readonly EditCommands _editCommands;
+    private readonly GuiCommands _guiCommands;
+
 
     public const int TransparentImageIndex = 0;
     public const int FolderImageIndex = 1;
@@ -270,7 +272,8 @@ public partial class ElementTreeViewManager
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _editCommands = Locator.GetRequiredService<EditCommands>();
-        
+        _guiCommands = GumCommands.Self.GuiCommands;
+
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
 

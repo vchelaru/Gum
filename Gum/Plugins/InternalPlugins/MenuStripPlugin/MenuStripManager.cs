@@ -124,8 +124,8 @@ namespace Gum.Managers
             Add(addToolStripMenuItem, "Screen", () => 
                 GumCommands.Self.GuiCommands.ShowAddScreenWindow()) ;
 
-            Add(addToolStripMenuItem, "Component", () => 
-                ProjectCommands.Self.AskToAddComponent());
+            Add(addToolStripMenuItem, "Component", () =>
+                GumCommands.Self.GuiCommands.ShowAddComponentWindow());
             Add(addToolStripMenuItem, "Instance", () =>
                 GumCommands.Self.GuiCommands.ShowAddInstanceWindow());
             Add(addToolStripMenuItem, "State", () => 
