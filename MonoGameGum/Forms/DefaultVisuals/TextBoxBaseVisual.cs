@@ -60,6 +60,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
                 Background.ApplyState(Styling.NineSlice.Bordered);
+                this.Children.Add(Background);
 
                 SelectionInstance = new NineSliceRuntime();
                 SelectionInstance.Name = "SelectionInstance";
@@ -75,6 +76,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 SelectionInstance.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 SelectionInstance.Texture = uiSpriteSheetTexture;
                 SelectionInstance.ApplyState(Styling.NineSlice.Solid);
+                this.Children.Add(SelectionInstance);
 
                 TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
@@ -93,7 +95,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.Color = Styling.Colors.White;
                 TextInstance.ApplyState(Styling.Text.Normal);
                 TextInstance.Text = "";
-                
+                this.Children.Add(TextInstance);
+
                 PlaceholderTextInstance = new TextRuntime();
                 PlaceholderTextInstance.Name = "PlaceholderTextInstance";
                 PlaceholderTextInstance.Red = 128;
@@ -110,7 +113,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
                 PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
-                
+                this.Children.Add(PlaceholderTextInstance);
+
                 // TODO: Fix this, this.ClipsChildren makes this invisible because it's outside the parent.
                 FocusedIndicator = new NineSliceRuntime();
                 FocusedIndicator.Name = "FocusedIndicator";
@@ -129,7 +133,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.Texture = uiSpriteSheetTexture;
                 FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
                 FocusedIndicator.Visible = false;
-                
+                this.Children.Add(FocusedIndicator);
+
                 CaretInstance = new SpriteRuntime();
                 CaretInstance.Name = "CaretInstance";
                 CaretInstance.Color = Styling.Colors.Primary;
@@ -146,12 +151,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 CaretInstance.Y = 0f;
                 CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-                this.Children.Add(Background);
-                this.Children.Add(SelectionInstance);
-                this.Children.Add(TextInstance);
-                this.Children.Add(PlaceholderTextInstance);
-                this.Children.Add(FocusedIndicator);
                 this.Children.Add(CaretInstance);
 
                 var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();

@@ -108,7 +108,7 @@ public class FormsUtilities
                 TryAdd(typeof(TextBox), typeof(TextBoxVisual));
                 TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
                 TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
-                TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+                TryAdd(typeof(Window), typeof(WindowVisual));
 
                 break;
             default:
