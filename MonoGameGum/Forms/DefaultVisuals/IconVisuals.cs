@@ -53,7 +53,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
         public static StateSave Arrow3 => CreateTextureCoordinateState(352, 256, 32, 32);
         public static StateSave Basket => CreateTextureCoordinateState(288, 224, 32, 32);
         public static StateSave Battery => CreateTextureCoordinateState(320, 224, 32, 32);
-        public static StateSave Check => CreateTextureCoordinateState(388, 132, 24, 24);
+        public static StateSave Check => CreateTextureCoordinateState(384, 128, 32, 32);
         public static StateSave CheckeredFlag => CreateTextureCoordinateState(384, 288, 32, 32);
         public static StateSave Circle1 => CreateTextureCoordinateState(448, 128, 32, 32);
         public static StateSave Circle2 => CreateTextureCoordinateState(420, 132, 24, 24);
