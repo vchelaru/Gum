@@ -996,6 +996,130 @@
         <SetsValue>true</SetsValue>
       </Variable>
     </State>
+    <State>
+      <Name>CircleSolid</Name>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureHeight</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureLeft</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureTop</Name>
+        <Value xsi:type="xsd:int">96</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureWidth</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>CircleBordered</Name>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureHeight</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureLeft</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureTop</Name>
+        <Value xsi:type="xsd:int">96</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureWidth</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>CircleOutlined</Name>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureHeight</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureLeft</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureTop</Name>
+        <Value xsi:type="xsd:int">120</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureWidth</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>CircleOutlinedHeavy</Name>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureHeight</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureLeft</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureTop</Name>
+        <Value xsi:type="xsd:int">120</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>TextureWidth</Name>
+        <Value xsi:type="xsd:int">24</Value>
+        <Category>Source</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
   </Category>
   <Behaviors />
 </StandardElementSave>
