@@ -44,7 +44,13 @@ public class DefaultMenuItemRuntime : InteractiveGue
             this.Children.Add(Background);
 
 
+            var innerContainer = new ContainerRuntime();
+            this.Children.Add(innerContainer);
+            innerContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            innerContainer.Dock(Gum.Wireframe.Dock.SizeToChildren);
+
             TextInstance = new TextRuntime();
+            innerContainer.Children.Add(TextInstance);
             TextInstance.Name = "TextInstance";
             TextInstance.Text = "Label";
             TextInstance.X = 6;
@@ -54,7 +60,11 @@ public class DefaultMenuItemRuntime : InteractiveGue
             TextInstance.Width = 0;
             TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-            this.Children.Add(TextInstance);
+            var SubmenuIndicatorInstance = new TextRuntime();
+            innerContainer.Children.Add(SubmenuIndicatorInstance);
+            SubmenuIndicatorInstance.Name = "SubmenuIndicatorInstance";
+            SubmenuIndicatorInstance.Text = ">";
+            SubmenuIndicatorInstance.X = 12;
 
             var menuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
             menuItemCategory.Name = "MenuItemCategory";

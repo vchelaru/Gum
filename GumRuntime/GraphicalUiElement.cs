@@ -5903,7 +5903,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public void AddChild(GraphicalUiElement child) => this.Children.Add(child);
 
     /// <summary>
-    /// Searches for and returns a GraphicalUiElement in this instance by name. Returns null
+    /// Searches recursively for and returns a GraphicalUiElement in this instance by name. Returns null
     /// if not found.
     /// </summary>
     /// <param name="name">The case-sensitive name to search for.</param>

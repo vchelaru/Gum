@@ -232,7 +232,7 @@ namespace RenderingLibrary.Math.Geometry
             {
                 renderer = Renderer.Self;
             }
-            mLinePrimitive = new LinePrimitive(renderer?.SinglePixelTexture);
+            mLinePrimitive = new LinePrimitive(renderer?.TryGetSinglePixelTexture());
             mLinePrimitive.Add(0, 0);
             mLinePrimitive.Add(0, 0);
             mLinePrimitive.Add(0, 0);
