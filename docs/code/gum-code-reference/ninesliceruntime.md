@@ -43,15 +43,15 @@ Alternatively, a Texture2D can be assigned directly
 
 ```csharp
 // assuming MyTexture is a valid Texture2D
-nineSlice.SourceFile = MyTexture;
+nineSlice.Texture = MyTexture;
 ```
 
-Once a SourceFileName is assigned, the SourceFile property references a valid Texture2D which can be reused.
+Once a SourceFileName is assigned, the Texture property references a valid Texture2D which can be reused.
 
 ```csharp
-// assigning SourceFileName results in SourceFile also being set
+// assigning SourceFileName results in Texture also being set
 firstNineSlice.SourceFileName = "Frame.png";
-secondNineSlice.SourceFile = firstNineSlice.SourceFile;
+secondNineSlice.Texture = firstNineSlice.Texture;
 ```
 
 ### TextureAddressMode and Texture Coordinates

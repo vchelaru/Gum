@@ -56,8 +56,10 @@ public class MenuItem : ItemsControl
 
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 
-    GraphicalUiElement text;
-    protected RenderingLibrary.Graphics.Text coreText;
+    GraphicalUiElement? text;
+    protected RenderingLibrary.Graphics.Text? coreText;
+
+    GraphicalUiElement? SubmenuIndicatorInstance;
 
     internal bool SelectOnHighlight { get; set; } = false;
 
@@ -95,9 +97,15 @@ public class MenuItem : ItemsControl
         }
     }
 
+    MenuItem _parentMenuItem;
     internal MenuItem ParentMenuItem
     {
-        get;set;
+        get => _parentMenuItem;
+        set
+        {
+            _parentMenuItem = value;
+            RefreshSubmenuIndicatorVisibility();
+        }
     }
 
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
@@ -156,10 +164,13 @@ public class MenuItem : ItemsControl
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
         coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        SubmenuIndicatorInstance = Visual.GetGraphicalUiElementByName("SubmenuIndicatorInstance");
 
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
 
         lastVisual = Visual;
+
+        RefreshSubmenuIndicatorVisibility();
     }
 
     private void HandleVisualChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -260,6 +271,24 @@ public class MenuItem : ItemsControl
     }
     #endregion
 
+    protected override void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        base.HandleItemsCollectionChanged(sender, e);
+
+        RefreshSubmenuIndicatorVisibility();
+    }
+
+    private void RefreshSubmenuIndicatorVisibility()
+    {
+        if (SubmenuIndicatorInstance != null)
+        {
+            SubmenuIndicatorInstance.Visible =
+                this.Items?.Count > 0 &&
+                // If ParentMenuItem is null, then this
+                // is a top-level menu item
+                this.ParentMenuItem != null;
+        }
+    }
 
     internal void SetSelectOnHighlightRecursively(bool value)
     {
@@ -270,6 +299,12 @@ public class MenuItem : ItemsControl
         }
     }
 
+    /// <summary>
+    /// Returns whether the argument itemVisual is the visual for either
+    /// this MenuItem, or any MenuItem contained as a sub-item.
+    /// </summary>
+    /// <param name="itemVisual"></param>
+    /// <returns></returns>
     public bool IsRecursiveMenuItem(GraphicalUiElement itemVisual)
     {
         foreach (var menuItem in this.MenuItemsInternal)
@@ -445,7 +480,6 @@ public class MenuItem : ItemsControl
             coreText.RawText = o?.ToString();
         }
     }
-
 
     public override void UpdateState()
     {

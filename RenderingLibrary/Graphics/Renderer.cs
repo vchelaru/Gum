@@ -120,6 +120,12 @@ public class Renderer : IRenderer
     }
 
     /// <summary>
+    /// Returns the SinglePixelTexture if it exists, or null if not. This tolerates nulls, unlike the property.
+    /// </summary>
+    /// <returns>The SinglePixelTexture if it is not null</returns>
+    public Texture2D? TryGetSinglePixelTexture() => mSinglePixelTexture;
+
+    /// <summary>
     /// The rectangle to use when rendering single-pixel texture objects, such as ColoredRectangles.
     /// By default this is null, indicating the entire texture is used.
     /// </summary>
@@ -242,12 +248,18 @@ public class Renderer : IRenderer
 
     #endregion
 
+    public Renderer()
+    {
+        mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
+        mCamera = new RenderingLibrary.Camera();
+
+    }
+
     #region Methods
 
     public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
     {
         renderTargetService = new RenderTargetService();
-        mCamera = new RenderingLibrary.Camera();
 
         if (graphicsDevice != null)
         {
@@ -265,7 +277,6 @@ public class Renderer : IRenderer
         Camera.PixelPerfectOffsetY = .0f;
 #endif
 
-        mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
 
         _layers.Add(new Layer());
         _layers[0].Name = "Main Layer";

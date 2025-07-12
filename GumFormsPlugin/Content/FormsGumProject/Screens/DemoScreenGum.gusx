@@ -281,7 +281,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ControlLabel.LabelText</Name>
+      <Name>ControlLabel.Text</Name>
       <Value xsi:type="xsd:string">Control Scheme</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -485,7 +485,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>DifficultyLabel.LabelText</Name>
+      <Name>DifficultyLabel.Text</Name>
       <Value xsi:type="xsd:string">Difficulty</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -900,7 +900,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>LabelInstance.LabelText</Name>
+      <Name>LabelInstance.Text</Name>
       <Value xsi:type="xsd:string">New Profile Name</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -918,7 +918,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>LabelInstance1.LabelText</Name>
+      <Name>LabelInstance1.Text</Name>
       <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1260,7 +1260,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>MusicLabel.LabelText</Name>
+      <Name>MusicLabel.Text</Name>
       <Value xsi:type="xsd:string">Music Volume</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1614,7 +1614,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ResolutionLabel.LabelText</Name>
+      <Name>ResolutionLabel.Text</Name>
       <Value xsi:type="xsd:string">Resolution</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1732,7 +1732,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>SoundLabel.LabelText</Name>
+      <Name>SoundLabel.Text</Name>
       <Value xsi:type="xsd:string">Sound Volume</Value>
       <SetsValue>true</SetsValue>
     </Variable>

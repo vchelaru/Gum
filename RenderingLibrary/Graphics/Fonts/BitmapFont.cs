@@ -339,29 +339,21 @@ public class BitmapFont : IDisposable
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
 
-        ///////////////////////////////Early Out/////////////////////////////////
-        if(mTextures.Length == 0 || mTextures[0] == null)
-        {
-            if(forcedTextureHeight == null || forcedTextureWidth == null)
-            {
-                return;
-            }
-        }
-        ////////////////////////////End Early Out///////////////////////////////
-
-        int textureWidth = 0;
-        int textureHeight = 0;
+        int textureWidth = 255;
+        int textureHeight = 255;
 
         if(forcedTextureWidth != null && forcedTextureHeight != null)
         {
             textureWidth = forcedTextureWidth.Value;
             textureHeight = forcedTextureHeight.Value;
         }
-        else
+        else if(mTextures?.Length > 0)
         {
-            textureWidth = mTextures[0].Width;
-            textureHeight = mTextures[0].Height;
+
+            textureWidth = mTextures[0]?.Width ?? 255;
+            textureHeight = mTextures[0]?.Height ?? 255;
         }
+
 
 
         //ToDo: Atlas support  **************************************************************
@@ -911,10 +903,10 @@ public class BitmapFont : IDisposable
 
         if(characterInfo != null)
         {
-            sourceLeft = characterInfo.GetPixelLeft(Texture);
-            sourceTop = characterInfo.GetPixelTop(Texture);
-            sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
-            sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+            sourceLeft = characterInfo.PixelLeft;
+            sourceTop = characterInfo.PixelTop;
+            sourceWidth = characterInfo.PixelRight - sourceLeft;
+            sourceHeight = characterInfo.PixelBottom - sourceTop;
         }
 
         var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
@@ -1093,10 +1085,10 @@ public class BitmapFont : IDisposable
 
                     BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
 
-                    int sourceLeft = characterInfo.GetPixelLeft(Texture);
-                    int sourceTop = characterInfo.GetPixelTop(Texture);
-                    int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
-                    int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+                    int sourceLeft = characterInfo.PixelLeft;
+                    int sourceTop = characterInfo.PixelTop;
+                    int sourceWidth = characterInfo.PixelRight - sourceLeft;
+                    int sourceHeight = characterInfo.PixelBottom - sourceTop;
 
                     int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
 
@@ -1178,12 +1170,12 @@ public class BitmapFont : IDisposable
                 // might be so that icons sit snug
                 // against the end of their line of
                 // of text. 
-                if (isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
+                if ((isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
                     // This should never happen in real development, but we want to check for this with unit tests:
-                    Texture != null)
+                    Texture != null) || char.IsWhiteSpace(character))
                 {
                     //toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
-                    toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.XOffsetInPixels;
+                    toReturn += (characterInfo.PixelRight - characterInfo.PixelLeft) + characterInfo.XOffsetInPixels;
                 }
                 else
                 {
@@ -1249,6 +1241,10 @@ public class BitmapFont : IDisposable
             TVTop = tvTop,
             TURight = tuLeft + charInfo.Width / (float)textureWidth,
             TVBottom = tvTop + charInfo.Height / (float)textureHeight,
+            PixelLeft = charInfo.X,
+            PixelTop = charInfo.Y,
+            PixelRight = charInfo.X + charInfo.Width,
+            PixelBottom = charInfo.Y + charInfo.Height,
             DistanceFromTopOfLine = 2 * charInfo.YOffset / (float)lineHeightInPixels,
             ScaleX = charInfo.Width / (float)lineHeightInPixels,
             ScaleY = charInfo.Height / (float)lineHeightInPixels,

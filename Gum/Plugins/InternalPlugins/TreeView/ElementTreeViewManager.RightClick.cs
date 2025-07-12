@@ -13,6 +13,7 @@ using Gum.Logic;
 using Gum.DataTypes.Behaviors;
 using Gum.PropertyGridHelpers;
 using Gum.Controls;
+using Gum.Commands;
 
 namespace Gum.Managers;
 
@@ -41,13 +42,15 @@ public partial class ElementTreeViewManager
     ToolStripMenuItem duplicateElement;
     #endregion
 
+
+
     #region Initialize and event handlers
 
     private void InitializeMenuItems()
     {
         mAddScreen = new ToolStripMenuItem();
         mAddScreen.Text = "Add Screen";
-        mAddScreen.Click += (_, _) => GumCommands.Self.GuiCommands.ShowAddScreenWindow();
+        mAddScreen.Click += (_, _) => _guiCommands.ShowAddScreenWindow();
 
         mImportScreen = new ToolStripMenuItem();
         mImportScreen.Text = "Import Screen";
@@ -63,11 +66,11 @@ public partial class ElementTreeViewManager
 
         mAddInstance = new ToolStripMenuItem();
         mAddInstance.Text = "Add Instance";
-        mAddInstance.Click += (_, _) => GumCommands.Self.GuiCommands.ShowAddInstanceWindow();
+        mAddInstance.Click += (_, _) => _guiCommands.ShowAddInstanceWindow();
 
         mAddParentInstance = new ToolStripMenuItem();
         mAddParentInstance.Text = "Add Parent Instance";
-        mAddParentInstance.Click += (_, _) => GumCommands.Self.GuiCommands.ShowAddParentInstance();
+        mAddParentInstance.Click += (_, _) => _guiCommands.ShowAddParentInstance();
 
         mSaveObject = new ToolStripMenuItem();
         mSaveObject.Text = "Force Save Object";
@@ -139,7 +142,7 @@ public partial class ElementTreeViewManager
         var node = (SelectedNode as TreeNodeWrapper)?.Node;
         if(node != null)
         {
-            GumCommands.Self.GuiCommands.ShowAddFolderWindow(node);
+            _guiCommands.ShowAddFolderWindow(node);
         }
     }
 
@@ -211,7 +214,7 @@ public partial class ElementTreeViewManager
             if (!Directory.Exists(fullFile))
             {
                 // It doesn't exist, so let's just refresh the UI for this and it will go away
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                _guiCommands.RefreshElementTreeView();
             }
             else
             {
@@ -236,11 +239,11 @@ public partial class ElementTreeViewManager
                         try
                         {
                             FileManager.DeleteDirectory(fullFile);
-                            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                            _guiCommands.RefreshElementTreeView();
                         }
                         catch(Exception exception)
                         {
-                            GumCommands.Self.GuiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
+                            _guiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
                             MessageBox.Show("Could not delete folder\nSee the output tab for more info");
                         }
                     }
@@ -391,7 +394,7 @@ public partial class ElementTreeViewManager
             {
                 
 
-                mMenuStrip.Items.Add("Add Component", null, (_,_)=> ProjectCommands.Self.AskToAddComponent());
+                mMenuStrip.Items.Add("Add Component", null, (_,_)=> _guiCommands.ShowAddComponentWindow());
                 mMenuStrip.Items.Add(mImportComponent);
                 mMenuStrip.Items.Add(mAddFolder);
                 mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
@@ -482,7 +485,7 @@ public partial class ElementTreeViewManager
         var node = (SelectedNode as TreeNodeWrapper)?.Node;
         if (node != null)
         {
-            GumCommands.Self.GuiCommands.ShowRenameFolderWindow(node);
+            _guiCommands.ShowRenameFolderWindow(node);
         }
     }
 
@@ -561,7 +564,7 @@ public partial class ElementTreeViewManager
 
         if (lastImportedComponent != null)
         {
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            _guiCommands.RefreshElementTreeView();
             _selectedState.SelectedComponent = lastImportedComponent;
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }

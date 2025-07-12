@@ -49,6 +49,20 @@ if(isOverUi == false)
 }
 ```
 
+### Code Example - Diagnosing Clicks
+
+The WindowOver property can be used to identify problems with items not receiving mouse events. For example, a Button may be a child of a parent container but be positioned outside of the parent's bounds. This results in the Button not receiving clicks. This can be diagnosed by printing the WindowOver to output.
+
+```csharp
+protected override void Update(GameTime)
+{
+    Gum.Update(gameTime);
+    var cursor = Gum.Cursor;
+    System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
+    base.Update(gameTime);
+}
+```
+
 ## WindowPushed
 
 WindowPushed returns the InteractiveGue (Forms Visual) which was under the Cursor when its PrimaryPush was set to true. WindowPushed can be used to handle drag+drop operations.

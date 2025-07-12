@@ -18,7 +18,7 @@ namespace ToolsUtilities
             return f1?.Standardized == f2?.Standardized;
         }
 
-        public static bool operator !=(FilePath f1, FilePath f2)
+        public static bool operator !=(FilePath? f1, FilePath? f2)
         {
             return (f1 == f2) == false;
         }

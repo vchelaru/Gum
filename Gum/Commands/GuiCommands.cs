@@ -428,17 +428,17 @@ public class GuiCommands
         errorLabel.TextWrapping = System.Windows.TextWrapping.Wrap;
         tiw.AddControl(errorLabel);
 
-        tiw.TextEntered += (_,_) =>
+        tiw.TextEntered += (_, _) =>
         {
             var text = tiw.Result;
 
             string whyNotValid;
-            if(!_nameVerifier.IsFolderNameValid(text, out whyNotValid))
+            if (!_nameVerifier.IsFolderNameValid(text, out whyNotValid))
             {
                 errorLabel.Foreground = System.Windows.Media.Brushes.Red;
                 errorLabel.Text = whyNotValid;
             }
-            else if(text?.Contains(' ') == true)
+            else if (text?.Contains(' ') == true)
             {
                 errorLabel.Foreground = System.Windows.Media.Brushes.Orange;
                 errorLabel.Text = "Folders with spaces are not recommended since they can break variable references";
@@ -512,26 +512,87 @@ public class GuiCommands
                         nodeToAddTo = nodeToAddTo.Parent;
                     }
 
-                    string? path = nodeToAddTo?.GetFullFilePath().FullPath;
+                    FilePath? path = nodeToAddTo?.GetFullFilePath();
 
                     if (nodeToAddTo == null || !nodeToAddTo.IsPartOfScreensFolderStructure())
                     {
-                        path = GumState.Self.ProjectState.ScreenFilePath.FullPath;
+                        path = GumState.Self.ProjectState.ScreenFilePath;
                     }
 
+                    if(path != null)
+                    {
 
-                    string relativeToScreens = FileManager.MakeRelative(path,
-                        FileLocations.Self.ScreensFolder);
+                        string relativeToScreens = FileManager.MakeRelative(path.StandardizedCaseSensitive,
+                            FileLocations.Self.ScreensFolder, preserveCase:true);
 
-                    ScreenSave screenSave = GumCommands.Self.ProjectCommands.AddScreen(relativeToScreens + name);
+                        relativeToScreens = relativeToScreens.Replace('\\', '/');
 
 
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                        ScreenSave screenSave = GumCommands.Self.ProjectCommands.AddScreen(relativeToScreens + name);
 
-                    _selectedState.SelectedScreen = screenSave;
+                        // Is this needed? Shouldn't this respond to a plugin event?
+                        RefreshElementTreeView();
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
+                        _selectedState.SelectedScreen = screenSave;
+
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+                        GumCommands.Self.FileCommands.TryAutoSaveProject();
+                    }
+                }
+            }
+        }
+    }
+
+    public void ShowAddComponentWindow()
+    {
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        {
+            MessageBox.Show("You must first save the project before adding a new component");
+        }
+        else
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new Component name:";
+            tiw.Title = "Add Component";
+
+            if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string name = tiw.Result;
+
+
+                string whyNotValid;
+                if (!_nameVerifier.IsElementNameValid(name, null, null, out whyNotValid))
+                {
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    var nodeToAddTo = _selectedState.SelectedTreeNode;
+
+                    while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
+                    {
+                        nodeToAddTo = nodeToAddTo.Parent;
+                    }
+
+                    FilePath? path = nodeToAddTo?.GetFullFilePath();
+                    if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
+                    {
+                        path = GumState.Self.ProjectState.ComponentFilePath;
+                    }
+
+                    if (path != null)
+                    {
+                        string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
+                            FileLocations.Self.ComponentsFolder, preserveCase: true);
+
+                        relativeToComponents = relativeToComponents.Replace('\\', '/');
+
+                        ComponentSave componentSave = new ComponentSave();
+
+                        ProjectCommands.Self.PrepareNewComponentSave(componentSave, relativeToComponents + name);
+
+                        ProjectCommands.Self.AddComponent(componentSave);
+                    }
                 }
             }
         }
@@ -762,14 +823,14 @@ public class GuiCommands
 
         string folder = "";
         string rootElementName = element.Name;
-        if(element.Name.Contains("/"))
+        if (element.Name.Contains("/"))
         {
             folder = Path.GetDirectoryName(element.Name).Replace("\\", "/") + "/";
             rootElementName = Path.GetFileName(element.Name);
         }
 
         window.Result = rootElementName;
-        if(!string.IsNullOrEmpty(folder))
+        if (!string.IsNullOrEmpty(folder))
         {
             var label = new System.Windows.Controls.Label();
             label.Content = folder;
@@ -779,11 +840,11 @@ public class GuiCommands
 
         var dialogResult = window.ShowDialog();
 
-        if(dialogResult == true)
+        if (dialogResult == true)
         {
             element.Name = folder + window.Result;
-            SetVariableLogic.Self.PropertyValueChanged("Name", 
-                oldName, 
+            SetVariableLogic.Self.PropertyValueChanged("Name",
+                oldName,
                 null,
                 element.DefaultState,
                 refresh: true,
@@ -808,7 +869,7 @@ public class GuiCommands
         if (dialogResult == true)
         {
             instance.Name = window.Result;
-            SetVariableLogic.Self.PropertyValueChanged("Name", oldName, 
+            SetVariableLogic.Self.PropertyValueChanged("Name", oldName,
                 instance,
                 instance.ParentContainer?.DefaultState,
                 refresh: true,

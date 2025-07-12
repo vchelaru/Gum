@@ -816,8 +816,13 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
-
-    public GraphicalUiElement GetVisual(string name) =>
+    /// <summary>
+    /// Searches recursively for and returns a GraphicalUiElement (visual) in this instance by name. Returns null
+    /// if not found.
+    /// </summary>
+    /// <param name="name">The case-sensitive name to search for.</param>
+    /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
+    public GraphicalUiElement? GetVisual(string name) =>
         Visual.GetGraphicalUiElementByName(name) as GraphicalUiElement;
 
 
