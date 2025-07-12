@@ -139,7 +139,11 @@ public class Splitter : FrameworkElement
             var cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
             changeInPixels = cursorX - (Visual.AbsoluteLeft + leftGrabbedInOffset!.Value);
         }
-        ApplyResizeChangeInPixels(changeInPixels);
+
+        if(changeInPixels != 0)
+        {
+            ApplyResizeChangeInPixels(changeInPixels);
+        }
 
     }
 
@@ -205,6 +209,18 @@ public class Splitter : FrameworkElement
             secondUnits != DimensionUnitType.PercentageOfSourceFile &&
             secondUnits != DimensionUnitType.PercentageOfOtherDimension &&
             secondUnits != DimensionUnitType.MaintainFileAspectRatio;
+
+        var wasFirstLayoutSuspended = firstVisual?.IsLayoutSuspended;
+        var wasSecondLayoutSuspended = secondVisual?.IsLayoutSuspended;
+
+        if (firstVisual != null && firstVisual.IsLayoutSuspended == false)
+        {
+            firstVisual.SuspendLayout();
+        }
+        if (secondVisual != null && secondVisual.IsLayoutSuspended == false)
+        {
+            secondVisual.SuspendLayout();
+        }
 
         // Ratios have to be handled together
         if (firstUnits == DimensionUnitType.Ratio && secondUnits == DimensionUnitType.Ratio)
@@ -309,8 +325,26 @@ public class Splitter : FrameworkElement
             }
         }
 
+        if(wasFirstLayoutSuspended == false)
+        {
+            firstVisual?.ClearDirtyLayoutState();
+            firstVisual?.ResumeLayout();
+        }
+        if(wasSecondLayoutSuspended == false)
+        {
+            secondVisual?.ClearDirtyLayoutState();
+            secondVisual?.ResumeLayout();
+        }
 
-
-        //if(unitsBefore == DimensionUnitType.Ratio && unitsAfter == DimensionUnitType.Ratio
+        // If we do not take extra precautions on layouts, then resizing the splitter causes:
+        // 1. The first item to resize, which can propagate upward to the parent object recursively, causing
+        //    a top-level layout
+        // 2. The second item to resize, which can also propagate upward to the parent object recursively, causing
+        //    a top-level layout
+        // This can be very expensive. When a resize happens, the net size should be the same before and after
+        // the resize, so nothing above the splitter's parent should need a resize. Therefore, we can
+        // suppress and clear all layouts on the first/second, then do a single layout on the parent.
+        // This can reduce layout calls considerably, especially if the parent is itself in a complex layout.
+        parent.UpdateLayout(updateParent: false, updateChildren: true);
     }
 }
