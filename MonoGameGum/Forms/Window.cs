@@ -5,6 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MonoGameGum.Input;
+using RenderingLibrary.Graphics;
+using RenderingLibrary;
+
+
 
 
 #if FRB
@@ -15,6 +19,8 @@ namespace FlatRedBall.Forms;
 using MonoGameGum.Forms.Controls;
 namespace MonoGameGum.Forms;
 #endif
+
+#region ResizeMode Enum
 
 /// <summary>
 /// Values for an element's resize behavior.
@@ -31,6 +37,8 @@ public enum ResizeMode
     CanResize
 }
 
+#endregion
+
 /// <summary>
 /// A resizable, movable FrameworkElement
 /// </summary>
@@ -40,7 +48,17 @@ public class Window : FrameworkElement
 
     List<FrameworkElement> _children = new List<FrameworkElement>();
 
-    public float CaptionHeight { get; set; } = 36;
+    public float TitleHeight
+    {
+        get => titleBar?.Height ?? 0;
+        set
+        {
+            if(titleBar != null)
+            {
+                titleBar.Height = value;
+            }
+        }
+    }
     public ResizeMode ResizeMode { get; set; } = ResizeMode.CanResize;
 
 
@@ -172,15 +190,32 @@ public class Window : FrameworkElement
     float? rightGrabbedInOffset;
     float? bottomGrabbedInOffset;
 
-    float? captionGrabbedInXOffset;
-    float? captionGrabbedInYOffset;
+    float? titleGrabbedInXOffset;
+    float? titleGrabbedInYOffset;
 
     #endregion
 
     private void HandleVisualDragging(object? sender, EventArgs e)
     {
+        bool shouldConsiderMove = true;
+
         var cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
         var cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds();
+
+        if(this.Visual.Parent != null)
+        {
+            // see if the cursor is over the parent, recursively
+            shouldConsiderMove = IsOverParentRecursively(this.Visual.Parent,
+                cursorX, cursorY);
+        }
+
+        ////////////////////////////Early Out/////////////////////////////
+        if(!shouldConsiderMove)
+        {
+            return;
+        }
+        //////////////////////////End Early Out/////////////////////////////
+
 
         if (leftGrabbedInOffset != null)
         {
@@ -263,10 +298,10 @@ public class Window : FrameworkElement
             }
         }
 
-        if (captionGrabbedInXOffset != null)
+        if (titleGrabbedInXOffset != null)
         {
-            var desiredLeft = cursorX - captionGrabbedInXOffset.Value;
-            var desiredTop = cursorY - captionGrabbedInYOffset.Value;
+            var desiredLeft = cursorX - titleGrabbedInXOffset.Value;
+            var desiredTop = cursorY - titleGrabbedInYOffset.Value;
 
             var differenceX = desiredLeft - Visual.AbsoluteLeft;
             var differenceY = desiredTop - Visual.AbsoluteTop;
@@ -275,6 +310,42 @@ public class Window : FrameworkElement
             Visual.Y += differenceY;
         }
 
+    }
+
+    private bool IsOverParentRecursively(IRenderableIpso item, float cursorX, float cursorY)
+    {
+        var isOver = false;
+        var interactiveGue = item as InteractiveGue;
+        if(interactiveGue?.RaiseChildrenEventsOutsideOfBounds == true)
+        {
+            isOver = true;
+        }
+
+        if(!isOver)
+        {
+            // bounds matter, so let's see if the cursor is inside:
+            var left = item.GetAbsoluteLeft();
+            var right = item.GetAbsoluteRight();
+            var top = item.GetAbsoluteTop();
+            var bottom = item.GetAbsoluteBottom();
+
+            isOver = left <= cursorX && right >= cursorX &&
+                top <= cursorY && bottom >= cursorY;
+        }
+
+        if(isOver)
+        {
+            var asGue = interactiveGue ?? item as GraphicalUiElement;
+
+            var parent = asGue?.Parent;
+
+            if(parent != null)
+            {
+                isOver = IsOverParentRecursively(parent, cursorX, cursorY);
+            }
+        }
+
+        return isOver;
     }
 #if FRB
     private void HandleVisualPush(IWindow window)
@@ -287,8 +358,8 @@ public class Window : FrameworkElement
         rightGrabbedInOffset = null;
         bottomGrabbedInOffset = null;
 
-        captionGrabbedInXOffset = null;
-        captionGrabbedInYOffset = null;
+        titleGrabbedInXOffset = null;
+        titleGrabbedInYOffset = null;
 
         var cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
         var cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds();
@@ -329,9 +400,9 @@ public class Window : FrameworkElement
         {
             if (sender == titleBar)
             {
-                // If the cursor is within the caption, we can move:
-                captionGrabbedInXOffset = cursorX - Visual.AbsoluteLeft;
-                captionGrabbedInYOffset = cursorY - Visual.AbsoluteTop;
+                // If the cursor is within the title, we can move:
+                titleGrabbedInXOffset = cursorX - Visual.AbsoluteLeft;
+                titleGrabbedInYOffset = cursorY - Visual.AbsoluteTop;
             }
         }
 

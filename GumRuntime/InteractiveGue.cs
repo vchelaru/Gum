@@ -251,16 +251,11 @@ public partial class InteractiveGue : BindableGue
 
     public void TryCallDragging()
     {
-        if(Dragging != null)
-        {
-            Dragging(this, EventArgs.Empty);
-        }
+        Dragging?.Invoke(this, EventArgs.Empty);
     }
 
-    public void TryCallRemoveAsPushed()
-    {
+    public void TryCallRemoveAsPushed() =>
         RemovedAsPushed?.Invoke(this, EventArgs.Empty);
-    }
 
     public void TryCallRollOn() =>
         RollOn?.Invoke(this, EventArgs.Empty);
@@ -270,6 +265,9 @@ public partial class InteractiveGue : BindableGue
 
     public void TryCallHoverOver() =>
         HoverOver?.Invoke(this, EventArgs.Empty);
+
+    public void TryCallPush() =>
+        Push?.Invoke(this, EventArgs.Empty);
 
     #endregion
 
