@@ -971,7 +971,8 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public static List<KeyCombo> ClickCombos { get; set; } = new ()
     {
-        new KeyCombo { PushedKey = Keys.Enter }
+        new KeyCombo { PushedKey = Keys.Enter },
+        new KeyCombo { PushedKey = Keys.Space },
     };
 
     protected void HandleKeyboardFocusUpdate()
