@@ -21,7 +21,7 @@ public class MenuItemVisual : InteractiveGue
     public class MenuItemCategoryStates
     {
         public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
-        //        public StateSave Disabled { get; set; }
+        public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
         public StateSave Highlighted { get; set; } = new StateSave() { Name = FrameworkElement.HighlightedStateName };
         public StateSave Focused { get; set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
         public StateSave Selected { get; set; } = new StateSave() { Name = FrameworkElement.SelectedStateName };
@@ -94,15 +94,23 @@ public class MenuItemVisual : InteractiveGue
 
         AddVariable(States.Enabled, "Background.Visible", true);
         AddVariable(States.Enabled, "Background.Color", Styling.Colors.DarkGray);
+        AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
+
+        AddVariable(States.Disabled, "Background.Visible", true);
+        AddVariable(States.Disabled, "Background.Color", Styling.Colors.DarkGray);
+        AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
 
         AddVariable(States.Highlighted, "Background.Visible", true);
         AddVariable(States.Highlighted, "Background.Color", Styling.Colors.LightGray);
-        
+        AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.White);
+
         AddVariable(States.Selected, "Background.Visible", true);
         AddVariable(States.Selected, "Background.Color", Styling.Colors.Primary);
+        AddVariable(States.Selected, "TextInstance.Color", Styling.Colors.White);
 
         AddVariable(States.Focused, "Background.Visible", true);
         AddVariable(States.Focused, "Background.Color", Styling.Colors.DarkGray);
+        AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
 
         if (tryCreateFormsObject)
         {
