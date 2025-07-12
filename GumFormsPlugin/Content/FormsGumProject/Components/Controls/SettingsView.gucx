@@ -67,7 +67,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>MusicVolumeLabel.LabelText</Name>
+      <Name>MusicVolumeLabel.Text</Name>
       <Value xsi:type="xsd:string">Music Volume</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -103,7 +103,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>SoundVolumeLabel.LabelText</Name>
+      <Name>SoundVolumeLabel.Text</Name>
       <Value xsi:type="xsd:string">Sound Effect Volume</Value>
       <SetsValue>true</SetsValue>
     </Variable>
