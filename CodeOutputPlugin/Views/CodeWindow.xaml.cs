@@ -239,9 +239,13 @@ public partial class CodeWindow : UserControl
             }
         };
 
-        member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.OutputLibrary != null 
-        ? LibraryToString[CodeOutputProjectSettings.OutputLibrary]
-        : string.Empty;
+        member.CustomGetEvent += (owner) =>
+        {
+
+            return (CodeOutputProjectSettings?.OutputLibrary != null && LibraryToString.ContainsKey(CodeOutputProjectSettings.OutputLibrary))
+              ? LibraryToString[CodeOutputProjectSettings.OutputLibrary]
+                : string.Empty;
+        };
 
 
 
