@@ -24,13 +24,28 @@ public class WindowVisual : InteractiveGue
     public Panel BorderRightInstance { get; private set; }
 
 
-    public float BorderWidth { get; set; } = 10f;
+    private float _borderSize = 0f;
+    public float BorderSize
+    {
+        get => _borderSize;
+        set
+        {
+            if (_borderSize == value) 
+                return;
+
+            _borderSize = value;
+            MinHeight = Math.Clamp(_borderSize, 10f, _borderSize);
+            MinWidth = Math.Clamp(_borderSize, 10f, _borderSize);
+        }
+    }
+
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         if (fullInstantiation)
         {
-            this.Width = 256;
-            this.Height = 256;
+            Width = 256;
+            Height = 256;
+            BorderSize = 10f; // Use the property to set MinHeight and MinWidth also
 
             var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
@@ -67,64 +82,64 @@ public class WindowVisual : InteractiveGue
             BorderTopLeftInstance = new Panel();
             BorderTopLeftInstance.Name = "BorderTopLeftInstance";
             BorderTopLeftInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);
-            BorderTopLeftInstance.Width = BorderWidth;
-            BorderTopLeftInstance.Height = BorderWidth;
+            BorderTopLeftInstance.Width = BorderSize;
+            BorderTopLeftInstance.Height = BorderSize;
             BorderTopLeftInstance.CustomCursor = Cursors.SizeNWSE;
             this.AddChild(BorderTopLeftInstance);
 
             BorderTopRightInstance = new Panel();
             BorderTopRightInstance.Name = "BorderTopRightInstance";
             BorderTopRightInstance.Anchor(Gum.Wireframe.Anchor.TopRight);
-            BorderTopRightInstance.Width = BorderWidth;
-            BorderTopRightInstance.Height = BorderWidth;
+            BorderTopRightInstance.Width = BorderSize;
+            BorderTopRightInstance.Height = BorderSize;
             BorderTopRightInstance.CustomCursor = Cursors.SizeNESW;
             this.AddChild(BorderTopRightInstance);
 
             BorderBottomLeftInstance = new Panel();
             BorderBottomLeftInstance.Name = "BorderBottomLeftInstance";
             BorderBottomLeftInstance.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-            BorderBottomLeftInstance.Width = BorderWidth;
-            BorderBottomLeftInstance.Height = BorderWidth;
+            BorderBottomLeftInstance.Width = BorderSize;
+            BorderBottomLeftInstance.Height = BorderSize;
             BorderBottomLeftInstance.CustomCursor = Cursors.SizeNESW;
             this.AddChild(BorderBottomLeftInstance);
 
             BorderBottomRightInstance = new Panel();
             BorderBottomRightInstance.Name = "BorderBottomRightInstance";
             BorderBottomRightInstance.Anchor(Gum.Wireframe.Anchor.BottomRight);
-            BorderBottomRightInstance.Width = BorderWidth;
-            BorderBottomRightInstance.Height = BorderWidth;
+            BorderBottomRightInstance.Width = BorderSize;
+            BorderBottomRightInstance.Height = BorderSize;
             BorderBottomRightInstance.CustomCursor = Cursors.SizeNWSE;
             this.AddChild(BorderBottomRightInstance);
 
             BorderTopInstance = new Panel();
             BorderTopInstance.Name = "BorderTopInstance";
             BorderTopInstance.Dock(Gum.Wireframe.Dock.Top);
-            BorderTopInstance.Height = BorderWidth;
-            BorderTopInstance.Width = -BorderWidth * 2;
+            BorderTopInstance.Height = BorderSize;
+            BorderTopInstance.Width = -BorderSize * 2;
             BorderTopInstance.CustomCursor = Cursors.SizeNS;
             this.AddChild(BorderTopInstance);
 
             BorderBottomInstance = new Panel();
             BorderBottomInstance.Name = "BorderBottomInstance";
             BorderBottomInstance.Dock(Gum.Wireframe.Dock.Bottom);
-            BorderBottomInstance.Height = BorderWidth;
-            BorderBottomInstance.Width = -BorderWidth * 2;
+            BorderBottomInstance.Height = BorderSize;
+            BorderBottomInstance.Width = -BorderSize * 2;
             BorderBottomInstance.CustomCursor = Cursors.SizeNS;
             this.AddChild(BorderBottomInstance);
 
             BorderLeftInstance = new Panel();
             BorderLeftInstance.Name = "BorderLeftInstance";
             BorderLeftInstance.Dock(Gum.Wireframe.Dock.Left);
-            BorderLeftInstance.Width = BorderWidth;
-            BorderLeftInstance.Height = -BorderWidth * 2;
+            BorderLeftInstance.Width = BorderSize;
+            BorderLeftInstance.Height = -BorderSize * 2;
             BorderLeftInstance.CustomCursor = Cursors.SizeWE;
             this.AddChild(BorderLeftInstance);
 
             BorderRightInstance = new Panel();
             BorderRightInstance.Name = "BorderRightInstance";
             BorderRightInstance.Dock(Gum.Wireframe.Dock.Right);
-            BorderRightInstance.Width = BorderWidth;
-            BorderRightInstance.Height = -BorderWidth * 2;
+            BorderRightInstance.Width = BorderSize;
+            BorderRightInstance.Height = -BorderSize * 2;
             BorderRightInstance.CustomCursor = Cursors.SizeWE;
             this.AddChild(BorderRightInstance);
         }
