@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalLibraries", "Extern
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Maui", "Runtimes\SkiaGum.Maui\SkiaGum.Maui.csproj", "{451E6BB0-1DE2-AB36-9951-A335EA552C11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests.V2", "Tests\MonoGameGum.Tests.V2\MonoGameGum.Tests.V2.csproj", "{B7D2E29A-F296-4605-98A7-B05009A1A7CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,14 @@ Global
 		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|Any CPU.Build.0 = Release|Any CPU
 		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|x86.ActiveCfg = Release|Any CPU
 		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|x86.Build.0 = Release|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Debug|x86.Build.0 = Debug|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Release|x86.ActiveCfg = Release|Any CPU
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +142,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{435D0AF1-6956-42A4-AF24-E2BF0E9748D8} = {8A971C48-D5E3-433D-B669-E805D6C7F319}
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B7D2E29A-F296-4605-98A7-B05009A1A7CE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}

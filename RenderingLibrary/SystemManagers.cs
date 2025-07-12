@@ -321,14 +321,19 @@ namespace RenderingLibrary
             return bitmapFont;
         }
 
+        [Obsolete("Use LoadEmbeddedTexture2d, this has a typo")]
+        public Texture2D LoadEmberddedTexture2d(string embeddedTexture2dName) =>
+            LoadEmbeddedTexture2d(embeddedTexture2dName);
         /// <summary>
-        /// Loads a texture into the Disposable cache from the Embedded Resource within the application
+        /// Loads a texture into the Disposable cache from the Embedded Resource within the application.
         /// </summary>
-        /// <param name="graphicsDevice"></param>
         /// <param name="embeddedTexture2dName"></param>
         /// <returns></returns>
-        public Texture2D LoadEmberddedTexture2d(string embeddedTexture2dName)
+        public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
         {
+            // tolerate nulls for unit tests:
+            if (Renderer.GraphicsDevice == null) return null;
+
             var assembly = typeof(SystemManagers).Assembly;
             using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{AssemblyPrefix}.{embeddedTexture2dName}");
 

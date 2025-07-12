@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Forms.DefaultVisuals;
 
-internal class MenuVisual : InteractiveGue
+public class MenuVisual : InteractiveGue
 {
     public NineSliceRuntime Background {  get; private set; }
     public ContainerRuntime InnerPanelInstance { get; private set; }
