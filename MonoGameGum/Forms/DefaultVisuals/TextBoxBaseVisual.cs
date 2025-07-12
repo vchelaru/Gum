@@ -12,11 +12,12 @@ namespace MonoGameGum.Forms.DefaultVisuals
     public abstract class TextBoxBaseVisual : InteractiveGue
     {
         public NineSliceRuntime Background { get; private set; }
+        public ContainerRuntime ClipContainer { get; private set; }
         public NineSliceRuntime SelectionInstance { get; private set; }
         public TextRuntime TextInstance { get; private set; }
         public TextRuntime PlaceholderTextInstance { get; private set; }
-        public NineSliceRuntime FocusedIndicator { get; private set; }
         public SpriteRuntime CaretInstance { get; private set; }
+        public NineSliceRuntime FocusedIndicator { get; private set; }
 
         protected abstract string CategoryName { get; }
 
@@ -37,10 +38,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
         {
             if (fullInstantiation)
             {
-                this.States = new TextBoxCategoryStates();
-                this.Width = 100;
-                this.Height = 24;
-                this.ClipsChildren = true;
+                States = new TextBoxCategoryStates();
+                Width = 100;
+                Height = 24;
 
                 var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
@@ -60,7 +60,13 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
                 Background.ApplyState(Styling.NineSlice.Bordered);
-                this.Children.Add(Background);
+                this.AddChild(Background);
+
+                ClipContainer = new ContainerRuntime();
+                ClipContainer.Name = "ClipContiner";
+                ClipContainer.Dock(Gum.Wireframe.Dock.Fill);
+                ClipContainer.ClipsChildren = true;
+                this.AddChild(ClipContainer);
 
                 SelectionInstance = new NineSliceRuntime();
                 SelectionInstance.Name = "SelectionInstance";
@@ -76,7 +82,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 SelectionInstance.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 SelectionInstance.Texture = uiSpriteSheetTexture;
                 SelectionInstance.ApplyState(Styling.NineSlice.Solid);
-                this.Children.Add(SelectionInstance);
+                ClipContainer.AddChild(SelectionInstance);
 
                 TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
@@ -95,7 +101,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.Color = Styling.Colors.White;
                 TextInstance.ApplyState(Styling.Text.Normal);
                 TextInstance.Text = "";
-                this.Children.Add(TextInstance);
+                ClipContainer.AddChild(TextInstance);
 
                 PlaceholderTextInstance = new TextRuntime();
                 PlaceholderTextInstance.Name = "PlaceholderTextInstance";
@@ -113,9 +119,26 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
                 PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
-                this.Children.Add(PlaceholderTextInstance);
+                ClipContainer.AddChild(PlaceholderTextInstance);
 
-                // TODO: Fix this, this.ClipsChildren makes this invisible because it's outside the parent.
+                CaretInstance = new SpriteRuntime();
+                CaretInstance.Name = "CaretInstance";
+                CaretInstance.Color = Styling.Colors.Primary;
+                CaretInstance.Height = 18f;
+                CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                CaretInstance.Texture = uiSpriteSheetTexture;
+                CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
+                CaretInstance.ApplyState(Styling.NineSlice.Solid);
+                CaretInstance.Width = 1f;
+                CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                CaretInstance.X = 4f;
+                CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+                CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+                CaretInstance.Y = 0f;
+                CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+                ClipContainer.AddChild(CaretInstance);
+
                 FocusedIndicator = new NineSliceRuntime();
                 FocusedIndicator.Name = "FocusedIndicator";
                 FocusedIndicator.Color = Styling.Colors.Warning;
@@ -134,24 +157,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
                 FocusedIndicator.Visible = false;
                 this.Children.Add(FocusedIndicator);
-
-                CaretInstance = new SpriteRuntime();
-                CaretInstance.Name = "CaretInstance";
-                CaretInstance.Color = Styling.Colors.Primary;
-                CaretInstance.Height = 18f;
-                CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                CaretInstance.Texture = uiSpriteSheetTexture;
-                CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-                CaretInstance.ApplyState(Styling.NineSlice.Solid);
-                CaretInstance.Width = 1f;
-                CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                CaretInstance.X = 4f;
-                CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-                CaretInstance.Y = 0f;
-                CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                this.Children.Add(CaretInstance);
 
                 var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 textboxCategory.Name = CategoryName;
