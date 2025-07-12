@@ -29,6 +29,22 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 ActiveStyle = this;
             }
         }
+
+        private static StateSave CreateTextureCoordinateState(int left, int top, int width, int height)
+        {
+            return new()
+            {
+                Variables = new()
+                {
+                    new() { Name = "TextureLeft", Type = "int", Value = left },
+                    new() { Name = "TextureTop", Type = "int", Value = top },
+                    new() { Name = "TextureWidth", Type = "int", Value = width },
+                    new() { Name = "TextureHeight", Type = "int", Value = height },
+                    new() { Name = "TextureAddress", Type = "int", Value = Gum.Managers.TextureAddress.Custom }
+                }
+            };
+        }
+
         public static class Colors
         {
             public static Color Black { get; set; } = new Color(0, 0, 0);
@@ -84,39 +100,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
             public static StateSave CircleOutlined = CreateTextureCoordinateState(0, 120, 24, 24);
             public static StateSave CircleOutlinedHeavy = CreateTextureCoordinateState(24, 120, 24, 24);
 
-            private static StateSave CreateTextureCoordinateState(int left, int top, int width, int height)
-            {
-                return new()
-                {
-                    Variables = new()
-            {
-                new () { Name = "TextureLeft", Type = "int", Value = left },
-                new () { Name = "TextureTop", Type = "int", Value = top },
-                new () { Name = "TextureWidth", Type = "int", Value = width },
-                new () { Name = "TextureHeight", Type = "int", Value = height },
-                new () { Name = "TextureAddress", Type = "int", Value = Gum.Managers.TextureAddress.Custom }
-            }
-                };
-            }
         }
 
         public class Icons
         {
-            private static StateSave CreateTextureCoordinateState(int left, int top, int width, int height)
-            {
-                return new()
-                {
-                    Variables = new()
-                {
-                    new() { Name = "TextureLeft", Type = "int", Value = left },
-                    new() { Name = "TextureTop", Type = "int", Value = top },
-                    new() { Name = "TextureWidth", Type = "int", Value = width },
-                    new() { Name = "TextureHeight", Type = "int", Value = height },
-                    new() { Name = "TextureAddress", Type = "int", Value = Gum.Managers.TextureAddress.Custom }
-                }
-                };
-            }
-
             public static StateSave Arrow1 => CreateTextureCoordinateState(288, 256, 32, 32);
             public static StateSave Arrow2 => CreateTextureCoordinateState(320, 256, 32, 32);
             public static StateSave Arrow3 => CreateTextureCoordinateState(352, 256, 32, 32);
