@@ -357,7 +357,7 @@ public class CodeGenerator
 
     #endregion
 
-    #region Class Name and Header
+    #region Class Name and Header, Inheritance
 
     private static void GenerateClassHeader(CodeGenerationContext context)
     {
@@ -458,7 +458,11 @@ public class CodeGenerator
         {
             inheritance = "SkiaGum.SkiaGumCanvasView";
         }
-        else if (element.BaseType == "Container")
+        else if (element.BaseType == "Container" || 
+
+            // This allows forms controls like Label to inherit directly from Text, yet still
+            // be a Forms control:
+            ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
         {
             if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
