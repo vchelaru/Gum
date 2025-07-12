@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommonFormsAndControls;
@@ -19,8 +19,10 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Logic;
 using System.Drawing;
 using Gum.Commands;
+using Gum.Dialogs;
 using WpfInput = System.Windows.Input;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers;
 
@@ -109,6 +111,7 @@ public partial class ElementTreeViewManager
     private readonly ISelectedState _selectedState;
     private readonly EditCommands _editCommands;
     private readonly GuiCommands _guiCommands;
+    private readonly IDialogService _dialogService;
 
 
     public const int TransparentImageIndex = 0;
@@ -274,6 +277,8 @@ public partial class ElementTreeViewManager
         _editCommands = Locator.GetRequiredService<EditCommands>();
         _guiCommands = GumCommands.Self.GuiCommands;
 
+        _dialogService = Locator.GetRequiredService<IDialogService>();
+        
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
 

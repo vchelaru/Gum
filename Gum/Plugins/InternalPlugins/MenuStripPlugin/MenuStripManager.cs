@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
@@ -123,15 +123,9 @@ namespace Gum.Managers
             this.RemoveVariableMenuItem});
 
 
-
-
-            Add(addToolStripMenuItem, "Screen", () => 
-                GumCommands.Self.GuiCommands.ShowAddScreenWindow()) ;
-
-            Add(addToolStripMenuItem, "Component", () =>
-                GumCommands.Self.GuiCommands.ShowAddComponentWindow());
-            Add(addToolStripMenuItem, "Instance", () =>
-                GumCommands.Self.GuiCommands.ShowAddInstanceWindow());
+            Add(addToolStripMenuItem, "Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
+            Add(addToolStripMenuItem, "Component", () => _dialogService.Show<AddComponentDialogViewModel>());
+            Add(addToolStripMenuItem, "Instance", () => _dialogService.Show<AddInstanceDialogViewModel>());
             Add(addToolStripMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
 
             // 

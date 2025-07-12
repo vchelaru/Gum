@@ -1463,4 +1463,10 @@ namespace Gum.Managers
             }
         }
     }
+    
+    public static class ObjectFinderExt
+    {
+        public static bool IsProjectSaved(this ObjectFinder objectFinder) =>
+            objectFinder.GumProjectSave is { FullFileName.Length: > 0 };
+    }
 }

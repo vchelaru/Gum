@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommonFormsAndControls;
@@ -14,6 +14,9 @@ using Gum.DataTypes.Behaviors;
 using Gum.PropertyGridHelpers;
 using Gum.Controls;
 using Gum.Commands;
+using Gum.Dialogs;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers;
 
@@ -50,7 +53,7 @@ public partial class ElementTreeViewManager
     {
         mAddScreen = new ToolStripMenuItem();
         mAddScreen.Text = "Add Screen";
-        mAddScreen.Click += (_, _) => _guiCommands.ShowAddScreenWindow();
+        mAddScreen.Click += (_, _) => _dialogService.Show<AddScreenDialogViewModel>();
 
         mImportScreen = new ToolStripMenuItem();
         mImportScreen.Text = "Import Screen";
@@ -66,11 +69,12 @@ public partial class ElementTreeViewManager
 
         mAddInstance = new ToolStripMenuItem();
         mAddInstance.Text = "Add Instance";
-        mAddInstance.Click += (_, _) => _guiCommands.ShowAddInstanceWindow();
+        mAddInstance.Click += (_, _) => _dialogService.Show<AddInstanceDialogViewModel>();
 
         mAddParentInstance = new ToolStripMenuItem();
         mAddParentInstance.Text = "Add Parent Instance";
-        mAddParentInstance.Click += (_, _) => _guiCommands.ShowAddParentInstance();
+        mAddParentInstance.Click +=
+            (_, _) => _dialogService.Show<AddInstanceDialogViewModel>(x => x.ParentInstance = true);
 
         mSaveObject = new ToolStripMenuItem();
         mSaveObject.Text = "Force Save Object";
@@ -139,10 +143,9 @@ public partial class ElementTreeViewManager
 
     void AddFolderClick(object sender, EventArgs e)
     {
-        var node = (SelectedNode as TreeNodeWrapper)?.Node;
-        if(node != null)
+        if (SelectedNode != null)
         {
-            _guiCommands.ShowAddFolderWindow(node);
+            _dialogService.Show<AddFolderDialogViewModel>();
         }
     }
 
@@ -394,7 +397,7 @@ public partial class ElementTreeViewManager
             {
                 
 
-                mMenuStrip.Items.Add("Add Component", null, (_,_)=> _guiCommands.ShowAddComponentWindow());
+                mMenuStrip.Items.Add("Add Component", null, (_,_) => _dialogService.Show<AddComponentDialogViewModel>());
                 mMenuStrip.Items.Add(mImportComponent);
                 mMenuStrip.Items.Add(mAddFolder);
                 mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
@@ -482,11 +485,10 @@ public partial class ElementTreeViewManager
 
     private void HandleRenameFolder(object sender, EventArgs e)
     {
-        var node = (SelectedNode as TreeNodeWrapper)?.Node;
-        if (node != null)
+        _dialogService.Show<RenameFolderDialogViewModel>(vm =>
         {
-            _guiCommands.ShowRenameFolderWindow(node);
-        }
+            vm.FolderNode = (SelectedNode as TreeNodeWrapper)?.Node;
+        });
     }
 
     private void HandleAddBehavior(object sender, EventArgs e)
