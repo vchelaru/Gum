@@ -12,6 +12,7 @@ using Gum.Plugins;
 using Gum.Commands;
 using Gum.Mvvm;
 using System.Windows;
+using Gum.Dialogs;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -75,7 +76,7 @@ public class StateTreeViewRightClickService
             if (_selectedState.SelectedStateCategorySave != null)
             {
                 // As of 5/24/2023, we no longer support uncategorized states
-                AddMenuItem("Add State", _gumCommands.GuiCommands.ShowAddStateWindow);
+                AddMenuItem("Add State", () => _dialogService.Show<AddStateDialogViewModel>());
             }
 
             AddMenuItem("Add Category", _gumCommands.GuiCommands.ShowAddCategoryWindow);
@@ -301,11 +302,6 @@ public class StateTreeViewRightClickService
 
 
     #endregion
-
-    internal void AddStateClick()
-    {
-        _gumCommands.GuiCommands.ShowAddStateWindow();
-    }
 
     private void DuplicateStateClick()
     {
