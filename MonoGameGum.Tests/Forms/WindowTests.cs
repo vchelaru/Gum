@@ -1,5 +1,7 @@
-﻿using MonoGameGum.Forms;
+﻿using Gum.Wireframe;
+using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -36,5 +38,30 @@ public class WindowTests : BaseTestClass
         window.GetFrameworkElement("BorderBottomInstance").ShouldNotBeNull();
         window.GetFrameworkElement("BorderRightInstance").ShouldNotBeNull();
         window.GetFrameworkElement("BorderLeftInstance").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Dragging_ShouldMoveWindow()
+    {
+        Mock<ICursor> cursor = new ();
+        Window sut = new();
+        FrameworkElement.MainCursor = cursor.Object;
+
+
+        var titleBar = (InteractiveGue)sut.GetVisual("TitleBarInstance")!;
+        titleBar.TryCallPush();
+        titleBar.TryCallDragging();
+
+        sut.X.ShouldBe(0);
+        sut.Y.ShouldBe(0);
+
+        cursor.SetupGet(c => c.X).Returns(10);
+        cursor.SetupGet(c => c.Y).Returns(20);
+
+        titleBar.TryCallDragging();
+
+        sut.X.ShouldBe(10);
+        sut.Y.ShouldBe(20);
+
     }
 }
