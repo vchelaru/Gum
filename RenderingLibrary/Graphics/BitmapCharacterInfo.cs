@@ -15,6 +15,11 @@ namespace RenderingLibrary.Graphics
         public float TURight;
         public float TVBottom;
 
+        public int PixelLeft;
+        public int PixelTop;
+        public int PixelRight;
+        public int PixelBottom;
+
         public float ScaleX;
         public float ScaleY;
 
@@ -37,26 +42,37 @@ namespace RenderingLibrary.Graphics
         public int XOffsetInPixels;
         public float DistanceFromTopOfLine;
 
+        [Obsolete("Use PixelLeft")]
         public int GetPixelLeft(Texture2D texture)
         {
             return MathFunctions.RoundToInt(TULeft * texture.Width);
         }
+
+        [Obsolete("Use PixelTop")]
         public int GetPixelTop(Texture2D texture)
         {
             return MathFunctions.RoundToInt(TVTop * texture.Height);
         }
+
+        [Obsolete("Use PixelRight")]
         public int GetPixelRight(Texture2D texture)
         {
-            return MathFunctions.RoundToInt(TURight * texture.Width);
+            return MathFunctions.RoundToInt(TURight * texture?.Width ?? 0);
         }
+
+        [Obsolete("Use PixelBottom")]
         public int GetPixelBottom(Texture2D texture)
         {
             return MathFunctions.RoundToInt(TVBottom * texture.Height);
         }
+
+        [Obsolete("Use PixelRight - PixelLeft")]
         public int GetPixelWidth(Texture2D texture)
         {
             return GetPixelRight(texture) - GetPixelLeft(texture);
         }
+
+        [Obsolete("Use PixelBottom - PixelTop")]
         public int GetPixelHeight(Texture2D texture)
         {
             return GetPixelBottom(texture) - GetPixelTop(texture);

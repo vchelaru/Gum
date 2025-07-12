@@ -960,7 +960,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     throw new ArgumentException();
                 }
 #endif
-                mHeight = value; UpdateLayout();
+                mHeight = value; 
+
+                // If this height changes, then we should only update the parent if the height change can actually affect the parent:
+                //UpdateLayout();
+                UpdateLayout(
+                    ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                    ParentUpdateType.IfParentStacks |
+                    ParentUpdateType.IfParentHasRatioSizedChildren,
+                    int.MaxValue/2, XOrY.Y
+                    );
             }
         }
     }
@@ -5826,6 +5835,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             }
         }
+    }
+
+    /// <summary>
+    /// Clears the layout and font dirty state, resulting in no layout logic being
+    /// performed on the next resume layout. This method should only be used 
+    /// if you intend to manually perform layouts after a layout resume. Otherwise, calling
+    /// this can cause layouts to behave incorrectly
+    /// </summary>
+    public void ClearDirtyLayoutState()
+    {
+        currentDirtyState = null;
+        isFontDirty = false;
     }
 
     public void ResumeLayout(bool recursive = false)

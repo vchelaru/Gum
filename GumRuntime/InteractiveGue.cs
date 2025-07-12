@@ -193,6 +193,8 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler RollOff;
     /// <summary>
     /// Event raised every frame the cursor is over this object and the Cursor has changed position.
+    /// This event is not raized if the cursor has moved off of the object. For events raised when the 
+    /// cursor is not over this instance, see Dragging.
     /// </summary>
     public event EventHandler RollOver;
 
@@ -202,9 +204,10 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler HoverOver;
 
     /// <summary>
-    /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even
-    /// if outside of the bounds of the object. This can be used if an object is to be moved by dragging since it will
-    /// be raised even if the user moves the cursor quickly outside of its bounds.
+    /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, 
+    /// but is raised even if outside of the bounds of the object. This can be used if an 
+    /// object is to be moved by dragging since it will be raised even if the user moves the 
+    /// cursor quickly outside of its bounds.
     /// </summary>
     public event EventHandler Dragging;
 
@@ -713,6 +716,18 @@ public partial class InteractiveGue : BindableGue
         if(InteractiveGue.CurrentInputReceiver == this.FormsControlAsObject || InteractiveGue.CurrentInputReceiver == this)
         {
             InteractiveGue.CurrentInputReceiver = null;
+        }
+    }
+
+    public override string ToString()
+    {
+        if(this.FormsControlAsObject != null)
+        {
+            return $"{base.ToString()} for {FormsControlAsObject.GetType()}" ;
+        }
+        else
+        {
+            return base.ToString();
         }
     }
 }
