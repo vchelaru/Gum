@@ -552,7 +552,7 @@
       </Variable>
     </State>
     <State>
-      <Name>Selected</Name>
+      <Name>Focused</Name>
       <Variable>
         <Type>ColorCategory</Type>
         <Name>Background.ColorCategoryState</Name>

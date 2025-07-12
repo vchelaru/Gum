@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace MonoGameGum.Forms.DefaultVisuals;
 public class DefaultWindowRuntime : InteractiveGue
 {
+    public float BorderSize { get; set; } = 10f;
 
     public DefaultWindowRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -18,6 +19,8 @@ public class DefaultWindowRuntime : InteractiveGue
         {
             this.Width = 256;
             this.Height = 256;
+            MinHeight = BorderSize;
+            MinWidth = BorderSize;
 
             var border = new ColoredRectangleRuntime();
             border.Name = "WindowBorder";
@@ -29,15 +32,13 @@ public class DefaultWindowRuntime : InteractiveGue
             background.Name = "WindowBackground";
             background.Dock(Gum.Wireframe.Dock.Fill);
             // This is too thick, looks bad:
-            //background.Width = -2 * borderWidth;
-            //background.Height = -2 * borderWidth;
+            //background.Width = -2 * BorderSize;
+            //background.Height = -2 * BorderSize;
             background.Width = -4;
             background.Height = -4;
 
             background.Color = Styling.Colors.Gray;
             this.AddChild(background);
-
-            float borderWidth = 10;
 
             var innerPanel = new ContainerRuntime();
             innerPanel.Name = "InnerPanelInstance";
@@ -54,64 +55,64 @@ public class DefaultWindowRuntime : InteractiveGue
             var borderTopLeft = new Panel();
             borderTopLeft.Name = "BorderTopLeftInstance";
             borderTopLeft.Anchor(Gum.Wireframe.Anchor.TopLeft);
-            borderTopLeft.Width = borderWidth;
-            borderTopLeft.Height = borderWidth;
+            borderTopLeft.Width = BorderSize;
+            borderTopLeft.Height = BorderSize;
             borderTopLeft.CustomCursor = Cursors.SizeNWSE;
             this.AddChild(borderTopLeft);
 
             var borderTopRight = new Panel();
             borderTopRight.Name = "BorderTopRightInstance";
             borderTopRight.Anchor(Gum.Wireframe.Anchor.TopRight);
-            borderTopRight.Width = borderWidth;
-            borderTopRight.Height = borderWidth;
+            borderTopRight.Width = BorderSize;
+            borderTopRight.Height = BorderSize;
             borderTopRight.CustomCursor = Cursors.SizeNESW;
             this.AddChild(borderTopRight);
 
             var borderBottomLeft = new Panel();
             borderBottomLeft.Name = "BorderBottomLeftInstance";
             borderBottomLeft.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-            borderBottomLeft.Width = borderWidth;
-            borderBottomLeft.Height = borderWidth;
+            borderBottomLeft.Width = BorderSize;
+            borderBottomLeft.Height = BorderSize;
             borderBottomLeft.CustomCursor = Cursors.SizeNESW;
             this.AddChild(borderBottomLeft);
 
             var borderBottomRight = new Panel();
             borderBottomRight.Name = "BorderBottomRightInstance";
             borderBottomRight.Anchor(Gum.Wireframe.Anchor.BottomRight);
-            borderBottomRight.Width = borderWidth;
-            borderBottomRight.Height = borderWidth;
+            borderBottomRight.Width = BorderSize;
+            borderBottomRight.Height = BorderSize;
             borderBottomRight.CustomCursor = Cursors.SizeNWSE;
             this.AddChild(borderBottomRight);
 
             var borderTop = new Panel();
             borderTop.Name = "BorderTopInstance";
             borderTop.Dock(Gum.Wireframe.Dock.Top);
-            borderTop.Height = borderWidth;
-            borderTop.Width = -borderWidth*2;
+            borderTop.Height = BorderSize;
+            borderTop.Width = -BorderSize*2;
             borderTop.CustomCursor = Cursors.SizeNS;
             this.AddChild(borderTop);
 
             var borderBottom = new Panel();
             borderBottom.Name = "BorderBottomInstance";
             borderBottom.Dock(Gum.Wireframe.Dock.Bottom);
-            borderBottom.Height = borderWidth;
-            borderBottom.Width = -borderWidth*2;
+            borderBottom.Height = BorderSize;
+            borderBottom.Width = -BorderSize*2;
             borderBottom.CustomCursor = Cursors.SizeNS;
             this.AddChild(borderBottom);
 
             var borderLeft = new Panel();
             borderLeft.Name = "BorderLeftInstance";
             borderLeft.Dock(Gum.Wireframe.Dock.Left);
-            borderLeft.Width = borderWidth;
-            borderLeft.Height = -borderWidth*2;
+            borderLeft.Width = BorderSize;
+            borderLeft.Height = -BorderSize*2;
             borderLeft.CustomCursor = Cursors.SizeWE;
             this.AddChild(borderLeft);
 
             var borderRight = new Panel();
             borderRight.Name = "BorderRightInstance";
             borderRight.Dock(Gum.Wireframe.Dock.Right);
-            borderRight.Width = borderWidth;
-            borderRight.Height = -borderWidth*2;
+            borderRight.Width = BorderSize;
+            borderRight.Height = -BorderSize*2;
             borderRight.CustomCursor = Cursors.SizeWE;
             this.AddChild(borderRight);
 

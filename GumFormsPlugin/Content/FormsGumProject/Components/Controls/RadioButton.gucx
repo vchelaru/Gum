@@ -151,7 +151,7 @@
     <Variable>
       <Type>StyleCategory</Type>
       <Name>RadioBackground.StyleCategoryState</Name>
-      <Value xsi:type="xsd:string">Bordered</Value>
+      <Value xsi:type="xsd:string">CircleBordered</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
