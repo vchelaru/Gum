@@ -27,7 +27,7 @@ internal class MenuVisual : InteractiveGue
             this.X = 0;
             this.Y = 0;
 
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             Background = new NineSliceRuntime();
             Background.Name = "Background";

@@ -51,7 +51,7 @@ public class ScrollViewerVisual : InteractiveGue
             this.Width = 150;
             this.Height = 200;
 
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             {
                 Background = new NineSliceRuntime();

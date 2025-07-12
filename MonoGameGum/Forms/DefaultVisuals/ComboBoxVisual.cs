@@ -40,7 +40,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             if (fullInstantiation)
             {
                 this.States = new ComboBoxCategoryStates();
-                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
                 this.Height = 24f;
                 this.Width = 256f;
@@ -106,7 +106,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 DropdownIndicator.Rotation = -90;
                 DropdownIndicator.Texture = uiSpriteSheetTexture;
                 DropdownIndicator.Color = Styling.Colors.Primary;
-                DropdownIndicator.ApplyState(IconVisuals.Arrow2);
+                DropdownIndicator.ApplyState(Styling.Icons.Arrow2);
                 this.Children.Add(DropdownIndicator);
 
                 FocusedIndicator = new NineSliceRuntime();

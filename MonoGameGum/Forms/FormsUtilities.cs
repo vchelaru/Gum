@@ -91,7 +91,7 @@ public class FormsUtilities
             case DefaultVisualsVersion.V2:
 
                 Texture2D uiSpriteSheet = systemManagers.LoadEmberddedTexture2d("UISpriteSheet.png");
-                IconVisuals.ActiveVisual = new IconVisuals(uiSpriteSheet);
+                Styling.ActiveStyle = new Styling(uiSpriteSheet);
 
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));

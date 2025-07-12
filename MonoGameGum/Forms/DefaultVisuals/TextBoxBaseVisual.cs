@@ -42,7 +42,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.Height = 24;
                 this.ClipsChildren = true;
 
-                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
                 Background = new NineSliceRuntime();
                 Background.Name = "Background";

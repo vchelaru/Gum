@@ -34,7 +34,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.Height = 128;
                 this.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
                 UpButtonIcon = new SpriteRuntime();
                 UpButtonIcon.X = 0f;
@@ -48,7 +48,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 UpButtonIcon.Height = 100;
                 UpButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
                 UpButtonIcon.TextureAddress = Gum.Managers.TextureAddress.Custom;
-                UpButtonIcon.ApplyState(IconVisuals.Arrow1);
+                UpButtonIcon.ApplyState(Styling.Icons.Arrow1);
                 UpButtonIcon.Color = Styling.Colors.White;
                 UpButtonIcon.Texture = uiSpriteSheetTexture;
                 UpButtonIcon.Visible = true;
@@ -78,7 +78,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 DownButtonIcon.Height = 100;
                 DownButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
                 DownButtonIcon.TextureAddress = Gum.Managers.TextureAddress.Custom;
-                DownButtonIcon.ApplyState(IconVisuals.Arrow1);
+                DownButtonIcon.ApplyState(Styling.Icons.Arrow1);
                 DownButtonIcon.Color = Styling.Colors.White;
                 DownButtonIcon.Texture = uiSpriteSheetTexture;
                 DownButtonIcon.Visible = true;

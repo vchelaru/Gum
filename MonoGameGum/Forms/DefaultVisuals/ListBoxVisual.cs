@@ -45,7 +45,7 @@ public class ListBoxVisual : InteractiveGue
             Width = 150;
             Height = 150;
             this.States = new ListBoxCategoryStates();
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             Background = new NineSliceRuntime();
             Background.Name = "Background";

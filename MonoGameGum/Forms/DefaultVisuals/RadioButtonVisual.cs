@@ -49,7 +49,7 @@ public class RadioButtonVisual : InteractiveGue
             this.Width = 128;
 
             this.States = new RadioButtonCategoryStates();
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             Background = new NineSliceRuntime();
             Background.Name = "Background";
@@ -81,7 +81,7 @@ public class RadioButtonVisual : InteractiveGue
             InnerCheckbox.Name = "InnerCheck";
             InnerCheckbox.Color = Styling.Colors.White;
             InnerCheckbox.Texture = uiSpriteSheetTexture;
-            InnerCheckbox.ApplyState(IconVisuals.Circle2);
+            InnerCheckbox.ApplyState(Styling.Icons.Circle2);
             Background.Children.Add(InnerCheckbox);
 
             TextInstance = new TextRuntime();

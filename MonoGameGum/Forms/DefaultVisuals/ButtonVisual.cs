@@ -39,7 +39,7 @@ public class ButtonVisual : InteractiveGue
             this.Height = 5;
             this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             Background = new NineSliceRuntime();
             Background.X = 0;

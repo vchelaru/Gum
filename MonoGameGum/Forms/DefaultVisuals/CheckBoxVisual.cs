@@ -59,7 +59,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 this.States = new CheckBoxCategoryStates();
 
-                var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
                 CheckBoxBackground = new NineSliceRuntime();
                 CheckBoxBackground.Width = 24;
@@ -84,7 +84,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 InnerCheckbox.Name = "InnerCheck";
                 InnerCheckbox.Color = Styling.Colors.White;
                 InnerCheckbox.Texture = uiSpriteSheetTexture;
-                InnerCheckbox.ApplyState(IconVisuals.Check);
+                InnerCheckbox.ApplyState(Styling.Icons.Check);
                 CheckBoxBackground.Children.Add(InnerCheckbox);
 
                 TextInstance = new TextRuntime();
@@ -160,7 +160,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
-                    AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Check);
+                    AddVariablesFromIconVIsual("InnerCheck", Styling.Icons.Check);
 
                     AddState(state + "Off");
                     AddVariable("InnerCheck.Visible", false);
@@ -168,7 +168,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
-                    AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Check);
+                    AddVariablesFromIconVIsual("InnerCheck", Styling.Icons.Check);
 
                     AddState(state + "Indeterminate");
                     AddVariable("InnerCheck.Visible", true);
@@ -176,7 +176,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
-                    AddVariablesFromIconVIsual("InnerCheck", IconVisuals.Dash);
+                    AddVariablesFromIconVIsual("InnerCheck", Styling.Icons.Dash);
 
                 }
 

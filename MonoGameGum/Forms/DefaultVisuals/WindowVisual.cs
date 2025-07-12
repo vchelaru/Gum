@@ -32,7 +32,7 @@ public class WindowVisual : InteractiveGue
             this.Width = 256;
             this.Height = 256;
 
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             Background = new NineSliceRuntime();
             Background.Name = "Background";

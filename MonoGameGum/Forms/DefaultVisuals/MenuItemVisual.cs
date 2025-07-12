@@ -40,7 +40,7 @@ public class MenuItemVisual : InteractiveGue
             this.Y = 0;
 
             States = new MenuItemCategoryStates();
-            var uiSpriteSheetTexture = IconVisuals.ActiveVisual.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             Background = new NineSliceRuntime();
             Background.Name = "Background";
