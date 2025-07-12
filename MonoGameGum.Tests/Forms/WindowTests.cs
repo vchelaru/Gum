@@ -55,13 +55,74 @@ public class WindowTests : BaseTestClass
         sut.X.ShouldBe(0);
         sut.Y.ShouldBe(0);
 
-        cursor.SetupGet(c => c.X).Returns(10);
-        cursor.SetupGet(c => c.Y).Returns(20);
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(10);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(20);
 
         titleBar.TryCallDragging();
 
         sut.X.ShouldBe(10);
         sut.Y.ShouldBe(20);
+    }
 
+    [Fact]
+    public void Dragging_ShouldMoveWindow_IfInsideChild()
+    {
+
+        Mock<ICursor> cursor = new();
+
+        Panel parentPanel = new Panel();
+        parentPanel.Width = 200;
+        parentPanel.Height = 200;
+        parentPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        Window sut = new();
+        parentPanel.AddChild(sut);
+        FrameworkElement.MainCursor = cursor.Object;
+
+
+        var titleBar = (InteractiveGue)sut.GetVisual("TitleBarInstance")!;
+        titleBar.TryCallPush();
+        titleBar.TryCallDragging();
+
+        sut.X.ShouldBe(0);
+        sut.Y.ShouldBe(0);
+
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(100);
+
+        titleBar.TryCallDragging();
+
+        sut.X.ShouldBe(100);
+    }
+
+    [Fact]
+    public void Dragging_ShouldNotMoveWindow_IfOutsideOfChild()
+    {
+
+        Mock<ICursor> cursor = new();
+
+        Panel parentPanel = new Panel();
+        parentPanel.Width = 10;
+        parentPanel.Height = 10;
+        parentPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        Window sut = new();
+        parentPanel.AddChild(sut);
+        FrameworkElement.MainCursor = cursor.Object;
+
+
+        var titleBar = (InteractiveGue)sut.GetVisual("TitleBarInstance")!;
+        titleBar.TryCallPush();
+        titleBar.TryCallDragging();
+
+        sut.X.ShouldBe(0);
+        sut.Y.ShouldBe(0);
+
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(100);
+
+        titleBar.TryCallDragging();
+
+        sut.X.ShouldBe(0, "because the cursor was moved it too far out");
     }
 }
