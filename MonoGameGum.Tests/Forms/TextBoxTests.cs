@@ -16,6 +16,13 @@ namespace MonoGameGum.Tests.Forms;
 
 public class TextBoxTests : BaseTestClass
 {
+    [Fact]
+    public void Click_ShouldSetIsFocused()
+    {
+        TextBox textBox = new();
+        textBox.Visual.CallClick();
+        textBox.IsFocused.ShouldBeTrue();
+    }
 
     [Fact]
     public void IsFocused_ShouldRaiseLostFocus_IfIsFocusedSetToFalse()
