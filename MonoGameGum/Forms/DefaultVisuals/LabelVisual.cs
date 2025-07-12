@@ -12,6 +12,7 @@ public class LabelVisual : TextRuntime
         if (fullInstantiation)
         {
             Name = "TextInstance";
+            Text = "Label";
             X = 0;
             Y = 0;
             Width = 0;
