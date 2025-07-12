@@ -139,7 +139,11 @@ public class Splitter : FrameworkElement
             var cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
             changeInPixels = cursorX - (Visual.AbsoluteLeft + leftGrabbedInOffset!.Value);
         }
-        ApplyResizeChangeInPixels(changeInPixels);
+
+        if(changeInPixels != 0)
+        {
+            ApplyResizeChangeInPixels(changeInPixels);
+        }
 
     }
 
@@ -205,6 +209,18 @@ public class Splitter : FrameworkElement
             secondUnits != DimensionUnitType.PercentageOfSourceFile &&
             secondUnits != DimensionUnitType.PercentageOfOtherDimension &&
             secondUnits != DimensionUnitType.MaintainFileAspectRatio;
+
+        var wasFirstLayoutSuspended = firstVisual?.IsLayoutSuspended;
+        var wasSecondLayoutSuspended = secondVisual?.IsLayoutSuspended;
+
+        if (firstVisual != null && firstVisual.IsLayoutSuspended == false)
+        {
+            firstVisual.SuspendLayout();
+        }
+        if (secondVisual != null && secondVisual.IsLayoutSuspended == false)
+        {
+            secondVisual.SuspendLayout();
+        }
 
         // Ratios have to be handled together
         if (firstUnits == DimensionUnitType.Ratio && secondUnits == DimensionUnitType.Ratio)
@@ -309,8 +325,18 @@ public class Splitter : FrameworkElement
             }
         }
 
+        if(wasFirstLayoutSuspended == false)
+        {
+            firstVisual?.ClearDirtyLayoutState();
+            firstVisual?.ResumeLayout();
+        }
+        if(wasSecondLayoutSuspended == false)
+        {
+            secondVisual?.ClearDirtyLayoutState();
+            secondVisual?.ResumeLayout();
+        }
 
-
-        //if(unitsBefore == DimensionUnitType.Ratio && unitsAfter == DimensionUnitType.Ratio
+         This is faster because - finish here vic:
+        parent.UpdateLayout(updateParent: false, updateChildren: true);
     }
 }

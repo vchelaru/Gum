@@ -718,6 +718,18 @@ public partial class InteractiveGue : BindableGue
             InteractiveGue.CurrentInputReceiver = null;
         }
     }
+
+    public override string ToString()
+    {
+        if(this.FormsControlAsObject != null)
+        {
+            return $"{base.ToString()} for {FormsControlAsObject.GetType()}" ;
+        }
+        else
+        {
+            return base.ToString();
+        }
+    }
 }
 
 public interface IInputReceiver
