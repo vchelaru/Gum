@@ -70,14 +70,14 @@ public class RadioButtonVisual : InteractiveGue
             this.Children.Add(Background);
 
             InnerCheckbox = new SpriteRuntime();
-            InnerCheckbox.Width = 0;
-            InnerCheckbox.Height = 0;
-            InnerCheckbox.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            InnerCheckbox.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            InnerCheckbox.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            InnerCheckbox.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            InnerCheckbox.XOrigin = HorizontalAlignment.Left;
-            InnerCheckbox.YOrigin = VerticalAlignment.Top;
+            InnerCheckbox.Width = 100;
+            InnerCheckbox.Height = 100;
+            InnerCheckbox.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            InnerCheckbox.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            InnerCheckbox.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            InnerCheckbox.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            InnerCheckbox.XOrigin = HorizontalAlignment.Center;
+            InnerCheckbox.YOrigin = VerticalAlignment.Center;
             InnerCheckbox.Name = "InnerCheck";
             InnerCheckbox.Color = Styling.Colors.White;
             InnerCheckbox.Texture = uiSpriteSheetTexture;

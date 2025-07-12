@@ -48,7 +48,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             };
         }
 
-        public static StateSave Arrow1 => CreateTextureCoordinateState(292, 260, 24, 24);
+        public static StateSave Arrow1 => CreateTextureCoordinateState(288, 256, 32, 32);
         public static StateSave Arrow2 => CreateTextureCoordinateState(320, 256, 32, 32);
         public static StateSave Arrow3 => CreateTextureCoordinateState(352, 256, 32, 32);
         public static StateSave Basket => CreateTextureCoordinateState(288, 224, 32, 32);
@@ -56,7 +56,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
         public static StateSave Check => CreateTextureCoordinateState(384, 128, 32, 32);
         public static StateSave CheckeredFlag => CreateTextureCoordinateState(384, 288, 32, 32);
         public static StateSave Circle1 => CreateTextureCoordinateState(448, 128, 32, 32);
-        public static StateSave Circle2 => CreateTextureCoordinateState(420, 132, 24, 24);
+        public static StateSave Circle2 => CreateTextureCoordinateState(416, 128, 32, 32);
         public static StateSave Close => CreateTextureCoordinateState(416, 192, 32, 32);
         public static StateSave Crosshairs => CreateTextureCoordinateState(352, 288, 32, 32);
         public static StateSave Currency => CreateTextureCoordinateState(352, 224, 32, 32);
