@@ -336,7 +336,15 @@ public class Splitter : FrameworkElement
             secondVisual?.ResumeLayout();
         }
 
-         This is faster because - finish here vic:
+        // If we do not take extra precautions on layouts, then resizing the splitter causes:
+        // 1. The first item to resize, which can propagate upward to the parent object recursively, causing
+        //    a top-level layout
+        // 2. The second item to resize, which can also propagate upward to the parent object recursively, causing
+        //    a top-level layout
+        // This can be very expensive. When a resize happens, the net size should be the same before and after
+        // the resize, so nothing above the splitter's parent should need a resize. Therefore, we can
+        // suppress and clear all layouts on the first/second, then do a single layout on the parent.
+        // This can reduce layout calls considerably, especially if the parent is itself in a complex layout.
         parent.UpdateLayout(updateParent: false, updateChildren: true);
     }
 }
