@@ -23,21 +23,7 @@ public class WindowVisual : InteractiveGue
     public Panel BorderLeftInstance { get; private set; }
     public Panel BorderRightInstance { get; private set; }
 
-
-    private float _borderSize = 0f;
-    public float BorderSize
-    {
-        get => _borderSize;
-        set
-        {
-            if (_borderSize == value) 
-                return;
-
-            _borderSize = value;
-            MinHeight = Math.Clamp(_borderSize, 10f, _borderSize);
-            MinWidth = Math.Clamp(_borderSize, 10f, _borderSize);
-        }
-    }
+    public float BorderSize { get; set; } = 10f;
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -45,7 +31,8 @@ public class WindowVisual : InteractiveGue
         {
             Width = 256;
             Height = 256;
-            BorderSize = 10f; // Use the property to set MinHeight and MinWidth also
+            MinHeight = BorderSize;
+            MinWidth = BorderSize;
 
             var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 

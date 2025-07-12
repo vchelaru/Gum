@@ -11,20 +11,7 @@ using System.Threading.Tasks;
 namespace MonoGameGum.Forms.DefaultVisuals;
 public class DefaultWindowRuntime : InteractiveGue
 {
-    private float _borderSize = 0f;
-    public float BorderSize
-    {
-        get => _borderSize;
-        set
-        {
-            if (_borderSize == value)
-                return;
-
-            _borderSize = value;
-            MinHeight = Math.Clamp(_borderSize, 10f, _borderSize);
-            MinWidth = Math.Clamp(_borderSize, 10f, _borderSize);
-        }
-    }
+    public float BorderSize { get; set; } = 10f;
 
     public DefaultWindowRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -32,8 +19,8 @@ public class DefaultWindowRuntime : InteractiveGue
         {
             this.Width = 256;
             this.Height = 256;
-            BorderSize = 10f;
-
+            MinHeight = BorderSize;
+            MinWidth = BorderSize;
 
             var border = new ColoredRectangleRuntime();
             border.Name = "WindowBorder";
