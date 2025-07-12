@@ -107,7 +107,7 @@ public class FormsUtilities
                 TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
                 TryAdd(typeof(TextBox), typeof(TextBoxVisual));
                 TryAdd(typeof(Slider), typeof(SliderVisual));
-                TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
+                TryAdd(typeof(Splitter), typeof(SplitterVisual));
                 TryAdd(typeof(Window), typeof(WindowVisual));
 
                 break;
