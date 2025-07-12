@@ -477,7 +477,7 @@ public class MenuItem : ItemsControl
     {
         if (coreText != null)
         {
-            coreText.RawText = o?.ToString();
+            coreText.RawText = o?.ToString() ?? string.Empty;
         }
     }
 
@@ -492,12 +492,11 @@ public class MenuItem : ItemsControl
 
         const string category = MenuItemCategoryState;
 
-        //if(IsEnabled == false)
-        //{
-        //    // todo?
-        //}
-
-        if (IsFocused)
+        if (IsEnabled == false)
+        {
+            Visual.SetProperty(category, DisabledStateName);
+        }
+        else if (IsFocused)
         {
             Visual.SetProperty(category, FocusedStateName);
         }
