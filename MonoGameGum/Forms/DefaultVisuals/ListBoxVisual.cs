@@ -80,7 +80,9 @@ public class ListBoxVisual : InteractiveGue
             FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
             FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
-            FocusedIndicator.Visible = false; // TODO: Vic! I shouldn't have to set this, the states should control this.
+            // NOTE: Focus for a ListBox must come from code 
+            // or from a user enabling keyboard navigation with FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
+            FocusedIndicator.Visible = false; 
             this.Children.Add(FocusedIndicator);
 
             ClipAndScrollContainer = new ContainerRuntime();
@@ -97,15 +99,12 @@ public class ListBoxVisual : InteractiveGue
             ClipAndScrollContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             this.Children.Add(ClipAndScrollContainer);
 
-
-            // TODO: Change this to ScrollBarVisual once it's created
             VerticalScrollBarInstance = new ScrollBarVisual();
             VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
             VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
             VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
             VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-            //VerticalScrollBarInstance.Width = 24;
             VerticalScrollBarInstance.Height = 0;
             VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             ClipAndScrollContainer.Children.Add(VerticalScrollBarInstance);
@@ -169,7 +168,6 @@ public class ListBoxVisual : InteractiveGue
                 });
             }
 
-            // For now let's just have the focus indicator show/hide.
             AddState(FrameworkElement.EnabledStateName);
             AddVariable("FocusedIndicator.Visible", false);
             States.Enabled = currentState;
