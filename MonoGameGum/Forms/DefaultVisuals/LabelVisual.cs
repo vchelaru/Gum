@@ -14,8 +14,8 @@ public class LabelVisual : TextRuntime
             Name = "TextInstance";
             X = 0;
             Y = 0;
-            Width = 128;
-            WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            Width = 0;
+            WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             Height = 0;
             HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         }
