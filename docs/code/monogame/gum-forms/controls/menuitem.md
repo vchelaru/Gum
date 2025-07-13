@@ -4,7 +4,7 @@
 
 MenuItem is a control which is added to Menu instances, or as a child of other MenuItems. MenuItems can be created automatically or explicitly when working with a Menu.
 
-<figure><img src="../../../../.gitbook/assets/20_15 41 52.gif" alt=""><figcaption><p>MenuItems in a Menu</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 30 56.gif" alt=""><figcaption><p>MenuItems in a Menu</p></figcaption></figure>
 
 ## Code Example: Creating MenuItems
 
@@ -12,7 +12,7 @@ The following code shows how to create menu items. Notice that MenuItems can be 
 
 ```csharp
 var menu = new Menu();
-Root.Children.Add(menu.Visual);
+menu.AddToRoot();
 
 var fileMenuItem = new MenuItem();
 fileMenuItem.Header = "File";
@@ -47,7 +47,7 @@ Typically this property is set to true by clicking on a MenuItem, or by hovering
 The following code shows how to explicitly set IsSelected to true based on keyboard input:
 
 ```csharp
-var keyboard = FormsUtilities.Keyboard;
+var keyboard = GumService.Default.Keyboard;
 
 if(keyboard.IsAltDown)
 {
@@ -64,6 +64,4 @@ if(keyboard.IsAltDown)
 ```
 
 By default MenuItems in a Menu are not selected unless the user clicks on the MenuItem. Once an item is selected, the user can hover over any menu item (either in the Menu itself, or a child MenuItem) to automatically expand the MenuItem.
-
-<figure><img src="../../../../.gitbook/assets/02_21 36 48.gif" alt=""><figcaption><p>MenuItems automatically set their IsSelected to true after one item is selected with the cursor</p></figcaption></figure>
 

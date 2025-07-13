@@ -10,6 +10,7 @@ The following code creates two ListBoxes with a Splitter inbetween them. The Spl
 
 ```csharp
 var stackPanel = new StackPanel();
+stackPanel.Spacing = 1;
 stackPanel.AddToRoot();
 
 var listBox = new ListBox();
@@ -33,4 +34,4 @@ for (int i = 0; i < 10; i++)
 
 ```
 
-<figure><img src="../../../../.gitbook/assets/19_23 12 04.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 55 13.gif" alt=""><figcaption></figcaption></figure>

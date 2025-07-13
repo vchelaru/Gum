@@ -10,7 +10,7 @@ The following code creates a Slider which allows the user to select a value betw
 
 ```csharp
 var slider = new Slider();
-this.Root.Children.Add(slider.Visual);
+slider.AddToRoot();
 slider.X = 50;
 slider.Y = 50;
 slider.Minimum = 0;
@@ -24,7 +24,7 @@ slider.ValueChangeCompleted += (_, _) =>
     Debug.WriteLine($"Finished setting Value: {slider.Value}");
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_07 18 09.gif" alt=""><figcaption><p>Slider reporting its value whenever the value changes or when the change completes</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 53 58.gif" alt=""><figcaption><p>Slider reporting its value whenever the value changes or when the change completes</p></figcaption></figure>
 
 ## Value
 

@@ -72,7 +72,7 @@ secondButton.Click += (_, _) =>
 };
 ```
 
-<figure><img src="../../../../.gitbook/assets/09_19 38 58.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 51 57.gif" alt=""><figcaption></figcaption></figure>
 
 ## Orientation
 
