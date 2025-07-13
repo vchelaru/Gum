@@ -60,7 +60,7 @@ public class MenuItemVisual : InteractiveGue
         Background.Texture = uiSpriteSheetTexture;
         Background.Visible = true;
         Background.ApplyState(Styling.NineSlice.Solid);
-        this.Children.Add(Background);
+        this.AddChild(Background);
 
         ContainerInstance = new ContainerRuntime();
         ContainerInstance.Name = "ContainerInstance";
@@ -70,7 +70,7 @@ public class MenuItemVisual : InteractiveGue
         ContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ContainerInstance.Width = 0f;
         ContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        this.Children.Add(ContainerInstance);
+        this.AddChild(ContainerInstance);
 
         TextInstance = new TextRuntime();
         TextInstance.Name = "TextInstance";
@@ -84,7 +84,7 @@ public class MenuItemVisual : InteractiveGue
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         TextInstance.Height = 2;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        ContainerInstance.Children.Add(TextInstance);
+        ContainerInstance.AddChild(TextInstance);
 
         SubmenuIndicatorInstance = new TextRuntime();
         SubmenuIndicatorInstance.Name = "SubmenuIndicatorInstance";
@@ -97,7 +97,7 @@ public class MenuItemVisual : InteractiveGue
         SubmenuIndicatorInstance.Width = 2f;
         SubmenuIndicatorInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-        ContainerInstance.Children.Add(SubmenuIndicatorInstance);
+        ContainerInstance.AddChild(SubmenuIndicatorInstance);
 
         var menuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         menuItemCategory.Name = "MenuItemCategory";

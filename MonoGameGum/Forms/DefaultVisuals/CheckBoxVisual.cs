@@ -23,29 +23,29 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public class CheckBoxCategoryStates
         {
-            public StateSave EnabledOn { get; set; }
-            public StateSave EnabledOff { get; set; }
-            public StateSave EnabledIndeterminate { get; set; }
-            public StateSave DisabledOn { get; set; }
-            public StateSave DisabledOff { get; set; }
-            public StateSave DisabledIndeterminate { get; set; }
-            public StateSave HighlightedOn { get; set; }
-            public StateSave HighlightedOff { get; set; }
-            public StateSave HighlightedIndeterminate { get; set; }
-            public StateSave PushedOn { get; set; }
-            public StateSave PushedOff { get; set; }
-            public StateSave PushedIndeterminate { get; set; }
-            public StateSave FocusedOn { get; set; }
-            public StateSave FocusedOff { get; set; }
-            public StateSave FocusedIndeterminate { get; set; }
-            public StateSave HighlightedFocusedOn { get; set; }
-            public StateSave HighlightedFocusedOff { get; set; }
-            public StateSave HighlightedFocusedIndeterminate { get; set; }
-            public StateSave DisabledFocusedOn { get; set; }
-            public StateSave DisabledFocusedOff { get; set; }
-            public StateSave DisabledFocusedIndeterminate { get; set; }
-
+            public StateSave EnabledOn { get; set; } = new StateSave { Name = nameof(EnabledOn) };
+            public StateSave EnabledOff { get; set; } = new StateSave { Name = nameof(EnabledOff) };
+            public StateSave EnabledIndeterminate { get; set; } = new StateSave { Name = nameof(EnabledIndeterminate) };
+            public StateSave DisabledOn { get; set; } = new StateSave { Name = nameof(DisabledOn) };
+            public StateSave DisabledOff { get; set; } = new StateSave { Name = nameof(DisabledOff) };
+            public StateSave DisabledIndeterminate { get; set; } = new StateSave { Name = nameof(DisabledIndeterminate) };
+            public StateSave HighlightedOn { get; set; } = new StateSave { Name = nameof(HighlightedOn) };
+            public StateSave HighlightedOff { get; set; } = new StateSave { Name = nameof(HighlightedOff) };
+            public StateSave HighlightedIndeterminate { get; set; } = new StateSave { Name = nameof(HighlightedIndeterminate) };
+            public StateSave PushedOn { get; set; } = new StateSave { Name = nameof(PushedOn) };
+            public StateSave PushedOff { get; set; } = new StateSave { Name = nameof(PushedOff) };
+            public StateSave PushedIndeterminate { get; set; } = new StateSave { Name = nameof(PushedIndeterminate) };
+            public StateSave FocusedOn { get; set; } = new StateSave { Name = nameof(FocusedOn) };
+            public StateSave FocusedOff { get; set; } = new StateSave { Name = nameof(FocusedOff) };
+            public StateSave FocusedIndeterminate { get; set; } = new StateSave { Name = nameof(FocusedIndeterminate) };
+            public StateSave HighlightedFocusedOn { get; set; } = new StateSave { Name = nameof(HighlightedFocusedOn) };
+            public StateSave HighlightedFocusedOff { get; set; } = new StateSave { Name = nameof(HighlightedFocusedOff) };
+            public StateSave HighlightedFocusedIndeterminate { get; set; } = new StateSave { Name = nameof(HighlightedFocusedIndeterminate) };
+            public StateSave DisabledFocusedOn { get; set; } = new StateSave { Name = nameof(DisabledFocusedOn) };
+            public StateSave DisabledFocusedOff { get; set; } = new StateSave { Name = nameof(DisabledFocusedOff) };
+            public StateSave DisabledFocusedIndeterminate { get; set; } = new StateSave { Name = nameof(DisabledFocusedIndeterminate) };
         }
+
 
         public CheckBoxCategoryStates States;
 
@@ -54,11 +54,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
         {
             if (fullInstantiation)
             {
-                this.Height = 32;
-                this.Width = 128;
+                Height = 32;
+                Width = 128;
 
-                this.States = new CheckBoxCategoryStates();
-
+                States = new CheckBoxCategoryStates();
                 var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
                 CheckBoxBackground = new NineSliceRuntime();
@@ -70,7 +69,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 CheckBoxBackground.Name = "CheckBoxBackground";
                 CheckBoxBackground.Texture = uiSpriteSheetTexture;
                 CheckBoxBackground.ApplyState(Styling.NineSlice.Bordered);
-                this.Children.Add(CheckBoxBackground);
+                this.AddChild(CheckBoxBackground);
 
                 InnerCheckbox = new SpriteRuntime();
                 InnerCheckbox.Width = 100f;
@@ -100,7 +99,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 TextInstance.ApplyState(Styling.Text.Normal);
-                this.Children.Add(TextInstance);
+                this.AddChild(TextInstance);
 
                 FocusedIndicator = new NineSliceRuntime();
                 FocusedIndicator.X = 0;
@@ -119,7 +118,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.Visible = false;
                 FocusedIndicator.Color = Styling.Colors.Warning;
                 FocusedIndicator.Name = "FocusedIndicator";
-                this.Children.Add(FocusedIndicator);
+                this.AddChild(FocusedIndicator);
 
                 var checkboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 checkboxCategory.Name = "CheckBoxCategory";
@@ -141,7 +140,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         Value = value
                     });
                 }
-
 
                 void AddVariablesFromIconVIsual(string parentObject, StateSave iconSaveState )
                 {
