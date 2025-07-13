@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This tutorial walks you through turning an empty MonoGame project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.&#x20;
+This tutorial walks you through turning an empty MonoGame project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
 
 This tutorial covers:
 
@@ -45,7 +45,7 @@ public class Game1 : Game
         Gum.Initialize(this);
             
         var mainPanel = new StackPanel();
-        mainPanel.Visual.AddToRoot();
+        mainPanel.AddToRoot();
         
         base.Initialize();
     }
@@ -113,13 +113,13 @@ public class Game1 : Game
 The code above includes the following sections:
 
 * Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
-* Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls.  By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` for the `StackPanel`.
+* Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls.  By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
-<pre class="language-csharp"><code class="lang-csharp">Gum.Initialize(this);
-            
-<strong>var mainPanel = new StackPanel();
-</strong>mainPanel.Visual.AddToRoot();
-</code></pre>
+```csharp
+Gum.Initialize(this);
+var mainPanel = new StackPanel();
+mainPanel.AddToRoot();
+```
 
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any forms components. For example, if a `Button` is added to the `StackPanel`, this code is responsible for checking if the cursor is overlapping the `Button` and adjusting the highlight/pressed state appropriately.
 
@@ -143,59 +143,61 @@ Now that we have Gum running, we can add controls to our `StackPanel` (`mainPane
 
 {% tabs %}
 {% tab title="Full Code" %}
-<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
+```csharp
+protected override void Initialize()
 {
     Gum.Initialize(this);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
 
-<strong>    // Creates a button instance
-</strong>    var button = new Button();
+    // Creates a button instance
+    var button = new Button();
     // Adds the button as a child so that it is drawn and has its
     // events raised
     mainPanel.AddChild(button);
     // Initial button text before being clicked
     button.Text = "Click Me";
     // Makes the button wider so the text fits
-    button.Visual.Width = 350;
+    button.Width = 350;
     // Click event can be handled with a lambda
     button.Click += (_, _) =>
         button.Text = $"Clicked at {System.DateTime.Now}";
 
     base.Initialize();
 }
-</code></pre>
+```
 {% endtab %}
 
 {% tab title="Diff" %}
-<pre class="language-diff"><code class="lang-diff">protected override void Initialize()
+```diff
+protected override void Initialize()
 {
     Gum.Initialize(this);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
 
-<strong>+   // Creates a button instance
-</strong>+   var button = new Button();
++   // Creates a button instance
++   var button = new Button();
 +   // Adds the button as a child so that it is drawn and has its
 +   // events raised
 +   mainPanel.AddChild(button);
 +   // Initial button text before being clicked
 +   button.Text = "Click Me";
 +   // Makes the button wider so the text fits
-+   button.Visual.Width = 350;
++   button.Width = 350;
 +   // Click event can be handled with a lambda
 +   button.Click += (_, _) =>
 +       button.Text = $"Clicked at {System.DateTime.Now}";
 
     base.Initialize();
 }
-</code></pre>
+```
 {% endtab %}
 {% endtabs %}
 
-<figure><img src="../../../../.gitbook/assets/11_07 52 42.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 03 09.gif" alt=""><figcaption></figcaption></figure>
 
 ## Conclusion
 

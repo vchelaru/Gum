@@ -61,24 +61,44 @@ public class Game1 : Game
 
 To test that you have successfully added Gum to the project, modify your Initialize method to add a rectangle:
 
+{% tabs %}
+{% tab title="Full Code" %}
 ```csharp
 protected override void Initialize()
 {
     Gum.Initialize(this);
 
-    var rectangle = new ColoredRectangleRuntime();
-    rectangle.Width = 100;
-    rectangle.Height = 100;
-    rectangle.Color = Color.White;
-    rectangle.AddToRoot();
+    var button = new Button();
+    button.AddToRoot();
+    button.Click += (_,_) =>
+        button.Text = "Clicked at\n" + DateTime.Now;
+
 
     base.Initialize();
 }
 ```
+{% endtab %}
 
-<figure><img src="../../../.gitbook/assets/image (25).png" alt=""><figcaption><p>White ColoredRectangleRuntime in game</p></figcaption></figure>
+{% tab title="Diff" %}
+```diff
+protected override void Initialize()
+{
+    Gum.Initialize(this);
 
-If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
++   var button = new Button();
++   button.AddToRoot();
++   button.Click += (_,_) =>
++       button.Text = "Clicked at\n" + DateTime.Now;
+
+    base.Initialize();
+}
+```
+{% endtab %}
+{% endtabs %}
+
+<figure><img src="../../../.gitbook/assets/13_06 56 07.gif" alt=""><figcaption></figcaption></figure>
+
+If everything is initialized correctly, you should see a clickable button at the top-left of the screen.
 
 ### Loading Gum Projects
 
