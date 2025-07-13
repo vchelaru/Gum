@@ -10,28 +10,26 @@ The following code adds items to a ListBox when a button is clicked. When an ite
 
 ```csharp
 var listBox = new ListBox();
-this.Root.Children.Add(listBox.Visual);
+listBox.AddToRoot();
 listBox.X = 50;
 listBox.Y = 50;
 listBox.Width = 400;
 listBox.Height = 200;
 
 var button = new Button();
-this.Root.Children.Add(button.Visual);
+button.AddToRoot();
 button.X = 50;
 button.Y = 270;
-button.Width = 200;
-button.Height = 40;
 button.Text = "Add to ListBox";
 button.Click += (s, e) =>
 {
-    var newItem = $"Item @ {DateTime.Now}";
+    var newItem = $"Item {listBox.Items.Count} @ {DateTime.Now}";
     listBox.Items.Add(newItem);
     listBox.ScrollIntoView(newItem);
 };
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_06 50 24.gif" alt=""><figcaption><p>Adding items to a ListBox by clicking a button</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 05 48.gif" alt=""><figcaption><p>Adding items to a ListBox by clicking a button</p></figcaption></figure>
 
 ## Selection
 
@@ -76,7 +74,7 @@ for(int i = 0; i < 10; i++)
 listBox.DragDropReorderMode = DragDropReorderMode.Immediate;
 ```
 
-<figure><img src="../../../../.gitbook/assets/09_04 59 13.gif" alt=""><figcaption><p>ListBoxItems reordering</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 06 43.gif" alt=""><figcaption><p>ListBoxItems reordering</p></figcaption></figure>
 
 ## Customizing with VisualTemplate
 
@@ -129,7 +127,7 @@ for (int i = 0; i < 20; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 07 53.png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
 
 Often you may want to add a list of items which should not use their ToString method. For example you may have a list of IDs which represent weapons in a dictionary. The display can be customized by inheriting from ListBoxItem as shown in the following code:
 

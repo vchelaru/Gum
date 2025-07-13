@@ -12,7 +12,7 @@ ListBoxItems can be implicitly instantiated by adding any type of object to a Li
 
 ```csharp
 var listBox = new ListBox();
-this.Root.Children.Add(listBox.Visual);
+listBox.AddToRoot();
 listBox.X = 50;
 listBox.Y = 50;
 listBox.Width = 400;

@@ -18,8 +18,8 @@ void SomeInitializationFunction()
     ...
     button = new Button();
     Root.Children.Add(button.Visual);
-    button.X = 0;
-    button.Y = 0;
+    button.X = 50;
+    button.Y = 50;
     button.Width = 100;
     button.Height = 50;
     button.Text = "Hello MonoGame!";
@@ -38,9 +38,9 @@ void HandleClick(object sender, EventArgs args)
 {% tab title="Lambda" %}
 ```csharp
 var button = new Button();
-Root.Children.Add(button.Visual);
-button.X = 0;
-button.Y = 0;
+button.AddToRoot();
+button.X = 50;
+button.Y = 50;
 button.Width = 100;
 button.Height = 50;
 button.Text = "Hello MonoGame!";
@@ -57,11 +57,11 @@ button.Click += (_, _) =>
 ```csharp
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_06 36 41 (1).gif" alt=""><figcaption><p>Button responding to clicks by incrementing clickCount</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 53 05.gif" alt=""><figcaption><p>Button responding to clicks by incrementing clickCount</p></figcaption></figure>
 
-## Clicking Programatically
+## Clicking Programmatically
 
-Clicking can be performed programatically by calling PerformClick. The following example shows how to click a button when the Enter key is pressed:
+Clicking can be performed programmatically by calling PerformClick. The following example shows how to click a button when the Enter key is pressed:
 
 ```csharp
 var keyboard = FormsUtilities.Keyboard;
