@@ -1171,8 +1171,9 @@ public class BitmapFont : IDisposable
                 // against the end of their line of
                 // of text. 
                 if ((isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
-                    // This should never happen in real development, but we want to check for this with unit tests:
-                    Texture != null) || char.IsWhiteSpace(character))
+                    // Texture being null should never happen in real development, but we want to check for this with unit tests:
+                    Texture != null) 
+                    || (isLast && char.IsWhiteSpace(character)))
                 {
                     //toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
                     toReturn += (characterInfo.PixelRight - characterInfo.PixelLeft) + characterInfo.XOffsetInPixels;
