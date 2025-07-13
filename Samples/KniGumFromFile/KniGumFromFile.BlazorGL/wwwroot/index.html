@@ -96,11 +96,13 @@
                 if ([32, 37, 38, 39, 40].indexOf(event.keyCode) > -1)
                     event.preventDefault();
             };
-            window.onmousewheel = function (event) {
-                // Prevent Mousewheel scrolling the outer page
-                // when running inside an iframe. e.g: itch.io embedding.
-                event.preventDefault();
-            }, { passive: false };
+			function preventScroll(event) {
+				// Prevent Mousewheel scrolling the outer page
+				// when running inside an iframe. e.g: itch.io embedding.
+				event.preventDefault();
+			}
+			window.onmousewheel = preventScroll;      // optional fallback for old browsers
+			window.addEventListener('wheel', preventScroll, { passive: false });
         </script>
 </body>
 

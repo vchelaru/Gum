@@ -12,8 +12,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using Gum.Services.Dialogs;
 
 namespace Gum.Services;
@@ -66,10 +65,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
         services.AddSingleton<ElementCommands>();
-        
-        services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
-        services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
-        services.AddSingleton<IDialogService, DialogService>();
+
+        services.AddDialogs();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.
@@ -92,5 +89,46 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         
         services.AddTransient<AddVariableViewModel>();
+    }
+
+    private static IServiceCollection AddDialogs(this IServiceCollection services)
+    {
+        services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
+        services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
+        services.AddSingleton<IDialogService, DialogService>();
+
+        services.ForEachConcreteTypeAssignableTo<DialogViewModel>(
+            typeof(GumBuilder).Assembly,
+            static (isp, type) => isp.AddTransient(type)
+        );
+
+        return services;
+    }
+}
+
+file static class ServiceCollectionHelpers
+{
+    public static IServiceCollection ForEachConcreteTypeAssignableTo<TBaseType>(
+        this IServiceCollection services,
+        Assembly assembly,
+        Action<IServiceCollection, Type> callback)
+    {
+        Type baseType = typeof(TBaseType);
+
+        IEnumerable<Type> closedTypes = assembly.DefinedTypes
+            .Where(t =>
+                t.IsClass &&
+                !t.IsAbstract &&
+                !t.IsGenericTypeDefinition &&
+                baseType.IsAssignableFrom(t) &&
+                t.DeclaredConstructors.Any(c => c.IsPublic && !c.IsStatic))
+            .Select(t => t.AsType());
+
+        foreach (Type type in closedTypes)
+        {
+            callback(services, type);
+        }
+
+        return services;
     }
 }

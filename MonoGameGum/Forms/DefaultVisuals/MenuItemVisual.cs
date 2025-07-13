@@ -15,13 +15,15 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 public class MenuItemVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
-    //public ContainerRuntime ContainerInstance { get; private set; }
+    public ContainerRuntime ContainerInstance { get; private set; }
     public TextRuntime TextInstance { get; private set; }
+
+    public TextRuntime SubmenuIndicatorInstance { get; private set; }
 
     public class MenuItemCategoryStates
     {
         public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
-        //        public StateSave Disabled { get; set; }
+        public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
         public StateSave Highlighted { get; set; } = new StateSave() { Name = FrameworkElement.HighlightedStateName };
         public StateSave Focused { get; set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
         public StateSave Selected { get; set; } = new StateSave() { Name = FrameworkElement.SelectedStateName };
@@ -60,24 +62,42 @@ public class MenuItemVisual : InteractiveGue
         Background.ApplyState(Styling.NineSlice.Solid);
         this.Children.Add(Background);
 
+        ContainerInstance = new ContainerRuntime();
+        ContainerInstance.Name = "ContainerInstance";
+        ContainerInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.LeftToRightStack;
+        ContainerInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);
+        ContainerInstance.Height = 0f;
+        ContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ContainerInstance.Width = 0f;
+        ContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        this.Children.Add(ContainerInstance);
+
         TextInstance = new TextRuntime();
         TextInstance.Name = "TextInstance";
         TextInstance.Text = "Menu Item";
-        TextInstance.X = 2;
+        TextInstance.Dock(Gum.Wireframe.Dock.Left);
+        TextInstance.X = 4;
         TextInstance.Y = 0;
-        TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        TextInstance.XOrigin = HorizontalAlignment.Center;
-        TextInstance.YOrigin = VerticalAlignment.Center;
-        TextInstance.Width = 2;
-        TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        TextInstance.Height = 0;
-        TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-        TextInstance.VerticalAlignment = VerticalAlignment.Center;
         TextInstance.Color = Styling.Colors.White;
         TextInstance.ApplyState(Styling.Text.Normal);
-        this.Children.Add(TextInstance);
+        TextInstance.Width = 2;
+        TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        TextInstance.Height = 2;
+        TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ContainerInstance.Children.Add(TextInstance);
+
+        SubmenuIndicatorInstance = new TextRuntime();
+        SubmenuIndicatorInstance.Name = "SubmenuIndicatorInstance";
+        SubmenuIndicatorInstance.Dock(Gum.Wireframe.Dock.Left);
+        SubmenuIndicatorInstance.X = 8;
+        SubmenuIndicatorInstance.Height = 0f;
+        SubmenuIndicatorInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        SubmenuIndicatorInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        SubmenuIndicatorInstance.Text = @">";
+        SubmenuIndicatorInstance.Width = 2f;
+        SubmenuIndicatorInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+        ContainerInstance.Children.Add(SubmenuIndicatorInstance);
 
         var menuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         menuItemCategory.Name = "MenuItemCategory";
@@ -92,17 +112,30 @@ public class MenuItemVisual : InteractiveGue
             });
         }
 
+        menuItemCategory.States.Add(States.Enabled);
         AddVariable(States.Enabled, "Background.Visible", true);
         AddVariable(States.Enabled, "Background.Color", Styling.Colors.DarkGray);
+        AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
 
+        menuItemCategory.States.Add(States.Disabled);
+        AddVariable(States.Disabled, "Background.Visible", true);
+        AddVariable(States.Disabled, "Background.Color", Styling.Colors.DarkGray);
+        AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
+
+        menuItemCategory.States.Add(States.Highlighted);
         AddVariable(States.Highlighted, "Background.Visible", true);
         AddVariable(States.Highlighted, "Background.Color", Styling.Colors.LightGray);
-        
+        AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.White);
+
+        menuItemCategory.States.Add(States.Selected);
         AddVariable(States.Selected, "Background.Visible", true);
         AddVariable(States.Selected, "Background.Color", Styling.Colors.Primary);
+        AddVariable(States.Selected, "TextInstance.Color", Styling.Colors.White);
 
+        menuItemCategory.States.Add(States.Focused);
         AddVariable(States.Focused, "Background.Visible", true);
         AddVariable(States.Focused, "Background.Color", Styling.Colors.DarkGray);
+        AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
 
         if (tryCreateFormsObject)
         {

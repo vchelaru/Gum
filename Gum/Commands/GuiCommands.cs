@@ -382,42 +382,6 @@ public class GuiCommands
 
     }
 
-    public void ShowAddStateWindow()
-    {
-        if (_selectedState.SelectedStateCategorySave == null && _selectedState.SelectedElement == null)
-        {
-            MessageBox.Show("You must first select an element or a behavior category to add a state");
-        }
-        else
-        {
-            var tiw = new CustomizableTextInputWindow();
-            tiw.Message = "Enter new state name:";
-            tiw.Title = "Add state";
-
-            if (tiw.ShowDialog() == true)
-            {
-                string name = tiw.Result;
-
-                if (!_nameVerifier.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
-                {
-                    _dialogService.ShowMessage(whyNotValid);
-                }
-                else
-                {
-                    using (_undoManager.RequestLock())
-                    {
-                        StateSave stateSave = _elementCommands.AddState(
-                            _selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, name);
-
-
-                        _selectedState.SelectedStateSave = stateSave;
-
-                    }
-                }
-            }
-        }
-    }
-
     public void ShowAddFolderWindow(TreeNode node)
     {
         var tiw = new CustomizableTextInputWindow();
