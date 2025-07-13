@@ -64,6 +64,10 @@ internal class DialogViewResolver : IDialogViewResolver
                         if (viewTypes.FirstOrDefault(type => vmType.Name == $"{type.Name}Model") is { } viewType)
                         {
                             types[vmType] = viewType;
+                        } 
+                        else if (typeof(GetUserStringDialogBaseViewModel).IsAssignableFrom(vmType) && !vmType.IsAbstract)
+                        {
+                            types[vmType] = typeof(GetUserStringDialogView);
                         }
 
                         return types;

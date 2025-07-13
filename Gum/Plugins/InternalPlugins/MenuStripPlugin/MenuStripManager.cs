@@ -8,8 +8,10 @@ using Gum.Gui.Forms;
 using System.Diagnostics;
 using ExCSS;
 using Gum.Commands;
+using Gum.Dialogs;
 using Gum.ToolCommands;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers
 {
@@ -21,6 +23,7 @@ namespace Gum.Managers
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
         private readonly EditCommands _editCommands;
+        private readonly IDialogService _dialogService;
 
         private MenuStrip _menuStrip;
 
@@ -54,6 +57,7 @@ namespace Gum.Managers
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _editCommands = Locator.GetRequiredService<EditCommands>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
         public void Initialize()
@@ -128,8 +132,7 @@ namespace Gum.Managers
                 GumCommands.Self.GuiCommands.ShowAddComponentWindow());
             Add(addToolStripMenuItem, "Instance", () =>
                 GumCommands.Self.GuiCommands.ShowAddInstanceWindow());
-            Add(addToolStripMenuItem, "State", () => 
-                GumCommands.Self.GuiCommands.ShowAddStateWindow());
+            Add(addToolStripMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
 
             // 
             // RemoveElementMenuItem
