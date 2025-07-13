@@ -99,10 +99,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 DropdownIndicator.YUnits = GeneralUnitType.PixelsFromSmall;
                 DropdownIndicator.XOrigin = HorizontalAlignment.Center;
                 DropdownIndicator.YOrigin = VerticalAlignment.Center;
-                DropdownIndicator.Width = 24f;
-                DropdownIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-                DropdownIndicator.Height = 24f;
-                DropdownIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+                DropdownIndicator.Width = 100f;
+                DropdownIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+                DropdownIndicator.Height = 100f;
+                DropdownIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
                 DropdownIndicator.Rotation = -90;
                 DropdownIndicator.Texture = uiSpriteSheetTexture;
                 DropdownIndicator.Color = Styling.Colors.Primary;
