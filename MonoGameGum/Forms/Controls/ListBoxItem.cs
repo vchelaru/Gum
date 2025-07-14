@@ -244,7 +244,7 @@ public class ListBoxItem : FrameworkElement
 
     public override string ToString()
     {
-        return coreText.RawText;
+        return coreText?.RawText ?? "ListBoxItem";
     }
 
     #endregion

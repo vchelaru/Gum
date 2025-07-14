@@ -380,7 +380,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
-        ListBoxItem item;
+        ListBoxItem? item = null;
         if (o is ListBoxItem)
         {
             // the user provided a list box item, so just use that directly instead of creating a new one
@@ -389,7 +389,16 @@ public class ListBox : ItemsControl, IInputReceiver
         else
         {
             var visual = CreateNewVisual(o);
-            item = CreateNewListBoxItem(visual);
+
+            if (visual is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject != null)
+            {
+                item = interactiveGue.FormsControlAsObject as ListBoxItem;
+            }
+
+            if(item == null)
+            {
+                item = CreateNewListBoxItem(visual);
+            }
             if(!string.IsNullOrEmpty(DisplayMemberPath))
             {
                 var display = o.GetType()
