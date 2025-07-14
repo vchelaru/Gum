@@ -130,7 +130,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 });
             }
 
-            void AddVariablesFromIconVIsual(StateSave state, string parentObject, StateSave iconSaveState )
+            void AddVariablesFromIconVisual(StateSave state, string parentObject, StateSave iconSaveState )
             {
                 foreach( var variable in iconSaveState.Variables )
                 {
@@ -147,7 +147,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 AddVariable(state, "CheckBoxBackground.Color", checkboxBackgroundColor);
                 AddVariable(state, "FocusedIndicator.Visible", isFocused);
                 AddVariable(state, "TextInstance.Color", textColor);
-                AddVariablesFromIconVIsual(state, "InnerCheck", iconSaveState);
+                AddVariablesFromIconVisual(state, "InnerCheck", iconSaveState);
             }
 
             AddState(States.EnabledOn, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, true, Styling.Icons.Check);
@@ -174,10 +174,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
             AddState(States.HighlightedFocusedOff, Styling.Colors.PrimaryLight, Styling.Colors.White, Styling.Colors.White, true, false, Styling.Icons.Check);
             AddState(States.HighlightedFocusedIndeterminate, Styling.Colors.PrimaryLight, Styling.Colors.White, Styling.Colors.White, true, true, Styling.Icons.Dash);
 
-            // Changed this to PrimarDark, unsure why we changed it to Primary.
-            AddState(States.PushedOn, Styling.Colors.PrimaryDark, Styling.Colors.White, Styling.Colors.White, false, true, Styling.Icons.Check);
-            AddState(States.PushedOff, Styling.Colors.PrimaryDark, Styling.Colors.White, Styling.Colors.White, false, false, Styling.Icons.Check);
-            AddState(States.PushedIndeterminate, Styling.Colors.PrimaryDark, Styling.Colors.White, Styling.Colors.White, false, true, Styling.Icons.Dash);
+            // PER V1 comment: // dark looks weird so staying with normal primary. This matches the default template
+            AddState(States.PushedOn, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, true, Styling.Icons.Check);
+            AddState(States.PushedOff, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, false, Styling.Icons.Check);
+            AddState(States.PushedIndeterminate, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, true, Styling.Icons.Dash);
 
             if (tryCreateFormsObject)
             {

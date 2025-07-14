@@ -23,310 +23,199 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public class TextBoxCategoryStates
         {
-            public StateSave Enabled { get; set; }
-            public StateSave Disabled { get; set; }
-            public StateSave Highlighted { get; set; }
-            public StateSave Focused { get; set; }
-            public StateSave SingleLineMode { get; set; }
-            public StateSave MultiLineMode { get; set; }
-            public StateSave MultiLineModeNoWrap { get; set; }
+            public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
+            public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
+            public StateSave Highlighted { get; set; } = new StateSave() { Name = FrameworkElement.HighlightedStateName };
+            public StateSave Focused { get; set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
+
+            // These next were combined into the single "states" variable per discussion
+            // But if we want we can always make this thing multi-layered with a "LineMode" sub-class.
+            public StateSave SingleLineMode { get; set; } = new StateSave() { Name = "Single" }; 
+            public StateSave MultiLineMode { get; set; } = new StateSave() { Name = "Multi" };
+            public StateSave MultiLineModeNoWrap { get; set; } = new StateSave() { Name = "MultiNoWrap" };
         }
 
         public TextBoxCategoryStates States;
 
         public TextBoxBaseVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
-            if (fullInstantiation)
+            States = new TextBoxCategoryStates();
+            Width = 100;
+            Height = 24;
+
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            Background.X = 0;
+            Background.Y = 0;
+            Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            Background.XOrigin = HorizontalAlignment.Center;
+            Background.YOrigin = VerticalAlignment.Center;
+            Background.Width = 0;
+            Background.Height = 0;
+            Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Color = Styling.Colors.DarkGray;
+            Background.Texture = uiSpriteSheetTexture;
+            Background.ApplyState(Styling.NineSlice.Bordered);
+            this.AddChild(Background);
+
+            ClipContainer = new ContainerRuntime();
+            ClipContainer.Name = "ClipContiner";
+            ClipContainer.Dock(Gum.Wireframe.Dock.Fill);
+            ClipContainer.ClipsChildren = true;
+            this.AddChild(ClipContainer);
+
+            SelectionInstance = new NineSliceRuntime();
+            SelectionInstance.Name = "SelectionInstance";
+            SelectionInstance.Color = Styling.Colors.Accent;
+            SelectionInstance.Height = -4f;
+            SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            SelectionInstance.Width = 7f;
+            SelectionInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            SelectionInstance.X = 15f;
+            SelectionInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            SelectionInstance.Y = 0f;
+            SelectionInstance.Texture = uiSpriteSheetTexture;
+            SelectionInstance.ApplyState(Styling.NineSlice.Solid);
+            ClipContainer.AddChild(SelectionInstance);
+
+            TextInstance = new TextRuntime();
+            TextInstance.Name = "TextInstance";
+            TextInstance.X = 4f;
+            TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            TextInstance.Y = 0f;
+            TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            TextInstance.Width = 0f;
+            TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            TextInstance.Height = -4f;
+            TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            TextInstance.VerticalAlignment = VerticalAlignment.Center;
+            TextInstance.Color = Styling.Colors.White;
+            TextInstance.ApplyState(Styling.Text.Normal);
+            TextInstance.Text = "";
+            ClipContainer.AddChild(TextInstance);
+
+            PlaceholderTextInstance = new TextRuntime();
+            PlaceholderTextInstance.Name = "PlaceholderTextInstance";
+            PlaceholderTextInstance.Red = 128;
+            PlaceholderTextInstance.Blue = 128;
+            PlaceholderTextInstance.Green = 128;
+            PlaceholderTextInstance.Height = -4f;
+            PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            PlaceholderTextInstance.Text = "Text Placeholder";
+            PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            PlaceholderTextInstance.Width = -8f;
+            PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
+            ClipContainer.AddChild(PlaceholderTextInstance);
+
+            CaretInstance = new SpriteRuntime();
+            CaretInstance.Name = "CaretInstance";
+            CaretInstance.Color = Styling.Colors.Primary;
+            CaretInstance.Height = 18f;
+            CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            CaretInstance.Texture = uiSpriteSheetTexture;
+            CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
+            CaretInstance.ApplyState(Styling.NineSlice.Solid);
+            CaretInstance.Width = 1f;
+            CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            CaretInstance.X = 4f;
+            CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            CaretInstance.Y = 0f;
+            CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            ClipContainer.AddChild(CaretInstance);
+
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
+            FocusedIndicator.Color = Styling.Colors.Warning;
+            FocusedIndicator.X = 0;
+            FocusedIndicator.Y = 2;
+            FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = VerticalAlignment.Top;
+            FocusedIndicator.Width = 0;
+            FocusedIndicator.Height = 2;
+            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+            FocusedIndicator.Visible = false;
+            this.AddChild(FocusedIndicator);
+
+            var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            textboxCategory.Name = CategoryName;
+            this.AddCategory(textboxCategory);
+
+            void AddVariable(StateSave state, string name, object value)
             {
-                States = new TextBoxCategoryStates();
-                Width = 100;
-                Height = 24;
-
-                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
-
-                Background = new NineSliceRuntime();
-                Background.Name = "Background";
-                Background.X = 0;
-                Background.Y = 0;
-                Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                Background.XOrigin = HorizontalAlignment.Center;
-                Background.YOrigin = VerticalAlignment.Center;
-                Background.Width = 0;
-                Background.Height = 0;
-                Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                Background.Color = Styling.Colors.DarkGray;
-                Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(Styling.NineSlice.Bordered);
-                this.AddChild(Background);
-
-                ClipContainer = new ContainerRuntime();
-                ClipContainer.Name = "ClipContiner";
-                ClipContainer.Dock(Gum.Wireframe.Dock.Fill);
-                ClipContainer.ClipsChildren = true;
-                this.AddChild(ClipContainer);
-
-                SelectionInstance = new NineSliceRuntime();
-                SelectionInstance.Name = "SelectionInstance";
-                SelectionInstance.Color = Styling.Colors.Accent;
-                SelectionInstance.Height = -4f;
-                SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                SelectionInstance.Width = 7f;
-                SelectionInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                SelectionInstance.X = 15f;
-                SelectionInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-                SelectionInstance.Y = 0f;
-                SelectionInstance.Texture = uiSpriteSheetTexture;
-                SelectionInstance.ApplyState(Styling.NineSlice.Solid);
-                ClipContainer.AddChild(SelectionInstance);
-
-                TextInstance = new TextRuntime();
-                TextInstance.Name = "TextInstance";
-                TextInstance.X = 4f;
-                TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-                TextInstance.Y = 0f;
-                TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                TextInstance.Width = 0f;
-                TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                TextInstance.Height = -4f;
-                TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                TextInstance.VerticalAlignment = VerticalAlignment.Center;
-                TextInstance.Color = Styling.Colors.White;
-                TextInstance.ApplyState(Styling.Text.Normal);
-                TextInstance.Text = "";
-                ClipContainer.AddChild(TextInstance);
-
-                PlaceholderTextInstance = new TextRuntime();
-                PlaceholderTextInstance.Name = "PlaceholderTextInstance";
-                PlaceholderTextInstance.Red = 128;
-                PlaceholderTextInstance.Blue = 128;
-                PlaceholderTextInstance.Green = 128;
-                PlaceholderTextInstance.Height = -4f;
-                PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                PlaceholderTextInstance.Text = "Text Placeholder";
-                PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                PlaceholderTextInstance.Width = -8f;
-                PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-                PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-                PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
-                ClipContainer.AddChild(PlaceholderTextInstance);
-
-                CaretInstance = new SpriteRuntime();
-                CaretInstance.Name = "CaretInstance";
-                CaretInstance.Color = Styling.Colors.Primary;
-                CaretInstance.Height = 18f;
-                CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                CaretInstance.Texture = uiSpriteSheetTexture;
-                CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-                CaretInstance.ApplyState(Styling.NineSlice.Solid);
-                CaretInstance.Width = 1f;
-                CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                CaretInstance.X = 4f;
-                CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-                CaretInstance.Y = 0f;
-                CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                ClipContainer.AddChild(CaretInstance);
-
-                FocusedIndicator = new NineSliceRuntime();
-                FocusedIndicator.Name = "FocusedIndicator";
-                FocusedIndicator.Color = Styling.Colors.Warning;
-                FocusedIndicator.X = 0;
-                FocusedIndicator.Y = 2;
-                FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-                FocusedIndicator.XOrigin = HorizontalAlignment.Center;
-                FocusedIndicator.YOrigin = VerticalAlignment.Top;
-                FocusedIndicator.Width = 0;
-                FocusedIndicator.Height = 2;
-                FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-                FocusedIndicator.Texture = uiSpriteSheetTexture;
-                FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
-                FocusedIndicator.Visible = false;
-                this.Children.Add(FocusedIndicator);
-
-                var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-                textboxCategory.Name = CategoryName;
-                this.AddCategory(textboxCategory);
-
-                StateSave currentState;
-
-                void AddState(string name)
+                state.Variables.Add(new VariableSave
                 {
-                    var state = new StateSave();
-                    state.Name = name;
-                    textboxCategory.States.Add(state);
-                    currentState = state;
-                }
-
-                void AddVariable(string name, object value)
-                {
-                    currentState.Variables.Add(new VariableSave
-                    {
-                        Name = name,
-                        Value = value
-                    });
-                }
-
-                AddState(FrameworkElement.EnabledStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("Background.Color", Styling.Colors.DarkGray);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Enabled = currentState;
-
-                AddState(FrameworkElement.DisabledStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.Gray);
-                AddVariable("Background.Color", Styling.Colors.DarkGray);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Disabled = currentState;
-
-                AddState(FrameworkElement.HighlightedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("Background.Color", Styling.Colors.Gray);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Highlighted = currentState;
-
-                AddState(FrameworkElement.FocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("Background.Color", Styling.Colors.DarkGray);
-                AddVariable("FocusedIndicator.Visible", true);
-                States.Focused = currentState;
-
-                var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-                lineModeCategory.Name = "LineModeCategory";
-                this.AddCategory(lineModeCategory);
-                var singleLineState = new StateSave()
-                {
-                    Name = "Single",
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "SelectionInstance.Height",
-                            Value = -4f
-                        },
-                        new ()
-                        {
-                            Name = "SelectionInstance.HeightUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToParent
-                        },
-                        new()
-                        {
-                            Name = "TextInstance.Width",
-                            Value = 0f
-                        },
-                        new()
-                        {
-                            Name = "TextInstance.WidthUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren
-                        },
-                        new ()
-                        {
-                            Name = "PlaceholderTextInstance.VerticalAlignment",
-                            Value = VerticalAlignment.Center
-                        },
-                        new ()
-                        {
-                            Name = "TextInstance.VerticalAlignment",
-                            Value = VerticalAlignment.Center
-                        }
-
-                    }
-                };
-
-                lineModeCategory.States.Add(singleLineState);
-                this.States.SingleLineMode = singleLineState;
-
-                var multiLineState = new StateSave()
-                {
-                    Name = "Multi",
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "SelectionInstance.Height",
-                            Value = 20f
-                        },
-                        new ()
-                        {
-                            Name = "SelectionInstance.HeightUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.Absolute
-                        },
-                        new()
-                        {
-                            Name = "TextInstance.Width",
-                            Value = -8f
-                        },
-                        new()
-                        {
-                            Name = "TextInstance.WidthUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToParent
-                        },
-                        new ()
-                        {
-                            Name = "PlaceholderTextInstance.VerticalAlignment",
-                            Value = VerticalAlignment.Top
-                        },
-                        new ()
-                        {
-                            Name = "TextInstance.VerticalAlignment",
-                            Value = VerticalAlignment.Top
-                        }
-                    }
-                };
-                lineModeCategory.States.Add(multiLineState);
-                this.States.MultiLineMode = multiLineState;
-
-                var multiLineNoWrapState = new StateSave()
-                {
-                    Name = "MultiNoWrap",
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "SelectionInstance.Height",
-                            Value = 20f
-                        },
-                        new ()
-                        {
-                            Name = "SelectionInstance.HeightUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.Absolute
-                        },
-                        new()
-                        {
-                            Name = "TextInstance.Width",
-                            Value = 0f
-                        },
-                        new()
-                        {
-                            Name = "TextInstance.WidthUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren
-                        },
-                        new ()
-                        {
-                            Name = "PlaceholderTextInstance.VerticalAlignment",
-                            Value = VerticalAlignment.Top
-                        },
-                        new ()
-                        {
-                            Name = "TextInstance.VerticalAlignment",
-                            Value = VerticalAlignment.Top
-                        }
-                    }
-                };
-                lineModeCategory.States.Add(multiLineNoWrapState);
-                this.States.MultiLineModeNoWrap = multiLineNoWrapState;
+                    Name = name,
+                    Value = value
+                });
             }
+
+            textboxCategory.States.Add(States.Enabled);
+            AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
+            AddVariable(States.Enabled, "Background.Color", Styling.Colors.DarkGray);
+            AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
+
+            textboxCategory.States.Add(States.Disabled);
+            AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
+            AddVariable(States.Disabled, "Background.Color", Styling.Colors.DarkGray);
+            AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
+
+            textboxCategory.States.Add(States.Highlighted);
+            AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.White);
+            AddVariable(States.Highlighted, "Background.Color", Styling.Colors.Gray);
+            AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
+
+            textboxCategory.States.Add(States.Focused);
+            AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
+            AddVariable(States.Focused, "Background.Color", Styling.Colors.DarkGray);
+            AddVariable(States.Focused, "FocusedIndicator.Visible", true);
+
+            var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            lineModeCategory.Name = "LineModeCategory";
+            this.AddCategory(lineModeCategory);
+
+            lineModeCategory.States.Add(States.SingleLineMode);
+            AddVariable(States.SingleLineMode, "SelectionInstance.Height", -4f);
+            AddVariable(States.SingleLineMode, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToParent);
+            AddVariable(States.SingleLineMode, "TextInstance.Width", 0f);
+            AddVariable(States.SingleLineMode, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+            AddVariable(States.SingleLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Center);
+            AddVariable(States.SingleLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Center);
+
+            lineModeCategory.States.Add(States.MultiLineMode);
+            AddVariable(States.MultiLineMode, "SelectionInstance.Height", 20f);
+            AddVariable(States.MultiLineMode, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.Absolute);
+            AddVariable(States.MultiLineMode, "TextInstance.Width", -8f);
+            AddVariable(States.MultiLineMode, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToParent);
+            AddVariable(States.MultiLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
+            AddVariable(States.MultiLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
+
+            lineModeCategory.States.Add(States.MultiLineModeNoWrap);
+            AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.Height", 20f);
+            AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.Absolute);
+            AddVariable(States.MultiLineModeNoWrap, "TextInstance.Width", 0f);
+            AddVariable(States.MultiLineModeNoWrap, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+            AddVariable(States.MultiLineModeNoWrap, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
+            AddVariable(States.MultiLineModeNoWrap, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
         }
     }
 }

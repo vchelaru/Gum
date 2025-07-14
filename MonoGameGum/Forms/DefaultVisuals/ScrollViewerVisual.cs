@@ -24,8 +24,8 @@ public class ScrollViewerVisual : InteractiveGue
 
     public void MakeSizedToChildren()
     {
-        this.Height = 0;
-        this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        Height = 0;
+        HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ClipContainerContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ClipContainerContainer.Height = 4;
@@ -33,8 +33,8 @@ public class ScrollViewerVisual : InteractiveGue
         ClipContainer.Height = 0;
         InnerPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-        this.Width = 0;
-        this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        Width = 0;
+        WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ClipContainerContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ClipContainerContainer.Width = 4;
@@ -46,82 +46,79 @@ public class ScrollViewerVisual : InteractiveGue
 
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        if (fullInstantiation)
-        {
-            this.Width = 150;
-            this.Height = 200;
+        Width = 150;
+        Height = 200;
 
-            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+        var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+        {
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            Background.Height = 0f;
+            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Width = 0f;
+            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.X = 0f;
+            Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            Background.XUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.Y = 0f;
+            Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            Background.YUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.Color = Styling.Colors.DarkGray;
+            Background.Texture = uiSpriteSheetTexture;
+            Background.ApplyState(Styling.NineSlice.Bordered);
+            this.AddChild(Background);
+
+            ScrollAndClipContainer = new ContainerRuntime();
+            ScrollAndClipContainer.Width = 0;
+            ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ScrollAndClipContainer.Height = 0;
+            ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            this.AddChild(ScrollAndClipContainer);
 
             {
-                Background = new NineSliceRuntime();
-                Background.Name = "Background";
-                Background.Height = 0f;
-                Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                Background.Width = 0f;
-                Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                Background.X = 0f;
-                Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-                Background.XUnits = GeneralUnitType.PixelsFromMiddle;
-                Background.Y = 0f;
-                Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-                Background.Color = Styling.Colors.DarkGray;
-                Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(Styling.NineSlice.Bordered);
-                this.Children.Add(Background);
+                VerticalScrollBarInstance = new ScrollBarVisual();
+                VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
+                VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
+                VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
+                VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+                VerticalScrollBarInstance.Height = 0;
+                VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ScrollAndClipContainer.AddChild(VerticalScrollBarInstance);
 
-                ScrollAndClipContainer = new ContainerRuntime();
-                ScrollAndClipContainer.Width = 0;
-                ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                ScrollAndClipContainer.Height = 0;
-                ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                this.Children.Add(ScrollAndClipContainer);
+                // ClipContainerContainer uses a ratio to fill available space,
+                // and the clip container is inside of that and adds its own margins
+                ClipContainerContainer = new ContainerRuntime();
+                ClipContainerContainer.Height = 0f;
+                ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ClipContainerContainer.Width = 1;
+                ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
+                ScrollAndClipContainer.AddChild(ClipContainerContainer);
 
                 {
-                    VerticalScrollBarInstance = new ScrollBarVisual();
-                    VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
-                    VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-                    VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-                    VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                    VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                    VerticalScrollBarInstance.Height = 0;
-                    VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                    ScrollAndClipContainer.Children.Add(VerticalScrollBarInstance);
-
-                    // ClipContainerContainer uses a ratio to fill available space,
-                    // and the clip container is inside of that and adds its own margins
-                    ClipContainerContainer = new ContainerRuntime();
-                    ClipContainerContainer.Height = 0f;
-                    ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                    ClipContainerContainer.Width = 1;
-                    ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
-                    ScrollAndClipContainer.Children.Add(ClipContainerContainer);
+                    ClipContainer = new ContainerRuntime();
+                    ClipContainer.Name = "ClipContainerInstance";
+                    ClipContainer.ClipsChildren = true;
+                    ClipContainer.Height = -4f;
+                    ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                    ClipContainer.Width = -4;
+                    ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                    ClipContainer.X = 2f;
+                    ClipContainer.Y = 2f;
+                    ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                    ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
+                    ClipContainerContainer.AddChild(ClipContainer);
 
                     {
-                        ClipContainer = new ContainerRuntime();
-                        ClipContainer.Name = "ClipContainerInstance";
-                        ClipContainer.ClipsChildren = true;
-                        ClipContainer.Height = -4f;
-                        ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                        ClipContainer.Width = -4;
-                        ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                        ClipContainer.X = 2f;
-                        ClipContainer.Y = 2f;
-                        ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                        ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
-                        ClipContainerContainer.Children.Add(ClipContainer);
-
-                        {
-                            InnerPanel = new ContainerRuntime();
-                            InnerPanel.Name = "InnerPanelInstance";
-                            InnerPanel.Height = 0f;
-                            InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                            InnerPanel.Width = 0f;
-                            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                            InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-                            ClipContainer.Children.Add(InnerPanel);
-                        }
+                        InnerPanel = new ContainerRuntime();
+                        InnerPanel.Name = "InnerPanelInstance";
+                        InnerPanel.Height = 0f;
+                        InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                        InnerPanel.Width = 0f;
+                        InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                        InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+                        ClipContainer.AddChild(InnerPanel);
                     }
                 }
             }

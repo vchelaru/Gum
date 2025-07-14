@@ -18,49 +18,46 @@ public class MenuVisual : InteractiveGue
 
     public MenuVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        if(fullInstantiation)
-        {
-            this.Width = 0;
-            this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            this.Height = 0;
-            this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            this.X = 0;
-            this.Y = 0;
+        X = 0;
+        Y = 0;
+        Width = 0;
+        WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        Height = 0;
+        HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
-            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+        var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-            Background.X = 0;
-            Background.Y = 0;
-            Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            Background.XOrigin = HorizontalAlignment.Center;
-            Background.YOrigin = VerticalAlignment.Center;
-            Background.Width = 0;
-            Background.Height = 0;
-            Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            Background.Color = Styling.Colors.DarkGray;
-            Background.Texture = uiSpriteSheetTexture;
-            Background.Visible = true;
-            Background.ApplyState(Styling.NineSlice.Solid);
-            this.Children.Add(Background);
+        Background = new NineSliceRuntime();
+        Background.Name = "Background";
+        Background.X = 0;
+        Background.Y = 0;
+        Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        Background.XOrigin = HorizontalAlignment.Center;
+        Background.YOrigin = VerticalAlignment.Center;
+        Background.Width = 0;
+        Background.Height = 0;
+        Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        Background.Color = Styling.Colors.DarkGray;
+        Background.Texture = uiSpriteSheetTexture;
+        Background.Visible = true;
+        Background.ApplyState(Styling.NineSlice.Solid);
+        this.AddChild(Background);
 
-            InnerPanelInstance = new ContainerRuntime();
-            InnerPanelInstance.Name = "InnerPanelInstance";
-            InnerPanelInstance.Height = 0f;
-            InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            InnerPanelInstance.Width = 0f;
-            InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            InnerPanelInstance.WrapsChildren = true;
-            InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-            InnerPanelInstance.StackSpacing = 2;
-            this.Children.Add(InnerPanelInstance);
+        InnerPanelInstance = new ContainerRuntime();
+        InnerPanelInstance.Name = "InnerPanelInstance";
+        InnerPanelInstance.Height = 0f;
+        InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        InnerPanelInstance.Width = 0f;
+        InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        InnerPanelInstance.WrapsChildren = true;
+        InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        InnerPanelInstance.StackSpacing = 2;
+        this.AddChild(InnerPanelInstance);
 
-            var menuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            menuCategory.Name = Menu.MenuCategoryState;
-        }
+        var menuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        menuCategory.Name = Menu.MenuCategoryState;
 
         if (tryCreateFormsObject)
         {

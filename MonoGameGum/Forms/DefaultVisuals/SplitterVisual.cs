@@ -16,21 +16,18 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
-            if(fullInstantiation)
-            {
-                Width = 8;
-                Height = 8;
+            Width = 8;
+            Height = 8;
 
-                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-                Background = new NineSliceRuntime();
-                Background.Name = "Background";
-                Background.Dock(Gum.Wireframe.Dock.Fill);
-                Background.Color = Styling.Colors.DarkGray;
-                Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(Styling.NineSlice.Bordered);
-                this.Children.Add(Background);
-            }
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            Background.Dock(Gum.Wireframe.Dock.Fill);
+            Background.Color = Styling.Colors.DarkGray;
+            Background.Texture = uiSpriteSheetTexture;
+            Background.ApplyState(Styling.NineSlice.Bordered);
+            this.AddChild(Background);
 
             if(tryCreateFormsObject)
             {
