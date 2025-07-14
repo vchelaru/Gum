@@ -157,7 +157,6 @@ public class ScrollBar : RangeBase
 
     private void HandleTrackPush(object sender, EventArgs args)
     {
-        System.Diagnostics.Debug.WriteLine("Thumb pushed");
         if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)
         {
             Value -= LargeChange;
