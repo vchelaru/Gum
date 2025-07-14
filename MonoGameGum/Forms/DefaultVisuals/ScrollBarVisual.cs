@@ -20,7 +20,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
         public ButtonVisual DownButtonInstance { get; private set; }
         public SpriteRuntime DownButtonIcon { get; private set; }
         public ContainerRuntime ThumbContainer {  get; private set; }
-        public NineSliceRuntime TrackBackground { get; private set; }
+        public NineSliceRuntime TrackInstance { get; private set; }
         public ButtonVisual ThumbInstance { get; private set; }
 
 
@@ -104,22 +104,22 @@ namespace MonoGameGum.Forms.DefaultVisuals
             ThumbContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
             this.AddChild(ThumbContainer);
 
-            TrackBackground = new NineSliceRuntime();
-            TrackBackground.Name = "TrackInstance";
-            TrackBackground.Height = 0f;
-            TrackBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            TrackBackground.Width = 0f;
-            TrackBackground.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            TrackBackground.X = 0f;
-            TrackBackground.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            TrackBackground.XUnits = GeneralUnitType.PixelsFromMiddle;
-            TrackBackground.Y = 0f;
-            TrackBackground.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TrackBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
-            TrackBackground.ApplyState(Styling.NineSlice.Solid);
-            TrackBackground.Color = Styling.Colors.Gray;
-            TrackBackground.Texture = uiSpriteSheetTexture;
-            ThumbContainer.AddChild(TrackBackground);
+            TrackInstance = new NineSliceRuntime();
+            TrackInstance.Name = "TrackInstance";
+            TrackInstance.Height = 0f;
+            TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TrackInstance.Width = 0f;
+            TrackInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TrackInstance.X = 0f;
+            TrackInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TrackInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            TrackInstance.Y = 0f;
+            TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            TrackInstance.ApplyState(Styling.NineSlice.Solid);
+            TrackInstance.Color = Styling.Colors.Gray;
+            TrackInstance.Texture = uiSpriteSheetTexture;
+            ThumbContainer.AddChild(TrackInstance);
 
             ThumbInstance = new ButtonVisual();
             ThumbInstance.Name = "ThumbInstance";
