@@ -104,6 +104,8 @@ public class ScrollViewer : FrameworkElement
         get => verticalScrollBar.Maximum;
     }
 
+    public ScrollBar? VerticalScrollBar => verticalScrollBar;
+
     #endregion
 
     #region Initialize
