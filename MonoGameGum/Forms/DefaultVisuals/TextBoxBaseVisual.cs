@@ -111,10 +111,11 @@ namespace MonoGameGum.Forms.DefaultVisuals
             PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             PlaceholderTextInstance.Text = "Text Placeholder";
             PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            PlaceholderTextInstance.Width = -8f;
-            PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            // We probably want to have this relative to children, otherwise placeholder wraps which is werid
+            PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            PlaceholderTextInstance.Width = 0f;
+            PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
             PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
