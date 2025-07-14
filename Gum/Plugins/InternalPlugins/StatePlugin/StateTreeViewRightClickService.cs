@@ -79,7 +79,7 @@ public class StateTreeViewRightClickService
                 AddMenuItem("Add State", () => _dialogService.Show<AddStateDialogViewModel>());
             }
 
-            AddMenuItem("Add Category", _gumCommands.GuiCommands.ShowAddCategoryWindow);
+            AddMenuItem("Add Category", () => _dialogService.Show<AddCategoryDialogViewModel>());
 
             if (_selectedState.SelectedStateSave != null)
             {

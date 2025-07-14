@@ -12,8 +12,9 @@ public abstract class GetUserStringDialogBaseViewModel : DialogViewModel
     public virtual string? Title { get => Get<string>(); set => Set(value); }
     public virtual string Message { get => Get<string>(); set => Set(value); }
     public string? Value { get => Get<string>(); set => Set(value); }
-    public string? Error { get => Get<string>(); private set => Set(value); }
+    public string? Error { get => Get<string>(); protected set => Set(value); }
     public bool PreSelect { get; protected set; }
+    public string? Prefix { get => Get<string>(); set => Set(value); }
     
     protected GetUserStringDialogBaseViewModel()
     {
@@ -42,7 +43,7 @@ public abstract class GetUserStringDialogBaseViewModel : DialogViewModel
     
     private static string? EnsureNotEmpty(string? value)
     {
-        return string.IsNullOrEmpty(value) ? "Cannot be empty." : null;
+        return string.IsNullOrWhiteSpace(value) ? "Cannot be empty." : null;
     }
 }
 
