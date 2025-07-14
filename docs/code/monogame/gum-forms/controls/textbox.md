@@ -127,9 +127,9 @@ A push+drag with the mouse selects the text between the start and the current lo
 
 <figure><img src="../../../../.gitbook/assets/13_10 01 46.gif" alt=""><figcaption><p>Push+drag to select text</p></figcaption></figure>
 
-Holding down the shift key and pressing the arrow keys adjusts the selection.
+Holding down the shift key and pressing the arrow keys adjusts the selection. CTRL+Shift+arrow selects the next or previous word.
 
-<figure><img src="../../../../.gitbook/assets/16_11 22 37.gif" alt=""><figcaption><p>Arrow keys + shift to select</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_05 58 31.gif" alt=""><figcaption><p>Arrow keys + shift to select</p></figcaption></figure>
 
 ## CaretIndex
 
@@ -168,41 +168,50 @@ textBox.CaretIndexChanged += (_, _) =>
     UpdateLabelToTextBox(label, textBox);
 };
 
-static void UpdateLabelToTextBox(Label label, TextBox textBox)
+void UpdateLabelToTextBox(Label label, TextBox textBox)
 {
     label.Text = "Text box text: " + textBox.Text + 
         " with caret index " + textBox.CaretIndex;
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/29_06 20 44.gif" alt=""><figcaption><p>CaretIndexChanged is invoked whenever the caret index changes, which updates the Label's text.</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_06 03 52.gif" alt=""><figcaption><p>CaretIndexChanged is invoked whenever the caret index changes, which updates the Label's text.</p></figcaption></figure>
 
 ## TextWrapping
 
 The `TextWrapping` property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
 
-<figure><img src="../../../../.gitbook/assets/16_11 32 07.gif" alt=""><figcaption><p>TextWrapping.NoWrap causes text to scroll</p></figcaption></figure>
+```csharp
+var textBox = new TextBox();
+textBox.AddToRoot();
+```
+
+<figure><img src="../../../../.gitbook/assets/14_06 09 11.gif" alt=""><figcaption><p><code>TextWrapping.NoWrap</code> causes text to scroll</p></figcaption></figure>
 
 If `TextWrapping` is set to `TextWrapping.Wrap`, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
 
 ```csharp
-wrappedTextBox.TextWrapping = TextWrapping.Wrap;
-// If you have set up your TextBox in code, you may need to make it taller:
-wrappedTextBox.Height = 140;
+ var wrappedTextBox = new TextBox();
+ wrappedTextBox.AddToRoot();
+ wrappedTextBox.TextWrapping = TextWrapping.Wrap;
+ // If you have set up your TextBox in code, you may need to make it taller:
+ wrappedTextBox.Height = 140;
 ```
 
-<figure><img src="../../../../.gitbook/assets/16_11 39 19.gif" alt=""><figcaption><p><code>TextWrapping.Wrap</code> causes text to wrap</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_06 11 31.gif" alt=""><figcaption><p><code>TextWrapping.Wrap</code> causes text to wrap</p></figcaption></figure>
 
 `AcceptsReturn` can be set to true to add newlines when the return (enter) key is pressed.
 
 ```csharp
+var wrappedTextBox = new TextBox();
+wrappedTextBox.AddToRoot();
 wrappedTextBox.TextWrapping = TextWrapping.Wrap;
 // If you have set up your TextBox in code, you may need to make it taller:
 wrappedTextBox.Height = 140;
 wrappedTextBox.AcceptsReturn = true;
 ```
 
-<figure><img src="../../../../.gitbook/assets/01_10 27 47.gif" alt=""><figcaption><p>Manually adding newlines by pressing the return (enter) key</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_06 12 55.gif" alt=""><figcaption><p>Manually adding newlines by pressing the return (enter) key</p></figcaption></figure>
 
 ## Extended Character Sets and Keyboards
 
