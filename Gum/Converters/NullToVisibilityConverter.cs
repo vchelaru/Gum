@@ -13,7 +13,7 @@ public class NullToVisibilityConverter : IValueConverter
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        bool isNull = value is null;
+        bool isNull = value is null || value is string s && string.IsNullOrEmpty(s);
 
         if (Invert)
             isNull = !isNull;

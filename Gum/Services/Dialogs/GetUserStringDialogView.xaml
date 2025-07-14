@@ -18,8 +18,21 @@
     <StackPanel>
         <TextBlock Text="{Binding Message}" 
                    TextWrapping="Wrap"/>
-        <TextBox x:Name="ValueTextBox" 
-                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" 
+                       Text="{Binding Prefix}" 
+                       VerticalAlignment="Center"
+                       Padding="0,0,4,0"
+                       Visibility="{Binding Prefix, Converter={StaticResource NullToVisibilityConverter}}"/>
+            <TextBox x:Name="ValueTextBox" 
+                     Grid.Column="1"
+                     Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
         <TextBlock Text="{Binding Error}" 
                    Margin="0,4,0,0" 
                    Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" 
