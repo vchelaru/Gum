@@ -227,7 +227,7 @@ public class StateSave
         }
     }
 
-    public VariableSave SetValue(string variableName, object valueToSet, string variableType)
+    public VariableSave SetValue(string variableName, object valueToSet, string? variableType = null)
     {
         VariableSave variableSave = GetVariableSave(variableName);
 
