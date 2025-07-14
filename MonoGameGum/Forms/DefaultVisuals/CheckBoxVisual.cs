@@ -110,7 +110,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.Height = 2;
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-            FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
             FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false;

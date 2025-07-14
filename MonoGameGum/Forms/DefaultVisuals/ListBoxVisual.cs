@@ -60,7 +60,6 @@ public class ListBoxVisual : InteractiveGue
             Background.Height = 0f;
             Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.Color = Styling.Colors.DarkGray;
-            Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
             Background.ApplyState(Styling.NineSlice.Bordered);
             this.Children.Add(Background);

@@ -57,7 +57,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 Background.Color = Styling.Colors.DarkGray;
-                Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 Background.Texture = uiSpriteSheetTexture;
                 Background.ApplyState(Styling.NineSlice.Bordered);
                 this.AddChild(Background);
@@ -79,7 +78,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 SelectionInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
                 SelectionInstance.Y = 0f;
-                SelectionInstance.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 SelectionInstance.Texture = uiSpriteSheetTexture;
                 SelectionInstance.ApplyState(Styling.NineSlice.Solid);
                 ClipContainer.AddChild(SelectionInstance);
@@ -152,7 +150,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 FocusedIndicator.Height = 2;
                 FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-                FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 FocusedIndicator.Texture = uiSpriteSheetTexture;
                 FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
                 FocusedIndicator.Visible = false;

@@ -64,7 +64,6 @@ public class RadioButtonVisual : InteractiveGue
             Background.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             Background.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             Background.Color = Styling.Colors.Primary;
-            Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
             Background.ApplyState(Styling.NineSlice.CircleBordered);
             this.Children.Add(Background);
@@ -110,7 +109,6 @@ public class RadioButtonVisual : InteractiveGue
             FocusedIndicator.Height = 2;
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-            FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
             FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false;

@@ -63,7 +63,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 NineSliceInstance.Height = 8f;
                 NineSliceInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 NineSliceInstance.Color = Styling.Colors.DarkGray;
-                NineSliceInstance.TextureAddress = Gum.Managers.TextureAddress.Custom;
                 NineSliceInstance.Texture = uiSpriteSheetTexture;
                 NineSliceInstance.ApplyState(Styling.NineSlice.Bordered);
                 TrackInstance.Children.Add(NineSliceInstance);

@@ -50,10 +50,9 @@ public class ButtonVisual : InteractiveGue
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Name = "Background";
-        Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.NineSlice.Bordered); 
-        this.Children.Add(Background);
+        this.AddChild(Background);
 
         TextInstance = new TextRuntime();
         TextInstance.X = 0;
@@ -70,7 +69,7 @@ public class ButtonVisual : InteractiveGue
         TextInstance.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
         TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
         TextInstance.ApplyState(Styling.Text.Normal);
-        this.Children.Add(TextInstance);
+        this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();
         FocusedIndicator.X = 0;
@@ -83,13 +82,12 @@ public class ButtonVisual : InteractiveGue
         FocusedIndicator.Height = 2;
         FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
         FocusedIndicator.Visible = false;
         FocusedIndicator.Color = Styling.Colors.Warning;
         FocusedIndicator.Name = "FocusedIndicator";
-        this.Children.Add(FocusedIndicator);
+        this.AddChild(FocusedIndicator);
 
         var buttonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         buttonCategory.Name = "ButtonCategory";

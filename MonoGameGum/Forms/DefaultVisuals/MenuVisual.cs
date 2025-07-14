@@ -42,7 +42,6 @@ public class MenuVisual : InteractiveGue
             Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.Color = Styling.Colors.DarkGray;
-            Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
             Background.Texture = uiSpriteSheetTexture;
             Background.Visible = true;
             Background.ApplyState(Styling.NineSlice.Solid);
