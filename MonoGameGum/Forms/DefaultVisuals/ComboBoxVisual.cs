@@ -24,177 +24,154 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public class ComboBoxCategoryStates
         {
-            public StateSave Enabled { get; set; }
-            public StateSave Disabled { get; set; }
-            public StateSave DisabledFocused { get; set; }
-            public StateSave Focused { get; set; }
-            public StateSave Highlighted { get; set; }
-            public StateSave HighlightedFocused { get; set; }
-            public StateSave Pushed { get; set; }
+            public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
+            public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
+            public StateSave DisabledFocused { get; set; } = new StateSave() { Name = FrameworkElement.DisabledFocusedStateName };
+            public StateSave Focused { get; set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
+            public StateSave Highlighted { get; set; } = new StateSave() { Name = FrameworkElement.HighlightedStateName };
+            public StateSave HighlightedFocused { get; set; } = new StateSave() { Name = FrameworkElement.HighlightedFocusedStateName };
+            public StateSave Pushed { get; set; } = new StateSave() { Name = FrameworkElement.PushedStateName };
         }
 
         public ComboBoxCategoryStates States;
 
         public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
-            if (fullInstantiation)
+            Height = 24f;
+            Width = 256f;
+
+            States = new ComboBoxCategoryStates();
+            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            Background.X = 0f;
+            Background.XUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.Y = 0f;
+            Background.YUnits = GeneralUnitType.PixelsFromMiddle;
+            Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            Background.Width = 0f;
+            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Height = 0f;
+            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            Background.Color = Styling.Colors.DarkGray;
+            Background.Texture = uiSpriteSheetTexture;
+            Background.ApplyState(Styling.NineSlice.Bordered);
+            this.AddChild(Background);
+
+            TextInstance = new TextRuntime();
+            TextInstance.Name = "TextInstance";
+            TextInstance.Text = "Selected Item";
+            TextInstance.X = 0f;
+            TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            TextInstance.Y = 0f;
+            TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.Width = -8f;
+            TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TextInstance.Height = 0;
+            TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.Color = Styling.Colors.White;
+            TextInstance.ApplyState(Styling.Text.Strong);
+            this.AddChild(TextInstance);
+
+            ListBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
+            ListBoxInstance.Name = "ListBoxInstance";
+            ListBoxInstance.Y = 28f;
+            ListBoxInstance.Width = 0f;
+            ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ListBoxInstance.Height = 128f;
+            ListBoxInstance.Visible = false;
+            this.AddChild(ListBoxInstance);
+
+            DropdownIndicator = new SpriteRuntime();
+            DropdownIndicator.Name = "DropdownIndicator";
+            DropdownIndicator.X = -12f;
+            DropdownIndicator.XUnits = GeneralUnitType.PixelsFromLarge;
+            DropdownIndicator.Y = 12f;
+            DropdownIndicator.YUnits = GeneralUnitType.PixelsFromSmall;
+            DropdownIndicator.XOrigin = HorizontalAlignment.Center;
+            DropdownIndicator.YOrigin = VerticalAlignment.Center;
+            DropdownIndicator.Width = 100f;
+            DropdownIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            DropdownIndicator.Height = 100f;
+            DropdownIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            DropdownIndicator.Rotation = -90;
+            DropdownIndicator.Texture = uiSpriteSheetTexture;
+            DropdownIndicator.Color = Styling.Colors.Primary;
+            DropdownIndicator.ApplyState(Styling.Icons.Arrow2);
+            this.AddChild(DropdownIndicator);
+
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
+            FocusedIndicator.X = 0;
+            FocusedIndicator.Y = 2;
+            FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = VerticalAlignment.Top;
+            FocusedIndicator.Width = 0;
+            FocusedIndicator.Height = 2;
+            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+            FocusedIndicator.Visible = false;
+            FocusedIndicator.Color = Styling.Colors.Warning;
+            this.AddChild(FocusedIndicator);
+
+            var comboBoxCategory = new StateSaveCategory();
+            comboBoxCategory.Name = "ComboBoxCategory";
+            this.AddCategory(comboBoxCategory);
+
+            void AddVariable(StateSave state, string name, object value)
             {
-                this.States = new ComboBoxCategoryStates();
-                var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
-
-                this.Height = 24f;
-                this.Width = 256f;
-
-                Background = new NineSliceRuntime();
-                Background.Name = "Background";
-                Background.X = 0f;
-                Background.XUnits = GeneralUnitType.PixelsFromMiddle;
-                Background.Y = 0f;
-                Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-                Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-                Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                Background.Width = 0f;
-                Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                Background.Height = 0f;
-                Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                Background.Color = Styling.Colors.DarkGray;
-                Background.TextureAddress = Gum.Managers.TextureAddress.Custom;
-                Background.Texture = uiSpriteSheetTexture;
-                Background.ApplyState(Styling.NineSlice.Bordered);
-                this.Children.Add(Background);
-
-                TextInstance = new TextRuntime();
-                TextInstance.Name = "TextInstance";
-                TextInstance.Text = "Selected Item";
-                TextInstance.X = 0f;
-                TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-                TextInstance.Y = 0f;
-                TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-                TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                TextInstance.Width = -8f;
-                TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                TextInstance.Height = 0;
-                TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                TextInstance.Color = Styling.Colors.White;
-                TextInstance.ApplyState(Styling.Text.Strong);
-                this.Children.Add(TextInstance);
-
-                ListBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
-                ListBoxInstance.Name = "ListBoxInstance";
-                ListBoxInstance.Y = 28f;
-                ListBoxInstance.Width = 0f;
-                ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                ListBoxInstance.Height = 128f;
-                ListBoxInstance.Visible = false;
-                this.Children.Add(ListBoxInstance);
-
-                DropdownIndicator = new SpriteRuntime();
-                DropdownIndicator.Name = "DropdownIndicator";
-                DropdownIndicator.X = -12f;
-                DropdownIndicator.XUnits = GeneralUnitType.PixelsFromLarge;
-                DropdownIndicator.Y = 12f;
-                DropdownIndicator.YUnits = GeneralUnitType.PixelsFromSmall;
-                DropdownIndicator.XOrigin = HorizontalAlignment.Center;
-                DropdownIndicator.YOrigin = VerticalAlignment.Center;
-                DropdownIndicator.Width = 100f;
-                DropdownIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-                DropdownIndicator.Height = 100f;
-                DropdownIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-                DropdownIndicator.Rotation = -90;
-                DropdownIndicator.Texture = uiSpriteSheetTexture;
-                DropdownIndicator.Color = Styling.Colors.Primary;
-                DropdownIndicator.ApplyState(Styling.Icons.Arrow2);
-                this.Children.Add(DropdownIndicator);
-
-                FocusedIndicator = new NineSliceRuntime();
-                FocusedIndicator.X = 0;
-                FocusedIndicator.Y = 0;
-                FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-                FocusedIndicator.XOrigin = HorizontalAlignment.Center;
-                FocusedIndicator.YOrigin = VerticalAlignment.Center;
-                FocusedIndicator.Width = -4;
-                FocusedIndicator.Height = -4;
-                FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                FocusedIndicator.Color = Styling.Colors.White;
-                FocusedIndicator.Visible = false;
-                FocusedIndicator.Name = "FocusedIndicator";
-                FocusedIndicator.TextureAddress = Gum.Managers.TextureAddress.Custom;
-                FocusedIndicator.Texture = uiSpriteSheetTexture;
-                FocusedIndicator.ApplyState(Styling.NineSlice.Bordered);
-                this.Children.Add(FocusedIndicator);
-
-                var comboBoxCategory = new StateSaveCategory();
-                comboBoxCategory.Name = "ComboBoxCategory";
-                this.AddCategory(comboBoxCategory);
-
-                StateSave currentState;
-
-                void AddState(string name)
+                state.Variables.Add(new VariableSave
                 {
-                    var state = new StateSave();
-                    state.Name = name;
-                    comboBoxCategory.States.Add(state);
-                    currentState = state;
-                }
-
-                void AddVariable(string name, object value)
-                {
-                    currentState.Variables.Add(new VariableSave
-                    {
-                        Name = name,
-                        Value = value
-                    });
-                }
-
-
-                AddState(FrameworkElement.EnabledStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.Primary);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Enabled = currentState;
-
-                AddState(FrameworkElement.DisabledStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.Gray);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.Gray);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Disabled = currentState;
-
-                AddState(FrameworkElement.DisabledFocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.Gray);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.Gray);
-                AddVariable("FocusedIndicator.Visible", true);
-                States.DisabledFocused = currentState;
-
-                AddState(FrameworkElement.FocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.White);
-                AddVariable("FocusedIndicator.Visible", true);
-                States.Focused = currentState;
-
-                AddState(FrameworkElement.HighlightedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.PrimaryLight);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryLight);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Highlighted = currentState;
-
-                AddState(FrameworkElement.HighlightedFocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.PrimaryLight);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryLight);
-                AddVariable("FocusedIndicator.Visible", true);
-                States.HighlightedFocused = currentState;
-
-                AddState(FrameworkElement.PushedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.PrimaryDark);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryDark);
-                AddVariable("FocusedIndicator.Visible", false);
-                States.Pushed = currentState;
-
+                    Name = name,
+                    Value = value
+                });
             }
+
+            comboBoxCategory.States.Add(States.Enabled);
+            AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
+            AddVariable(States.Enabled, "DropdownIndicator.Color", Styling.Colors.Primary);
+            AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
+
+            comboBoxCategory.States.Add(States.Disabled);
+            AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
+            AddVariable(States.Disabled, "DropdownIndicator.Color", Styling.Colors.Gray);
+            AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
+
+            comboBoxCategory.States.Add(States.DisabledFocused);
+            AddVariable(States.DisabledFocused, "TextInstance.Color", Styling.Colors.Gray);
+            AddVariable(States.DisabledFocused, "DropdownIndicator.Color", Styling.Colors.Gray);
+            AddVariable(States.DisabledFocused, "FocusedIndicator.Visible", true);
+
+            comboBoxCategory.States.Add(States.Focused);
+            AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
+            AddVariable(States.Focused, "DropdownIndicator.Color", Styling.Colors.White);
+            AddVariable(States.Focused, "FocusedIndicator.Visible", true);
+
+            comboBoxCategory.States.Add(States.Highlighted);
+            AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.PrimaryLight);
+            AddVariable(States.Highlighted, "DropdownIndicator.Color", Styling.Colors.PrimaryLight);
+            AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
+
+            comboBoxCategory.States.Add(States.HighlightedFocused);
+            AddVariable(States.HighlightedFocused, "TextInstance.Color", Styling.Colors.PrimaryLight);
+            AddVariable(States.HighlightedFocused, "DropdownIndicator.Color", Styling.Colors.PrimaryLight);
+            AddVariable(States.HighlightedFocused, "FocusedIndicator.Visible", true);
+
+            comboBoxCategory.States.Add(States.Pushed);
+            AddVariable(States.Pushed, "TextInstance.Color", Styling.Colors.PrimaryDark);
+            AddVariable(States.Pushed, "DropdownIndicator.Color", Styling.Colors.PrimaryDark);
+            AddVariable(States.Pushed, "FocusedIndicator.Visible", false);
+
             if (tryCreateFormsObject)
             {
                 FormsControlAsObject = new ComboBox(this);
