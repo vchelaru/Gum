@@ -21,6 +21,8 @@ public class ScrollBar : RangeBase
     Button upButton;
     Button downButton;
 
+    public Button? UpButton => upButton;
+    public Button? DownButton => downButton;
     public float MinimumThumbSize { get; set; } = 16;
 
     double viewportSize = .1;
