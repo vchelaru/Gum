@@ -1,6 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -30,6 +31,8 @@ public class MenuItemVisual : InteractiveGue
     }
 
     public MenuItemCategoryStates States;
+
+    public StateSaveCategory MenuItemCategory;
 
     public MenuItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -98,43 +101,32 @@ public class MenuItemVisual : InteractiveGue
 
         ContainerInstance.AddChild(SubmenuIndicatorInstance);
 
-        var menuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        menuItemCategory.Name = "MenuItemCategory";
-        this.AddCategory(menuItemCategory);
+        MenuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        MenuItemCategory.Name = "MenuItemCategory";
+        this.AddCategory(MenuItemCategory);
 
-        void AddVariable(StateSave currentState, string name, object value)
+        void AddVariable(StateSave state, string name, object value)
         {
-            currentState.Variables.Add(new VariableSave
+            state.Variables.Add(new VariableSave
             {
                 Name = name,
                 Value = value
             });
         }
 
-        menuItemCategory.States.Add(States.Enabled);
-        AddVariable(States.Enabled, "Background.Visible", true);
-        AddVariable(States.Enabled, "Background.Color", Styling.Colors.DarkGray);
-        AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
+        void AddState(StateSave state, bool isBackgroundVisible, Color backgroundColor, Color textInstanceColor)
+        {
+            MenuItemCategory.States.Add(state);
+            AddVariable(state, "Background.Visible", isBackgroundVisible);
+            AddVariable(state, "Background.Color", backgroundColor);
+            AddVariable(state, "TextInstance.Color", textInstanceColor);
+        }
 
-        menuItemCategory.States.Add(States.Disabled);
-        AddVariable(States.Disabled, "Background.Visible", true);
-        AddVariable(States.Disabled, "Background.Color", Styling.Colors.DarkGray);
-        AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
-
-        menuItemCategory.States.Add(States.Highlighted);
-        AddVariable(States.Highlighted, "Background.Visible", true);
-        AddVariable(States.Highlighted, "Background.Color", Styling.Colors.LightGray);
-        AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.White);
-
-        menuItemCategory.States.Add(States.Selected);
-        AddVariable(States.Selected, "Background.Visible", true);
-        AddVariable(States.Selected, "Background.Color", Styling.Colors.Primary);
-        AddVariable(States.Selected, "TextInstance.Color", Styling.Colors.White);
-
-        menuItemCategory.States.Add(States.Focused);
-        AddVariable(States.Focused, "Background.Visible", true);
-        AddVariable(States.Focused, "Background.Color", Styling.Colors.DarkGray);
-        AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
+        AddState(States.Enabled, false, Styling.Colors.DarkGray, Styling.Colors.White);
+        AddState(States.Disabled, false, Styling.Colors.DarkGray, Styling.Colors.Gray);
+        AddState(States.Highlighted, true, Styling.Colors.LightGray, Styling.Colors.White);
+        AddState(States.Selected, true, Styling.Colors.Primary, Styling.Colors.White);
+        AddState(States.Focused, false, Styling.Colors.DarkGray, Styling.Colors.White);
 
         if (tryCreateFormsObject)
         {

@@ -37,6 +37,8 @@ public class ListBoxVisual : InteractiveGue
 
     public ListBoxCategoryStates States;
 
+    public StateSaveCategory ListBoxCategory;
+
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 150;
@@ -142,9 +144,9 @@ public class ListBoxVisual : InteractiveGue
         InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         ClipContainerInstance.Children.Add(InnerPanelInstance);
 
-        var listBoxCategory = new StateSaveCategory();
-        listBoxCategory.Name = "ListBoxCategory";
-        this.AddCategory(listBoxCategory);
+        ListBoxCategory = new StateSaveCategory();
+        ListBoxCategory.Name = "ListBoxCategory";
+        this.AddCategory(ListBoxCategory);
 
         void AddVariable(StateSave state, string name, object value)
         {
@@ -155,25 +157,27 @@ public class ListBoxVisual : InteractiveGue
             });
         }
 
-        listBoxCategory.States.Add(States.Enabled);
+        // If the set of variables increases, create an AddState void method similar to tghe other V2s.
+
+        ListBoxCategory.States.Add(States.Enabled);
         AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
 
-        listBoxCategory.States.Add(States.Disabled);
+        ListBoxCategory.States.Add(States.Disabled);
         AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
 
-        listBoxCategory.States.Add(States.DisabledFocused);
+        ListBoxCategory.States.Add(States.DisabledFocused);
         AddVariable(States.DisabledFocused, "FocusedIndicator.Visible", true);
 
-        listBoxCategory.States.Add(States.Focused);
+        ListBoxCategory.States.Add(States.Focused);
         AddVariable(States.Focused, "FocusedIndicator.Visible", true);
 
-        listBoxCategory.States.Add(States.Highlighted);
+        ListBoxCategory.States.Add(States.Highlighted);
         AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
 
-        listBoxCategory.States.Add(States.HighlightedFocused);
+        ListBoxCategory.States.Add(States.HighlightedFocused);
         AddVariable(States.HighlightedFocused, "FocusedIndicator.Visible", true);
 
-        listBoxCategory.States.Add(States.Pushed);
+        ListBoxCategory.States.Add(States.Pushed);
         AddVariable(States.Pushed, "FocusedIndicator.Visible", false);
 
         if (tryCreateFormsObject)
