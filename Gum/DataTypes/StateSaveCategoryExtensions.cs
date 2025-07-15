@@ -16,5 +16,19 @@ namespace Gum.DataTypes.Variables;
 
 public static class StateSaveCategoryExtensions
 {
+    public static void SetValues(this StateSaveCategory category, string name, object value)
+    {
+        foreach(var state in category.States)
+        {
+            state.SetValue(name, value);
+        }
+    }
 
+    public static void RemoveValues(this StateSaveCategory category, string name)
+    {
+        foreach(var state in category.States)
+        {
+            state.RemoveValue(name);
+        }
+    }
 }
