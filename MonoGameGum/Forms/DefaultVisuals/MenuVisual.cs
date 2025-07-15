@@ -61,7 +61,7 @@ public class MenuVisual : InteractiveGue
 
         MenuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         MenuCategory.Name = Menu.MenuCategoryState;
-        this.Categories.Add(MenuCategory);
+        this.AddCategory(MenuCategory);
 
         if (tryCreateFormsObject)
         {
