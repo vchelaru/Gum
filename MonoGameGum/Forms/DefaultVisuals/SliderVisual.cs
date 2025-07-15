@@ -32,6 +32,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public SliderCategoryStates States;
 
+        public StateSaveCategory SliderCategory { get; private set; }
+
         public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
 
@@ -94,41 +96,41 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.Visible = false;
             this.AddChild(FocusedIndicator);
 
-            var sliderCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            sliderCategory.Name = "SliderCategory";
-            this.AddCategory(sliderCategory);
+            SliderCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            SliderCategory.Name = "SliderCategory";
+            this.AddCategory(SliderCategory);
 
-            void AddVariable(StateSave currentState, string name, object value)
+            void AddVariable(StateSave state, string name, object value)
             {
-                currentState.Variables.Add(new VariableSave
+                state.Variables.Add(new VariableSave
                 {
                     Name = name,
                     Value = value
                 });
             }
 
-            sliderCategory.States.Add(States.Disabled);
+            SliderCategory.States.Add(States.Disabled);
             AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
             AddVariable(States.Disabled, "ThumbInstance.IsEnabled", false);
 
-            sliderCategory.States.Add(States.DisabledFocused);
+            SliderCategory.States.Add(States.DisabledFocused);
             AddVariable(States.DisabledFocused, "FocusedIndicator.Visible", true);
             AddVariable(States.DisabledFocused, "ThumbInstance.IsEnabled", false);
 
-            sliderCategory.States.Add(States.Enabled);
+            SliderCategory.States.Add(States.Enabled);
             AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
             AddVariable(States.Enabled, "ThumbInstance.IsEnabled", true);
 
-            sliderCategory.States.Add(States.Focused);
+            SliderCategory.States.Add(States.Focused);
             AddVariable(States.Focused, "FocusedIndicator.Visible", true);
 
-            sliderCategory.States.Add(States.Highlighted);
+            SliderCategory.States.Add(States.Highlighted);
             AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
 
-            sliderCategory.States.Add(States.HighlightedFocused);
+            SliderCategory.States.Add(States.HighlightedFocused);
             AddVariable(States.HighlightedFocused, "FocusedIndicator.Visible", true);
 
-            sliderCategory.States.Add(States.Pushed);
+            SliderCategory.States.Add(States.Pushed);
             AddVariable(States.Pushed, "FocusedIndicator.Visible", false);
 
             if(tryCreateFormsObject)

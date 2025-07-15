@@ -60,7 +60,7 @@ public class MenuVisual : InteractiveGue
         this.AddChild(InnerPanelInstance);
 
         MenuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        MenuCategory.Name = Menu.MenuCategoryState;
+        MenuCategory.Name = Menu.MenuCategoryStateName;
         this.AddCategory(MenuCategory);
 
         if (tryCreateFormsObject)
