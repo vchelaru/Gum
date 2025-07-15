@@ -35,6 +35,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public ComboBoxCategoryStates States;
 
+        public StateSaveCategory ComboBoxCategory;
+
         public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
             Height = 24f;
@@ -124,9 +126,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.Color = Styling.Colors.Warning;
             this.AddChild(FocusedIndicator);
 
-            var comboBoxCategory = new StateSaveCategory();
-            comboBoxCategory.Name = "ComboBoxCategory";
-            this.AddCategory(comboBoxCategory);
+            ComboBoxCategory = new StateSaveCategory();
+            ComboBoxCategory.Name = "ComboBoxCategory";
+            this.AddCategory(ComboBoxCategory);
 
             void AddVariable(StateSave state, string name, object value)
             {
@@ -137,40 +139,21 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 });
             }
 
-            comboBoxCategory.States.Add(States.Enabled);
-            AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
-            AddVariable(States.Enabled, "DropdownIndicator.Color", Styling.Colors.Primary);
-            AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
+            void AddState(StateSave state, Color dropdownIndicatorColor, Color textInstanceColor, bool isFocusedVisible)
+            {
+                ComboBoxCategory.States.Add(state);
+                AddVariable(state, "DropdownIndicator.Color", dropdownIndicatorColor);
+                AddVariable(state, "TextInstance.Color", textInstanceColor);
+                AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
+            }
 
-            comboBoxCategory.States.Add(States.Disabled);
-            AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
-            AddVariable(States.Disabled, "DropdownIndicator.Color", Styling.Colors.Gray);
-            AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
-
-            comboBoxCategory.States.Add(States.DisabledFocused);
-            AddVariable(States.DisabledFocused, "TextInstance.Color", Styling.Colors.Gray);
-            AddVariable(States.DisabledFocused, "DropdownIndicator.Color", Styling.Colors.Gray);
-            AddVariable(States.DisabledFocused, "FocusedIndicator.Visible", true);
-
-            comboBoxCategory.States.Add(States.Focused);
-            AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
-            AddVariable(States.Focused, "DropdownIndicator.Color", Styling.Colors.White);
-            AddVariable(States.Focused, "FocusedIndicator.Visible", true);
-
-            comboBoxCategory.States.Add(States.Highlighted);
-            AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.PrimaryLight);
-            AddVariable(States.Highlighted, "DropdownIndicator.Color", Styling.Colors.PrimaryLight);
-            AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
-
-            comboBoxCategory.States.Add(States.HighlightedFocused);
-            AddVariable(States.HighlightedFocused, "TextInstance.Color", Styling.Colors.PrimaryLight);
-            AddVariable(States.HighlightedFocused, "DropdownIndicator.Color", Styling.Colors.PrimaryLight);
-            AddVariable(States.HighlightedFocused, "FocusedIndicator.Visible", true);
-
-            comboBoxCategory.States.Add(States.Pushed);
-            AddVariable(States.Pushed, "TextInstance.Color", Styling.Colors.PrimaryDark);
-            AddVariable(States.Pushed, "DropdownIndicator.Color", Styling.Colors.PrimaryDark);
-            AddVariable(States.Pushed, "FocusedIndicator.Visible", false);
+            AddState(States.Enabled, Styling.Colors.Primary, Styling.Colors.White, false);
+            AddState(States.Disabled, Styling.Colors.Gray, Styling.Colors.Gray, false);
+            AddState(States.DisabledFocused, Styling.Colors.Gray, Styling.Colors.Gray, true);
+            AddState(States.Focused, Styling.Colors.White, Styling.Colors.White, true);
+            AddState(States.Highlighted, Styling.Colors.PrimaryLight, Styling.Colors.PrimaryLight, false);
+            AddState(States.HighlightedFocused, Styling.Colors.PrimaryLight, Styling.Colors.PrimaryLight, true);
+            AddState(States.Pushed, Styling.Colors.PrimaryDark, Styling.Colors.PrimaryDark, false);
 
             if (tryCreateFormsObject)
             {

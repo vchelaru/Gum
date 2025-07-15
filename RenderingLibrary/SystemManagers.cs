@@ -312,7 +312,7 @@ namespace RenderingLibrary
             var resourceName = $"{AssemblyPrefix}.{fontName}.fnt";
 
             var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, resourceName);
-            var defaultFontTexture = LoadEmberddedTexture2d($"{fontName}_0.png");
+            var defaultFontTexture = LoadEmbeddedTexture2d($"{fontName}_0.png");
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
             // qualify for Android:
@@ -321,9 +321,6 @@ namespace RenderingLibrary
             return bitmapFont;
         }
 
-        [Obsolete("Use LoadEmbeddedTexture2d, this has a typo")]
-        public Texture2D LoadEmberddedTexture2d(string embeddedTexture2dName) =>
-            LoadEmbeddedTexture2d(embeddedTexture2dName);
         /// <summary>
         /// Loads a texture into the Disposable cache from the Embedded Resource within the application.
         /// </summary>
