@@ -35,7 +35,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public ComboBoxCategoryStates States;
 
-        public StateSaveCategory ComboBoxCategory;
+        public StateSaveCategory ComboBoxCategory { get; private set; }
 
         public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {

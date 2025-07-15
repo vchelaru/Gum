@@ -37,7 +37,7 @@ public class ListBoxVisual : InteractiveGue
 
     public ListBoxCategoryStates States;
 
-    public StateSaveCategory ListBoxCategory;
+    public StateSaveCategory ListBoxCategory { get; private set; }
 
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {

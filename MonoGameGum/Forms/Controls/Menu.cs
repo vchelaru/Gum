@@ -23,7 +23,9 @@ public class Menu : ItemsControl
 {
     #region Fields/Properties
 
-    public const string MenuCategoryState = "MenuCategoryState";
+    [Obsolete("Use MenuCategoryStateName")]
+    public static string MenuCategoryState => MenuCategoryStateName;
+    public const string MenuCategoryStateName = "MenuCategoryState";
 
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 

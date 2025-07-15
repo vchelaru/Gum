@@ -1,4 +1,5 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -15,6 +16,8 @@ public class MenuVisual : InteractiveGue
 {
     public NineSliceRuntime Background {  get; private set; }
     public ContainerRuntime InnerPanelInstance { get; private set; }
+
+    public StateSaveCategory MenuCategory { get; private set; }
 
     public MenuVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -56,8 +59,9 @@ public class MenuVisual : InteractiveGue
         InnerPanelInstance.StackSpacing = 2;
         this.AddChild(InnerPanelInstance);
 
-        var menuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        menuCategory.Name = Menu.MenuCategoryState;
+        MenuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        MenuCategory.Name = Menu.MenuCategoryState;
+        this.Categories.Add(MenuCategory);
 
         if (tryCreateFormsObject)
         {

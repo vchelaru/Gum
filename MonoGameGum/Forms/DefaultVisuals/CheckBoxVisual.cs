@@ -17,14 +17,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
     public class CheckBoxVisual : InteractiveGue
     {
         public NineSliceRuntime CheckBoxBackground { get; private set; }
-
-        [Obsolete("Use InnerCheck instead; it matches the SpriteRuntime Name.")]
-        public SpriteRuntime InnerCheckbox
-        {
-            get => InnerCheck;
-            private set => InnerCheck = value;
-        }
-
         public SpriteRuntime InnerCheck { get; private set; }
         public TextRuntime TextInstance { get; private set; }
         public NineSliceRuntime FocusedIndicator { get; private set; }
@@ -57,7 +49,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public CheckBoxCategoryStates States;
 
-        public StateSaveCategory CheckboxCategory;
+        public StateSaveCategory CheckboxCategory { get; private set; }
 
         public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {

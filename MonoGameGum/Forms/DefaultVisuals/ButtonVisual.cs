@@ -30,7 +30,7 @@ public class ButtonVisual : InteractiveGue
 
     public ButtonCategoryStates States;
 
-    public StateSaveCategory ButtonCategory;
+    public StateSaveCategory ButtonCategory { get; private set; }
 
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {

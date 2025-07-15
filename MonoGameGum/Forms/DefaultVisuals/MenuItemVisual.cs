@@ -32,7 +32,7 @@ public class MenuItemVisual : InteractiveGue
 
     public MenuItemCategoryStates States;
 
-    public StateSaveCategory MenuItemCategory;
+    public StateSaveCategory MenuItemCategory { get; private set; }
 
     public MenuItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
