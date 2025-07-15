@@ -129,13 +129,13 @@ public class RadioButtonVisual : InteractiveGue
             });
         }
 
-        void AddState(StateSave state, Color checkboxBackgroundColor,
+        void AddState(StateSave state, Color backgroundColor,
             Color textColor, Color checkColor, bool isFocused, bool checkVisible)
         {
             RadioButtonCategory.States.Add(state);
             AddVariable(state, "InnerCheck.Visible", checkVisible);
             AddVariable(state, "InnerCheck.Color", checkColor);
-            AddVariable(state, "CheckBoxBackground.Color", checkboxBackgroundColor);
+            AddVariable(state, "Background.Color", backgroundColor);
             AddVariable(state, "FocusedIndicator.Visible", isFocused);
             AddVariable(state, "TextInstance.Color", textColor);
         }
