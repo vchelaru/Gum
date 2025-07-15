@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum Forms provide fully functional controls with minimal setup. These controls can be restyled in code, either per-instance, or globally per control type. Customization can be performed in-code or in the Gum tool.
+Gum Forms provide fully functional controls with minimal setup. These controls can be restyled in code through their Visual property.
 
 {% hint style="info" %}
 Gum NuGet packages 2025.7.14.1 and later introduce Version 2 Gum controls which make styling simpler. This documentation has been updated to use Version 2, and all new projects should use Version 2.
@@ -28,9 +28,9 @@ This document uses strongly-typed visuals wherever possible. Keep in mind that t
 
 * Your project is using Version 2 of the visuals. The version is specified in the GumServices.Initialize call.
 * Your project has not replaced the default visuals with its own visual type. This topic is discussed later in the document.
-* Your project is not using generated code for custom visuals, such as ButtonStandard. If your project is code-only, then this does not apply.
+* Your project is not using generated code for custom visuals, such as ButtonStandard.&#x20;
 
-Every type of control has a corresponding visual, where the name "Visual" is appended. For example, the following code shows how to obtain the Visual from a Button instance:
+Every type of control has a corresponding visual, where the name "Visual" is appended to the control type. For example, the following code shows how to obtain the Visual from a Button instance:
 
 ```csharp
 using MonoGameGum.Forms.DefaultVisuals;
@@ -53,7 +53,7 @@ customizedButton.AddToRoot();
 
 <figure><img src="../../../../.gitbook/assets/14_07 32 15.png" alt=""><figcaption></figcaption></figure>
 
-Our code above access the TextInstance visual which is of type TextRuntime. Components, such as Button, are ultimately made out of the following visual types:
+The code above access the TextInstance visual which is of type TextRuntime. Components, such as Button, are ultimately made out of the following visual types:
 
 * [CircleRuntime](../../../gum-code-reference/circleruntime.md)
 * [ColoredRectangleRuntime](../../../gum-code-reference/coloredrectangleruntime.md)
@@ -63,7 +63,7 @@ Our code above access the TextInstance visual which is of type TextRuntime. Comp
 * [SpriteRuntime](../../../gum-code-reference/spriteruntime/)
 * [TextRuntime](../../../gum-code-reference/textruntime/)
 
-For information on working with the individual components, click the links in the list above.
+For information on working with the individual visual types, click the links in the list above.
 
 ## Identifying State vs Direct Assignment Variables
 
@@ -96,18 +96,12 @@ Now the TextInstance has its Color set whenever the Enabled state is applied, in
 
 ## Removing Variables from States
 
-As shown above, individual variables can be modified through states by calling `SetValue`. Rather than modifying a single value, we can modify all states as well. For example, the following code removes all state variable assignments from a button.
+The code above shows how to modify a variable on a state. In some cases it may be easier to reset all states and build them up one by one. For example, the following code resets all states:
 
 <pre class="language-csharp"><code class="lang-csharp">var customizedButton = new Button();
 customizedButton.AddToRoot();
 var buttonVisual = (ButtonVisual)customizedButton.Visual;
-<strong>buttonVisual.States.Enabled.Clear();
-</strong><strong>buttonVisual.States.Focused.Clear();
-</strong><strong>buttonVisual.States.Disabled.Clear();
-</strong><strong>buttonVisual.States.DisabledFocused.Clear();
-</strong><strong>buttonVisual.States.Highlighted.Clear();
-</strong><strong>buttonVisual.States.HighlightedFocused.Clear();
-</strong><strong>buttonVisual.States.Pushed.Clear();
+<strong>buttonVisual.ButtonCategory.ResetAllStates();
 </strong></code></pre>
 
 After states are cleared, the button does not react visually to any interaction.
@@ -121,30 +115,18 @@ customizedButton.AddToRoot();
 <strong>customizedButton.Click += (_, _) =>
 </strong><strong>    customizedButton.Text = "Clicked!";
 </strong>var buttonVisual = (ButtonVisual)customizedButton.Visual;
-buttonVisual.States.Enabled.Clear();
-buttonVisual.States.Focused.Clear();
-buttonVisual.States.Disabled.Clear();
-buttonVisual.States.DisabledFocused.Clear();
-buttonVisual.States.Highlighted.Clear();
-buttonVisual.States.HighlightedFocused.Clear();
-buttonVisual.States.Pushed.Clear();
+buttonVisual.ButtonCategory.ResetAllStates();
 </code></pre>
 
 <figure><img src="../../../../.gitbook/assets/14_07 57 13.gif" alt=""><figcaption></figcaption></figure>
 
-States can be cleared and then modified after the clear to fully customize a button. For example, the following code changes the background color when the button is hovered and pushed:
+States can be reset and then modified after the clear to fully customize a button. For example, the following code changes the background color when the button is hovered and pushed:
 
 <pre class="language-csharp"><code class="lang-csharp">var customizedButton = new Button();
 customizedButton.AddToRoot();
 var buttonVisual = (ButtonVisual)customizedButton.Visual;
 
-buttonVisual.States.Enabled.Clear();
-buttonVisual.States.Focused.Clear();
-buttonVisual.States.Disabled.Clear();
-buttonVisual.States.DisabledFocused.Clear();
-buttonVisual.States.Highlighted.Clear();
-buttonVisual.States.HighlightedFocused.Clear();
-buttonVisual.States.Pushed.Clear();
+buttonVisual.ButtonCategory.ResetAllStates();
 
 <strong>buttonVisual.States.Enabled.SetValue(
 </strong><strong>    "Background.Color", Color.Orange);
@@ -261,7 +243,9 @@ var background = buttonVisual.Background;
 background.Texture = YourLoadedTexture;
 background.TextureAddress = TextureAddress.EntireTexture;
 
-// remove the colors from all states
+// reset all states
+buttonVisual.ButtonCategory.ResetAllStates();
+
 buttonVisual.States.Enabled.SetValue("Background.Color", Color.White);
 buttonVisual.States.Highlighted.SetValue("Background.Color", Color.White);
 buttonVisual.States.Pushed.SetValue("Background.Color", Color.Gray);
