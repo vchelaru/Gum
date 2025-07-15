@@ -32,14 +32,14 @@ public class Game1 : Game
     
     public Game1()
     {
-        _graphics = new GraphicsDeviceManager(this, DefaultVisualsVersion.V2);
+        _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }    
     
     protected override void Initialize()
     {
-        Gum.Initialize(this);
+        Gum.Initialize(this, DefaultVisualsVersion.V2);
         base.Initialize();
     }
 
