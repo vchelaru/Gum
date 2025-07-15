@@ -34,6 +34,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
             UpButtonIcon = new SpriteRuntime();
+            UpButtonIcon.Name = "UpButtonIcon";
             UpButtonIcon.X = 0f;
             UpButtonIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
             UpButtonIcon.Y = 0f;
@@ -63,6 +64,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             this.AddChild(UpButtonInstance);
 
             DownButtonIcon = new SpriteRuntime();
+            DownButtonIcon.Name = "DownButtonIcon";
             DownButtonIcon.X = 0f;
             DownButtonIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
             DownButtonIcon.Y = 0f;

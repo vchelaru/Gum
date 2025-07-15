@@ -17,7 +17,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
     public class CheckBoxVisual : InteractiveGue
     {
         public NineSliceRuntime CheckBoxBackground { get; private set; }
-        public SpriteRuntime InnerCheckbox { get; private set; }
+        public SpriteRuntime InnerCheck { get; private set; }
         public TextRuntime TextInstance { get; private set; }
         public NineSliceRuntime FocusedIndicator { get; private set; }
 
@@ -49,6 +49,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public CheckBoxCategoryStates States;
 
+        public StateSaveCategory CheckboxCategory { get; private set; }
 
         public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
@@ -69,20 +70,20 @@ namespace MonoGameGum.Forms.DefaultVisuals
             CheckBoxBackground.ApplyState(Styling.NineSlice.Bordered);
             this.AddChild(CheckBoxBackground);
 
-            InnerCheckbox = new SpriteRuntime();
-            InnerCheckbox.Width = 100f;
-            InnerCheckbox.Height = 100f;
-            InnerCheckbox.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            InnerCheckbox.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            InnerCheckbox.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            InnerCheckbox.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            InnerCheckbox.XOrigin = HorizontalAlignment.Center;
-            InnerCheckbox.YOrigin = VerticalAlignment.Center;
-            InnerCheckbox.Name = "InnerCheck";
-            InnerCheckbox.Color = Styling.Colors.White;
-            InnerCheckbox.Texture = uiSpriteSheetTexture;
-            InnerCheckbox.ApplyState(Styling.Icons.Check);
-            CheckBoxBackground.Children.Add(InnerCheckbox);
+            InnerCheck = new SpriteRuntime();
+            InnerCheck.Width = 100f;
+            InnerCheck.Height = 100f;
+            InnerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            InnerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            InnerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            InnerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            InnerCheck.XOrigin = HorizontalAlignment.Center;
+            InnerCheck.YOrigin = VerticalAlignment.Center;
+            InnerCheck.Name = "InnerCheck";
+            InnerCheck.Color = Styling.Colors.White;
+            InnerCheck.Texture = uiSpriteSheetTexture;
+            InnerCheck.ApplyState(Styling.Icons.Check);
+            CheckBoxBackground.Children.Add(InnerCheck);
 
             TextInstance = new TextRuntime();
             TextInstance.X = 0;
@@ -100,6 +101,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             this.AddChild(TextInstance);
 
             FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
             FocusedIndicator.X = 0;
             FocusedIndicator.Y = 2;
             FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
@@ -114,12 +116,11 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false;
             FocusedIndicator.Color = Styling.Colors.Warning;
-            FocusedIndicator.Name = "FocusedIndicator";
             this.AddChild(FocusedIndicator);
 
-            var checkboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            checkboxCategory.Name = "CheckBoxCategory";
-            this.AddCategory(checkboxCategory);
+            CheckboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            CheckboxCategory.Name = "CheckBoxCategory";
+            this.AddCategory(CheckboxCategory);
 
             void AddVariable(StateSave state, string name, object value)
             {
@@ -141,7 +142,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             void AddState(StateSave state, Color checkboxBackgroundColor,
                 Color textColor, Color checkColor, bool isFocused, bool checkVisible, StateSave iconSaveState)
             {
-                checkboxCategory.States.Add(state);
+                CheckboxCategory.States.Add(state);
                 AddVariable(state, "InnerCheck.Visible", checkVisible);
                 AddVariable(state, "InnerCheck.Color", checkColor);
                 AddVariable(state, "CheckBoxBackground.Color", checkboxBackgroundColor);

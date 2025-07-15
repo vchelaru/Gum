@@ -16,7 +16,7 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 public class RadioButtonVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
-    public SpriteRuntime InnerCheckbox { get; private set; }
+    public SpriteRuntime InnerCheck { get; private set; }
     public TextRuntime TextInstance { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
@@ -40,6 +40,8 @@ public class RadioButtonVisual : InteractiveGue
     }
 
     public RadioButtonCategoryStates States;
+
+    public StateSaveCategory RadioButtonCategory { get; private set; }
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -66,22 +68,23 @@ public class RadioButtonVisual : InteractiveGue
         Background.ApplyState(Styling.NineSlice.CircleBordered);
         this.AddChild(Background);
 
-        InnerCheckbox = new SpriteRuntime();
-        InnerCheckbox.Width = 100;
-        InnerCheckbox.Height = 100;
-        InnerCheckbox.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        InnerCheckbox.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        InnerCheckbox.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        InnerCheckbox.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        InnerCheckbox.XOrigin = HorizontalAlignment.Center;
-        InnerCheckbox.YOrigin = VerticalAlignment.Center;
-        InnerCheckbox.Name = "InnerCheck";
-        InnerCheckbox.Color = Styling.Colors.White;
-        InnerCheckbox.Texture = uiSpriteSheetTexture;
-        InnerCheckbox.ApplyState(Styling.Icons.Circle2);
-        Background.Children.Add(InnerCheckbox);
+        InnerCheck = new SpriteRuntime();
+        InnerCheck.Name = "InnerCheck";
+        InnerCheck.Width = 100;
+        InnerCheck.Height = 100;
+        InnerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        InnerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        InnerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        InnerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        InnerCheck.XOrigin = HorizontalAlignment.Center;
+        InnerCheck.YOrigin = VerticalAlignment.Center;
+        InnerCheck.Color = Styling.Colors.White;
+        InnerCheck.Texture = uiSpriteSheetTexture;
+        InnerCheck.ApplyState(Styling.Icons.Circle2);
+        Background.Children.Add(InnerCheck);
 
         TextInstance = new TextRuntime();
+        TextInstance.Name = "TextInstance";
         TextInstance.X = 0;
         TextInstance.Y = 0;
         TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
@@ -90,13 +93,13 @@ public class RadioButtonVisual : InteractiveGue
         TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
         TextInstance.Width = -28;
         TextInstance.Height = 0;
-        TextInstance.Name = "TextInstance";
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         TextInstance.ApplyState(Styling.Text.Normal);
         this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();
+        FocusedIndicator.Name = "FocusedIndicator";
         FocusedIndicator.X = 0;
         FocusedIndicator.Y = 2;
         FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
@@ -111,12 +114,11 @@ public class RadioButtonVisual : InteractiveGue
         FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
         FocusedIndicator.Visible = false;
         FocusedIndicator.Color = Styling.Colors.Warning;
-        FocusedIndicator.Name = "FocusedIndicator";
         this.AddChild(FocusedIndicator);
 
-        var radioButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        radioButtonCategory.Name = "RadioButtonCategory";
-        this.AddCategory(radioButtonCategory);
+        RadioButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        RadioButtonCategory.Name = "RadioButtonCategory";
+        this.AddCategory(RadioButtonCategory);
 
         void AddVariable(StateSave state, string name, object value)
         {
@@ -127,13 +129,13 @@ public class RadioButtonVisual : InteractiveGue
             });
         }
 
-        void AddState(StateSave state, Color checkboxBackgroundColor,
+        void AddState(StateSave state, Color backgroundColor,
             Color textColor, Color checkColor, bool isFocused, bool checkVisible)
         {
-            radioButtonCategory.States.Add(state);
+            RadioButtonCategory.States.Add(state);
             AddVariable(state, "InnerCheck.Visible", checkVisible);
             AddVariable(state, "InnerCheck.Color", checkColor);
-            AddVariable(state, "CheckBoxBackground.Color", checkboxBackgroundColor);
+            AddVariable(state, "Background.Color", backgroundColor);
             AddVariable(state, "FocusedIndicator.Visible", isFocused);
             AddVariable(state, "TextInstance.Color", textColor);
         }

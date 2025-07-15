@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+
 
 
 #if FRB
@@ -23,7 +25,10 @@ public class Menu : ItemsControl
 {
     #region Fields/Properties
 
-    public const string MenuCategoryState = "MenuCategoryState";
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Obsolete("Use MenuCategoryStateName")]
+    public static string MenuCategoryState => MenuCategoryStateName;
+    public const string MenuCategoryStateName = "MenuCategoryState";
 
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 

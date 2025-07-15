@@ -1,6 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -36,6 +37,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
         }
 
         public TextBoxCategoryStates States;
+        public StateSaveCategory TextboxCategory { get; private set; }
+        public StateSaveCategory LineModeCategory { get; private set; }
 
         public TextBoxBaseVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
@@ -157,9 +160,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.Visible = false;
             this.AddChild(FocusedIndicator);
 
-            var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            textboxCategory.Name = CategoryName;
-            this.AddCategory(textboxCategory);
+            TextboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            TextboxCategory.Name = CategoryName;
+            this.AddCategory(TextboxCategory);
 
             void AddVariable(StateSave state, string name, object value)
             {
@@ -170,31 +173,24 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 });
             }
 
-            textboxCategory.States.Add(States.Enabled);
-            AddVariable(States.Enabled, "TextInstance.Color", Styling.Colors.White);
-            AddVariable(States.Enabled, "Background.Color", Styling.Colors.DarkGray);
-            AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
+            void AddTextBoxCategoryState(StateSave state, Color backgroundColor, Color textInstanceColor, bool isFocusedVisible)
+            {
+                TextboxCategory.States.Add(state);
+                AddVariable(state, "Background.Color", backgroundColor);
+                AddVariable(state, "TextInstance.Color", textInstanceColor);
+                AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
+            }
 
-            textboxCategory.States.Add(States.Disabled);
-            AddVariable(States.Disabled, "TextInstance.Color", Styling.Colors.Gray);
-            AddVariable(States.Disabled, "Background.Color", Styling.Colors.DarkGray);
-            AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
+            AddTextBoxCategoryState(States.Enabled, Styling.Colors.DarkGray, Styling.Colors.White, false);
+            AddTextBoxCategoryState(States.Disabled, Styling.Colors.DarkGray, Styling.Colors.Gray, false);
+            AddTextBoxCategoryState(States.Highlighted, Styling.Colors.Gray, Styling.Colors.White, false);
+            AddTextBoxCategoryState(States.Focused, Styling.Colors.DarkGray, Styling.Colors.White, true);
 
-            textboxCategory.States.Add(States.Highlighted);
-            AddVariable(States.Highlighted, "TextInstance.Color", Styling.Colors.White);
-            AddVariable(States.Highlighted, "Background.Color", Styling.Colors.Gray);
-            AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
+            LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+            LineModeCategory.Name = "LineModeCategory";
+            this.AddCategory(LineModeCategory);
 
-            textboxCategory.States.Add(States.Focused);
-            AddVariable(States.Focused, "TextInstance.Color", Styling.Colors.White);
-            AddVariable(States.Focused, "Background.Color", Styling.Colors.DarkGray);
-            AddVariable(States.Focused, "FocusedIndicator.Visible", true);
-
-            var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            lineModeCategory.Name = "LineModeCategory";
-            this.AddCategory(lineModeCategory);
-
-            lineModeCategory.States.Add(States.SingleLineMode);
+            LineModeCategory.States.Add(States.SingleLineMode);
             AddVariable(States.SingleLineMode, "SelectionInstance.Height", -4f);
             AddVariable(States.SingleLineMode, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToParent);
             AddVariable(States.SingleLineMode, "TextInstance.Width", 0f);
@@ -202,7 +198,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             AddVariable(States.SingleLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Center);
             AddVariable(States.SingleLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Center);
 
-            lineModeCategory.States.Add(States.MultiLineMode);
+            LineModeCategory.States.Add(States.MultiLineMode);
             AddVariable(States.MultiLineMode, "SelectionInstance.Height", 20f);
             AddVariable(States.MultiLineMode, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.Absolute);
             AddVariable(States.MultiLineMode, "TextInstance.Width", -8f);
@@ -210,7 +206,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             AddVariable(States.MultiLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
             AddVariable(States.MultiLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
 
-            lineModeCategory.States.Add(States.MultiLineModeNoWrap);
+            LineModeCategory.States.Add(States.MultiLineModeNoWrap);
             AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.Height", 20f);
             AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.Absolute);
             AddVariable(States.MultiLineModeNoWrap, "TextInstance.Width", 0f);

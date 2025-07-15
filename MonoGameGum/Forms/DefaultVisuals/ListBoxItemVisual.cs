@@ -1,6 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -28,6 +29,8 @@ public class ListBoxItemVisual : InteractiveGue
     }
 
     public ListBoxItemCategoryStates States;
+
+    public StateSaveCategory ListBoxItemCategory { get; private set; }
 
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -92,9 +95,9 @@ public class ListBoxItemVisual : InteractiveGue
         FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
         this.AddChild(FocusedIndicator);
 
-        var listBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        listBoxItemCategory.Name = "ListBoxItemCategory";
-        this.AddCategory(listBoxItemCategory);
+        ListBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        ListBoxItemCategory.Name = "ListBoxItemCategory";
+        this.AddCategory(ListBoxItemCategory);
 
         void AddVariable(StateSave state, string name, object value)
         {
@@ -105,23 +108,22 @@ public class ListBoxItemVisual : InteractiveGue
             });
         }
 
-        listBoxItemCategory.States.Add(States.Enabled);
-        AddVariable(States.Enabled, "Background.Visible", false);
-        AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
+        void AddState(StateSave state, bool isBackgroundVisible, bool isFocusedVisible, Color? backgroundColor = null)
+        {
+            ListBoxItemCategory.States.Add(state);
+            AddVariable(state, "Background.Visible", isBackgroundVisible);
+            AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
 
-        listBoxItemCategory.States.Add(States.Highlighted);
-        AddVariable(States.Highlighted, "Background.Visible", true);
-        AddVariable(States.Highlighted, "Background.Color", Styling.Colors.Primary);
-        AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
+            if (backgroundColor != null)
+            {
+                AddVariable(state, "Background.Color", backgroundColor);
+            }
+        }
 
-        listBoxItemCategory.States.Add(States.Selected);
-        AddVariable(States.Selected, "Background.Visible", true);
-        AddVariable(States.Selected, "Background.Color", Styling.Colors.Accent);
-        AddVariable(States.Selected, "FocusedIndicator.Visible", false);
-
-        listBoxItemCategory.States.Add(States.Focused);
-        AddVariable(States.Focused, "Background.Visible", false);
-        AddVariable(States.Focused, "FocusedIndicator.Visible", true);
+        AddState(States.Enabled, false, false);
+        AddState(States.Highlighted, true, false, Styling.Colors.Primary);
+        AddState(States.Selected, true, false, Styling.Colors.Accent);
+        AddState(States.Focused, false, true);
 
         if (tryCreateFormsObject)
         {
