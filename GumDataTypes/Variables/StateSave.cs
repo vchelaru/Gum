@@ -44,7 +44,6 @@ public class StateSave
     [XmlIgnore]
     public Action Apply;
 
-    #region Methods
 
     public StateSave()
     {
@@ -231,12 +230,12 @@ public class StateSave
     {
         VariableSave variableSave = GetVariableSave(variableName);
 
-        if(variableSave == null)
+        if (variableSave == null)
         {
             variableSave = new VariableSave();
             variableSave.Name = variableName;
             variableSave.Type = variableType;
-            this.Variables.Add(variableSave);
+            Variables.Add(variableSave);
         }
 
         variableSave.Value = valueToSet;
@@ -244,20 +243,12 @@ public class StateSave
 
         return variableSave;
     }
-    public void RemoveValue(string variableName)
-    {
-        var variableSave = GetVariableSave(variableName);
-        if(variableSave != null)
-        {
-            Variables.Remove(variableSave);
-        }
-    }
 
     public override string ToString()
     {
         return this.Name + " in " + ParentContainer;
     }
 
-    #endregion
+
 
 }
