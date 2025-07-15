@@ -23,6 +23,7 @@ To initialize Gum, modify your Game project (such as Game1.cs) so that it includ
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
+using MonoGameGum.Forms;
 
 public class Game1 : Game
 {
@@ -31,7 +32,7 @@ public class Game1 : Game
     
     public Game1()
     {
-        _graphics = new GraphicsDeviceManager(this);
+        _graphics = new GraphicsDeviceManager(this, DefaultVisualsVersion.V2);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }    
@@ -66,7 +67,7 @@ To test that you have successfully added Gum to the project, modify your Initial
 ```csharp
 protected override void Initialize()
 {
-    Gum.Initialize(this);
+    Gum.Initialize(this, DefaultVisualsVersion.V2);
 
     var button = new Button();
     button.AddToRoot();
@@ -83,7 +84,7 @@ protected override void Initialize()
 ```diff
 protected override void Initialize()
 {
-    Gum.Initialize(this);
+    Gum.Initialize(this, DefaultVisualsVersion.V2);
 
 +   var button = new Button();
 +   button.AddToRoot();

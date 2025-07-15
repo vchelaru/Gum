@@ -140,6 +140,7 @@
 ## Code
 
 * [Gum Code Reference](code/gum-code-reference/README.md)
+  * [Gum Class Overview](code/gum-code-reference/gum-class-overview.md)
   * [AnimationRuntime](code/gum-code-reference/animationruntime.md)
   * [BitmapCharacterInfo](code/gum-code-reference/bitmapcharacterinfo.md)
   * [BitmapFont](code/gum-code-reference/bitmapfont.md)
@@ -149,7 +150,6 @@
   * [Component Runtimes](code/gum-code-reference/component-runtimes.md)
   * [ContainerRuntime](code/gum-code-reference/containerruntime.md)
   * [Cursor](code/gum-code-reference/cursor.md)
-  * [Gum Class Overview](code/gum-code-reference/gum-class-overview.md)
   * [DataUiGrid](code/gum-code-reference/datauigrid/README.md)
     * [Reflection](code/gum-code-reference/datauigrid/reflection.md)
     * [Categories](code/gum-code-reference/datauigrid/categories.md)

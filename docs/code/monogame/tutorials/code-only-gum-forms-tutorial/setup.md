@@ -25,6 +25,7 @@ Gum requires a few lines of code to get started. A simplified Game class with th
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
+using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 
 public class Game1 : Game
@@ -42,7 +43,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        Gum.Initialize(this);
+        Gum.Initialize(this, DefaultVisualsVersion.V2);
             
         var mainPanel = new StackPanel();
         mainPanel.AddToRoot();
@@ -68,6 +69,7 @@ public class Game1 : Game
 
 {% tab title="Diff" %}
 ```diff
++using MonoGameGum.Forms;
 +using MonoGameGum.Forms.Controls;
 
 public class Game1 : Game
@@ -85,7 +87,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-+       Gum.Initialize(this);
++       Gum.Initialize(this, DefaultVisualsVersion.V2);
             
 +       var mainPanel = new StackPanel();
 +       mainPanel.Visual.AddToRoot();
@@ -112,11 +114,11 @@ public class Game1 : Game
 
 The code above includes the following sections:
 
-* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
+* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Note that `DefaultVisualsVersion.V2` is passed as a second parameter, indicating that Version 2 of visuals are used. All new projects should use Version 2 rather than Version 1 as of July 2025.
 * Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls.  By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
 ```csharp
-Gum.Initialize(this);
+Gum.Initialize(this, DefaultVisualsVersion.V2);
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
 ```
@@ -146,7 +148,7 @@ Now that we have Gum running, we can add controls to our `StackPanel` (`mainPane
 ```csharp
 protected override void Initialize()
 {
-    Gum.Initialize(this);
+    Gum.Initialize(this, DefaultVisualsVersion.V2);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
@@ -173,7 +175,7 @@ protected override void Initialize()
 ```diff
 protected override void Initialize()
 {
-    Gum.Initialize(this);
+    Gum.Initialize(this, DefaultVisualsVersion.V2);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();

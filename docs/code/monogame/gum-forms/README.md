@@ -34,7 +34,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        Gum.Initialize(this);
+        Gum.Initialize(this, DefaultVisualsVersion.V2);
 
         var stackPanel = new StackPanel();
         stackPanel.AddToRoot();
