@@ -36,7 +36,7 @@ public static class StateSaveCategoryExtensions
     {
         foreach(var state in category.States)
         {
-            state.Variables.Clear();
+            state.Clear();
         }
     }
 }
