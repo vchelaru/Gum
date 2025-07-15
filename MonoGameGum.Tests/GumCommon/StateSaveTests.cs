@@ -14,27 +14,27 @@ public class StateSaveTests
     [Fact]
     public void SetValue_CreatesVariable()
     {
-        StateSave stateSave = new();
+        StateSave sut = new();
 
-        stateSave.SetValue("TestVariable", 1f);
+        sut.SetValue("TestVariable", 1f);
 
-        stateSave.Variables.Count.ShouldBe(1);
-        stateSave.Variables[0].Value.ShouldBe(1f);
-        stateSave.Variables[0].Name.ShouldBe("TestVariable");
+        sut.Variables.Count.ShouldBe(1);
+        sut.Variables[0].Value.ShouldBe(1f);
+        sut.Variables[0].Name.ShouldBe("TestVariable");
 
-        stateSave.SetValue("TestVariable", 2f);
-        stateSave.Variables.Count.ShouldBe(1);
-        stateSave.Variables[0].Value.ShouldBe(2f);
-        stateSave.Variables[0].Name.ShouldBe("TestVariable");
+        sut.SetValue("TestVariable", 2f);
+        sut.Variables.Count.ShouldBe(1);
+        sut.Variables[0].Value.ShouldBe(2f);
+        sut.Variables[0].Name.ShouldBe("TestVariable");
     }
 
     [Fact]
     public void RemoveValue_RemovesVariables()
     {
-        StateSave stateSave = new();
+        StateSave sut = new();
 
-        stateSave.SetValue("TestVariable", 1f);
-        stateSave.RemoveValue("TestVariable");
-        stateSave.Variables.Count.ShouldBe(0);
+        sut.SetValue("TestVariable", 1f);
+        sut.RemoveValue("TestVariable");
+        sut.Variables.Count.ShouldBe(0);
     }
 }
