@@ -31,4 +31,12 @@ public static class StateSaveCategoryExtensions
             state.RemoveValue(name);
         }
     }
+
+    public static void ResetAllStates(this StateSaveCategory category)
+    {
+        foreach(var state in category.States)
+        {
+            state.Variables.Clear();
+        }
+    }
 }
