@@ -244,6 +244,14 @@ public class StateSave
 
         return variableSave;
     }
+    public void RemoveValue(string variableName)
+    {
+        var variableSave = GetVariableSave(variableName);
+        if(variableSave != null)
+        {
+            Variables.Remove(variableSave);
+        }
+    }
 
     public override string ToString()
     {
