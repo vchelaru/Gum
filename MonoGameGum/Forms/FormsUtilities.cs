@@ -90,7 +90,7 @@ public class FormsUtilities
                 break;
             case DefaultVisualsVersion.V2:
 
-                Texture2D uiSpriteSheet = systemManagers.LoadEmberddedTexture2d("UISpriteSheet.png");
+                Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
                 Styling.ActiveStyle = new Styling(uiSpriteSheet);
 
                 TryAdd(typeof(Button), typeof(ButtonVisual));
