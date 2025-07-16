@@ -2,12 +2,12 @@
 using System;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
-using FlatRedBall.Forms.Input;
 
 
 
 
 #if FRB
+using FlatRedBall.Forms.Input;
 using MonoGameGum.Forms.Controls;
 
 using FlatRedBall.Gui;
