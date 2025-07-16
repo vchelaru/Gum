@@ -39,6 +39,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             Width = 128;
             Height = 24;
+            float sliderButtonWidth = 32f;
             States = new SliderCategoryStates();
             var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
@@ -48,7 +49,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             TrackInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TrackInstance.Width = -32f;
+            TrackInstance.Width = -sliderButtonWidth;
             TrackInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             TrackInstance.Height = 0f;
             TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -75,7 +76,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             ThumbInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             ThumbInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            ThumbInstance.Width = 32f;
+            ThumbInstance.Width = sliderButtonWidth;
             ThumbInstance.Height = 24f;
             ThumbInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             TrackInstance.AddChild(ThumbInstance);
@@ -89,7 +90,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             FocusedIndicator.XOrigin = HorizontalAlignment.Center;
             FocusedIndicator.YOrigin = VerticalAlignment.Top;
-            FocusedIndicator.Width = 0;
+            FocusedIndicator.Width = -sliderButtonWidth;
             FocusedIndicator.Height = 2;
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
