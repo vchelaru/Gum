@@ -78,7 +78,7 @@ public partial class InteractiveGue : BindableGue
     static IInputReceiver currentInputReceiver;
 
     
-    public static IInputReceiver CurrentInputReceiver
+    public static IInputReceiver? CurrentInputReceiver
     {
         get => currentInputReceiver;
         set
@@ -751,7 +751,16 @@ public interface IInputReceiver
     /// </summary>
     void OnFocusUpdate();
 
+    /// <summary>
+    /// Called every frame before OnFocusUpdate with the root-most control calling this first, then
+    /// down to its children. If this is handled, children do not recieve this event.
+    /// </summary>
+    /// <param name="args">Args, which if IsHandled is set to true prevent children from receiving this </param>
+    void OnFocusUpdatePreview(RoutedEventArgs args);
+
     void DoKeyboardAction(IInputReceiverKeyboard keyboard);
+
+    IInputReceiver? ParentInputReceiver { get; }
 }
 
 public enum InputDevice
@@ -846,8 +855,16 @@ public static class GueInteractiveExtensionMethods
         DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
     }
 
+    static List<IInputReceiver> previewList = new();
     public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
-    { 
+    {
+#if DEBUG
+        if(cursor == null)
+        {
+            throw new ArgumentNullException(nameof(cursor));
+        }
+#endif
+
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
         var windowOverBefore = cursor.WindowOver;
         var windowPushedBefore = cursor.WindowPushed;
@@ -943,8 +960,38 @@ public static class GueInteractiveExtensionMethods
         {
             var receiver = InteractiveGue.CurrentInputReceiver;
 
-            receiver.DoKeyboardAction(keyboard);
-            receiver.OnFocusUpdate();
+            previewList.Clear();
+            previewList.Add(receiver);
+
+
+            var parent = receiver.ParentInputReceiver;
+            while(parent != null)
+            {
+                previewList.Insert(0, parent);
+                parent = parent.ParentInputReceiver;
+            }
+
+            bool wasCancelled = false;
+            foreach(var toPreview in previewList)
+            {
+                var args = new RoutedEventArgs();
+                if(!wasCancelled)
+                {
+                    toPreview.OnFocusUpdatePreview(args);
+                    wasCancelled = args.Handled;
+
+                    if(wasCancelled)
+                    {
+                        break;
+                    }    
+                }
+            }
+
+            if(!wasCancelled)
+            {
+                receiver.DoKeyboardAction(keyboard);
+                receiver.OnFocusUpdate();
+            }
         }
     }
 }

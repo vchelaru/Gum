@@ -28,6 +28,67 @@ public class ButtonTests : BaseTestClass
     }
 
     [Fact]
+    public void UpdateState_ShouldSetPushed_IfPushedWithKeyboard()
+    {
+        bool wasApplied = false;
+        Button button = new();
+        button.IsFocused = true;
+
+        var buttonState = button.GetState(FrameworkElement.PushedStateName);
+        buttonState.Clear();
+        buttonState.Apply = () =>
+        {
+            // just to make sure it gets called
+            wasApplied = true;
+        };
+
+        var keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard
+            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+            .Returns(true);
+        keyboard
+            .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Enter))
+            .Returns(true);
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        button.OnFocusUpdate();
+        button.UpdateState();
+
+        wasApplied.ShouldBeTrue();
+    }
+
+
+    [Fact]
+    public void UpdateState_ShouldNotSetPushed_IfKeyboardDownNoPush()
+    {
+        bool wasApplied = false;
+        Button button = new();
+        button.IsFocused = true;
+
+        var buttonState = button.GetState(FrameworkElement.PushedStateName);
+        buttonState.Clear();
+        buttonState.Apply = () =>
+        {
+            // just to make sure it gets called
+            wasApplied = true;
+        };
+
+        var keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard
+            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+            .Returns(false);
+        keyboard
+            .Setup(k => k.KeyDown(Microsoft.Xna.Framework.Input.Keys.Enter))
+            .Returns(true);
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        button.OnFocusUpdate();
+        button.UpdateState();
+
+        wasApplied.ShouldBeFalse();
+    }
+
+    [Fact]
     public void OnFocusUpdate_ShouldClickOnEnter()
     {
         Button button = new ();

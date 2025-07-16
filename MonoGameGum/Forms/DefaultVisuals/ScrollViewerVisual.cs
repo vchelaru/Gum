@@ -1,4 +1,5 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
@@ -20,6 +21,18 @@ public class ScrollViewerVisual : InteractiveGue
     public ContainerRuntime ClipContainerInstance { get; private set; }
     public ContainerRuntime ScrollAndClipContainer { get; private set; }
     public ContainerRuntime ClipContainerContainer { get; private set; }
+    public NineSliceRuntime FocusedIndicator { get; private set; }
+
+    public class ScrollViewerCategoryStates
+    {
+        public StateSave Enabled { get; private set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
+        public StateSave Focused { get; private set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
+    }
+
+    public ScrollViewerCategoryStates States;
+
+    public StateSaveCategory ScrollViewerCategory { get; private set; }
+
 
     public void MakeSizedToChildren()
     {
@@ -66,6 +79,24 @@ public class ScrollViewerVisual : InteractiveGue
             Background.Texture = uiSpriteSheetTexture;
             Background.ApplyState(Styling.NineSlice.Bordered);
             this.AddChild(Background);
+
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
+            FocusedIndicator.X = 0;
+            FocusedIndicator.Y = 2;
+            FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = VerticalAlignment.Top;
+            FocusedIndicator.Width = 0;
+            FocusedIndicator.Height = 2;
+            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+            FocusedIndicator.Visible = false;
+            FocusedIndicator.Color = Styling.Colors.Warning;
+            this.AddChild(FocusedIndicator);
 
             ScrollAndClipContainer = new ContainerRuntime();
             ScrollAndClipContainer.Name = "ScrollAndClipContainer";
@@ -122,7 +153,30 @@ public class ScrollViewerVisual : InteractiveGue
                     }
                 }
             }
+
         }
+        ScrollViewerCategory = new StateSaveCategory();
+        ScrollViewerCategory.Name = ScrollViewer.ScrollViewerCategoryName;
+        this.AddCategory(ScrollViewerCategory);
+
+        void AddVariable(StateSave state, string name, object value)
+        {
+            state.Variables.Add(new VariableSave
+            {
+                Name = name,
+                Value = value
+            });
+        }
+
+        void AddState(StateSave state, bool isFocusedVisible)
+        {
+            ScrollViewerCategory.States.Add(state);
+            AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
+        }
+
+        States = new ScrollViewerCategoryStates();
+        AddState(States.Enabled, false);
+        AddState(States.Focused, true);
 
         if (tryCreateFormsObject)
         {

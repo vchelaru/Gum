@@ -11,7 +11,9 @@ using System.Linq;
 
 
 
+
 #if FRB
+using MonoGameGum.Forms.Controls;
 using FlatRedBall.Forms.Input;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
@@ -249,6 +251,9 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         return args;
     }
+
+    public IInputReceiver? ParentInputReceiver =>
+        this.GetParentInputReceiver();
 
     #endregion
 
@@ -889,6 +894,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     protected abstract void HandleDelete();
 
     public abstract void HandleCharEntered(char character);
+
+    public void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+    }
 
     public void OnFocusUpdate()
     {

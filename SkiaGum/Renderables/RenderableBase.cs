@@ -66,9 +66,9 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
     }
 
     Vector2 Position;
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set

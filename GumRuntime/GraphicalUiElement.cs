@@ -131,7 +131,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static bool ShowLineRectangles = false;
 
     // to save on casting:
-    protected IRenderableIpso mContainedObjectAsIpso;
+    protected IRenderableIpso? mContainedObjectAsIpso;
     protected IVisible mContainedObjectAsIVisible;
 
     GraphicalUiElement? mWhatContainsThis;
