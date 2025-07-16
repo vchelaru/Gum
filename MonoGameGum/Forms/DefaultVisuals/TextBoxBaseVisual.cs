@@ -107,9 +107,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             PlaceholderTextInstance = new TextRuntime();
             PlaceholderTextInstance.Name = "PlaceholderTextInstance";
-            PlaceholderTextInstance.Red = 128;
-            PlaceholderTextInstance.Blue = 128;
-            PlaceholderTextInstance.Green = 128;
+            PlaceholderTextInstance.Color = Styling.Colors.Gray;
             PlaceholderTextInstance.Height = -4f;
             PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             PlaceholderTextInstance.Text = "Text Placeholder";
@@ -173,18 +171,19 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 });
             }
 
-            void AddTextBoxCategoryState(StateSave state, Color backgroundColor, Color textInstanceColor, bool isFocusedVisible)
+            void AddTextBoxCategoryState(StateSave state, Color backgroundColor, Color textInstanceColor, bool isFocusedVisible, Color placeholderTextColor)
             {
                 TextboxCategory.States.Add(state);
                 AddVariable(state, "Background.Color", backgroundColor);
                 AddVariable(state, "TextInstance.Color", textInstanceColor);
                 AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
+                AddVariable(state, "PlaceholderTextInstance.Color", placeholderTextColor);
             }
 
-            AddTextBoxCategoryState(States.Enabled, Styling.Colors.DarkGray, Styling.Colors.White, false);
-            AddTextBoxCategoryState(States.Disabled, Styling.Colors.DarkGray, Styling.Colors.Gray, false);
-            AddTextBoxCategoryState(States.Highlighted, Styling.Colors.Gray, Styling.Colors.White, false);
-            AddTextBoxCategoryState(States.Focused, Styling.Colors.DarkGray, Styling.Colors.White, true);
+            AddTextBoxCategoryState(States.Enabled, Styling.Colors.DarkGray, Styling.Colors.White, false, Styling.Colors.Gray);
+            AddTextBoxCategoryState(States.Disabled, Styling.Colors.DarkGray, Styling.Colors.Gray, false, Styling.Colors.Gray);
+            AddTextBoxCategoryState(States.Highlighted, Styling.Colors.Gray, Styling.Colors.White, false, Styling.Colors.DarkGray);
+            AddTextBoxCategoryState(States.Focused, Styling.Colors.DarkGray, Styling.Colors.White, true, Styling.Colors.Gray);
 
             LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
             LineModeCategory.Name = "LineModeCategory";
