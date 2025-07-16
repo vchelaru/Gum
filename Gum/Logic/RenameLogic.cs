@@ -12,6 +12,7 @@ using CommonFormsAndControls;
 using Gum.Controls;
 using System.Drawing;
 using System.Windows.Documents.DocumentStructures;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -70,12 +71,14 @@ public class RenameLogic
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
 
-    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier, IDialogService dialogService)
+    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier, IDialogService dialogService, GuiCommands guiCommands)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
+        _guiCommands = guiCommands;
     }
 
     #region StateSave
@@ -91,13 +94,13 @@ public class RenameLogic
             string oldName = stateSave.Name;
 
             stateSave.Name = newName;
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshStateTreeView();
             // I don't think we need to save the project when renaming a state:
             //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
             // Renaming the state should refresh the property grid
             // because it displays the state name at the top
-            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+            _guiCommands.RefreshVariables(force: true);
 
             PluginManager.Self.StateRename(stateSave, oldName);
 
@@ -187,7 +190,7 @@ public class RenameLogic
             }
         }
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshStateTreeView();
         // I don't think we need to save the project when renaming a state:
         //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
@@ -327,7 +330,7 @@ public class RenameLogic
                     RenameXml(elementSave, oldName);
                 }
 
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(instanceContainer);
+                _guiCommands.RefreshElementTreeView(instanceContainer);
             }
 
             if (!shouldContinue && isRenamingXmlFile)
@@ -380,11 +383,11 @@ public class RenameLogic
         if (didMoveToNewDirectory)
         {
             // refresh the entire tree view because the node is moving:
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            _guiCommands.RefreshElementTreeView();
         }
         else
         {
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
+            _guiCommands.RefreshElementTreeView(elementSave);
         }
     }
 

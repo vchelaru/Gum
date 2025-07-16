@@ -8,6 +8,7 @@ using Gum.Wireframe;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -51,6 +52,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
     
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -73,6 +75,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        
     }
 
     #region Copy
@@ -237,8 +241,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(sourceElement);
             WireframeObjectManager.Self.RefreshAll(true);
-            GumCommands.Self.GuiCommands.RefreshVariables();
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            _guiCommands.RefreshVariables();
+            _guiCommands.RefreshElementTreeView();
         }
 
         // todo: need to handle cut Element saves, but I don't want to do it yet due to the danger of losing valid data...
@@ -329,7 +333,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
             container.States.Add(newStateSave);
         }
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshStateTreeView();
 
 
 
@@ -578,7 +582,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
 
         WireframeObjectManager.Self.RefreshAll(true);
-        GumCommands.Self.GuiCommands.RefreshElementTreeView(targetElement);
+        _guiCommands.RefreshElementTreeView(targetElement);
         GumCommands.Self.FileCommands.TryAutoSaveElement(targetElement);
         _selectedState.SelectedInstances = newInstances;
 

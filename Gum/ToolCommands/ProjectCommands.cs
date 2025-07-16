@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using System.Linq;
+using Gum.Commands;
 using Gum.Services;
 
 namespace Gum.ToolCommands;
@@ -21,6 +22,7 @@ public class ProjectCommands
     static ProjectCommands mSelf;
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
+    private readonly GuiCommands _guiCommands;
 
     #endregion
 
@@ -44,6 +46,7 @@ public class ProjectCommands
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
     
     #region Screens
@@ -155,8 +158,8 @@ public class ProjectCommands
 
         PluginManager.Self.BehaviorDeleted(behavior);
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-        GumCommands.Self.GuiCommands.RefreshVariables();
+        _guiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshVariables();
         // I don't think we have to refresh the wireframe since nothing is being shown
         //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 

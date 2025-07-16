@@ -43,7 +43,7 @@ namespace Gum.Plugins.Inheritance
                     AdjustInstance(directBase, inheritingElement, clone.Name);
 
                     GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                    _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
         }
@@ -60,7 +60,7 @@ namespace Gum.Plugins.Inheritance
                     inheritingElement.Instances.RemoveAll(item => item.Name == instance.Name);
 
                     GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                    _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
         }
@@ -77,7 +77,7 @@ namespace Gum.Plugins.Inheritance
                 {
                     toRename.Name = instance.Name;
                     GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                    _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
         }
@@ -170,9 +170,9 @@ namespace Gum.Plugins.Inheritance
 
             const bool fullRefresh = true;
             // since the type might change:
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
-            GumCommands.Self.GuiCommands.RefreshVariables(fullRefresh);
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshElementTreeView(asElementSave);
+            _guiCommands.RefreshVariables(fullRefresh);
+            _guiCommands.RefreshStateTreeView();
         }
 
         private void HandleInstanceReordered(InstanceSave instance)
@@ -190,7 +190,7 @@ namespace Gum.Plugins.Inheritance
                 if(didShiftIndex)
                 {
                     GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                    _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
         }

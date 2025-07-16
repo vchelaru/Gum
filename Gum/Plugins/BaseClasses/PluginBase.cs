@@ -14,12 +14,16 @@ using Gum.ToolStates;
 using ExCSS;
 using RenderingLibrary;
 using System.Numerics;
+using Gum.Commands;
 using Gum.Managers;
+using Gum.Services;
 
 namespace Gum.Plugins.BaseClasses
 {
     public abstract class PluginBase : IPlugin
     {
+        protected readonly GuiCommands _guiCommands;
+        
         #region Events
 
         public event Action<GumProjectSave>? ProjectLoad;
@@ -214,6 +218,11 @@ namespace Gum.Plugins.BaseClasses
 
         public virtual Version Version => new Version(1, 0);
 
+        protected PluginBase()
+        {
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        }
+
         public abstract void StartUp();
         public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 
@@ -347,12 +356,12 @@ namespace Gum.Plugins.BaseClasses
 
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
         {
-            return GumCommands.Self.GuiCommands.AddControl(control, tabName, tabLocation);
+            return _guiCommands.AddControl(control, tabName, tabLocation);
         }
 
         public void RemoveControl(System.Windows.Controls.UserControl control)
         {
-            GumCommands.Self.GuiCommands.RemoveControl(control);
+            _guiCommands.RemoveControl(control);
         }
 
         #endregion

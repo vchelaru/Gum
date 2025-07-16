@@ -10,6 +10,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
+using Gum.Services;
 #if GUM
 using WpfDataUi.Controls;
 #endif
@@ -362,7 +364,7 @@ namespace SkiaPlugin.Managers
             {
 #if GUM
 // This should probably be handled in a plugin somewhere:
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                Locator.GetRequiredService<GuiCommands>().RefreshVariables(force: true);
 #endif
             }
         }

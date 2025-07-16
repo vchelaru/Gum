@@ -36,7 +36,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
 
         private void HandleToggleTabVisibility(object sender, EventArgs e)
         {
-            if(!GumCommands.Self.GuiCommands.IsTabVisible(pluginTab))
+            if(!_guiCommands.IsTabVisible(pluginTab))
             {
                 pluginTab.Show();
             } 

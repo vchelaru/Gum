@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls;
+using CommonFormsAndControls;
 using Gum.DataTypes.Variables;
 using Gum.DataTypes;
 using Gum.Logic;
@@ -39,10 +39,10 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly NameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
 
-    public ExposeVariableService(GuiCommands guiCommands, FileCommands fileCommands)
+    public ExposeVariableService(FileCommands fileCommands)
     {
         _undoManager = Locator.GetRequiredService<UndoManager>();
-        _guiCommands = guiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _fileCommands = fileCommands;
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
@@ -143,7 +143,7 @@ internal class ExposeVariableService : IExposeVariableService
                 PluginManager.Self.VariableAdd(elementSave, tiw.Result);
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _guiCommands.RefreshVariables(force: true);
                 toReturn.Data = variableSave;
                 toReturn.Succeeded = true;
             }
