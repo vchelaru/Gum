@@ -85,7 +85,7 @@ internal class DialogService : IDialogService
 
     public bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel
     {
-        viewModel = _serviceProvider.GetService<T>() ?? Locator.GetRequiredService<T>();
+        viewModel = _serviceProvider.GetRequiredService<T>();
         initializer?.Invoke(viewModel);
         return Show(viewModel);
     }

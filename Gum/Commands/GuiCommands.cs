@@ -291,35 +291,6 @@ public class GuiCommands
         PluginManager.Self.FocusSearch();
     }
 
-    #region Show Add XXX Widows
-    public void ShowAddVariableWindow()
-    {
-        var canShow = _selectedState.SelectedBehavior != null || _selectedState.SelectedElement != null;
-
-        /////////////// Early Out///////////////
-        if (!canShow)
-        {
-            return;
-        }
-        //////////////End Early Out/////////////
-        var vm = Locator.GetRequiredService<AddVariableViewModel>();
-        vm.RenameType = RenameType.NormalName;
-        vm.Element = _selectedState.SelectedElement;
-        vm.Variable = null;
-
-        var window = new AddVariableWindow(vm);
-
-        var result = window.ShowDialog();
-
-        if (result == true)
-        {
-            vm.AddVariableToSelectedItem();
-        }
-    }
-    
-    #endregion
-
-
     public Spinner ShowSpinner()
     {
         var spinner = new Gum.Controls.Spinner();
