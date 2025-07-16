@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum supports reading input from the mouse, touch screen, keyboard, and gamepads. Some types of input is automatically enabled such as clicks on Buttons. Other types of input must be enabled through code, such as giving controls focus for tabbing.
+Gum supports reading input from the mouse, touch screen, keyboard, and gamepads. Some types of input are automatically enabled such as clicks on Buttons. Other types of input must be enabled through code, such as giving controls focus for tabbing.
 
 This tutorial covers the various ways input can be used to interact with forms objects.
 
@@ -104,7 +104,7 @@ The remainder of this tutorial excludes code to add keyboards and gamepads to th
 
 If your game includes multiple controls then the user can tab between the controls to pass focus. A forms control must first be given focus before tabbing is possible. Once a control is given focus, the user can tab to the next control using the tab key on the keyboard. Shift+tab tabs backwards (up) through the list of controls. Tabbing with the gamepad can be performed using up and down on the d-pad or analog stick.
 
-The following code shows how to create multiple buttons. Once the first button is focused, the user can tab between the to click each one.
+The following code shows how to create multiple buttons. Once the first button is focused, the user can tab between the buttons to click each one.
 
 ```csharp
 // Give some spacing between the buttons:
@@ -248,7 +248,7 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
 
 ```
 
-<figure><img src="../../../../.gitbook/assets/13_08 38 58.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/16_06 37 17.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
 
 {% hint style="info" %}
 At the time of this writing gamepad tabbing behavior cannot be modified - tabbing automatically uses gamepad up and down on dpad and analog sticks. This may change in future versions of Gum.
