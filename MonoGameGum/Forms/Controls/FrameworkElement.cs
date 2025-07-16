@@ -1256,38 +1256,17 @@ public class FrameworkElement : INotifyPropertyChanged
         var cursor = MainCursor;
 
 #if DEBUG
-        if(cursor == null)
+        if (cursor == null)
         {
             throw new InvalidOperationException("MainCursor must be assigned before performing any UI logic");
         }
 #endif
 
+
+        bool isPushInputHeldDown = GetIfPushInputIsHeld();
+        
         var primaryDown = cursor.PrimaryDown;
 
-        bool pushedByInput = false;
-
-#if !RAYLIB
-        for(int i = 0; i < GamePadsForUiControl.Count; i++)
-        {
-            pushedByInput = pushedByInput || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
-        }
-
-#if (MONOGAME || KNI) && !FRB
-        if(!pushedByInput)
-        {
-            for (int i = 0; i < KeyboardsForUiControl.Count; i++)
-            {
-                foreach(var combo in FrameworkElement.ClickCombos)
-                {
-                    if(combo.IsComboDown())
-                    {
-                        pushedByInput = true;
-                    }
-                }
-            }
-        }
-#endif
-#endif
         var isTouchScreen = cursor.LastInputDevice == InputDevice.TouchScreen;
 
         if (IsEnabled == false)
@@ -1307,7 +1286,7 @@ public class FrameworkElement : INotifyPropertyChanged
             {
                 return PushedStateName;
             }
-            else if(pushedByInput)
+            else if (isPushInputHeldDown)
             {
                 return PushedStateName;
             }
@@ -1348,6 +1327,38 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             return EnabledStateName;
         }
+    }
+
+    protected virtual bool GetIfPushInputIsHeld() =>
+        GetIfGamepadOrKeyboardPrimaryPushInputIsHeld();
+
+    protected bool GetIfGamepadOrKeyboardPrimaryPushInputIsHeld()
+    {
+        bool isPushInputHeldDown = false;
+
+#if !RAYLIB
+        for (int i = 0; i < GamePadsForUiControl.Count; i++)
+        {
+            isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+        }
+
+#if (MONOGAME || KNI) && !FRB
+        if (!isPushInputHeldDown)
+        {
+            for (int i = 0; i < KeyboardsForUiControl.Count; i++)
+            {
+                foreach (var combo in FrameworkElement.ClickCombos)
+                {
+                    if (combo.IsComboDown())
+                    {
+                        isPushInputHeldDown = true;
+                    }
+                }
+            }
+        }
+#endif
+#endif
+        return isPushInputHeldDown;
     }
 
     protected string GetDesiredStateWithChecked(bool? isChecked)

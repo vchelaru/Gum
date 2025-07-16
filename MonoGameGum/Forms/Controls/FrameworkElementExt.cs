@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Gum.Wireframe;
 using MonoGameGum.Forms.Data;
 
 namespace MonoGameGum.Forms.Controls;
@@ -20,4 +21,26 @@ public static class FrameworkElementExt
     {
         return element.Visual?.GetFrameworkElementByName<T>(name);
     }
+
+    public static IInputReceiver? GetParentInputReceiver(this FrameworkElement element)
+    {
+        var parentGue = element.Visual.Parent as GraphicalUiElement;
+
+        while (parentGue != null)
+        {
+            if (parentGue is IInputReceiver receiver)
+            {
+                return receiver;
+            }
+            if (parentGue is InteractiveGue interactiveGue &&
+                interactiveGue.FormsControlAsObject is IInputReceiver found)
+            {
+                return found;
+            }
+            parentGue = parentGue.Parent as GraphicalUiElement;
+        }
+        return null;
+
+    }
+
 }

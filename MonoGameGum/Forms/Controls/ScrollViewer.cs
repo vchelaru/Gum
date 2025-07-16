@@ -1,11 +1,15 @@
 ﻿using Gum.Wireframe;
 using System;
+using Microsoft.Xna.Framework.Input;
+
 
 #if FRB
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -29,15 +33,24 @@ public enum ScrollBarVisibility
 
 #endregion
 
+#region ScrollChangedEventArgs
+
 public class ScrollChangedEventArgs : EventArgs
 {
     // todo - may expand this in the future, but creating this now
     // to future proof event handlers
 }
 
-public class ScrollViewer : FrameworkElement
+#endregion
+
+/// <summary>
+/// A control for displaying stacked items with a scroll bar. Items can be
+/// FrameworkElements (Forms) or regular visuals (GraphicalUiElements).
+/// </summary>
+public class ScrollViewer : FrameworkElement, IInputReceiver
 {
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
+    public const string ScrollViewerCategoryName = "ScrollViewerCategory";
 
     #region Fields/Properties
 
@@ -105,6 +118,64 @@ public class ScrollViewer : FrameworkElement
     }
 
     public ScrollBar? VerticalScrollBar => verticalScrollBar;
+
+    bool doItemsHaveFocus;
+    public bool DoItemsHaveFocus
+    {
+        get => doItemsHaveFocus;
+        set
+        {
+            var changedValue = false;
+            if (!IsFocused && value)
+            {
+                IsFocused = true;
+                changedValue = true;
+            }
+
+            if(doItemsHaveFocus != value)
+            {
+                doItemsHaveFocus = value;
+                changedValue = true;
+            }
+
+            if(changedValue)
+            {
+                if(doItemsHaveFocus == false)
+                {
+                    var currentReceiver = InteractiveGue.CurrentInputReceiver;
+                    if (currentReceiver.ParentInputReceiver == this)
+                    {
+                        this.IsFocused = true;
+                    }
+                }
+                else
+                {
+                    // find first InputReceiver and give it focus:
+                    for (int i = 0; i < this.InnerPanel.Children.Count; i++)
+                    {
+                        var childAsInputReceiver = this.InnerPanel.Children[i] as IInputReceiver;
+
+                        if (childAsInputReceiver == null &&
+                            this.InnerPanel.Children[i] is InteractiveGue interactiveGue)
+                        {
+                            childAsInputReceiver = interactiveGue.FormsControlAsObject as IInputReceiver;
+                        }
+
+                        if (childAsInputReceiver != null)
+                        {
+                            InteractiveGue.CurrentInputReceiver = childAsInputReceiver;
+                            break;
+                        }
+                    }
+                }
+            }
+            // todo - give the first item focus:
+            //if (SelectedIndex > -1 && SelectedIndex < ListBoxItemsInternal.Count)
+            //{
+            //    ListBoxItemsInternal[SelectedIndex].IsFocused = doListBoxItemsHaveFocus;
+            //}
+        }
+    }
 
     #endregion
 
@@ -333,6 +404,124 @@ public class ScrollViewer : FrameworkElement
 
     #endregion
 
+    #region Focus-related methods
+
+    public IInputReceiver? ParentInputReceiver =>
+    this.GetParentInputReceiver();
+
+    public virtual void OnGainFocus()
+    {
+        IsFocused = true;
+
+    }
+
+    public virtual void OnLoseFocus()
+    {
+        IsFocused = false;
+    }
+
+    public void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+        // todo - check for ESC and return handled, steal focus from children
+        foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
+        {
+            // eventually we want to support combos but for now use esc:
+            if(keyboard.KeyPushed(Keys.Escape))
+            {
+                DoItemsHaveFocus = false;
+                IsFocused = true;
+                args.Handled = true;
+                break;
+            }
+        }
+    }
+
+    public virtual void OnFocusUpdate()
+    {
+        if (DoItemsHaveFocus)
+        {
+            DoItemFocusUpdate();
+        }
+        else
+        {
+            DoTopLevelFocusUpdate();
+        }
+
+#if (MONOGAME || KNI || FNA) && !FRB
+        base.HandleKeyboardFocusUpdate();
+#endif
+
+        // Do we need this event? ListBox has it, but I'm not sure if ScrollViewer should have it
+        //FocusUpdate?.Invoke(this);
+    }
+
+    private void DoTopLevelFocusUpdate()
+    {
+        var gamepads = FrameworkElement.GamePadsForUiControl;
+
+        for (int i = 0; i < gamepads.Count; i++)
+        {
+            var gamepad = gamepads[i];
+
+            HandleGamepadNavigation(gamepad);
+
+            if (gamepad.ButtonPushed(Buttons.A))
+            {
+                DoItemsHaveFocus = true;
+            }
+
+            // ListBox has this, does ScrollViewer need it?
+            //void RaiseIfPushedAndEnabled(Buttons button)
+            //{
+            //    if (IsEnabled && gamepad.ButtonPushed(button))
+            //    {
+            //        ControllerButtonPushed?.Invoke(button);
+            //    }
+            //}
+
+            //RaiseIfPushedAndEnabled(Buttons.B);
+            //RaiseIfPushedAndEnabled(Buttons.X);
+            //RaiseIfPushedAndEnabled(Buttons.Y);
+            //RaiseIfPushedAndEnabled(Buttons.Start);
+            //RaiseIfPushedAndEnabled(Buttons.Back);
+            //RaiseIfPushedAndEnabled(Buttons.DPadLeft);
+            //RaiseIfPushedAndEnabled(Buttons.DPadRight);
+
+#if FRB
+            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);
+            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadRight);
+#endif
+        }
+
+
+
+#if (MONOGAME || KNI || FNA) && !FRB
+
+        foreach (var keyboard in KeyboardsForUiControl)
+        {
+            foreach (var keyCombo in FrameworkElement.ClickCombos)
+            {
+                if (keyCombo.IsComboPushed())
+                {
+                    DoItemsHaveFocus = true;
+                    break;
+                }
+            }
+        }
+#endif
+    }
+
+    private void DoItemFocusUpdate()
+    {
+
+    }
+
+    public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
+    {
+    }
+
+    #endregion
+
     #region UpdateTo methods
 
     // Currently this is public because Gum objects don't have events
@@ -382,6 +571,12 @@ public class ScrollViewer : FrameworkElement
         Visual.SetProperty(category, state);
     }
 
+    public override void UpdateState()
+    {
+        var state = base.GetDesiredState();
+
+        Visual.SetProperty(ScrollViewerCategoryName + "State", state);
+    }
 
     #endregion
 }

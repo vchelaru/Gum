@@ -29,6 +29,20 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     public IInputReceiver NextInTabSequence { get; set; }
 
+    public override bool IsFocused
+    { 
+        get => base.IsFocused;
+        set
+        {
+            if(value == false)
+            {
+                wasPushedOnCurrentHold = false;
+            }
+            base.IsFocused = value;
+
+        }
+    }
+
     #endregion
 
     #region Events
@@ -142,14 +156,22 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     }
 
     #region IInputReceiver Methods
-
+    public IInputReceiver? ParentInputReceiver =>
+    this.GetParentInputReceiver();
+    public void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+    }
     public GamepadButton ClickGamepadButton { get; set; } = GamepadButton.A;
+
+    bool wasPushedOnCurrentHold = false;
 
     public void OnFocusUpdate()
     {
+        if(!GetIfPushInputIsHeld())
+        {
+            wasPushedOnCurrentHold = false;
+        }
         var gamepads = GamePadsForUiControl;
-
-
 
         for (int i = 0; i < gamepads.Count; i++)
         {
@@ -163,8 +185,10 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 // remain focused as to not focus a new item.
                 IsEnabled)
             {
+                wasPushedOnCurrentHold = true;
                 //this.HandlePush(null);
                 this.HandleClick(this, new InputEventArgs() { InputDevice = gamepad });
+
             }
             else if(gamepad.ButtonReleased(ClickGamepadButton))
             {
@@ -209,6 +233,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             if ((gamepad as IInputDevice).DefaultConfirmInput.WasJustPressed && IsEnabled)
             {
                 //this.HandlePush(null);
+                wasPushedOnCurrentHold = true;
                 this.HandleClick(this, EventArgs.Empty);
             }
 
@@ -232,6 +257,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             if (inputDevice.DefaultConfirmInput.WasJustPressed && IsEnabled)
             {
                 //this.HandlePush(null);
+                wasPushedOnCurrentHold = true;
                 this.HandleClick(this, EventArgs.Empty);
             }
         }
@@ -239,7 +265,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
 #if (MONOGAME || KNI) && !FRB
 
-        foreach(var keyboard in KeyboardsForUiControl)
+        foreach (var keyboard in KeyboardsForUiControl)
         {
             bool wasPushed = false;
             bool wasReleased = false;
@@ -260,6 +286,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
             if(wasPushed)
             {
+                wasPushedOnCurrentHold = true;
+
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 UpdateState();
@@ -278,8 +306,14 @@ public class ButtonBase : FrameworkElement, IInputReceiver
         FocusUpdate?.Invoke(this);
     }
 
+    protected override bool GetIfPushInputIsHeld()
+    {
+        return wasPushedOnCurrentHold && base.GetIfPushInputIsHeld();
+    }
+
     public void OnGainFocus()
     {
+        IsFocused = true;
     }
 
     [Obsolete("Use OnLoseFocus instead")]

@@ -387,6 +387,12 @@ public class Slider : RangeBase, IInputReceiver
 
     #region IInputReceiver Methods
 
+    public IInputReceiver? ParentInputReceiver =>
+    this.GetParentInputReceiver();
+    public void OnFocusUpdatePreview(RoutedEventArgs args)
+    {
+    }
+
     public void OnFocusUpdate()
     {
         var gamepads = FrameworkElement.GamePadsForUiControl;
@@ -481,6 +487,7 @@ public class Slider : RangeBase, IInputReceiver
 
     public void OnGainFocus()
     {
+        IsFocused = true;
     }
 
     [Obsolete("Use OnLoseFocus instead")]
