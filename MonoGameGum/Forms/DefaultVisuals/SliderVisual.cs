@@ -18,7 +18,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
         public ContainerRuntime TrackInstance { get; private set; }
         public NineSliceRuntime NineSliceInstance { get; private set; }
         public ButtonVisual ThumbInstance { get; private set; }
-        public RectangleRuntime FocusedIndicator { get; private set; }
+        public NineSliceRuntime FocusedIndicator { get; private set; }
         public class SliderCategoryStates
         {
             public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
@@ -39,6 +39,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             Width = 128;
             Height = 24;
+            float sliderButtonWidth = 32f;
             States = new SliderCategoryStates();
             var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
@@ -48,7 +49,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             TrackInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TrackInstance.Width = -32f;
+            TrackInstance.Width = -sliderButtonWidth;
             TrackInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             TrackInstance.Height = 0f;
             TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -75,24 +76,26 @@ namespace MonoGameGum.Forms.DefaultVisuals
             ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             ThumbInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             ThumbInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            ThumbInstance.Width = 32f;
+            ThumbInstance.Width = sliderButtonWidth;
             ThumbInstance.Height = 24f;
             ThumbInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             TrackInstance.AddChild(ThumbInstance);
 
-            FocusedIndicator = new RectangleRuntime();
+            FocusedIndicator = new NineSliceRuntime();
             FocusedIndicator.Name = "FocusedIndicator";
+            FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.X = 0;
-            FocusedIndicator.Y = 0;
+            FocusedIndicator.Y = 2;
             FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             FocusedIndicator.XOrigin = HorizontalAlignment.Center;
-            FocusedIndicator.YOrigin = VerticalAlignment.Center;
-            FocusedIndicator.Width = 0;
-            FocusedIndicator.Height = 0;
+            FocusedIndicator.YOrigin = VerticalAlignment.Top;
+            FocusedIndicator.Width = -sliderButtonWidth;
+            FocusedIndicator.Height = 2;
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.Color = Color.White;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false;
             this.AddChild(FocusedIndicator);
 
