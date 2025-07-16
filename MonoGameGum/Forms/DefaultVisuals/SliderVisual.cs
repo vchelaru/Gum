@@ -18,7 +18,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
         public ContainerRuntime TrackInstance { get; private set; }
         public NineSliceRuntime NineSliceInstance { get; private set; }
         public ButtonVisual ThumbInstance { get; private set; }
-        public RectangleRuntime FocusedIndicator { get; private set; }
+        public NineSliceRuntime FocusedIndicator { get; private set; }
         public class SliderCategoryStates
         {
             public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
@@ -80,19 +80,21 @@ namespace MonoGameGum.Forms.DefaultVisuals
             ThumbInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             TrackInstance.AddChild(ThumbInstance);
 
-            FocusedIndicator = new RectangleRuntime();
+            FocusedIndicator = new NineSliceRuntime();
             FocusedIndicator.Name = "FocusedIndicator";
+            FocusedIndicator.Color = Styling.Colors.Warning;
             FocusedIndicator.X = 0;
-            FocusedIndicator.Y = 0;
+            FocusedIndicator.Y = 2;
             FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             FocusedIndicator.XOrigin = HorizontalAlignment.Center;
-            FocusedIndicator.YOrigin = VerticalAlignment.Center;
+            FocusedIndicator.YOrigin = VerticalAlignment.Top;
             FocusedIndicator.Width = 0;
-            FocusedIndicator.Height = 0;
+            FocusedIndicator.Height = 2;
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            FocusedIndicator.Color = Color.White;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            FocusedIndicator.Texture = uiSpriteSheetTexture;
+            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
             FocusedIndicator.Visible = false;
             this.AddChild(FocusedIndicator);
 
