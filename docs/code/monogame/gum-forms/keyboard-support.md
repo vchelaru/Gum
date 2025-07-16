@@ -30,4 +30,15 @@ For example, the following code gives a Button focus assuming MyButton is a vali
 MyButton.IsFocused = true;
 ```
 
-Note that TextBox and PasswordBox automatically have IsFocus set to true when clicked on.
+Note that TextBox and PasswordBox automatically have IsFocused set to true when clicked on.
+
+Controls can be skipped when tabbed by setting `GamepadTabbingFocusBehavior`. For example the following code results in a button being skipped if it receives focus from tabbing:
+
+```csharp
+MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
+```
+
+{% hint style="info" %}
+Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
+{% endhint %}
+
