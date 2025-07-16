@@ -1,6 +1,19 @@
 ﻿using System.Linq.Expressions;
 using Gum.Wireframe;
+using System;
+
+
+
+
+#if FRB
+using FlatRedBall.Gui;
+using FlatRedBall.Forms.Controls;
+using FlatRedBall.Forms.Data;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+
+#else
 using MonoGameGum.Forms.Data;
+#endif
 
 namespace MonoGameGum.Forms.Controls;
 

@@ -1,10 +1,17 @@
 ﻿using Gum.Wireframe;
 using System;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
+using FlatRedBall.Forms.Input;
+
+
 
 
 #if FRB
+using MonoGameGum.Forms.Controls;
+
 using FlatRedBall.Gui;
+using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
@@ -51,6 +58,28 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
 {
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
     public const string ScrollViewerCategoryName = "ScrollViewerCategory";
+
+#if FRB
+    public bool TakingInput => throw new NotImplementedException();
+    public IInputReceiver NextInTabSequence { get; set; }
+    public List<Keys> IgnoredKeys => throw new NotImplementedException();
+    public void ReceiveInput()
+    {
+    }
+    [Obsolete("Use OnLoseFocus instead")]
+    public void LoseFocus() => OnLoseFocus();
+    public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
+    {
+        var args = new KeyEventArgs();
+        args.Key = key;
+        base.RaiseKeyDown(args);
+    }
+    public void HandleCharEntered(char character)
+    {
+    }
+    public event Action<IInputReceiver> FocusUpdate;
+
+#endif
 
     #region Fields/Properties
 
@@ -423,6 +452,7 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
         // todo - check for ESC and return handled, steal focus from children
+#if !FRB
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:
@@ -434,6 +464,7 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
                 break;
             }
         }
+#endif
     }
 
     public virtual void OnFocusUpdate()
@@ -488,8 +519,8 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
             //RaiseIfPushedAndEnabled(Buttons.DPadRight);
 
 #if FRB
-            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);
-            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadRight);
+            //RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);
+            //RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadRight);
 #endif
         }
 
@@ -520,7 +551,7 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
     {
     }
 
-    #endregion
+#endregion
 
     #region UpdateTo methods
 
