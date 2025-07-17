@@ -6,7 +6,7 @@
 	  <Nullable>enable</Nullable>
 	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	  <PackageId>Gum.SkiaSharp.Maui</PackageId>
-	  <Version>2025.7.15.1</Version>
+	  <Version>2025.7.17.1</Version>
 
 	  <NoWarn>1591</NoWarn>
 

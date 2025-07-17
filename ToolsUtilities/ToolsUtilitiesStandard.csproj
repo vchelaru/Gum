@@ -7,7 +7,7 @@
 		<NoWarn>1591</NoWarn>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>FlatRedBall.ToolsUtilities.NetStandard</PackageId>
-		<Version>2025.7.15.1</Version>
+		<Version>2025.7.17.1</Version>
 
 		<Platforms>AnyCPU;x86</Platforms>
 
