@@ -87,8 +87,6 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
-        
-        services.AddTransient<AddVariableViewModel>();
     }
 
     private static IServiceCollection AddDialogs(this IServiceCollection services)

@@ -244,39 +244,20 @@ public class EditVariableService : IEditVariableService
 
     private void ShowFullEditUi(VariableSave variable, IStateContainer container)
     {
-        var vm = Locator.GetRequiredService<AddVariableViewModel>();
-        vm.RenameType = RenameType.NormalName;
-
-        vm.Variable = variable;
-        vm.Element = container as ElementSave;
-
-        vm.SelectedItem = variable.Type;
-        vm.EnteredName = variable.Name;
-
-        var window = new AddVariableWindow(vm);
-        window.Title = "Edit Variable";
-
-        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable.Name, variable.Name);
-
-        var isReferencedInVariableReference = changes.VariableReferenceChanges.Count > 0;
-        vm.VariableChangeResponse = changes;
-
-        string changesDetails = GetChangesDetails(changes);
-        vm.DetailText = changesDetails;
-
-        var result = window.ShowDialog();
-
-        if (result == true)
+        _dialogService.Show<AddVariableViewModel>(vm =>
         {
-            var validityResponse = vm.Validate();
-            if(validityResponse.Succeeded == false)
-            {
-                _dialogService.ShowMessage(validityResponse.Message);
-            }
-            else
-            {
-                vm.DoEdit(variable, changes);
-            }
-        }
+            var changes =
+                _renameLogic.GetVariableChangesForRenamedVariable(container, variable.Name, variable.Name);
+            string changesDetails = GetChangesDetails(changes);
+
+            vm.RenameType = RenameType.NormalName;
+            vm.Variable = variable;
+            vm.Element = container as ElementSave;
+            vm.SelectedItem = variable.Type;
+            vm.EnteredName = variable.Name;
+            vm.VariableChangeResponse = changes;
+            vm.DetailText = changesDetails;
+            vm.Title = "Edit Variable";
+        });
     }
 }

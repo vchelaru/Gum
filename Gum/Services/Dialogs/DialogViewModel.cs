@@ -19,6 +19,9 @@ public abstract class DialogViewModel : ViewModel
 
     protected DialogViewModel()
     {
+        AffirmativeText = "OK";
+        NegativeText = "Cancel";
+        
         AffirmativeCommand = new RelayCommand(OnAffirmative, CanExecuteAffirmative);
         NegativeCommand = new RelayCommand(OnNegative, CanExecuteNegative);
     }

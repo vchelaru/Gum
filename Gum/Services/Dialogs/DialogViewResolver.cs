@@ -12,6 +12,15 @@ internal interface IDialogViewResolver
     Type? GetDialogViewType(Type viewModelType);
 }
 
+public class DialogAttribute : Attribute
+{
+    public Type DataContext { get; }
+    public DialogAttribute(Type dataContext)
+    {
+        DataContext = dataContext;
+    }
+}
+
 internal class DialogViewResolver : IDialogViewResolver
 {
     private readonly ILogger _logger;
@@ -53,25 +62,50 @@ internal class DialogViewResolver : IDialogViewResolver
 
         try
         {
-            List<Type> viewTypes = assembly.GetTypes()
-                .Where(t => typeof(FrameworkElement).IsAssignableFrom(t) && t.Name.Contains("DialogView")).ToList();
-
+            Dictionary<string, Type> viewModelTypes = assembly.GetTypes()
+                .Where(t => typeof(DialogViewModel).IsAssignableFrom(t) && !t.IsAbstract)
+                .ToDictionary(
+                    x => x.Name.Replace("DialogViewModel", string.Empty), 
+                    x => x);
+            
             Dictionary<Type, Type> vmViewPairs = assembly.GetTypes()
-                .Where(t => typeof(DialogViewModel).IsAssignableFrom(t))
-                .Aggregate(new Dictionary<Type, Type>(),
-                    (types, vmType) =>
+                .Where(t => typeof(FrameworkElement).IsAssignableFrom(t))
+                .Aggregate(new Dictionary<Type, Type>(), (types, viewType) =>
+                {
+                    if (viewType.GetCustomAttribute<DialogAttribute>() is { } attr)
                     {
-                        if (viewTypes.FirstOrDefault(type => vmType.Name == $"{type.Name}Model") is { } viewType)
+                        if (typeof(DialogViewModel).IsAssignableFrom(attr.DataContext) && !attr.DataContext.IsAbstract)
                         {
-                            types[vmType] = viewType;
-                        } 
-                        else if (typeof(GetUserStringDialogBaseViewModel).IsAssignableFrom(vmType) && !vmType.IsAbstract)
-                        {
-                            types[vmType] = typeof(GetUserStringDialogView);
+                            types[attr.DataContext] = viewType;
                         }
+                        else
+                        {
+                            throw new ArgumentException("Type " + attr.DataContext + " does not derive from DialogViewModel");
+                        }
+                    }
+                    else
+                    {
+                        string baseViewName = viewType.Name.Replace("DialogView",  string.Empty);
 
-                        return types;
-                    });
+                        if (viewModelTypes.TryGetValue(baseViewName, out Type viewModelType))
+                        {
+                            types[viewModelType] = viewType;
+                        }
+                    }
+                    
+                    return types;
+                });
+
+            // UserStringDialogs without an explicit view implementation fall back to default
+            foreach (Type userStringBase in vmViewPairs.Select(x => x.Key)
+                         .Where(t => typeof(GetUserStringDialogBaseViewModel).IsAssignableFrom(t)))
+            {
+                if (!vmViewPairs.ContainsKey(userStringBase))
+                {
+                    vmViewPairs[userStringBase] = typeof(GetUserStringDialogView);
+                }
+            }
+
             foreach (var pair in vmViewPairs)
             {
                 _vmViewPaires[pair.Key] = pair.Value;
