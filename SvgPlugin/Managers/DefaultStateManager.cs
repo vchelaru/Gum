@@ -10,9 +10,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if GUM
 using Gum.Commands;
 using Gum.Services;
-#if GUM
 using WpfDataUi.Controls;
 #endif
 namespace SkiaPlugin.Managers
