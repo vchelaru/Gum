@@ -125,6 +125,7 @@ public class ColorPickerLogic
             instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             instanceMember.CustomSetPropertyEvent += (sender, args) => SetCurrentColor(args, redVariableName, greenVariableName, blueVariableName);
             instanceMember.SupportsMakeDefault = false;
+            instanceMember.IsReadOnly = variable.IsReadOnly || greenVariable.IsReadOnly || blueVariable.IsReadOnly;
 
             instanceMember.ContextMenuEvents.Add("Make Default", (_,_) => HandleMakeColorDefault(redVariableName, greenVariableName, blueVariableName));
 

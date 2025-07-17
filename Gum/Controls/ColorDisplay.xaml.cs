@@ -90,6 +90,9 @@ namespace Gum.Controls.DataUi
                     wasSet = TrySetValueOnUi(valueOnInstance) == ApplyValueResult.Success;
                 }
             }
+
+            RefreshIsEnabled();
+
             this.Label.Content = InstanceMember.DisplayName;
 
             this.RefreshContextMenu(MainGrid.ContextMenu);
@@ -97,6 +100,18 @@ namespace Gum.Controls.DataUi
             // todo - eventually we may want a HintTextBlock. If so, add it here:
 
             SuppressSettingProperty = false;
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                IsEnabled = false;
+            }
+            else
+            {
+                IsEnabled = true;
+            }
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
