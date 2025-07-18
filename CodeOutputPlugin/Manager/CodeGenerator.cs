@@ -873,7 +873,18 @@ public class CodeGenerator
             }
             else
             {
-                context.StringBuilder.AppendLine(context.Tabs + "base.AfterFullCreation();");
+                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                {
+                    // July 17, 2025
+                    // I don't think this
+                    // is needed for Forms-first
+                    // codegen
+                    //context.StringBuilder.AppendLine(context.Tabs + "Visual?.AfterFullCreation();");
+                }
+                else
+                {
+                    context.StringBuilder.AppendLine(context.Tabs + "base.AfterFullCreation();");
+                }
 
             }
         }
