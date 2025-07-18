@@ -69,7 +69,7 @@ namespace Gum.Plugins.ParentPlugin
                         // This container can't support this value
                         currentState.SetValue($"{instance.Name}.Parent", oldValue, "string");
 
-                        GumCommands.Self.GuiCommands.PrintOutput(
+                        _guiCommands.PrintOutput(
                             $"The instance {newParent.Name} has a type restriction of {typeRestriction} so {instance.Name} cannot be added as a child.");
                     }
                 }

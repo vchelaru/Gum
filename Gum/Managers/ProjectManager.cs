@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Management.Instrumentation;
 using Gum.ToolCommands;
 using System.Threading.Tasks;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using DialogResult = System.Windows.Forms.DialogResult;
@@ -39,6 +40,7 @@ namespace Gum
         private readonly ISelectedState _selectedState;
         private readonly ElementCommands _elementCommands;
         private readonly IDialogService _dialogService;
+        private readonly GuiCommands _guiCommands;
 
         #endregion
 
@@ -87,6 +89,7 @@ namespace Gum
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
 
         public void LoadSettings()
@@ -394,7 +397,7 @@ namespace Gum
                     }
                     catch (Exception e)
                     {
-                        GumCommands.Self.GuiCommands.PrintOutput($"Error {e}");
+                        _guiCommands.PrintOutput($"Error {e}");
                     }
                 }
             }

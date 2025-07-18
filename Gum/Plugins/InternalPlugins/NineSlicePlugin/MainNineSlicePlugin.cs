@@ -43,7 +43,7 @@ internal class MainNineSlicePlugin : InternalPlugin
         }
         catch (Exception e)
         {
-            GumCommands.Self.GuiCommands.PrintOutput($"Error copying ExampleSpriteFrame.png: {e}");
+            _guiCommands.PrintOutput($"Error copying ExampleSpriteFrame.png: {e}");
         }
     }
 

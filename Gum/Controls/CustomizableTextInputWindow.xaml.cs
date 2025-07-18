@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Gum.Commands;
+using Gum.Services;
 
 namespace Gum.Controls;
 
@@ -61,7 +63,8 @@ public partial class CustomizableTextInputWindow : Window
 
         this.WindowStartupLocation = WindowStartupLocation.Manual;
 
-        GumCommands.Self.GuiCommands.MoveToCursor(this);
+        GuiCommands guiCommands = Locator.GetRequiredService<GuiCommands>();
+        guiCommands.MoveToCursor(this);
 
         ValidationLabel.Visibility = Visibility.Hidden;
         this.Loaded += HandleLoaded;

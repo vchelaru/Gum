@@ -9,6 +9,7 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Gum.Commands;
 using ToolsUtilities;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
@@ -16,6 +17,8 @@ namespace Gum.Plugins.ImportPlugin.Manager;
 public static class ImportLogic
 {
     private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
+    private static readonly GuiCommands _guiCommands = Locator.GetRequiredService<GuiCommands>();
+    
     #region Screen
 
     internal static void ShowImportScreenUi()
@@ -89,7 +92,7 @@ public static class ImportLogic
             StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
             if(saveProject)
             {
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                _guiCommands.RefreshElementTreeView();
                 _selectedState.SelectedScreen = screenSave;
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
@@ -157,7 +160,7 @@ public static class ImportLogic
 
         if (lastImportedComponent != null)
         {
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            _guiCommands.RefreshElementTreeView();
             _selectedState.SelectedComponent = lastImportedComponent;
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
@@ -190,7 +193,7 @@ public static class ImportLogic
                 }
                 catch (Exception ex)
                 {
-                    GumCommands.Self.GuiCommands.PrintOutput("Error copying file: " + ex);
+                    _guiCommands.PrintOutput("Error copying file: " + ex);
                     shouldAdd = false;
                 }
             }
@@ -218,7 +221,7 @@ public static class ImportLogic
 
             if(saveProject)
             {
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                _guiCommands.RefreshElementTreeView();
                 _selectedState.SelectedComponent = componentSave;
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
@@ -287,7 +290,7 @@ public static class ImportLogic
 
         if (lastImportedBehavior != null)
         {
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            _guiCommands.RefreshElementTreeView();
             _selectedState.SelectedBehavior = lastImportedBehavior;
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
@@ -320,7 +323,7 @@ public static class ImportLogic
                 }
                 catch (Exception ex)
                 {
-                    GumCommands.Self.GuiCommands.PrintOutput("Error copying file: " + ex);
+                    _guiCommands.PrintOutput("Error copying file: " + ex);
                     shouldAdd = false;
                 }
             }
@@ -346,7 +349,7 @@ public static class ImportLogic
 
             if(saveProject)
             {
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                _guiCommands.RefreshElementTreeView();
                 _selectedState.SelectedBehavior = behaviorSave;
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }

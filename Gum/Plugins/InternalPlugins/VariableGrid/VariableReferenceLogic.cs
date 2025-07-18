@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -33,9 +33,9 @@ public class VariableReferenceLogic
 
     #endregion
 
-    public VariableReferenceLogic(GuiCommands guiCommands)
+    public VariableReferenceLogic()
     {
-        _guiCommands = guiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService =  Locator.GetRequiredService<IDialogService>();
     }
@@ -502,7 +502,7 @@ public class VariableReferenceLogic
 
         if (didChange)
         {
-            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+            _guiCommands.RefreshVariables(force: true);
         }
     }
 

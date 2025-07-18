@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Managers;
@@ -17,12 +18,17 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     
     private readonly NameVerifier _nameVerifier;
     private readonly RenameLogic _renameLogic;
+    private readonly GuiCommands _guiCommands;
     public TreeNode? FolderNode { get; set; }
     
-    public RenameFolderDialogViewModel(NameVerifier nameVerifier, RenameLogic renameLogic)
+    public RenameFolderDialogViewModel(
+        NameVerifier nameVerifier, 
+        RenameLogic renameLogic,
+        GuiCommands guiCommands)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
+        _guiCommands = guiCommands;
     }
 
     protected override void OnAffirmative()
@@ -95,7 +101,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         try
         {
             Directory.Move(oldFullPath.FullPath, newFullPath.FullPath);
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            _guiCommands.RefreshElementTreeView();
         }
         catch (Exception e)
         {

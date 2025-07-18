@@ -10,6 +10,7 @@ using Gum.Logic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Controls;
+using Gum.Commands;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 
@@ -87,6 +88,7 @@ public class UndoManager
 
     private readonly ISelectedState _selectedState;
     private readonly RenameLogic _renameLogic;
+    private readonly GuiCommands _guiCommands;
     
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
@@ -130,10 +132,11 @@ public class UndoManager
 
     #endregion
 
-    public UndoManager(ISelectedState selectedState, RenameLogic renameLogic)
+    public UndoManager(ISelectedState selectedState, RenameLogic renameLogic, GuiCommands guiCommands)
     {
         _selectedState = selectedState;
         _renameLogic = renameLogic;
+        _guiCommands = guiCommands;
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }
@@ -467,19 +470,19 @@ public class UndoManager
 
         Plugins.PluginManager.Self.AfterUndo();
 
-        GumCommands.Self.GuiCommands.RefreshElementTreeView(toApplyTo);
+        _guiCommands.RefreshElementTreeView(toApplyTo);
 
         // reset everything. This is slow, but is easy
         WireframeObjectManager.Self.RefreshAll(true);
 
         if (shouldRefreshStateTreeView)
         {
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshStateTreeView();
         }
 
         if(shouldRefreshBehaviorView)
         {
-            GumCommands.Self.GuiCommands.BroadcastRefreshBehaviorView();
+            _guiCommands.BroadcastRefreshBehaviorView();
         }
 
         //PrintStatus("PerformUndo");

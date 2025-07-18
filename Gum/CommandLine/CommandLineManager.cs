@@ -4,6 +4,7 @@ using Gum.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Gum.Commands;
 using ToolsUtilities;
 
 namespace Gum.CommandLine
@@ -11,6 +12,8 @@ namespace Gum.CommandLine
     public class CommandLineManager : Singleton<CommandLineManager>
     {
         private readonly FontManager _fontManager;
+        private readonly GuiCommands _guiCommands;
+        
         #region Fields/Properties
 
         public string GlueProjectToLoad
@@ -32,18 +35,19 @@ namespace Gum.CommandLine
         public CommandLineManager()
         {
             _fontManager = Locator.GetRequiredService<FontManager>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
 
         public async Task ReadCommandLine()
         {
             string[] commandLineArgs = Environment.GetCommandLineArgs();
-            GumCommands.Self.GuiCommands.PrintOutput(commandLineArgs.Length + " command line argument(s)...");
+            _guiCommands.PrintOutput(commandLineArgs.Length + " command line argument(s)...");
 
             for(int i = 0; i < commandLineArgs.Length; i++)
             {
                 var arg = commandLineArgs[i];
 
-                GumCommands.Self.GuiCommands.PrintOutput(arg);
+                _guiCommands.PrintOutput(arg);
 
                 if (!string.IsNullOrEmpty(arg))
                 {

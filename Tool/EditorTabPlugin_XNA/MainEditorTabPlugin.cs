@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls.Forms;
+using CommonFormsAndControls.Forms;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
@@ -641,7 +641,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         {
             if (args.KeyCode == Keys.Tab)
             {
-                GumCommands.Self.GuiCommands.ToggleToolVisibility();
+                _guiCommands.ToggleToolVisibility();
             }
         };
 
@@ -710,7 +710,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         if (shouldUpdate)
         {
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            GumCommands.Self.GuiCommands.RefreshVariables();
+            _guiCommands.RefreshVariables();
 
             WireframeObjectManager.Self.RefreshAll(true);
         }
@@ -892,7 +892,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         // be added to the gumEditorPanel 2nd, no idea why
         CreateWireframeEditControl(gumEditorPanel);
 
-        GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
+        _guiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
         _wireframeControl.XnaUpdate += () =>
         {

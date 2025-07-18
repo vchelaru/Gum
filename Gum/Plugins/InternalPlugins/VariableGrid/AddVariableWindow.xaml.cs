@@ -1,4 +1,4 @@
-﻿using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;

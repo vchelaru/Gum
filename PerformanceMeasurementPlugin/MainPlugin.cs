@@ -8,6 +8,8 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
+using Gum.Services;
 
 namespace PerformanceMeasurementPlugin
 {
@@ -15,6 +17,7 @@ namespace PerformanceMeasurementPlugin
     public class MainPlugin : PluginBase
     {
         PerformanceView view;
+        private readonly GuiCommands _guiCommands;
 
         public override string FriendlyName
         {
@@ -26,19 +29,24 @@ namespace PerformanceMeasurementPlugin
             get { return new Version(1, 1); }
         }
 
+        public MainPlugin()
+        {
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        }
+
         public override void StartUp()
         {
             view = new PerformanceView();
             view.DataContext = new PerformanceViewModel();
 
             // This doesn't work currently so we're not going to show it, it just gets in the way.
-            //GumCommands.Self.GuiCommands.AddControl(view, "Performance");
+            //_guiCommands.AddControl(view, "Performance");
 
         }
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
         {
-            GumCommands.Self.GuiCommands.RemoveControl(view);
+            _guiCommands.RemoveControl(view);
             return true;
         }
     }

@@ -17,11 +17,13 @@ internal class ScreenshotService
     Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;
     private readonly SelectionManager _selectionManager;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly GuiCommands _guiCommands;
 
     public ScreenshotService(SelectionManager selectionManager)
     {
         _selectionManager = selectionManager;
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     public void InitializeMenuItem(ToolStripMenuItem item)
@@ -109,7 +111,7 @@ internal class ScreenshotService
             }
             catch (Exception e)
             {
-                GumCommands.Self.GuiCommands.PrintOutput(e.ToString());
+                _guiCommands.PrintOutput(e.ToString());
             }
             renderTarget.Dispose();
             renderTarget = null;

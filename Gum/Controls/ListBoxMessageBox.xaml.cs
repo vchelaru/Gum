@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using Gum.Commands;
+using Gum.Services;
 
 namespace StateAnimationPlugin.Views
 {
@@ -97,7 +99,8 @@ namespace StateAnimationPlugin.Views
 
         private void HandleLoaded(object sender, RoutedEventArgs e)
         {
-            GumCommands.Self.GuiCommands.MoveToCursor(this);
+            GuiCommands guiCommands = Locator.GetRequiredService<GuiCommands>();
+            guiCommands.MoveToCursor(this);
 
             ListBox.Focus();
         }

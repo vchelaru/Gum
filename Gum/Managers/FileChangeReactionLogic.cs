@@ -13,10 +13,13 @@ namespace Gum.Managers
     {
         private readonly ISelectedState _selectedState;
         private readonly WireframeCommands _wireframeCommands;
+        private readonly GuiCommands _guiCommands;
+        
         public FileChangeReactionLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -175,7 +178,7 @@ namespace Gum.Managers
                 {
                     _selectedState.SelectedElement = null;
                 }
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                _guiCommands.RefreshElementTreeView();
 
                 if(refreshingSelected)
                 {
@@ -212,7 +215,7 @@ namespace Gum.Managers
                 Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
 
                 // todo - this isn't working if I rename a variable...
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _guiCommands.RefreshVariables(force: true);
             }
         }
 
@@ -234,7 +237,7 @@ namespace Gum.Managers
                 {
                     _selectedState.SelectedBehavior = null;
                 }
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                _guiCommands.RefreshElementTreeView();
 
                 if (refreshingSelected)
                 {
@@ -242,7 +245,7 @@ namespace Gum.Managers
                         item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
                     _selectedState.SelectedBehavior = behavior;
 
-                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                    _guiCommands.RefreshVariables(force: true);
                 }
 
                 // no need to reload wirefreame like we do for elements because they don't show up visually...

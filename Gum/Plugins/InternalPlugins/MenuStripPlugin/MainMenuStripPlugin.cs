@@ -12,6 +12,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
 
 namespace Gum.Plugins.InternalPlugins.MenuStripPlugin;
 
@@ -22,7 +23,7 @@ public class MainMenuStripPlugin : InternalPlugin
 
     public static void InitializeMenuStrip()
     {
-        _menuStripManager = new MenuStripManager(GumCommands.Self.GuiCommands);
+        _menuStripManager = new MenuStripManager();
         _menuStripManager.Initialize();
 
     }

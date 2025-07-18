@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
@@ -12,11 +13,13 @@ namespace Gum.Logic
     {
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
+        private readonly GuiCommands _guiCommands;
 
         public ReorderLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
         
         public void MoveSelectedInstanceForward()
@@ -140,7 +143,7 @@ namespace Gum.Logic
         {
             var element = _selectedState.SelectedElement;
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
+            _guiCommands.RefreshElementTreeView(element);
 
 
             WireframeObjectManager.Self.RefreshAll(true);

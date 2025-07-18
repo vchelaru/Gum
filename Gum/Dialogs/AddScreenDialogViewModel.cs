@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -13,11 +14,15 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
     
     private readonly NameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
+    private readonly GuiCommands _guiCommands;
 
-    public AddScreenDialogViewModel(NameVerifier nameVerifier, ISelectedState selectedState)
+    public AddScreenDialogViewModel(NameVerifier nameVerifier, 
+        ISelectedState selectedState, 
+        GuiCommands guiCommands)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
+        _guiCommands = guiCommands;
     }
 
     protected override void OnAffirmative()
@@ -42,7 +47,7 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
 
         ScreenSave screenSave = GumCommands.Self.ProjectCommands.AddScreen(relativeToScreens + Value);
         
-        GumCommands.Self.GuiCommands.RefreshElementTreeView();
+        _guiCommands.RefreshElementTreeView();
 
         _selectedState.SelectedScreen = screenSave;
 

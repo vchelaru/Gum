@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls;
+using CommonFormsAndControls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -170,7 +170,7 @@ public class EditCommands
         oldCategory.States.Remove(stateToMove);
         newCategory.States.Add(stateToMove);
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshStateTreeView();
         _selectedState.SelectedStateSave = stateToMove;
 
         // make sure to propagate all variables in this new state and
@@ -279,7 +279,7 @@ public class EditCommands
     {
         container.RequiredVariables.Variables.Remove(variable);
         GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
-        GumCommands.Self.GuiCommands.RefreshVariables();
+        _guiCommands.RefreshVariables();
     }
 
     public void AddBehavior()

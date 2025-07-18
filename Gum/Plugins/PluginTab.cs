@@ -1,9 +1,13 @@
 ﻿using System;
+using Gum.Commands;
+using Gum.Services;
 
 namespace Gum.Plugins
 {
     public class PluginTab
     {
+        private readonly GuiCommands _guiCommands;
+        
         public string Title
         {
             get => (string)TabItem.Header;
@@ -35,6 +39,11 @@ namespace Gum.Plugins
         }
         public event Action GotFocus;
 
+        public PluginTab()
+        {
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        }
+
         private void HandleMiddleMouseClicked()
         {
             if(CanClose)
@@ -43,8 +52,8 @@ namespace Gum.Plugins
             }
         }
 
-        public void Show(bool focus = true) => GumCommands.Self.GuiCommands.ShowTab(this, focus);
-        public void Hide() => GumCommands.Self.GuiCommands.HideTab(this);
+        public void Show(bool focus = true) => _guiCommands.ShowTab(this, focus);
+        public void Hide() => _guiCommands.HideTab(this);
 
         public void RaiseTabShown() => TabShown?.Invoke();
         public event Action TabShown;
@@ -56,7 +65,7 @@ namespace Gum.Plugins
         public void Focus() => TabItem.Focus();
 
         public bool IsFocused =>
-            GumCommands.Self.GuiCommands.IsTabFocused(this);
+            _guiCommands.IsTabFocused(this);
 
         public bool CanClose { get; set; }
     }

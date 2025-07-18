@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
@@ -9,6 +9,7 @@ using Gum.Reflection;
 using Gum.Wireframe;
 using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
+using Gum.Commands;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
 using Gum.DataTypes;
@@ -38,6 +39,8 @@ namespace Gum
     {
         #region Fields/Properties
 
+        private readonly GuiCommands _guiCommands;
+        
         private System.Windows.Forms.Timer FileWatchTimer;
 
         MainPanelControl mainPanelControl;
@@ -63,7 +66,9 @@ namespace Gum
             this.KeyDown += HandleKeyDown;
 
             // Initialize before the StateView is created...
-            GumCommands.Self.Initialize(this, mainPanelControl, Locator.GetRequiredService<LocalizationManager>());
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _guiCommands.Initialize(this, mainPanelControl);
+            GumCommands.Self.Initialize(this, Locator.GetRequiredService<LocalizationManager>());
 
             TypeManager.Self.Initialize();
 
@@ -71,7 +76,7 @@ namespace Gum
             ProjectManager.Self.LoadSettings();
 
             Cursor addCursor = LoadAddCursor();
-            GumCommands.Self.GuiCommands.AddCursor = addCursor;
+            _guiCommands.AddCursor = addCursor;
             // Vic says - I tried
             // to instantiate the ElementTreeImages
             // in the ElementTreeViewManager. I move 
@@ -151,7 +156,7 @@ namespace Gum
                  && (args.Modifiers & Keys.Control) == Keys.Control
                 )
             {
-                GumCommands.Self.GuiCommands.FocusSearch();
+                _guiCommands.FocusSearch();
                 args.Handled = true;
                 args.SuppressKeyPress = true;
             }

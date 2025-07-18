@@ -192,7 +192,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
     public HotkeyManager()
     {
         _copyPasteLogic = CopyPasteLogic.Self;
-        _guiCommands = GumCommands.Self.GuiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _dialogService =  Locator.GetRequiredService<IDialogService>();
@@ -336,7 +336,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
         if(Search.IsPressed(e))
         {
-            GumCommands.Self.GuiCommands.FocusSearch();
+            _guiCommands.FocusSearch();
             e.Handled = true;
         }
     }

@@ -7,15 +7,19 @@ using Gum.ToolStates;
 using Gum.Undo;
 using System.Linq;
 using System.Windows.Forms;
+using Gum.Commands;
 
 namespace Gum.PropertyGridHelpers
 {
     public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic>
     {
         private readonly UndoManager _undoManager;
+        private readonly GuiCommands _guiCommands;
+        
         public VariableInCategoryPropagationLogic()
         {
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
         public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
         {
@@ -103,7 +107,7 @@ namespace Gum.PropertyGridHelpers
 
                             state.Variables.Add(newVariable);
 
-                            GumCommands.Self.GuiCommands.PrintOutput(
+                            _guiCommands.PrintOutput(
                                 $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
                         }
                     }
@@ -124,7 +128,7 @@ namespace Gum.PropertyGridHelpers
                             //newVariableList.ValueAsIList = defaultVariableList.ValueAsIList;
                             newVariableList.Name = memberName;
                             state.VariableLists.Add(newVariableList);
-                            GumCommands.Self.GuiCommands.PrintOutput(
+                            _guiCommands.PrintOutput(
                                 $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
                         }
                     }
@@ -170,10 +174,10 @@ namespace Gum.PropertyGridHelpers
 
                     // save everything
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                    _guiCommands.RefreshStateTreeView();
                     // no selection has changed, but we want to force refresh here because we know
                     // we really need a refresh - something was removed.
-                    GumCommands.Self.GuiCommands.RefreshVariables(force:true);
+                    _guiCommands.RefreshVariables(force:true);
 
                     PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
                 }

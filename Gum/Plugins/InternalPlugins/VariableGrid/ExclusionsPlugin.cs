@@ -58,7 +58,7 @@ public class ExclusionsPlugin : InternalPlugin
         if(variableName == "ChildrenLayout")
         {
             // Changing children layout can result in different values being shown in the property grid
-            GumCommands.Self.GuiCommands.RefreshVariables(force:true);
+            _guiCommands.RefreshVariables(force:true);
         }
     }
 

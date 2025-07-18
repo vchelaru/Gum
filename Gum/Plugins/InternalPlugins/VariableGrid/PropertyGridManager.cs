@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.ToolStates;
@@ -130,7 +130,7 @@ public partial class PropertyGridManager
         _localizationManager = localizationManager;
         mainControl = new Gum.MainPropertyGrid();
 
-        GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+        _guiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
         mVariablesDataGrid = mainControl.DataGrid;
 

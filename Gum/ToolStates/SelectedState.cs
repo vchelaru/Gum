@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
+using Gum.Commands;
 using Gum.Wireframe;
 using Gum.Plugins;
 using Gum.Debug;
@@ -13,12 +14,15 @@ using Gum.DataTypes.Behaviors;
 using Gum.Controls;
 using Newtonsoft.Json.Linq;
 using Gum.Events;
+using Gum.Services;
 
 namespace Gum.ToolStates;
 
 public class SelectedState : ISelectedState
 {
     #region Fields
+    
+    private readonly GuiCommands _guiCommands;
 
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
@@ -166,7 +170,7 @@ public class SelectedState : ISelectedState
         if (stateBefore == SelectedStateSave)
         {
             // If the state changed (element changed) then no need to force the UI again
-            GumCommands.Self.GuiCommands.RefreshVariables();
+            _guiCommands.RefreshVariables();
         }
     }
 
@@ -223,7 +227,7 @@ public class SelectedState : ISelectedState
         if (behavior != snapshot.SelectedBehavior)
         {
             snapshot.SelectedBehavior = behavior;
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshStateTreeView();
 
             WireframeObjectManager.Self.RefreshAll(false);
 
@@ -293,6 +297,11 @@ public class SelectedState : ISelectedState
     }
 
     #endregion
+
+    public SelectedState()
+    {
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+    }
 
     #region Instance
 
@@ -436,7 +445,7 @@ public class SelectedState : ISelectedState
             {
                 if (stateContainerBefore != elementAfter && stateContainerBefore != behaviorAfter)
                 {
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                    _guiCommands.RefreshStateTreeView();
                 }
             }
         }

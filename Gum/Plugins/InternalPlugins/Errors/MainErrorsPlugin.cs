@@ -18,14 +18,8 @@ public class MainErrorsPlugin : InternalPlugin
     ErrorDisplay control;
     PluginTab tabPage;
     private ErrorTabHeader _tabPageHeader;
-    private readonly GuiCommands _guiCommands;
 
     #endregion
-
-    public MainErrorsPlugin()
-    {
-        _guiCommands = GumCommands.Self.GuiCommands;
-    }
 
     public override void StartUp()
     {

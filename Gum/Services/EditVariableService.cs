@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls;
+using CommonFormsAndControls;
 using ExCSS;
 using Gum.Controls;
 using Gum.DataTypes;
@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
 using Gum.Services.Dialogs;
 using WpfDataUi.DataTypes;
 
@@ -48,11 +49,13 @@ public class EditVariableService : IEditVariableService
 {
     private readonly RenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
 
-    public EditVariableService()
+    public EditVariableService(RenameLogic renameLogic, IDialogService dialogService, GuiCommands guiCommands)
     {
-        _renameLogic = Locator.GetRequiredService<RenameLogic>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _renameLogic = renameLogic;
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
@@ -234,7 +237,7 @@ public class EditVariableService : IEditVariableService
         vm.RenameType = RenameType.ExposedName;
         vm.ApplyVariableReferenceChanges(changeResponse, newName, oldName, changedElements);
 
-        GumCommands.Self.GuiCommands.RefreshVariables(force:true);
+        _guiCommands.RefreshVariables(force:true);
         foreach(var element in changedElements)
         {
             GumCommands.Self.FileCommands.TryAutoSaveElement(element);

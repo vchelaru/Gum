@@ -101,13 +101,14 @@ public class AddVariableViewModel : DialogViewModel
 
     #endregion
 
-    public AddVariableViewModel(UndoManager undoManager, 
+    public AddVariableViewModel(GuiCommands guiCommands,
+        UndoManager undoManager, 
         ElementCommands elementCommands, 
         NameVerifier nameVerifier, 
         ISelectedState selectedState, 
         IDialogService dialogService)
     {
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = guiCommands;
         _undoManager = undoManager;
         _elementCommands = elementCommands;
         _fileCommands = Locator.GetRequiredService<FileCommands>();

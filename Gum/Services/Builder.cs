@@ -55,6 +55,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
         services.AddSingleton<UndoManager>();
+        services.AddSingleton<FontManager>();
+        services.AddSingleton<IEditVariableService, EditVariableService>();
         
         //logic
         services.AddSingleton<VariableReferenceLogic>();
@@ -65,8 +67,11 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
         services.AddSingleton<ElementCommands>();
+        services.AddSingleton<GuiCommands>();
 
         services.AddDialogs();
+        
+        services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.
@@ -75,16 +80,13 @@ file static class ServiceCollectionExtensions
     // they can be moved to AddCleanServices.
     public static void AddLegacyServices(this IServiceCollection services)
     {
-        services.AddSingleton(GumCommands.Self.GuiCommands);
         services.AddSingleton(GumCommands.Self.FileCommands);
         services.AddSingleton(SetVariableLogic.Self);
         services.AddSingleton(HotkeyManager.Self);
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         
         services.AddSingleton<CircularReferenceManager>();
-        services.AddSingleton<FontManager>();
         services.AddSingleton<DragDropManager>();
-        services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
     }
@@ -101,6 +103,11 @@ file static class ServiceCollectionExtensions
         );
 
         return services;
+    }
+    
+    private class Lazier<T> : Lazy<T> where T : notnull
+    {
+        public Lazier(IServiceProvider serviceProvider) : base(serviceProvider.GetRequiredService<T>){}
     }
 }
 

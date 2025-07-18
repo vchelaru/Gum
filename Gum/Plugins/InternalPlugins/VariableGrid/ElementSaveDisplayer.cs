@@ -255,7 +255,6 @@ namespace Gum.PropertyGridHelpers
         {
             Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
-            //var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
             var value = currentState.GetValueRecursive(variableListName) as IList;
             if (value != null)
             {

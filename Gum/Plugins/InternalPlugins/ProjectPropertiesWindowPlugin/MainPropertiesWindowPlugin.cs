@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Gui.Controls;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -82,19 +82,19 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             var wasShown = 
-                GumCommands.Self.GuiCommands.ShowTabForControl(control);
+                _guiCommands.ShowTabForControl(control);
 
             if(!wasShown)
             {
-                var tab = GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                var tab = _guiCommands.AddControl(control, "Project Properties");
                 tab.CanClose = true;
                 control.ViewModel = viewModel;
-                GumCommands.Self.GuiCommands.ShowTabForControl(control);
+                _guiCommands.ShowTabForControl(control);
             }
         }
         catch (Exception ex)
         {
-            GumCommands.Self.GuiCommands.PrintOutput($"Error showing project properties:\n{ex.ToString()}");
+            _guiCommands.PrintOutput($"Error showing project properties:\n{ex.ToString()}");
         }
     }
 
@@ -222,6 +222,6 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
     private void HandleCloseClicked(object sender, EventArgs e)
     {
-        GumCommands.Self.GuiCommands.RemoveControl(control);
+        _guiCommands.RemoveControl(control);
     }
 }
