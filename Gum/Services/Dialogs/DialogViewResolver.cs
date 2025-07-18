@@ -96,15 +96,18 @@ internal class DialogViewResolver : IDialogViewResolver
                     return types;
                 });
 
-            // UserStringDialogs without an explicit view implementation fall back to default
-            foreach (Type userStringBase in vmViewPairs.Select(x => x.Key)
-                         .Where(t => typeof(GetUserStringDialogBaseViewModel).IsAssignableFrom(t)))
+            foreach (var kvp in viewModelTypes)
             {
-                if (!vmViewPairs.ContainsKey(userStringBase))
+                if (vmViewPairs.ContainsKey(kvp.Value) == false)
                 {
-                    vmViewPairs[userStringBase] = typeof(GetUserStringDialogView);
+                    // we didn't handle this VM type, we need to:
+                    if (typeof(GetUserStringDialogBaseViewModel).IsAssignableFrom(kvp.Value))
+                    {
+                        vmViewPairs[kvp.Value] = typeof(GetUserStringDialogView);
+                    }
                 }
             }
+
 
             foreach (var pair in vmViewPairs)
             {
