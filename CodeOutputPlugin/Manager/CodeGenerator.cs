@@ -681,10 +681,11 @@ public class CodeGenerator
 
                 var shouldSetStateByString = false;
 
+                // see if the state is defined by a standard element. If so, we 
+                var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
+
                 if (isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                 {
-                    // see if the state is defined by a standard element. If so, we 
-                    var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
 
                     if (rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
                     {
@@ -700,6 +701,8 @@ public class CodeGenerator
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
+                //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
+
                 var hasGetter = true;
                 if (isState)
                 {
@@ -708,10 +711,17 @@ public class CodeGenerator
                         hasGetter = false;
                     }
                 }
+                if (rootVariable?.Name == "SourceFile")
+                {
+                    // SourceFileName has no getter by default
+                    hasGetter = false;
+                }
+
                 if (hasGetter)
                 {
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "_")};");
                 }
+
 
                 if (shouldSetStateByString)
                 {
@@ -720,8 +730,17 @@ public class CodeGenerator
                 }
                 else
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
+                    if(rootVariable?.Name == "SourceFile")
+                    {
+                        var variableName = exposedVariable.SourceObject + ".SourceFileName";
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
+                    }
                 }
+
                 tabCount--;
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
@@ -730,6 +749,9 @@ public class CodeGenerator
 
 
     }
+
+
+
 
     #endregion
 
