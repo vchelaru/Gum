@@ -134,8 +134,16 @@ namespace Gum.Plugins.Inheritance
 
                     StateSave defaultStateSave = StandardElementsManager.Self.GetDefaultStateFor(newValue);
 
-                    asElementSave.Initialize(defaultStateSave);
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(asElementSave);
+                    // July 17, 2025
+                    // Calling this method
+                    // results in all of the
+                    // default values being assigned
+                    // on this instance. Doing so overwrites
+                    // the default values inherited from the base
+                    // StandardElementSave. Instead, we should inherit
+                    // from the base:
+                    //asElementSave.Initialize(defaultStateSave);
+                    //StandardElementsManagerGumTool.Self.FixCustomTypeConverters(asElementSave);
                 }
                 else
                 {
