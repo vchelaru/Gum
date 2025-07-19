@@ -71,6 +71,9 @@ public class FrameworkElementTests : BaseTestClass
         var frameworkElement = new FrameworkElement(new ContainerRuntime());
         // so that it has managers:
         frameworkElement.Visual.AddToManagers();
+
+        // So it registers a click:
+        frameworkElement.Visual.Click += (_, _) => { };
         frameworkElement.Width = 100;
         frameworkElement.Height = 100;
         GraphicalUiElement.CanvasWidth = 100;
