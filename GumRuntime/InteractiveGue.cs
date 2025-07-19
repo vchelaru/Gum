@@ -349,6 +349,14 @@ public partial class InteractiveGue : BindableGue
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
                 asInteractive?.MouseWheelScroll != null
+                // if it has events and it has a Forms control, then let's consider it a click
+                //|| asInteractive?.FormsControlAsObject != null
+                // Update July 18, 2025 
+                // We can't do this because
+                // if we do, full screen containers
+                // consume all clicks. We need to come
+                // up with another way to do this. For now
+                // the events are the hack
                 )
             {
                 if (!handledByChild)

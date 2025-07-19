@@ -578,6 +578,10 @@ namespace GumRuntime
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, ISystemManagers systemManagers)
         {
+            if(elementSave == null)
+            {
+                throw new ArgumentNullException(nameof(elementSave), "elementSave parameter is required");
+            }
             // We need to set categories and states first since those are used below;
             toReturn.AddStatesAndCategoriesRecursivelyToGue(elementSave);
 
