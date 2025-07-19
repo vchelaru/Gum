@@ -36,7 +36,7 @@ In other words, you can reset your game screen to be as shown in the following c
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -46,7 +46,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -61,14 +61,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -101,7 +101,7 @@ We can interact with any of the Forms instances by using `GetFrameworkElementByN
 ```diff
 protected override void Initialize()
 {
-    var gumProject = Gum.Initialize(
+    var gumProject = GumUI.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");      

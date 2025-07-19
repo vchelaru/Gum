@@ -32,7 +32,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -43,7 +43,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        Gum.Initialize(this, DefaultVisualsVersion.V2);
+        GumUI.Initialize(this, DefaultVisualsVersion.V2);
             
         var mainPanel = new StackPanel();
         mainPanel.AddToRoot();
@@ -53,14 +53,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -76,7 +76,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     
-+   GumService Gum => GumService.Default;
++   GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -87,7 +87,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-+       Gum.Initialize(this, DefaultVisualsVersion.V2);
++       GumUI.Initialize(this, DefaultVisualsVersion.V2);
             
 +       var mainPanel = new StackPanel();
 +       mainPanel.Visual.AddToRoot();
@@ -97,14 +97,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-+       Gum.Update(gameTime);
++       GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-+       Gum.Draw();
++       GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -118,7 +118,7 @@ The code above includes the following sections:
 * Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls.  By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
 ```csharp
-Gum.Initialize(this, DefaultVisualsVersion.V2);
+GumUI.Initialize(this, DefaultVisualsVersion.V2);
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
 ```
@@ -126,13 +126,13 @@ mainPanel.AddToRoot();
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any forms components. For example, if a `Button` is added to the `StackPanel`, this code is responsible for checking if the cursor is overlapping the `Button` and adjusting the highlight/pressed state appropriately.
 
 ```csharp
-Gum.Update(gameTime);
+GumUI.Update(gameTime);
 ```
 
 * Draw - this method draws all Gum objects to the screen. This method does not yet perform any drawing since `StackPanels` are invisible, but we'll be adding controls later in this tutorial.
 
 ```csharp
-Gum.Draw();
+GumUI.Draw();
 ```
 
 We can run our project to see a blank (cornflower blue) screen.
@@ -148,7 +148,7 @@ Now that we have Gum running, we can add controls to our `StackPanel` (`mainPane
 ```csharp
 protected override void Initialize()
 {
-    Gum.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
@@ -175,7 +175,7 @@ protected override void Initialize()
 ```diff
 protected override void Initialize()
 {
-    Gum.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();

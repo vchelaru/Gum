@@ -19,7 +19,7 @@ The keyboard can be used to interact with controls. Keyboards can be used to:
 To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
 
 ```csharp
-FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
+FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
 ```
 
 Keep in mind that a control must first be explicitly to receive keyboard input.&#x20;

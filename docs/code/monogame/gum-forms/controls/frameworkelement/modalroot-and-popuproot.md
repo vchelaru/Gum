@@ -4,7 +4,7 @@
 
 The static `ModalRoot` and `PopupRoot` properties provide an `InteractiveGue` which serve as the root for any element which should appear on top of other elements. These properties have the following characteristics:
 
-* Automatically created by `Gum.Initialize`
+* Automatically created by `GumUI.Initialize`
 * Automatically resized to fit the entire screen, including if the `GraphicalUiElement.CanvasHeight` and `GraphicalUiElement.CanvasWidth` change.
 * Both remain on top of all other elements for its given layer. ModalRoot appears on top of PopupRoot.
 

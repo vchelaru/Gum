@@ -127,7 +127,7 @@ using MonoGameGum;
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -138,7 +138,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -148,14 +148,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -166,7 +166,7 @@ The code above has the following three calls on GumService:
 * Initialize - this loads the argument Gum project and sets appropriate defaults. Note that we are loading a Gum project here, but the gum project is optional. Projects which are using Gum only in code would not pass the second parameter.
 
 ```csharp
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -175,13 +175,13 @@ The code above has the following three calls on GumService:
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
 
 ```csharp
-Gum.Update(gameTime);
+GumUI.Update(gameTime);
 ```
 
 * Draw - this method draws all Gum objects to the screen. Currently this method does not perform any drawing, but in the next tutorial we'll be adding a Gum screen which is drawn in this method.
 
 ```csharp
-Gum.Draw();
+GumUI.Draw();
 ```
 
 ## Conclusion
