@@ -80,7 +80,7 @@ public class ListBoxVisual : InteractiveGue
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
         // NOTE: Focus for a ListBox must come from code 
-        // or from a user enabling keyboard navigation with FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
+        // or from a user enabling keyboard navigation with FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
         FocusedIndicator.Visible = false; 
         this.AddChild(FocusedIndicator);
 

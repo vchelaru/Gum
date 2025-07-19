@@ -22,7 +22,7 @@ namespace GumFormsSample
         private readonly IGumFormsSampleLogger _logger = new DebugLogger();
         private BindableGue _currentScreen;
         private bool _disposed;
-        GumService Gum => GumService.Default;
+        GumService GumUI => GumService.Default;
 
         public GumFormsSampleGame()
         {
@@ -37,10 +37,10 @@ namespace GumFormsSample
             _renderTarget = new RenderTarget2D(GraphicsDevice, _config.Width, _config.Height);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
+            GumUI.Initialize(this, "FormsGumProject/GumProject.gumx");
             // temporary until this is pulled from .gumx
             RenderingLibrary.Graphics.Text.IsMidWordLineBreakEnabled = true;
-            Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
+            GumUI.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
             _currentScreen = _screenFactory.DefaultScreen;
             _currentScreen.AddToRoot();
@@ -51,7 +51,7 @@ namespace GumFormsSample
 
         protected override void Update(GameTime gameTime)
         {
-            Gum.Update(gameTime);
+            GumUI.Update(gameTime);
             if(InteractiveGue.CurrentInputReceiver == null)
             {
                 int keyResult = _inputService.Update();
@@ -59,7 +59,7 @@ namespace GumFormsSample
                 {
                     if (_currentScreen != null)
                     {
-                        Gum.Root.Children.Remove(_currentScreen);
+                        GumUI.Root.Children.Remove(_currentScreen);
                     }
 
                     _currentScreen = _screenFactory.CreateScreen(keyResult);
@@ -67,12 +67,12 @@ namespace GumFormsSample
                 }
             }
 
-            foreach (var item in Gum.Root.Children)
+            foreach (var item in GumUI.Root.Children)
             {
                 (item as IUpdateScreen)?.Update(gameTime);
             }
 
-            System.Diagnostics.Debug.WriteLine(Gum.Cursor.WindowOver);
+            System.Diagnostics.Debug.WriteLine(GumUI.Cursor.WindowOver);
 
             base.Update(gameTime);
         }

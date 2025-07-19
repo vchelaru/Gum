@@ -17,7 +17,7 @@ using MonoGameGum.Forms;
 The following code shows how to get a Button instance from a screen which is loaded from a Gum project.
 
 ```csharp
-var project = Gum.Initialize(this, "GumProject/GumProject.gumx");
+var project = GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
 var screen = project.Screens.Find(item => item.Name == "MainMenu");
 var screenRuntime = screen.ToGraphicalUiElement();

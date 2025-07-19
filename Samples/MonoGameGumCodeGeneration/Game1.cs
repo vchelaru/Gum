@@ -14,7 +14,7 @@ namespace MonoGameGumCodeGeneration
         private readonly GraphicsDeviceManager _graphics;
         private MainMenuFullGenerationRuntime _mainMenu;
         private bool _disposed;
-        GumService Gum => GumService.Default;
+        GumService GumUI => GumService.Default;
 
         public Game1()
         {
@@ -29,7 +29,7 @@ namespace MonoGameGumCodeGeneration
 
         protected override void Initialize()
         {
-            Gum.Initialize(this, "GumProject/GumProject.gumx");
+            GumUI.Initialize(this, "GumProject/GumProject.gumx");
             _mainMenu = new MainMenuFullGenerationRuntime
             {
                 Name = "MainMenu"
@@ -40,14 +40,14 @@ namespace MonoGameGumCodeGeneration
 
         protected override void Update(GameTime gameTime)
         {
-            Gum.Update(this, gameTime);
+            GumUI.Update(this, gameTime);
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            Gum.Draw();
+            GumUI.Draw();
             base.Draw(gameTime);
         }
 

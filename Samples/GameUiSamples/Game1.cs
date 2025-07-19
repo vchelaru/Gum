@@ -17,7 +17,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    GumService Gum => MonoGameGum.GumService.Default;
+    GumService GumUI => MonoGameGum.GumService.Default;
 
     public static GameServiceContainer ServiceContainer { get; private set; }
 
@@ -42,9 +42,9 @@ public class Game1 : Game
     {
         ServiceContainer = Services;
 
-        var gumProject = Gum.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
+        var gumProject = GumUI.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
         // This allows the keyboard to control the game (tabbing)
-        FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
+        FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
         FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Keys.Down });
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Up });
 
@@ -65,7 +65,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
 
         foreach(var item in GumService.Default.Root.Children)
         {
@@ -82,7 +82,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        Gum.Draw();
+        GumUI.Draw();
 
         base.Draw(gameTime);
     }

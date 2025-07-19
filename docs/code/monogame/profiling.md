@@ -25,7 +25,7 @@ The following code shows how to check the performance of a simple project. Note 
 protected override void Initialize()
 {
     // Initialize Gum - can load a project, although it isn't used below
-    Gum.Initialize(this);
+    GumUI.Initialize(this);
 
     // Create a panel to hold all children.
     var panel = new StackPanel();
@@ -45,7 +45,7 @@ protected override void Initialize()
 
 protected override void Update(GameTime gameTime)
 {
-    Gum.Update(gameTime);
+    GumUI.Update(gameTime);
     base.Update(gameTime);
 }
 
@@ -53,12 +53,12 @@ protected override void Draw(GameTime gameTime)
 {
     GraphicsDevice.Clear(Color.CornflowerBlue);
 
-    Gum.Draw();
+    GumUI.Draw();
 
-    if(Gum.Keyboard.KeyPushed(Keys.Space))
+    if(GumUI.Keyboard.KeyPushed(Keys.Space))
     {
 
-        var spriteRenderer = Gum.SystemManagers.Renderer.SpriteRenderer;
+        var spriteRenderer = GumUI.SystemManagers.Renderer.SpriteRenderer;
         var lastFrameDrawStates = spriteRenderer.LastFrameDrawStates;
         
         System.Diagnostics.Debug.WriteLine(

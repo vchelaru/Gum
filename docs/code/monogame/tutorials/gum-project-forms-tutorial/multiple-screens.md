@@ -54,7 +54,7 @@ You can load Screen1 by adding the following code to your Game class.
 <pre class="language-csharp"><code class="lang-csharp"><strong>public class Game1 : Game
 </strong>{
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;    
+    GumService GumUI => GumService.Default;    
 
     public Game1()
     {
@@ -65,7 +65,7 @@ You can load Screen1 by adding the following code to your Game class.
 
     protected override void Initialize()
     {
-        Gum.Initialize(this,
+        GumUI.Initialize(this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 
@@ -82,7 +82,7 @@ You can load Screen1 by adding the following code to your Game class.
 <pre class="language-diff"><code class="lang-diff"><strong>public class Game1 : Game
 </strong>{
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;    
+    GumService GumUI => GumService.Default;    
 
     public Game1()
     {
@@ -93,7 +93,7 @@ You can load Screen1 by adding the following code to your Game class.
 
     protected override void Initialize()
     {
-        Gum.Initialize(this,
+        GumUI.Initialize(this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 

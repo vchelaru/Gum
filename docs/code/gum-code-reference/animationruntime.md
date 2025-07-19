@@ -25,8 +25,8 @@ GraphicalUiElement screenRuntime;
 
 protected override void Initialize()
 {
-    Gum.Initialize(this, "GumProject/GumProject.gumx");
-    Gum.LoadAnimations();
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.LoadAnimations();
 
     var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
     screenRuntime = screen.ToGraphicalUiElement();
@@ -37,7 +37,7 @@ protected override void Initialize()
 
 protected override void Update(GameTime gameTime)
 {
-    Gum.Update(gameTime);
+    GumUI.Update(gameTime);
 
     var animation = screenRuntime.Animations[0];
     animation.ApplyAtTimeTo(gameTime.TotalGameTime.TotalSeconds, screenRuntime);

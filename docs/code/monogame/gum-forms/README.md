@@ -23,7 +23,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -34,7 +34,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        Gum.Initialize(this, DefaultVisualsVersion.V2);
+        GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
         var stackPanel = new StackPanel();
         stackPanel.AddToRoot();
@@ -59,14 +59,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -116,7 +116,7 @@ Your project is now referenced in your game. Modify the Game file to initialize 
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -127,7 +127,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -141,14 +141,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(this, gameTime);
+        GumUI.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }

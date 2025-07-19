@@ -52,7 +52,7 @@ To show the screen in game, modify the Initialize method as shown in the followi
 
 <pre class="language-diff" data-line-numbers><code class="lang-diff">protected override void Initialize()
 {
-    var gumProject = Gum.Initialize(
+    var gumProject = GumUI.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");

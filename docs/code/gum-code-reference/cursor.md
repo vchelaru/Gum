@@ -56,8 +56,8 @@ The WindowOver property can be used to identify problems with items not receivin
 ```csharp
 protected override void Update(GameTime)
 {
-    Gum.Update(gameTime);
-    var cursor = Gum.Cursor;
+    GumUI.Update(gameTime);
+    var cursor = GumIO.Cursor;
     System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
     base.Update(gameTime);
 }
