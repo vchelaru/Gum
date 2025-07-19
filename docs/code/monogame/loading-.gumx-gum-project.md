@@ -72,7 +72,7 @@ To load a Gum Project:
 ```csharp
 protected override void Initialize()
 {
-    var gumProject = Gum.Initialize(
+    var gumProject = GumUI.Initialize(
         this, 
         "GumProject/GumProject.gumx");
 
@@ -87,7 +87,7 @@ protected override void Initialize()
 The code above loads the Gum project using the file path `"GumProject/GumProject.gumx"`. By default this path is relative to your game's Content folder. If your Gum project is not part of the Content folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
 ```csharp
-Gum.Initialize(
+GumUI.Initialize(
     this, "../GumProject/GumProject.gumx");
 ```
 
@@ -125,7 +125,7 @@ A full Game1 class which loads a project might look like this:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -135,7 +135,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this, "GumProject/GumProject.gumx");
         // This assumes that your project has at least 1 screen
         var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
@@ -146,14 +146,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }

@@ -30,7 +30,7 @@ The following code shows how to do the steps above:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     StackPanel layeredStackPanel;
     List<GraphicalUiElement> itemsToUpdate;
@@ -44,7 +44,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        Gum.Initialize(this);
+        GumUI.Initialize(this);
 
         var unlayeredStackPanel = new StackPanel();
         unlayeredStackPanel.AddToRoot();
@@ -57,7 +57,7 @@ public class Game1 : Game
         }
        
         // 1
-        var layer = Gum.SystemManagers.Renderer.AddLayer();
+        var layer = GumUI.SystemManagers.Renderer.AddLayer();
         // 2
         var layerCameraSettings = new LayerCameraSettings();
         layerCameraSettings.Zoom = 2;
@@ -67,7 +67,7 @@ public class Game1 : Game
         layeredStackPanel = new StackPanel();
         layeredStackPanel.X = 100;
         // 4
-        layeredStackPanel.Visual.AddToManagers(Gum.SystemManagers, layer);
+        layeredStackPanel.Visual.AddToManagers(GumUI.SystemManagers, layer);
 
         for (int i = 0; i < 3; i++)
         {
@@ -79,7 +79,7 @@ public class Game1 : Game
         // 5
         itemsToUpdate = new()
         {
-            Gum.Root,
+            GumUI.Root,
             layeredStackPanel.Visual
         };
 
@@ -90,7 +90,7 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         // 6
-        Gum.Update(this, gameTime, itemsToUpdate);
+        GumUI.Update(this, gameTime, itemsToUpdate);
 
         base.Update(gameTime);
     }
@@ -99,7 +99,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        Gum.Draw();
+        GumUI.Draw();
 
         base.Draw(gameTime);
     }
