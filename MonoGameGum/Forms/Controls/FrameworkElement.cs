@@ -1017,10 +1017,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <param name="loop">Whether to loop around to the beginning or end if at the last focusable item.</param>
     public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null, bool loop = false)
     {
-        if (requestingElement == null)
-        {
-            requestingElement = this;
-        }
+        requestingElement = requestingElement ?? this;
 
         ////////////////////Early Out/////////////////
         if (((IVisible)requestingElement.Visual).AbsoluteVisible == false)
@@ -1028,11 +1025,11 @@ public class FrameworkElement : INotifyPropertyChanged
             return;
         }
         /////////////////End Early Out/////////////////
-        Collection<IRenderableIpso> children = Visual.Children;
 
         var parentGue = requestingElement.Visual.Parent as InteractiveGue;
+        var requestingElementVisual = requestingElement.Visual;
 
-        HandleTab(tabDirection, requestingElement.Visual, parentGue, shouldAskParent: true, loop:loop);
+        HandleTab(tabDirection, requestingElementVisual, parentGue, shouldAskParent: true, loop:loop);
     }
 
     /// <summary>
@@ -1181,7 +1178,8 @@ public class FrameworkElement : INotifyPropertyChanged
                     {
                         if (parentVisual?.Parent != null)
                         {
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, parentVisual.Parent as InteractiveGue, shouldAskParent: true, loop:loop);
+                            var grandparentVisual = parentVisual.Parent as InteractiveGue;
+                            didFocusNewItem = HandleTab(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
                         }
                         else
                         {
@@ -1189,7 +1187,23 @@ public class FrameworkElement : INotifyPropertyChanged
 
                             if(didFocusNewItem == false && didReachEndOfChildren && loop)
                             {
-                                didFocusNewItem = HandleTab(tabDirection, null, requestingVisual, shouldAskParent: true, loop: false);
+                                // If we asked the parent and it didn't focus a new item, and if the parent doesn't have its own parent, then we
+                                // start back down the children of the parent:
+                                InteractiveGue? firstChild = null;
+                                if(parentVisual.Children != null)
+                                {
+                                    foreach(var child in parentVisual.Children)
+                                    {
+                                        if (child is InteractiveGue ig)
+                                        {
+                                            firstChild = ig;
+                                            break;
+                                        }
+                                    }
+                                }
+                                firstChild = firstChild ?? requestingVisual;
+
+                                didFocusNewItem = HandleTab(tabDirection, null, firstChild, shouldAskParent: true, loop: false);
                             }
                         }
                     }
