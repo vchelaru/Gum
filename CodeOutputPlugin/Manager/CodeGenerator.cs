@@ -442,12 +442,19 @@ public class CodeGenerator
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
-        string inheritance = null;
+        string? inheritance = null;
         if (element is ScreenSave)
         {
             if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                inheritance = element.BaseType ?? "MonoGameGum.Forms.Controls.FrameworkElement";
+                if(string.IsNullOrEmpty( element.BaseType))
+                {
+                    inheritance = "MonoGameGum.Forms.Controls.FrameworkElement";
+                }
+                else
+                {
+                    inheritance = element.BaseType;
+                }
             }
             else
             {

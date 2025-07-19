@@ -758,11 +758,11 @@ namespace Gum.PropertyGridHelpers
             var oldValue = variable?.Value;
             LastOldFullCommitValue = oldValue;
 
+            bool wasChangeMade = false;
             if (shouldReset)
             {
                 bool isPartOfCategory = StateSaveCategory != null;
 
-                bool wasChangeMade = false;
                 if (variable != null)
                 {
                     // Don't remove the variable if it's part of an element - we still want it there
@@ -838,6 +838,11 @@ namespace Gum.PropertyGridHelpers
                     // We need to refresh the property grid and the wireframe display
 
                 }
+                else if ((obj == "BaseType") || (obj == "Base Type") && ElementSave != null)
+                {
+                    ElementSave.BaseType = null;
+                    wasChangeMade = true;
+                }
                 else
                 {
                     // Maybe this is a variable list?
@@ -858,25 +863,26 @@ namespace Gum.PropertyGridHelpers
                 }
 
 
-                if (wasChangeMade)
-                {
-                    _undoManager.RecordUndo();
-                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-                    WireframeObjectManager.Self.RefreshAll(true);
-
-                    PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
-
-                    if (affectsTreeView)
-                    {
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
-                    }
-
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
-                }
             }
             else
             {
                 IsDefault = false;
+            }
+
+            if (wasChangeMade)
+            {
+                _undoManager.RecordUndo();
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                WireframeObjectManager.Self.RefreshAll(true);
+
+                PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
+
+                if (affectsTreeView)
+                {
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
+                }
+
+                GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
             }
 
             var gumElementOrInstanceSaveAsObject = this.Instance;
