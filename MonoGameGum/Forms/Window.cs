@@ -93,9 +93,24 @@ public class Window : FrameworkElement
 
     #region Initialize Methods
 
-    public Window() : base() { }
+    public Window() : base()
+    {
+        if(Visual != null)
+        {
+            // this allows the window to consume cursor events:
+            this.Visual.Click += (_,_) => { };
+        }
+    }
 
-    public Window(InteractiveGue visual) : base(visual) { }
+
+    public Window(InteractiveGue visual) : base(visual)
+    {
+        if (Visual != null)
+        {
+            // this allows the window to consume cursor events:
+            this.Visual.Click += (_, _) => { };
+        }
+    }
 
     protected override void ReactToVisualChanged()
     {
