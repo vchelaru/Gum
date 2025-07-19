@@ -614,7 +614,14 @@ public static class StateSaveExtensionMethods
         }
         else if (variableName == "BaseType")
         {
-            stateSave.ParentContainer.BaseType = value?.ToString();
+            if(value?.ToString() == string.Empty)
+            {
+                stateSave.ParentContainer.BaseType = null;
+            }
+            else
+            {
+                stateSave.ParentContainer.BaseType = value?.ToString();
+            }
             isReservedName = true; // don't do anything
         }
 
