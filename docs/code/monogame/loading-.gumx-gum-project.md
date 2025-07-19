@@ -32,10 +32,17 @@ To create a Gum project:
 To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
-2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
+2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [MonoGameGumFromFile.csproj](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
     Your .csproj may look like this:
 
     <figure><img src="../../.gitbook/assets/WildcardInCsproj.png" alt=""><figcaption><p>Example of wildcard pattern in .csproj</p></figcaption></figure>
+```xml
+  <ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+```
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\\
 
     <figure><img src="../../.gitbook/assets/VerifyCopyIfNewer.png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
