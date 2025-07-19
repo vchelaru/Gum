@@ -19,7 +19,7 @@ Before creating a Gum project, it is recommended that you already have a functio
 
 <figure><img src="../../.gitbook/assets/ContentFolderInGame.png" alt=""><figcaption><p>GumProject folder in the game's Content folder</p></figcaption></figure>
 
-If you haven't already downloaded it, you should down the Gum tool. See the [Introduction page](../../#downloading-gum) for information on downloading Gum.
+If you haven't already downloaded it, you should download the Gum tool. See the [Introduction page](../../#downloading-gum) for information on downloading Gum.
 
 To create a Gum project:
 
