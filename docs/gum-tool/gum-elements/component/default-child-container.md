@@ -6,6 +6,10 @@ By default this value is blank, which means that newly added children treat the 
 
 Default Child Container is typically set on containers which are designed to hold children, but which have margins or decoration around the dedicated container instance. Examples include list boxes, tree views, and frames.
 
+{% hint style="info" %}
+Default Child Container is a property that simplifies the addition of new children to a container. Changing this value will not change already-added children. This property is not required, since the Parent can be manually typed and set to the inner container using the "dot". See below for more information on dot assignments.
+{% endhint %}
+
 ### Example
 
 Consider a Component named Frame which has two instances: OuterRectangle and InnerRectangle.
