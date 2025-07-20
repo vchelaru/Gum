@@ -226,6 +226,7 @@
       * [Forms Controls](code/monogame/tutorials/code-only-gum-forms-tutorial/forms-controls.md)
       * [ListBox Items](code/monogame/tutorials/code-only-gum-forms-tutorial/listbox-items.md)
       * [Input in Forms](code/monogame/tutorials/code-only-gum-forms-tutorial/input-in-forms.md)
+      * [Creating New Controls](code/monogame/tutorials/code-only-gum-forms-tutorial/creating-new-controls.md)
     * [\[Deprecated\] Gum Project (.gumx) Tutorial](code/monogame/tutorials/gum-project-.gumx-tutorial/README.md)
       * [Setup](code/monogame/tutorials/gum-project-.gumx-tutorial/setup.md)
       * [Gum Screens](code/monogame/tutorials/gum-project-.gumx-tutorial/gum-screens.md)
