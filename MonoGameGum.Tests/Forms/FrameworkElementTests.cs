@@ -1,4 +1,6 @@
 ﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework;
+using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using Moq;
@@ -14,6 +16,8 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class FrameworkElementTests : BaseTestClass
 {
+    #region Loaded
+
     [Fact]
     public void Loaded_ShouldBeCalled_WhenAddedToRoot()
     {
@@ -53,6 +57,7 @@ public class FrameworkElementTests : BaseTestClass
 
     }
 
+    #endregion
 
     [Fact]
     public void EffectiveManagers_ShouldBeSet_IfAddedToRoot()
@@ -69,7 +74,7 @@ public class FrameworkElementTests : BaseTestClass
     public void CursorOver_ShouldBeThis_IfHasEvents()
     {
         var frameworkElement = new FrameworkElement(new ContainerRuntime());
-        // so that it has managers:
+        // so that it has managers which is needed for proper hit detection:
         frameworkElement.Visual.AddToManagers();
 
         // So it registers a click:
@@ -91,6 +96,8 @@ public class FrameworkElementTests : BaseTestClass
 
         cursor.VerifySet(c => c.WindowOver = frameworkElement.Visual);
     }
+
+    // CustomCursor cannot be properly tested because it requires a concrete Cursor class.
 
     [Fact]
     public void HandleTab_ShouldLoopBackToFirstItem()
