@@ -187,6 +187,11 @@ public class FormsUtilities
             return;
         }
 
+        var frameworkElementOverBefore =
+            cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
+            cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
+
+
         cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
         keyboard.Activity(gameTime.TotalGameTime.TotalSeconds, game);
         UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
@@ -272,11 +277,13 @@ public class FormsUtilities
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
 
-        if(frameworkElementOver?.IsEnabled == true )
+        var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
+
+        if(frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
         {
-            cursor.CustomCursor = frameworkElementOver?.CustomCursor ?? Cursors.Arrow;
+            cursor.CustomCursor = frameworkElementOver?.CustomCursor;
         }
-        else
+        else if(didChangeFrameworkElement)
         {
             cursor.CustomCursor = Cursors.Arrow;
         }
