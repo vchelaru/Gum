@@ -705,6 +705,13 @@ public class CodeGenerator
                     type = "string";
                 }
 
+                string sourceObjectName = exposedVariable.SourceObject;
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                {
+                    // for now assume all variables on source objects are using visuals:
+                    sourceObjectName = exposedVariable.SourceObject + ".Visual";
+                }
+
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
@@ -726,25 +733,25 @@ public class CodeGenerator
 
                 if (hasGetter)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "_")};");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName.Replace(" ", "_")}.{rootVariable?.Name};");
                 }
 
 
                 if (shouldSetStateByString)
                 {
-                    var rightSide = $"{exposedVariable.SourceObject}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                    var rightSide = $"{sourceObjectName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
                 }
                 else
                 {
                     if(rootVariable?.Name == "SourceFile")
                     {
-                        var variableName = exposedVariable.SourceObject + ".SourceFileName";
+                        var variableName = sourceObjectName + ".SourceFileName";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
                     }
                     else
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName.Replace(" ", "_")}.{rootVariable?.Name} = value;");
                     }
                 }
 
