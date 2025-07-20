@@ -6,8 +6,6 @@ name: .SonarQube
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
   build:
@@ -46,7 +44,18 @@ jobs:
       - name: Build and analyze
         shell: powershell
         run: |
+          echo "::group::Start and Configure Scan"
           .\.sonar\scanner\dotnet-sonarscanner begin /o:"kaltinril" /k:"kaltinril_gum" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+          echo "::endgroup::"
+          
+          echo "::group::Build"
           dotnet build .\AllLibraries.sln
-          dotnet-coverage collect "dotnet test ./MonoGameGum.Tests/MonoGameGum.Tests.csproj" -f xml -o "coverage.xml"
+          echo "::endgroup::"
+          
+          echo "::group::Test Coverage"
+          dotnet-coverage collect "dotnet test ./MonoGameGum.Tests/MonoGameGum.Tests.csproj --no-build" -f xml -o "coverage.xml"
+          echo "::endgroup::"
+          
+          echo "::group::Process Scan and Upload"
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          echo "::endgroup::"
