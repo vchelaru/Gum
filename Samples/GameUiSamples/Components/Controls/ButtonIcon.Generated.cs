@@ -1,5 +1,6 @@
 //Code for Controls/ButtonIcon (Container)
 using GumRuntime;
+using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
 using Gum.Converters;
@@ -12,89 +13,87 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-namespace GameUiSamples.Components
+namespace GameUiSamples.Components;
+partial class ButtonIcon : MonoGameGum.Forms.Controls.Button
 {
-    partial class ButtonIcon:MonoGameGum.Forms.Controls.Button
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    public static void RegisterRuntimeType()
     {
-        [System.Runtime.CompilerServices.ModuleInitializer]
-        public static void RegisterRuntimeType()
+        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
-            {
-                var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
-                var element = ObjectFinder.Self.GetElementSave("Controls/ButtonIcon");
-                element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
-                if(createForms) visual.FormsControlAsObject = new ButtonIcon(visual);
-                return visual;
-            });
-            MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonIcon)] = template;
-            ElementSaveExtensions.RegisterGueInstantiation("Controls/ButtonIcon", () => 
-            {
-                var gue = template.CreateContent(null, true) as InteractiveGue;
-                return gue;
-            });
-        }
-        public enum ButtonCategory
+            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonIcon");
+            element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
+            if(createForms) visual.FormsControlAsObject = new ButtonIcon(visual);
+            return visual;
+        });
+        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonIcon)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("Controls/ButtonIcon", () => 
         {
-            Enabled,
-            Disabled,
-            Highlighted,
-            Pushed,
-            HighlightedFocused,
-            Focused,
-            DisabledFocused,
-        }
+            var gue = template.CreateContent(null, true) as InteractiveGue;
+            return gue;
+        });
+    }
+    public enum ButtonCategory
+    {
+        Enabled,
+        Disabled,
+        Highlighted,
+        Pushed,
+        HighlightedFocused,
+        Focused,
+        DisabledFocused,
+    }
 
-        ButtonCategory? _buttonCategoryState;
-        public ButtonCategory? ButtonCategoryState
+    ButtonCategory? _buttonCategoryState;
+    public ButtonCategory? ButtonCategoryState
+    {
+        get => _buttonCategoryState;
+        set
         {
-            get => _buttonCategoryState;
-            set
+            _buttonCategoryState = value;
+            if(value != null)
             {
-                _buttonCategoryState = value;
-                if(value != null)
+                if(Visual.Categories.ContainsKey("ButtonCategory"))
                 {
-                    if(Visual.Categories.ContainsKey("ButtonCategory"))
-                    {
-                        var category = Visual.Categories["ButtonCategory"];
-                        var state = category.States.Find(item => item.Name == value.ToString());
-                        this.Visual.ApplyState(state);
-                    }
-                    else
-                    {
-                        var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
-                        var state = category.States.Find(item => item.Name == value.ToString());
-                        this.Visual.ApplyState(state);
-                    }
+                    var category = Visual.Categories["ButtonCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
                 }
             }
         }
-        public NineSliceRuntime Background { get; protected set; }
-        public Icon Icon { get; protected set; }
-        public NineSliceRuntime FocusedIndicator { get; protected set; }
-
-        public Icon.IconCategory? IconCategory
-        {
-            get => Icon.IconCategoryState;
-            set => Icon.IconCategoryState = value;
-        }
-
-        public ButtonIcon(InteractiveGue visual) : base(visual) { }
-        public ButtonIcon()
-        {
-
-
-
-        }
-        protected override void ReactToVisualChanged()
-        {
-            base.ReactToVisualChanged();
-            Background = this.Visual?.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-            Icon = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<Icon>(this.Visual,"Icon");
-            FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
-            CustomInitialize();
-        }
-        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-        partial void CustomInitialize();
     }
+    public NineSliceRuntime Background { get; protected set; }
+    public Icon Icon { get; protected set; }
+    public NineSliceRuntime FocusedIndicator { get; protected set; }
+
+    public Icon.IconCategory? IconCategory
+    {
+        get => Icon.IconCategoryState;
+        set => Icon.IconCategoryState = value;
+    }
+
+    public ButtonIcon(InteractiveGue visual) : base(visual) { }
+    public ButtonIcon()
+    {
+
+
+
+    }
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
+        Icon = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Icon");
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
 }
