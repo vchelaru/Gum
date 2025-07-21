@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Gum.Managers;
+using System;
+using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Gum.Managers;
-using System.Collections;
-using ToolsUtilities;
-using System.CodeDom;
 using System.Reflection.Emit;
+using System.Security.Cryptography.X509Certificates;
+using ToolsUtilities;
 //using Gum.Wireframe;
 
 
@@ -160,6 +161,29 @@ public static class StateSaveExtensionMethods
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < stateSave.Variables.Count; i++)
+                    {
+                        var stateVariable = stateSave.Variables[i];
+                        ElementSave categoryOwner = null;
+                        StateSaveCategory category = null;
+                        if (string.IsNullOrEmpty(stateVariable.SourceObject) && stateVariable.SetsValue &&
+                            stateVariable.Value is string stateName &&
+                            // check this last since it's the slowest:
+                            stateVariable.IsState(elementContainingState, out categoryOwner, out category) && category != null)
+                        {
+                            var foundBaseDefinedState = category.States.FirstOrDefault(item => item.Name == stateName);
+                            value = foundBaseDefinedState?.GetValue(nameInBase);
+                            wasFound = value != null;
+                            if (wasFound)
+                            {
+                                break;
+                            }
+                            int m = 3;
                         }
                     }
                 }
