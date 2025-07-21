@@ -51,9 +51,9 @@ namespace Gum.Managers
 
         #endregion
 
-        public MenuStripManager(GuiCommands guiCommands)
+        public MenuStripManager()
         {
-            _guiCommands = guiCommands;
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _editCommands = Locator.GetRequiredService<EditCommands>();
@@ -62,7 +62,7 @@ namespace Gum.Managers
 
         public void Initialize()
         {
-            var mainWindow = GumCommands.Self.GuiCommands.MainWindow;
+            var mainWindow = _guiCommands.MainWindow;
             // Load Recent handled in MainRecentFilesPlugin
 
             #region Local Functions
@@ -279,12 +279,12 @@ namespace Gum.Managers
 
             //Add(viewToolStripMenuItem, "Hide Tools", () =>
             //{
-            //    GumCommands.Self.GuiCommands.HideTools();
+            //    _guiCommands.HideTools();
             //});
 
             //Add(viewToolStripMenuItem, "Show Tools", () =>
             //{
-            //    GumCommands.Self.GuiCommands.ShowTools();
+            //    _guiCommands.ShowTools();
             //});
 
 

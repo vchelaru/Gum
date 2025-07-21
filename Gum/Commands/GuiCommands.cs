@@ -42,13 +42,14 @@ public class GuiCommands
 
     MainPanelControl mainPanelControl;
 
-    private readonly ISelectedState _selectedState;
+    private readonly Lazy<ISelectedState> _lazySelectedState;
+    private ISelectedState _selectedState => _lazySelectedState.Value;
 
     #endregion
 
-    public GuiCommands()
+    public GuiCommands(Lazy<ISelectedState> lazySelectedState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _lazySelectedState = lazySelectedState;
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -203,7 +204,7 @@ public class GuiCommands
 
     public void PositionWindowByCursor(System.Windows.Forms.Form window)
     {
-        var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
+        var mousePosition = GetMousePosition();
 
         window.Location = new System.Drawing.Point(mousePosition.X - window.Width / 2, mousePosition.Y - window.Height / 2);
     }

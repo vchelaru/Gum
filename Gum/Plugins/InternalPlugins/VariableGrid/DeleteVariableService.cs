@@ -28,11 +28,11 @@ public class DeleteVariableService : IDeleteVariableService
     private readonly RenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
 
-    public DeleteVariableService(FileCommands fileCommands, GuiCommands guiCommands)
+    public DeleteVariableService(FileCommands fileCommands)
     {
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _fileCommands = fileCommands;
-        _guiCommands = guiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
     }

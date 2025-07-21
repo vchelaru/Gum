@@ -7,6 +7,7 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
 using Gum.Commands;
+using Gum.Services;
 
 namespace Gum.Wireframe.Editors
 {
@@ -43,7 +44,7 @@ namespace Gum.Wireframe.Editors
         public DimensionDisplay()
         {
             _toolFontService = ToolFontService.Self;
-            _guiCommands = GumCommands.Self.GuiCommands;
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
 
         public void AddToManagers(SystemManagers systemManagers, Layer layer)

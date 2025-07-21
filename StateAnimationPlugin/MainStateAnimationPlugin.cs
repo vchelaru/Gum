@@ -38,7 +38,6 @@ public class MainStateAnimationPlugin : PluginBase
     private readonly DuplicateService _duplicateService;
     private readonly AnimationFilePathService _animationFilePathService;
     private readonly ElementDeleteService _elementDeleteService;
-    private readonly GuiCommands _gumCommands;
     private readonly RenameManager _renameManager;
     private readonly SettingsManager _settingsManager;
     private readonly ProjectState _projectState;
@@ -76,7 +75,6 @@ public class MainStateAnimationPlugin : PluginBase
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
-        _gumCommands = GumCommands.Self.GuiCommands;
         _renameManager = RenameManager.Self;
         _settingsManager = SettingsManager.Self;
         _projectState = GumState.Self.ProjectState;
@@ -128,7 +126,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (element != null && !_gumCommands.IsTabVisible(pluginTab))
+        if (element != null && !_guiCommands.IsTabVisible(pluginTab))
         {
             var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
 
@@ -251,7 +249,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleToggleTabVisibility(object sender, EventArgs e)
     {
-        if (!_gumCommands.IsTabVisible(pluginTab))
+        if (!_guiCommands.IsTabVisible(pluginTab))
         {
             pluginTab.Show();
         }
@@ -279,11 +277,11 @@ public class MainStateAnimationPlugin : PluginBase
             mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
         }
 
-        var wasShown = _gumCommands.ShowTabForControl(mMainWindow);
+        var wasShown = _guiCommands.ShowTabForControl(mMainWindow);
 
         if (!wasShown)
         {
-            pluginTab = _gumCommands.AddControl(mMainWindow, "Animations",
+            pluginTab = _guiCommands.AddControl(mMainWindow, "Animations",
                 TabLocation.RightBottom);
 
             pluginTab.TabShown += HandleTabShown;
@@ -584,7 +582,7 @@ public class MainStateAnimationPlugin : PluginBase
             }
             catch (Exception exc)
             {
-                _gumCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
+                _guiCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
             }
         }
     }

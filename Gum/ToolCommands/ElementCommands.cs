@@ -9,6 +9,7 @@ using Gum.ToolStates;
 using Gum.PropertyGridHelpers;
 using Gum.DataTypes.Behaviors;
 using System.ComponentModel;
+using Gum.Commands;
 using Gum.Wireframe;
 using GumRuntime;
 using Gum.Converters;
@@ -23,12 +24,14 @@ namespace Gum.ToolCommands
         #region Fields
 
         private readonly ISelectedState _selectedState;
+        private readonly GuiCommands _guiCommands;
 
         #endregion
 
         public ElementCommands()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
 
         #region Instance
@@ -52,7 +55,7 @@ namespace Gum.ToolCommands
 
             elementToAddTo.Instances.Add(instanceSave);
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
+            _guiCommands.RefreshElementTreeView(elementToAddTo);
 
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
             //_selectedState.SelectedInstance = instanceSave;
@@ -69,7 +72,7 @@ namespace Gum.ToolCommands
             // a plugin may have removed this instance. If so, we need to refresh the tree node again:
             if (elementToAddTo.Instances.Contains(instanceSave) == false)
             {
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
+                _guiCommands.RefreshElementTreeView(elementToAddTo);
                 Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 
                 // August 2, 2022 - this is currently returned even if a plugin
@@ -170,7 +173,7 @@ namespace Gum.ToolCommands
 
             PluginManager.Self.StateAdd(stateSave);
 
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshStateTreeView();
 
             if(stateContainer is BehaviorSave behavior)
             {
@@ -313,7 +316,7 @@ namespace Gum.ToolCommands
 
                 if (hasChangeOccurred)
                 {
-                    GumCommands.Self.GuiCommands.RefreshVariableValues();
+                    _guiCommands.RefreshVariableValues();
                 }
             }
 
@@ -642,7 +645,7 @@ namespace Gum.ToolCommands
                 }
             }
 
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshStateTreeView();
 
             PluginManager.Self.CategoryAdd(category);
 
@@ -669,7 +672,7 @@ namespace Gum.ToolCommands
             instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
             behaviorToAddTo.RequiredInstances.Add(instanceSave);
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(behaviorToAddTo);
+            _guiCommands.RefreshElementTreeView(behaviorToAddTo);
 
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
             //_selectedState.SelectedInstance = instanceSave;
@@ -686,7 +689,7 @@ namespace Gum.ToolCommands
             // a plugin may have removed this instance. If so, we need to refresh the tree node again:
             //if (elementToAddTo.Instances.Contains(instanceSave) == false)
             //{
-            //    GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
+            //    _guiCommands.RefreshElementTreeView(elementToAddTo);
             //    Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 
             //    // August 2, 2022 - this is currently returned even if a plugin
@@ -725,7 +728,7 @@ namespace Gum.ToolCommands
 
                 PluginManager.Self.BehaviorReferencesChanged(componentSave);
 
-                GumCommands.Self.GuiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
+                _guiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
 
                 if (performSave)
                 {

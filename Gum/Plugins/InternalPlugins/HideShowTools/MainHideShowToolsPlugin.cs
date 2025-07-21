@@ -26,14 +26,14 @@ internal class MainHideShowToolsPlugin : InternalPlugin
         if (areToolsVisible)
         {
             menuItem.Text = "Show Tools";
-            GumCommands.Self.GuiCommands.HideTools();
+            _guiCommands.HideTools();
             areToolsVisible = false;
 
         }
         else
         {
             menuItem.Text = "Hide Tools";
-            GumCommands.Self.GuiCommands.ShowTools();
+            _guiCommands.ShowTools();
             areToolsVisible = true;
         }
     }

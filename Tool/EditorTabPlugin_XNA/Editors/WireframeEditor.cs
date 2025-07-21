@@ -17,6 +17,7 @@ using System;
 using Gum.PropertyGridHelpers;
 using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
+using Gum.Commands;
 using Gum.Services;
 using Gum.ToolCommands;
 
@@ -31,6 +32,8 @@ public abstract class WireframeEditor
     protected readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
     private readonly UndoManager _undoManager;
+    protected readonly GuiCommands _guiCommands;
+    
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -53,9 +56,10 @@ public abstract class WireframeEditor
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -221,7 +225,7 @@ public abstract class WireframeEditor
                 // go so we'll just deal with that problem for now.
                 //ApplyAxisLockToSelectedState();
 
-                //GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                //_guiCommands.RefreshPropertyGrid();
             }
             mHasChangedAnythingSinceLastPush = true;
         }
@@ -283,7 +287,7 @@ public abstract class WireframeEditor
 
         using var undoLock = _undoManager.RequestLock();
 
-        GumCommands.Self.GuiCommands.RefreshVariableValues();
+        _guiCommands.RefreshVariableValues();
 
         var element = _selectedState.SelectedElement;
 

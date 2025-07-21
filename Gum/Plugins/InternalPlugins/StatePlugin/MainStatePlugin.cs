@@ -1,4 +1,4 @@
-﻿using Gum.Controls;
+using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -45,11 +45,11 @@ public class MainStatePlugin : InternalPlugin
     public MainStatePlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _gumCommands = GumCommands.Self;
         var elementCommands = Locator.GetRequiredService<ElementCommands>();
         var editCommands = Locator.GetRequiredService<EditCommands>();
         var dialogService = Locator.GetRequiredService<IDialogService>();
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands, elementCommands, editCommands, dialogService);
+        var guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands, elementCommands, editCommands, dialogService, guiCommands);
         _hotkeyManager = HotkeyManager.Self;
         _objectFinder = ObjectFinder.Self;
     }
@@ -103,7 +103,7 @@ public class MainStatePlugin : InternalPlugin
         stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager, _selectedState);
         _stateTreeViewRightClickService.SetMenuStrip(stateTreeView.TreeViewContextMenu, stateTreeView);
         
-        newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
+        newPluginTab = _guiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
     }
 
     #endregion

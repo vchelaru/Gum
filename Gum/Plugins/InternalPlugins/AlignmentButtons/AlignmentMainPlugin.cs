@@ -55,7 +55,7 @@ namespace Gum.Plugins.AlignmentButtons
 
                 if (!isAdded)
                 {
-                    GumCommands.Self.GuiCommands.AddControl(control, "Alignment");
+                    _guiCommands.AddControl(control, "Alignment");
                     isAdded = true;
                 }
             }
@@ -63,7 +63,7 @@ namespace Gum.Plugins.AlignmentButtons
             {
                 if (control != null && isAdded)
                 {
-                    GumCommands.Self.GuiCommands.RemoveControl(control);
+                    _guiCommands.RemoveControl(control);
                     isAdded = false;
                 }
             }

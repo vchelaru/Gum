@@ -37,6 +37,7 @@ namespace Gum.PropertyGridHelpers
         private readonly ElementCommands _elementCommands;
         private readonly UndoManager _undoManager;
         private readonly WireframeCommands _wireframeCommands;
+        private readonly GuiCommands _guiCommands;
 
         public SetVariableLogic()
         {
@@ -47,15 +48,14 @@ namespace Gum.PropertyGridHelpers
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
             _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fontManager = Locator.GetRequiredService<FontManager>();
         }
 
         // this is needed as we unroll all the other singletons...
         public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
         {
-            
             _circularReferenceManager = circularReferenceManager;
-            
-            _fontManager = Locator.GetRequiredService<FontManager>();
             _fileCommands = fileCommands;
         }
 
@@ -192,8 +192,8 @@ namespace Gum.PropertyGridHelpers
 
             if (needsToRefreshEntireElement)
             {
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _guiCommands.RefreshElementTreeView(parentElement);
+                _guiCommands.RefreshVariables(force: true);
             }
         }
 
@@ -255,8 +255,8 @@ namespace Gum.PropertyGridHelpers
                         MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
                         //stateSave.SetValue("BaseType", oldValue, instance);
                         instance.BaseType = (string)oldValue;
-                        GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
-                        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                        _guiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
+                        _guiCommands.RefreshVariables(force: true);
                     }
 
                     if(instanceContainer != null)
@@ -489,7 +489,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     gue.SetProperty(unqualifiedVariableToSet, valueToSet);
                 }
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _guiCommands.RefreshVariables(force: true);
 
 
             }
@@ -565,13 +565,13 @@ namespace Gum.PropertyGridHelpers
                     if (cancel)
                     {
                         variable.Value = oldValue;
-                        GumCommands.Self.GuiCommands.RefreshVariableValues();
+                        _guiCommands.RefreshVariableValues();
                     }
 
                     if (!cancel && filePath.Extension == "achx")
                     {
                         stateSave.SetValue($"{instancePrefix}TextureAddress", Gum.Managers.TextureAddress.Custom);
-                        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                        _guiCommands.RefreshVariables(force: true);
                     }
                 }
 
@@ -753,11 +753,11 @@ namespace Gum.PropertyGridHelpers
 
                 if (isValidAssignment)
                 {
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
+                    _guiCommands.RefreshElementTreeView(parentElement);
                 }
                 else
                 {
-                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                    _guiCommands.RefreshVariables(force: true);
                 }
             }
         }

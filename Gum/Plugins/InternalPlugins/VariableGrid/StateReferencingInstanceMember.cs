@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls;
+using CommonFormsAndControls;
 using ExCSS;
 using Gum.DataTypes;
 using Gum.DataTypes.ComponentModel;
@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using Gum.Commands;
 using ToolsUtilities;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
@@ -36,6 +37,7 @@ namespace Gum.PropertyGridHelpers
         private readonly HotkeyManager _hotkeyManager;
         private readonly UndoManager _undoManager;
         private readonly IDeleteVariableService _deleteVariableLogic;
+        private readonly GuiCommands _guiCommands;
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -252,6 +254,7 @@ namespace Gum.PropertyGridHelpers
             _deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
             _undoManager = undoManager;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
 
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
@@ -336,7 +339,7 @@ namespace Gum.PropertyGridHelpers
                     catch(Exception e)
                     {
                         // this could be a missing standard element save, print output but tolerate it:
-                        GumCommands.Self.GuiCommands.PrintOutput("Error getting standard element variable:\n" + e);
+                        _guiCommands.PrintOutput("Error getting standard element variable:\n" + e);
                     }
                 }
             }
@@ -816,7 +819,7 @@ namespace Gum.PropertyGridHelpers
                         var variableInDefault = _selectedState.SelectedElement.DefaultState.GetVariableSave(variable.Name);
                         if (variableInDefault != null)
                         {
-                            GumCommands.Self.GuiCommands.PrintOutput(
+                            _guiCommands.PrintOutput(
                                 $"The variable {variable.Name} is part of the category {StateSaveCategory.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
 
                             variable.Value = variableInDefault.Value;
@@ -831,7 +834,7 @@ namespace Gum.PropertyGridHelpers
                             }
                             else
                             {
-                                GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+                                _guiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
 
                             }
 
@@ -882,14 +885,14 @@ namespace Gum.PropertyGridHelpers
             if (wasChangeMade)
             {
                 _undoManager.RecordUndo();
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _guiCommands.RefreshVariables(force: true);
                 WireframeObjectManager.Self.RefreshAll(true);
 
                 PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 
                 if (affectsTreeView)
                 {
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
+                    _guiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
                 }
 
                 GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);

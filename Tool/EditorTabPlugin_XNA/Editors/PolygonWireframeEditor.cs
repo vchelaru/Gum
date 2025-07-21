@@ -340,7 +340,7 @@ namespace Gum.Wireframe.Editors
             hasGrabbedBodyOrPoint = true;
             mHasChangedAnythingSinceLastPush = true;
 
-            GumCommands.Self.GuiCommands.RefreshVariableValues();
+            _guiCommands.RefreshVariableValues();
 
             return newIndex;
         }
@@ -468,7 +468,7 @@ namespace Gum.Wireframe.Editors
             // The values haven't yet been pushed up to the 
             // element/Instance, so this won't do anything yet.
             // Instead we rely on DoEndOfSettingValuesLogic 
-            GumCommands.Self.GuiCommands.RefreshVariableValues();
+            _guiCommands.RefreshVariableValues();
         }
 
         private void BodyGrabbingActivity()
@@ -494,7 +494,7 @@ namespace Gum.Wireframe.Editors
 
                 if(canDelete == false)
                 {
-                    GumCommands.Self.GuiCommands.PrintOutput("Cannot delete point, polygon requires at least 3 points");
+                    _guiCommands.PrintOutput("Cannot delete point, polygon requires at least 3 points");
                 }
                 else
                 {

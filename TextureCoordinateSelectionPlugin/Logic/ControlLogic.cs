@@ -14,6 +14,7 @@ using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
+using Gum.Commands;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -34,6 +35,7 @@ public class ControlLogic : Singleton<ControlLogic>
 {
     private readonly ISelectedState _selectedState;
     private readonly UndoManager _undoManager;
+    private readonly GuiCommands _guiCommands;
     
     LineRectangle textureOutlineRectangle = null;
 
@@ -70,6 +72,7 @@ public class ControlLogic : Singleton<ControlLogic>
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     public PluginTab CreateControl()
@@ -99,9 +102,9 @@ public class ControlLogic : Singleton<ControlLogic>
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
 
-        //GumCommands.Self.GuiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
+        //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
-        var pluginTab = GumCommands.Self.GuiCommands.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
+        var pluginTab = _guiCommands.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
         innerControl.DoubleClick += (not, used) =>
             HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
 
@@ -361,8 +364,8 @@ public class ControlLogic : Singleton<ControlLogic>
             // We should refresh the entire grid because we could be
             // changing this from Entire Texture to Custom, resulting in
             // new variables being shown
-            //GumCommands.Self.GuiCommands.RefreshVariableValues();
-            GumCommands.Self.GuiCommands.RefreshVariables();
+            //_guiCommands.RefreshVariableValues();
+            _guiCommands.RefreshVariables();
 
         }
 
@@ -420,7 +423,7 @@ public class ControlLogic : Singleton<ControlLogic>
             state.SetValue($"{instancePrefix}TextureHeight", graphicalUiElement.TextureHeight, "int");
 
 
-            GumCommands.Self.GuiCommands.RefreshVariableValues();
+            _guiCommands.RefreshVariableValues();
         }
 
         RefreshNineSliceGuides();

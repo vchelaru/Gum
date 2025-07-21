@@ -20,6 +20,7 @@ namespace Gum.Commands
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
         private readonly IDialogService _dialogService;
+        private readonly GuiCommands _guiCommands;
         
         MainWindow mainWindow;
 
@@ -28,6 +29,7 @@ namespace Gum.Commands
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
         
         public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
@@ -98,8 +100,8 @@ namespace Gum.Commands
 
             ProjectManager.Self.CreateNewProject();
 
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            GumCommands.Self.GuiCommands.RefreshVariables();
+            _guiCommands.RefreshStateTreeView();
+            _guiCommands.RefreshVariables();
             WireframeObjectManager.Self.RefreshAll(true);
         }
 

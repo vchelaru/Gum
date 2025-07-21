@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.Managers;
@@ -79,7 +80,6 @@ public partial class WireframeObjectManager
         )
     {
         _localizationManager = localizationManager;
-
         gueManager = new GraphicalUiElementManager();
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
@@ -159,7 +159,7 @@ public partial class WireframeObjectManager
         {
             ClearAll();
             RootGue = null;
-            GumCommands.Self.GuiCommands.PrintOutput($"Error - cannot create representation for Component {elementSave.Name} because its BaseType is not set.");
+            _guiCommands.PrintOutput($"Error - cannot create representation for Component {elementSave.Name} because its BaseType is not set.");
         }
         else if (forceLayout || forceReloadTextures)
         {
@@ -196,7 +196,7 @@ public partial class WireframeObjectManager
                 catch(Exception e)
                 {
                     RootGue = null;
-                    GumCommands.Self.GuiCommands.PrintOutput(e.ToString());
+                    _guiCommands.PrintOutput(e.ToString());
                     _dialogService.ShowMessage($"Error loading {elementSave}. See output window for more details");
                 }
                 GraphicalUiElement.IsAllLayoutSuspended = false;

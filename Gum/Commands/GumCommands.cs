@@ -7,12 +7,6 @@ namespace Gum;
 
 public class GumCommands : Singleton<GumCommands>
 {
-    public GuiCommands GuiCommands
-    {
-        get;
-        private set;
-    }
-
     public FileCommands FileCommands
     {
         get;
@@ -23,7 +17,6 @@ public class GumCommands : Singleton<GumCommands>
 
     public GumCommands()
     {
-        GuiCommands = new GuiCommands();
         FileCommands = new FileCommands();
         ProjectCommands = Gum.ToolCommands.ProjectCommands.Self;
     }
@@ -60,9 +53,8 @@ public class GumCommands : Singleton<GumCommands>
         }
     }
 
-    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl, LocalizationManager localizationManager)
+    public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
     {
-        GuiCommands.Initialize(mainWindow, mainPanelControl);
         FileCommands.Initialize(mainWindow, localizationManager);
     }
 

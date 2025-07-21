@@ -115,7 +115,7 @@ public class DeleteObjectPlugin : InternalPlugin
             RecursivelyDeleteChildrenOf(instance);
 
             // refresh the property grid, refresh the wireframe, save
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
+            _guiCommands.RefreshElementTreeView(element);
             _wireframeCommands.Refresh();
             GumCommands.Self.FileCommands.TryAutoSaveElement(element);
         }
