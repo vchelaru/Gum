@@ -324,6 +324,49 @@ public class GraphicalUiElementTests
 
     }
 
+    [Fact]
+    public void Dock_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new ();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime dockLeft = new();
+        parent.AddChild (dockLeft);
+        dockLeft.Dock(Dock.Left);
+        dockLeft.X.ShouldBe(0);
+        dockLeft.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        dockLeft.XOrigin.ShouldBe(HorizontalAlignment.Left);
+        dockLeft.Y.ShouldBe(0);
+        dockLeft.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        dockLeft.YOrigin.ShouldBe(VerticalAlignment.Center);
+        dockLeft.Height.ShouldBe(0);
+        dockLeft.HeightUnits.ShouldBe(DimensionUnitType.RelativeToParent);
+    }
+
+    [Fact]
+    public void YUnits_ShouldBeIgnored_ForSubsequentStackedSiblings()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 300;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime child1 = new ContainerRuntime();
+        parent.Children.Add(child1);
+        child1.Height = 100;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        child1.AbsoluteTop.ShouldBe(0);
+
+        ContainerRuntime child2 = new ();
+        parent.Children.Add(child2);
+        child2.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        child2.AbsoluteTop.ShouldBe(100);
+    }
+
+
     #endregion
 
     [Fact]

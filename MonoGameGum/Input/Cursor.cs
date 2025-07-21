@@ -310,7 +310,28 @@ public class Cursor : ICursor
             LastInputDevice = InputDevice.TouchScreen;
         }
 
-        _touchCollection = TouchPanel.GetState();
+        var shouldDoTouchPanel = true;
+
+#if KNI
+        shouldDoTouchPanel = TouchPanel.Current != null;
+#endif
+
+        if (shouldDoTouchPanel)
+        {
+            // In MonoGame there's no way to check if GameWindow has been set.
+            // This code could pass its own GameWindow, but that requires assumptions
+            // or additional objects being carried through Cursor to get to here. Instead
+            // we'll try/catch it. The catch shouldn't happen in actual games so it should be
+            // cheap.
+            try
+            {
+                _touchCollection = TouchPanel.GetState();
+            }
+            catch
+            {
+                _touchCollection = new TouchCollection();
+            }
+        }
 
         var lastFrameTouchCollectionCount = 0;
         try

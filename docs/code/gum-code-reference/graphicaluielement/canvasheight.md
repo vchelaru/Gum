@@ -4,11 +4,21 @@
 
 CanvasHeight is a static property which tells the Gum layout engine the size of the canvas. This is used for layouts on GraphicalUiElements which have no parent.
 
+CanvasWidth and CanvasHeight are automatically assigned when calling GumService.Default.Initialize to match the GraphicsDevice.Viewport.Width and GraphicsDevice.Viewport.Height, respectively.
+
+Changing these values automatically updates the following Root containers:
+
+* GumService.Default.Root
+* GumService.Default.PopupRoot
+* GumService.Default.ModalRoot
+
 ## Common Usage
 
 CanvasHeight and CanvasWidth are typically assigned to the height and width of your canvas. This can depend on the development environment. These values are used for layouts, especially layouts which depend on the canvas (or window) width and height.
 
-Setting these values does not automaticaly cause all GraphicalUiElements to perform their layout calls. If these values are changed then any GraphicalUiElements which have no parents should have their Layout method called. Setting properties on a GraphicalUiElement (such as changing WidthUnits) may also perform a layout.
+If you are using the Root objects in your application, including if you call AddToRoot, then no additional layout calls are needed after changing these values.
+
+If you are not using Root (such as if you are using GumBatch), or if you need updates to happen immediately to see absolute values, then you need to explicitly call UpdateLayout on the root-most object.
 
 ## Code Example - Setting the CanvasWidth and CanvasHeight in a MonoGame Project
 

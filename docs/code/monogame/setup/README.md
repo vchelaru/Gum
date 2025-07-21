@@ -28,7 +28,7 @@ using MonoGameGum.Forms;
 public class Game1 : Game
 {
     GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -39,20 +39,20 @@ public class Game1 : Game
     
     protected override void Initialize()
     {
-        Gum.Initialize(this, DefaultVisualsVersion.V2);
+        GumUI.Initialize(this, DefaultVisualsVersion.V2);
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -67,7 +67,7 @@ To test that you have successfully added Gum to the project, modify your Initial
 ```csharp
 protected override void Initialize()
 {
-    Gum.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
     var button = new Button();
     button.AddToRoot();
@@ -84,7 +84,7 @@ protected override void Initialize()
 ```diff
 protected override void Initialize()
 {
-    Gum.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
 +   var button = new Button();
 +   button.AddToRoot();

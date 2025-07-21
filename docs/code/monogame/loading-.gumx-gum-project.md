@@ -19,7 +19,7 @@ Before creating a Gum project, it is recommended that you already have a functio
 
 <figure><img src="../../.gitbook/assets/ContentFolderInGame.png" alt=""><figcaption><p>GumProject folder in the game's Content folder</p></figcaption></figure>
 
-If you haven't already downloaded it, you should down the Gum tool. See the [Introduction page](../../#downloading-gum) for information on downloading Gum.
+If you haven't already downloaded it, you should download the Gum tool. See the [Introduction page](../../#downloading-gum) for information on downloading Gum.
 
 To create a Gum project:
 
@@ -32,10 +32,17 @@ To create a Gum project:
 To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
-2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
+2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [MonoGameGumFromFile.csproj](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
     Your .csproj may look like this:
 
     <figure><img src="../../.gitbook/assets/WildcardInCsproj.png" alt=""><figcaption><p>Example of wildcard pattern in .csproj</p></figcaption></figure>
+```xml
+  <ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+```
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\\
 
     <figure><img src="../../.gitbook/assets/VerifyCopyIfNewer.png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
@@ -72,7 +79,7 @@ To load a Gum Project:
 ```csharp
 protected override void Initialize()
 {
-    var gumProject = Gum.Initialize(
+    var gumProject = GumUI.Initialize(
         this, 
         "GumProject/GumProject.gumx");
 
@@ -87,7 +94,7 @@ protected override void Initialize()
 The code above loads the Gum project using the file path `"GumProject/GumProject.gumx"`. By default this path is relative to your game's Content folder. If your Gum project is not part of the Content folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
 ```csharp
-Gum.Initialize(
+GumUI.Initialize(
     this, "../GumProject/GumProject.gumx");
 ```
 
@@ -125,7 +132,7 @@ A full Game1 class which loads a project might look like this:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -135,7 +142,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this, "GumProject/GumProject.gumx");
         // This assumes that your project has at least 1 screen
         var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
@@ -146,14 +153,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }

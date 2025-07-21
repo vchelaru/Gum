@@ -88,7 +88,7 @@ public struct CodeGenerationContext
                 }
                 else
                 {
-                    CodeGenerator.GetGumFormsType(instanceElement, out string? formsType, out _);
+                    CodeGenerator.GetGumFormsTypeFromBehaviors(instanceElement, out string? formsType, out _);
 
                     _isInstanceFormsObject = !string.IsNullOrEmpty(formsType);
                 }
@@ -143,7 +143,7 @@ public struct CodeGenerationContext
 
     public string GetInstanceNameInCode(InstanceSave instance)
     {
-        if(instance.Name.Length > 0 &&
+        if (instance.Name.Length > 0 &&
             char.IsDigit(instance.Name[0]))
         {
             return '_' + instance.Name.Replace(" ", "_");
@@ -270,7 +270,7 @@ public class CodeGenerator
             neededUsings.Add("MonoGameGum.GueDeriving");
         }
 
-        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
         {
             // https://github.com/vchelaru/Gum/issues/895
             neededUsings.Add("SkiaGum.GueDeriving");
@@ -293,7 +293,7 @@ public class CodeGenerator
             }
         }
 
-        foreach(var neededUsing in neededUsings)
+        foreach (var neededUsing in neededUsings)
         {
             context.StringBuilder.AppendLine($"using {neededUsing};");
         }
@@ -442,12 +442,19 @@ public class CodeGenerator
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
-        string inheritance = null;
+        string? inheritance = null;
         if (element is ScreenSave)
         {
             if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                inheritance = element.BaseType ?? "MonoGameGum.Forms.Controls.FrameworkElement";
+                if(string.IsNullOrEmpty( element.BaseType))
+                {
+                    inheritance = "MonoGameGum.Forms.Controls.FrameworkElement";
+                }
+                else
+                {
+                    inheritance = element.BaseType;
+                }
             }
             else
             {
@@ -458,25 +465,42 @@ public class CodeGenerator
         {
             inheritance = "SkiaGum.SkiaGumCanvasView";
         }
-        else if (element.BaseType == "Container" || 
-
-            // This allows forms controls like Label to inherit directly from Text, yet still
-            // be a Forms control:
-            ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
+        else if (element.BaseType == "Container" && projectSettings.OutputLibrary == OutputLibrary.MonoGame)
         {
             if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 inheritance = "ContainerRuntime";
             }
-            else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        }
+
+        else if (element.BaseType == "Container" ||
+
+            // This allows forms controls like Label to inherit directly from Text, yet still
+            // be a Forms control:
+            ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
+        {
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                GetGumFormsType(element, out string? gumFormsType, out _);
+                GetGumFormsTypeFromBehaviors(element, out string? gumFormsType, out _);
 
                 if (string.IsNullOrEmpty(gumFormsType))
                 {
-                    gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
+                    // if it inherits from a standard element that is not a container, and it doesn't have any Forms behaviors
+                    if (element.BaseType == "Container")
+                    {
+                        gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
+                    }
+                    // else it is something like a NineSlice-inheriting object, so don't return a forms inheritance
+                    else if(ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
+                    {
+                        inheritance = "Invalid inheritance - Forms controls must either inherit from Container, or must have Forms behaviors";
+                    }
                 }
-                inheritance = gumFormsType;
+
+                if (!string.IsNullOrEmpty(gumFormsType))
+                {
+                    inheritance = gumFormsType;
+                }
             }
             else
             {
@@ -664,10 +688,11 @@ public class CodeGenerator
 
                 var shouldSetStateByString = false;
 
+                // see if the state is defined by a standard element. If so, we 
+                var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
+
                 if (isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                 {
-                    // see if the state is defined by a standard element. If so, we 
-                    var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
 
                     if (rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
                     {
@@ -680,9 +705,18 @@ public class CodeGenerator
                     type = "string";
                 }
 
+                string sourceObjectName = exposedVariable.SourceObject;
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                {
+                    // for now assume all variables on source objects are using visuals:
+                    sourceObjectName = exposedVariable.SourceObject + ".Visual";
+                }
+
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
+                //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
+
                 var hasGetter = true;
                 if (isState)
                 {
@@ -691,20 +725,36 @@ public class CodeGenerator
                         hasGetter = false;
                     }
                 }
+                if (rootVariable?.Name == "SourceFile")
+                {
+                    // SourceFileName has no getter by default
+                    hasGetter = false;
+                }
+
                 if (hasGetter)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "_")};");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName.Replace(" ", "_")}.{rootVariable?.Name};");
                 }
+
 
                 if (shouldSetStateByString)
                 {
-                    var rightSide = $"{exposedVariable.SourceObject}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                    var rightSide = $"{sourceObjectName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
                 }
                 else
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
+                    if(rootVariable?.Name == "SourceFile")
+                    {
+                        var variableName = sourceObjectName + ".SourceFileName";
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName.Replace(" ", "_")}.{rootVariable?.Name} = value;");
+                    }
                 }
+
                 tabCount--;
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
@@ -713,6 +763,9 @@ public class CodeGenerator
 
 
     }
+
+
+
 
     #endregion
 
@@ -834,7 +887,18 @@ public class CodeGenerator
             }
             else
             {
-                context.StringBuilder.AppendLine(context.Tabs + "base.AfterFullCreation();");
+                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                {
+                    // July 17, 2025
+                    // I don't think this
+                    // is needed for Forms-first
+                    // codegen
+                    //context.StringBuilder.AppendLine(context.Tabs + "Visual?.AfterFullCreation();");
+                }
+                else
+                {
+                    context.StringBuilder.AppendLine(context.Tabs + "base.AfterFullCreation();");
+                }
 
             }
         }
@@ -890,7 +954,7 @@ public class CodeGenerator
     {
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
         {
-            GetGumFormsType(context.Element, out string? gumFormsType, out _);
+            GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
             if (gumFormsType != null)
             {
                 context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
@@ -959,10 +1023,10 @@ public class CodeGenerator
 
         context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance.BaseType, visualApi, context)}();");
 
-        if(context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-            if(instanceElement is StandardElementSave)
+            if (instanceElement is StandardElementSave)
             {
                 // We could do some kind of caching to speed this up? Fortunately there aren't a lot of ElementSaves in a typical project
                 context.StringBuilder.AppendLine($"{tabs}{instanceName}.ElementSave = ObjectFinder.Self.GetStandardElement(\"{instanceElement.Name}\");");
@@ -1068,7 +1132,7 @@ public class CodeGenerator
                 $"[typeof({className})] = template;");
 
             var element = context.Element;
-            GetGumFormsType(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+            GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
             if (formsType != null)
             {
                 var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
@@ -1113,7 +1177,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
 
             var element = context.Element;
-            GetGumFormsType(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+            GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
             if (formsType != null)
             {
                 var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
@@ -1134,13 +1198,13 @@ public class CodeGenerator
 
     #region Gum Forms (MonoGame)
 
-    internal static void GetGumFormsType(ElementSave element, out string? formsType, out ElementBehaviorReference? behavior)
+    internal static void GetGumFormsTypeFromBehaviors(ElementSave element, out string? formsType, out ElementBehaviorReference? behavior)
     {
         formsType = null;
         behavior = null;
         var behaviors = element?.Behaviors;
 
-        if(behaviors != null)
+        if (behaviors != null)
         {
             foreach (var possibleBehavior in behaviors)
             {
@@ -1180,7 +1244,7 @@ public class CodeGenerator
     {
         if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame) return;
 
-        GetGumFormsType(context.Element, out string? gumFormsType, out _);
+        GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
 
         if (gumFormsType == null) return;
 
@@ -2502,7 +2566,7 @@ public class CodeGenerator
             }
             else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                if(context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
                     stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}() : base(new ContainerRuntime())");
                 }
@@ -2670,7 +2734,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "AssignParents();");
             }
 
-            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 stringBuilder.AppendLine(context.Tabs + "if(tryCreateFormsObject)");
                 stringBuilder.AppendLine(context.Tabs + "{");
@@ -2767,7 +2831,7 @@ public class CodeGenerator
         context.Element = element;
         context.CodeOutputProjectSettings = projectSettings;
         context.StringBuilder = stringBuilder;
-        
+
 
 
         #endregion
@@ -3914,7 +3978,7 @@ public class CodeGenerator
                         // All XamForms objects are components, so all must inherit from something. This should never happen...
                     }
 
-                    
+
                     hasContent = DoesTypeHaveContent(componentType);
                 }
 
@@ -3925,7 +3989,7 @@ public class CodeGenerator
 
                 var contextInstance = context.Instance;
 
-                if(contextInstance != null)
+                if (contextInstance != null)
                 {
 
                     if (IsTabControl(parentInstance))

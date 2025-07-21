@@ -37,7 +37,7 @@
                         </GroupBox>
 
                     </Grid>
-                    <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="3" Text="{Binding Code}"></TextBox>
+                    <TextBox x:Name="TextBoxInstance" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="3" Text="{Binding Code}" FontFamily="Consolas"></TextBox>
                 </Grid>
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
                 <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">

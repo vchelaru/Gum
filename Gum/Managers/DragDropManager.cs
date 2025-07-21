@@ -550,7 +550,7 @@ public class DragDropManager
         {
             object draggedObject = draggedTreeNode.Tag;
 
-            if (targetTreeNode != draggedTreeNode)
+            if (targetTreeNode != draggedTreeNode && targetTreeNode?.Tag !=  draggedTreeNode?.Tag )
             {
                 HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
             }

@@ -30,6 +30,7 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
         SystemManagers.Default = new();
         SystemManagers.Default.Renderer = new Renderer();
         SystemManagers.Default.Renderer.AddLayer(new Layer());
+        ISystemManagers.Default = SystemManagers.Default;
 
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
