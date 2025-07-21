@@ -875,14 +875,14 @@ namespace Gum.PropertyGridHelpers
             if (wasChangeMade)
             {
                 _undoManager.RecordUndo();
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _guiCommands.RefreshVariables(force: true);
                 WireframeObjectManager.Self.RefreshAll(true);
 
                 PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 
                 if (affectsTreeView)
                 {
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
+                    _guiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
                 }
 
                 GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
