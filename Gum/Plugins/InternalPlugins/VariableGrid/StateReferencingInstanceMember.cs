@@ -468,6 +468,8 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
+        #region Expose/Unexpose
+
         private void TryAddExposeVariableMenuOptions(InstanceSave instance)
         {
             bool canExpose = false;
@@ -531,7 +533,9 @@ namespace Gum.PropertyGridHelpers
                 this.RootVariableName);
         }
 
+        #endregion
 
+        #region Get Value
         private object HandleCustomGet(object instance)
         {
             if (RootVariableName == "Name" && instance is InstanceSave asInstanceSave)
@@ -569,6 +573,10 @@ namespace Gum.PropertyGridHelpers
                 return mStateSave.GetValueRecursive(effectiveVariableName);
             }
         }
+
+        #endregion
+
+        #region Set Value
 
         private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
         {
@@ -668,6 +676,8 @@ namespace Gum.PropertyGridHelpers
                 }
             }
         }
+
+        #endregion
 
         private VariableSave GetVariableDefinedInThisOrBase(VariableSave existingVariable)
         {

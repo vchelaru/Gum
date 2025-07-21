@@ -1607,6 +1607,7 @@ public partial class ElementTreeViewManager
             }
         }
 
+        List<List<InstanceSave>> siblingLists = new ();
 
         foreach (InstanceSave instance in allInstances)
         {
@@ -1628,7 +1629,12 @@ public partial class ElementTreeViewManager
                 nodeForInstance.Expand();
             }
 
-            var siblingInstances = instance.GetSiblingsIncludingThis();
+            var siblingInstances = siblingLists.FirstOrDefault(item => item.Contains(instance));
+            if (siblingInstances == null)
+            {
+                siblingInstances = instance.GetSiblingsIncludingThis();
+                siblingLists.Add(siblingInstances);
+            }
             var desiredIndex = siblingInstances.IndexOf(instance);
 
             var container = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);

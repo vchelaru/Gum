@@ -690,11 +690,11 @@ public class CodeGenerator
 
                 // see if the state is defined by a standard element. If so, we 
                 var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
-
+                var isStateOnVisual = false;
                 if (isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                 {
-
-                    if (rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
+                    isStateOnVisual = rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave;
+                    if (isStateOnVisual)
                     {
                         shouldSetStateByString = true;
                     }
@@ -708,8 +708,15 @@ public class CodeGenerator
                 string sourceObjectName = exposedVariable.SourceObject;
                 if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
-                    // for now assume all variables on source objects are using visuals:
-                    sourceObjectName = exposedVariable.SourceObject + ".Visual";
+                    // only if the object is not a standard element
+                    var element = ObjectFinder.Self.GetElementSave(foundInstance);
+                    if(element is not StandardElementSave)
+                    {
+                        if(isState == false || isStateOnVisual)
+                        {
+                            sourceObjectName = exposedVariable.SourceObject + ".Visual";
+                        }
+                    }
                 }
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
