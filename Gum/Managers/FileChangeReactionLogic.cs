@@ -14,12 +14,14 @@ namespace Gum.Managers
         private readonly ISelectedState _selectedState;
         private readonly WireframeCommands _wireframeCommands;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
         
         public FileChangeReactionLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -78,7 +80,7 @@ namespace Gum.Managers
 
                 if(localizationFile == file)
                 {
-                    GumCommands.Self.FileCommands.LoadLocalizationFile();
+                    _fileCommands.LoadLocalizationFile();
                     _wireframeCommands.Refresh();
                 }
             }
@@ -89,7 +91,7 @@ namespace Gum.Managers
             var currentElement = _selectedState.SelectedElement;
             var elementName = currentElement?.Name;
 
-            GumCommands.Self.FileCommands.LoadProject(file.Standardized);
+            _fileCommands.LoadProject(file.Standardized);
 
             if(!string.IsNullOrEmpty(elementName))
             {

@@ -50,12 +50,17 @@ public class EditVariableService : IEditVariableService
     private readonly RenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
 
-    public EditVariableService(RenameLogic renameLogic, IDialogService dialogService, GuiCommands guiCommands)
+    public EditVariableService(RenameLogic renameLogic, 
+        IDialogService dialogService, 
+        GuiCommands guiCommands,
+        FileCommands fileCommands)
     {
         _renameLogic = renameLogic;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
@@ -240,7 +245,7 @@ public class EditVariableService : IEditVariableService
         _guiCommands.RefreshVariables(force:true);
         foreach(var element in changedElements)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+            _fileCommands.TryAutoSaveElement(element);
         }
 
     }

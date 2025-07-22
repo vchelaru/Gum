@@ -1,4 +1,4 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -30,14 +30,19 @@ public class VariableReferenceLogic
     private readonly GuiCommands _guiCommands;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
+    private readonly FileCommands _fileCommands;
 
     #endregion
 
-    public VariableReferenceLogic()
+    public VariableReferenceLogic(GuiCommands guiCommands, 
+        WireframeCommands wireframeCommands, 
+        IDialogService dialogService,
+        FileCommands fileCommands)
     {
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _dialogService =  Locator.GetRequiredService<IDialogService>();
+        _guiCommands = guiCommands;
+        _wireframeCommands = wireframeCommands;
+        _dialogService =  dialogService;
+        _fileCommands = fileCommands;
     }
 
     public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
@@ -366,7 +371,7 @@ public class VariableReferenceLogic
         {
             foreach (var elementToSave in elementsToSave)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+                _fileCommands.TryAutoSaveElement(elementToSave);
             }
         }
 
@@ -378,7 +383,7 @@ public class VariableReferenceLogic
         // now force save it if it's a variable reference:
         if (unqualifiedMember == "VariableReferences" && trySave)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
+            _fileCommands.TryAutoSaveElement(parentElement);
         }
 
         // The MainEditorTabPlugin handles refreshing in most cases, but if there was a "deep" set due to variable references,

@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Gum.Mvvm;
 using Gum.Services.Dialogs;
 
 namespace Gum.Services;
@@ -38,8 +39,7 @@ internal static class GumBuilder
         
         // This is needed until we unroll all the static singletons...
         CircularReferenceManager circularReferenceManager = Locator.GetRequiredService<CircularReferenceManager>();
-        FileCommands fileCommands = Locator.GetRequiredService<FileCommands>();
-        SetVariableLogic.Self.Initialize(circularReferenceManager, fileCommands);
+        SetVariableLogic.Self.Initialize(circularReferenceManager);
         
         return host;
     }
@@ -51,12 +51,21 @@ file static class ServiceCollectionExtensions
     // These must not use the Locator for resolving dependencies.
     public static void AddCleanServices(this IServiceCollection services)
     {
+        //transients
+        services.ForEachConcreteTypeAssignableTo<ViewModel>(
+            typeof(GumBuilder).Assembly,
+            static (isp, type) => isp.AddTransient(type)
+        );
+        services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
+        
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
         services.AddSingleton<UndoManager>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<IEditVariableService, EditVariableService>();
+        services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
+        services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         
         //logic
         services.AddSingleton<VariableReferenceLogic>();
@@ -67,11 +76,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
         services.AddSingleton<ElementCommands>();
-        services.AddSingleton<GuiCommands>();
-
-        services.AddDialogs();
+        services.AddSingleton<FileCommands>();
+        services.AddSingleton<ProjectCommands>();
         
-        services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
+        services.AddDialogs();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.
@@ -80,15 +88,12 @@ file static class ServiceCollectionExtensions
     // they can be moved to AddCleanServices.
     public static void AddLegacyServices(this IServiceCollection services)
     {
-        services.AddSingleton(GumCommands.Self.FileCommands);
         services.AddSingleton(SetVariableLogic.Self);
         services.AddSingleton(HotkeyManager.Self);
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         
         services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<DragDropManager>();
-        services.AddSingleton<IExposeVariableService, ExposeVariableService>();
-        services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
     }
 
     private static IServiceCollection AddDialogs(this IServiceCollection services)
@@ -96,11 +101,6 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
         services.AddSingleton<IDialogService, DialogService>();
-
-        services.ForEachConcreteTypeAssignableTo<DialogViewModel>(
-            typeof(GumBuilder).Assembly,
-            static (isp, type) => isp.AddTransient(type)
-        );
 
         return services;
     }

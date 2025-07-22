@@ -298,9 +298,9 @@ public class SelectedState : ISelectedState
 
     #endregion
 
-    public SelectedState()
+    public SelectedState(GuiCommands guiCommands)
     {
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = guiCommands;
     }
 
     #region Instance

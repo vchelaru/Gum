@@ -38,6 +38,11 @@ namespace Gum.PropertyGridHelpers
         private readonly UndoManager _undoManager;
         private readonly IDeleteVariableService _deleteVariableLogic;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
+        private readonly IEditVariableService _editVariablesService;
+        private readonly IExposeVariableService _exposeVariableService;
+        private readonly ISelectedState _selectedState;
+        
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -47,9 +52,7 @@ namespace Gum.PropertyGridHelpers
 
         InstanceSavePropertyDescriptor mPropertyDescriptor;
 
-        private readonly IEditVariableService _editVariablesService;
-        private readonly IExposeVariableService _exposeVariableService;
-        private readonly ISelectedState _selectedState;
+
         #endregion
 
         #region Properties
@@ -255,6 +258,7 @@ namespace Gum.PropertyGridHelpers
             _undoManager = undoManager;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands =  Locator.GetRequiredService<FileCommands>();
 
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
@@ -895,7 +899,7 @@ namespace Gum.PropertyGridHelpers
                     _guiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
                 }
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
+                _fileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
             }
 
             var gumElementOrInstanceSaveAsObject = this.Instance;

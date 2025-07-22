@@ -19,6 +19,8 @@ using Gum.Logic;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
 using Gum.Services.Dialogs;
 using GumRuntime;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Gum
 {
@@ -55,8 +57,11 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
-            _ = GumBuilder.BuildGum();
-            ((MainFormWindowHandleProvider)Locator.GetRequiredService<IMainWindowHandleProvider>()).Initialize(() => Handle);
+            IHost host = GumBuilder.BuildGum();
+            
+            IServiceProvider services = host.Services;
+            
+            ((MainFormWindowHandleProvider)services.GetRequiredService<IMainWindowHandleProvider>()).Initialize(() => Handle);
             
             InitializeComponent();
 
@@ -66,9 +71,9 @@ namespace Gum
             this.KeyDown += HandleKeyDown;
 
             // Initialize before the StateView is created...
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _guiCommands = services.GetRequiredService<GuiCommands>();
             _guiCommands.Initialize(this, mainPanelControl);
-            GumCommands.Self.Initialize(this, Locator.GetRequiredService<LocalizationManager>());
+            services.GetRequiredService<FileCommands>().Initialize(this);
 
             TypeManager.Self.Initialize();
 
@@ -92,7 +97,7 @@ namespace Gum
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?
-            PropertyGridManager.Self.InitializeEarly(Locator.GetRequiredService<LocalizationManager>());
+            PropertyGridManager.Self.InitializeEarly();
 
             // bah we have to do this before initializing all plugins because we need the menu strip to exist:
             MainMenuStripPlugin.InitializeMenuStrip();

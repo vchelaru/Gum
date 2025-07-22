@@ -36,6 +36,7 @@ public class ControlLogic : Singleton<ControlLogic>
     private readonly ISelectedState _selectedState;
     private readonly UndoManager _undoManager;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
     
     LineRectangle textureOutlineRectangle = null;
 
@@ -73,6 +74,7 @@ public class ControlLogic : Singleton<ControlLogic>
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
     }
 
     public PluginTab CreateControl()
@@ -451,7 +453,7 @@ public class ControlLogic : Singleton<ControlLogic>
 
         _undoManager.RecordUndo();
 
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveCurrentElement();
     }
 
     public void RefreshOutline(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)

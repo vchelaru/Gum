@@ -117,7 +117,7 @@ public class DeleteObjectPlugin : InternalPlugin
             // refresh the property grid, refresh the wireframe, save
             _guiCommands.RefreshElementTreeView(element);
             _wireframeCommands.Refresh();
-            GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+            _fileCommands.TryAutoSaveElement(element);
         }
     }
 
@@ -190,7 +190,7 @@ public class DeleteObjectPlugin : InternalPlugin
         {
             var asBehaviorSave = deletedObject as BehaviorSave;
 
-            return GumCommands.Self.FileCommands.GetFullPathXmlFile(asBehaviorSave);
+            return _fileCommands.GetFullPathXmlFile(asBehaviorSave);
         }
         else if (deletedObject is InstanceSave)
         {

@@ -14,12 +14,14 @@ namespace Gum.Logic
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
 
         public ReorderLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
         
         public void MoveSelectedInstanceForward()
@@ -135,7 +137,7 @@ namespace Gum.Logic
                     element.Instances.Insert(whereToInsert, whatToInsert);
 
                     RefreshInResponseToReorder(whatToMoveInFrontOf);
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                    _fileCommands.TryAutoSaveElement(element);
                 }
             }
         }
@@ -148,7 +150,7 @@ namespace Gum.Logic
 
             WireframeObjectManager.Self.RefreshAll(true);
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentElement();
 
             PluginManager.Self.InstanceReordered(instance);
         }

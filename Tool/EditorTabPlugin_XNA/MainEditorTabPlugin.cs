@@ -1,4 +1,4 @@
-using CommonFormsAndControls.Forms;
+﻿using CommonFormsAndControls.Forms;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
@@ -101,6 +101,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private BackgroundSpriteService _backgroundSpriteService;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly FileCommands _fileCommands;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -131,6 +132,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
     }
 
     public override void StartUp()
@@ -709,7 +711,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         }
         if (shouldUpdate)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentElement();
             _guiCommands.RefreshVariables();
 
             WireframeObjectManager.Self.RefreshAll(true);

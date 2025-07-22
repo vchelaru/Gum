@@ -112,6 +112,7 @@ public partial class ElementTreeViewManager
     private readonly EditCommands _editCommands;
     private readonly GuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
+    private readonly FileCommands _fileCommands;
 
 
     public const int TransparentImageIndex = 0;
@@ -276,8 +277,8 @@ public partial class ElementTreeViewManager
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _editCommands = Locator.GetRequiredService<EditCommands>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
-
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
         
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }

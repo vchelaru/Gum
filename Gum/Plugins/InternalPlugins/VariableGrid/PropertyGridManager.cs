@@ -29,12 +29,13 @@ public partial class PropertyGridManager
     private readonly IExposeVariableService _exposeVariableService;
     private readonly UndoManager _undoManager;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
     private readonly ObjectFinder _objectFinder;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IDialogService _dialogService;
+    private readonly LocalizationManager _localizationManager;
     
     WpfDataUi.DataUiGrid mVariablesDataGrid;
-    private LocalizationManager _localizationManager;
     MainPropertyGrid mainControl;
 
     static PropertyGridManager mPropertyGridManager;
@@ -110,15 +111,14 @@ public partial class PropertyGridManager
         _objectFinder = ObjectFinder.Self;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
     // so some of it will happen here:
-    public void InitializeEarly(LocalizationManager localizationManager)
+    public void InitializeEarly()
     {
-
-
-
         _colorPickerLogic = new ColorPickerLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
@@ -127,7 +127,6 @@ public partial class PropertyGridManager
             _setVariableLogic);
         mPropertyGridDisplayer = new ElementSaveDisplayer(new SubtextLogic());
 
-        _localizationManager = localizationManager;
         mainControl = new Gum.MainPropertyGrid();
 
         _guiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);

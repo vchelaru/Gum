@@ -8,12 +8,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
+using Gum.Services;
 using ToolsUtilities;
 
 namespace SkiaPlugin.Managers
 {
     static class StandardAdder
     {
+        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
         public static void AddAllStandards()
         {
             AddStandard("Arc", DefaultStateManager.GetArcState());
@@ -56,10 +59,10 @@ namespace SkiaPlugin.Managers
                     gumProject.StandardElements.Add(loaded);
                     loaded.Initialize(defaultState);
                     StandardElementsManagerGumTool.Self.FixCustomTypeConverters(loaded);
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(loaded);
+                    _fileCommands.TryAutoSaveElement(loaded);
                     toReturn = loaded;
                 }
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
+                _fileCommands.TryAutoSaveProject();
             }
 
             return toReturn;

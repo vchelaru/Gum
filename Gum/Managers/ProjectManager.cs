@@ -41,6 +41,7 @@ namespace Gum
         private readonly ElementCommands _elementCommands;
         private readonly IDialogService _dialogService;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
 
         #endregion
 
@@ -90,6 +91,7 @@ namespace Gum
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
 
         public void LoadSettings()
@@ -108,7 +110,7 @@ namespace Gum
 
                 if (!isShift && !string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
                 {
-                    GumCommands.Self.FileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+                    _fileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
 
                     if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
                     {
@@ -117,7 +119,7 @@ namespace Gum
                 }
                 else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
                 {
-                    GumCommands.Self.FileCommands.LoadProject(GeneralSettingsFile.LastProject);
+                    _fileCommands.LoadProject(GeneralSettingsFile.LastProject);
                 }
                 else
                 {
@@ -154,7 +156,7 @@ namespace Gum
                 _selectedState.SelectedInstance = null;
                 _selectedState.SelectedElement = null;
 
-                GumCommands.Self.FileCommands.LoadProject(fileName);
+                _fileCommands.LoadProject(fileName);
 
                 return true;
             }
@@ -263,7 +265,7 @@ namespace Gum
 
             if (mGumProjectSave != null)
             {
-                GumCommands.Self.FileCommands.LoadLocalizationFile();
+                _fileCommands.LoadLocalizationFile();
             }
 
             GeneralSettingsFile.AddToRecentFilesIfNew(fileName);

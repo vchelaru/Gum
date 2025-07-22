@@ -3,12 +3,15 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.Commands;
+using Gum.Services;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.VariableGrid
 {
     internal static class BehaviorShowingLogic
     {
+        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
         public static List<MemberCategory> GetCategoriesFor(BehaviorSave behavior)
         {
             List<MemberCategory> toReturn = new List<MemberCategory>();
@@ -33,7 +36,7 @@ namespace Gum.Plugins.VariableGrid
                 {
                     setter(args.Value);
 
-                    GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                    _fileCommands.TryAutoSaveBehavior(behavior);
                 };
 
                 var componentsImplementingBehavior = GumState.Self.ProjectState.GumProjectSave.Components
