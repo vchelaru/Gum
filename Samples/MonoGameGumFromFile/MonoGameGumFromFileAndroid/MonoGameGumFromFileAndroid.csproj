@@ -13,6 +13,7 @@
   <ItemGroup>
     <Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.cs" Link="Components\ComponentWithExposedVariableRuntime.cs" />
     <Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.Generated.cs" Link="Components\ComponentWithExposedVariableRuntime.Generated.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Game1.cs" Link="Game1.cs" />
     <Compile Include="..\MonoGameGumFromFile\Managers\SingleThreadSynchronizationContext.cs" Link="Managers\SingleThreadSynchronizationContext.cs" />
     <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.cs" Link="Screens\MvvmScreenRuntime.cs" />
     <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.Generated.cs" Link="Screens\MvvmScreenRuntime.Generated.cs" />

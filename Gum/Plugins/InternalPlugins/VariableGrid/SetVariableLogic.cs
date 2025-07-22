@@ -160,13 +160,6 @@ namespace Gum.PropertyGridHelpers
                     {
                         RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName);
 
-                        // This used to only check if values have changed. However, this can cause problems
-                        // because an intermediary value may change the value, then it gets a full commit. On
-                        // the full commit it doesn't save, so we need to save if this is true. 
-                        if (trySave)
-                        {
-                            _fileCommands.TryAutoSaveElement(parentElement);
-                        }
                     }
                 }
 
@@ -174,6 +167,18 @@ namespace Gum.PropertyGridHelpers
                 // Also this should happen after we update the wireframe so that plugins like
                 // the texture window which depend on the wireframe will have the correct values
                 PluginManager.Self.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
+
+                // This used to only check if values have changed. However, this can cause problems
+                // because an intermediary value may change the value, then it gets a full commit. On
+                // the full commit it doesn't save, so we need to save if this is true. 
+                // Update July 22, 2025
+                // Plugins may make modifications
+                // to the element, so save *after*
+                // calling PluginManager.Self.VariableSet
+                if (trySave)
+                {
+                    _fileCommands.TryAutoSaveElement(parentElement);
+                }
             }
             finally
             {
