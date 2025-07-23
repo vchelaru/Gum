@@ -2,12 +2,104 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Install Python Requirements",
+      "label": "venv:create",
       "type": "shell",
-      "command": "\"${config:python.pythonPath}\" -m pip install -r requirements.txt",
-      "options": {
-        "cwd": "${workspaceFolder}/Python/PythonGum"
+      "problemMatcher": [],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-NoProfile", "-ExecutionPolicy", "Bypass",
+          "-Command",
+          "if(!(Test-Path .venv)){ py -3 -m venv .venv }"
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["-c", "[ -d .venv ] || python3 -m venv .venv"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["-c", "[ -d .venv ] || python3 -m venv .venv"]
       }
+    },
+
+    {
+      "label": "pip:upgrade",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"]
+      }
+    },
+
+    {
+      "label": "pip:install",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["-m", "pip", "install", "-r", "requirements.txt"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "-r", "requirements.txt"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "-r", "requirements.txt"]
+      }
+    },
+
+    {
+      "label": "build gum dlls",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile", "-ExecutionPolicy", "Bypass",
+        "-File", "tools/build_dlls_from_source.ps1"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "gen stubs",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\pylance_stubs.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/pylance_stubs.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/pylance_stubs.py"]
+      }
+    },
+
+    {
+      "label": "bootstrap",
+      "dependsOn": [
+        "venv:create",
+        "pip:upgrade",
+        "pip:install",
+        "build gum dlls",
+        "gen stubs"
+      ],
+      "dependsOrder": "sequence",
+      "group": { "kind": "build", "isDefault": true }
     }
   ]
 }

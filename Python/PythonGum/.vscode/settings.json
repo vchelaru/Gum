@@ -1,7 +1,13 @@
 {
-"python.analysis.extraPaths": ["${workspaceFolder}/Python/PythonGum/src"],
-"python.analysis.stubPath": "${workspaceFolder}/typings",
-"python.languageServer": "Pylance",
+  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+  "python.analysis.stubPath": "${workspaceFolder}/typings",
+  "python.languageServer": "Pylance",
+  "python.analysis.diagnosticSeverityOverrides": {
+  "reportMissingModuleSource": "none",
+  "reportMissingImports": "none"
+  },
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.terminal.activateEnvironment": true,
 
   // Use the modern .NET runtime for C# projects
   "omnisharp.useModernNet": true

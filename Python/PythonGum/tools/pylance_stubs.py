@@ -1,6 +1,8 @@
 # tools/gen_stubs.py
-import sys, pythonnet, clr, textwrap
+import sys, pythonnet, clr
 from pathlib import Path
+from System.Reflection import ReflectionTypeLoadException
+
 pythonnet.load("coreclr")
 
 DLL_DIR = Path(r"C:\git\Gum\python\PythonGum\src\gum_runtime\_clr\net6.0")
@@ -10,45 +12,56 @@ for p in DLL_DIR.glob("*.dll"):
     except Exception: pass
 
 import System
-from System.Reflection import ReflectionTypeLoadException
-out_root = Path("typings") / "Gum"  # where stubs go
-out_root.mkdir(parents=True, exist_ok=True)
 
-def safe_types(a):
-    try: return a.GetTypes()
+SKIP = {"System", "Microsoft", "MS", "Internal", "FxResources", "Python", "mscorlib", "Windows"}
+OUT  = Path("typings")
+OUT.mkdir(parents=True, exist_ok=True)
+
+def safe_types(asm):
+    try: return asm.GetTypes()
     except ReflectionTypeLoadException as ex: return [t for t in ex.Types if t]
 
-type_map = [t for asm in System.AppDomain.CurrentDomain.GetAssemblies()
-            for t in safe_types(asm) if t and t.Namespace and t.Namespace.startswith("Gum")]
+# discover roots automatically
+all_types = [t for asm in System.AppDomain.CurrentDomain.GetAssemblies()
+             for t in safe_types(asm) if t and t.Namespace]
 
+roots = {t.Namespace.split(".")[0] for t in all_types} - SKIP
+print("Generating stubs for roots:", sorted(roots))
+
+# group by namespace
 by_ns = {}
-for t in type_map:
-    by_ns.setdefault(t.Namespace, []).append(t)
+for t in all_types:
+    root = t.Namespace.split(".")[0]
+    if root in roots:
+        by_ns.setdefault(t.Namespace, []).append(t)
 
+HEADER = ("from __future__ import annotations\n"
+          "import typing\n"
+          "from typing import Any\n\n")
 ANY = "typing.Any"
-header = "from __future__ import annotations\nimport typing\n" \
-         "from typing import Any\n\n"
 
 for ns, types in by_ns.items():
-    rel = ns.split(".")[1:]  # drop root "Gum"
-    folder = out_root.joinpath(*rel)
+    parts = ns.split(".")
+    folder = OUT.joinpath(*parts)
     folder.mkdir(parents=True, exist_ok=True)
-    stub = folder / "__init__.pyi"
-    lines = [header]
+    stub_file = folder / "__init__.pyi"
+
+    lines = [HEADER]
     for t in types:
         name = t.Name
         if t.IsEnum:
             lines.append(f"class {name}(int): ...\n")
             continue
-        bases = "typing.Any"
-        lines.append(f"class {name}({bases}):")
-        # props
-        for p in t.GetProperties():
-            lines.append(f"    {p.Name}: {ANY}  # property")
-        # methods (skip special names)
+        lines.append(f"class {name}(typing.Any):")
+        # properties
+        for prop in t.GetProperties():
+            lines.append(f"    {prop.Name}: {ANY}")
+        # methods
         for m in t.GetMethods():
-            if m.Name.startswith("_") or m.IsSpecialName: continue
-            lines.append(f"    def {m.Name}(self, *args: {ANY}, **kw: {ANY}) -> {ANY}: ...")
+            if m.IsSpecialName:  # skip get_/set_ etc
+                continue
+            lines.append(f"    def {m.Name}(self, *args: {ANY}, **kwargs: {ANY}) -> {ANY}: ...")
         lines.append("")
-    stub.write_text("\n".join(lines), encoding="utf-8")
-print("Stub generation done ->", out_root)
+    stub_file.write_text("\n".join(lines), encoding="utf-8")
+
+print("Stub generation done ->", OUT)
