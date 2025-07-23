@@ -36,7 +36,7 @@ Every type of control has a corresponding visual, where the name "Visual" is app
 using MonoGameGum.Forms.DefaultVisuals;
 //...
 var button = new Button();
-var buttonVisual = (ButtonVisual)button;
+var buttonVisual = (ButtonVisual)button.Visual;
 ```
 
 ## Directly Setting an Instance's Values
