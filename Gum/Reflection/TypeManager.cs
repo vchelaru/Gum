@@ -92,6 +92,11 @@ namespace Gum.Reflection
                 if (typeAsString == "List<Vector2>") return typeof(List<System.Numerics.Vector2>);
                 if (typeAsString == "List<System.Numerics.Vector2>") return typeof(List<System.Numerics.Vector2>);
 
+                // avoid ambiguity
+
+                // We'd never use the XNA-like blend part of GumCore in the tool:
+                if (typeAsString == "Blend") return typeof(Gum.RenderingLibrary.Blend);
+
                 foreach (Type type in mTypes)
                 {
                     if (type.Name == typeAsString)
