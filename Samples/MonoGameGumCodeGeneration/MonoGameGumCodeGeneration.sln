@@ -11,10 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameGum", "..\..\MonoGa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{FC566533-D963-442C-A9FC-7DC4886AFF30}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesNet6", "..\..\GumDataTypes\GumDataTypesNet6.csproj", "{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{93B18CE5-ED18-4229-8F7A-466D47649F77}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,22 +43,6 @@ Global
 		{FC566533-D963-442C-A9FC-7DC4886AFF30}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FC566533-D963-442C-A9FC-7DC4886AFF30}.Release|x86.ActiveCfg = Release|Any CPU
 		{FC566533-D963-442C-A9FC-7DC4886AFF30}.Release|x86.Build.0 = Release|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Debug|x86.Build.0 = Debug|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Release|x86.ActiveCfg = Release|Any CPU
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A}.Release|x86.Build.0 = Release|Any CPU
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Debug|x86.ActiveCfg = Debug|x86
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Debug|x86.Build.0 = Debug|x86
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Release|Any CPU.Build.0 = Release|Any CPU
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Release|x86.ActiveCfg = Release|x86
-		{93B18CE5-ED18-4229-8F7A-466D47649F77}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,8 +50,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{01A69A2F-F78E-42E5-B548-B9F6E6D22E71} = {90AA46D4-3161-41EE-9918-F59165162417}
 		{FC566533-D963-442C-A9FC-7DC4886AFF30} = {90AA46D4-3161-41EE-9918-F59165162417}
-		{EC26F52F-625B-4D4D-AE37-DBBCBDA9CA3A} = {90AA46D4-3161-41EE-9918-F59165162417}
-		{93B18CE5-ED18-4229-8F7A-466D47649F77} = {90AA46D4-3161-41EE-9918-F59165162417}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {99BC8D39-D6F2-4EBF-B096-A10DA99A0B65}

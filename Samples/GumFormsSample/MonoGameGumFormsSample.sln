@@ -9,13 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameGum", "..\..\MonoGa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{7139F899-D1F1-436A-B5D1-6FD49BB5BE87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesNet6", "..\..\GumDataTypes\GumDataTypesNet6.csproj", "{1002C62A-401F-4B9A-88DA-4F644DFE624B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameGumFormsSampleCommon", "GumFormsSampleCommon\MonoGameGumFormsSampleCommon.csproj", "{7060DCA3-70DD-4799-9B67-63AB69D536BC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{F357C0AC-2D4F-4B94-BA53-CBB7774ADDCB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,14 +45,6 @@ Global
 		{7139F899-D1F1-436A-B5D1-6FD49BB5BE87}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7139F899-D1F1-436A-B5D1-6FD49BB5BE87}.Release|x86.ActiveCfg = Release|Any CPU
 		{7139F899-D1F1-436A-B5D1-6FD49BB5BE87}.Release|x86.Build.0 = Release|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Debug|x86.Build.0 = Debug|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Release|x86.ActiveCfg = Release|Any CPU
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B}.Release|x86.Build.0 = Release|Any CPU
 		{7060DCA3-70DD-4799-9B67-63AB69D536BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7060DCA3-70DD-4799-9B67-63AB69D536BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7060DCA3-70DD-4799-9B67-63AB69D536BC}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -65,14 +53,6 @@ Global
 		{7060DCA3-70DD-4799-9B67-63AB69D536BC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7060DCA3-70DD-4799-9B67-63AB69D536BC}.Release|x86.ActiveCfg = Release|Any CPU
 		{7060DCA3-70DD-4799-9B67-63AB69D536BC}.Release|x86.Build.0 = Release|Any CPU
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Debug|x86.ActiveCfg = Debug|x86
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Debug|x86.Build.0 = Debug|x86
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Release|x86.ActiveCfg = Release|x86
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,8 +60,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{42EFC8E8-8EF0-4334-B77A-F4616284179E} = {F357C0AC-2D4F-4B94-BA53-CBB7774ADDCB}
 		{7139F899-D1F1-436A-B5D1-6FD49BB5BE87} = {F357C0AC-2D4F-4B94-BA53-CBB7774ADDCB}
-		{1002C62A-401F-4B9A-88DA-4F644DFE624B} = {F357C0AC-2D4F-4B94-BA53-CBB7774ADDCB}
-		{F9436BAC-AEAA-4049-B3C2-D43B406D2EC4} = {F357C0AC-2D4F-4B94-BA53-CBB7774ADDCB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9EA16B7B-4ED6-4249-8C76-9548D3128B5E}

@@ -1,17 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameUiSamples", "GameUiSamples.csproj", "{B40F3B5B-38AD-4520-8A41-D4C7E11C5AC3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum", "..\..\MonoGameGum\MonoGameGum.csproj", "{4C8A2660-1B7C-4B77-9AB5-7E8150EA16FC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{13FB7B1D-EE30-4D89-AD55-ECF617CBB86E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypesNet6", "..\..\GumDataTypes\GumDataTypesNet6.csproj", "{F852E8A1-E146-4CD9-A25B-111A131598E8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{459559BC-7E1B-44D8-9EE3-66EB798F7E12}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{36862BED-6114-4EAE-94AC-F1E51079A18E}"
 EndProject
@@ -33,14 +29,6 @@ Global
 		{13FB7B1D-EE30-4D89-AD55-ECF617CBB86E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13FB7B1D-EE30-4D89-AD55-ECF617CBB86E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13FB7B1D-EE30-4D89-AD55-ECF617CBB86E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F852E8A1-E146-4CD9-A25B-111A131598E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F852E8A1-E146-4CD9-A25B-111A131598E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F852E8A1-E146-4CD9-A25B-111A131598E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F852E8A1-E146-4CD9-A25B-111A131598E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{459559BC-7E1B-44D8-9EE3-66EB798F7E12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{459559BC-7E1B-44D8-9EE3-66EB798F7E12}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{459559BC-7E1B-44D8-9EE3-66EB798F7E12}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{459559BC-7E1B-44D8-9EE3-66EB798F7E12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,7 +36,5 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{4C8A2660-1B7C-4B77-9AB5-7E8150EA16FC} = {36862BED-6114-4EAE-94AC-F1E51079A18E}
 		{13FB7B1D-EE30-4D89-AD55-ECF617CBB86E} = {36862BED-6114-4EAE-94AC-F1E51079A18E}
-		{F852E8A1-E146-4CD9-A25B-111A131598E8} = {36862BED-6114-4EAE-94AC-F1E51079A18E}
-		{459559BC-7E1B-44D8-9EE3-66EB798F7E12} = {36862BED-6114-4EAE-94AC-F1E51079A18E}
 	EndGlobalSection
 EndGlobal
