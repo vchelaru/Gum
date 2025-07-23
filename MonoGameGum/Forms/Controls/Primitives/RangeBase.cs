@@ -28,13 +28,15 @@ public abstract class RangeBase : FrameworkElement
     static TimeSpan InitialRepeatRate = TimeSpan.FromSeconds(.33);
     static TimeSpan SubsequentRepeatRate = TimeSpan.FromSeconds(.12);
 
-    protected Button thumb;
+    protected Button? thumb;
 
     // version 1 of this would use the thumb's parent. But this is problematic if the thumb
     // parent is re-assigned after the Slider is created. Instead we should look for an explicit
     // track:
     InteractiveGue explicitTrack;
-    protected InteractiveGue Track => explicitTrack ?? thumb.Visual.EffectiveParentGue as InteractiveGue;
+    protected InteractiveGue? Track => explicitTrack ?? 
+        // tolerate this so users can create and assign Visual later
+        thumb?.Visual.EffectiveParentGue as InteractiveGue;
 
     /// <summary>
     /// Represents the X or Y offset of the cursor relative to the thumb when the thumb was grabbed.
