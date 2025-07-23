@@ -5310,7 +5310,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 throw new Exception($"{nameof(SetPropertyOnRenderable)} must be set on GraphicalUiElement");
             }
 #endif
-            SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+            try
+            {
+                SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+            }
+            catch(InvalidCastException invalidCastException)
+            {
+                throw new InvalidCastException($"Error trying to set {propertyName} to {value} on {mContainedObjectAsIpso}", invalidCastException);
+            }
         }
     }
 
