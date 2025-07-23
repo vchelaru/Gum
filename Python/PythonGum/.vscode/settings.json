@@ -1,0 +1,9 @@
+{
+"python.analysis.extraPaths": ["${workspaceFolder}/Python/PythonGum/src"],
+"python.analysis.stubPath": "${workspaceFolder}/typings",
+"python.languageServer": "Pylance",
+
+  // Use the modern .NET runtime for C# projects
+  "omnisharp.useModernNet": true
+}
+

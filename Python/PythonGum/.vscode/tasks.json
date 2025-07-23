@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install Python Requirements",
+      "type": "shell",
+      "command": "\"${config:python.pythonPath}\" -m pip install -r requirements.txt",
+      "options": {
+        "cwd": "${workspaceFolder}/Python/PythonGum"
+      }
+    }
+  ]
+}
