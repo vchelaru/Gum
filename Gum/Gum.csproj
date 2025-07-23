@@ -78,9 +78,7 @@
 		<ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
 		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
