@@ -51,6 +51,8 @@ namespace CodeOutputPlugin.Manager
             else
             {
                 toReturn = new CodeOutputProjectSettings();
+
+                toReturn.SetDefaults();
             }
 
             return toReturn;

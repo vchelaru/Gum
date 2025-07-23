@@ -111,6 +111,7 @@ public partial class CodeWindow : UserControl
         projectCategory.Members.Add(CreateGenerateObjectInstantiationTypeMember());
         projectCategory.Members.Add(CreateProjectUsingStatementsMember());
         projectCategory.Members.Add(CreateRootNamespaceMember());
+        projectCategory.Members.Add(CreateAppendFolderToNamespace());
         projectCategory.Members.Add(CreateDefaultScreenBaseMember());
 
         var createAdjustPixelValues =
@@ -301,6 +302,25 @@ public partial class CodeWindow : UserControl
 
         member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.RootNamespace;
         member.CustomGetTypeEvent += (owner) => typeof(string);
+
+        return member;
+    }
+
+    private InstanceMember CreateAppendFolderToNamespace()
+    {
+        var member = new InstanceMember("Append Folder to Namespace", this);
+
+        member.CustomSetPropertyEvent += (owner, args) =>
+        {
+            if (CodeOutputProjectSettings != null)
+            {
+                CodeOutputProjectSettings.AppendFolderToNamespace = (bool)args.Value;
+                CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+            }
+        };
+
+        member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.AppendFolderToNamespace ?? false;
+        member.CustomGetTypeEvent += (owner) => typeof(bool);
 
         return member;
     }

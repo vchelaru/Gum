@@ -343,12 +343,15 @@ public class CodeGenerator
                 namespaceName += ".Standards";
             }
 
-            var splitElementName = element.Name.Replace("\\", "/").Split('/').ToArray();
-            var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
-            var whatToAppend = string.Join(".", splitPrefix);
-            if (!string.IsNullOrEmpty(whatToAppend))
+            if(projectSettings.AppendFolderToNamespace)
             {
-                namespaceName += "." + whatToAppend;
+                var splitElementName = element.Name.Replace("\\", "/").Split('/').ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var whatToAppend = string.Join(".", splitPrefix);
+                if (!string.IsNullOrEmpty(whatToAppend))
+                {
+                    namespaceName += "." + whatToAppend;
+                }
             }
         }
 
