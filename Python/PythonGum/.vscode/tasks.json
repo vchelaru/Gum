@@ -68,7 +68,7 @@
         "-File", "tools/build_dlls_from_source.ps1"
       ],
       "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": []
+      "problemMatcher": "$msCompile"
     },
 
     {

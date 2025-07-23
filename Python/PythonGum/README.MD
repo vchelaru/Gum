@@ -16,5 +16,13 @@
 1. Go to Terminal > Run Task
 ![alt text](image.png)
 1. Select Bootstrap
-    This will Setup the Python Virtual Environment
+![alt text](image-1.png)
+    1. This will Setup the Python Virtual Environment
+    1. Update PIP (Package manager for Python)
+    1. Install the required packages from (requirements.txt)
+    1. Build the GumCommon.dll and pull in all required DLLs and put them in src\gum_runtime\_clr\net6.0\
+    1. Create Intellisense PyLance Stubs
+1. Now you Can open loader.py and click Play to test it.
+![alt text](image-2.png)
+
 
