@@ -17,13 +17,12 @@
 	  <PackageReference Include="Shouldly" Version="4.3.0" />
 	  <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
-	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.3" />
+	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
-    <ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
