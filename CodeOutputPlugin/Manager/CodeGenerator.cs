@@ -343,7 +343,7 @@ public class CodeGenerator
                 namespaceName += ".Standards";
             }
 
-            var splitElementName = element.Name.Split('\\').ToArray();
+            var splitElementName = element.Name.Replace("\\", "/").Split('/').ToArray();
             var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
             var whatToAppend = string.Join(".", splitPrefix);
             if (!string.IsNullOrEmpty(whatToAppend))
