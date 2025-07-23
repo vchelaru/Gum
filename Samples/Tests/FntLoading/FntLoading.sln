@@ -9,10 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameGum", "..\..\..\Mon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\..\GumCommon\GumCommon.csproj", "{2A1862A8-FEB1-4E96-A6C0-535C9CC04768}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypesNet6", "..\..\..\GumDataTypes\GumDataTypesNet6.csproj", "{00C5E9B1-B5D3-4AFB-8E56-E8A799894EAF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolsUtilitiesStandard", "..\..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{3308D83C-7970-4BF1-B16C-CFE270B2CF97}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,14 +27,6 @@ Global
 		{2A1862A8-FEB1-4E96-A6C0-535C9CC04768}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A1862A8-FEB1-4E96-A6C0-535C9CC04768}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A1862A8-FEB1-4E96-A6C0-535C9CC04768}.Release|Any CPU.Build.0 = Release|Any CPU
-		{00C5E9B1-B5D3-4AFB-8E56-E8A799894EAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{00C5E9B1-B5D3-4AFB-8E56-E8A799894EAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{00C5E9B1-B5D3-4AFB-8E56-E8A799894EAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{00C5E9B1-B5D3-4AFB-8E56-E8A799894EAF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3308D83C-7970-4BF1-B16C-CFE270B2CF97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3308D83C-7970-4BF1-B16C-CFE270B2CF97}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3308D83C-7970-4BF1-B16C-CFE270B2CF97}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3308D83C-7970-4BF1-B16C-CFE270B2CF97}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

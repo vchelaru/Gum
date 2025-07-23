@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
@@ -24,9 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
-    <ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\GumProject\**\*.*">
