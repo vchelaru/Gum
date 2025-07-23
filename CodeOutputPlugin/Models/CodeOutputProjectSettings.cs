@@ -48,6 +48,7 @@ using System.Linq;
 
     public string RootNamespace { get; set; }
 
+    public bool AppendFolderToNamespace { get; set; }
 
     public InheritanceLocation InheritanceLocation { get; set; } = InheritanceLocation.InGeneratedCode;
 
@@ -68,4 +69,9 @@ using System.Linq;
     public string BaseTypesNotCodeGenerated { get; set; }
 
     public bool GenerateGumDataTypes { get; set; }
+
+    internal void SetDefaults()
+    {
+        this.AppendFolderToNamespace = true;
+    }
 }
