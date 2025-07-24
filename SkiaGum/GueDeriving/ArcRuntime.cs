@@ -1,5 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -180,6 +181,15 @@ namespace SkiaGum.GueDeriving
                 GradientX2 = 100;
                 GradientY2 = 100;
             }
+        }
+
+        public override GraphicalUiElement Clone()
+        {
+            var toReturn = (ArcRuntime)base.Clone();
+
+            toReturn.mContainedArc = null;
+
+            return toReturn;
         }
 
     }

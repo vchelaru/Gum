@@ -1,4 +1,5 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Wireframe;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -40,5 +41,15 @@ public class CircleRuntime : SkiaShapeRuntime
             DropshadowOffsetY = 3;
             DropshadowBlurY = 3;
         }
+    }
+
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (CircleRuntime)base.Clone();
+
+        toReturn.mContainedCircle = null;
+
+        return toReturn;
     }
 }

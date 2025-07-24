@@ -62,5 +62,14 @@ namespace SkiaGum.GueDeriving
                 Height = 50;
             }
         }
+
+        public override GraphicalUiElement Clone()
+        {
+            var toReturn = (ColoredRectangleRuntime)base.Clone();
+
+            toReturn.mContainedRoundedRectangle = null;
+
+            return toReturn;
+        }
     }
 }
