@@ -66,7 +66,7 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
     }
 
     Vector2 Position;
-    IRenderableIpso? mParent;
+    internal protected IRenderableIpso? mParent;
 
     public IRenderableIpso? Parent
     {
@@ -88,7 +88,7 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
         }
     }
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    internal protected ObservableCollection<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -568,7 +568,7 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
 
     public void Render(ISystemManagers managers)
     {
-        var canvas = (managers as SystemManagers).Canvas;
+        var canvas = ((SystemManagers)managers).Canvas;
 
         var canRender =
             AbsoluteVisible &&

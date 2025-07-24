@@ -3,73 +3,81 @@ using SkiaGum.Renderables;
 using SkiaSharp.Skottie;
 using System;
 
-namespace SkiaGum.GueDeriving
+namespace SkiaGum.GueDeriving;
+
+public class LottieAnimationRuntime : BindableGue
 {
-    public class LottieAnimationRuntime : BindableGue
+    //protected override RenderableBase ContainedRenderable => ContainedLottieAnimation;
+
+    LottieAnimation mContainedLottieAnimation;
+    LottieAnimation ContainedLottieAnimation
     {
-        //protected override RenderableBase ContainedRenderable => ContainedLottieAnimation;
-
-        LottieAnimation mContainedLottieAnimation;
-        LottieAnimation ContainedLottieAnimation
+        get
         {
-            get
+            if (mContainedLottieAnimation == null)
             {
-                if (mContainedLottieAnimation == null)
-                {
-                    mContainedLottieAnimation = this.RenderableComponent as LottieAnimation;
-                }
-                return mContainedLottieAnimation;
+                mContainedLottieAnimation = this.RenderableComponent as LottieAnimation;
+            }
+            return mContainedLottieAnimation;
+        }
+    }
+
+    string sourceFile;
+    public string SourceFile
+    {
+        // eventually we may want to store this off somehow
+        get => sourceFile;
+        set
+        {
+            if (sourceFile != value)
+            {
+                sourceFile = value;
+                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                var contentLoader = loaderManager.ContentLoader;
+                var animation = contentLoader.LoadContent<Animation>(value);
+                Animation = animation;
             }
         }
+    }
 
-        string sourceFile;
-        public string SourceFile
+    public Animation Animation
+    {
+        get => ContainedLottieAnimation.Animation;
+        set => ContainedLottieAnimation.Animation = value;
+    }
+
+    public bool Loops
+    {
+        get => ContainedLottieAnimation.Loops;
+        set => ContainedLottieAnimation.Loops = value;
+    }
+
+    //public bool IsDimmed
+    //{
+    //    get => ContainedCircle.IsDimmed;
+    //    set => ContainedCircle.IsDimmed = value;
+    //}
+
+    public void Restart() => ContainedLottieAnimation.TimeAnimationStarted = DateTime.Now;
+
+    public LottieAnimationRuntime(bool fullInstantiation = true)
+    {
+        if (fullInstantiation)
         {
-            // eventually we may want to store this off somehow
-            get => sourceFile;
-            set
-            {
-                if (sourceFile != value)
-                {
-                    sourceFile = value;
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    var contentLoader = loaderManager.ContentLoader;
-                    var animation = contentLoader.LoadContent<Animation>(value);
-                    Animation = animation;
-                }
-            }
+            SetContainedObject(new LottieAnimation());
+            //this.Color = SKColors.White;
+            this.Visible = true;
+            Width = 100;
+            Height = 100;
         }
+    }
 
-        public Animation Animation
-        {
-            get => ContainedLottieAnimation.Animation;
-            set => ContainedLottieAnimation.Animation = value;
-        }
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (LottieAnimationRuntime)base.Clone();
 
-        public bool Loops
-        {
-            get => ContainedLottieAnimation.Loops;
-            set => ContainedLottieAnimation.Loops = value;
-        }
+        toReturn.mContainedLottieAnimation = null;
 
-        //public bool IsDimmed
-        //{
-        //    get => ContainedCircle.IsDimmed;
-        //    set => ContainedCircle.IsDimmed = value;
-        //}
-
-        public void Restart() => ContainedLottieAnimation.TimeAnimationStarted = DateTime.Now;
-
-        public LottieAnimationRuntime(bool fullInstantiation = true)
-        {
-            if (fullInstantiation)
-            {
-                SetContainedObject(new LottieAnimation());
-                //this.Color = SKColors.White;
-                this.Visible = true;
-                Width = 100;
-                Height = 100;
-            }
-        }
+        return toReturn;
     }
 }

@@ -25,7 +25,7 @@ namespace MauiSkiaGum
             MainStack.StackSpacing = 16;
 
             var roundedRectangle = new RoundedRectangleRuntime();
-            MainStack.Children.Add(roundedRectangle);
+            MainStack.AddChild(roundedRectangle);
             roundedRectangle.Width = 100;
             roundedRectangle.Height = 100;
             roundedRectangle.Color = SKColors.Blue;
@@ -41,7 +41,6 @@ namespace MauiSkiaGum
             // undo assignments by setting the value back to null:
             roundedRectangle.CustomRadiusTopLeft = 50;
             roundedRectangle.CustomRadiusTopLeft = null;
-
 
 
             var text = new TextRuntime();
