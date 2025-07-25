@@ -49,7 +49,6 @@
   <ItemGroup>
     <Folder Include="Forms\Controls\" />
     <Folder Include="Forms\Data\" />
-    <Folder Include="GueDeriving\" />
   </ItemGroup>
 
 </Project>
