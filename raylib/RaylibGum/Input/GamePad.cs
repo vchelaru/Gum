@@ -11,12 +11,15 @@ public class GamePad
     public bool ButtonPushed(GamepadButton button) => false;
     public bool ButtonReleased(GamepadButton button) => false;
 
+    public bool ButtonRepeatRate(GamepadButton button) => false;
+
     public AnalogStick LeftStick { get; private set; } = new();
 }
 
 public class AnalogStick
 {
     public bool AsDPadPushed(DPadDirection direction) => false;
+    public bool AsDPadPushedRepeatRate(DPadDirection direction) => false;
 }
 
 public enum GamepadButton

@@ -1,13 +1,15 @@
 ﻿using Gum.Forms.Controls;
-using Gum.Wireframe;
-using Gum.Renderables;
 using Gum.GueDeriving;
+using Gum.GueDeriving;
+using Gum.Renderables;
+using Gum.Renderables;
+using Gum.Wireframe;
 using Raylib_cs;
 using RaylibGum;
-using Gum.GueDeriving;
-using Gum.Renderables;
+using RaylibGum.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static Raylib_cs.Raylib;
 
@@ -82,6 +84,20 @@ public class BasicShapes
         checkbox.Width = 200;
         checkbox.Text = "Check me";
         container.AddChild(checkbox.Visual);
+
+
+        var slider = new Slider();
+        container.AddChild(slider.Visual);
+
+        slider.Minimum = 0;
+        slider.Maximum = 30;
+        slider.TicksFrequency = 1;
+        slider.IsSnapToTickEnabled = true;
+        slider.Width = 250;
+        slider.ValueChanged += (_, _) =>
+            Debug.WriteLine($"Value: {slider.Value}");
+        slider.ValueChangeCompleted += (_, _) =>
+            Debug.WriteLine($"Finished setting Value: {slider.Value}");
 
         //for(int i = 0; i < 10; i++)
         //{
@@ -209,7 +225,8 @@ public class BasicShapes
 
             GumUI.Draw();
 
-            EndDrawing();
+
+                EndDrawing();
             //----------------------------------------------------------------------------------
         }
 

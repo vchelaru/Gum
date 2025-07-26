@@ -68,6 +68,7 @@ public class FormsUtilities
                 Styling.ActiveStyle = new Styling(uiSpriteSheet);
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
+                TryAdd(typeof(Slider), typeof(SliderVisual));
 
 
                 break;

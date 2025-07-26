@@ -26,6 +26,41 @@ public class TextRuntime : BindableGue
         }
     }
 
+    public string Text
+    {
+        get
+        {
+            return ContainedText.RawText;
+        }
+        set
+        {
+            var widthBefore = ContainedText.WrappedTextWidth;
+            var heightBefore = ContainedText.WrappedTextHeight;
+            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+            {
+                // make it have no line wrap width before assignign the text:
+
+                // todo - Vic needs to fix this up!
+                //ContainedText.Width = null;
+            }
+
+            // Use SetProperty so it goes through the BBCode-checking methods
+            //ContainedText.RawText = value;
+            this.SetProperty("Text", value);
+
+            NotifyPropertyChanged();
+            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+            if (shouldUpdate)
+            {
+                UpdateLayout(
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+            }
+        }
+    }
+
+
+
     public HorizontalAlignment HorizontalAlignment
     {
         get => ContainedText.HorizontalAlignment;
