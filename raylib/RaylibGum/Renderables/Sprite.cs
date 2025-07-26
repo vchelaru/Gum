@@ -55,6 +55,11 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         }
     }
 
+    public Color Color
+    {
+        get; set;
+    } = Color.White;
+
     public float? TextureWidth => Texture.Width;
 
     public float? TextureHeight => Texture.Height;
@@ -66,20 +71,22 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
 
     public override void Render(ISystemManagers managers)
     {
+        if (!Visible) return;
+
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
 
         if(SourceRectangle == null)
         {
             // todo - support scaling
-            DrawTextureEx(Texture, new Vector2(x, y), 0, 1, Color.White);
+            DrawTextureEx(Texture, new Vector2(x, y), 0, 1, Color);
         }
         else
         {
             var destinationRectangle = new Rectangle(
                 x, y, this.Width, this.Height);
 
-            DrawTexturePro(Texture, SourceRectangle.Value, destinationRectangle, Vector2.Zero, 0, Color.White);
+            DrawTexturePro(Texture, SourceRectangle.Value, destinationRectangle, Vector2.Zero, 0, Color);
         }
 
 

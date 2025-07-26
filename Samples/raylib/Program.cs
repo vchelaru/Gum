@@ -75,9 +75,11 @@ public class BasicShapes
 
         var button = new Button();
         button.Width = 200;
-        button.X = 300;
-        button.Y = 200;
         container.AddChild(button.Visual);
+
+        var checkbox = new CheckBox();
+        checkbox.Width = 200;
+        container.AddChild(checkbox.Visual);
 
         //for(int i = 0; i < 10; i++)
         //{
@@ -143,7 +145,7 @@ public class BasicShapes
         //    container.Children.Add(child);
         //}
 
-        for(int i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++)
         {
             var rectangle = new SolidRectangle();
             rectangle.Color = Color.Green;
@@ -185,7 +187,7 @@ public class BasicShapes
             // Draw
             //----------------------------------------------------------------------------------
             BeginDrawing();
-            ClearBackground(Color.RayWhite);
+            ClearBackground(Color.Gray);
 
             /* Raylib supports drawing simple 2d shapes with internal functions 
             so uncomment the following lines to see it in action */

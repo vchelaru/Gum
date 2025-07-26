@@ -75,6 +75,8 @@ public class Text : InvisibleRenderable, IText
 
     public override void Render(ISystemManagers managers)
     {
+        if (!Visible) return;
+
         var position = new Vector2(
             this.GetAbsoluteLeft(),
             this.GetAbsoluteTop());

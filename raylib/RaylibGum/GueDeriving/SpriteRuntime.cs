@@ -4,7 +4,6 @@ using Gum.Renderables;
 using Raylib_cs;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +21,16 @@ public class SpriteRuntime : BindableGue
                 mContainedSprite = this.RenderableComponent as Sprite;
             }
             return mContainedSprite;
+        }
+    }
+
+    public Color Color
+    {
+        get => ContainedSprite.Color;
+        set
+        {
+            ContainedSprite.Color = value;
+            NotifyPropertyChanged();
         }
     }
 

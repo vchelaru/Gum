@@ -67,6 +67,7 @@ public class FormsUtilities
                 Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
                 Styling.ActiveStyle = new Styling(uiSpriteSheet);
                 TryAdd(typeof(Button), typeof(ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
 
 
                 break;

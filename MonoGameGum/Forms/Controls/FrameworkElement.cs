@@ -238,6 +238,10 @@ public class FrameworkElement : INotifyPropertyChanged
             {
                 throw new Exception();
             }
+            if(Visual == null)
+            {
+                throw new NullReferenceException($"Cannot set Width because Visual hasn't yet been set on this {GetType()}");
+            }
 #endif
             Visual.Width = value;
         }

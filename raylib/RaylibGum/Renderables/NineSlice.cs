@@ -75,6 +75,8 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
 
     public override void Render(ISystemManagers managers)
     {
+        if (!Visible) return;
+
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
 
