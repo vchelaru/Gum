@@ -1,10 +1,10 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 #if FRB
 using FlatRedBall.Forms.Controls;
@@ -12,7 +12,17 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 
 #endif
 
+
+#if RAYLIB
+using Gum.Forms.Controls;
+namespace Gum.Forms;
+
+#else
+using MonoGameGum.Forms.Controls;
+
 namespace MonoGameGum.Forms;
+
+#endif
 
 public static class GraphicalUiElementFormsExtensions
 {

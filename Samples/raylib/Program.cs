@@ -1,7 +1,10 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
 using GumTest.Renderables;
+using MonoGameGum.GueDeriving;
 using Raylib_cs;
 using RaylibGum;
+using RaylibGum.GueDeriving;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using System.Runtime.CompilerServices;
@@ -17,6 +20,9 @@ public class BasicShapes
 
     static Texture2D texture;
 
+    static GumService GumUI => GumService.Default;
+
+
     public static void Main()
     {
         // Initialization
@@ -27,11 +33,6 @@ public class BasicShapes
         // This tells Gum to use the entire screen
         GraphicalUiElement.CanvasWidth = screenWidth;
         GraphicalUiElement.CanvasHeight = screenHeight;
-
-        // Our root contains everything:
-        GraphicalUiElement Root = new GraphicalUiElement(new InvisibleRenderable());
-
-
 
         
         InitWindow(screenWidth, screenHeight, "Basic shape and image drawing");
@@ -46,7 +47,7 @@ public class BasicShapes
         UnloadImage(image);
         //--------------------------------------------------------------------------------------
 
-        GumService.Default.Initialize();
+        GumUI.Initialize();
         // 
 
 
@@ -63,9 +64,12 @@ public class BasicShapes
         // let's set a top to bottom stack
         for (int i = 0; i < 3; i++)
         {
-            var sprite = new Sprite();
-            sprite.Texture = texture;
-            var child = new GraphicalUiElement(sprite);
+            //var sprite = new Sprite();
+            //sprite.Texture = texture;
+            //var child = new GraphicalUiElement(sprite);
+
+            var child = new SpriteRuntime();
+            child.Texture = texture;
             child.Height = 100;
             child.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
             child.Width = 100;
@@ -97,7 +101,7 @@ public class BasicShapes
             child.Name = "Rectangle " + i;
             child.Height = 30;
             child.Width = 60;
-            container.Children.Add(child);
+            container.AddChild(child);
 
             child.Click += (_,_) =>
             {
@@ -105,7 +109,19 @@ public class BasicShapes
             };
         }
 
+        var buttonBackground = new ColoredRectangleRuntime();
+        buttonBackground.Color = Color.Blue;
+        buttonBackground.Dock(Dock.Fill);
+        var buttonVisual = new ContainerRuntime();
+        buttonVisual.AddChild(buttonBackground);
 
+        var button = new Button(buttonVisual);
+        button.Click += (_,_) =>
+        {
+           // This will be called when the button is clicked
+            Console.WriteLine("Button clicked!");
+        };
+        container.AddChild(buttonVisual);
 
         // Main game loop
         while (!WindowShouldClose())
@@ -134,9 +150,9 @@ public class BasicShapes
             // );
 
 
-            GumService.Default.Update(0);
+            GumUI.Update(0);
 
-            GumService.Default.Draw();
+            GumUI.Draw();
 
             EndDrawing();
             //----------------------------------------------------------------------------------

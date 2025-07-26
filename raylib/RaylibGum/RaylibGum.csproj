@@ -25,7 +25,10 @@
 
   <ItemGroup>
     <Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" Link="Forms\Controls\FrameworkElement.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" Link="Forms\Controls\FrameworkElementExt.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\ButtonBase.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\BinderHelpers.cs" Link="Forms\Data\BinderHelpers.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\Binding.cs" Link="Forms\Data\Binding.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\BindingExpressionBase.cs" Link="Forms\Data\BindingExpressionBase.cs" />
@@ -34,6 +37,7 @@
     <Compile Include="..\..\MonoGameGum\Forms\Data\PropertyPathObserver.cs" Link="Forms\Data\PropertyPathObserver.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\PropertyRegistry.cs" Link="Forms\Data\PropertyRegistry.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
     <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
   </ItemGroup>
