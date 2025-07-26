@@ -10,6 +10,7 @@ namespace Gum.Forms.DefaultVisuals;
 #else
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
+using Microsoft.Xna.Framework;
 namespace MonoGameGum.Forms.DefaultVisuals;
 #endif
 
