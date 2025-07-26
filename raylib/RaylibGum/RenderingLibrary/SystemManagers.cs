@@ -1,4 +1,6 @@
-﻿using Raylib_cs;
+﻿using Gum.Wireframe;
+using Raylib_cs;
+using RaylibGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -32,6 +34,11 @@ public class SystemManagers : ISystemManagers
     public SystemManagers()
     {
         _renderer = new Renderer();
+    }
+
+    public void Initialize()
+    {
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
     public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)

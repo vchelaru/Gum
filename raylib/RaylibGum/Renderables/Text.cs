@@ -90,10 +90,21 @@ public class Text : InvisibleRenderable, IText
             position.X += this.Width / 2;
             origin.X = MeasureTextEx(Font, RawText, FontSize, 1).X/2;
         }
+        else if (HorizontalAlignment == HorizontalAlignment.Right)
+        {
+            position.X += this.Width;
+            origin.X = MeasureTextEx(Font, RawText, FontSize, 1).X;
+        }
+
         if (VerticalAlignment == VerticalAlignment.Center)
         {
             position.Y += this.Height / 2;
-            origin.Y = MeasureTextEx(Font, RawText, FontSize, 1).Y/2;
+            origin.Y = MeasureTextEx(Font, RawText, FontSize, 1).Y / 2;
+        }
+        if (VerticalAlignment == VerticalAlignment.Bottom)
+        {
+            position.Y += this.Height;
+            origin.Y = MeasureTextEx(Font, RawText, FontSize, 1).Y;
         }
 
         // todo - handle alignment

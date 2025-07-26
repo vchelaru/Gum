@@ -75,10 +75,12 @@ public class BasicShapes
 
         var button = new Button();
         button.Width = 200;
+        button.Text = "I'm a button";
         container.AddChild(button.Visual);
 
         var checkbox = new CheckBox();
         checkbox.Width = 200;
+        checkbox.Text = "Check me";
         container.AddChild(checkbox.Visual);
 
         //for(int i = 0; i < 10; i++)
