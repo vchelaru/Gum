@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.GueDeriving;
-public class TextRuntime : BindableGue
+public class TextRuntime : InteractiveGue
 {
     Text mContainedText;
     Text ContainedText

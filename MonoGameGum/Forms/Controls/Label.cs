@@ -4,6 +4,9 @@ using System;
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+namespace Gum.Forms.Controls;
+
 #else
 namespace MonoGameGum.Forms.Controls;
 #endif
@@ -11,7 +14,7 @@ namespace MonoGameGum.Forms.Controls;
 public class Label : FrameworkElement
 {
     protected GraphicalUiElement textComponent;
-    protected RenderingLibrary.Graphics.Text coreTextObject;
+    protected global::RenderingLibrary.Graphics.IText coreTextObject;
 
     public GraphicalUiElement TextComponent => textComponent;
 
@@ -68,7 +71,7 @@ public class Label : FrameworkElement
         //ReportMissingTextInstance();
 #endif
 
-        coreTextObject = (RenderingLibrary.Graphics.Text)textComponent?.RenderableComponent;
+        coreTextObject = (global::RenderingLibrary.Graphics.IText)textComponent?.RenderableComponent;
     }
 
 #if DEBUG

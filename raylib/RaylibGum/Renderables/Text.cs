@@ -110,7 +110,8 @@ public class Text : InvisibleRenderable, IText
         // todo - handle alignment
         //DrawText(RawText, x, y, 20, Color.DarkGray);
         //DrawTextEx(Font, RawText, position, FontSize, 0, Color);
-        DrawTextPro(Font, RawText, position, origin, 0, FontSize, 0, Color);
+        const float spacing = 1;
+        DrawTextPro(Font, RawText, position, origin, 0, FontSize, spacing, Color);
 
     }
 

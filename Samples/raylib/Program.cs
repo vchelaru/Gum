@@ -99,6 +99,10 @@ public class BasicShapes
         slider.ValueChangeCompleted += (_, _) =>
             Debug.WriteLine($"Finished setting Value: {slider.Value}");
 
+        var label = new Label();
+        container.AddChild(label.Visual);
+        label.Text = "This is a Gum label";
+
         //for(int i = 0; i < 10; i++)
         //{
         //    var nineSlice = new NineSliceRuntime();
