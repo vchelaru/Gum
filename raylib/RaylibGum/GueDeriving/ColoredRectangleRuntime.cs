@@ -1,12 +1,12 @@
-﻿using Gum.Wireframe;
-using RaylibGum.Renderables;
+﻿using Gum.Renderables;
+using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaylibGum.GueDeriving;
+namespace Gum.GueDeriving;
 public class ColoredRectangleRuntime : BindableGue
 {
     public static float DefaultWidth = 50;

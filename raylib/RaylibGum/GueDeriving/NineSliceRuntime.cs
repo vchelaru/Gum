@@ -1,13 +1,13 @@
 ﻿using Gum.Wireframe;
 using Raylib_cs;
-using RaylibGum.Renderables;
+using Gum.Renderables;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaylibGum.GueDeriving;
+namespace Gum.GueDeriving;
 public class NineSliceRuntime : InteractiveGue
 {
     NineSlice mContainedNineSlice;
@@ -21,6 +21,19 @@ public class NineSliceRuntime : InteractiveGue
                 mContainedNineSlice = this.RenderableComponent as NineSlice;
             }
             return mContainedNineSlice;
+        }
+    }
+
+    public Color Color
+    {
+        get
+        {
+            return ContainedNineSlice.Color;
+        }
+        set
+        {
+            ContainedNineSlice.Color = value;
+            NotifyPropertyChanged();
         }
     }
 

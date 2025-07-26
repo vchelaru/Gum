@@ -41,6 +41,8 @@
     <Compile Include="..\..\MonoGameGum\Forms\Data\PropertyPathObserver.cs" Link="Forms\Data\PropertyPathObserver.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\PropertyRegistry.cs" Link="Forms\Data\PropertyRegistry.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ButtonVisual.cs" Link="Forms\DefaultVisuals\ButtonVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
     <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
@@ -61,6 +63,7 @@
   <ItemGroup>
     <Folder Include="Forms\Controls\" />
     <Folder Include="Forms\Data\" />
+    <Folder Include="Forms\DefaultVisuals\" />
   </ItemGroup>
 
 </Project>

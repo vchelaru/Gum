@@ -14,100 +14,101 @@ using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 
 #if RAYLIB
 using BlendState = Gum.BlendState;
+namespace Gum.GueDeriving;
+#else
+namespace MonoGameGum.GueDeriving;
 #endif
 
-namespace MonoGameGum.GueDeriving
+
+public class ContainerRuntime : InteractiveGue
 {
-    public class ContainerRuntime : InteractiveGue
+    public float Alpha
     {
-        public float Alpha
+        get => (RenderableComponent as InvisibleRenderable)?.Alpha ?? 255;
+        set
         {
-            get => (RenderableComponent as InvisibleRenderable)?.Alpha ?? 255;
-            set
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
             {
-                if (RenderableComponent is InvisibleRenderable invisibleRenderable)
-                {
-                    invisibleRenderable.Alpha = value;
-                }
+                invisibleRenderable.Alpha = value;
             }
         }
+    }
 
-        public bool IsRenderTarget
+    public bool IsRenderTarget
+    {
+        get => (RenderableComponent as InvisibleRenderable)?.IsRenderTarget ?? false;
+        set
         {
-            get => (RenderableComponent as InvisibleRenderable)?.IsRenderTarget ?? false;
-            set
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
             {
-                if (RenderableComponent is InvisibleRenderable invisibleRenderable)
-                {
-                    invisibleRenderable.IsRenderTarget = value;
-                }
+                invisibleRenderable.IsRenderTarget = value;
             }
         }
+    }
 
 
-        public BlendState BlendState
-        {
+    public BlendState BlendState
+    {
 #if MONOGAME || FNA || KNI
-            get => RenderableComponent.BlendState.ToXNA();
+        get => RenderableComponent.BlendState.ToXNA();
 #else
-            get => RenderableComponent.BlendState;
+        get => RenderableComponent.BlendState;
 #endif
-            set
-            {
-                if (RenderableComponent is InvisibleRenderable invisibleRenderable)
-                {
-#if MONOGAME || FNA || KNI
-                    invisibleRenderable.BlendState = value.ToGum();
-#else
-                    invisibleRenderable.BlendState = value;
-#endif
-                    NotifyPropertyChanged();
-                    NotifyPropertyChanged(nameof(Blend));
-                }
-            }
-        }
-
-        public Gum.RenderingLibrary.Blend Blend
+        set
         {
-            get
-            {
-                return Gum.RenderingLibrary.BlendExtensions.ToBlend(RenderableComponent.BlendState);
-            }
-            set
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
             {
 #if MONOGAME || FNA || KNI
-                BlendState = value.ToBlendState().ToXNA();
+                invisibleRenderable.BlendState = value.ToGum();
 #else
-                BlendState = value.ToBlendState();
+                invisibleRenderable.BlendState = value;
 #endif
-
-                // NotifyPropertyChanged handled by BlendState:
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(Blend));
             }
         }
+    }
 
-        public ContainerRuntime()
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get
+        {
+            return Gum.RenderingLibrary.BlendExtensions.ToBlend(RenderableComponent.BlendState);
+        }
+        set
+        {
+#if MONOGAME || FNA || KNI
+            BlendState = value.ToBlendState().ToXNA();
+#else
+            BlendState = value.ToBlendState();
+#endif
+
+            // NotifyPropertyChanged handled by BlendState:
+        }
+    }
+
+    public ContainerRuntime()
+    {
+        Instantiate();
+    }
+
+    public ContainerRuntime(bool fullInstantiation = true)
+    {
+        if (fullInstantiation)
         {
             Instantiate();
         }
+    }
 
-        public ContainerRuntime(bool fullInstantiation = true)
-        {
-            if (fullInstantiation)
-            {
-                Instantiate();
-            }
-        }
-
-        private void Instantiate()
-        {
-            SetContainedObject(new InvisibleRenderable());
-            Width = 150;
-            Height = 150;
-            Visible = true;
-
-        }
-
-        public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+    private void Instantiate()
+    {
+        SetContainedObject(new InvisibleRenderable());
+        Width = 150;
+        Height = 150;
+        Visible = true;
 
     }
+
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+
 }

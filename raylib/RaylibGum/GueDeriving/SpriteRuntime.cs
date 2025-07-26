@@ -1,5 +1,6 @@
-﻿using Gum.Wireframe;
-using GumTest.Renderables;
+﻿using Gum.Renderables;
+using Gum.Wireframe;
+using Gum.Renderables;
 using Raylib_cs;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaylibGum.GueDeriving;
+namespace Gum.GueDeriving;
 public class SpriteRuntime : BindableGue
 {
     Sprite mContainedSprite;

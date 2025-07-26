@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Xml.Schema;
 using static Raylib_cs.Raylib;
 
-namespace RaylibGum.Renderables;
+namespace Gum.Renderables;
 public class NineSlice : InvisibleRenderable, ITextureCoordinate
 {
     public Texture2D Texture { get; set; }
@@ -68,6 +68,11 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
         set {} 
     }
 
+    public Color Color
+    {
+        get; set;
+    } = Color.White;
+
     public override void Render(ISystemManagers managers)
     {
         int x = (int)this.GetAbsoluteLeft();
@@ -102,7 +107,7 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
             destinationRectangle,
             Vector2.Zero,
             0,
-            Color.White);
+            Color);
     }
 
 

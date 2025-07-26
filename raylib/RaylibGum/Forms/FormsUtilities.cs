@@ -1,13 +1,19 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Wireframe;
-using MonoGameGum.GueDeriving;
-using RaylibGum.Input;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+
+#if RAYLIB
+using Gum.GueDeriving;
+using RaylibGum.Input;
+#else
+using  MonoGameGum.GueDeriving;
+#endif
 
 namespace Gum.Forms;
 

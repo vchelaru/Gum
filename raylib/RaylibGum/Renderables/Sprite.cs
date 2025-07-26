@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using static Raylib_cs.Raylib;
 
-namespace GumTest.Renderables;
+namespace Gum.Renderables;
 public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
 {
     public Texture2D Texture { get; set; }

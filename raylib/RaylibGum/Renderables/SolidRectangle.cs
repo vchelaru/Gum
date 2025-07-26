@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using static Raylib_cs.Raylib;
 
 
-namespace RaylibGum.Renderables;
+namespace Gum.Renderables;
 public class SolidRectangle : InvisibleRenderable
 {
     public int Red

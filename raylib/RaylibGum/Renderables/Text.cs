@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static Raylib_cs.Raylib;
 
-namespace GumTest.Renderables;
+namespace Gum.Renderables;
 public class Text : InvisibleRenderable, IText
 {
     Font _font;
@@ -46,6 +46,16 @@ public class Text : InvisibleRenderable, IText
     public TextOverflowVerticalMode TextOverflowVerticalMode { get; set; }
     float? IText.Width { get; set; }
 
+    public HorizontalAlignment HorizontalAlignment
+    {
+        get; set;
+    }
+
+    public VerticalAlignment VerticalAlignment
+    {
+        get; set;
+    }
+
     static Text()
 
     {
@@ -64,6 +74,7 @@ public class Text : InvisibleRenderable, IText
             this.GetAbsoluteLeft(),
             this.GetAbsoluteTop());
 
+        // todo - handle alignment
         //DrawText(RawText, x, y, 20, Color.DarkGray);
         DrawTextEx(Font, RawText, position, FontSize, 0, Color.DarkGray);
 

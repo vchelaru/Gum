@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
-using GumTest.Renderables;
-using MonoGameGum.GueDeriving;
+using Gum.Renderables;
+using Gum.GueDeriving;
 using Raylib_cs;
 using Gum.Forms;
 using RaylibGum.Input;
