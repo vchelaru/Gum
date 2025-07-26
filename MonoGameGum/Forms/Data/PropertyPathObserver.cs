@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 #if FRB
 namespace FlatRedBall.Forms.Data;
 #elif RAYLIB
-namespace RaylibGum.Forms.Data;
+namespace Gum.Forms.Data;
 #else
 namespace MonoGameGum.Forms.Data;
 #endif

@@ -10,8 +10,12 @@ using System.Threading.Tasks;
 namespace RaylibGum.Input;
 public class Cursor : ICursor
 {
+    Cursors? _customCursor;
 
     MouseState _mouseState;
+
+
+
     MouseState mLastFrameMouseState = new MouseState();
 
     TouchCollection _touchCollection;
@@ -50,9 +54,15 @@ public class Cursor : ICursor
 
     public double LastPrimaryClickTime => 0;
 
-    public int XChange => 0;
+    /// <summary>
+    /// Returns the screen space (in pixels) change on the X axis since the last frame.
+    /// </summary>
+    public int XChange => X - LastX;
 
-    public int YChange => 0;
+    /// <summary>
+    /// Returns the screen space (in pixel) change on the Y axis since the last frame.
+    /// </summary>
+    public int YChange => Y - LastY;
 
     public int ScrollWheelChange => 0;
 

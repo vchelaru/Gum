@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using FlatRedBall.Forms.Controls;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+namespace Gum.Forms.Controls;
+
 #else
 namespace MonoGameGum.Forms.Controls;
 #endif

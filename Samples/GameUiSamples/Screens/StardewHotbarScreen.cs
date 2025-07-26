@@ -14,6 +14,7 @@ using GameUiSamples.Components;
 using Microsoft.Xna.Framework;
 using System;
 using GameUiSamples.Services;
+using MonoGameGum.Forms.Controls;
 namespace GameUiSamples.Screens;
 
 partial class StardewHotbarScreen : IUpdateScreen

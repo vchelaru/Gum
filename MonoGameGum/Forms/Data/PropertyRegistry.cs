@@ -6,8 +6,8 @@ using System.Reflection;
 using FlatRedBall.Forms.Controls;
 namespace FlatRedBall.Forms.Data;
 #elif RAYLIB
-using RaylibGum.Forms.Data;
-using RaylibGum.Forms.Controls;
+using Gum.Forms.Data;
+using Gum.Forms.Controls;
 
 #else
 using MonoGameGum.Forms.Controls;

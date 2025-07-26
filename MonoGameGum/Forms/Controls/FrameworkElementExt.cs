@@ -5,17 +5,22 @@ using System;
 
 
 
+
 #if FRB
 using FlatRedBall.Gui;
 using FlatRedBall.Forms.Controls;
 using FlatRedBall.Forms.Data;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
-
+namespace MonoGameGum.Forms.Controls;
+#elif RAYLIB
+using RaylibGum;
+using Gum.Forms.Data;
+namespace Gum.Forms.Controls;
 #else
 using MonoGameGum.Forms.Data;
+namespace MonoGameGum.Forms.Controls;
 #endif
 
-namespace MonoGameGum.Forms.Controls;
 
 public static class FrameworkElementExt
 {
@@ -56,4 +61,16 @@ public static class FrameworkElementExt
 
     }
 
+#if !FRB
+    public static void AddToRoot(this FrameworkElement element)
+    {
+        GumService.Default.Root.Children.Add(element.Visual);
+    }
+#endif
+
+    public static void RemoveFromRoot(this FrameworkElement element)
+    {
+        element.Visual.Parent = null;
+        element.Visual.RemoveFromManagers();
+    }
 }

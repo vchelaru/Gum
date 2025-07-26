@@ -6,7 +6,7 @@ using Gum.Wireframe;
 #if FRB
 using FlatRedBall.Forms.Controls;
 #elif RAYLIB
-using RaylibGum.Forms.Controls;
+using Gum.Forms.Controls;
 #else
 using MonoGameGum.Forms.Controls;
 #endif
@@ -14,7 +14,7 @@ using MonoGameGum.Forms.Controls;
 #if FRB
 namespace FlatRedBall.Forms.Data;
 #elif RAYLIB
-namespace RaylibGum.Forms.Data;
+namespace Gum.Forms.Data;
 #else
 namespace MonoGameGum.Forms.Data;
 #endif

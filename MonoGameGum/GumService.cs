@@ -330,14 +330,5 @@ public static class ElementSaveExtensionMethods
 
 public static class FrameworkElementExtensionMethods
 {
-    public static void AddToRoot(this FrameworkElement element)
-    {
-        GumService.Default.Root.Children.Add(element.Visual);
-    }
 
-    public static void RemoveFromRoot(this FrameworkElement element)
-    {
-        element.Visual.Parent = null;
-        element.Visual.RemoveFromManagers();
-    }
 }

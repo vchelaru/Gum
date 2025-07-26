@@ -1,9 +1,9 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
-using GumTest.Renderables;
-using MonoGameGum.GueDeriving;
+using Gum.Renderables;
+using Gum.GueDeriving;
 using Raylib_cs;
-using RaylibGum.Forms;
+using Gum.Forms;
 using RaylibGum.Input;
 using RenderingLibrary;
 using System;
@@ -36,12 +36,14 @@ public class GumService
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 
-    public void Initialize()
+    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
         SystemManagers.Default = new SystemManagers();
         ISystemManagers.Default = SystemManagers.Default;
+        SystemManagers.Default.Initialize();
 
-        FormsUtilities.InitializeDefaults();
+
+        FormsUtilities.InitializeDefaults(defaultVisualsVersion: defaultVisualsVersion);
 
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;

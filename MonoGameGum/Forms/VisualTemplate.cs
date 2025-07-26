@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
-namespace RaylibGum.Forms;
+namespace Gum.Forms;
 
 #else
 
