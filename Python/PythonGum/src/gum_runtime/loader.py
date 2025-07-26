@@ -9,6 +9,7 @@ sys.path.append(r"C:\git\Gum\python\PythonGum\src\gum_runtime\_clr\net6.0")
 try:
     clr.AddReference("GumCommon") # type: ignore
     clr.AddReference("GumToPythonHelpers") # type: ignore
+    #clr.AddReference("Gum") # type: ignore
     print("GumCommon reference loaded successfully.")
 except Exception as e:
     print("Error loading GumCommon:", e)
@@ -20,6 +21,7 @@ from RenderingLibrary.Graphics import HorizontalAlignment, VerticalAlignment
 from Gum.Managers import ChildrenLayout
 
 from GumToPython import GumToPythonHelpers
+
 
 try:
     topLevel = GraphicalUiElement(InvisibleRenderable())
@@ -38,6 +40,8 @@ topLevel.Y = 100
 topLevel.Width = 200
 topLevel.Height = 200
 
+
+
 def create_and_add_child(parent: GraphicalUiElement):
     child = GraphicalUiElement(InvisibleRenderable())
     parent.Children.Add(child)
@@ -45,19 +49,19 @@ def create_and_add_child(parent: GraphicalUiElement):
     child.X = 0
     child.XUnits = Converters.GeneralUnitType.PixelsFromSmall
     #child.XOrigin = HorizontalAlignment.Center
-    child.Width = 50
+    child.Width = 32
     child.Y = 0
     child.YUnits = Converters.GeneralUnitType.PixelsFromSmall
     #child.YOrigin = VerticalAlignment.Center
-    child.Height = 50
+    child.Height = 32
 
     add_grandchild(child)
 
 def add_grandchild(parent: GraphicalUiElement):
     grandChild = GraphicalUiElement(InvisibleRenderable())
     parent.Children.Add(grandChild)
-    grandChild.Width = 25
-    grandChild.Height = 25
+    grandChild.Width = 16
+    grandChild.Height = 16
     grandChild.X = 0
     grandChild.Y = 0
     grandChild.XUnits = Converters.GeneralUnitType.PixelsFromMiddle
@@ -67,11 +71,18 @@ def add_grandchild(parent: GraphicalUiElement):
 
 
 topLevel.ChildrenLayout = ChildrenLayout.AutoGridHorizontal
-for i in range(5):
+for i in range(20):
     create_and_add_child(topLevel)
+
+def get_bounding_rectangle(gue: GraphicalUiElement):
+    return pygame.Rect(gue.AbsoluteX, gue.AbsoluteY, gue.Width, gue.Height)
 
 def draw_depth_first(parent: GraphicalUiElement, color):
     color = (color + 20) % 256
+
+    if parent.ClipsChildren:
+        screen.set_clip(get_bounding_rectangle(parent))
+    
     draw_rect_placeholder(parent, (color, color, color))
     
     for c in parent.Children:
@@ -84,6 +95,9 @@ def draw_depth_first(parent: GraphicalUiElement, color):
             continue
         
         draw_depth_first(gue, color)
+    
+    if parent.ClipsChildren:
+        screen.set_clip(None) 
 
 # use absoluteX and absoluteY to draw a Python sprite. 
 
@@ -95,8 +109,8 @@ BLUE = (0, 0, 255)
 GRAY = (128, 128, 128)
 
 # initialize everything for drawing
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 480
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 960
 fps = 60.0
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -114,12 +128,49 @@ while True:
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
+    
+        # perform action on mouse click
+        if event.type == MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left mouse button
+                topLevel.ClipsChildren = not topLevel.ClipsChildren
+
+        # change Auto grid width of toplevel with g key
+        if event.type == KEYDOWN:
+            if event.key == K_g:
+                topLevel.AutoGridHorizontalCells += 1
+                topLevel.AutoGridHorizontalCells = topLevel.AutoGridHorizontalCells % 5
+                if topLevel.AutoGridHorizontalCells == 0:
+                    topLevel.AutoGridHorizontalCells = 1
+                print(f"AutoGridHorizontalCells: {topLevel.AutoGridHorizontalCells}")
+
+        
+        # move the top level element when pressing the arrow keys
+
+    keys = pygame.key.get_pressed()
+    for key in keys:
+        if key:
+            if keys[K_LEFT]:
+                topLevel.X -= 10
+            elif keys[K_RIGHT]:
+                topLevel.X += 10
+            elif keys[K_UP]:
+                topLevel.Y -= 10
+            elif keys[K_DOWN]:
+                topLevel.Y += 10
+            # Increase size of topLevel with plus key
+            elif keys[K_PLUS] or keys[K_EQUALS]:
+                topLevel.Width += 10
+                topLevel.Height += 10
+            # Decrease size of topLevel with minus key
+            elif keys[K_MINUS]:
+                topLevel.Width -= 10
+                topLevel.Height -= 10
 
     # Clear screen
     screen.fill(BLACK)  # Fill the screen with black.
 
+    
     draw_depth_first(topLevel, 20)
-
 
 
     pygame.display.flip()
