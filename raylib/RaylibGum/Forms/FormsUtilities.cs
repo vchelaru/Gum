@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Raylib_cs;
+using Gum.Forms.DefaultVisuals;
+
+
 
 
 #if RAYLIB
@@ -47,7 +51,7 @@ public class FormsUtilities
 
 
 
-    internal static void InitializeDefaults(SystemManagers? systemManagers = null)
+    internal static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
         systemManagers = systemManagers ?? SystemManagers.Default;
 
@@ -55,6 +59,25 @@ public class FormsUtilities
         {
             throw new InvalidOperationException("" +
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
+        }
+
+        switch(defaultVisualsVersion)
+        {
+            case DefaultVisualsVersion.V2:
+                Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
+                Styling.ActiveStyle = new Styling(uiSpriteSheet);
+                TryAdd(typeof(Button), typeof(ButtonVisual));
+
+
+                break;
+        }
+
+        void TryAdd(Type formsType, Type runtimeType)
+        {
+            if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
+            {
+                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
+            }
         }
 
         cursor = new Cursor();

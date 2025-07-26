@@ -36,12 +36,12 @@ public class GumService
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 
-    public void Initialize()
+    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
         SystemManagers.Default = new SystemManagers();
         ISystemManagers.Default = SystemManagers.Default;
 
-        FormsUtilities.InitializeDefaults();
+        FormsUtilities.InitializeDefaults(defaultVisualsVersion: defaultVisualsVersion);
 
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;

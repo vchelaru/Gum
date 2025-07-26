@@ -1,12 +1,14 @@
 ﻿using Gum.Renderables;
-using Gum.Wireframe;
 using Gum.Renderables;
+using Gum.Wireframe;
+using Raylib_cs;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RenderingLibrary.Graphics;
 
 namespace Gum.GueDeriving;
 public class TextRuntime : BindableGue
@@ -35,4 +37,36 @@ public class TextRuntime : BindableGue
         get => ContainedText.VerticalAlignment;
         set => ContainedText.VerticalAlignment = value;
     }
+
+    public Color Color
+    {
+        get => ContainedText.Color;
+        set
+        {
+            ContainedText.Color = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
+    {
+        if (fullInstantiation)
+        {
+            var textRenderable = new Text();
+            mContainedText = textRenderable;
+
+            SetContainedObject(textRenderable);
+
+            //Width = DefaultWidth;
+            //WidthUnits = DefaultWidthUnits;
+            //Height = DefaultHeight;
+            //HeightUnits = DefaultHeightUnits;
+            //this.FontSize = DefaultFontSize;
+            //this.Font = DefaultFont;
+            //HasEvents = false;
+
+            textRenderable.RawText = "Hello World";
+        }
+    }
+
 }

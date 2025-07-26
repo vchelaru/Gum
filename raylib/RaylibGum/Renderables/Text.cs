@@ -28,6 +28,11 @@ public class Text : InvisibleRenderable, IText
         }
     }
 
+    public Color Color
+    {
+        get; set;
+    } = Color.DarkGray;
+
     public string RawText
     {
         get; set;
@@ -73,10 +78,26 @@ public class Text : InvisibleRenderable, IText
         var position = new Vector2(
             this.GetAbsoluteLeft(),
             this.GetAbsoluteTop());
+        var origin = new Vector2(
+            0, // todo - handle horizontal alignment
+            0); // todo - handle vertical alignment
+
+
+        if(HorizontalAlignment == HorizontalAlignment.Center)
+        {
+            position.X += this.Width / 2;
+            origin.X = MeasureTextEx(Font, RawText, FontSize, 1).X/2;
+        }
+        if (VerticalAlignment == VerticalAlignment.Center)
+        {
+            position.Y += this.Height / 2;
+            origin.Y = MeasureTextEx(Font, RawText, FontSize, 1).Y/2;
+        }
 
         // todo - handle alignment
         //DrawText(RawText, x, y, 20, Color.DarkGray);
-        DrawTextEx(Font, RawText, position, FontSize, 0, Color.DarkGray);
+        //DrawTextEx(Font, RawText, position, FontSize, 0, Color);
+        DrawTextPro(Font, RawText, position, origin, 0, FontSize, 0, Color);
 
     }
 
