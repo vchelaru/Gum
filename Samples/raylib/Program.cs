@@ -6,6 +6,7 @@ using Raylib_cs;
 using RaylibGum;
 using RaylibGum.GueDeriving;
 using RaylibGum.Renderables;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System.Runtime.CompilerServices;
 using static Raylib_cs.Raylib;
@@ -43,41 +44,85 @@ public class BasicShapes
         //Transform it as a texture
         texture = LoadTextureFromImage(image);
 
+
+
         //Unload/release it
         UnloadImage(image);
         //--------------------------------------------------------------------------------------
 
         GumUI.Initialize();
-        // 
+        var standardTexture = SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png");
+        
 
+        //var texture2 = LoadTextureFromImage(imageFromFile);
 
         var container = new GraphicalUiElement(new InvisibleRenderable());
         container.AddToRoot();
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        container.WrapsChildren = true;
         container.StackSpacing = 2;
-        container.Width = 100;
+        container.Width = 0;
+        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+
         container.Height = 0;
-        container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        container.ClipsChildren = true;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
-        // let's set a top to bottom stack
-        for (int i = 0; i < 3; i++)
-        {
-            //var sprite = new Sprite();
-            //sprite.Texture = texture;
-            //var child = new GraphicalUiElement(sprite);
+        container.ClipsChildren = true;
 
-            var child = new SpriteRuntime();
-            child.Texture = texture;
-            child.Height = 100;
-            child.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            child.Width = 100;
-            child.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            container.Children.Add(child);
+        //var sprite = new SpriteRuntime();
+        //sprite.Texture = standardTexture.Value;
+        //container.AddChild(sprite);
+
+        for(int i = 0; i < 10; i++)
+        {
+            var nineSlice = new NineSliceRuntime();
+            nineSlice.Texture = standardTexture.Value;
+            nineSlice.TextureLeft = 24;
+            nineSlice.TextureTop = 3 * 16;
+            nineSlice.TextureWidth = 24;
+            nineSlice.TextureHeight = 24;
+            nineSlice.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            nineSlice.Width = 15 + 15*i;
+            nineSlice.Height = 15 + 15 * i;
+            container.AddChild(nineSlice);
+
         }
 
-        for(int i = 0; i < 5; i++)
+        // let's set a top to bottom stack
+        //for (int i = 0; i < 3; i++)
+        //{
+        //    //var sprite = new Sprite();
+        //    //sprite.Texture = texture;
+        //    //var child = new GraphicalUiElement(sprite);
+
+        //    var child = new SpriteRuntime();
+        //    child.Texture = texture;
+        //    child.Height = 100;
+        //    child.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        //    child.Width = 100;
+        //    child.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        //    container.Children.Add(child);
+        //}
+
+        for (int i = 0; i < 2; i++)
+        {
+            var partialSprite = new SpriteRuntime();
+            partialSprite.Name = "Partial sprite";
+            partialSprite.Texture = texture;
+            partialSprite.Height = 300;
+            partialSprite.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            partialSprite.Width = 300;
+            partialSprite.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            partialSprite.TextureLeft = 0;
+            partialSprite.TextureWidth = 32;
+            partialSprite.TextureTop = 0;
+            partialSprite.TextureHeight = 16;
+            partialSprite.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            container.Children.Add(partialSprite);
+
+        }
+
+        for (int i = 0; i < 5; i++)
 
         {
             var text = new Text();
