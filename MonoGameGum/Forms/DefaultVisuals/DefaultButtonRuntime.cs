@@ -92,38 +92,38 @@ public class DefaultButtonRuntime : InteractiveGue
             }
 
             AddState(FrameworkElement.EnabledStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.Primary);
-            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.Primary);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
             AddVariable("FocusedIndicator.Visible", false);
 
             AddState(FrameworkElement.FocusedStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.Primary);
-            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.Primary);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
             AddVariable("FocusedIndicator.Visible", true);
 
             AddState(FrameworkElement.HighlightedStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.PrimaryLight);
-            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.PrimaryLight);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
             AddVariable("FocusedIndicator.Visible", false);
 
             AddState(FrameworkElement.HighlightedFocusedStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.PrimaryLight);
-            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.PrimaryLight);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
             AddVariable("FocusedIndicator.Visible", true);
 
             AddState(FrameworkElement.PushedStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.PrimaryDark);
-            AddVariable("TextInstance.Color", Styling.Colors.White);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.PrimaryDark);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
             AddVariable("FocusedIndicator.Visible", false);
 
             AddState(FrameworkElement.DisabledStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.DarkGray);
-            AddVariable("TextInstance.Color", Styling.Colors.Gray);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.DarkGray);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.Gray);
             AddVariable("FocusedIndicator.Visible", false);
 
             AddState(FrameworkElement.DisabledFocusedStateName);
-            AddVariable("ButtonBackground.Color", Styling.Colors.DarkGray);
-            AddVariable("TextInstance.Color", Styling.Colors.Gray);
+            AddVariable("ButtonBackground.Color", Styling.ActiveStyle.Colors.DarkGray);
+            AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.Gray);
             AddVariable("FocusedIndicator.Visible", true);
 
         }

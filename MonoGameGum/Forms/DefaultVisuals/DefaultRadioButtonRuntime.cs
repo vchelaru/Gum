@@ -132,23 +132,23 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             }
 
 
-            AddOnOffState(FrameworkElement.DisabledStateName, Styling.Colors.DarkGray,
-                Styling.Colors.Gray, Styling.Colors.Gray, false);
-            AddOnOffState(FrameworkElement.DisabledFocusedStateName, Styling.Colors.DarkGray,
-                Styling.Colors.Gray, Styling.Colors.Gray, true);
-            AddOnOffState(FrameworkElement.EnabledStateName, Styling.Colors.Primary,
-                Styling.Colors.White, Styling.Colors.White, false);
-            AddOnOffState(FrameworkElement.FocusedStateName, Styling.Colors.Primary,
-                Styling.Colors.White, Styling.Colors.White, true);
-            AddOnOffState(FrameworkElement.HighlightedStateName, Styling.Colors.PrimaryLight,
-                Styling.Colors.White, Styling.Colors.White, false);
-            AddOnOffState(FrameworkElement.HighlightedFocusedStateName, Styling.Colors.PrimaryLight,
-                Styling.Colors.White, Styling.Colors.White, true);
+            AddOnOffState(FrameworkElement.DisabledStateName, Styling.ActiveStyle.Colors.DarkGray,
+                Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false);
+            AddOnOffState(FrameworkElement.DisabledFocusedStateName, Styling.ActiveStyle.Colors.DarkGray,
+                Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true);
+            AddOnOffState(FrameworkElement.EnabledStateName, Styling.ActiveStyle.Colors.Primary,
+                Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false);
+            AddOnOffState(FrameworkElement.FocusedStateName, Styling.ActiveStyle.Colors.Primary,
+                Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
+            AddOnOffState(FrameworkElement.HighlightedStateName, Styling.ActiveStyle.Colors.PrimaryLight,
+                Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false);
+            AddOnOffState(FrameworkElement.HighlightedFocusedStateName, Styling.ActiveStyle.Colors.PrimaryLight,
+                Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
 
             // dark looks weird so staying with normal primary. This matches the default template
-            //AddOnOffState(FrameworkElement.PushedState, Styling.Colors.PrimaryDark,
-            AddOnOffState(FrameworkElement.PushedStateName, Styling.Colors.Primary,
-                Styling.Colors.White, Styling.Colors.White, false);
+            //AddOnOffState(FrameworkElement.PushedState, Styling.ActiveStyle.Colors.PrimaryDark,
+            AddOnOffState(FrameworkElement.PushedStateName, Styling.ActiveStyle.Colors.Primary,
+                Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false);
 
 
         }

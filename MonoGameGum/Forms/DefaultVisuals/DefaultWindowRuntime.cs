@@ -25,7 +25,7 @@ public class DefaultWindowRuntime : InteractiveGue
             var border = new ColoredRectangleRuntime();
             border.Name = "WindowBorder";
             border.Dock(Gum.Wireframe.Dock.Fill);
-            border.Color = Styling.Colors.DarkGray;
+            border.Color = Styling.ActiveStyle.Colors.DarkGray;
             this.AddChild(border);
 
             var background = new ColoredRectangleRuntime();
@@ -37,7 +37,7 @@ public class DefaultWindowRuntime : InteractiveGue
             background.Width = -4;
             background.Height = -4;
 
-            background.Color = Styling.Colors.Gray;
+            background.Color = Styling.ActiveStyle.Colors.Gray;
             this.AddChild(background);
 
             var innerPanel = new ContainerRuntime();
