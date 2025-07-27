@@ -1,5 +1,7 @@
 ﻿using Gum.DataTypes.Variables;
 using RenderingLibrary;
+using System.ComponentModel;
+
 
 #if RAYLIB
 using Raylib_cs;
@@ -18,6 +20,8 @@ public class Styling
     /// </summary>
     public static Styling ActiveStyle { get; set; }
     public Texture2D SpriteSheet { get; set; }
+
+    public Text Text { get; set; } = new Text();
 
     public Styling(Texture2D? spriteSheet)
     {
@@ -73,26 +77,6 @@ public class Styling
 
     }
 
-    public static class Text
-    {
-        public static StateSave Normal = CreateFontState("Arial", 18, false, false);
-        public static StateSave Strong = CreateFontState("Arial", 18, true, false);
-        public static StateSave Emphasis = CreateFontState("Arial", 18, false, true);
-
-        private static StateSave CreateFontState(string fontName, int fontSize, bool isBold, bool isItalic)
-        {
-            return new()
-            {
-                Variables = new()
-                {
-                    new () { Name = "Font", Type = "string", Value = fontName },
-                    new () { Name = "FontSize", Type = "int", Value = fontSize },
-                    new () { Name = "IsBold", Type = "bool", Value = isBold },
-                    new () { Name = "IsItalic", Type = "bool", Value = isItalic }
-                }
-            };
-        }
-    }
 
     public static class NineSlice
     {
@@ -186,3 +170,31 @@ public class Styling
         public static StateSave Wrench => CreateTextureCoordinateState(384, 96, 32, 32);
     }
 }
+
+public class Text
+{
+#if RAYLIB
+    public StateSave Normal = new();
+    public StateSave Strong = new();
+    public StateSave Emphasis = new();
+#else
+    public StateSave Normal = CreateFontState("Arial", 18, false, false);
+    public StateSave Strong = CreateFontState("Arial", 18, true, false);
+    public StateSave Emphasis = CreateFontState("Arial", 18, false, true);
+    private static StateSave CreateFontState(string fontName, int fontSize, bool isBold, bool isItalic)
+    {
+        return new()
+        {
+            Variables = new()
+                {
+                    new () { Name = "Font", Type = "string", Value = fontName },
+                    new () { Name = "FontSize", Type = "int", Value = fontSize },
+                    new () { Name = "IsBold", Type = "bool", Value = isBold },
+                    new () { Name = "IsItalic", Type = "bool", Value = isItalic }
+                }
+        };
+    }
+#endif
+
+}
+

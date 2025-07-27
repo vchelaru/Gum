@@ -15,7 +15,7 @@ public class Text : InvisibleRenderable, IText
 {
     Font _font;
 
-    Font Font
+    public Font Font
     {
         get
         {
@@ -26,6 +26,7 @@ public class Text : InvisibleRenderable, IText
 
             return _font;
         }
+        set => _font = value;
     }
 
     public Color Color

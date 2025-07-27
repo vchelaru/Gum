@@ -83,7 +83,7 @@ public class ListBoxItemVisual : InteractiveGue
         TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-        TextInstance.ApplyState(Styling.Text.Normal);
+        TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         TextInstance.Color = Styling.Colors.White;
         this.AddChild(TextInstance);
 

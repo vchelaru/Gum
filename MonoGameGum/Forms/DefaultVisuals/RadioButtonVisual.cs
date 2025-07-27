@@ -107,7 +107,7 @@ public class RadioButtonVisual : InteractiveGue
         TextInstance.Height = 0;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        TextInstance.ApplyState(Styling.Text.Normal);
+        TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();

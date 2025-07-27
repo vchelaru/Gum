@@ -86,7 +86,7 @@ public class ComboBoxVisual : InteractiveGue
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         TextInstance.Color = Styling.Colors.White;
-        TextInstance.ApplyState(Styling.Text.Strong);
+        TextInstance.ApplyState(Styling.ActiveStyle.Text.Strong);
         this.AddChild(TextInstance);
 
         ListBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);

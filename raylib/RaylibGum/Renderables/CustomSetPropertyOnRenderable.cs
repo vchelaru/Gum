@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Renderables;
 using Gum.Wireframe;
+using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -52,8 +53,15 @@ internal static class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
-
-        return handled;
+        else if(propertyName == "Font")
+        {
+            if(value is Font font)
+            {
+                asText.Font = font;
+                handled = true;
+            }
+        }
+            return handled;
     }
 
 

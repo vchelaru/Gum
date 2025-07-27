@@ -82,7 +82,7 @@ public class ButtonVisual : InteractiveGue
         TextInstance.HorizontalAlignment = HorizontalAlignment.Center;
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
         TextInstance.Color = Color.White;
-        TextInstance.ApplyState(Styling.Text.Normal);
+        TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();

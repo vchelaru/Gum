@@ -26,6 +26,13 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    public Font CustomFont
+    {
+        get => ContainedText.Font;
+
+        set => ContainedText.Font = value;
+    }
+
     public string Text
     {
         get
