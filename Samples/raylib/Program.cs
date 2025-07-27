@@ -259,13 +259,8 @@ public class BasicShapes
     private static void InitializeStyling()
     {
         var font = LoadFontEx("resources/04B_30_.TTF", 24, null, 0);
-
         Styling.ActiveStyle.Text.Normal.SetValue("Font", font);
-
-
-
         Styling.ActiveStyle.Text.Strong.SetValue("Font", font);
         Styling.ActiveStyle.Text.Emphasis.SetValue("Font", font);
-
     }
 }

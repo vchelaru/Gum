@@ -63,9 +63,9 @@ public class ListBoxItemVisual : InteractiveGue
         Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0f;
         Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.Colors.DarkGray;
+        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.NineSlice.Bordered);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
 
         TextInstance = new TextRuntime();
@@ -84,7 +84,7 @@ public class ListBoxItemVisual : InteractiveGue
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
-        TextInstance.Color = Styling.Colors.White;
+        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();
@@ -99,9 +99,9 @@ public class ListBoxItemVisual : InteractiveGue
         FocusedIndicator.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.Height = 2f;
         FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        FocusedIndicator.Color = Styling.Colors.Warning;
+        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
-        FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         this.AddChild(FocusedIndicator);
 
         ListBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
@@ -130,8 +130,8 @@ public class ListBoxItemVisual : InteractiveGue
         }
 
         AddState(States.Enabled, false, false);
-        AddState(States.Highlighted, true, false, Styling.Colors.Primary);
-        AddState(States.Selected, true, false, Styling.Colors.Accent);
+        AddState(States.Highlighted, true, false, Styling.ActiveStyle.Colors.Primary);
+        AddState(States.Selected, true, false, Styling.ActiveStyle.Colors.Accent);
         AddState(States.Focused, false, true);
 
         if (tryCreateFormsObject)

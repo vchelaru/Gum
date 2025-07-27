@@ -83,9 +83,9 @@ public class ScrollViewerVisual : InteractiveGue
             Background.Y = 0f;
             Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-            Background.Color = Styling.Colors.DarkGray;
+            Background.Color = Styling.ActiveStyle.Colors.DarkGray;
             Background.Texture = uiSpriteSheetTexture;
-            Background.ApplyState(Styling.NineSlice.Bordered);
+            Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
             this.AddChild(Background);
 
             FocusedIndicator = new NineSliceRuntime();
@@ -101,9 +101,9 @@ public class ScrollViewerVisual : InteractiveGue
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
-            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+            FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
             FocusedIndicator.Visible = false;
-            FocusedIndicator.Color = Styling.Colors.Warning;
+            FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
             this.AddChild(FocusedIndicator);
 
             ScrollAndClipContainer = new ContainerRuntime();

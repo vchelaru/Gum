@@ -54,8 +54,8 @@ public class ScrollBarVisual : InteractiveGue
         UpButtonIcon.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         UpButtonIcon.Height = 100;
         UpButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        UpButtonIcon.ApplyState(Styling.Icons.Arrow1);
-        UpButtonIcon.Color = Styling.Colors.White;
+        UpButtonIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow1);
+        UpButtonIcon.Color = Styling.ActiveStyle.Colors.White;
         UpButtonIcon.Texture = uiSpriteSheetTexture;
         UpButtonIcon.Visible = true;
         UpButtonIcon.Rotation = 90;
@@ -84,8 +84,8 @@ public class ScrollBarVisual : InteractiveGue
         DownButtonIcon.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         DownButtonIcon.Height = 100;
         DownButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        DownButtonIcon.ApplyState(Styling.Icons.Arrow1);
-        DownButtonIcon.Color = Styling.Colors.White;
+        DownButtonIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow1);
+        DownButtonIcon.Color = Styling.ActiveStyle.Colors.White;
         DownButtonIcon.Texture = uiSpriteSheetTexture;
         DownButtonIcon.Visible = true;
         DownButtonIcon.Rotation = -90;
@@ -127,8 +127,8 @@ public class ScrollBarVisual : InteractiveGue
         TrackInstance.Y = 0f;
         TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        TrackInstance.ApplyState(Styling.NineSlice.Solid);
-        TrackInstance.Color = Styling.Colors.Gray;
+        TrackInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
+        TrackInstance.Color = Styling.ActiveStyle.Colors.Gray;
         TrackInstance.Texture = uiSpriteSheetTexture;
         ThumbContainer.AddChild(TrackInstance);
 

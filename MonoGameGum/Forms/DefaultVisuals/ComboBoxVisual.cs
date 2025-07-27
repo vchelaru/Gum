@@ -65,9 +65,9 @@ public class ComboBoxVisual : InteractiveGue
         Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0f;
         Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.Colors.DarkGray;
+        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.NineSlice.Bordered);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
 
         TextInstance = new TextRuntime();
@@ -85,7 +85,7 @@ public class ComboBoxVisual : InteractiveGue
         TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-        TextInstance.Color = Styling.Colors.White;
+        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Strong);
         this.AddChild(TextInstance);
 
@@ -112,8 +112,8 @@ public class ComboBoxVisual : InteractiveGue
         DropdownIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         DropdownIndicator.Rotation = -90;
         DropdownIndicator.Texture = uiSpriteSheetTexture;
-        DropdownIndicator.Color = Styling.Colors.Primary;
-        DropdownIndicator.ApplyState(Styling.Icons.Arrow2);
+        DropdownIndicator.Color = Styling.ActiveStyle.Colors.Primary;
+        DropdownIndicator.ApplyState(Styling.ActiveStyle.Icons.Arrow2);
         this.AddChild(DropdownIndicator);
 
         FocusedIndicator = new NineSliceRuntime();
@@ -129,9 +129,9 @@ public class ComboBoxVisual : InteractiveGue
         FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
-        FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.Colors.Warning;
+        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         ComboBoxCategory = new StateSaveCategory();
@@ -155,13 +155,13 @@ public class ComboBoxVisual : InteractiveGue
             AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
         }
 
-        AddState(States.Enabled, Styling.Colors.Primary, Styling.Colors.White, false);
-        AddState(States.Disabled, Styling.Colors.Gray, Styling.Colors.Gray, false);
-        AddState(States.DisabledFocused, Styling.Colors.Gray, Styling.Colors.Gray, true);
-        AddState(States.Focused, Styling.Colors.White, Styling.Colors.White, true);
-        AddState(States.Highlighted, Styling.Colors.PrimaryLight, Styling.Colors.PrimaryLight, false);
-        AddState(States.HighlightedFocused, Styling.Colors.PrimaryLight, Styling.Colors.PrimaryLight, true);
-        AddState(States.Pushed, Styling.Colors.PrimaryDark, Styling.Colors.PrimaryDark, false);
+        AddState(States.Enabled, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, false);
+        AddState(States.Disabled, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false);
+        AddState(States.DisabledFocused, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true);
+        AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
+        AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
+        AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
+        AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
 
         if (tryCreateFormsObject)
         {

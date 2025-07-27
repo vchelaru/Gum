@@ -73,9 +73,9 @@ public class SliderVisual : InteractiveGue
         NineSliceInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         NineSliceInstance.Height = 8f;
         NineSliceInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        NineSliceInstance.Color = Styling.Colors.DarkGray;
+        NineSliceInstance.Color = Styling.ActiveStyle.Colors.DarkGray;
         NineSliceInstance.Texture = uiSpriteSheetTexture;
-        NineSliceInstance.ApplyState(Styling.NineSlice.Bordered);
+        NineSliceInstance.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         TrackInstance.AddChild(NineSliceInstance);
 
         ThumbInstance = new ButtonVisual();
@@ -92,7 +92,7 @@ public class SliderVisual : InteractiveGue
 
         FocusedIndicator = new NineSliceRuntime();
         FocusedIndicator.Name = "FocusedIndicator";
-        FocusedIndicator.Color = Styling.Colors.Warning;
+        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.X = 0;
         FocusedIndicator.Y = 2;
         FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
@@ -104,7 +104,7 @@ public class SliderVisual : InteractiveGue
         FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
-        FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
         this.AddChild(FocusedIndicator);
 

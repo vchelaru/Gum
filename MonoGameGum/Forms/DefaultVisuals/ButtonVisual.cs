@@ -64,7 +64,7 @@ public class ButtonVisual : InteractiveGue
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Name = "Background";
         Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.NineSlice.Bordered); 
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered); 
         this.AddChild(Background);
 
         TextInstance = new TextRuntime();
@@ -98,9 +98,9 @@ public class ButtonVisual : InteractiveGue
         FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
-        FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.Colors.Warning;
+        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         ButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
@@ -124,13 +124,13 @@ public class ButtonVisual : InteractiveGue
             AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
         }
 
-        AddState(States.Enabled, Styling.Colors.Primary, Styling.Colors.White, false);
-        AddState(States.Disabled, Styling.Colors.DarkGray, Styling.Colors.Gray, false);
-        AddState(States.Highlighted, Styling.Colors.PrimaryLight, Styling.Colors.White, false);
-        AddState(States.Pushed, Styling.Colors.PrimaryDark, Styling.Colors.White, false);
-        AddState(States.HighlightedFocused, Styling.Colors.PrimaryLight, Styling.Colors.White, true);
-        AddState(States.Focused, Styling.Colors.Primary, Styling.Colors.White, true);
-        AddState(States.DisabledFocused, Styling.Colors.DarkGray, Styling.Colors.Gray, true);
+        AddState(States.Enabled, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, false);
+        AddState(States.Disabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, false);
+        AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, false);
+        AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.White, false);
+        AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, true);
+        AddState(States.Focused, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, true);
+        AddState(States.DisabledFocused, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, true);
 
         if (tryCreateFormsObject)
         {

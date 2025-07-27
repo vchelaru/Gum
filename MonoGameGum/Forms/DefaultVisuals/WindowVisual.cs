@@ -54,9 +54,9 @@ public class WindowVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.Colors.Primary;
+        Background.Color = Styling.ActiveStyle.Colors.Primary;
         Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.NineSlice.Panel);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Panel);
         this.AddChild(Background);
 
         InnerPanelInstance = new Panel();

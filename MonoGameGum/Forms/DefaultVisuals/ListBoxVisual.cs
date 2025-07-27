@@ -66,9 +66,9 @@ public class ListBoxVisual : InteractiveGue
         Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0f;
         Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.Colors.DarkGray;
+        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.NineSlice.Bordered);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
 
         FocusedIndicator = new NineSliceRuntime();
@@ -83,9 +83,9 @@ public class ListBoxVisual : InteractiveGue
         FocusedIndicator.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.Height = 2f;
         FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        FocusedIndicator.Color = Styling.Colors.Warning;
+        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
-        FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         // NOTE: Focus for a ListBox must come from code 
         // or from a user enabling keyboard navigation with FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
         FocusedIndicator.Visible = false; 
