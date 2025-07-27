@@ -79,14 +79,14 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         if(SourceRectangle == null)
         {
             // todo - support scaling
-            DrawTextureEx(Texture, new Vector2(x, y), 0, 1, Color);
+            DrawTextureEx(Texture, new Vector2(x, y), -Rotation, 1, Color);
         }
         else
         {
             var destinationRectangle = new Rectangle(
                 x, y, this.Width, this.Height);
 
-            DrawTexturePro(Texture, SourceRectangle.Value, destinationRectangle, Vector2.Zero, 0, Color);
+            DrawTexturePro(Texture, SourceRectangle.Value, destinationRectangle, Vector2.Zero, -Rotation, Color);
         }
 
 

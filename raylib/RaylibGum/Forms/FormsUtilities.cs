@@ -69,6 +69,8 @@ public class FormsUtilities
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
                 TryAdd(typeof(Label), typeof(LabelVisual));
+                TryAdd(typeof(ScrollBar), typeof(ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
                 TryAdd(typeof(Slider), typeof(SliderVisual));
 
 
