@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Renderables;
 using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -53,5 +54,55 @@ internal static class CustomSetPropertyOnRenderable
         }
 
         return handled;
+    }
+
+
+    public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
+    {
+        var managers = iSystemManagers as SystemManagers;
+
+        //if (renderable is Sprite)
+        //{
+        //    managers.SpriteManager.Add(renderable as Sprite, layer);
+        //}
+        //else if (renderable is NineSlice)
+        //{
+        //    managers.SpriteManager.Add(renderable as NineSlice, layer);
+        //}
+        //else if (renderable is LineRectangle)
+        //{
+        //    managers.ShapeManager.Add(renderable as LineRectangle, layer);
+        //}
+        //else if (renderable is SolidRectangle)
+        //{
+        //    managers.ShapeManager.Add(renderable as SolidRectangle, layer);
+        //}
+        //else if (renderable is Text)
+        //{
+        //    managers.TextManager.Add(renderable as Text, layer);
+        //}
+        //else if (renderable is LineCircle)
+        //{
+        //    managers.ShapeManager.Add(renderable as LineCircle, layer);
+        //}
+        //else if (renderable is LinePolygon)
+        //{
+        //    managers.ShapeManager.Add(renderable as LinePolygon, layer);
+        //}
+        //else if (renderable is InvisibleRenderable)
+        //{
+        //    managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
+        //}
+        //else
+        {
+            if (layer == null)
+            {
+                managers.Renderer.Layers[0].Add(renderable);
+            }
+            else
+            {
+                layer.Add(renderable);
+            }
+        }
     }
 }

@@ -272,7 +272,8 @@ public class FormsUtilities
         //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList, cursor, 
-            keyboard, gameTime.TotalGameTime.TotalSeconds);
+            keyboard, 
+            gameTime.TotalGameTime.TotalSeconds);
 
 
         var frameworkElementOver =

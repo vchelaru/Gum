@@ -1,17 +1,18 @@
 ﻿using Gum.DataTypes;
-using Gum.Wireframe;
-using Gum.Renderables;
-using Gum.GueDeriving;
-using Raylib_cs;
 using Gum.Forms;
+using Gum.GueDeriving;
+using Gum.Renderables;
+using Gum.Wireframe;
+using Raylib_cs;
 using RaylibGum.Input;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 namespace RaylibGum;
 public class GumService
@@ -39,10 +40,30 @@ public class GumService
 
     public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
+        InitializeInternal(
+            gumProjectFile: null,
+            systemManagers: SystemManagers.Default,
+            defaultVisualsVersion: defaultVisualsVersion);
+    }
+
+    bool hasBeenInitialized = false;
+
+    void InitializeInternal(string? gumProjectFile = null,
+        SystemManagers? systemManagers = null,
+        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+    {
+        if (hasBeenInitialized)
+        {
+            throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
+        }
+        hasBeenInitialized = true;
+
+        //_game = game;
+        // RegisterRuntimeTypesThroughReflection();
+
         SystemManagers.Default = new SystemManagers();
         ISystemManagers.Default = SystemManagers.Default;
         SystemManagers.Default.Initialize();
-
 
         FormsUtilities.InitializeDefaults(defaultVisualsVersion: defaultVisualsVersion);
 
@@ -51,6 +72,7 @@ public class GumService
         Root.Height = 0;
         Root.HeightUnits = DimensionUnitType.RelativeToParent;
         Root.Name = "Main Root";
+        Root.HasEvents = false;
 
         Root.AddToManagers();
 
@@ -69,39 +91,9 @@ public class GumService
 
     public void Draw()
     {
-        DrawGumRecursively(Root);
+        SystemManagers.Default.Draw();
     }
 
-    private void DrawGumRecursively(GraphicalUiElement element)
-    {
-        element.Render(null);
-
-        if(element.ClipsChildren)
-        {
-            var scissorX = (int)element.AbsoluteX;
-            var scissorY = (int)element.AbsoluteY;
-            var scissorWidth = (int)element.GetAbsoluteWidth();
-            var scissorHeight = (int)element.GetAbsoluteHeight();
-            Raylib.BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
-        }
-
-        if (element.Children != null)
-        {
-            foreach (var child in element.Children)
-            {
-                if (child is GraphicalUiElement childGue && childGue.Visible)
-                {
-                    DrawGumRecursively(childGue);
-                }
-            }
-        }
-
-        if(element.ClipsChildren)
-        {
-            Raylib.EndScissorMode();
-        }
-
-    }
 }
 
 public static class GraphicalUiElementExtensionMethods

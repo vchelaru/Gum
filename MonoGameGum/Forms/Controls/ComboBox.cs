@@ -5,7 +5,6 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.Converters;
 using System.Collections;
-using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
 
 
@@ -13,14 +12,23 @@ using RenderingLibrary;
 
 #if FRB
 using MonoGameGum.Forms.Controls;
+using Microsoft.Xna.Framework.Input;
 using static FlatRedBall.Input.Xbox360GamePad;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using RaylibGum.Input;
+using Keys = Raylib_cs.KeyboardKey;
+namespace Gum.Forms.Controls;
+
 #else
 using MonoGameGum.Input;
+using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using Microsoft.Xna.Framework.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -30,7 +38,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     ListBox listBox;
     GraphicalUiElement textComponent;
-    RenderingLibrary.Graphics.Text coreTextObject;
+    global::RenderingLibrary.Graphics.IText coreTextObject;
 
 
     public string Text
@@ -172,7 +180,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     public event Action<object, SelectionChangedEventArgs> SelectionChanged;
     public event Action<IInputReceiver> FocusUpdate;
-    public event Action<Buttons> ControllerButtonPushed;
+    public event Action<GamepadButton> ControllerButtonPushed;
     public event Action<int> GenericGamepadButtonPushed;
 
     #endregion
@@ -231,7 +239,8 @@ public class ComboBox : FrameworkElement, IInputReceiver
         Visual.Children.Remove(listBoxInstance);
         listBoxInstance.RemoveFromManagers();
 
-        coreTextObject = textComponent.RenderableComponent as RenderingLibrary.Graphics.Text;
+        coreTextObject = textComponent.RenderableComponent as
+            global::RenderingLibrary.Graphics.IText;
 
         if (listBoxInstance.FormsControlAsObject == null)
         {
@@ -489,14 +498,14 @@ public class ComboBox : FrameworkElement, IInputReceiver
         {
             var gamepad = xboxGamepads[i];
 
-            var movedDown = gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
+            var movedDown = gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down);
 
-            var movedUp = gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
+            var movedUp = gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
                      gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up);
 
-            var pressedButton = gamepad.ButtonPushed(Buttons.A) ||
-                gamepad.ButtonPushed(Buttons.B);
+            var pressedButton = gamepad.ButtonPushed(GamepadButton.A) ||
+                gamepad.ButtonPushed(GamepadButton.B);
             DoDropDownOpenFocusUpdate(movedDown, movedUp, pressedButton);
         }
 #if FRB
@@ -571,12 +580,12 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(Buttons.A))
+            if (gamepad.ButtonPushed(GamepadButton.A))
             {
                 OpenAndFocusListBox();
             }
 
-            void RaiseIfPushedAndEnabled(Buttons button)
+            void RaiseIfPushedAndEnabled(GamepadButton button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -584,11 +593,11 @@ public class ComboBox : FrameworkElement, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Buttons.B);
-            RaiseIfPushedAndEnabled(Buttons.X);
-            RaiseIfPushedAndEnabled(Buttons.Y);
-            RaiseIfPushedAndEnabled(Buttons.Start);
-            RaiseIfPushedAndEnabled(Buttons.Back);
+            RaiseIfPushedAndEnabled(GamepadButton.B);
+            RaiseIfPushedAndEnabled(GamepadButton.X);
+            RaiseIfPushedAndEnabled(GamepadButton.Y);
+            RaiseIfPushedAndEnabled(GamepadButton.Start);
+            RaiseIfPushedAndEnabled(GamepadButton.Back);
         }
 
         void OpenAndFocusListBox()
@@ -700,6 +709,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
+#if !RAYLIB
         var asKeyboard = keyboard as IInputReceiverKeyboardMonoGame;
         if (asKeyboard != null)
         {
@@ -711,8 +721,9 @@ public class ComboBox : FrameworkElement, IInputReceiver
                     keyboard.IsCtrlDown);
             }
         }
+#endif
     }
 #endif
 
-    #endregion
-}
+#endregion
+    }

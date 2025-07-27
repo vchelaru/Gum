@@ -31,6 +31,7 @@
     <Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" Link="Forms\Controls\ComboBox.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" Link="Forms\Controls\FrameworkElement.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" Link="Forms\Controls\FrameworkElementExt.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\ItemsControl.cs" Link="Forms\Controls\ItemsControl.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="..\..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ButtonVisual.cs" Link="Forms\DefaultVisuals\ButtonVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\CheckBoxVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\ComboBoxVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\LabelVisual.cs" Link="Forms\DefaultVisuals\LabelVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\ListBoxItemVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxVisual.cs" Link="Forms\DefaultVisuals\ListBoxVisual.cs" />

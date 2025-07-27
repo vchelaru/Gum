@@ -39,6 +39,10 @@ public class SystemManagers : ISystemManagers
     public void Initialize()
     {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+
+        GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+
+        Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
     }
 
     public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
@@ -80,5 +84,10 @@ public class SystemManagers : ISystemManagers
     public void InvalidateSurface()
     {
 
+    }
+
+    internal void Draw()
+    {
+        Renderer.Draw(this);
     }
 }

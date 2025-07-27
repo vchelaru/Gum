@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Raylib_cs;
 using Gum.Forms.DefaultVisuals;
+using RenderingLibrary.Graphics;
+
 
 
 
@@ -68,6 +70,7 @@ public class FormsUtilities
                 Styling.ActiveStyle = new Styling(uiSpriteSheet);
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(ComboBoxVisual));
                 TryAdd(typeof(Label), typeof(LabelVisual));
                 TryAdd(typeof(ListBox), typeof(ListBoxVisual));
                 TryAdd(typeof(ListBoxItem), typeof(ListBoxItemVisual));
@@ -147,9 +150,81 @@ public class FormsUtilities
 
         cursor.Activity(gameTime);
         keyboard.Activity(gameTime);
-
+        UpdateGamepads(gameTime);
         innerList.Clear();
-        innerList.AddRange(roots);
+
+
+        if (FrameworkElement.ModalRoot.Children.Count > 0)
+        {
+#if DEBUG
+            if (FrameworkElement.ModalRoot.Managers == null)
+            {
+                throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
+            }
+#endif
+            SetDimensionsToCanvas(FrameworkElement.ModalRoot);
+
+            // make sure this is the last:
+            foreach (var layer in SystemManagers.Default.Renderer.Layers)
+            {
+                if (layer.Renderables.Contains(FrameworkElement.ModalRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.ModalRoot.RenderableComponent)
+                {
+                    layer.Remove(FrameworkElement.ModalRoot.RenderableComponent as IRenderableIpso);
+                    layer.Add(FrameworkElement.ModalRoot.RenderableComponent as IRenderableIpso);
+                }
+            }
+
+            for (int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
+            {
+                var item = FrameworkElement.ModalRoot.Children[i];
+                if (item is GraphicalUiElement itemAsGue)
+                {
+                    innerList.Add(itemAsGue);
+                    // only the top-most element receives input
+                    break;
+                }
+            }
+        }
+        else
+        {
+
+
+            if (roots != null)
+            {
+                innerList.AddRange(roots);
+            }
+
+            var isRootInRoots = roots?.Contains(FrameworkElement.PopupRoot) == true;
+
+            if (!isRootInRoots && FrameworkElement.PopupRoot.Children.Count > 0)
+            {
+#if DEBUG
+                if (FrameworkElement.PopupRoot.Managers == null)
+                {
+                    throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
+                }
+#endif
+
+                SetDimensionsToCanvas(FrameworkElement.PopupRoot);
+                // make sure this is the last:
+                foreach (var layer in SystemManagers.Default.Renderer.Layers)
+                {
+                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
+                    {
+                        layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
+                        layer.Add(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
+                    }
+                }
+
+                foreach (var item in FrameworkElement.PopupRoot.Children)
+                {
+                    if (item is GraphicalUiElement itemAsGue)
+                    {
+                        innerList.Add(itemAsGue);
+                    }
+                }
+            }
+        }
 
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList, 
@@ -172,5 +247,21 @@ public class FormsUtilities
         {
             //cursor.CustomCursor = Cursors.Arrow;
         }
+    }
+
+    internal static void SetDimensionsToCanvas(InteractiveGue container)
+    {
+        // Just to be safe, we'll set X and Y:
+        container.X = 0;
+        container.Y = 0;
+        container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        container.Width = GraphicalUiElement.CanvasWidth;
+        container.Height = GraphicalUiElement.CanvasHeight;
+    }
+
+    private static void UpdateGamepads(double time)
+    {
+        // todo
     }
 }

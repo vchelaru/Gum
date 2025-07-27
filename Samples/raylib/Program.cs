@@ -156,6 +156,14 @@ public class BasicShapes
             listBox.ScrollIntoView(newItem);
         };
 
+        var comboBox = new ComboBox();
+        container.AddChild(comboBox.Visual);
+        for (int i = 0; i < 10; i++)
+        {
+            comboBox.Items.Add($"Item {i}");
+        }
+
+
         // Main game loop
         while (!WindowShouldClose())
         {
