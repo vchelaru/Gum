@@ -155,7 +155,9 @@ public class GumService
     }
 
     bool hasBeenInitialized = false;
-    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null, 
+    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, 
+        string? gumProjectFile = null, 
+        SystemManagers? systemManagers = null, 
         DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
     {
         if(hasBeenInitialized)
