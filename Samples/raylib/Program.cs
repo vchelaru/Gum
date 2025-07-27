@@ -124,124 +124,37 @@ public class BasicShapes
                 innerButton.Text = DateTime.Now.ToString();
         }
 
-        var spriteContainer = new ContainerRuntime();
-        container.AddChild(spriteContainer);
-        spriteContainer.Width = 100;
-        spriteContainer.Height = 100;
 
 
+        var stackPanel = new StackPanel();
+        container.AddChild(stackPanel.Visual);
 
-        var UpButtonIcon = new SpriteRuntime();
-        spriteContainer.AddChild(UpButtonIcon);
-        UpButtonIcon.Name = "UpButtonIcon";
-        UpButtonIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
-        UpButtonIcon.YUnits = GeneralUnitType.PixelsFromMiddle;
-        UpButtonIcon.XOrigin = HorizontalAlignment.Center;
-        UpButtonIcon.YOrigin = VerticalAlignment.Center;
-        UpButtonIcon.Width = 100;
-        UpButtonIcon.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        UpButtonIcon.Height = 100;
-        UpButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        UpButtonIcon.ApplyState(Styling.Icons.Arrow1);
-        UpButtonIcon.Color = Styling.Colors.White;
-        UpButtonIcon.Texture = Styling.ActiveStyle.SpriteSheet;
-        UpButtonIcon.Visible = true;
-        UpButtonIcon.Rotation = 0;
+        var easyRadioButton = new RadioButton();
+        stackPanel.AddChild(easyRadioButton);
+        easyRadioButton.Text = "Easy";
 
-        //for(int i = 0; i < 10; i++)
-        //{
-        //    var nineSlice = new NineSliceRuntime();
-        //    nineSlice.Texture = standardTexture.Value;
-        //    nineSlice.TextureLeft = 24;
-        //    nineSlice.TextureTop = 3 * 16;
-        //    nineSlice.TextureWidth = 24;
-        //    nineSlice.TextureHeight = 24;
-        //    nineSlice.TextureAddress = Gum.Managers.TextureAddress.Custom;
-        //    nineSlice.Width = 15 + 15*i;
-        //    nineSlice.Height = 15 + 15 * i;
-        //    container.AddChild(nineSlice);
+        var mediumRadioButton = new RadioButton();
+        stackPanel.AddChild(mediumRadioButton);
+        mediumRadioButton.Text = "Medium";
 
-        //}
+        var hardRadioButton = new RadioButton();
+        stackPanel.AddChild(hardRadioButton);
+        hardRadioButton.Text = "Hard";
 
-        // let's set a top to bottom stack
-        //for (int i = 0; i < 3; i++)
-        //{
-        //    //var sprite = new Sprite();
-        //    //sprite.Texture = texture;
-        //    //var child = new GraphicalUiElement(sprite);
+        var listBox = new ListBox();
+        container.AddChild(listBox.Visual);
+        listBox.Width = 300;
+        listBox.Height = 200;
 
-        //    var child = new SpriteRuntime();
-        //    child.Texture = texture;
-        //    child.Height = 100;
-        //    child.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        //    child.Width = 100;
-        //    child.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        //    container.Children.Add(child);
-        //}
-
-        //for (int i = 0; i < 2; i++)
-        //{
-        //    var partialSprite = new SpriteRuntime();
-        //    partialSprite.Name = "Partial sprite";
-        //    partialSprite.Texture = texture;
-        //    partialSprite.Height = 300;
-        //    partialSprite.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        //    partialSprite.Width = 300;
-        //    partialSprite.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        //    partialSprite.TextureLeft = 0;
-        //    partialSprite.TextureWidth = 32;
-        //    partialSprite.TextureTop = 0;
-        //    partialSprite.TextureHeight = 16;
-        //    partialSprite.TextureAddress = Gum.Managers.TextureAddress.Custom;
-        //    container.Children.Add(partialSprite);
-
-        //}
-
-        //for (int i = 0; i < 5; i++)
-
-        //{
-        //    var text = new Text();
-        //    text.RawText = "Hello World";
-        //    var child = new GraphicalUiElement(text);
-        //    child.Height = 0;
-        //    child.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        //    child.Width = 0;
-        //    child.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        //    child.FontSize = 12 + i * 4;
-
-        //    container.Children.Add(child);
-        //}
-
-        for (int i = 0; i < 3; i++)
+        var addButton = new Button();
+        container.AddChild(addButton.Visual);
+        addButton.Text = "Add to ListBox";
+        addButton.Click += (s, e) =>
         {
-            var rectangle = new SolidRectangle();
-            rectangle.Color = Color.Green;
-
-            var child = new InteractiveGue(rectangle);
-            child.Name = "Rectangle " + i;
-            child.Height = 30;
-            child.Width = 60;
-            container.AddChild(child);
-
-            child.Click += (_,_) =>
-            {
-                child.X += 10;
-            };
-        }
-
-        //var buttonBackground = new ColoredRectangleRuntime();
-        //buttonBackground.Color = Color.Blue;
-        //buttonBackground.Dock(Dock.Fill);
-        //var buttonVisual = new ContainerRuntime();
-        //buttonVisual.AddChild(buttonBackground);
-
-        //var button = new Button(buttonVisual);
-        //button.Click += (_,_) =>
-        //{
-        //   // This will be called when the button is clicked
-        //    Console.WriteLine("Button clicked!");
-        //};
-        //container.AddChild(buttonVisual);
+            var newItem = $"Item {listBox.Items.Count} @ {DateTime.Now}";
+            listBox.Items.Add(newItem);
+            listBox.ScrollIntoView(newItem);
+        };
 
         // Main game loop
         while (!WindowShouldClose())

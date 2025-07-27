@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace RaylibGum;
 public class GumService
@@ -71,10 +72,8 @@ public class GumService
         DrawGumRecursively(Root);
     }
 
-    private static void DrawGumRecursively(GraphicalUiElement element)
+    private void DrawGumRecursively(GraphicalUiElement element)
     {
-        var shouldDrawSelf = element.RenderableComponent is Sprite;
-
         element.Render(null);
 
         if(element.ClipsChildren)
@@ -90,7 +89,7 @@ public class GumService
         {
             foreach (var child in element.Children)
             {
-                if (child is GraphicalUiElement childGue)
+                if (child is GraphicalUiElement childGue && childGue.Visible)
                 {
                     DrawGumRecursively(childGue);
                 }

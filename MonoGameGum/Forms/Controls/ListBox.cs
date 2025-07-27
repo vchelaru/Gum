@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using RenderingLibrary;
-using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using Gum.Converters;
@@ -14,14 +13,25 @@ using RenderingLibrary.Graphics;
 
 #if FRB
 using FlatRedBall.Input;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
+using Microsoft.Xna.Framework.Input;
 using FlatRedBall.Math.Geometry;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using Gum.GueDeriving;
+using RaylibGum.Input;
+using Keys = Raylib_cs.KeyboardKey;
+
+namespace Gum.Forms.Controls;
+
 #else
 using MonoGameGum.Input;
+using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using Microsoft.Xna.Framework.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -328,7 +338,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// Until July 2024 this was only firing at the top level. July 2024 version also raises
     /// this event when a button is pushed on an item.
     /// </remarks>
-    public event Action<Buttons> ControllerButtonPushed;
+    public event Action<GamepadButton> ControllerButtonPushed;
 
 #if FRB
     public event Action<int> GenericGamepadButtonPushed;
@@ -926,37 +936,37 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
-            if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
+            if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
             {
                 direction = RepositionDirections.Down;
             }
             
-            if (gamepad.ButtonRepeatRate(Buttons.DPadRight) ||
+            if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
             {
                 direction = RepositionDirections.Right;
             }
 
-            if (gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
+            if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
             {
                 direction = RepositionDirections.Up;
             }
 
-            if (gamepad.ButtonRepeatRate(Buttons.DPadLeft) ||
+            if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
             {
                 direction = RepositionDirections.Left;
             }
 
 
-            var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(Buttons.A)) ||
-                gamepad.ButtonPushed(Buttons.B);
+            var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(GamepadButton.A)) ||
+                gamepad.ButtonPushed(GamepadButton.B);
 
             DoListItemFocusUpdate(direction, pressedButton);
 
-            void RaiseIfPushedAndEnabled(Buttons button)
+            void RaiseIfPushedAndEnabled(GamepadButton button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -964,14 +974,14 @@ public class ListBox : ItemsControl, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Buttons.A);
-            RaiseIfPushedAndEnabled(Buttons.B);
-            RaiseIfPushedAndEnabled(Buttons.X);
-            RaiseIfPushedAndEnabled(Buttons.Y);
-            RaiseIfPushedAndEnabled(Buttons.Start);
-            RaiseIfPushedAndEnabled(Buttons.Back);
-            RaiseIfPushedAndEnabled(Buttons.DPadLeft);
-            RaiseIfPushedAndEnabled(Buttons.DPadRight);
+            RaiseIfPushedAndEnabled(GamepadButton.A);
+            RaiseIfPushedAndEnabled(GamepadButton.B);
+            RaiseIfPushedAndEnabled(GamepadButton.X);
+            RaiseIfPushedAndEnabled(GamepadButton.Y);
+            RaiseIfPushedAndEnabled(GamepadButton.Start);
+            RaiseIfPushedAndEnabled(GamepadButton.Back);
+            RaiseIfPushedAndEnabled(GamepadButton.DPadLeft);
+            RaiseIfPushedAndEnabled(GamepadButton.DPadRight);
 
 #if FRB
             RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);
@@ -1225,12 +1235,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(Buttons.A))
+            if (gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoListItemsHaveFocus = true;
             }
 
-            void RaiseIfPushedAndEnabled(Buttons button)
+            void RaiseIfPushedAndEnabled(GamepadButton button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -1238,13 +1248,13 @@ public class ListBox : ItemsControl, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Buttons.B);
-            RaiseIfPushedAndEnabled(Buttons.X);
-            RaiseIfPushedAndEnabled(Buttons.Y);
-            RaiseIfPushedAndEnabled(Buttons.Start);
-            RaiseIfPushedAndEnabled(Buttons.Back);
-            RaiseIfPushedAndEnabled(Buttons.DPadLeft);
-            RaiseIfPushedAndEnabled(Buttons.DPadRight);
+            RaiseIfPushedAndEnabled(GamepadButton.B);
+            RaiseIfPushedAndEnabled(GamepadButton.X);
+            RaiseIfPushedAndEnabled(GamepadButton.Y);
+            RaiseIfPushedAndEnabled(GamepadButton.Start);
+            RaiseIfPushedAndEnabled(GamepadButton.Back);
+            RaiseIfPushedAndEnabled(GamepadButton.DPadLeft);
+            RaiseIfPushedAndEnabled(GamepadButton.DPadRight);
 
 #if FRB
             RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);

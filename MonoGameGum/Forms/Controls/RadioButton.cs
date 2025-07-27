@@ -5,6 +5,9 @@ using Gum.Wireframe;
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+namespace Gum.Forms.Controls;
+
 #else
 namespace MonoGameGum.Forms.Controls;
 #endif
@@ -15,7 +18,7 @@ public class RadioButton : ToggleButton
 
     private GraphicalUiElement textComponent;
 
-    private RenderingLibrary.Graphics.Text coreTextObject;
+    private global::RenderingLibrary.Graphics.IText coreTextObject;
 
     //<radio button parent, <group name, radio button list>>
     public static Dictionary<object, Dictionary<string, List<RadioButton>>> RadioButtonDictionary = new Dictionary<object, Dictionary<string, List<RadioButton>>>();
@@ -163,7 +166,7 @@ public class RadioButton : ToggleButton
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
 
         if (textComponent != null)
-            coreTextObject = (RenderingLibrary.Graphics.Text)textComponent.RenderableComponent;
+            coreTextObject = (global::RenderingLibrary.Graphics.IText)textComponent.RenderableComponent;
 
         if (GroupName == null)
         {
