@@ -13,6 +13,7 @@ Forms controls are a collection of classes which provide common UI behavior. You
 * RadioButton
 * ScrollViewer
 * Slider
+* StackPanel
 * TextBox
 
 All controls are in the `MonoGameGum.Forms.Controls` namespace.
@@ -23,7 +24,7 @@ Forms naming is based on naming from WPF. If you are familiar with WPF or simila
 
 ## Common Control Properties
 
-All controls share a few common properties and characteristics. The following list provides a high-level introduction to forms control similarities. If the list doesn't make sense don't worry, we'll cover each topic in this and following tutorials.
+All controls share a few common properties and characteristics. The following list provides a high-level introduction to forms control similarities. If the list doesn't make sense yet don't worry, we'll cover each topic in this and following tutorials.
 
 * All controls can be added to a StackPanel. Technically, any control can be added to any other control, but for this tutorial we'll keep things simple by adding only to a StackPanel.
 * All controls have a Visual property which can be used to position, size, and perform advance layout behavior. This Visual property is ultimately a GraphicalUiElement which provides access to all Gum layout properties.
@@ -48,9 +49,25 @@ MyButton.Visual.WidthUnits = DimensionUnitType.RelativeToContainer;
 
 For more information about all of the properties available to GraphicalUiElement, see the [General Properties](../../../../gum-tool/gum-elements/general-properties/) section of the Gum tool - all properties in the tool are also available in code.
 
+{% hint style="info" %}
+Some Visual properties are also provided at the Forms Control level for convenience. These are:
+
+* `X`
+* `Y`
+* `Width`
+* `Height`
+
+For example, the following two lines of code are equivalent:
+
+```csharp
+MyButton.Width = 100;
+MyButton.Visual.Width = 100;
+```
+{% endhint %}
+
 ## Code Organization
 
-For the sake of brevity, we will add all of our controls to the Root object, and all code will be added to the game's Initialize method after the Root has been created. Of course a full game may require more advanced organization but we'll keep everything in the Game Initialize for simplicity.
+For the sake of brevity, we will add all of our controls in the game's Initialize method after `mainPanel` has been created. Of course a full game may require more advanced organization but we'll keep everything in the Game Initialize for simplicity.
 
 ## Label
 
@@ -87,7 +104,7 @@ disabledButton.Click += (_, _) =>
     label.Text = "This never happens";
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 27 05.gif" alt=""><figcaption><p>Buttons only respond to Click if IsEnabled is set to true (default)</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 14 20.gif" alt=""><figcaption><p>Buttons only respond to Click if IsEnabled is set to true (default)</p></figcaption></figure>
 
 {% hint style="info" %}
 Notice that the Label and two Buttons are stacked top-to-bottom. This is the default behavior layout behavior of StackPanels.
@@ -111,7 +128,7 @@ checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
 checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 29 21.gif" alt=""><figcaption><p>CheckBox responds to clicks</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 17 43.gif" alt=""><figcaption><p>CheckBox responds to clicks</p></figcaption></figure>
 
 ## ComboBox
 
@@ -132,7 +149,7 @@ comboBox.SelectionChanged += (_, _) =>
 mainPanel.AddChild(comboBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 31 12.gif" alt=""><figcaption><p>ComboBox responding to items being selected</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 34 57.gif" alt=""><figcaption><p>ComboBox responding to items being selected</p></figcaption></figure>
 
 ## ListBox
 
@@ -157,7 +174,7 @@ listBox.SelectionChanged += (_, _) =>
 mainPanel.AddChild(listBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 35 33.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 37 21.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
 
 ## RadioButton
 
@@ -200,7 +217,7 @@ radioButton3.Text = "Option 3";
 group2.AddChild(radioButton3);
 ```
 
-<figure><img src="../../../../.gitbook/assets/19_15 47 50.gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 39 16.gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
 
 ## ScrollViewer
 
@@ -221,7 +238,7 @@ for(int i = 0; i < 15; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 38 28.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 41 52.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
 
 ## Slider
 
@@ -235,11 +252,11 @@ slider.Width = 200;
 slider.Minimum = 0;
 slider.Maximum = 100;
 slider.ValueChanged += (_,_) => 
-    label.Text = $"Slider value: {slider.Value}";
+    label.Text = $"Slider value: {slider.Value:0.0}";
 mainPanel.AddChild(slider);
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 42 45.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_07 43 36.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
 
 ## TextBox
 
@@ -252,9 +269,10 @@ The following code creates a TextBox which raises an event whenever its text is 
 ```csharp
 var textBox = new TextBox();
 textBox.Placeholder = "Enter text here...";
+textBox.Width = 200;
 textBox.TextChanged += (_, _) => 
     label.Text = $"Text box text is now: {textBox.Text}";
 mainPanel.AddChild(textBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/22_06 52 48.gif" alt=""><figcaption><p>TextBox responding to text input</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 09 13.gif" alt=""><figcaption><p>TextBox responding to text input</p></figcaption></figure>

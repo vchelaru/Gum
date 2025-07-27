@@ -33,7 +33,7 @@ button.Click += (_, _) =>
 
 ```
 
-<figure><img src="../../../../.gitbook/assets/03_07 10 38.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_06 14 56.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
 
 ## Preventing Sizing and Moving
 
@@ -60,7 +60,7 @@ Note that changing any of these values will not update the visual appearance of 
 The following code disabled resizing by setting ResizeMode:
 
 ```csharp
-Window window = new();
+var window = new Window();
 window.AddToRoot();
 window.ResizeMode = ResizeMode.NoResize;
 ```
@@ -70,7 +70,7 @@ window.ResizeMode = ResizeMode.NoResize;
 The following code shows how to force dock a window to the right side of the screen. The user can still resize the window horizontally by grabbing the left edge of the window since the left side has not been disabled.
 
 ```csharp
-Window window = new();
+var window = new Window();
 window.AddToRoot();
 
 window.Dock(Dock.Right);
@@ -89,7 +89,7 @@ window.GetFrameworkElement("BorderBottomInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
 ```
 
-<figure><img src="../../../../.gitbook/assets/07_14 38 01.gif" alt=""><figcaption><p>Window resizing only from the left edge</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_06 16 42.gif" alt=""><figcaption><p>Window resizing only from the left edge</p></figcaption></figure>
 
 Each individual border and title bar instance can be independently disabled to customize the resize/movement behavior. For example, the following line is specifically responsible for disabling the ability to move the window:
 

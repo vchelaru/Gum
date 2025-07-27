@@ -16,7 +16,7 @@ For example, the following code enables gamepad control for a game assuming MyBu
 
 ```csharp
 // The first gamepad:
-var gamepad = Gum.Gamepads[0];
+var gamepad = GumUI.Gamepads[0];
 // If this code is run multiple times then the gamepad
 // may get added multiple times as well. To be safe, clear
 // the list:
@@ -31,7 +31,7 @@ By default a gamepad's A button can be used to select the focused control. If th
 
 ```csharp
 FrameworkElement.GamePadsForUiControl.AddRange(
-    Gum.Gamepads);
+    GumUI.Gamepads);
 
 TopButton.IsFocused = true;
 TopButton.Click += (_, _) =>

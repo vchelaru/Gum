@@ -7,7 +7,7 @@
 		<NoWarn>1591</NoWarn>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>FlatRedBall.ToolsUtilities.NetStandard</PackageId>
-		<Version>2025.7.6.1</Version>
+		<Version>2025.7.17.1</Version>
 
 		<Platforms>AnyCPU;x86</Platforms>
 
@@ -25,6 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
 		<PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
 	</ItemGroup>
 

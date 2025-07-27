@@ -9,6 +9,9 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Windows.Forms;
+using Gum.Dialogs;
+using Gum.PropertyGridHelpers;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers;
 
@@ -182,15 +185,17 @@ public class HotkeyManager : Singleton<HotkeyManager>
     private readonly Commands.GuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly IDialogService _dialogService;
 
     // If adding any new keys here, modify HotkeyViewModel
     
     public HotkeyManager()
     {
         _copyPasteLogic = CopyPasteLogic.Self;
-        _guiCommands = GumCommands.Self.GuiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _dialogService =  Locator.GetRequiredService<IDialogService>();
     }
 
     #region App Wide Keys
@@ -294,15 +299,33 @@ public class HotkeyManager : Singleton<HotkeyManager>
     {
         if(Rename.IsPressed(e))
         {
-            if(_selectedState.SelectedInstance != null)
+            if(_selectedState.SelectedInstance is { } selectedInstance)
             {
-                _guiCommands.ShowRenameInstanceWidow(_selectedState.SelectedInstance);
+                string oldName = selectedInstance.Name;
+                GetUserStringOptions options = new()
+                {
+                    InitialValue = oldName,
+                    PreSelect = true
+                };
+                
+                if (_dialogService.GetUserString("Enter new name", "Rename Instance", options) is { } newName)
+                {
+                    selectedInstance.Name = newName;
+                    SetVariableLogic.Self.PropertyValueChanged("Name", oldName,
+                        selectedInstance,
+                        selectedInstance.ParentContainer?.DefaultState,
+                        refresh: true,
+                        recordUndo: true,
+                        trySave: true);
+                }
                 e.Handled = true;
             }
-            else if(_selectedState.SelectedElement != null &&
-                _selectedState.SelectedElement is not StandardElementSave)
+            else if(_selectedState.SelectedElement is { } selectedElement and not StandardElementSave)
             {
-                _guiCommands.ShowRenameElementWindow(_selectedState.SelectedElement);
+                _dialogService.Show<RenameElementDialogViewModel>(vm =>
+                {
+                    vm.ElementSave = selectedElement;
+                });
                 e.Handled = true;
             }
         }
@@ -313,7 +336,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
         if(Search.IsPressed(e))
         {
-            GumCommands.Self.GuiCommands.FocusSearch();
+            _guiCommands.FocusSearch();
             e.Handled = true;
         }
     }

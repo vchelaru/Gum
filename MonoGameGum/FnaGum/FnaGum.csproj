@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.FNA</PackageId>
-		<Version>2025.7.6.1</Version>
+		<Version>2025.7.24.1</Version>
 
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -105,8 +105,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\fna\FNA.Core.csproj" PrivateAssets="All" />
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
-		<ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

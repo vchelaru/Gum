@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
@@ -8,8 +8,10 @@ using Gum.Gui.Forms;
 using System.Diagnostics;
 using ExCSS;
 using Gum.Commands;
+using Gum.Dialogs;
 using Gum.ToolCommands;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers
 {
@@ -21,6 +23,7 @@ namespace Gum.Managers
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
         private readonly EditCommands _editCommands;
+        private readonly IDialogService _dialogService;
 
         private MenuStrip _menuStrip;
 
@@ -48,17 +51,18 @@ namespace Gum.Managers
 
         #endregion
 
-        public MenuStripManager(GuiCommands guiCommands)
+        public MenuStripManager()
         {
-            _guiCommands = guiCommands;
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _editCommands = Locator.GetRequiredService<EditCommands>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
         public void Initialize()
         {
-            var mainWindow = GumCommands.Self.GuiCommands.MainWindow;
+            var mainWindow = _guiCommands.MainWindow;
             // Load Recent handled in MainRecentFilesPlugin
 
             #region Local Functions
@@ -119,17 +123,10 @@ namespace Gum.Managers
             this.RemoveVariableMenuItem});
 
 
-
-
-            Add(addToolStripMenuItem, "Screen", () => 
-                GumCommands.Self.GuiCommands.ShowAddScreenWindow()) ;
-
-            Add(addToolStripMenuItem, "Component", () =>
-                GumCommands.Self.GuiCommands.ShowAddComponentWindow());
-            Add(addToolStripMenuItem, "Instance", () =>
-                GumCommands.Self.GuiCommands.ShowAddInstanceWindow());
-            Add(addToolStripMenuItem, "State", () => 
-                GumCommands.Self.GuiCommands.ShowAddStateWindow());
+            Add(addToolStripMenuItem, "Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
+            Add(addToolStripMenuItem, "Component", () => _dialogService.Show<AddComponentDialogViewModel>());
+            Add(addToolStripMenuItem, "Instance", () => _dialogService.Show<AddInstanceDialogViewModel>());
+            Add(addToolStripMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
 
             // 
             // RemoveElementMenuItem
@@ -282,12 +279,12 @@ namespace Gum.Managers
 
             //Add(viewToolStripMenuItem, "Hide Tools", () =>
             //{
-            //    GumCommands.Self.GuiCommands.HideTools();
+            //    _guiCommands.HideTools();
             //});
 
             //Add(viewToolStripMenuItem, "Show Tools", () =>
             //{
-            //    GumCommands.Self.GuiCommands.ShowTools();
+            //    _guiCommands.ShowTools();
             //});
 
 

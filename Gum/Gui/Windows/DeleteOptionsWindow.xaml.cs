@@ -2,6 +2,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Gum.Commands;
+using Gum.Services;
 
 namespace Gum.Gui.Windows
 {
@@ -33,7 +35,7 @@ namespace Gum.Gui.Windows
 
         private void HandleLoaded(object sender, RoutedEventArgs e)
         {
-            GumCommands.Self.GuiCommands.MoveToCursor(this);
+            Locator.GetRequiredService<GuiCommands>().MoveToCursor(this);
         }
 
         private void YesButtonClick(object sender, RoutedEventArgs e)

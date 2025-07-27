@@ -10,10 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LibraryProjects", "LibraryP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{2ABFB42D-954D-4429-8B01-397581BC8C9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypesNet6", "..\..\GumDataTypes\GumDataTypesNet6.csproj", "{CE62F06B-B8C7-462C-81F6-B5A7521F397A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{C7E8984A-67F8-4081-9CF1-D16093EC39F2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,14 +28,6 @@ Global
 		{2ABFB42D-954D-4429-8B01-397581BC8C9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2ABFB42D-954D-4429-8B01-397581BC8C9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2ABFB42D-954D-4429-8B01-397581BC8C9D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CE62F06B-B8C7-462C-81F6-B5A7521F397A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE62F06B-B8C7-462C-81F6-B5A7521F397A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE62F06B-B8C7-462C-81F6-B5A7521F397A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE62F06B-B8C7-462C-81F6-B5A7521F397A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C7E8984A-67F8-4081-9CF1-D16093EC39F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7E8984A-67F8-4081-9CF1-D16093EC39F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7E8984A-67F8-4081-9CF1-D16093EC39F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7E8984A-67F8-4081-9CF1-D16093EC39F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -47,8 +35,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{C8415A14-F48F-47E3-914D-79C44434CB77} = {269E6100-C1A6-41C2-971C-7C5B32987775}
 		{2ABFB42D-954D-4429-8B01-397581BC8C9D} = {269E6100-C1A6-41C2-971C-7C5B32987775}
-		{CE62F06B-B8C7-462C-81F6-B5A7521F397A} = {269E6100-C1A6-41C2-971C-7C5B32987775}
-		{C7E8984A-67F8-4081-9CF1-D16093EC39F2} = {269E6100-C1A6-41C2-971C-7C5B32987775}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B84D31CC-187A-41E1-B88E-8EB5BFED24E0}

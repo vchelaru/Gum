@@ -1,4 +1,4 @@
-﻿using Gum;
+using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -75,7 +75,7 @@ namespace SkiaPlugin
                 else
                 {
                     StandardAdder.AddAllStandards();
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                    _guiCommands.RefreshElementTreeView();
                 }
             };
         }

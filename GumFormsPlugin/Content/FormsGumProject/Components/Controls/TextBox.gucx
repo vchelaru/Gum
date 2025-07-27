@@ -47,6 +47,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>CaretInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ClipContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <IsFile>true</IsFile>
       <Type>string</Type>
       <Name>CaretInstance.SourceFile</Name>
@@ -133,8 +139,74 @@
     </Variable>
     <Variable>
       <Type>bool</Type>
-      <Name>ClipsChildren</Name>
+      <Name>ClipContainer.ClipsChildren</Name>
       <Value xsi:type="xsd:boolean">true</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClipContainer.Height</Name>
+      <Value xsi:type="xsd:float">-0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>ClipContainer.HeightUnits</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClipContainer.Width</Name>
+      <Value xsi:type="xsd:float">-0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>ClipContainer.WidthUnits</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClipContainer.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>ClipContainer.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>ClipContainer.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClipContainer.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>ClipContainer.YOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>ClipContainer.YUnits</Name>
+      <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>ClipsChildren</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -238,6 +310,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>PlaceholderTextInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ClipContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>StyleCategory</Type>
       <Name>PlaceholderTextInstance.StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Normal</Value>
@@ -302,6 +380,12 @@
       <Type>float</Type>
       <Name>SelectionInstance.Height</Name>
       <Value xsi:type="xsd:float">-4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>SelectionInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ClipContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -386,6 +470,12 @@
       <Name>TextInstance.MaxNumberOfLines</Name>
       <ExposedAsName>MaxNumberOfLines</ExposedAsName>
       <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ClipContainer</Value>
+      <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>StyleCategory</Type>
@@ -552,7 +642,7 @@
       </Variable>
     </State>
     <State>
-      <Name>Selected</Name>
+      <Name>Focused</Name>
       <Variable>
         <Type>ColorCategory</Type>
         <Name>Background.ColorCategoryState</Name>
@@ -664,6 +754,11 @@
   <Instance>
     <Name>Background</Name>
     <BaseType>NineSlice</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ClipContainer</Name>
+    <BaseType>Container</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

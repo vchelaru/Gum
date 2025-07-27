@@ -1,0 +1,120 @@
+﻿using System.Threading.Tasks;
+using Gum.DataTypes;
+using Gum.Managers;
+using Gum.PropertyGridHelpers;
+using Gum.Services.Dialogs;
+using Gum.ToolCommands;
+using Gum.ToolStates;
+
+namespace Gum.Dialogs;
+
+public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
+{
+    public override string Title => "New Object";
+    public override string Message => "Enter new object name";
+
+    private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
+    private readonly ElementCommands _elementCommands;
+    
+    public bool ParentInstance { get; set; }
+    
+
+    public AddInstanceDialogViewModel(
+        ISelectedState selectedState,
+        NameVerifier nameVerifier, 
+        ElementCommands elementCommands)
+    {
+        _selectedState = selectedState;
+        _nameVerifier = nameVerifier;
+        _elementCommands = elementCommands;
+    }
+
+    protected override void OnAffirmative()
+    {
+        if (Value is null || Error is not null) return;
+        
+        ElementSave selectedElement = _selectedState.SelectedElement;
+        InstanceSave? focusedInstance = _selectedState.SelectedInstance;
+        InstanceSave newInstance =
+            _elementCommands.AddInstance(selectedElement, Value, StandardElementsManager.Self.DefaultType);
+        
+        if (ParentInstance)
+        {
+            System.Diagnostics.Debug.Assert(focusedInstance != null);
+        }
+        
+        if (focusedInstance != null)
+        {
+            if (ParentInstance)
+            {
+                SetInstanceParentWrapper(selectedElement, newInstance, focusedInstance);
+            }
+            else
+            {
+                SetInstanceParent(selectedElement, newInstance, focusedInstance);
+            }
+        }
+
+        base.OnAffirmative();
+    }
+
+    protected override string? Validate(string? value)
+    {
+        if (!_nameVerifier.IsInstanceNameValid(value, null, _selectedState.SelectedElement, out string whyNotValid))
+        {
+            return  whyNotValid;
+        }
+
+        return base.Validate(value);
+    }
+    
+    public static void SetInstanceParentWrapper(ElementSave targetElement, InstanceSave newInstance, InstanceSave existingInstance)
+    {
+        // Vic October 13, 2023
+        // Currently new parents can
+        // only be created as Containers,
+        // so they won't have Default Child 
+        // Containers. In the future we will
+        // probably add the ability to select
+        // the type of parent to add, and when
+        // that happens we'll want to add assignment
+        // of the parent's default child container.
+
+        // From DragDropManager:
+        // "Since the Parent property can only be set in the default state, we will
+        // set the Parent variable on that instead of the _selectedState.SelectedStateSave"
+        var stateToAssignOn = targetElement.DefaultState;
+
+        var variableName = newInstance.Name + ".Parent";
+        var existingInstanceVar = existingInstance.Name + ".Parent";
+        var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...
+        var oldParentValue = stateToAssignOn.GetValue(existingInstanceVar) as string;
+
+        stateToAssignOn.SetValue(variableName, oldParentValue, "string");
+        stateToAssignOn.SetValue(existingInstanceVar, newInstance.Name, "string");
+
+        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, newInstance, targetElement.DefaultState);
+        SetVariableLogic.Self.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
+    }
+
+    public static void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
+    {
+        // From DragDropManager:
+        // "Since the Parent property can only be set in the default state, we will
+        // set the Parent variable on that instead of the _selectedState.SelectedStateSave"
+        var stateToAssignOn = targetElement.DefaultState;
+        var variableName = child.Name + ".Parent";
+        var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...
+
+        string newParent = parent.Name;
+        var suffix = ObjectFinder.Self.GetDefaultChildName(parent);
+        if (!string.IsNullOrEmpty(suffix))
+        {
+            newParent = parent.Name + "." + suffix;
+        }
+
+        stateToAssignOn.SetValue(variableName, newParent, "string");
+        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, child, targetElement.DefaultState);
+    }
+}

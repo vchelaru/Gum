@@ -11,14 +11,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>CustomFontFile</Name>
-      <Value xsi:type="xsd:string"></Value>
-      <Category>Font</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -48,13 +40,6 @@
       <Type>StyleCategory</Type>
       <Name>StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>TextOverflowHorizontalMode</Type>
-      <Name>TextOverflowHorizontalMode</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <Category>Text</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

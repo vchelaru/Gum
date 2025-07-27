@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2025.7.6.1</Version>
+		<Version>2025.7.24.1</Version>
 
 
 
@@ -114,8 +114,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
-		<ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

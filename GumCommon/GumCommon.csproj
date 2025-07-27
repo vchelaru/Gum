@@ -9,7 +9,7 @@
 		<Title>GumCommon</Title>
 		<Description>Flexible layout tool for graphics in any .NET environment</Description>
 		<PackageId>FlatRedBall.GumCommon</PackageId>
-		<Version>2025.7.6.1</Version>
+		<Version>2025.7.24.1</Version>
 
 
 
@@ -25,6 +25,36 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\GumDataTypes\Behaviors\BehaviorInstanceSave.cs" Link="Behaviors\BehaviorInstanceSave.cs" />
+		<Compile Include="..\GumDataTypes\Behaviors\BehaviorReference.cs" Link="Behaviors\BehaviorReference.cs" />
+		<Compile Include="..\GumDataTypes\Behaviors\BehaviorSave.cs" Link="Behaviors\BehaviorSave.cs" />
+		<Compile Include="..\GumDataTypes\Behaviors\ElementBehaviorReference.cs" Link="Behaviors\ElementBehaviorReference.cs" />
+		<Compile Include="..\GumDataTypes\ComponentSave.cs" Link="DataTypes\ComponentSave.cs" />
+		<Compile Include="..\GumDataTypes\CustomPropertySave.cs" Link="DataTypes\CustomPropertySave.cs" />
+		<Compile Include="..\GumDataTypes\DimensionUnitType.cs" Link="DataTypes\DimensionUnitType.cs" />
+		<Compile Include="..\GumDataTypes\ElementReference.cs" Link="DataTypes\ElementReference.cs" />
+		<Compile Include="..\GumDataTypes\ElementSave.cs" Link="DataTypes\ElementSave.cs" />
+		<Compile Include="..\GumDataTypes\EventSave.cs" Link="DataTypes\EventSave.cs" />
+		<Compile Include="..\GumDataTypes\GuideRectangle.cs" Link="DataTypes\GuideRectangle.cs" />
+		<Compile Include="..\GumDataTypes\GumProjectSave.cs" Link="DataTypes\GumProjectSave.cs" />
+		<Compile Include="..\GumDataTypes\IInstanceContainer.cs" Link="DataTypes\IInstanceContainer.cs" />
+		<Compile Include="..\GumDataTypes\InstanceSave.cs" Link="DataTypes\InstanceSave.cs" />
+		<Compile Include="..\GumDataTypes\IStateContainer.cs" Link="DataTypes\IStateContainer.cs" />
+		<Compile Include="..\GumDataTypes\NamedRectangle.cs" Link="DataTypes\NamedRectangle.cs" />
+		<Compile Include="..\GumDataTypes\SaveClasses\AnimatedStateSave.cs" Link="DataTypes\AnimatedStateSave.cs" />
+		<Compile Include="..\GumDataTypes\SaveClasses\AnimationReferenceSave.cs" Link="DataTypes\AnimationReferenceSave.cs" />
+		<Compile Include="..\GumDataTypes\SaveClasses\AnimationSave.cs" Link="DataTypes\AnimationSave.cs" />
+		<Compile Include="..\GumDataTypes\SaveClasses\ElementAnimationReferenceSave.cs" Link="DataTypes\ElementAnimationReferenceSave.cs" />
+		<Compile Include="..\GumDataTypes\SaveClasses\ElementAnimationsSave.cs" Link="DataTypes\ElementAnimationsSave.cs" />
+		<Compile Include="..\GumDataTypes\SaveClasses\NamedEventSave.cs" Link="DataTypes\NamedEventSave.cs" />
+		<Compile Include="..\GumDataTypes\ScreenSave.cs" Link="DataTypes\ScreenSave.cs" />
+		<Compile Include="..\GumDataTypes\StandardElementSave.cs" Link="DataTypes\StandardElementSave.cs" />
+		<Compile Include="..\GumDataTypes\UnitConverter.cs" Link="DataTypes\UnitConverter.cs" />
+		<Compile Include="..\GumDataTypes\Variables\IVariableFinder.cs" Link="DataTypes\IVariableFinder.cs" />
+		<Compile Include="..\GumDataTypes\Variables\StateSave.cs" Link="DataTypes\StateSave.cs" />
+		<Compile Include="..\GumDataTypes\Variables\StateSaveCategory.cs" Link="DataTypes\StateSaveCategory.cs" />
+		<Compile Include="..\GumDataTypes\Variables\VariableListSave.cs" Link="DataTypes\VariableListSave.cs" />
+		<Compile Include="..\GumDataTypes\Variables\VariableSave.cs" Link="DataTypes\VariableSave.cs" />
 		<Compile Include="..\GumRuntime\BbCodeParser.cs" Link="Runtime\BbCodeParser.cs" />
 		<Compile Include="..\GumRuntime\BindableGue.cs" Link="BindableGue.cs" />
 		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs" Link="Wireframe\ElementSaveExtensions.GumRuntime.cs" />
@@ -48,6 +78,12 @@
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
 		<Compile Include="..\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />
+		<Compile Include="..\ToolsUtilities\**\*.cs" Link="Utilities\%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="..\ToolsUtilities\obj\**" />
+	  <Compile Remove="..\ToolsUtilities\Properties\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -55,12 +91,10 @@
 		<Folder Include="Managers\" />
 		<Folder Include="Mvvm\" />
 		<Folder Include="Animation\" />
+		<Folder Include="Behaviors\" />
+		<Folder Include="DataTypes\" />
+		<Folder Include="Utilities\" />
 		<Folder Include="RenderingLibrary\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
-		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="..\Gum\DataTypes\BehaviorSaveExtensionMethods.cs">
@@ -92,6 +126,9 @@
 		</Compile>
 		<Compile Include="..\Gum\DataTypes\StateSaveExtensionMethods.cs">
 			<Link>DataTypes\StateSaveExtensionMethods.cs</Link>
+		</Compile>
+		<Compile Include="..\Gum\DataTypes\StateSaveCategoryExtensions.cs">
+			<Link>DataTypes\StateSaveCategoryExtensions.cs</Link>
 		</Compile>
 		<Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
 		<Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
@@ -156,5 +193,9 @@
 		<Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
 			<Link>Graphics\HorizontalAlignment.cs</Link>
 		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+	  <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
 	</ItemGroup>
 </Project>

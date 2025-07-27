@@ -2,7 +2,7 @@
 
 ## Introduction
 
-ListBoxes are one of the more complex controls in Gum Forms. This document discusses how to work with and customize ListBox items.
+`ListBoxes` are one of the more complex controls in Gum Forms. This document discusses how to work with and customize `ListBox` items.
 
 {% hint style="info" %}
 This document uses the ListBox control for consistency but most of the same code applies to ComboBox. This document mentions where ComboBox differs from ListBox.
@@ -10,7 +10,7 @@ This document uses the ListBox control for consistency but most of the same code
 
 ## Default ToString Implementation
 
-By default whenever an instance is added to the ListBox Items property, the ListBox creates a ListBoxItem internally to display the object. Notice that the following code adds integers to a ListBox's Items property which internally creates UI elements to represent the integers.
+By default whenever an instance is added to the `ListBox` `Items` property, the `ListBox` creates a `ListBoxItem` internally to display the object. Notice that the following code adds integers to a `ListBox's` `Items` property which internally creates UI elements to represent the integers.
 
 ```csharp
 var listBox = new ListBox();
@@ -21,7 +21,7 @@ for (int i = 0; i < 10; i++)
 mainPanel.AddChild(listBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 12 29.png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Full Code" %}
@@ -45,20 +45,22 @@ mainPanel.AddChild(listBox);
 {% hint style="info" %}
 The following code produces similar results, although explicitly creating ListBoxItems is less common:
 
-<pre class="language-diff"><code class="lang-diff">var listBox = new ListBox();
-for (int i = 0; i &#x3C; 10; i++)
+```diff
+var listBox = new ListBox();
+for (int i = 0; i < 10; i++)
 {
-<strong>+   var listBoxItem = new ListBoxItem();
-</strong>+   listBoxItem.UpdateToObject(i);
+-   listBox.Items.Add(i);
++   var listBoxItem = new ListBoxItem();
++   listBoxItem.UpdateToObject(i);
 +   listBox.Items.Add(listBoxItem);
 }
 mainPanel.AddChild(listBox);
-</code></pre>
+```
 {% endhint %}
 {% endtab %}
 {% endtabs %}
 
-By default the ListBoxItem displays the ToString of whatever is added to the Items property. In the case of integers, the string representation of the integer is displayed. However, if we display an object, such as information about a weapon, the default display is not very useful.
+By default the ListBoxItem displays the `ToString()` of whatever is added to the `Items` property. In the case of integers, the string representation of the integer is displayed. However, if we display an object, such as information about a weapon, the default display is not very useful.
 
 For example, consider the following code:
 
@@ -99,11 +101,11 @@ listBox.Items.Add(new WeaponDefinition
 mainPanel.AddChild(listBox);
 ```
 
-In this case ToString is called on WeaponDefinition, but this doesn't provide useful information to the user:
+In this case `ToString` is called on `WeaponDefinition`, but this doesn't provide useful information to the user:
 
-<figure><img src="../../../../.gitbook/assets/05_11 46 14.png" alt=""><figcaption><p>ToString displays the class name</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 14 47.png" alt=""><figcaption><p>ToString displays the class name</p></figcaption></figure>
 
-We can change the displayed string by modifying the ToString method in WeaponDefinition.
+We can change the displayed string by modifying the `ToString` method in `WeaponDefinition`.
 
 {% tabs %}
 {% tab title="Full Code" %}
@@ -135,13 +137,13 @@ class WeaponDefinition
 {% endtab %}
 {% endtabs %}
 
-<figure><img src="../../../../.gitbook/assets/05_11 51 53.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 15 43.png" alt=""><figcaption></figcaption></figure>
 
-By implementing a custom ToString method on the WeaponDefinition class we can customize how it is displayed in the ListBox. While this is handy, it does limit us because we may want to modify ToString for other purposes such as customizing information in the debugger.&#x20;
+By implementing a custom `ToString` method on the `WeaponDefinition` class we can customize how it is displayed in the `ListBox`. While this is handy, it does limit us because we may want to modify `ToString` for other purposes such as customizing information in the debugger.&#x20;
 
 ## DisplayMemberPath
 
-`DisplayMemberPath` can be used to change which property is used to display each item. If this value is its default value of an empty string, then the `ToString` method is used. If this value is assigned, then it must be the name of a property on the source item. This property has the benefit of not relying on `ToString` which might be used for debugging or might change for other reasons in the future.
+`DisplayMemberPath` can be used to change which property is used to display each item. If `DisplayMemberPath` is not assigned (or changed to an empty string), then the `ToString` method is used. If this value is assigned, then it must be the name of a property on the source item. This property has the benefit of not relying on `ToString` which might be used for debugging or might change for other reasons in the future.
 
 For example, the following code shows how to display the weapon's name:
 
@@ -187,7 +189,8 @@ mainPanel.AddChild(listBox);
 {% endtab %}
 
 {% tab title="Diff" %}
-<pre class="language-diff"><code class="lang-diff">//Define WeaponDefinition
+```diff
+//Define WeaponDefinition
 class WeaponDefinition
 {
     public string Name { get; set; }
@@ -220,15 +223,15 @@ listBox.Items.Add(new WeaponDefinition
     RequiredLevel = 3,
     Price = 30
 });
-<strong>+listBox.DisplayMemberPath = nameof(WeaponDefinition.Name);
-</strong>mainPanel.AddChild(listBox);
-</code></pre>
++listBox.DisplayMemberPath = nameof(WeaponDefinition.Name);
+mainPanel.AddChild(listBox);
+```
 {% endtab %}
 {% endtabs %}
 
-<figure><img src="../../../../.gitbook/assets/21_06 12 02 (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 18 32.png" alt=""><figcaption></figcaption></figure>
 
-Although this approach is more flexible than using ToString, it does not provide the full benefits of running code on each item to customize its appearance. The next section shows how to create derived forms classes to customize their `UpdateToObject` method.
+Although this approach is more flexible than using `ToString`, it does not allow us to customize how each item is displayed. The next section shows how to create derived forms classes to customize their `UpdateToObject` method.
 
 ## FrameworkElementTemplate
 
@@ -308,6 +311,7 @@ class WeaponDefinition
 
 // Later, create the ListBox
 var listBox = new ListBox();
+-listBox.DisplayMemberPath = nameof(WeaponDefinition.Name);
 +listBox.FrameworkElementTemplate =
 +    new FrameworkElementTemplate(typeof(WeaponDefinitionListBoxItem));
 //...
@@ -315,7 +319,7 @@ var listBox = new ListBox();
 {% endtab %}
 {% endtabs %}
 
-<figure><img src="../../../../.gitbook/assets/05_11 51 53 (1).png" alt=""><figcaption><p>WeaponDefinitionListBoxItem displaying custom text</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 22 27.png" alt=""><figcaption><p>WeaponDefinitionListBoxItem displaying custom text</p></figcaption></figure>
 
 This code example creates a ListBoxItem named WeaponDefinitionListBoxItem. As the name suggests, it is specifically created to display WeaponDefinition instances. Of course, you could create a more generalized version of this class which might handle a variety of different types of items.
 
@@ -354,7 +358,7 @@ mainPanel.AddChild(comboBox);
 
 This code compiles and works mostly the way we want it, but not perfectly. Notice that WeaponDefinition's ToString is still called to display the main text on the combo box.
 
-<figure><img src="../../../../.gitbook/assets/05_12 30 17.gif" alt=""><figcaption><p>ComboBox displaying WeaponDefinition ToString</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 25 10.gif" alt=""><figcaption><p>ComboBox displaying WeaponDefinition ToString</p></figcaption></figure>
 
 Fortunately we can create a class that is derived from ComboBox which overrides the UpdateToObject method just like we did earlier for ListBoxItem.
 
@@ -402,7 +406,7 @@ comboBox.FrameworkElementTemplate =
 
 
 
-<figure><img src="../../../../.gitbook/assets/05_12 39 59.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 26 04.gif" alt=""><figcaption></figcaption></figure>
 
 ## SelectedObject
 

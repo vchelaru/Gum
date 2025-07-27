@@ -14,7 +14,7 @@ Gum Forms can be used purely in code (no .gumx project required), or you can ful
 
 ### Quick Setup - Forms in code
 
-The easiest way to add Forms to your project is to use the `FormsUtilities` class. Keep in mind that Forms is not a replacement for Gum; rather, it adds objects on top of Gum which provide common UI interaction. In other words, if you are using Forms, you are still using Gum as well. Therefore, when using Forms you must also initialize Gum.
+The easiest way to add Forms to your project is to use the `GumService` class.
 
 The following code snippet shows how to initialize Forms and Gum, and how to add a single Button to your project:
 
@@ -23,7 +23,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -34,7 +34,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(this);
+        GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
         var stackPanel = new StackPanel();
         stackPanel.AddToRoot();
@@ -42,6 +42,9 @@ public class Game1 : Game
 
         var button = new Button();
         stackPanel.AddChild(button);
+        stackPanel.X = 50;
+        stackPanel.Y = 50;
+        
         button.Width = 100;
         button.Height = 50;
         button.Text = "Hello MonoGame!";
@@ -56,14 +59,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -72,7 +75,7 @@ public class Game1 : Game
 
 The code above produces a single button which can be clicked to increment the click count.
 
-<figure><img src="../../../.gitbook/assets/24_06 36 41.gif" alt=""><figcaption><p>Gum button reacting to clicks by incrementing click count</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_08 49 14.gif" alt=""><figcaption><p>Gum button reacting to clicks by incrementing click count</p></figcaption></figure>
 
 ### Quick Setup - Forms in the Gum Tool
 
@@ -113,7 +116,7 @@ Your project is now referenced in your game. Modify the Game file to initialize 
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
 
     public Game1()
     {
@@ -124,7 +127,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -138,14 +141,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(this, gameTime);
+        GumUI.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }

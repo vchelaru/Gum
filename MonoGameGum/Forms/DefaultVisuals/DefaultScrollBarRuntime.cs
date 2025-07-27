@@ -40,6 +40,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 UpButtonInstance.TextInstance.Text = "^";
                 UpButtonInstance.Height = 24f;
+                UpButtonInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 UpButtonInstance.Width = 0;
                 UpButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 UpButtonInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
@@ -48,6 +49,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 DownButtonInstance.TextInstance.Text = "v";
                 DownButtonInstance.Height = 24f;
+                DownButtonInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
                 DownButtonInstance.Width = 0f;
                 DownButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 DownButtonInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;

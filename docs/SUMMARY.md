@@ -132,6 +132,7 @@
   * [Add Variable](gum-tool/variables/add-variable.md)
 * [Bitmap font generator (.fnt)](gum-tool/bitmap-font-generator-.fnt.md)
 * [Upgrading](gum-tool/upgrading/README.md)
+  * [Migrating to 2025 July PreRelease](gum-tool/upgrading/migrating-to-2025-july-prerelease.md)
   * [Migrating to 2025 June 27](gum-tool/upgrading/migrating-to-2025-june-27.md)
   * [Migrating to 2025 May 28](gum-tool/upgrading/migrating-2025-april-27-to-may-28.md)
   * [Breaking Changes](gum-tool/upgrading/breaking-changes/README.md)
@@ -140,6 +141,7 @@
 ## Code
 
 * [Gum Code Reference](code/gum-code-reference/README.md)
+  * [Gum Class Overview](code/gum-code-reference/gum-class-overview.md)
   * [AnimationRuntime](code/gum-code-reference/animationruntime.md)
   * [BitmapCharacterInfo](code/gum-code-reference/bitmapcharacterinfo.md)
   * [BitmapFont](code/gum-code-reference/bitmapfont.md)
@@ -149,7 +151,6 @@
   * [Component Runtimes](code/gum-code-reference/component-runtimes.md)
   * [ContainerRuntime](code/gum-code-reference/containerruntime.md)
   * [Cursor](code/gum-code-reference/cursor.md)
-  * [Gum Class Overview](code/gum-code-reference/gum-class-overview.md)
   * [DataUiGrid](code/gum-code-reference/datauigrid/README.md)
     * [Reflection](code/gum-code-reference/datauigrid/reflection.md)
     * [Categories](code/gum-code-reference/datauigrid/categories.md)
@@ -226,6 +227,7 @@
       * [Forms Controls](code/monogame/tutorials/code-only-gum-forms-tutorial/forms-controls.md)
       * [ListBox Items](code/monogame/tutorials/code-only-gum-forms-tutorial/listbox-items.md)
       * [Input in Forms](code/monogame/tutorials/code-only-gum-forms-tutorial/input-in-forms.md)
+      * [Creating New Controls](code/monogame/tutorials/code-only-gum-forms-tutorial/creating-new-controls.md)
     * [\[Deprecated\] Gum Project (.gumx) Tutorial](code/monogame/tutorials/gum-project-.gumx-tutorial/README.md)
       * [Setup](code/monogame/tutorials/gum-project-.gumx-tutorial/setup.md)
       * [Gum Screens](code/monogame/tutorials/gum-project-.gumx-tutorial/gum-screens.md)

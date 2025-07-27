@@ -24,10 +24,11 @@ public enum RenameType
     ExposedName
 }
 
-public class AddVariableViewModel : ViewModel
+public class AddVariableViewModel : DialogViewModel
 {
     #region Fields/Properties
 
+    public string Title { get; set; } = "Add Variable";
     public string EnteredName
     {
         get => Get<string>();
@@ -40,7 +41,7 @@ public class AddVariableViewModel : ViewModel
         set => Set(value);
     }
 
-    private readonly Commands.GuiCommands _guiCommands;
+    private readonly GuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly UndoManager _undoManager;
     private readonly ElementCommands _elementCommands;
@@ -80,8 +81,8 @@ public class AddVariableViewModel : ViewModel
         }
     }
 
-    public ElementSave Element { get; set; }
-    public VariableSave Variable { get; set; }
+    public ElementSave? Element { get; set; }
+    public VariableSave? Variable { get; set; }
 
     public RenameType RenameType { get; set; }
     public VariableChangeResponse VariableChangeResponse 
@@ -100,15 +101,20 @@ public class AddVariableViewModel : ViewModel
 
     #endregion
 
-    public AddVariableViewModel(Commands.GuiCommands guiCommands, FileCommands fileCommands)
+    public AddVariableViewModel(GuiCommands guiCommands,
+        UndoManager undoManager, 
+        ElementCommands elementCommands, 
+        NameVerifier nameVerifier, 
+        ISelectedState selectedState, 
+        IDialogService dialogService)
     {
         _guiCommands = guiCommands;
-        _undoManager = Locator.GetRequiredService<UndoManager>();
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
-        _fileCommands = fileCommands;
-        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _undoManager = undoManager;
+        _elementCommands = elementCommands;
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _nameVerifier = nameVerifier;
+        _selectedState = selectedState;
+        _dialogService = dialogService;
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
@@ -117,6 +123,27 @@ public class AddVariableViewModel : ViewModel
         AvailableTypes.Add("bool");
 
         SelectedItem = "float";
+    }
+
+    protected override void OnAffirmative()
+    {
+        GeneralResponse response = Validate();
+        if (!response.Succeeded)
+        {
+            _dialogService.ShowMessage(response.Message);
+            NegativeCommand.Execute(null);
+            return;
+        }
+
+        if (Variable is null)
+        {
+            AddVariableToSelectedItem();
+        }
+        else
+        {
+            DoEdit(Variable, VariableChangeResponse);
+        }
+        base.OnAffirmative();
     }
 
     public GeneralResponse Validate()
@@ -149,7 +176,7 @@ public class AddVariableViewModel : ViewModel
         return GeneralResponse.SuccessfulResponse;
     }
 
-    public void AddVariableToSelectedItem()
+    private void AddVariableToSelectedItem()
     {
         var type = SelectedItem;
         var name = EnteredName;
@@ -194,7 +221,7 @@ public class AddVariableViewModel : ViewModel
         }
     }
 
-    internal void DoEdit(VariableSave variable, Logic.VariableChangeResponse changes)
+    private void DoEdit(VariableSave variable, Logic.VariableChangeResponse changes)
     {
         var type = SelectedItem;
         var newName = EnteredName;

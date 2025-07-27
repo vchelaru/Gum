@@ -12,7 +12,7 @@ The following code adds a password box.&#x20;
 
 ```csharp
 var passwordBox = new PasswordBox();
-this.Root.Children.Add(passwordBox.Visual);
+passwordBox.AddToRoot();
 passwordBox.X = 50;
 passwordBox.Y = 50;
 passwordBox.Width = 200;
@@ -20,11 +20,11 @@ passwordBox.Height = 34;
 passwordBox.Placeholder = "Enter Password";
 
 var button = new Button();
-this.Root.Children.Add(button.Visual);
+button.AddToRoot();
 button.X = 50;
 button.Y = 90;
 button.Text = "Get Password";
 button.Click += (_, _) => Debug.WriteLine(passwordBox.Password.ToString());
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_06 59 02.gif" alt=""><figcaption><p>Entering a password in the PasswordBux and obtaining it through the Password property</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_09 34 46.gif" alt=""><figcaption><p>Password entered in a PasswordBox</p></figcaption></figure>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.ToolStates;
@@ -16,6 +16,8 @@ using RenderingLibrary.Graphics;
 using Gum.Services;
 using Gum.Undo;
 using Gum.Commands;
+using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers;
 
@@ -29,6 +31,8 @@ public partial class PropertyGridManager
     private readonly GuiCommands _guiCommands;
     private readonly ObjectFinder _objectFinder;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly IDialogService _dialogService;
+    
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     private LocalizationManager _localizationManager;
     MainPropertyGrid mainControl;
@@ -105,6 +109,7 @@ public partial class PropertyGridManager
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _objectFinder = ObjectFinder.Self;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -125,7 +130,7 @@ public partial class PropertyGridManager
         _localizationManager = localizationManager;
         mainControl = new Gum.MainPropertyGrid();
 
-        GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+        _guiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
         mVariablesDataGrid = mainControl.DataGrid;
 
@@ -148,7 +153,21 @@ public partial class PropertyGridManager
 
     private void HandleAddVariable(object sender, EventArgs e)
     {
-        GumCommands.Self.GuiCommands.ShowAddVariableWindow();
+        var canShow = _selectedState.SelectedBehavior != null || _selectedState.SelectedElement != null;
+
+        /////////////// Early Out///////////////
+        if (!canShow)
+        {
+            return;
+        }
+        //////////////End Early Out/////////////
+
+        _dialogService.Show<AddVariableViewModel>(vm =>
+        {
+            vm.RenameType = RenameType.NormalName;
+            vm.Element = _selectedState.SelectedElement;
+            vm.Variable = null;
+        });
     }
 
     bool isInRefresh = false;

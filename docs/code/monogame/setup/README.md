@@ -23,11 +23,12 @@ To initialize Gum, modify your Game project (such as Game1.cs) so that it includ
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
+using MonoGameGum.Forms;
 
 public class Game1 : Game
 {
     GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;
+    GumService GumUI => GumService.Default;
     
     public Game1()
     {
@@ -38,20 +39,20 @@ public class Game1 : Game
     
     protected override void Initialize()
     {
-        Gum.Initialize(this);
+        GumUI.Initialize(this, DefaultVisualsVersion.V2);
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        Gum.Draw();
+        GumUI.Draw();
         base.Draw(gameTime);
     }
 }
@@ -61,24 +62,44 @@ public class Game1 : Game
 
 To test that you have successfully added Gum to the project, modify your Initialize method to add a rectangle:
 
+{% tabs %}
+{% tab title="Full Code" %}
 ```csharp
 protected override void Initialize()
 {
-    Gum.Initialize(this);
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
-    var rectangle = new ColoredRectangleRuntime();
-    rectangle.Width = 100;
-    rectangle.Height = 100;
-    rectangle.Color = Color.White;
-    rectangle.AddToRoot();
+    var button = new Button();
+    button.AddToRoot();
+    button.Click += (_,_) =>
+        button.Text = "Clicked at\n" + DateTime.Now;
+
 
     base.Initialize();
 }
 ```
+{% endtab %}
 
-<figure><img src="../../../.gitbook/assets/image (25).png" alt=""><figcaption><p>White ColoredRectangleRuntime in game</p></figcaption></figure>
+{% tab title="Diff" %}
+```diff
+protected override void Initialize()
+{
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
 
-If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
++   var button = new Button();
++   button.AddToRoot();
++   button.Click += (_,_) =>
++       button.Text = "Clicked at\n" + DateTime.Now;
+
+    base.Initialize();
+}
+```
+{% endtab %}
+{% endtabs %}
+
+<figure><img src="../../../.gitbook/assets/13_06 56 07.gif" alt=""><figcaption></figcaption></figure>
+
+If everything is initialized correctly, you should see a clickable button at the top-left of the screen.
 
 ### Loading Gum Projects
 

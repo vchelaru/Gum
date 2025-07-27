@@ -12,6 +12,7 @@ using Gum.Plugins;
 using Gum.Commands;
 using Gum.Mvvm;
 using System.Windows;
+using Gum.Dialogs;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -26,6 +27,7 @@ public class StateTreeViewRightClickService
     private readonly ElementCommands _elementCommands;
     private readonly EditCommands _editCommands;
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
 
     System.Windows.Controls.ContextMenu _menuStrip;
     GumCommands _gumCommands;
@@ -34,13 +36,15 @@ public class StateTreeViewRightClickService
         GumCommands gumCommands, 
         ElementCommands elementCommands, 
         EditCommands editCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        GuiCommands guiCommands)
     {
         _selectedState = selectedState;
         _gumCommands = gumCommands;
         _elementCommands = elementCommands;
         _editCommands = editCommands;
         _dialogService = dialogService;
+        _guiCommands = guiCommands;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
@@ -75,10 +79,10 @@ public class StateTreeViewRightClickService
             if (_selectedState.SelectedStateCategorySave != null)
             {
                 // As of 5/24/2023, we no longer support uncategorized states
-                AddMenuItem("Add State", _gumCommands.GuiCommands.ShowAddStateWindow);
+                AddMenuItem("Add State", () => _dialogService.Show<AddStateDialogViewModel>());
             }
 
-            AddMenuItem("Add Category", _gumCommands.GuiCommands.ShowAddCategoryWindow);
+            AddMenuItem("Add Category", () => _dialogService.Show<AddCategoryDialogViewModel>());
 
             if (_selectedState.SelectedStateSave != null)
             {
@@ -175,7 +179,7 @@ public class StateTreeViewRightClickService
 
             if (shouldSave)
             {
-                _gumCommands.GuiCommands.RefreshStateTreeView();
+                _guiCommands.RefreshStateTreeView();
 
                 _gumCommands.FileCommands.TryAutoSaveCurrentObject();
 
@@ -302,11 +306,6 @@ public class StateTreeViewRightClickService
 
     #endregion
 
-    internal void AddStateClick()
-    {
-        _gumCommands.GuiCommands.ShowAddStateWindow();
-    }
-
     private void DuplicateStateClick()
     {
         // Is there a "custom" current state save, like an interpolation or animation?
@@ -336,7 +335,7 @@ public class StateTreeViewRightClickService
 
         _elementCommands.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
 
-        _gumCommands.GuiCommands.RefreshStateTreeView();
+        _guiCommands.RefreshStateTreeView();
 
         _selectedState.SelectedStateSave = newState;
 

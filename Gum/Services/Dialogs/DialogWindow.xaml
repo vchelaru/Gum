@@ -33,7 +33,7 @@
                                     <Setter.Value>
                                         <DataTemplate DataType="{x:Type local:DialogViewModel}">
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                <Button Content="{Binding AffirmativeText}" Padding="16,4" MinWidth="64" Margin="5,0,0,0" Command="{Binding AffirmativeCommand}" />
+                                                <Button Content="{Binding AffirmativeText}" Padding="16,4" MinWidth="64" Margin="5,0,0,0" Command="{Binding AffirmativeCommand}" IsDefault="True"/>
                                                 <Button Content="{Binding NegativeText}" Padding="16,4" MinWidth="64" Margin="5,0,0,0" Command="{Binding NegativeCommand}">
                                                     <Button.Style>
                                                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">

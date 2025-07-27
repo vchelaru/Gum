@@ -67,7 +67,7 @@ The first part of your Game1 class might look like the following code:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GumService Gum => GumService.Default;    
+    GumService GumUI => GumService.Default;    
 
     public Game1()
     {
@@ -78,7 +78,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
+        var gumProject = GumUI.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");

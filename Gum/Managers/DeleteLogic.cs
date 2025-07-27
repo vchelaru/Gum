@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using DialogResult = System.Windows.Forms.DialogResult;
@@ -27,6 +28,7 @@ namespace Gum.Managers
         private readonly ElementCommands _elementCommands;
         private readonly UndoManager _undoManager;
         private readonly IDialogService _dialogService;
+        private readonly GuiCommands _guiCommands;
 
         public DeleteLogic()
         {
@@ -36,6 +38,7 @@ namespace Gum.Managers
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
         }
 
 
@@ -242,7 +245,7 @@ namespace Gum.Managers
             optionsWindow.ObjectsToDelete = objectsToDelete;
 
             // do this in Loaded so it has height
-            //GumCommands.Self.GuiCommands.MoveToCursor(optionsWindow);
+            //_guiCommands.MoveToCursor(optionsWindow);
 
             PluginManager.Self.ShowDeleteDialog(optionsWindow, objectsToDelete);
 
@@ -338,12 +341,12 @@ namespace Gum.Managers
             if(selectedElement != null)
             {
                 _selectedState.SelectedElement = elementToReselect;
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(selectedElement);
+                _guiCommands.RefreshElementTreeView(selectedElement);
             }
             else if(behavior != null)
             {
                 _selectedState.SelectedBehavior = behaviorToReselect;
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(behavior);
+                _guiCommands.RefreshElementTreeView(behavior);
             }
 
             WireframeObjectManager.Self.RefreshAll(true);
@@ -471,8 +474,8 @@ namespace Gum.Managers
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                GumCommands.Self.GuiCommands.RefreshVariables();
+                _guiCommands.RefreshStateTreeView();
+                _guiCommands.RefreshVariables();
                 WireframeObjectManager.Self.RefreshAll(true);
 
                 PluginManager.Self.CategoryDelete(category);
@@ -515,7 +518,7 @@ namespace Gum.Managers
                     _elementCommands.RemoveState(stateSave, _selectedState.SelectedStateContainer);
                     PluginManager.Self.StateDelete(stateSave);
 
-                    GumCommands.Self.GuiCommands.RefreshVariables();
+                    _guiCommands.RefreshVariables();
                     WireframeObjectManager.Self.RefreshAll(true);
 
                     if (shouldSelectAfterRemoval)

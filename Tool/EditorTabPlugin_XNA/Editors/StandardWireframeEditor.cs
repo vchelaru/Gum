@@ -82,7 +82,7 @@ public class StandardWireframeEditor : WireframeEditor
         ISelectedState selectedState)
         : base(
               hotkeyManager, 
-              selectionManager, 
+              selectionManager,
               selectedState)
     {
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
@@ -290,7 +290,7 @@ public class StandardWireframeEditor : WireframeEditor
             VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
                 _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
-            GumCommands.Self.GuiCommands.RefreshVariableValues();
+            _guiCommands.RefreshVariableValues();
 
         }
     }
@@ -378,7 +378,7 @@ public class StandardWireframeEditor : WireframeEditor
             {
                 ApplyAxisLockToSelectedState();
 
-                GumCommands.Self.GuiCommands.RefreshVariables();
+                _guiCommands.RefreshVariables();
             }
 
             // let's snap everything
@@ -473,7 +473,7 @@ public class StandardWireframeEditor : WireframeEditor
         if (hasChangeOccurred)
         {
             //UpdateSelectedObjectsPositionAndDimensions();
-            GumCommands.Self.GuiCommands.RefreshVariables();
+            _guiCommands.RefreshVariables();
 
             // I don't think we need this anymore because they're updated automatically in SelectionManager
             //SelectionManager.Self.ShowSizeHandlesFor(WireframeObjectManager.Self.GetSelectedRepresentation());
@@ -735,7 +735,7 @@ public class StandardWireframeEditor : WireframeEditor
 
         if (wasAnythingModified)
         {
-            GumCommands.Self.GuiCommands.RefreshVariables(true);
+            _guiCommands.RefreshVariables(true);
         }
     }
 

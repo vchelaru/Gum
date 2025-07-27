@@ -8,6 +8,7 @@ using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Timers;
+using Gum.Services;
 using ToolsUtilities;
 
 namespace Gum.Plugins.FileWatchPlugin;
@@ -38,7 +39,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
         _fileWatchManager = FileWatchManager.Self;
         _fileWatchLogic = FileWatchLogic.Self;
-        _guiCommands = GumCommands.Self.GuiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
 
         pluginTab = _guiCommands.AddControl(control, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();

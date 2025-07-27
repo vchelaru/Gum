@@ -82,7 +82,7 @@ To show the TitleScreen in game, we can use the newly-generated TitleScreen clas
 ```csharp
 protected override void Initialize()
 {
-    Gum.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
     var screen = new TitleScreen();
     screen.AddToRoot();
@@ -96,7 +96,7 @@ protected override void Initialize()
 ```diff
 protected override void Initialize()
 {
-    Gum.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
 +   var screen = new TitleScreen();
 +   screen.AddToRoot();
@@ -130,7 +130,7 @@ For example, the following code could be used to set the time when a button was 
 // In your Game class:
 protected override void Initialize()
 {
-    Gum.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
     var screen = new TitleScreen();
     screen.ButtonStandardInstance.Click += (_, _) =>
@@ -146,7 +146,7 @@ protected override void Initialize()
 <pre class="language-diff"><code class="lang-diff">// In your Game class:
 protected override void Initialize()
 {
-    Gum.Initialize(this, "GumProject/GumProject.gumx");
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
 
     var screen = new TitleScreen();
 <strong>+   screen.ButtonStandardInstance.Click += (_, _) =>

@@ -15,3 +15,7 @@ Samples/MonoGameGumImmediateMode/MonoGameGumImmediateMode/.config/*
 Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject/EventExport/gum_events.json
 Samples/GameUiSamples/Content/GumProject/EventExport/gum_events.json
 GumFormsPlugin/Content/FormsGumProject/EventExport/gum_events.json
+
+# SonarQube and SonarScanner excludes
+.sonarqube/
+coverage.xml

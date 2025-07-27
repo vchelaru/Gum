@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.Commands;
 using RenderingLibrary;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -54,12 +55,14 @@ public partial class WireframeObjectManager
     FontManager _fontManager;
     private readonly ISelectedState _selectedState;
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
 
     public WireframeObjectManager()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     private bool GetIfSelectedStateIsSetRecursively()

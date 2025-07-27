@@ -44,7 +44,7 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     [Theory]
     [InlineData(basicBMFontFileData)]
     [InlineData(basicBMFontXMLData)]
-    public void BitmapFont_ShouldParseFile(string bmFontData)
+    public void Constructor_ShouldParseFile(string bmFontData)
     {
         BitmapFont font = new BitmapFont((Texture2D)null, bmFontData);
 
@@ -68,7 +68,7 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     [Theory]
     [InlineData("Fake invalid data")]
     [InlineData("BMF binary not yet supported")]
-    public void BitmapFont_ShouldErrorWhenInvalidFileFormat(string bmFontData)
+    public void Constructor_ShouldErrorWhenInvalidFileFormat(string bmFontData)
     {
         Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null, bmFontData));
     }
@@ -121,11 +121,28 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     [InlineData(bmfontTextDataMissingCommon)]
     [InlineData(bmfontXMLDataMissingInfo)]
     [InlineData(bmfontXMLDataMissingCommon)]
-    public void BitmapFont_ShouldErrorWhenMissingInfoOrCommon(string bmFontData)
+    public void Constructor_ShouldErrorWhenMissingInfoOrCommon(string bmFontData)
     {
         Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null, bmFontData));
     }
 
+    [Fact]
+    public void MeasureString_ShouldProperlyMeasureWhitespace()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null, basicBMFontFileData);
 
+        // We have to explicitly set the font pattern because the
+        // font doesn't know its own texture size:
+
+        font.SetFontPattern(256, 256);
+
+        var spaceCharacter = font.Characters[' '];
+        spaceCharacter.XAdvance = 10;
+        spaceCharacter.PixelRight = 5;
+        spaceCharacter.PixelLeft = 0;
+        spaceCharacter.XOffsetInPixels = 1;
+
+        font.MeasureString("     ").ShouldBe(40 + 5 + 1);
+    }
 }
 

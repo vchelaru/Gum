@@ -107,13 +107,6 @@ namespace MonoGameGumFromFile
             GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width/zoom;
             
             GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height/zoom;
-
-            // Grab the rootmost object and tell it to resize:
-            GumService.Default.Root.UpdateLayout();
-
-            // If you are using Gum Forms, you should also notify GumForms:
-            //MonoGameGum.Forms.Controls.FrameworkElement.Root.UpdateLayout();
-
         }
 
         private void InitializeRuntimeMapping()

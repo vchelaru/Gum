@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.ComponentModel;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Mvvm;
 using Microsoft.Xaml.Behaviors.Core;
 
@@ -11,27 +14,28 @@ public abstract class DialogViewModel : ViewModel
     public string? AffirmativeText { get => Get<string>(); set => Set(value); }
     public string? NegativeText { get => Get<string>(); set => Set(value); }
 
-    public ICommand AffirmativeCommand { get; }
-    public ICommand NegativeCommand { get; }
+    public RelayCommand AffirmativeCommand { get; }
+    public RelayCommand NegativeCommand { get; }
 
     protected DialogViewModel()
     {
-        AffirmativeCommand = new ActionCommand(Affirmative);
-        NegativeCommand = new ActionCommand(Negative);
+        AffirmativeText = "OK";
+        NegativeText = "Cancel";
+        
+        AffirmativeCommand = new RelayCommand(OnAffirmative, CanExecuteAffirmative);
+        NegativeCommand = new RelayCommand(OnNegative, CanExecuteNegative);
     }
 
-    private void Affirmative()
+    protected virtual void OnAffirmative()
     {
-        OnAffirmative();
         RequestClose?.Invoke(this, true);
     }
 
-    private void Negative()
+    protected virtual void OnNegative()
     {
-        OnNegative();
         RequestClose?.Invoke(this, false);
     }
-    
-    protected virtual void OnAffirmative(){}
-    protected virtual void OnNegative(){}
+
+    public virtual bool CanExecuteAffirmative() => true;
+    public virtual bool CanExecuteNegative() => true;
 }

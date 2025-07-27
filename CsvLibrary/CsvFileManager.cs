@@ -20,9 +20,121 @@ namespace CsvLibrary
             return CsvDeserializeToRuntime(fileName, delimiter);
         }
 
+
+        static bool IsUrl(string fileName)
+        {
+            return fileName.IndexOf("http:") == 0 || fileName.IndexOf("https:") == 0;
+        }
+
+        public static string ExeLocation
+        {
+            get
+            {
+
+                string result = AppContext.BaseDirectory;
+
+                // Blazor-WASM returns "/" for BaseDirectory, which is invalid for GetDirectoryName.
+                if (result != "/")
+                    result = Path.GetDirectoryName(result);
+
+                return result.Replace('/', Path.DirectorySeparatorChar)
+                                .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            }
+        }
+
+        static bool IsRelative(string fileName)
+        {
+            bool relative = false;
+
+            if (fileName == null)
+            {
+                throw new System.ArgumentException("Cannot check if a null file name is relative.");
+            }
+
+
+            {
+                if (IsUrl(fileName))
+                {
+                    relative = false;
+                }
+                else
+                if (fileName.StartsWith(ExeLocation))
+                {
+                    relative = false;
+                }
+                else if (fileName == String.Empty)
+                {
+                    relative = true; // it doesn't have a prefix so it's technically relative:
+                }
+                else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
+                {
+                    // On linux and mac, we need to still check if it has a root:
+                    var root = Path.GetPathRoot(fileName);
+
+
+                    relative = string.IsNullOrWhiteSpace(root);
+                }
+            }
+
+            return relative;
+        }
+
+        static string GetExtension(string fileName)
+        {
+            try
+            {
+                if (fileName == null)
+                {
+                    return "";
+                }
+
+
+                int dotIndex = fileName.LastIndexOf('.');
+                int lastSlash = fileName.LastIndexOf("/");
+                int lastBackSlash = fileName.LastIndexOf("\\");
+
+                if (dotIndex != -1)
+                {
+                    bool hasDotSlash = false;
+
+                    if (dotIndex == fileName.Length - 1 || lastSlash > dotIndex || lastBackSlash > dotIndex)
+                    {
+                        return "";
+                    }
+
+
+
+
+                    if (dotIndex < fileName.Length - 1 && (fileName[dotIndex + 1] == '/' || fileName[dotIndex + 1] == '\\'))
+                    {
+                        hasDotSlash = true;
+                    }
+
+                    if (hasDotSlash)
+                    {
+                        return "";
+                    }
+                    else
+                    {
+                        return fileName.Substring(dotIndex + 1, fileName.Length - (dotIndex + 1)).ToLower();
+                    }
+                }
+                else
+                {
+                    return ""; // This returns "" because calling the method with a string like "redball" should return no extension
+                }
+            }
+            catch
+            {
+                //EMP: Removed to clean up Warnings
+                //int m = 3;
+                throw new Exception();
+            }
+        }
+
         public static RuntimeCsvRepresentation CsvDeserializeToRuntime(string fileName, char delimiter, HeaderPresence headerPresence = HeaderPresence.HasHeaders)
         {
-            if (FileManager.IsRelative(fileName))
+            if (IsRelative(fileName))
             {
                 throw new NotImplementedException();
                 //fileName = FileManager.MakeAbsolute(fileName);
@@ -31,7 +143,7 @@ namespace CsvLibrary
             //FileManager.ThrowExceptionIfFileDoesntExist(fileName);
 
 
-            string extension = FileManager.GetExtension(fileName);
+            string extension = GetExtension(fileName);
 
 #if SILVERLIGHT || XBOX360 || WINDOWS_PHONE
             

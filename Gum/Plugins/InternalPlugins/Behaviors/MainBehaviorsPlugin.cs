@@ -172,7 +172,7 @@ public class MainBehaviorsPlugin : InternalPlugin
                     _elementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
                 }
 
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                _guiCommands.RefreshStateTreeView();
                 GumCommands.Self.FileCommands.TryAutoSaveElement(component);
             }
             viewModel.UpdateTo(component);

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum supports reading input from the mouse, touch screen, keyboard, and gamepads. Some types of input is automatically enabled such as clicks on Buttons. Other types of input must be enabled through code, such as giving controls focus for tabbing.
+Gum supports reading input from the mouse, touch screen, keyboard, and gamepads. Some types of input are automatically enabled such as clicks on Buttons. Other types of input must be enabled through code, such as giving controls focus for tabbing.
 
 This tutorial covers the various ways input can be used to interact with forms objects.
 
@@ -39,6 +39,8 @@ By default Gum controls work with the mouse and touch screen. The mouse automati
   * Drag thumb to change value
   * Click on track to change value
   * ValueChanged, ValueChangeCompleted, ValueChangedByUi events
+* Splitter
+  * Drag to resize controls before and after the Splitter
 * TextBox/PasswordBox
   * Enter text with keyboard
   * CTRL+V paste
@@ -50,6 +52,9 @@ By default Gum controls work with the mouse and touch screen. The mouse automati
   * Caret movement with arrows
   * Delete and backspace to remove letters
   * Double-click to select all
+* Window
+  * Drag the title bar to move the window
+  * Drag the edges and corners to resize the window
 
 ## Keyboard and Gamepad Input
 
@@ -91,7 +96,7 @@ button.IsFocused = true;
 mainPanel.AddChild(button); 
 ```
 
-<figure><img src="../../../../.gitbook/assets/20_05 36 52.gif" alt=""><figcaption><p>Button clicks through gamepad A button or keyboard enter</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 31 15.gif" alt=""><figcaption><p>Button clicks through gamepad A button or keyboard space/enter</p></figcaption></figure>
 
 The remainder of this tutorial excludes code to add keyboards and gamepads to their explicit list for brevity.
 
@@ -99,9 +104,12 @@ The remainder of this tutorial excludes code to add keyboards and gamepads to th
 
 If your game includes multiple controls then the user can tab between the controls to pass focus. A forms control must first be given focus before tabbing is possible. Once a control is given focus, the user can tab to the next control using the tab key on the keyboard. Shift+tab tabs backwards (up) through the list of controls. Tabbing with the gamepad can be performed using up and down on the d-pad or analog stick.
 
-The following code shows how to create multiple buttons. Once the first button is focused, the user can tab between the to click each one.
+The following code shows how to create multiple buttons. Once the first button is focused, the user can tab between the buttons to click each one.
 
 ```csharp
+// Give some spacing between the buttons:
+mainPanel.Spacing = 6;
+
 for(int i = 0; i < 5; i++)
 {
     var button = new Button();
@@ -119,7 +127,7 @@ for(int i = 0; i < 5; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/20_05 49 17.gif" alt=""><figcaption><p>Button stack tabbing and receiving input</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 33 43.gif" alt=""><figcaption><p>Button stack tabbing and receiving input</p></figcaption></figure>
 
 Tab order is controlled by the order that controls are added to their parent. If the parent is a StackPanel, then controls will naturally tab top to bottom. Once the last control receives focus, tabbing wraps back around to the first control. Similarly, pressing shift+tab on the first control wraps around to the last control.
 
@@ -157,7 +165,7 @@ passwordBox.Placeholder = "";
 mainPanel.AddChild(passwordBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/20_06 22 59.gif" alt=""><figcaption><p>Tabbing skips over Labels and moves to the next TextBox or PasswordBox</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 36 31.gif" alt=""><figcaption><p>Tabbing skips over Labels and moves to the next TextBox or PasswordBox</p></figcaption></figure>
 
 Tabbing can be performed to move focus between complex hierarchies. Gum performs a [depth first](https://en.wikipedia.org/wiki/Depth-first_search) search for controls which implement IInputReceiver. For example, the following code creates two groups of `RadioButton` instances, each inside their own `StackPanel`. Tabbing is able to move between the two groups automatically.
 
@@ -188,7 +196,7 @@ for (int i = 0; i < 3; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/20_06 03 29.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 37 43.gif" alt=""><figcaption></figcaption></figure>
 
 ## Customizing Tab Keys
 
@@ -240,7 +248,7 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
 
 ```
 
-<figure><img src="../../../../.gitbook/assets/20_07 29 21.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/16_06 37 17.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
 
 {% hint style="info" %}
 At the time of this writing gamepad tabbing behavior cannot be modified - tabbing automatically uses gamepad up and down on dpad and analog sticks. This may change in future versions of Gum.

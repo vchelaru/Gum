@@ -207,7 +207,7 @@ void CustomInitialize()
 }
 ```
 
-<figure><img src="../../../.gitbook/assets/01_19 44 07.gif" alt=""><figcaption><p>Two buttons updating money</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_08 51 15.gif" alt=""><figcaption><p>Two buttons updating money</p></figcaption></figure>
 
 
 

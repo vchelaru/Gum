@@ -6,6 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
+using FlatRedBall.Forms.Controls;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+
+#endif
+
 namespace MonoGameGum.Forms;
 
 public static class GraphicalUiElementFormsExtensions

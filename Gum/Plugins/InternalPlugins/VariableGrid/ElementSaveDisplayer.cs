@@ -20,6 +20,7 @@ using Gum.Undo;
 using System.Security.Principal;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
+using System.Collections;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -101,14 +102,13 @@ namespace Gum.PropertyGridHelpers
                 defaultChildContainerProperty.TypeConverter = new AvailableInstancesConverter();
             }
 
-            var recursiveVariableFinder = new RecursiveVariableFinder(currentState);
             var variableListName = "VariableReferences";
             if (instanceSave != null)
             {
                 variableListName = instanceSave.Name + "." + variableListName;
             }
 
-            Dictionary<string, string> variablesSetThroughReference = GetVariablesSetThroughReferences(elementSave, recursiveVariableFinder, variableListName);
+            Dictionary<string, string> variablesSetThroughReference = GetVariablesSetThroughReferences(elementSave, currentState, variableListName);
 
 
             // if component
@@ -251,14 +251,14 @@ namespace Gum.PropertyGridHelpers
             #endregion
         }
 
-        private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, RecursiveVariableFinder recursiveVariableFinder, string variableListName)
+        private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave currentState, string variableListName)
         {
             Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
-            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
-            if (variableReference?.ValueAsIList != null)
+            var value = currentState.GetValueRecursive(variableListName) as IList;
+            if (value != null)
             {
-                foreach (var item in variableReference.ValueAsIList)
+                foreach (var item in value)
                 {
                     var assignment = item as string;
                     if (assignment?.Contains("=") == true)

@@ -96,6 +96,19 @@ public class GumService
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
     }
 
+    public void Initialize(Game game, DefaultVisualsVersion defaultVisualsVersion)
+    {
+        if (game.GraphicsDevice == null)
+        {
+            throw new InvalidOperationException(
+                "game.GraphicsDevice cannot be null. " +
+                "Be sure to call Initialize in the Game's Initialize method or later " +
+                "so that the Game has a valid GrahicsDevice");
+        }
+
+        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion:defaultVisualsVersion);
+    }
+
     public void Initialize(Game game, SystemManagers systemManagers)
     {
         InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
@@ -142,7 +155,8 @@ public class GumService
     }
 
     bool hasBeenInitialized = false;
-    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null)
+    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null, 
+        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
     {
         if(hasBeenInitialized)
         {
@@ -161,7 +175,7 @@ public class GumService
 #endif
         }
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers);
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;
@@ -182,7 +196,13 @@ public class GumService
             gumProject.Initialize();
             FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
-            var gumDirectory = FileManager.GetDirectory(FileManager.MakeAbsolute(gumProjectFile));
+            var absoluteFile = gumProjectFile;
+            if(FileManager.IsRelative(absoluteFile))
+            {
+                absoluteFile = FileManager.MakeAbsolute(gumProjectFile);
+            }
+
+            var gumDirectory = FileManager.GetDirectory(absoluteFile);
 
             FileManager.RelativeDirectory = gumDirectory;
 

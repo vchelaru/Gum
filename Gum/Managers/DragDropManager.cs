@@ -14,6 +14,7 @@ using Gum.ToolCommands;
 using RenderingLibrary.Graphics;
 using Gum.PropertyGridHelpers;
 using System.Drawing;
+using Gum.Commands;
 using Gum.Converters;
 using Gum.Logic;
 using Gum.Plugins.ImportPlugin.Manager;
@@ -50,6 +51,7 @@ public class DragDropManager
     private readonly RenameLogic _renameLogic;
     private readonly UndoManager _undoManager;
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
 
     #endregion
 
@@ -71,6 +73,7 @@ public class DragDropManager
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -403,8 +406,8 @@ public class DragDropManager
 
         if(targetComponent == _selectedState.SelectedComponent)
         {
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            GumCommands.Self.GuiCommands.BroadcastRefreshBehaviorView();
+            _guiCommands.RefreshStateTreeView();
+            _guiCommands.BroadcastRefreshBehaviorView();
         }
     }
 
@@ -474,7 +477,7 @@ public class DragDropManager
         behaviorInstanceSave.Name = draggedAsInstanceSave.Name;
         behaviorInstanceSave.BaseType = draggedAsInstanceSave.BaseType;
         asBehaviorSave.RequiredInstances.Add(behaviorInstanceSave);
-        GumCommands.Self.GuiCommands.RefreshElementTreeView();
+        _guiCommands.RefreshElementTreeView();
         GumCommands.Self.FileCommands.TryAutoSaveBehavior(asBehaviorSave);
 
     }
@@ -547,7 +550,7 @@ public class DragDropManager
         {
             object draggedObject = draggedTreeNode.Tag;
 
-            if (targetTreeNode != draggedTreeNode)
+            if (targetTreeNode != draggedTreeNode && targetTreeNode?.Tag !=  draggedTreeNode?.Tag )
             {
                 HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
             }
@@ -723,8 +726,8 @@ public class DragDropManager
     private void SaveAndRefresh()
     {
         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-        GumCommands.Self.GuiCommands.RefreshVariables();
-        GumCommands.Self.GuiCommands.RefreshElementTreeView();
+        _guiCommands.RefreshVariables();
+        _guiCommands.RefreshElementTreeView();
 
         WireframeObjectManager.Self.RefreshAll(true);
     }

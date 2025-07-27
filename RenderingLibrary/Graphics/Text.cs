@@ -689,16 +689,6 @@ namespace RenderingLibrary.Graphics
             mRawText = text;
             mNeedsBitmapFontRefresh = true;
 
-            // Vic says - this seems expensive to do for every text. Maybe we should lazy load this to save
-            // some performance?
-            mBounds = new LinePrimitive(managers.Renderer?.TryGetSinglePixelTexture());
-            mBounds.Color = Color.LightGreen;
-
-            mBounds.Add(0, 0);
-            mBounds.Add(0, 0);
-            mBounds.Add(0, 0);
-            mBounds.Add(0, 0);
-            mBounds.Add(0, 0);
             HorizontalAlignment = Graphics.HorizontalAlignment.Left;
             VerticalAlignment = Graphics.VerticalAlignment.Top;
 
@@ -708,6 +698,18 @@ namespace RenderingLibrary.Graphics
             }
 
             UpdateLinePrimitive();
+        }
+
+        private void CreateBounds(SystemManagers managers)
+        {
+            mBounds = new LinePrimitive(managers.Renderer?.TryGetSinglePixelTexture());
+            mBounds.Color = Color.LightGreen;
+
+            mBounds.Add(0, 0);
+            mBounds.Add(0, 0);
+            mBounds.Add(0, 0);
+            mBounds.Add(0, 0);
+            mBounds.Add(0, 0);
         }
 
         char[] whatToSplitOn = new char[] { ' ' };
@@ -1056,7 +1058,14 @@ namespace RenderingLibrary.Graphics
 
         void UpdateLinePrimitive()
         {
-            LineRectangle.UpdateLinePrimitive(mBounds, this);
+            if(RenderBoundary)
+            {
+                if(mBounds == null)
+                {
+                    CreateBounds(this.mManagers);
+                }
+                LineRectangle.UpdateLinePrimitive(mBounds, this);
+            }
 
         }
 

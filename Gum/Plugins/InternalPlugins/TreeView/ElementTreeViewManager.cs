@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommonFormsAndControls;
@@ -19,8 +19,10 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Logic;
 using System.Drawing;
 using Gum.Commands;
+using Gum.Dialogs;
 using WpfInput = System.Windows.Input;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Managers;
 
@@ -109,6 +111,7 @@ public partial class ElementTreeViewManager
     private readonly ISelectedState _selectedState;
     private readonly EditCommands _editCommands;
     private readonly GuiCommands _guiCommands;
+    private readonly IDialogService _dialogService;
 
 
     public const int TransparentImageIndex = 0;
@@ -272,8 +275,10 @@ public partial class ElementTreeViewManager
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _editCommands = Locator.GetRequiredService<EditCommands>();
-        _guiCommands = GumCommands.Self.GuiCommands;
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
 
+        _dialogService = Locator.GetRequiredService<IDialogService>();
+        
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
 
@@ -517,7 +522,7 @@ public partial class ElementTreeViewManager
             new System.Windows.Controls.RowDefinition() 
             { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
 
-        GumCommands.Self.GuiCommands.AddControl(grid, "Project", TabLocation.Left);
+        _guiCommands.AddControl(grid, "Project", TabLocation.Left);
 
         ObjectTreeView.Dock = DockStyle.Fill;
         //panel.Controls.Add(ObjectTreeView);
@@ -542,7 +547,7 @@ public partial class ElementTreeViewManager
         Grid.SetRow(FlatList, 2);
         grid.Children.Add(FlatList);
 
-        //GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
+        //_guiCommands.AddControl(panel, "Project", TabLocation.Left);
     }
 
 
@@ -622,7 +627,7 @@ public partial class ElementTreeViewManager
             if(InputLibrary.Cursor.Self.IsInWindow)
             {
                 e.UseDefaultCursors = false;
-                System.Windows.Forms.Cursor.Current = GumCommands.Self.GuiCommands.AddCursor;
+                System.Windows.Forms.Cursor.Current = _guiCommands.AddCursor;
             }
         };
     }
@@ -1602,6 +1607,7 @@ public partial class ElementTreeViewManager
             }
         }
 
+        List<List<InstanceSave>> siblingLists = new ();
 
         foreach (InstanceSave instance in allInstances)
         {
@@ -1623,7 +1629,12 @@ public partial class ElementTreeViewManager
                 nodeForInstance.Expand();
             }
 
-            var siblingInstances = instance.GetSiblingsIncludingThis();
+            var siblingInstances = siblingLists.FirstOrDefault(item => item.Contains(instance));
+            if (siblingInstances == null)
+            {
+                siblingInstances = instance.GetSiblingsIncludingThis();
+                siblingLists.Add(siblingInstances);
+            }
             var desiredIndex = siblingInstances.IndexOf(instance);
 
             var container = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);

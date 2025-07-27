@@ -4,7 +4,7 @@
 
 The static `ModalRoot` and `PopupRoot` properties provide an `InteractiveGue` which serve as the root for any element which should appear on top of other elements. These properties have the following characteristics:
 
-* Automatically created by `Gum.Initialize`
+* Automatically created by `GumUI.Initialize`
 * Automatically resized to fit the entire screen, including if the `GraphicalUiElement.CanvasHeight` and `GraphicalUiElement.CanvasWidth` change.
 * Both remain on top of all other elements for its given layer. ModalRoot appears on top of PopupRoot.
 
@@ -23,19 +23,20 @@ By contrast, elements added to the PopupRoot are not modal - other elements can 
 The following code can be used to display a popup to either ModalRoot or PopupRoot depending on the `isModal` value.
 
 ```csharp
-// assuming popupButton is valid:
-popupButton.Click += (_,_) =>
+var popupButton = new Button();
+popupButton.AddToRoot();
+popupButton.Y = 50;
+popupButton.X = 50;
+popupButton.Text = "Show Modal";
+popupButton.Click += (_, _) =>
 {
-    ShowPopup(isModal:true);
+    ShowPopup("Close me", isModal: true);
 };
-// Define ShowPopup
-private void ShowPopup(string text, bool isModal)
+
+void ShowPopup(string text, bool isModal)
 {
-    
-private void ShowPopup(string text, bool isModal)
-{
-    var container = isModal ? 
-        FrameworkElement.ModalRoot : FrameworkElement.PopupRoot;
+    var container = isModal ?
+        GumService.Default.ModalRoot : GumService.Default.PopupRoot;
 
     var button = new Button();
     button.Text = "Close Me";
@@ -43,9 +44,9 @@ private void ShowPopup(string text, bool isModal)
     button.Height = 200;
     var buttonVisual = button.Visual;
     buttonVisual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
-    buttonVisual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    buttonVisual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
     buttonVisual.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
-    buttonVisual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+    buttonVisual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
     container.Children.Add(button.Visual);
     button.Click += (_, _) =>
     {
@@ -53,11 +54,9 @@ private void ShowPopup(string text, bool isModal)
         buttonVisual.Parent = null;
     };
 }
-
-
 ```
 
-<figure><img src="../../../../../.gitbook/assets/31_06 02 52.gif" alt=""><figcaption><p>Modal popup button blocks all other UI when it is shown</p></figcaption></figure>
+<figure><img src="../../../../../.gitbook/assets/13_09 00 24.gif" alt=""><figcaption><p>Modal popup button blocks all other UI when it is shown</p></figcaption></figure>
 
 ### Example - Adding a Popup from Gum Element
 
@@ -67,7 +66,7 @@ Popups can also be created if your game is loading a Gum project. Since the Grap
 var popupComponent = gumProject.Components.First(item => item.Name == "MyPopup")
     .ToGraphicalUiElement();
 
-popupComponent.Parent = FrameworkElement.ModalRoot;
+popupComponent.Parent = GumService.Default.ModalRoot;
 
 // later, the popup can be removed:
 popupComponent.RemoveFromManagers();
@@ -79,7 +78,7 @@ If you are going to add a Screen to a ModalRoot, then the Screen must have a ren
 ```csharp
 var popupScreen = gumProject.Screens.First(item => item.Name == "MyScreen")
     .ToGraphicalUiElement();
-popupScreen.Parent = FrameworkElement.ModalRoot;
+popupScreen.Parent = GumService.Default.ModalRoot;
 
 // later, the popup can be removed:
 popupScreen.RemoveFromManagers();

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -37,6 +38,7 @@ public enum WhichElementsToGenerate
 public class CodeWindowViewModel : ViewModel
 {
     private readonly IDialogService _dialogService;
+    private readonly GuiCommands _guiCommands;
     
     public WhatToView WhatToView
     {
@@ -156,6 +158,7 @@ public class CodeWindowViewModel : ViewModel
     public CodeWindowViewModel()
     {
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     public FilePath? GetCsprojDirectoryAboveGumx()
@@ -265,7 +268,7 @@ public class CodeWindowViewModel : ViewModel
             }
             catch (Exception ex)
             {
-                GumCommands.Self.GuiCommands.PrintOutput($"Error: {ex}");
+                _guiCommands.PrintOutput($"Error: {ex}");
             }
         }
 

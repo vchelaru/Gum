@@ -1,4 +1,5 @@
-﻿using MonoGameGum.Forms.Controls;
+﻿using Gum.Wireframe;
+using MonoGameGum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,5 +41,11 @@ public class BaseTestClass : IDisposable
             HeldKey = Microsoft.Xna.Framework.Input.Keys.RightShift,
             IsTriggeredOnRepeat = true
         });
+
+        InteractiveGue.CurrentInputReceiver = null;
+
+        GumService.Default.Root.Children.Clear();
+        GumService.Default.ModalRoot.Children.Clear();
+        GumService.Default.PopupRoot.Children.Clear();
     }
 }

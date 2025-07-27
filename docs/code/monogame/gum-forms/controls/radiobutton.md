@@ -4,6 +4,29 @@
 
 RadioButtons provide a way to display multiple mutually-exclusive options to the user. Clicking on one RadioButton unchecks all other RadioButtons in a group.
 
+## Code Example: Creating RadioButtons
+
+The following code creates RadioButtons for selecting difficulty:
+
+```csharp
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+
+var easyRadioButton = new RadioButton();
+stackPanel.AddChild(easyRadioButton);
+easyRadioButton.Text = "Easy";
+
+var mediumRadioButton = new RadioButton();
+stackPanel.AddChild(mediumRadioButton);
+mediumRadioButton.Text = "Medium";
+
+var hardRadioButton = new RadioButton();
+stackPanel.AddChild(hardRadioButton);
+hardRadioButton.Text = "Hard";
+```
+
+<figure><img src="../../../../.gitbook/assets/13_09 42 01.gif" alt=""><figcaption></figcaption></figure>
+
 ## Grouping by Container
 
 RadioButtons automatically group themselves based on their container. If RadioButtons are added directly to a Screen or Component, then they all use the same group and will all be mutually exclusive.

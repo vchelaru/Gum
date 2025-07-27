@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.Composition;
@@ -22,6 +22,7 @@ using Gum.Managers;
 using Gum.Services;
 using RenderingLibrary;
 using System.Numerics;
+using Gum.Commands;
 
 namespace Gum.Plugins
 {
@@ -56,6 +57,8 @@ namespace Gum.Plugins
         static PluginManager mProjectInstance;
         static List<PluginManager> mInstances = new List<PluginManager>();
         private bool mGlobal;
+
+        private readonly GuiCommands _guiCommands;
 
         public static string PluginFolder
         {
@@ -647,6 +650,11 @@ namespace Gum.Plugins
 
         #region Additional Methods
 
+        public PluginManager()
+        {
+            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        }
+
 
         public void Initialize(MainWindow mainWindow)
         {
@@ -827,7 +835,7 @@ namespace Gum.Plugins
             //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
             if(args.RequestingAssembly != null)
             {
-                GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+                _guiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
             }
 
             return null;

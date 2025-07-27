@@ -8,7 +8,7 @@ The CheckBox control provides the ability to display a true/false state and allo
 
 ```csharp
 var checkBox = new CheckBox();
-stackPanel.Children.Add(checkBox.Visual);
+checkBox.AddToRoot();
 checkBox.X = 50;
 checkBox.Y = 50;
 checkBox.Text = "Checkbox";
@@ -16,7 +16,7 @@ checkBox.Checked += (_,_) => Debug.WriteLine($"IsChecked:{checkBox.IsChecked}");
 checkBox.Unchecked += (_, _) => Debug.WriteLine($"IsChecked:{checkBox.IsChecked}");
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_06 44 43.gif" alt=""><figcaption><p>CheckBox responding to Checked and Unchecked events by printing output</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 55 15.gif" alt=""><figcaption><p>CheckBox responding to Checked and Unchecked events by printing output</p></figcaption></figure>
 
 ## CheckBox Width and Height
 
@@ -32,4 +32,4 @@ checkBox.Text = "This is some longer text";
 stackPanel.AddChild(checkBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_22 12 38.png" alt=""><figcaption><p>ComboBox with wrapped text</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 56 16.png" alt=""><figcaption><p>ComboBox with wrapped text</p></figcaption></figure>

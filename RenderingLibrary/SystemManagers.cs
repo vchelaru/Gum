@@ -249,13 +249,13 @@ namespace RenderingLibrary
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 // Load the default font, and then the bold, italic, and italic_bold options for bbcode
-                var loadedFont = LoadEmbeddedFont(graphicsDevice, "Font18Arial");
+                var loadedFont = LoadEmbeddedFont("Font18Arial");
                 Text.DefaultBitmapFont = loadedFont;
                 Renderer.InternalShapesTexture = loadedFont.Texture;
 
-                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Bold");
-                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic");
-                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic_Bold");
+                LoadEmbeddedFont("Font18Arial_Bold");
+                LoadEmbeddedFont("Font18Arial_Italic");
+                LoadEmbeddedFont("Font18Arial_Italic_Bold");
 
                 GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
                 GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
@@ -286,7 +286,7 @@ namespace RenderingLibrary
             }
         }
 
-        public string AssemblyPrefix =>
+        public static string AssemblyPrefix =>
 #if KNI
             "KniGum";
 #elif FNA
@@ -295,24 +295,51 @@ namespace RenderingLibrary
             "MonoGameGum.Content";
 #endif
 
-        private BitmapFont LoadEmbeddedFont(GraphicsDevice graphicsDevice, string fontName)
+        /// <summary>
+        /// Loads a font and associated PNG file.  Files are embedded and stored with names like:
+        ///     {AssemblyPrefix}.{filename}.{extension}
+        ///     KniGum.Font18Arial_0.png
+        ///     FnaGum.Font18Arial_0.png
+        ///     MonoGameGum.Content.Font18Arial_0.png
+        /// </summary>
+        /// <param name="graphicsDevice"></param>
+        /// <param name="fontName">The filename without the extension</param>
+        /// <returns></returns>
+        private BitmapFont LoadEmbeddedFont(string fontName)
         {
             var assembly = typeof(SystemManagers).Assembly;
 
-            var prefix = AssemblyPrefix;
+            var resourceName = $"{AssemblyPrefix}.{fontName}.fnt";
 
-            var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, $"{prefix}.{fontName}.fnt");
-            using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{prefix}.{fontName}_0.png");
-            var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
+            var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, resourceName);
+            var defaultFontTexture = LoadEmbeddedTexture2d($"{fontName}_0.png");
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
-            var resourceName =
-                $"EmbeddedResource.{prefix}.{fontName}.fnt";
-
             // qualify for Android:
-            Content.LoaderManager.Self.AddDisposable(resourceName, bitmapFont);
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont);
 
             return bitmapFont;
+        }
+
+        /// <summary>
+        /// Loads a texture into the Disposable cache from the Embedded Resource within the application.
+        /// </summary>
+        /// <param name="embeddedTexture2dName"></param>
+        /// <returns></returns>
+        public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
+        {
+            // tolerate nulls for unit tests:
+            if (Renderer.GraphicsDevice == null) return null;
+
+            var assembly = typeof(SystemManagers).Assembly;
+            using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{AssemblyPrefix}.{embeddedTexture2dName}");
+
+            Texture2D texture = Texture2D.FromStream(Renderer.GraphicsDevice, stream);
+
+            var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture);
+
+            return texture;
         }
 
 #if USE_GUMCOMMON

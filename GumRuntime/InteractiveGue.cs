@@ -78,7 +78,7 @@ public partial class InteractiveGue : BindableGue
     static IInputReceiver currentInputReceiver;
 
     
-    public static IInputReceiver CurrentInputReceiver
+    public static IInputReceiver? CurrentInputReceiver
     {
         get => currentInputReceiver;
         set
@@ -349,6 +349,14 @@ public partial class InteractiveGue : BindableGue
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
                 asInteractive?.MouseWheelScroll != null
+                // if it has events and it has a Forms control, then let's consider it a click
+                //|| asInteractive?.FormsControlAsObject != null
+                // Update July 18, 2025 
+                // We can't do this because
+                // if we do, full screen containers
+                // consume all clicks. We need to come
+                // up with another way to do this. For now
+                // the events are the hack
                 )
             {
                 if (!handledByChild)
@@ -751,7 +759,16 @@ public interface IInputReceiver
     /// </summary>
     void OnFocusUpdate();
 
+    /// <summary>
+    /// Called every frame before OnFocusUpdate with the root-most control calling this first, then
+    /// down to its children. If this is handled, children do not recieve this event.
+    /// </summary>
+    /// <param name="args">Args, which if IsHandled is set to true prevent children from receiving this </param>
+    void OnFocusUpdatePreview(RoutedEventArgs args);
+
     void DoKeyboardAction(IInputReceiverKeyboard keyboard);
+
+    IInputReceiver? ParentInputReceiver { get; }
 }
 
 public enum InputDevice
@@ -846,8 +863,16 @@ public static class GueInteractiveExtensionMethods
         DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
     }
 
+    static List<IInputReceiver> previewList = new();
     public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
-    { 
+    {
+#if DEBUG
+        if(cursor == null)
+        {
+            throw new ArgumentNullException(nameof(cursor));
+        }
+#endif
+
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
         var windowOverBefore = cursor.WindowOver;
         var windowPushedBefore = cursor.WindowPushed;
@@ -943,8 +968,38 @@ public static class GueInteractiveExtensionMethods
         {
             var receiver = InteractiveGue.CurrentInputReceiver;
 
-            receiver.DoKeyboardAction(keyboard);
-            receiver.OnFocusUpdate();
+            previewList.Clear();
+            previewList.Add(receiver);
+
+
+            var parent = receiver.ParentInputReceiver;
+            while(parent != null)
+            {
+                previewList.Insert(0, parent);
+                parent = parent.ParentInputReceiver;
+            }
+
+            bool wasCancelled = false;
+            foreach(var toPreview in previewList)
+            {
+                var args = new RoutedEventArgs();
+                if(!wasCancelled)
+                {
+                    toPreview.OnFocusUpdatePreview(args);
+                    wasCancelled = args.Handled;
+
+                    if(wasCancelled)
+                    {
+                        break;
+                    }    
+                }
+            }
+
+            if(!wasCancelled)
+            {
+                receiver.DoKeyboardAction(keyboard);
+                receiver.OnFocusUpdate();
+            }
         }
     }
 }

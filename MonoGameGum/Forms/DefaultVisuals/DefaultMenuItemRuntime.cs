@@ -1,5 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -80,6 +81,34 @@ public class DefaultMenuItemRuntime : InteractiveGue
                         Value = false,
                         Name = "Background.Visible"
                     },
+                    new Gum.DataTypes.Variables.VariableSave()
+                    {
+                        Value = Color.White,
+                        Name = "TextInstance.Color"
+                    },
+                    //new Gum.DataTypes.Variables.VariableSave()
+                    //{
+                    //    Value = false,
+                    //    Name = "FocusedIndicator.Visible"
+                    //}
+                }
+            });
+
+            menuItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
+            {
+                Name = FrameworkElement.DisabledStateName,
+                Variables = new List<Gum.DataTypes.Variables.VariableSave>()
+                {
+                    new Gum.DataTypes.Variables.VariableSave()
+                    {
+                        Value = false,
+                        Name = "Background.Visible"
+                    },
+                    new Gum.DataTypes.Variables.VariableSave()
+                    {
+                        Value = Color.Gray,
+                        Name = "TextInstance.Color"
+                    },
                     //new Gum.DataTypes.Variables.VariableSave()
                     //{
                     //    Value = false,
@@ -102,6 +131,11 @@ public class DefaultMenuItemRuntime : InteractiveGue
                     {
                         Value = new Microsoft.Xna.Framework.Color(205, 142, 44),
                         Name = "Background.Color"
+                    },
+                    new Gum.DataTypes.Variables.VariableSave()
+                    {
+                        Value = Color.White,
+                        Name = "TextInstance.Color"
                     },
                     //new Gum.DataTypes.Variables.VariableSave()
                     //{
@@ -126,6 +160,11 @@ public class DefaultMenuItemRuntime : InteractiveGue
                         Value = new Microsoft.Xna.Framework.Color(143, 68, 121),
                         Name = "Background.Color"
                     },
+                    new Gum.DataTypes.Variables.VariableSave()
+                    {
+                        Value = Color.White,
+                        Name = "TextInstance.Color"
+                    },
                     //new Gum.DataTypes.Variables.VariableSave()
                     //{
                     //    Value = false,
@@ -133,6 +172,8 @@ public class DefaultMenuItemRuntime : InteractiveGue
                     //}
                 }
             });
+
+
         }
         if (tryCreateFormsObject)
         {

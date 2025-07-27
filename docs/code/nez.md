@@ -32,7 +32,7 @@ public class Game1 : Core
 
     protected override void Update(GameTime gameTime)
     {
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        MonoGameGum.GumService.Default.Activity(gameTime);
         base.Update(gameTime);
     }
 

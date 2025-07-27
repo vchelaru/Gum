@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
-		<Version>2025.7.6.1</Version>
+		<Version>2025.7.24.1</Version>
 
 
 		<NoWarn>1591</NoWarn>
@@ -97,6 +97,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <EmbeddedResource Include="..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="Content\UISpriteSheet.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<EmbeddedResource Include="Content\Font18Arial.fnt" />
 		<EmbeddedResource Include="Content\Font18Arial_0.png" />
 		<EmbeddedResource Include="Content\Font18Arial_Bold.fnt" />
@@ -109,8 +113,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
-		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

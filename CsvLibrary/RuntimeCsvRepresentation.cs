@@ -863,10 +863,47 @@ namespace CsvLibrary
 
             string whatToSave = stringBuilder.ToString();
 
-            string directory = FileManager.GetDirectory(fileName);
+            string directory = GetDirectory(fileName);
             Directory.CreateDirectory(directory);
 
-            FileManager.SaveText(whatToSave, fileName, encoding);
+            SaveText(whatToSave, fileName, encoding);
+        }
+
+
+        public static void SaveText(string stringToSave, string fileName, Encoding encoding)
+        {
+            FileInfo fileInfo = new FileInfo(fileName);
+
+            if (!string.IsNullOrEmpty(GetDirectory(fileName)) &&
+                !Directory.Exists(GetDirectory(fileName)))
+            {
+                Directory.CreateDirectory(GetDirectory(fileName));
+            }
+
+            if (encoding == Encoding.UTF8)
+            {
+                StreamWriter writer = fileInfo.CreateText();
+
+                writer.Write(stringToSave);
+
+                writer.Close();
+            }
+            else
+            {
+                if (System.IO.File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
+
+                using (FileStream fileStream = fileInfo.OpenWrite())
+                {
+
+                    byte[] bytes = encoding.GetBytes(stringToSave);
+
+                    fileStream.Write(bytes, 0, bytes.Length);
+                }
+
+            }
         }
 
         private void GetReflectionInformation(Type typeOfElement, out MemberTypeIndexPair[] memberTypeIndexPairs, out IEnumerable<PropertyInfo> propertyInfos, out IEnumerable<FieldInfo> fieldInfos)
@@ -1602,6 +1639,53 @@ namespace CsvLibrary
 
 
         #endregion
+
+        public static string GetDirectory(string fileName)
+        {
+            string directoryToReturn = "";
+
+            if (fileName == null)
+            {
+                throw new Exception("The fileName passed to GetDirectory is null.  Non-null is required");
+            }
+
+            int lastIndex = System.Math.Max(
+                fileName.LastIndexOf('/'), fileName.LastIndexOf('\\'));
+
+            if (lastIndex == fileName.Length - 1)
+            {
+                // If this happens then fileName is actually a directory.
+                // So we should return the parent directory of the argument.
+
+                lastIndex = System.Math.Max(
+                    fileName.LastIndexOf('/', fileName.Length - 2),
+                    fileName.LastIndexOf('\\', fileName.Length - 2));
+            }
+
+            if (lastIndex != -1)
+            {
+                //bool isFtp = false;
+
+                //if (FileManager.IsUrl(fileName) || isFtp)
+                //{
+                //    // don't standardize URLs - they're case sensitive!!!
+
+                //}
+                //else
+                //{
+                //    return FileManager.Standardize(fileName.Substring(0, lastIndex + 1));
+                //}
+                directoryToReturn = fileName.Substring(0, lastIndex + 1);
+
+            }
+            else
+            {
+                directoryToReturn = ""; // there was no directory found.
+            }
+
+            return directoryToReturn;
+        }
+
     }
 
 

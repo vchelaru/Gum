@@ -44,6 +44,6 @@ Gum has been used in commercial projects of all sizes - check them out in our [S
 
 Gum is actively maintained and provides lots of ways to get answers:
 
-* Check the rest of the documentation here
+* Check the rest of the documentation
 * Join the [Discord chat](https://discord.gg/EvqwmSQuBz) (shared discord with FlatRedBall)
 * Create an [issue on Github](https://github.com/vchelaru/Gum/issues)

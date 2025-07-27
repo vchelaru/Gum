@@ -131,7 +131,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static bool ShowLineRectangles = false;
 
     // to save on casting:
-    protected IRenderableIpso mContainedObjectAsIpso;
+    protected IRenderableIpso? mContainedObjectAsIpso;
     protected IVisible mContainedObjectAsIVisible;
 
     GraphicalUiElement? mWhatContainsThis;
@@ -1543,8 +1543,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
     {
+        Width = 32;
+        Height = 32;
 #if DEBUG
-        if(containedObject is GraphicalUiElement)
+        if (containedObject is GraphicalUiElement)
         {
             throw new InvalidOperationException("GraphicalUiElements cannot contain other GraphicalUiElements as their renderable. " +
                 $"The contained object should be a renderable, such as a (platform specific) Sprite or Text. " +
@@ -1633,17 +1635,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public GraphicalUiElement Clone()
+    public virtual GraphicalUiElement Clone()
     {
-        if (CloneRenderableFunction == null)
-        {
-            throw new InvalidOperationException("GraphicalUiElement.CloneRenderableFunction must be set before calling clone");
-        }
-        var newClone = (GraphicalUiElement)this.MemberwiseClone();
-        var newRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
+        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
-        newClone.SetContainedObject(newRenderable);
-        mWhatContainsThis = null;
+        IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable).Clone() as IRenderable;
+
+        if (clonedRenderable == null)
+        { 
+            if (CloneRenderableFunction == null)
+            {
+                throw new InvalidOperationException($"{this.mContainedObjectAsIpso?.GetType()} needs to implement ICloneable or " +
+                    $"GraphicalUiElement.CloneRenderableFunction must be set before calling clone");
+            }
+            clonedRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
+        }
+
+        newClone.SetContainedObject(clonedRenderable);
+        newClone.mWhatContainsThis = null;
         return newClone;
     }
 
@@ -5308,7 +5317,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 throw new Exception($"{nameof(SetPropertyOnRenderable)} must be set on GraphicalUiElement");
             }
 #endif
-            SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+            try
+            {
+                SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+            }
+            catch(InvalidCastException invalidCastException)
+            {
+                throw new InvalidCastException($"Error trying to set {propertyName} to {value} on {mContainedObjectAsIpso}", invalidCastException);
+            }
         }
     }
 

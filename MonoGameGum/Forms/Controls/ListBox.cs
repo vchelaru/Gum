@@ -380,7 +380,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
-        ListBoxItem item;
+        ListBoxItem? item = null;
         if (o is ListBoxItem)
         {
             // the user provided a list box item, so just use that directly instead of creating a new one
@@ -389,7 +389,16 @@ public class ListBox : ItemsControl, IInputReceiver
         else
         {
             var visual = CreateNewVisual(o);
-            item = CreateNewListBoxItem(visual);
+
+            if (visual is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject != null)
+            {
+                item = interactiveGue.FormsControlAsObject as ListBoxItem;
+            }
+
+            if(item == null)
+            {
+                item = CreateNewListBoxItem(visual);
+            }
             if(!string.IsNullOrEmpty(DisplayMemberPath))
             {
                 var display = o.GetType()
@@ -766,20 +775,20 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (IsFocused)
             {
-                Visual.SetProperty(category, DisabledFocusedState);
+                Visual.SetProperty(category, DisabledFocusedStateName);
             }
             else
             {
-                Visual.SetProperty(category, DisabledState);
+                Visual.SetProperty(category, DisabledStateName);
             }
         }
         else if (IsFocused)
         {
-            Visual.SetProperty(category, FocusedState);
+            Visual.SetProperty(category, FocusedStateName);
         }
         else
         {
-            Visual.SetProperty(category, EnabledState);
+            Visual.SetProperty(category, EnabledStateName);
         }
 
         // The default state may update the visibility of the scroll bar. Whenever setting the state
@@ -888,7 +897,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #region IInputReceiver Methods
 
-    public void OnFocusUpdate()
+    public override void OnFocusUpdate()
     {
         if (DoListItemsHaveFocus)
         {
@@ -899,7 +908,7 @@ public class ListBox : ItemsControl, IInputReceiver
             DoTopLevelFocusUpdate();
         }
 
-#if MONOGAME && !FRB
+#if (MONOGAME || KNI || FNA) && !FRB
         base.HandleKeyboardFocusUpdate();
 #endif
 
@@ -1270,7 +1279,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if (MONOGAME || KNI) && !FRB
+#if (MONOGAME || KNI || FNA) && !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
@@ -1286,8 +1295,9 @@ public class ListBox : ItemsControl, IInputReceiver
 #endif
     }
 
-    public void OnGainFocus()
+    public override void OnGainFocus()
     {
+        IsFocused = true;
     }
 
     [Obsolete("use OnLoseFocus instead")]
@@ -1296,7 +1306,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <summary>
     /// Removes focus from the ListBox, both at the top level and at the individual item level, even if CanListItemsLoseFocus is set to false.
     /// </summary>
-    public void OnLoseFocus()
+    public override void OnLoseFocus()
     {
         IsFocused = false;
 
