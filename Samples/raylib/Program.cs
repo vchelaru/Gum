@@ -188,6 +188,29 @@ public class BasicShapes
         };
 
 
+        var splitterStackPanel = new StackPanel();
+        container.AddChild(splitterStackPanel);
+        splitterStackPanel.Spacing = 1;
+
+        var listBox1 = new ListBox();
+        splitterStackPanel.AddChild(listBox1);
+        for (int i = 0; i < 10; i++)
+        {
+            listBox1.Items.Add("List Item " + i);
+        }
+
+        var splitter = new Splitter();
+        splitterStackPanel.AddChild(splitter);
+        splitter.Dock(Dock.FillHorizontally);
+        splitter.Height = 5;
+
+        var listBox2 = new ListBox();
+        splitterStackPanel.AddChild(listBox2);
+        for (int i = 0; i < 10; i++)
+        {
+            listBox2.Items.Add("List Item " + i);
+        }
+
         // Main game loop
         while (!WindowShouldClose())
         {

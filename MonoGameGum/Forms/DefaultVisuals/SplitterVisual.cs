@@ -1,6 +1,5 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.GueDeriving;
+
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,33 +7,41 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultVisuals
+#if RAYLIB
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+namespace Gum.Forms.DefaultVisuals;
+
+#else
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.GueDeriving;
+namespace MonoGameGum.Forms.DefaultVisuals;
+#endif
+
+public class SplitterVisual : InteractiveGue
 {
-    public class SplitterVisual : InteractiveGue
+    public NineSliceRuntime Background { get; private set; }
+
+    public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        public NineSliceRuntime Background { get; private set; }
+        Width = 8;
+        Height = 8;
 
-        public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
+        var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+        Background = new NineSliceRuntime();
+        Background.Name = "Background";
+        Background.Dock(Gum.Wireframe.Dock.Fill);
+        Background.Color = Styling.Colors.DarkGray;
+        Background.Texture = uiSpriteSheetTexture;
+        Background.ApplyState(Styling.NineSlice.Bordered);
+        this.AddChild(Background);
+
+        if(tryCreateFormsObject)
         {
-            Width = 8;
-            Height = 8;
-
-            var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
-
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-            Background.Dock(Gum.Wireframe.Dock.Fill);
-            Background.Color = Styling.Colors.DarkGray;
-            Background.Texture = uiSpriteSheetTexture;
-            Background.ApplyState(Styling.NineSlice.Bordered);
-            this.AddChild(Background);
-
-            if(tryCreateFormsObject)
-            {
-                FormsControlAsObject = new Splitter(this);
-            }
+            FormsControlAsObject = new Splitter(this);
         }
-
-        public Splitter FormsControl => FormsControlAsObject as Splitter;
     }
+
+    public Splitter FormsControl => FormsControlAsObject as Splitter;
 }
