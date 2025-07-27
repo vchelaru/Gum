@@ -25,9 +25,35 @@ from Gum.Managers import ChildrenLayout
 
 from GumToPython import GumToPythonHelpers
 
+from Gum import BlendState
+
+
+
+from PySolidRectangle import PySolidRectangle
+
+
+import clr
+import System
+from System import Type
+from RenderingLibrary.Graphics import IRenderableIpso, IRenderable, IVisible
+from RenderingLibrary import IPositionedSizedObject
+
+# def dump_interface_members(iface):
+#     t = Type.GetType(iface.__clrtype__().AssemblyQualifiedName)
+#     print(f"\n=== Members of {iface} ===")
+#     for p in t.GetProperties():
+#         print("Property:", p.Name, p.PropertyType)
+#     for m in t.GetMethods():
+#         if m.DeclaringType.FullName != "System.Object":
+#             print("Method:", m.Name)
+
+
+# for iface in [IRenderableIpso, IRenderable, IVisible, IPositionedSizedObject]:
+#     dump_interface_members(iface)
 
 try:
-    topLevel = GraphicalUiElement(InvisibleRenderable())
+    a = PySolidRectangle()
+    topLevel = GraphicalUiElement(a)
 except Exception as e:
     print("Error creating GraphicalUiElement:", e)
 
