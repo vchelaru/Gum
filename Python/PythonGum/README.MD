@@ -27,11 +27,8 @@
     1. Install the required packages from (requirements.txt)
     1. Build the GumCommon.dll and pull in all required DLLs and put them in src\gum_runtime\_clr\net6.0\
     1. Create Intellisense PyLance Stubs
+
+## Run the script to test it
 1. Now you Can open loader.py and click Play to test it.
 ![alt text](image-2.png)
 
-
-## Running the project to make sure it works
-
-1. Open loader.py
-1. Click the play button in VSCode
