@@ -66,9 +66,11 @@
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\ScrollViewerVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SliderVisual.cs" Link="Forms\DefaultVisuals\SliderVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
     <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
   </ItemGroup>
 

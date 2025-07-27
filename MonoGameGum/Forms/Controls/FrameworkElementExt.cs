@@ -73,4 +73,10 @@ public static class FrameworkElementExt
         element.Visual.Parent = null;
         element.Visual.RemoveFromManagers();
     }
+
+    public static void AddChild(this GraphicalUiElement element, FrameworkElement child)
+    {
+        element.Children.Add(child.Visual);
+    }
+
 }

@@ -78,6 +78,7 @@ public class FormsUtilities
                 TryAdd(typeof(ScrollBar), typeof(ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
                 TryAdd(typeof(Slider), typeof(SliderVisual));
+                TryAdd(typeof(Window), typeof(WindowVisual));
 
 
                 break;
@@ -241,11 +242,11 @@ public class FormsUtilities
 
         if (frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
         {
-            //cursor.CustomCursor = frameworkElementOver?.CustomCursor;
+            cursor.CustomCursor = frameworkElementOver?.CustomCursor;
         }
         else if (didChangeFrameworkElement)
         {
-            //cursor.CustomCursor = Cursors.Arrow;
+            cursor.CustomCursor = Cursors.Arrow;
         }
     }
 

@@ -12,6 +12,44 @@ public class Cursor : ICursor
 {
     Cursors? _customCursor;
 
+    public Cursors? CustomCursor
+    {
+        get => _customCursor;
+        set
+        {
+            _customCursor = value;
+
+
+            switch(value)
+            {
+                case Cursors.Arrow:
+                case null:
+                    // Horizontal resize
+
+                    Raylib.SetMouseCursor(MouseCursor.Arrow);
+                    break;
+                case Cursors.SizeNS:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNs);
+
+                    break;
+                case Cursors.SizeWE:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeEw);
+
+                    break;
+
+                case Cursors.SizeNWSE:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNwse);
+
+                    break;
+                case Cursors.SizeNESW:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNesw);
+
+                    break;
+            }
+        }
+    }
+
+
     MouseState _mouseState;
 
 

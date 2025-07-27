@@ -1,6 +1,5 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.GueDeriving;
+
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if RAYLIB
+using Gum.Forms.Controls;
+using Gum.GueDeriving;
+namespace Gum.Forms.DefaultVisuals;
+#else
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.GueDeriving;
 namespace MonoGameGum.Forms.DefaultVisuals;
+#endif
+
 public class WindowVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }

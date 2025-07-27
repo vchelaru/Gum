@@ -1,4 +1,5 @@
 ﻿using Gum.Converters;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
@@ -162,6 +163,29 @@ public class BasicShapes
         {
             comboBox.Items.Add($"Item {i}");
         }
+
+
+        var window = new Window();
+        window.Anchor(Gum.Wireframe.Anchor.Center);
+        window.Width = 300;
+        window.Height = 200;
+        window.AddToRoot();
+
+        var textInstance = new Label();
+        textInstance.Dock(Gum.Wireframe.Dock.Top);
+        textInstance.Y = 24;
+        textInstance.Text = "Hello I am a message box";
+        window.AddChild(textInstance);
+
+        var windowButton = new Button();
+        windowButton.Anchor(Gum.Wireframe.Anchor.Bottom);
+        windowButton.Y = -10;
+        windowButton.Text = "Close";
+        window.AddChild(windowButton.Visual);
+        windowButton.Click += (_, _) =>
+        {
+            window.RemoveFromRoot();
+        };
 
 
         // Main game loop

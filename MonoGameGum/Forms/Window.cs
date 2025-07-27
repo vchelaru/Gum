@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MonoGameGum.Input;
 using RenderingLibrary.Graphics;
 using RenderingLibrary;
 
@@ -13,10 +12,16 @@ using RenderingLibrary;
 
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using MonoGameGum.Input;
 using FlatRedBall.Forms.Controls;
 namespace FlatRedBall.Forms;
+#elif RAYLIB
+using Gum.Forms.Controls;
+namespace Gum.Forms;
+
 #else
 using MonoGameGum.Forms.Controls;
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms;
 #endif
 
@@ -239,15 +244,15 @@ public class Window : FrameworkElement
 
             switch (Visual.XOrigin)
             {
-                case RenderingLibrary.Graphics.HorizontalAlignment.Left:
+                case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
                     Visual.X += difference;
                     Visual.Width -= difference;
                     break;
-                case RenderingLibrary.Graphics.HorizontalAlignment.Center:
+                case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
                     Visual.X += difference / 2f;
                     Visual.Width -= difference;
                     break;
-                case RenderingLibrary.Graphics.HorizontalAlignment.Right:
+                case global::RenderingLibrary.Graphics.HorizontalAlignment.Right:
                     Visual.Width -= difference;
                     break;
             }
@@ -259,15 +264,15 @@ public class Window : FrameworkElement
 
             switch (Visual.YOrigin)
             {
-                case RenderingLibrary.Graphics.VerticalAlignment.Top:
+                case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
                     Visual.Y += difference;
                     Visual.Height -= difference;
                     break;
-                case RenderingLibrary.Graphics.VerticalAlignment.Center:
+                case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
                     Visual.Y += difference / 2f;
                     Visual.Height -= difference;
                     break;
-                case RenderingLibrary.Graphics.VerticalAlignment.Bottom:
+                case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
                     Visual.Height -= difference;
                     break;
             }
@@ -279,14 +284,14 @@ public class Window : FrameworkElement
 
             switch (Visual.XOrigin)
             {
-                case RenderingLibrary.Graphics.HorizontalAlignment.Left:
+                case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
                     Visual.Width += difference;
                     break;
-                case RenderingLibrary.Graphics.HorizontalAlignment.Center:
+                case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
                     Visual.X += difference / 2f;
                     Visual.Width += difference;
                     break;
-                case RenderingLibrary.Graphics.HorizontalAlignment.Right:
+                case global::RenderingLibrary.Graphics.HorizontalAlignment.Right:
                     Visual.X += difference;
                     Visual.Width += difference;
                     break;
@@ -299,14 +304,14 @@ public class Window : FrameworkElement
 
             switch (Visual.YOrigin)
             {
-                case RenderingLibrary.Graphics.VerticalAlignment.Top:
+                case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
                     Visual.Height += difference;
                     break;
-                case RenderingLibrary.Graphics.VerticalAlignment.Center:
+                case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
                     Visual.Y = Visual.Y + difference / 2f;
                     Visual.Height += difference;
                     break;
-                case RenderingLibrary.Graphics.VerticalAlignment.Bottom:
+                case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
                     Visual.Y += difference;
                     Visual.Height += difference;
                     break;
