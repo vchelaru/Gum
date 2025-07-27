@@ -343,12 +343,15 @@ public class CodeGenerator
                 namespaceName += ".Standards";
             }
 
-            var splitElementName = element.Name.Split('\\').ToArray();
-            var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
-            var whatToAppend = string.Join(".", splitPrefix);
-            if (!string.IsNullOrEmpty(whatToAppend))
+            if(projectSettings.AppendFolderToNamespace)
             {
-                namespaceName += "." + whatToAppend;
+                var splitElementName = element.Name.Replace("\\", "/").Split('/').ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var whatToAppend = string.Join(".", splitPrefix);
+                if (!string.IsNullOrEmpty(whatToAppend))
+                {
+                    namespaceName += "." + whatToAppend;
+                }
             }
         }
 
@@ -447,7 +450,7 @@ public class CodeGenerator
         {
             if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                if(string.IsNullOrEmpty( element.BaseType))
+                if (string.IsNullOrEmpty(element.BaseType))
                 {
                     inheritance = "MonoGameGum.Forms.Controls.FrameworkElement";
                 }
@@ -491,7 +494,7 @@ public class CodeGenerator
                         gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
                     }
                     // else it is something like a NineSlice-inheriting object, so don't return a forms inheritance
-                    else if(ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
+                    else if (ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
                     {
                         inheritance = "Invalid inheritance - Forms controls must either inherit from Container, or must have Forms behaviors";
                     }
@@ -545,7 +548,7 @@ public class CodeGenerator
 
     #endregion
 
-    #region Generated Variables Properties (Exposed and "new")
+    #region Variables Properties (Exposed and "new")
 
     private static void FillWithNewVariables(CodeGenerationContext context)
     {
@@ -706,13 +709,13 @@ public class CodeGenerator
                 }
 
                 string sourceObjectName = exposedVariable.SourceObject;
-                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
                     // only if the object is not a standard element
                     var element = ObjectFinder.Self.GetElementSave(foundInstance);
-                    if(element is not StandardElementSave)
+                    if (element is not StandardElementSave)
                     {
-                        if(isState == false || isStateOnVisual)
+                        if (isState == false || isStateOnVisual)
                         {
                             sourceObjectName = exposedVariable.SourceObject + ".Visual";
                         }
@@ -751,7 +754,7 @@ public class CodeGenerator
                 }
                 else
                 {
-                    if(rootVariable?.Name == "SourceFile")
+                    if (rootVariable?.Name == "SourceFile")
                     {
                         var variableName = sourceObjectName + ".SourceFileName";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
@@ -2544,7 +2547,7 @@ public class CodeGenerator
 
     #endregion
 
-    #region Constructor
+    #region Constructors
 
     private static void GenerateConstructors(CodeGenerationContext context)
     {
@@ -2559,7 +2562,25 @@ public class CodeGenerator
         {
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(InteractiveGue visual) : base(visual) {{ }}");
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(InteractiveGue visual) : base(visual)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+
+                context.TabCount++;
+
+                if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
+                    {
+                        stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                    }
+                    // as mentioned below, if not fully in code then this is handled in AfterFullCreation
+                    stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
+                }
+
+
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
+
             }
 
             #region Constructor Header
@@ -2666,7 +2687,7 @@ public class CodeGenerator
             stringBuilder.AppendLine(context.Tabs + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
             var elementBaseType = element?.BaseType;
-            var baseElements = ObjectFinder.Self.GetBaseElements(element);
+            var baseElements = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
 
             var isThisAbsoluteLayout = element != null && IsOfXamarinFormsType(element, "AbsoluteLayout");
             var isStackLayout = element != null && IsOfXamarinFormsType(element, "StackLayout");

@@ -4,61 +4,69 @@ using SkiaGum.Renderables;
 using SkiaSharp;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace SkiaGum.GueDeriving
+namespace SkiaGum.GueDeriving;
+
+public class SpriteRuntime : BindableGue
 {
-    public class SpriteRuntime : BindableGue
+    Sprite mContainedSprite;
+    Sprite ContainedSprite
     {
-        Sprite mContainedSprite;
-        Sprite ContainedSprite
+        get
         {
-            get
+            if(mContainedSprite == null)
             {
-                if(mContainedSprite == null)
-                {
-                    mContainedSprite = this.RenderableComponent as Sprite;
-                }
-                return mContainedSprite;
+                mContainedSprite = this.RenderableComponent as Sprite;
+            }
+            return mContainedSprite;
+        }
+    }
+
+    public string SourceFile
+    {
+        // eventually we may want to store this off somehow
+        get => null;
+        set
+        {
+            if(string.IsNullOrEmpty(value))
+            {
+                Texture = null;
+            }
+            else
+            {
+                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                var contentLoader = loaderManager.ContentLoader;
+                var image = contentLoader.LoadContent<SKBitmap>(value);
+                Texture = image;
             }
         }
+    }
 
-        public string SourceFile
+    public SKBitmap Texture
+    {
+        get => ContainedSprite.Texture;
+        set => ContainedSprite.Texture = value;
+    }
+
+    public SpriteRuntime(bool fullInstantiaton = true)
+    {
+        if(fullInstantiaton)
         {
-            // eventually we may want to store this off somehow
-            get => null;
-            set
-            {
-                if(string.IsNullOrEmpty(value))
-                {
-                    Texture = null;
-                }
-                else
-                {
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    var contentLoader = loaderManager.ContentLoader;
-                    var image = contentLoader.LoadContent<SKBitmap>(value);
-                    Texture = image;
-                }
-            }
+            SetContainedObject(new Sprite());
+
+            WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+            HeightUnits = DimensionUnitType.PercentageOfSourceFile;
+
+            Width = 100;
+            Height = 100;
         }
+    }
 
-        public SKBitmap Texture
-        {
-            get => ContainedSprite.Texture;
-            set => ContainedSprite.Texture = value;
-        }
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (SpriteRuntime)base.Clone();
 
-        public SpriteRuntime(bool fullInstantiaton = true)
-        {
-            if(fullInstantiaton)
-            {
-                SetContainedObject(new Sprite());
+        toReturn.mContainedSprite = null;
 
-                WidthUnits = DimensionUnitType.PercentageOfSourceFile;
-                HeightUnits = DimensionUnitType.PercentageOfSourceFile;
-
-                Width = 100;
-                Height = 100;
-            }
-        }
+        return toReturn;
     }
 }

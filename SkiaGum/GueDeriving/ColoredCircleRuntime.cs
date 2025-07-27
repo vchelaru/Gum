@@ -1,5 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -163,5 +164,14 @@ public class ColoredCircleRuntime : SkiaShapeRuntime
             DropshadowOffsetY = 3;
             DropshadowBlurY = 3;
         }
+    }
+
+    public override GraphicalUiElement Clone()
+    {
+        var toReturn = (ColoredCircleRuntime)base.Clone();
+
+        toReturn.mContainedCircle = null;
+
+        return toReturn;
     }
 }

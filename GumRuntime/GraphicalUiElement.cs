@@ -1635,17 +1635,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public GraphicalUiElement Clone()
+    public virtual GraphicalUiElement Clone()
     {
-        if (CloneRenderableFunction == null)
-        {
-            throw new InvalidOperationException("GraphicalUiElement.CloneRenderableFunction must be set before calling clone");
-        }
-        var newClone = (GraphicalUiElement)this.MemberwiseClone();
-        var newRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
+        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
-        newClone.SetContainedObject(newRenderable);
-        mWhatContainsThis = null;
+        IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable).Clone() as IRenderable;
+
+        if (clonedRenderable == null)
+        { 
+            if (CloneRenderableFunction == null)
+            {
+                throw new InvalidOperationException($"{this.mContainedObjectAsIpso?.GetType()} needs to implement ICloneable or " +
+                    $"GraphicalUiElement.CloneRenderableFunction must be set before calling clone");
+            }
+            clonedRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
+        }
+
+        newClone.SetContainedObject(clonedRenderable);
+        newClone.mWhatContainsThis = null;
         return newClone;
     }
 
@@ -5310,7 +5317,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 throw new Exception($"{nameof(SetPropertyOnRenderable)} must be set on GraphicalUiElement");
             }
 #endif
-            SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+            try
+            {
+                SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+            }
+            catch(InvalidCastException invalidCastException)
+            {
+                throw new InvalidCastException($"Error trying to set {propertyName} to {value} on {mContainedObjectAsIpso}", invalidCastException);
+            }
         }
     }
 

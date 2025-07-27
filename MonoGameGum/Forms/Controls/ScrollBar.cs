@@ -1,5 +1,7 @@
 ﻿using Gum.Wireframe;
 using System;
+using Microsoft.Xna.Framework;
+
 
 
 #if FRB
@@ -66,20 +68,33 @@ public class ScrollBar : RangeBase
         base.ReactToVisualChanged();
 
 
-        var thumbHeight = thumb.ActualHeight;
+        var thumbHeight = thumb?.ActualHeight ?? 32;
 
-        upButton.Push += (not, used) => this.Value -= this.SmallChange;
-        downButton.Push += (not, used) => this.Value += this.SmallChange;
-#if FRB
-        Track.Push += _ => HandleTrackPush(this, EventArgs.Empty);
-#else
-        Track.Push += HandleTrackPush;
-#endif
+        if(upButton != null)
+        {
+            upButton.Push += (not, used) => this.Value -= this.SmallChange;
+        }
+
+        if(downButton != null)
+        {
+            downButton.Push += (not, used) => this.Value += this.SmallChange;
+        }
+
+        if(Track != null)
+        {
+    #if FRB
+            Track.Push += _ => HandleTrackPush(this, EventArgs.Empty);
+    #else
+            Track.Push += HandleTrackPush;
+    #endif
+        }
         Visual.SizeChanged += HandleVisualSizeChange;
 
 
 
-        var visibleTrackSpace = Track.GetAbsoluteHeight() - upButton.ActualHeight - downButton.ActualHeight;
+        var visibleTrackSpace = upButton != null && downButton != null
+            ? Track.GetAbsoluteHeight() - upButton.ActualHeight - downButton.ActualHeight
+            : 0;
 
         if (visibleTrackSpace != 0)
         {
@@ -204,6 +219,10 @@ public class ScrollBar : RangeBase
 
     private void UpdateThumbPositionAccordingToValue()
     {
+        if(thumb == null)
+        {
+            return;
+        }
         var ratioDown = (Value - Minimum) / (Maximum - Minimum);
         ratioDown = System.Math.Max(0, ratioDown);
         ratioDown = System.Math.Min(1, ratioDown);
@@ -284,7 +303,7 @@ public class ScrollBar : RangeBase
     private void UpdateThumbSize()
     {
         var desiredHeight = MinimumThumbSize;
-        if (ViewportSize != 0)
+        if (ViewportSize != 0 && Track != null)
         {
             float trackHeight = Track.GetAbsoluteHeight();
 

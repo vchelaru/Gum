@@ -8,7 +8,7 @@ using System.Text;
 
 namespace SkiaGum.Renderables;
 
-class RoundedRectangle : RenderableBase, IClipPath
+class RoundedRectangle : RenderableBase, IClipPath, ICloneable
 {
     public float CornerRadius { get; set; }
 
@@ -34,6 +34,18 @@ class RoundedRectangle : RenderableBase, IClipPath
         path.AddRoundRect(boundingRect, CornerRadius, CornerRadius);
 
         return path;
+    }
+
+    object ICloneable.Clone() => Clone();
+
+    public RoundedRectangle Clone()
+    {
+        var newInstance = (RoundedRectangle)this.MemberwiseClone();
+        newInstance.mParent = null;
+        newInstance.mChildren = new ();
+        newInstance.ClearCachedPaint();
+
+        return newInstance;
     }
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
