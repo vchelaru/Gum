@@ -42,10 +42,10 @@ public class MenuVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.Colors.DarkGray;
+        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.Visible = true;
-        Background.ApplyState(Styling.NineSlice.Solid);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         this.AddChild(Background);
 
         InnerPanelInstance = new ContainerRuntime();

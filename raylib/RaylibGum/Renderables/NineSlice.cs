@@ -7,23 +7,29 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using System.Xml.Schema;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
+public class NineSlice : InvisibleRenderable, ITextureCoordinate
 {
     public Texture2D Texture { get; set; }
+
     public Raylib_cs.Rectangle? SourceRectangle
-    { 
-        get; 
-        set; 
+    {
+        get;
+        set;
     }
-    System.Drawing.Rectangle? ITextureCoordinate.SourceRectangle 
-    { 
+
+    public float? TextureWidth => Texture.Width;
+
+    public float? TextureHeight => Texture.Height;
+
+    System.Drawing.Rectangle? ITextureCoordinate.SourceRectangle
+    {
         get
         {
-            if(SourceRectangle == null)
+            if (SourceRectangle == null)
             {
                 return null;
             }
@@ -40,7 +46,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         }
         set
         {
-            if(value == null)
+            if (value == null)
             {
                 SourceRectangle = null;
             }
@@ -55,19 +61,17 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         }
     }
 
+
+    bool ITextureCoordinate.Wrap 
+    { 
+        get => false;
+        set {} 
+    }
+
     public Color Color
     {
         get; set;
     } = Color.White;
-
-    public float? TextureWidth => Texture.Width;
-
-    public float? TextureHeight => Texture.Height;
-
-    public float AspectRatio => TextureHeight > 0 && TextureWidth != null ?
-        (float)TextureWidth.Value / TextureHeight.Value : 1;
-
-    bool ITextureCoordinate.Wrap{ get; set; }
 
     public override void Render(ISystemManagers managers)
     {
@@ -76,20 +80,37 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
 
-        if(SourceRectangle == null)
+        var destinationRectangle = new Rectangle(
+            x, y, this.Width, this.Height);
+
+
+        var nPatchInfo = new NPatchInfo
         {
-            // todo - support scaling
-            DrawTextureEx(Texture, new Vector2(x, y), -Rotation, 1, Color);
-        }
-        else
+            Source = SourceRectangle ?? new Raylib_cs.Rectangle(0, 0, Texture.Width, Texture.Height),
+            Left = Texture.Width/3,
+            Top = Texture.Height/3,
+            Right = Texture.Width - Texture.Width/3,
+            Bottom = Texture.Height - Texture.Height/3,
+            Layout = NPatchLayout.NinePatch
+        };
+
+        if(SourceRectangle != null)
         {
-            var destinationRectangle = new Rectangle(
-                x, y, this.Width, this.Height);
-
-            DrawTexturePro(Texture, SourceRectangle.Value, destinationRectangle, Vector2.Zero, -Rotation, Color);
+            var rect = SourceRectangle.Value;
+            nPatchInfo.Left = (int)(rect.Width / 3);
+            nPatchInfo.Right = (int)(rect.Width / 3);
+            nPatchInfo.Top = (int)(rect.Height / 3);
+            nPatchInfo.Bottom = (int)(rect.Height / 3);
         }
 
-
-
+        DrawTextureNPatch(
+            Texture,
+            nPatchInfo,
+            destinationRectangle,
+            Vector2.Zero,
+            0,
+            Color);
     }
+
+
 }

@@ -42,7 +42,7 @@ public class FormsUtilities
 
     public static Cursor Cursor => cursor;
 
-    static MonoGameGum.Input.Keyboard keyboard;
+    static Keyboard keyboard;
 
     public static Keyboard Keyboard => keyboard;
 
@@ -68,7 +68,10 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        switch(defaultVisualsVersion)
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
+        Styling.ActiveStyle = new Styling(uiSpriteSheet);
+
+        switch (defaultVisualsVersion)
         {
             case DefaultVisualsVersion.V1:
                 TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
@@ -90,8 +93,7 @@ public class FormsUtilities
                 break;
             case DefaultVisualsVersion.V2:
 
-                Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
-                Styling.ActiveStyle = new Styling(uiSpriteSheet);
+
 
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
@@ -270,7 +272,10 @@ public class FormsUtilities
         }
 
         //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
-        GueInteractiveExtensionMethods.DoUiActivityRecursively(innerList, cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            innerList, cursor, 
+            keyboard, 
+            gameTime.TotalGameTime.TotalSeconds);
 
 
         var frameworkElementOver =

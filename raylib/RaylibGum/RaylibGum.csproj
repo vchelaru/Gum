@@ -24,8 +24,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Content\UISpriteSheet.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" Link="Forms\Controls\ComboBox.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" Link="Forms\Controls\FrameworkElement.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" Link="Forms\Controls\FrameworkElementExt.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ItemsControl.cs" Link="Forms\Controls\ItemsControl.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Label.cs" Link="Forms\Controls\Label.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ListBox.cs" Link="Forms\Controls\ListBox.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ListBoxItem.cs" Link="Forms\Controls\ListBoxItem.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Panel.cs" Link="Forms\Controls\Panel.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\RadioButton.cs" Link="Forms\Controls\RadioButton.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ScrollBar.cs" Link="Forms\Controls\ScrollBar.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ScrollViewer.cs" Link="Forms\Controls\ScrollViewer.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Slider.cs" Link="Forms\Controls\Slider.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\Splitter.cs" Link="Forms\Controls\Splitter.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" Link="Forms\Controls\StackPanel.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Controls\ToggleButton.cs" Link="Forms\Controls\ToggleButton.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\BinderHelpers.cs" Link="Forms\Data\BinderHelpers.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\Binding.cs" Link="Forms\Data\Binding.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\BindingExpressionBase.cs" Link="Forms\Data\BindingExpressionBase.cs" />
@@ -34,8 +56,28 @@
     <Compile Include="..\..\MonoGameGum\Forms\Data\PropertyPathObserver.cs" Link="Forms\Data\PropertyPathObserver.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\PropertyRegistry.cs" Link="Forms\Data\PropertyRegistry.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ButtonVisual.cs" Link="Forms\DefaultVisuals\ButtonVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\CheckBoxVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\ComboBoxVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\LabelVisual.cs" Link="Forms\DefaultVisuals\LabelVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\ListBoxItemVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxVisual.cs" Link="Forms\DefaultVisuals\ListBoxVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\RadioButtonVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\ScrollBarVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\ScrollViewerVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SliderVisual.cs" Link="Forms\DefaultVisuals\SliderVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SplitterVisual.cs" Link="Forms\DefaultVisuals\SplitterVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
     <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Content\UISpriteSheet.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,8 +89,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Forms\Controls\" />
+    <Folder Include="Forms\Controls\Primitives\" />
     <Folder Include="Forms\Data\" />
+    <Folder Include="Forms\DefaultVisuals\" />
   </ItemGroup>
 
 </Project>

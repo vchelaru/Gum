@@ -1,9 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -12,7 +9,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
+#if RAYLIB
+using Raylib_cs;
+using Gum.GueDeriving;
+using Gum.Forms.Controls;
+namespace Gum.Forms.DefaultVisuals;
+
+#else
+using Microsoft.Xna.Framework;
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.GueDeriving;
 namespace MonoGameGum.Forms.DefaultVisuals;
+
+#endif
+
 public class RadioButtonVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
@@ -63,9 +75,9 @@ public class RadioButtonVisual : InteractiveGue
         Background.Height = 24;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        Background.Color = Styling.Colors.Primary;
+        Background.Color = Styling.ActiveStyle.Colors.Primary;
         Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.NineSlice.CircleBordered);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.CircleBordered);
         this.AddChild(Background);
 
         InnerCheck = new SpriteRuntime();
@@ -78,9 +90,9 @@ public class RadioButtonVisual : InteractiveGue
         InnerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         InnerCheck.XOrigin = HorizontalAlignment.Center;
         InnerCheck.YOrigin = VerticalAlignment.Center;
-        InnerCheck.Color = Styling.Colors.White;
+        InnerCheck.Color = Styling.ActiveStyle.Colors.White;
         InnerCheck.Texture = uiSpriteSheetTexture;
-        InnerCheck.ApplyState(Styling.Icons.Circle2);
+        InnerCheck.ApplyState(Styling.ActiveStyle.Icons.Circle2);
         Background.Children.Add(InnerCheck);
 
         TextInstance = new TextRuntime();
@@ -90,12 +102,12 @@ public class RadioButtonVisual : InteractiveGue
         TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
         TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         TextInstance.XOrigin = HorizontalAlignment.Right;
-        TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+        TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         TextInstance.Width = -28;
         TextInstance.Height = 0;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        TextInstance.ApplyState(Styling.Text.Normal);
+        TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();
@@ -111,9 +123,9 @@ public class RadioButtonVisual : InteractiveGue
         FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
-        FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+        FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.Colors.Warning;
+        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         RadioButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
@@ -140,27 +152,27 @@ public class RadioButtonVisual : InteractiveGue
             AddVariable(state, "TextInstance.Color", textColor);
         }
 
-        AddState(States.EnabledOn, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, true);
-        AddState(States.EnabledOff, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, false);
+        AddState(States.EnabledOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true);
+        AddState(States.EnabledOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false);
 
-        AddState(States.DisabledOn, Styling.Colors.DarkGray, Styling.Colors.Gray, Styling.Colors.Gray, false, true);
-        AddState(States.DisabledOff, Styling.Colors.DarkGray, Styling.Colors.Gray, Styling.Colors.Gray, false, false);
+        AddState(States.DisabledOn, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, true);
+        AddState(States.DisabledOff, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, false);
 
-        AddState(States.DisabledFocusedOn, Styling.Colors.DarkGray, Styling.Colors.Gray, Styling.Colors.Gray, true, true);
-        AddState(States.DisabledFocusedOff, Styling.Colors.DarkGray, Styling.Colors.Gray, Styling.Colors.Gray, true, false);
+        AddState(States.DisabledFocusedOn, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, true);
+        AddState(States.DisabledFocusedOff, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, false);
 
-        AddState(States.FocusedOn, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, true, true);
-        AddState(States.FocusedOff, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, true, false);
+        AddState(States.FocusedOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true);
+        AddState(States.FocusedOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, false);
 
-        AddState(States.HighlightedOn, Styling.Colors.PrimaryLight, Styling.Colors.White, Styling.Colors.White, false, true);
-        AddState(States.HighlightedOff, Styling.Colors.PrimaryLight, Styling.Colors.White, Styling.Colors.White, false, false);
+        AddState(States.HighlightedOn, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true);
+        AddState(States.HighlightedOff, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false);
 
-        AddState(States.HighlightedFocusedOn, Styling.Colors.PrimaryLight, Styling.Colors.White, Styling.Colors.White, true, true);
-        AddState(States.HighlightedFocusedOff, Styling.Colors.PrimaryLight, Styling.Colors.White, Styling.Colors.White, true, false);
+        AddState(States.HighlightedFocusedOn, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true);
+        AddState(States.HighlightedFocusedOff, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, false);
 
         // PER V1 comment: // dark looks weird so staying with normal primary. This matches the default template
-        AddState(States.PushedOn, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, true);
-        AddState(States.PushedOff, Styling.Colors.Primary, Styling.Colors.White, Styling.Colors.White, false, false);
+        AddState(States.PushedOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true);
+        AddState(States.PushedOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false);
 
         if (tryCreateFormsObject)
         {

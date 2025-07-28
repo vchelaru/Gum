@@ -5,6 +5,9 @@ using System;
 using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using Gum.Forms.Controls.Primitives;
+namespace Gum.Forms.Controls;
 #else
 using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
@@ -21,7 +24,7 @@ public class Button : ButtonBase
 
     GraphicalUiElement textComponent;
 
-    RenderingLibrary.Graphics.Text coreTextObject;
+    global::RenderingLibrary.Graphics.IText coreTextObject;
 
     /// <summary>
     /// Text displayed by the button. This property requires that the TextInstance instance be present in the Gum component.
@@ -65,7 +68,7 @@ public class Button : ButtonBase
     {
         // text component is optional:
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        coreTextObject = textComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        coreTextObject = textComponent?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
     }
 
 

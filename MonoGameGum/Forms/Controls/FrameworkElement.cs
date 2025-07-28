@@ -34,8 +34,8 @@ namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum;
 using RaylibGum.Input;
-using RaylibGum.Forms.Data;
-namespace RaylibGum.Forms.Controls;
+using Gum.Forms.Data;
+namespace Gum.Forms.Controls;
 using Keys = Raylib_cs.KeyboardKey;
 
 #else
@@ -237,6 +237,10 @@ public class FrameworkElement : INotifyPropertyChanged
             if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
             {
                 throw new Exception();
+            }
+            if(Visual == null)
+            {
+                throw new NullReferenceException($"Cannot set Width because Visual hasn't yet been set on this {GetType()}");
             }
 #endif
             Visual.Width = value;
@@ -653,7 +657,7 @@ public class FrameworkElement : INotifyPropertyChanged
         else
 #endif
         {
-            Visual.AddToManagers(RenderingLibrary.SystemManagers.Default,
+            Visual.AddToManagers(global::RenderingLibrary.SystemManagers.Default,
 #if FRB
                 gumLayer);
 #else

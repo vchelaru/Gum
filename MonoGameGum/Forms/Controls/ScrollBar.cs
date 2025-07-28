@@ -1,16 +1,20 @@
 ﻿using Gum.Wireframe;
 using System;
-using Microsoft.Xna.Framework;
 
 
 
 #if FRB
+using Microsoft.Xna.Framework;
 using FlatRedBall.Gui;
 using FlatRedBall.Forms.GumExtensions;
 using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using Gum.Forms.Controls.Primitives;
+namespace Gum.Forms.Controls;
 #else
+using Microsoft.Xna.Framework;
 using MonoGameGum.Input;
 using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
@@ -234,10 +238,10 @@ public class ScrollBar : RangeBase
         thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
-        thumb.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
-        thumb.Y = Microsoft.Xna.Framework.MathHelper.Lerp(MinThumbPosition, MaxThumbPosition,
-            (float)ratioDown);
+        thumb.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
 
+        var range = MaxThumbPosition - MinThumbPosition;
+        thumb.Y = MinThumbPosition + range * (float)ratioDown;
     }
 
 #if FRB

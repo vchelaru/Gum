@@ -6,6 +6,9 @@ using FlatRedBall.Forms.Controls.Primitives;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using Gum.Forms.Controls.Primitives;
+
 #else
 using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;

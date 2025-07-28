@@ -1,9 +1,18 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 
+
+#if RAYLIB
+using Gum.GueDeriving;
+using Gum.Forms.Controls;
+using Raylib_cs;
+namespace Gum.Forms.DefaultVisuals;
+#else
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.GueDeriving;
+using Microsoft.Xna.Framework;
 namespace MonoGameGum.Forms.DefaultVisuals;
+#endif
 
 public class LabelVisual : TextRuntime
 {
@@ -19,6 +28,9 @@ public class LabelVisual : TextRuntime
             WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             Height = 0;
             HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            this.Color = Color.White;
+
+            this.ApplyState(Styling.ActiveStyle.Text.Normal);
         }
         if (tryCreateFormsObject)
         {

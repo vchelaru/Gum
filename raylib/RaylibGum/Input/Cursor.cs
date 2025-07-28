@@ -10,8 +10,50 @@ using System.Threading.Tasks;
 namespace RaylibGum.Input;
 public class Cursor : ICursor
 {
+    Cursors? _customCursor;
+
+    public Cursors? CustomCursor
+    {
+        get => _customCursor;
+        set
+        {
+            _customCursor = value;
+
+
+            switch(value)
+            {
+                case Cursors.Arrow:
+                case null:
+                    // Horizontal resize
+
+                    Raylib.SetMouseCursor(MouseCursor.Arrow);
+                    break;
+                case Cursors.SizeNS:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNs);
+
+                    break;
+                case Cursors.SizeWE:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeEw);
+
+                    break;
+
+                case Cursors.SizeNWSE:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNwse);
+
+                    break;
+                case Cursors.SizeNESW:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNesw);
+
+                    break;
+            }
+        }
+    }
+
 
     MouseState _mouseState;
+
+
+
     MouseState mLastFrameMouseState = new MouseState();
 
     TouchCollection _touchCollection;
@@ -50,9 +92,15 @@ public class Cursor : ICursor
 
     public double LastPrimaryClickTime => 0;
 
-    public int XChange => 0;
+    /// <summary>
+    /// Returns the screen space (in pixels) change on the X axis since the last frame.
+    /// </summary>
+    public int XChange => X - LastX;
 
-    public int YChange => 0;
+    /// <summary>
+    /// Returns the screen space (in pixel) change on the Y axis since the last frame.
+    /// </summary>
+    public int YChange => Y - LastY;
 
     public int ScrollWheelChange => 0;
 
