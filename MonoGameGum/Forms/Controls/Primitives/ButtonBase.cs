@@ -1,5 +1,4 @@
 ﻿using Gum.Wireframe;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
@@ -7,6 +6,7 @@ using System.Collections.Generic;
 
 
 #if FRB
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Forms.Controls;
 using FlatRedBall.Forms.Input;
 using FlatRedBall.Gui;
@@ -15,7 +15,12 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls.Primitives;
+#elif RAYLIB
+namespace Gum.Forms.Controls.Primitives;
+using RaylibGum.Input;
+using Keys = Raylib_cs.KeyboardKey;
 #else
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 namespace MonoGameGum.Forms.Controls.Primitives;
@@ -70,13 +75,15 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     /// GuiManager.GamePadsForUiControl.
     /// </summary>
     public event Action<GamepadButton> ControllerButtonPushed;
+
+
 #if FRB
     public event Action<int> GenericGamepadButtonPushed;
 
     public event Action<FlatRedBall.Input.Mouse.MouseButtons> MouseButtonPushed;
 #endif
 
-    #endregion
+#endregion
 
     #region Initialize
 
@@ -326,9 +333,11 @@ public class ButtonBase : FrameworkElement, IInputReceiver
         IsFocused = false;
     }
 
-#if !FRB
+#if !FRB 
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
+#if RAYLIB
+#else
         var asKeyboard = keyboard as IInputReceiverKeyboardMonoGame;
         if(asKeyboard != null)
         {
@@ -340,6 +349,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                     keyboard.IsCtrlDown);
             }
         }
+#endif
     }
 #endif
 

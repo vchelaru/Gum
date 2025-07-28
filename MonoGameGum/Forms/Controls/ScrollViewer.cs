@@ -1,21 +1,28 @@
 ﻿using Gum.Wireframe;
 using System;
-using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 
 
 
 
 #if FRB
+using Microsoft.Xna.Framework.Input;
 using FlatRedBall.Forms.Input;
 using MonoGameGum.Forms.Controls;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using RaylibGum.Input;
+namespace Gum.Forms.Controls;
+
 #else
+using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
@@ -452,7 +459,7 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
     public void OnFocusUpdatePreview(RoutedEventArgs args)
     {
         // todo - check for ESC and return handled, steal focus from children
-#if !FRB
+#if !FRB && !RAYLIB
         foreach(var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             // eventually we want to support combos but for now use esc:
@@ -496,7 +503,7 @@ public class ScrollViewer : FrameworkElement, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(Buttons.A))
+            if (gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoItemsHaveFocus = true;
             }

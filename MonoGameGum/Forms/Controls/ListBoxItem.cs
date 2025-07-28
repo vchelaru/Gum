@@ -5,6 +5,9 @@ using System;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+
+namespace Gum.Forms.Controls;
 #else
 namespace MonoGameGum.Forms.Controls;
 #endif
@@ -33,7 +36,7 @@ public class ListBoxItem : FrameworkElement
     }
 
     GraphicalUiElement text;
-    protected RenderingLibrary.Graphics.Text coreText;
+    protected global::RenderingLibrary.Graphics.IText coreText;
 
     internal bool IsHighlightSuppressed { get; set; } = false;
 
@@ -95,7 +98,8 @@ public class ListBoxItem : FrameworkElement
     {
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
-        coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        coreText = text?.RenderableComponent as
+            global::RenderingLibrary.Graphics.IText;
     }
 
 

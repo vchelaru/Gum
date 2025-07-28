@@ -37,7 +37,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.Height = 24f;
                 this.Width = 256f;
 
-                background.Color = Styling.Colors.DarkGray;
+                background.Color = Styling.ActiveStyle.Colors.DarkGray;
                 background.Height = 0f;
                 background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 background.Width = 0f;
@@ -121,38 +121,38 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 }
 
                 AddState(FrameworkElement.DisabledStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.Gray);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.Gray);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.Gray);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.Gray);
                 AddVariable("FocusedIndicator.Visible", false);
 
                 AddState(FrameworkElement.DisabledFocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.Gray);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.Gray);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.Gray);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.Gray);
                 AddVariable("FocusedIndicator.Visible", true);
 
                 AddState(FrameworkElement.EnabledStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.White);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.White);
                 AddVariable("FocusedIndicator.Visible", false);
 
                 AddState(FrameworkElement.FocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.White);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.White);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.White);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.White);
                 AddVariable("FocusedIndicator.Visible", true);
 
                 AddState(FrameworkElement.HighlightedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.PrimaryLight);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryLight);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.PrimaryLight);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.PrimaryLight);
                 AddVariable("FocusedIndicator.Visible", false);
 
                 AddState(FrameworkElement.HighlightedFocusedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.PrimaryLight);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryLight);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.PrimaryLight);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.PrimaryLight);
                 AddVariable("FocusedIndicator.Visible", true);
 
                 AddState(FrameworkElement.PushedStateName);
-                AddVariable("TextInstance.Color", Styling.Colors.PrimaryDark);
-                AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryDark);
+                AddVariable("TextInstance.Color", Styling.ActiveStyle.Colors.PrimaryDark);
+                AddVariable("DropdownIndicator.Color", Styling.ActiveStyle.Colors.PrimaryDark);
                 AddVariable("FocusedIndicator.Visible", false);
 
             }

@@ -4,6 +4,9 @@ using System;
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+namespace Gum.Forms.Controls;
+
 #else
 namespace MonoGameGum.Forms.Controls;
 #endif
@@ -14,7 +17,7 @@ public class CheckBox : ToggleButton
 
     private GraphicalUiElement textComponent;
 
-    private RenderingLibrary.Graphics.Text coreTextObject;
+    private global::RenderingLibrary.Graphics.IText coreTextObject;
 
     public string Text
     {
@@ -58,7 +61,7 @@ public class CheckBox : ToggleButton
     {
         // text component is optional:
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        coreTextObject = textComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        coreTextObject = textComponent?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
     }
 
     #endregion

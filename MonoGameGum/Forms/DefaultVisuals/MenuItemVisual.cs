@@ -58,10 +58,10 @@ public class MenuItemVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.Colors.DarkGray;
+        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.Visible = true;
-        Background.ApplyState(Styling.NineSlice.Solid);
+        Background.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         this.AddChild(Background);
 
         ContainerInstance = new ContainerRuntime();
@@ -80,8 +80,8 @@ public class MenuItemVisual : InteractiveGue
         TextInstance.Dock(Gum.Wireframe.Dock.Left);
         TextInstance.X = 4;
         TextInstance.Y = 0;
-        TextInstance.Color = Styling.Colors.White;
-        TextInstance.ApplyState(Styling.Text.Normal);
+        TextInstance.Color = Styling.ActiveStyle.Colors.White;
+        TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         TextInstance.Width = 2;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         TextInstance.Height = 2;
@@ -122,11 +122,11 @@ public class MenuItemVisual : InteractiveGue
             AddVariable(state, "TextInstance.Color", textInstanceColor);
         }
 
-        AddState(States.Enabled, false, Styling.Colors.DarkGray, Styling.Colors.White);
-        AddState(States.Disabled, false, Styling.Colors.DarkGray, Styling.Colors.Gray);
-        AddState(States.Highlighted, true, Styling.Colors.LightGray, Styling.Colors.White);
-        AddState(States.Selected, true, Styling.Colors.Primary, Styling.Colors.White);
-        AddState(States.Focused, false, Styling.Colors.DarkGray, Styling.Colors.White);
+        AddState(States.Enabled, false, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White);
+        AddState(States.Disabled, false, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray);
+        AddState(States.Highlighted, true, Styling.ActiveStyle.Colors.LightGray, Styling.ActiveStyle.Colors.White);
+        AddState(States.Selected, true, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White);
+        AddState(States.Focused, false, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White);
 
         if (tryCreateFormsObject)
         {

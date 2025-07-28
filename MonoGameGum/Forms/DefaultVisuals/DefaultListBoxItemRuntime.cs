@@ -102,12 +102,12 @@ public class DefaultListBoxItemRuntime : InteractiveGue
 
             AddState(FrameworkElement.HighlightedStateName);
             AddVariable("Background.Visible", true);
-            AddVariable("Background.Color", Styling.Colors.Primary);
+            AddVariable("Background.Color", Styling.ActiveStyle.Colors.Primary);
             AddVariable("FocusedIndicator.Visible", false);
 
             AddState(FrameworkElement.SelectedStateName);
             AddVariable("Background.Visible", true);
-            AddVariable("Background.Color", Styling.Colors.Accent);
+            AddVariable("Background.Color", Styling.ActiveStyle.Colors.Accent);
             AddVariable("FocusedIndicator.Visible", false);
 
             AddState(FrameworkElement.FocusedStateName);

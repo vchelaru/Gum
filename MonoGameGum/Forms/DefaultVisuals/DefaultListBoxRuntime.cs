@@ -46,7 +46,7 @@ public class DefaultListBoxRuntime : InteractiveGue
             background.Y = 0f;
             background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             background.YUnits = GeneralUnitType.PixelsFromMiddle;
-            background.Color = Styling.Colors.DarkGray;
+            background.Color = Styling.ActiveStyle.Colors.DarkGray;
             this.Children.Add(background);
 
             VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;

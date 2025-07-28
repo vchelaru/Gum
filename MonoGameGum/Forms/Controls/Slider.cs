@@ -2,23 +2,33 @@
 using System.Collections.Generic;
 using Gum.Wireframe;
 using RenderingLibrary;
-using Microsoft.Xna.Framework.Input;
 using RenderingLibrary.Math;
 
 
 
+
 #if FRB
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Forms.Controls;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using static FlatRedBall.Input.Xbox360GamePad;
-using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using RaylibGum.Input;
+using Gum.Forms.Controls.Primitives;
+using Keys = Raylib_cs.KeyboardKey;
+
+namespace Gum.Forms.Controls;
+
 #else
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 using MonoGameGum.Forms.Controls.Primitives;
+using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -60,7 +70,7 @@ public class Slider : RangeBase, IInputReceiver
 
     public event Action<IInputReceiver> FocusUpdate;
 
-    public event Action<Buttons> ControllerButtonPushed;
+    public event Action<GamepadButton> ControllerButtonPushed;
 
     public event Action<int> GenericGamepadButtonPushed;
 
@@ -130,11 +140,11 @@ public class Slider : RangeBase, IInputReceiver
     {
         var leftOfThumb = this.thumb.AbsoluteLeft;
 
-        if (this.thumb.Visual.XOrigin == RenderingLibrary.Graphics.HorizontalAlignment.Center)
+        if (this.thumb.Visual.XOrigin == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
         {
             leftOfThumb += this.thumb.ActualWidth / 2.0f;
         }
-        else if (this.thumb.Visual.XOrigin == RenderingLibrary.Graphics.HorizontalAlignment.Right)
+        else if (this.thumb.Visual.XOrigin == global::RenderingLibrary.Graphics.HorizontalAlignment.Right)
         {
             leftOfThumb += this.thumb.ActualWidth;
         }
@@ -406,19 +416,19 @@ public class Slider : RangeBase, IInputReceiver
             HandleGamepadNavigation(gamepad);
 
 
-            if (gamepad.ButtonRepeatRate(Buttons.DPadLeft) ||
+            if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
             {
                 this.Value -= this.SmallChange;
             }
-            else if (gamepad.ButtonRepeatRate(Buttons.DPadRight) ||
+            else if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
             {
                 this.Value += this.SmallChange;
             }
 
 
-            void RaiseIfPushedAndEnabled(Buttons button)
+            void RaiseIfPushedAndEnabled(GamepadButton button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -426,11 +436,11 @@ public class Slider : RangeBase, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Buttons.B);
-            RaiseIfPushedAndEnabled(Buttons.X);
-            RaiseIfPushedAndEnabled(Buttons.Y);
-            RaiseIfPushedAndEnabled(Buttons.Start);
-            RaiseIfPushedAndEnabled(Buttons.Back);
+            RaiseIfPushedAndEnabled(GamepadButton.B);
+            RaiseIfPushedAndEnabled(GamepadButton.X);
+            RaiseIfPushedAndEnabled(GamepadButton.Y);
+            RaiseIfPushedAndEnabled(GamepadButton.Start);
+            RaiseIfPushedAndEnabled(GamepadButton.Back);
         }
 
 #if FRB
@@ -520,12 +530,14 @@ public class Slider : RangeBase, IInputReceiver
         // an IList or List. That's a breaking change for a tiny amount
         // of allocation....what to do....
 
+#if !RAYLIB
         var asMonoGameKeyboard = (IInputReceiverKeyboardMonoGame)keyboard;
 
         foreach (var key in asMonoGameKeyboard.KeysTyped)
         {
             HandleKeyDown(key, shift, alt, ctrl);
         }
+#endif
 
         var stringTyped = keyboard.GetStringTyped();
 

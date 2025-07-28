@@ -60,9 +60,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
             Background.Height = 0;
             Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-            Background.Color = Styling.Colors.DarkGray;
+            Background.Color = Styling.ActiveStyle.Colors.DarkGray;
             Background.Texture = uiSpriteSheetTexture;
-            Background.ApplyState(Styling.NineSlice.Bordered);
+            Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
             this.AddChild(Background);
 
             ClipContainer = new ContainerRuntime();
@@ -73,7 +73,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             SelectionInstance = new NineSliceRuntime();
             SelectionInstance.Name = "SelectionInstance";
-            SelectionInstance.Color = Styling.Colors.Accent;
+            SelectionInstance.Color = Styling.ActiveStyle.Colors.Accent;
             SelectionInstance.Height = -4f;
             SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             SelectionInstance.Width = 7f;
@@ -83,7 +83,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
             SelectionInstance.Y = 0f;
             SelectionInstance.Texture = uiSpriteSheetTexture;
-            SelectionInstance.ApplyState(Styling.NineSlice.Solid);
+            SelectionInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
             ClipContainer.AddChild(SelectionInstance);
 
             TextInstance = new TextRuntime();
@@ -100,14 +100,14 @@ namespace MonoGameGum.Forms.DefaultVisuals
             TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
             TextInstance.VerticalAlignment = VerticalAlignment.Center;
-            TextInstance.Color = Styling.Colors.White;
-            TextInstance.ApplyState(Styling.Text.Normal);
+            TextInstance.Color = Styling.ActiveStyle.Colors.White;
+            TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
             TextInstance.Text = "";
             ClipContainer.AddChild(TextInstance);
 
             PlaceholderTextInstance = new TextRuntime();
             PlaceholderTextInstance.Name = "PlaceholderTextInstance";
-            PlaceholderTextInstance.Color = Styling.Colors.Gray;
+            PlaceholderTextInstance.Color = Styling.ActiveStyle.Colors.Gray;
             PlaceholderTextInstance.Height = -4f;
             PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             PlaceholderTextInstance.Text = "Text Placeholder";
@@ -124,12 +124,12 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             CaretInstance = new SpriteRuntime();
             CaretInstance.Name = "CaretInstance";
-            CaretInstance.Color = Styling.Colors.Primary;
+            CaretInstance.Color = Styling.ActiveStyle.Colors.Primary;
             CaretInstance.Height = 18f;
             CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             CaretInstance.Texture = uiSpriteSheetTexture;
             CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-            CaretInstance.ApplyState(Styling.NineSlice.Solid);
+            CaretInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
             CaretInstance.Width = 1f;
             CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
             CaretInstance.X = 4f;
@@ -142,7 +142,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             FocusedIndicator = new NineSliceRuntime();
             FocusedIndicator.Name = "FocusedIndicator";
-            FocusedIndicator.Color = Styling.Colors.Warning;
+            FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
             FocusedIndicator.X = 0;
             FocusedIndicator.Y = 2;
             FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
@@ -154,7 +154,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             FocusedIndicator.Texture = uiSpriteSheetTexture;
-            FocusedIndicator.ApplyState(Styling.NineSlice.Solid);
+            FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
             FocusedIndicator.Visible = false;
             this.AddChild(FocusedIndicator);
 
@@ -180,10 +180,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 AddVariable(state, "PlaceholderTextInstance.Color", placeholderTextColor);
             }
 
-            AddTextBoxCategoryState(States.Enabled, Styling.Colors.DarkGray, Styling.Colors.White, false, Styling.Colors.Gray);
-            AddTextBoxCategoryState(States.Disabled, Styling.Colors.DarkGray, Styling.Colors.Gray, false, Styling.Colors.Gray);
-            AddTextBoxCategoryState(States.Highlighted, Styling.Colors.Gray, Styling.Colors.White, false, Styling.Colors.DarkGray);
-            AddTextBoxCategoryState(States.Focused, Styling.Colors.DarkGray, Styling.Colors.White, true, Styling.Colors.Gray);
+            AddTextBoxCategoryState(States.Enabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, false, Styling.ActiveStyle.Colors.Gray);
+            AddTextBoxCategoryState(States.Disabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, false, Styling.ActiveStyle.Colors.Gray);
+            AddTextBoxCategoryState(States.Highlighted, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.White, false, Styling.ActiveStyle.Colors.DarkGray);
+            AddTextBoxCategoryState(States.Focused, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, true, Styling.ActiveStyle.Colors.Gray);
 
             LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
             LineModeCategory.Name = "LineModeCategory";

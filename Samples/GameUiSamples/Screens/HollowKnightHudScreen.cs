@@ -12,6 +12,7 @@ using System;
 using MonoGameGum;
 using GameUiSamples.Components;
 using Microsoft.Xna.Framework;
+using MonoGameGum.Forms.Controls;
 namespace GameUiSamples.Screens;
 
 partial class HollowKnightHudScreen : IUpdateScreen
