@@ -245,6 +245,7 @@
     * [Controls](code/monogame/gum-forms/controls/README.md)
       * [Button](code/monogame/gum-forms/controls/button.md)
       * [CheckBox](code/monogame/gum-forms/controls/checkbox.md)
+      * [ComboBox](code/monogame/gum-forms/controls/combobox.md)
       * [FrameworkElement](code/monogame/gum-forms/controls/frameworkelement/README.md)
         * [BindingContext](code/monogame/gum-forms/controls/frameworkelement/bindingcontext.md)
         * [IsEnabled](code/monogame/gum-forms/controls/frameworkelement/isenabled.md)

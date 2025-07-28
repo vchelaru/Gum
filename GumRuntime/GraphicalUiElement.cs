@@ -1639,7 +1639,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
-        IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable).Clone() as IRenderable;
+        IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable)?.Clone() as IRenderable;
 
         if (clonedRenderable == null)
         { 
