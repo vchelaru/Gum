@@ -15,14 +15,12 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using MonoGameGum.Input;
 using FlatRedBall.Forms.Controls;
 namespace FlatRedBall.Forms;
-#elif RAYLIB
+#endif
+
+#if !FRB
 using Gum.Forms.Controls;
 namespace Gum.Forms;
 
-#else
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Input;
-namespace MonoGameGum.Forms;
 #endif
 
 #region ResizeMode Enum

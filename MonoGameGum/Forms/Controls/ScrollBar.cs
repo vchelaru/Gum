@@ -11,13 +11,15 @@ using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
-using Gum.Forms.Controls.Primitives;
-namespace Gum.Forms.Controls;
 #else
 using Microsoft.Xna.Framework;
 using MonoGameGum.Input;
-using MonoGameGum.Forms.Controls.Primitives;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+#if !FRB
+using Gum.Forms.Controls.Primitives;
+namespace Gum.Forms.Controls;
+
 #endif
 
 public class ScrollBar : RangeBase

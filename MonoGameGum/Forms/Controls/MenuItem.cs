@@ -14,8 +14,10 @@ using FlatRedBall.Math.Geometry;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
-#else
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Controls;
 #endif
 
 public class MenuItem : ItemsControl
@@ -57,7 +59,7 @@ public class MenuItem : ItemsControl
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 
     GraphicalUiElement? text;
-    protected RenderingLibrary.Graphics.Text? coreText;
+    protected global::RenderingLibrary.Graphics.Text? coreText;
 
     GraphicalUiElement? SubmenuIndicatorInstance;
 
@@ -163,7 +165,7 @@ public class MenuItem : ItemsControl
 
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
-        coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        coreText = text?.RenderableComponent as global::RenderingLibrary.Graphics.Text;
         SubmenuIndicatorInstance = Visual.GetGraphicalUiElementByName("SubmenuIndicatorInstance");
 
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;

@@ -18,13 +18,15 @@ using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-namespace Gum.Forms.Controls;
-
 #else
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Controls;
+
 #endif
 
 #region Enums

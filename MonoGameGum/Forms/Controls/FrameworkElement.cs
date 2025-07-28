@@ -34,8 +34,6 @@ namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum;
 using RaylibGum.Input;
-using Gum.Forms.Data;
-namespace Gum.Forms.Controls;
 using Keys = Raylib_cs.KeyboardKey;
 
 #else
@@ -43,8 +41,12 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
-using MonoGameGum.Forms.Data;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+
+#if !FRB
+using Gum.Forms.Data;
+namespace Gum.Forms.Controls;
 #endif
 
 #region Enums

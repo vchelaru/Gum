@@ -3,10 +3,11 @@
 
 using FlatRedBall.Forms.Controls;
 namespace FlatRedBall.Forms.Data;
+#endif
 
-#else
-using MonoGameGum.Forms.Controls;
-namespace MonoGameGum.Forms.Data;
+#if !FRB
+using Gum.Forms.Controls;
+namespace Gum.Forms.Data;
 
 #endif
 

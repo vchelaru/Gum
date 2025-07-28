@@ -7,10 +7,10 @@ using System.Runtime.CompilerServices;
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
-#elif RAYLIB
+#endif
+
+#if !FRB
 namespace Gum.Forms.Data;
-#else
-namespace MonoGameGum.Forms.Data;
 #endif
 
 /// <summary>

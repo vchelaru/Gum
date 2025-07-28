@@ -16,14 +16,18 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #elif RAYLIB
-namespace Gum.Forms.Controls.Primitives;
 using RaylibGum.Input;
 using Keys = Raylib_cs.KeyboardKey;
 #else
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
-namespace MonoGameGum.Forms.Controls.Primitives;
+#endif
+
+
+#if !FRB
+namespace Gum.Forms.Controls.Primitives;
+
 #endif
 
 public class ButtonBase : FrameworkElement, IInputReceiver
