@@ -3,4 +3,5 @@ clr_loader==0.2.7.post0
 pycparser==2.22
 pygame==2.6.1
 pythonnet==3.0.5
-
+build
+twine

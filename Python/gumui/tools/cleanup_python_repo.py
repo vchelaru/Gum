@@ -1,4 +1,5 @@
 import shutil
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,11 +21,15 @@ def remove_all_in_directory(path: Path):
         print(f"Skipped (not found): {path}")
 
 def main():
-    answer = input("This will remove the 'stage', 'src/gumui/_clr', and 'dist' directories. Continue? (y/n): ").strip().lower()
-    if answer != 'y':
-        print("ERROR: Aborting, press y next time to delete files")
-        return
-    
+    # Accept `--yes` to skip confirmation
+    auto_confirm = "--yes" in sys.argv
+
+    if not auto_confirm:
+        answer = input("This will remove the 'stage', 'src/gumui/_clr', and 'dist' directories. Continue? (y/n): ").strip().lower()
+        if answer != 'y':
+            print("Aborting. Run with --yes to skip prompt.")
+            return
+
     for path in paths_to_clean:
         remove_all_in_directory(path)
 

@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "venv:create",
+      "label": "setup:venv",
       "type": "shell",
       "problemMatcher": [],
       "windows": {
@@ -24,7 +24,7 @@
     },
 
     {
-      "label": "pip:upgrade",
+      "label": "setup:pip upgrade",
       "type": "shell",
       "problemMatcher": [],
       "windows": {
@@ -42,7 +42,7 @@
     },
 
     {
-      "label": "pip:install",
+      "label": "setup:pip install",
       "type": "shell",
       "problemMatcher": [],
       "windows": {
@@ -60,7 +60,7 @@
     },
 
     {
-      "label": "build gum dlls",
+      "label": "setup:build gum dlls",
       "type": "shell",
       "windows": {
         "command": ".venv\\Scripts\\python.exe",
@@ -79,7 +79,7 @@
     },
 
     {
-      "label": "gen stubs",
+      "label": "setup:gen stubs",
       "type": "shell",
       "problemMatcher": [],
       "windows": {
@@ -97,20 +97,20 @@
     },
 
     {
-      "label": "bootstrap",
+      "label": "setup:all",
       "dependsOn": [
-        "venv:create",
-        "pip:upgrade",
-        "pip:install",
-        "build gum dlls",
-        "gen stubs"
+        "setup:venv",
+        "setup:pip upgrade",
+        "setup:pip install",
+        "setup:build gum dlls",
+        "setup:gen stubs"
       ],
       "dependsOrder": "sequence",
       "group": { "kind": "build", "isDefault": true }
     },
 
     {
-      "label": "build gumui package",
+      "label": "build:gumui",
       "type": "shell",
       "windows": {
         "command": ".venv\\Scripts\\python.exe",
@@ -127,24 +127,55 @@
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
+
     {
-      "label": "clean gumui repo",
-      "group": { "kind": "build", "isDefault": false },
+      "label": "tools:clean",
       "type": "shell",
+      "group": { "kind": "build", "isDefault": false },
       "windows": {
         "command": ".venv\\Scripts\\python.exe",
-        "args": ["tools\\cleanup_python_repo.py"]
+        "args": ["tools\\cleanup_python_repo.py", "--yes"]
       },
       "linux": {
         "command": ".venv/bin/python",
-        "args": ["tools/cleanup_python_repo.py"]
+        "args": ["tools/cleanup_python_repo.py", "--yes"]
       },
       "osx": {
         "command": ".venv/bin/python",
-        "args": ["tools/cleanup_python_repo.py"]
+        "args": ["tools/cleanup_python_repo.py", "--yes"]
       },
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
+    },
+
+    {
+      "label": "build:rebuild all",
+      "dependsOn": [
+        "tools:clean",
+        "setup:all",
+        "build:gumui"
+      ],
+      "dependsOrder": "sequence",
+      "group": { "kind": "build", "isDefault": false }
+    },
+    {
+      "label": "publish:pypi",
+      "type": "shell",
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\publish_to_pypi.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/publish_to_pypi.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/publish_to_pypi.py"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false }
     }
 
   ]
