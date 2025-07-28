@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using MonoGameGum.Forms.Data;
+using Gum.Forms.Data;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;

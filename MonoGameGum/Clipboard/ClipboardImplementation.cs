@@ -7,28 +7,27 @@ using System.Threading.Tasks;
 using TextCopy;
 #endif
 
-namespace MonoGameGum.Clipboard
+namespace Gum.Clipboard;
+
+internal class ClipboardImplementation
 {
-    internal class ClipboardImplementation
+    internal static string GetText()
     {
-        internal static string GetText()
-        {
 #if IOS
-            return string.Empty;
+        return string.Empty;
 #else
-            return ClipboardService.GetText();
+        return ClipboardService.GetText();
 #endif
-        }
+    }
 
-        internal static void PushStringToClipboard(string text)
-        {
+    internal static void PushStringToClipboard(string text)
+    {
 #if IOS
-            // todo - do we care to fix this?
+        // todo - do we care to fix this?
 #else
 
-            ClipboardService.SetText(text);
+        ClipboardService.SetText(text);
 #endif
 
-        }
     }
 }

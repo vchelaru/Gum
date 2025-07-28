@@ -6,11 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
+#if FRB
+namespace MonoGameGum.Forms.Controls;
+#endif
+
+
+#if !FRB
 namespace Gum.Forms.Controls;
 
-#else
-namespace MonoGameGum.Forms.Controls;
+
 #endif
 
 public enum ResizeBehavior

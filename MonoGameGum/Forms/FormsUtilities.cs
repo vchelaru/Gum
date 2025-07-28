@@ -124,6 +124,15 @@ public class FormsUtilities
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
+            if(formsType.FullName.StartsWith("MonoGameGum.Forms."))
+            {
+                var baseType = formsType.BaseType;
+
+                if(baseType?.FullName.StartsWith("Gum.Forms.") == true)
+                {
+                    FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
+                }
+            }
         }
 
         cursor = new Cursor();

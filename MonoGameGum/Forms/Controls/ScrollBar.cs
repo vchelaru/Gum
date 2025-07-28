@@ -19,7 +19,6 @@ using MonoGameGum.Input;
 #if !FRB
 using Gum.Forms.Controls.Primitives;
 namespace Gum.Forms.Controls;
-
 #endif
 
 public class ScrollBar : RangeBase

@@ -1,5 +1,5 @@
-﻿using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.Data;
+﻿using Gum.Forms.Controls;
+using Gum.Forms.Data;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms.Data;

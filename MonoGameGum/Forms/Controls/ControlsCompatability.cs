@@ -124,6 +124,12 @@ namespace MonoGameGum.Forms.Controls
         public Button(InteractiveGue visual) : base(visual) { }
     }
 
+    public class CheckBox : Gum.Forms.Controls.CheckBox
+    {
+        public CheckBox() : base() { }
+        public CheckBox(InteractiveGue visual) : base(visual) { }
+    }
+
     public class  ComboBox : Gum.Forms.Controls.ComboBox
     {
         public ComboBox() : base() { }
@@ -178,6 +184,18 @@ namespace MonoGameGum.Forms.Controls
         public Panel(InteractiveGue visual) : base(visual) { }
     }
 
+    public class PasswordBox : Gum.Forms.Controls.PasswordBox 
+    {
+        public PasswordBox() : base() { }
+        public PasswordBox(InteractiveGue visual) : base(visual) { }
+    }
+
+    public class RadioButton : Gum.Forms.Controls.RadioButton
+    {
+        public RadioButton() : base() {}
+        public RadioButton(InteractiveGue visual) : base(visual) { }
+    }
+
     public class ScrollBar : Gum.Forms.Controls.ScrollBar 
     { 
         public ScrollBar() : base() { }
@@ -196,11 +214,28 @@ namespace MonoGameGum.Forms.Controls
         public Slider(InteractiveGue visual) : base(visual) { }
     }
 
+    public class Splitter : Gum.Forms.Controls.Splitter 
+    {
+        public Splitter() : base() { }
+        public Splitter(InteractiveGue visual) : base(visual) { }
+    }
 
     public abstract class TextBoxBase : Gum.Forms.Controls.TextBoxBase 
     {
         public TextBoxBase() : base() { }
         public TextBoxBase(InteractiveGue visual) : base(visual) { }
+    }
+
+    public class TextBox : Gum.Forms.Controls.TextBox
+    {
+        public TextBox() : base() { }
+        public TextBox(InteractiveGue visual) : base(visual) { }
+    }
+
+    public class ToggleButton : Gum.Forms.Controls.ToggleButton 
+    {
+        public ToggleButton() : base() { }
+        public ToggleButton(InteractiveGue visual) : base(visual) { }
     }
 
     public class StackPanel : Gum.Forms.Controls.StackPanel
@@ -209,6 +244,11 @@ namespace MonoGameGum.Forms.Controls
         public StackPanel(InteractiveGue visual) : base(visual) { }
     }
 
+    public class UserControl : Gum.Forms.Controls.UserControl 
+    {
+        public UserControl() : base() { }
+        public UserControl(InteractiveGue visual) : base(visual) { }
+    }
 
     public static class FrameworkElementExt
     {

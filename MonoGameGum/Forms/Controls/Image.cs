@@ -10,12 +10,15 @@ using System.Threading.Tasks;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
-namespace MonoGameGum.Forms.Controls;
 #endif
 
+#if !FRB
+
+namespace Gum.Forms.Controls;
+#endif
 public class Image : FrameworkElement
 {
-    RenderingLibrary.Graphics.Sprite mContainedSprite;
+    global::RenderingLibrary.Graphics.Sprite mContainedSprite;
     
     public string Source
     {
