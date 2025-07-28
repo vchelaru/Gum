@@ -30,7 +30,7 @@ SKIP_ROOTS = {
 sys.path.insert(0, str(DLL_DIR))
 for dll in DLL_DIR.glob("*.dll"):
     try:
-        clr.AddReference(str(dll))
+        clr.AddReference(str(dll))  # type: ignore
     except Exception:
         pass
 

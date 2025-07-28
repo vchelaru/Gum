@@ -62,13 +62,20 @@
     {
       "label": "build gum dlls",
       "type": "shell",
-      "command": "pwsh",
-      "args": [
-        "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", "tools/build_dlls_from_source.ps1"
-      ],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\build_dlls_from_source.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_dlls_from_source.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_dlls_from_source.py"]
+      },
       "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": "$msCompile"
+      "problemMatcher": []
     },
 
     {
@@ -100,6 +107,45 @@
       ],
       "dependsOrder": "sequence",
       "group": { "kind": "build", "isDefault": true }
+    },
+
+    {
+      "label": "build gumui package",
+      "type": "shell",
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\build_gumui.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_gumui.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_gumui.py"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "clean gumui repo",
+      "group": { "kind": "build", "isDefault": false },
+      "type": "shell",
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\cleanup_python_repo.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/cleanup_python_repo.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/cleanup_python_repo.py"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
     }
+
   ]
 }
