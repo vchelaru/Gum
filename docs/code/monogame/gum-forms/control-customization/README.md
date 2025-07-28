@@ -166,9 +166,9 @@ upButton.UpdateState();
 Styling can also be modified globally through the Styling class. The Styling class needs to be modified before controls are created. For example, the following code sets the three primary colors to red colors:
 
 ```csharp
-Styling.Colors.Primary = Color.Red;
-Styling.Colors.PrimaryLight = new Color(255, 100, 100);
-Styling.Colors.PrimaryDark = new Color(150, 0, 0);
+Styling.ActiveStyle.Colors.Primary = Color.Red;
+Styling.ActiveStyle.Colors.PrimaryLight = new Color(255, 100, 100);
+Styling.ActiveStyle.Colors.PrimaryDark = new Color(150, 0, 0);
 
 var panel = new StackPanel();
 panel.Spacing = 3;
@@ -199,9 +199,9 @@ Aside from colors, many of the borders styles can be modified. For example, the 
 This can be changed per instance as shown in the following code:
 
 ```csharp
-Styling.Colors.Primary = Color.Red;
-Styling.Colors.PrimaryLight = new Color(255, 100, 100);
-Styling.Colors.PrimaryDark = new Color(150, 0, 0);
+Styling.ActiveStyle.Colors.Primary = Color.Red;
+Styling.ActiveStyle.Colors.PrimaryLight = new Color(255, 100, 100);
+Styling.ActiveStyle.Colors.PrimaryDark = new Color(150, 0, 0);
 
 var panel = new StackPanel();
 panel.Spacing = 3;
