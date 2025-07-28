@@ -74,9 +74,11 @@ public static class FrameworkElementExt
         element.Visual.RemoveFromManagers();
     }
 
+#if RAYLIB
     public static void AddChild(this GraphicalUiElement element, FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }
+#endif
 
 }
