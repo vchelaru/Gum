@@ -12,6 +12,7 @@ namespace FlatRedBall.Forms.Data;
 using Gum.Forms.Controls;
 namespace Gum.Forms.Data;
 #endif
+
 internal class NpcBindingExpression : UntypedBindingExpression
 {
     private PropertyInfo TargetProperty { get; }
