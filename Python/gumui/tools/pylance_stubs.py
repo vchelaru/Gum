@@ -1,6 +1,4 @@
-# tools/gen_stubs.py
-
-import sys
+import sys, os
 from pathlib import Path
 
 import pythonnet
@@ -12,9 +10,17 @@ from System.Reflection import ReflectionTypeLoadException, BindingFlags
 from System import FlagsAttribute
 
 # -------- CONFIGURATION --------
-DLL_DIR      = Path(r"C:\git\Gum\python\PythonGum\src\gum_runtime\_clr\net6.0")
-OUT_DIR      = Path("typings")
-SKIP_ROOTS   = {
+here = os.path.dirname(os.path.abspath(__file__))
+
+# Path to the DLLs we want to generate stubs for
+clr_path = os.path.join(here, "..", "src", "gumui", "_clr", "net6.0")
+DLL_DIR = Path(os.path.abspath(clr_path))
+
+# *** CHANGED: write stubs inside the package under gumui/stubs ***
+OUT_DIR = Path(os.path.join(here, "..", "typings"))
+
+# Namespaces we want to skip
+SKIP_ROOTS = {
     "System", "Microsoft", "MS", "Internal",
     "FxResources", "Python", "mscorlib", "Windows"
 }
@@ -28,6 +34,7 @@ for dll in DLL_DIR.glob("*.dll"):
     except Exception:
         pass
 
+# Create the output folder (gumui/stubs)
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 HEADER = (
@@ -38,13 +45,11 @@ HEADER = (
 )
 ANY = "Any"
 
-
 def safe_get_types(assembly):
     try:
         return assembly.GetTypes()
     except ReflectionTypeLoadException as ex:
         return [t for t in ex.Types if t is not None]
-
 
 def collect_all_types():
     all_types = []
@@ -54,10 +59,8 @@ def collect_all_types():
                 all_types.append(t)
     return all_types
 
-
 def is_flag_enum(t):
     return t.IsDefined(FlagsAttribute, False)
-
 
 def group_by_namespace(types, roots):
     by_ns = {}
@@ -66,7 +69,6 @@ def group_by_namespace(types, roots):
         if root in roots:
             by_ns.setdefault(t.Namespace, []).append(t)
     return by_ns
-
 
 def write_stub_for_namespace(ns: str, types):
     parts = ns.split(".")
@@ -83,7 +85,7 @@ def write_stub_for_namespace(ns: str, types):
         if t.IsEnum:
             base = "IntFlag" if is_flag_enum(t) else "IntEnum"
             lines.append(f"class {cls_name}({base}):")
-            names  = Enum.GetNames(t)
+            names = Enum.GetNames(t)
             values = Enum.GetValues(t)
             for n, v in zip(names, values):
                 lines.append(f"    {n} = {int(v)}")
@@ -93,24 +95,20 @@ def write_stub_for_namespace(ns: str, types):
         # ---- CLASSES / STRUCTS / INTERFACES ----
         lines.append(f"class {cls_name}(typing.Any):")
 
-        # Properties (with setter if writable)
+        # Properties
         for prop in t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static):
-            # skip indexers:
             if prop.GetIndexParameters().Length != 0:
                 continue
-            # getter
             lines.append("    @property")
             lines.append(f"    def {prop.Name}(self) -> {ANY}: ...")
-            # setter if available
             if prop.CanWrite:
                 lines.append(f"    @{prop.Name}.setter")
                 lines.append(f"    def {prop.Name}(self, value: {ANY}) -> None: ...")
+
         # Methods
         for m in t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static):
             if m.IsSpecialName:
                 continue
-
-            # static vs instance
             if m.IsStatic:
                 lines.append("    @staticmethod")
                 sig = f"    def {m.Name}(*args: Any, **kwargs: Any) -> Any: ..."
@@ -122,16 +120,14 @@ def write_stub_for_namespace(ns: str, types):
 
     stub_file.write_text("\n".join(lines), encoding="utf-8")
 
-
 def main():
     all_types = collect_all_types()
-    roots     = {t.Namespace.split(".")[0] for t in all_types} - SKIP_ROOTS
+    roots = {t.Namespace.split(".")[0] for t in all_types} - SKIP_ROOTS
     print("Generating stubs for roots:", sorted(roots))
     by_ns = group_by_namespace(all_types, roots)
     for ns, types in by_ns.items():
         write_stub_for_namespace(ns, types)
     print("Stub generation complete. Stubs are in:", OUT_DIR)
-
 
 if __name__ == "__main__":
     main()

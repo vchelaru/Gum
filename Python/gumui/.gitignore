@@ -204,5 +204,5 @@ __marimo__/
 
 
 # Builds from Gum for use with Python
-src/gum_runtime/_clr/**/*
-
+src/gumui/_clr/**/*
+stage/**/*

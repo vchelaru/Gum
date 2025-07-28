@@ -1,5 +1,5 @@
 $here  = $PSScriptRoot
-$out   = Join-Path $here '..\src\gum_runtime\_clr'
+$out   = Join-Path $here '..\src\gumui\_clr'
 $cfg   = 'Debug'
 $tfms  = 'net6.0'
 

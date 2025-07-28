@@ -1,9 +1,11 @@
 import pythonnet; pythonnet.load("coreclr")
-import sys, clr
+import sys, clr, os
 
-
-# sys.path.append(r"C:\git\Gum\GumCommon\bin\Debug\net6.0")
-sys.path.append(r"C:\git\Gum\python\PythonGum\src\gum_runtime\_clr\net6.0")
+# get directory of THIS script so we can find the clr files
+here = os.path.dirname(os.path.abspath(__file__))
+clr_path = os.path.join(here, "..", "src", "gumui", "_clr", "net6.0")
+clr_path = os.path.abspath(clr_path)  # normalize to absolute
+sys.path.append(clr_path)
 
 try:
     clr.AddReference("GumCommon") # type: ignore
