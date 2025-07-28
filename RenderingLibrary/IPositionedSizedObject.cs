@@ -145,21 +145,21 @@ namespace RenderingLibrary
             bool isXInRange = false;
             if(ipso.Width < 0)
             {
-                isXInRange = relativePosition.X < 0 && relativePosition.X > ipso.Width;
+                isXInRange = relativePosition.X <= 0 && relativePosition.X > ipso.Width;
             }
             else
             {
-                isXInRange = relativePosition.X > 0 && relativePosition.X < ipso.Width;
+                isXInRange = relativePosition.X >= 0 && relativePosition.X < ipso.Width;
             }
 
             bool isYInRange = false;
             if(ipso.Height < 0)
             {
-                isYInRange = relativePosition.Y < 0 && relativePosition.Y > ipso.Height;
+                isYInRange = relativePosition.Y <= 0 && relativePosition.Y > ipso.Height;
             }
             else
             {
-                isYInRange = relativePosition.Y > 0 && relativePosition.Y < ipso.Height;
+                isYInRange = relativePosition.Y >= 0 && relativePosition.Y < ipso.Height;
             }
 
             return isXInRange && isYInRange;
