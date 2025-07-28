@@ -2,6 +2,7 @@
   "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing System.Linq;\n\nusing MonoGameGum.GueDeriving;",
   "CodeProjectRoot": "..\\..\\",
   "RootNamespace": "GameUiSamples",
+  "AppendFolderToNamespace": false,
   "InheritanceLocation": 1,
   "ObjectInstantiationType": 1,
   "DefaultScreenBase": "Gum.Wireframe.BindableGue",
