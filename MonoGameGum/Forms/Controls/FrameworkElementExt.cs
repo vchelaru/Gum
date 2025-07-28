@@ -61,12 +61,7 @@ public static class FrameworkElementExt
 
     }
 
-#if !FRB
-    public static void AddToRoot(this FrameworkElement element)
-    {
-        GumService.Default.Root.Children.Add(element.Visual);
-    }
-#endif
+
 
     public static void RemoveFromRoot(this FrameworkElement element)
     {

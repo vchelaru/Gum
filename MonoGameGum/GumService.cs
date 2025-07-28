@@ -320,6 +320,11 @@ public static class GraphicalUiElementExtensionMethods
     {
         element.Children.Add(child.Visual);
     }
+
+    public static void AddToRoot(this FrameworkElement element)
+    {
+        GumService.Default.Root.Children.Add(element.Visual);
+    }
 }
 
 public static class ElementSaveExtensionMethods

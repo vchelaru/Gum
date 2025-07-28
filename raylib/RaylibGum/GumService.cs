@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using Gum.Wireframe;
@@ -106,6 +107,11 @@ public static class GraphicalUiElementExtensionMethods
     public static void RemoveFromRoot(this GraphicalUiElement element)
     {
         element.Parent = null;
+    }
+
+    public static void AddToRoot(this FrameworkElement element)
+    {
+        GumService.Default.Root.Children.Add(element.Visual);
     }
 }
 
