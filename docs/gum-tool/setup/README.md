@@ -207,22 +207,18 @@ rm -f Gum.zip
 
 ```sh
 GUM_EXE_PATH=$(find "$GUM_WINE_PREFIX_PATH" -name "Gum.exe" -type f) && \
-printf '#!%s\nWINEPREFIX=%s wine "%s"\n' "/bin/bash" "$GUM_WINE_PREFIX_PATH" "$GUM_EXE_PATH" > ~/bin/gum
-```
-
-9. Make the script executable by running:
-
-```sh
+mkdir -p $HOME/bin && \
+printf '#!%s\nWINEPREFIX=%s wine "%s"\n' "/bin/bash" "$GUM_WINE_PREFIX_PATH" "$GUM_EXE_PATH" > $HOME/bin/gum && \
 chmod +x ~/bin/gum
 ```
 
-10. To ensure you can run the Gum Tool from any directory, add the script directory to your PATH. Most Linux and macOS users using macOS 10.14 or lower, will be using the BASH shell. While for most macOS user using macOS 10.15 or higher, you'll be using the ZSH shell.
+9. To ensure you can run the Gum Tool from any directory, add the script directory to your PATH. Most Linux and macOS users using macOS 10.14 or lower, will be using the BASH shell.
 
 **For Bash SHELL**
 
 ```sh
-if ! grep -q 'export PATH="\$HOME/bin:\$PATH"' ~/.bash_profile 2>/dev/null; then
-    echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bash_profile
+if ! grep -q 'export PATH="\$HOME/bin:\$PATH"' ~/.bashrc 2>/dev/null; then
+    echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
 fi
 ```
 
@@ -234,12 +230,12 @@ if ! grep -q 'export PATH="\$HOME/bin:\$PATH"' ~/.zshrc 2>/dev/null; then
 fi
 ```
 
-11. Reload the shell configuration to apply the changes. Run the following command:
+10. Reload the shell configuration to apply the changes. Run the following command:
 
 **For BASH Shell**
 
 ```sh
-source ~/.bash_profile
+source ~/.bashrc
 ```
 
 **For ZSH Shell**
