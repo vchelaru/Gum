@@ -155,7 +155,7 @@ rm -f ./xnafx40_redist.msi &> /dev/null
 ### of the wine folder
 ################################################################################
 echo "Installing GUM Tool..."
-GUM_ZIP_FILE="$WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
+GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
 curl -L -o "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
     && echo "Download completed." || { echo "Download failed."; exit 1; }
 
@@ -163,7 +163,7 @@ curl -L -o "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.
 ### Unzip the gum.zip file into Program Files/Gum
 ################################################################################
 echo "Extracting GUM Tool..."
-GUM_WINE_EXTRACT_DIR="$WINE_PREFIX_PATH/drive_c/Program Files/Gum"
+GUM_WINE_EXTRACT_DIR="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum"
 rm -rf "$GUM_WINE_EXTRACT_DIR"
 unzip -q "$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
     && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
