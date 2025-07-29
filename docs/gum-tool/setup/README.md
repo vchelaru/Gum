@@ -76,29 +76,23 @@ These following commands will go through the steps of downloading and running th
 
 1. Download the setup\_gum.linux.sh script\
    [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
-2. Open a terminal and `cd` to the directory that the script was downloaded to
-3. Make the script executable
+2. Open a terminal and `cd` to the directory that the script was downloaded to.
+3. Make the script executable and run the setup.
 
 ```sh
-chmod +x ./setup_gum_linux.sh
-```
-
-4. Execute the script
-
-```sh
-./setup_gum_linux.sh
+chmod +x ./setup_gum_linux.sh && ./setup_gum_linux.sh
 ```
 
 **Install WINE and Winetricks Manually**
 
 If the auto script fails to install the prerequisites try this.
 
-You can install WINE and Winetricks using your package manager. Open a terminal and run the following commands:
-
 If your distro is not listed bellow please use your prefered search engine to find out how to install\
 wine and winetricks properly on your system.
 
-Ubuntu 22.04
+You can install WINE and Winetricks using your package manager. Open a terminal and run the following commands:
+
+##### Ubuntu 22.04
 
 ```sh
 sudo dpkg --add-architecture i386 
@@ -109,7 +103,7 @@ sudo apt update && sudo apt install --install-recommends winehq-stable
 sudo apt-get -y install winetricks
 ```
 
-Ubuntu 24.04
+##### Ubuntu 24.04
 
 ```sh
 sudo dpkg --add-architecture i386 
@@ -120,14 +114,14 @@ sudo apt update && sudo apt install --install-recommends winehq-stable
 sudo apt-get -y install winetricks
 ```
 
-Fedora & Nobara (All Versions)
+##### Fedora & Nobara (All Versions)
 
 ```sh
 sudo dnf install wine
 sudo dnf install winetricks
 ```
 
-Linux Mint 20
+##### Linux Mint 20
 
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
@@ -137,7 +131,7 @@ echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-bu
 sudo apt-get install winetricks
 ```
 
-Linux Mint 21
+##### Linux Mint 21
 
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
@@ -147,7 +141,7 @@ echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-bu
 sudo apt-get install winetricks
 ```
 
-Linux Mint 22
+##### Linux Mint 22
 
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
@@ -161,52 +155,59 @@ sudo apt-get install winetricks
 
 These following commands will go through the steps setting up your macOS or Linux environment to run the GUM tool using WINE.
 
-1. Open a new terminal
-2. Install .NET Framework 4.8 using `winetricks` with the following command:
+1. Open a new terminal and set our wine prefix for Gum with the following command:
 
 ```sh
-winetricks dotnet48
+GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
+```
+
+2. Install Windows All Fonts using `winetricks` with the following command:
+
+```sh
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks allfonts
+```
+
+3. Install .NET Framework 4.8 using `winetricks` with the following command:
+
+```sh
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48
 ```
 
 This command initiates the installation of .NET Framework 4.8. A total of two installer dialogs appear one after another. Follow the steps for both to complete the installation. **This process may take a several minutes, so please be patient**.
 
-1. Download the XNA 4.0 Redistributable MSI file from Microsoft. You can download it using the following command:
+4. Download the XNA 4.0 Redistributable MSI file from Microsoft. You can download it using the following command:
 
 ```sh
 curl -O https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BEBAC362A930/xnafx40_redist.msi
 ```
 
-4. After downloading the MSI file, install it using the following command:
+5. After downloading the MSI file, install it using the following command:
 
 ```sh
-wine msiexec /i xnafx40_redist.msi
+WINEPREFIX=$GUM_WINE_PREFIX_PATH wine msiexec /i xnafx40_redist.msi
 ```
 
 Follow the installation prompts. At the end of the installation, it may display an error related to launching DirectX. **This is normal; just click "Close" on the error dialog.**
 
-5. Download the Gum Tool ZIP file from the FlatRedBall website and save it to your preferred location. You can download it using the following command:
+6. Download the Gum Tool ZIP file from the FlatRedBall website and save it to your preferred location. You can download it using the following command:
 
 ```sh
 curl -o Gum.zip https://files.flatredball.com/content/Tools/Gum/Gum.zip
 ```
 
-6. Unzip the downloaded Gum Tool ZIP file into the Program Files directory of the WINE folder. Run the following command in the terminal:
+7. Unzip the downloaded Gum Tool ZIP file into the Program Files directory of the WINE folder, this will also remove any existing Gum Tool installed and the zip to clean up. Run the following command in the terminal:
 
 ```sh
-unzip Gum.zip -d ~/.wine/drive_c/Program\ Files/Gum
-```
-
-7. After unzipping the Gum Tool, remove the downloaded ZIP file using the following command:
-
-```sh
+rm -rf $GUM_WINE_PREFIX_PATH/drive_c/Program\ Files/Gum && \
+unzip Gum.zip -d $GUM_WINE_PREFIX_PATH/drive_c/Program\ Files/Gum && \
 rm -f Gum.zip
 ```
 
 8. Create a script to run the Gum Tool. Run the following command in the terminal:
 
 ```sh
-echo '#!/bin/bash
-wine ~/.wine/drive_c/Program\\ Files/Gum/Data/Gum.exe' > ~/bin/Gum
+GUM_EXE_PATH=$(find "$GUM_WINE_PREFIX_PATH" -name "Gum.exe" -type f) && \
+printf '#!%s\nWINEPREFIX=%s wine "%s"\n' "/bin/bash" "$GUM_WINE_PREFIX_PATH" "$GUM_EXE_PATH" > ~/bin/gum
 ```
 
 9. Make the script executable by running:
@@ -249,9 +250,9 @@ source ~/.zshrc
 
 #### Running the Gum Tool
 
-Congratulations! You have now successfully set up the Gum Tool on macOS using WINE. You can open the Gum Tool by simply typing the following command in the terminal:
+Congratulations! You have now successfully set up the Gum Tool on Linux using WINE. You can open the Gum Tool by simply typing the following command in the terminal:
 
-```
+```sh
 gum
 ```
 

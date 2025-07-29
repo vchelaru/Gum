@@ -6,6 +6,8 @@
 
 set -e
 
+GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
+
 echo "This is an experimental script."
 echo "Script last updated on the 8th of May 2025!"
 
@@ -114,13 +116,21 @@ fi
 echo "Winetricks is installed"
 
 ################################################################################
+### Install windows allfonts with winetricks.  They can take a few minutes to finish, please be patient
+################################################################################
+echo "Installing all fonts using winetricks"
+echo "An installer dialog may appear, follow the steps to install"
+echo "They may take a few minutes to install, please be patient"
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks allfonts &> /dev/null
+
+################################################################################
 ### Install dotnet48 with winetricks. This will cause two installation prompts
 ### to appear.  They can take a few minutes to finish, please be patient
 ################################################################################
 echo "Installing .NET Framework 4.8 using winetricks"
 echo "Two installer dialogs will appear, follow the steps for both to install"
 echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=~/.wine_gum_prefix/ winetricks dotnet48 &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 
 ################################################################################
 ### Download the xna redistributable msi file from Microsoft
@@ -132,9 +142,8 @@ curl -O https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BE
 ################################################################################
 ### Execute the XNA MSI file using WINE 
 ################################################################################
-WINEPREFIX=~/.wine_gum_prefix/ wine msiexec /i xnafx40_redist.msi &> /dev/null || true 
+WINEPREFIX=$GUM_WINE_PREFIX_PATH wine msiexec /i xnafx40_redist.msi &> /dev/null || true 
 ## We must return true, so when you click cancel (if for example you must rerun the script it wont't close the script!
-
 
 ################################################################################
 ### Clean up the file we downloaded.
@@ -146,31 +155,30 @@ rm -f ./xnafx40_redist.msi &> /dev/null
 ### of the wine folder
 ################################################################################
 echo "Installing GUM Tool..."
-curl -L -o ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
+GUM_ZIP_FILE="$WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
+curl -L -o "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
     && echo "Download completed." || { echo "Download failed."; exit 1; }
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
 ################################################################################
 echo "Extracting GUM Tool..."
-unzip -q ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip -d ~/.wine_gum_prefix/drive_c/"Program Files"/Gum \
+GUM_WINE_EXTRACT_DIR="$WINE_PREFIX_PATH/drive_c/Program Files/Gum"
+rm -rf "$GUM_WINE_EXTRACT_DIR"
+unzip -q "$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
     && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
-
-################################################################################
-### Clean up the zip file we downloaded
-################################################################################
 echo "Cleaning up..."
-rm -f ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip \
+rm -f "$GUM_ZIP_FILE" \
     && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
-
 
 echo "Adding Gum to path"
 
 ################################################################################
 ### Define the script content
 ################################################################################
-SCRIPT_CONTENT='#!/bin/bash
-WINEPREFIX=~/.wine_gum_prefix/ wine ~/.wine_gum_prefix/drive_c/Program\ Files/Gum/Data/Debug/Gum.exe'
+GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f)
+SCRIPT_CONTENT="#!/bin/bash
+WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" wine \"$GUM_EXE_PATH\""
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
@@ -218,7 +226,6 @@ fi
 ################################################################################
 ### Finished
 ################################################################################
-echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'Gum'."
-echo "Pro Tip 1: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
-echo "Pro Tip 2: Install allfonts with the command winetricks allfonts, it'll make text look better (you maybe able to get by with just arial, but just to be safe."
+echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
+echo "Pro Tip: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
 echo "You may need to close and reopen the terminal if it doesn't work at first."
