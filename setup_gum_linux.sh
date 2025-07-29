@@ -9,7 +9,7 @@ set -e
 GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
 
 echo "This is an experimental script."
-echo "Script last updated on the 8th of May 2025!"
+echo "Script last updated on the 29th of July 2025!"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -23,11 +23,11 @@ echo "Verifying that WINE is installed..."
 if ! command -v wine &> /dev/null; then
     echo "Wine is not installed. Attempting to install..."
 
-    DISTRO=$(lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+    DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
     VERSION=$(lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
 
     case "$DISTRO" in
-        Ubuntu)
+        ubuntu)
             if [[ "$VERSION" == "22.04" ]]; then
                 echo "Installing Wine for Ubuntu 22.04"
                 sudo dpkg --add-architecture i386 
@@ -47,7 +47,7 @@ if ! command -v wine &> /dev/null; then
             fi
             ;;
 
-        LinuxMint)
+        linuxmint)
             if [[ "$VERSION" == "20" ]]; then
                 BASE="focal"
             elif [[ "$VERSION" == "21" ]]; then
@@ -67,12 +67,12 @@ if ! command -v wine &> /dev/null; then
             sudo apt install --install-recommends winehq-stable -y
             ;;
 
-        Fedora|Nobara)
+        fedora|nobara)
             echo "Installing Wine for Fedora/Nobara"
             sudo dnf install -y wine
             ;;
 
-        Darwin)
+        darwin)
             echo "Detected macOS"
             echo "Please install Wine-stable manually:"
             echo "brew install --cask --no-quarantine wine-stable"
@@ -95,13 +95,13 @@ if ! command -v winetricks &> /dev/null; then
     echo "Winetricks is not installed. Attempting to install..."
 
     case "$DISTRO" in
-        Ubuntu|LinuxMint)
+        ubuntu|linuxmint)
             sudo apt install -y winetricks
             ;;
-        Fedora|Nobara)
+        fedora|nobara)
             sudo dnf install -y winetricks
             ;;
-        Darwin)
+        darwin)
             echo "Please install Winetricks manually:"
             echo "brew install winetricks"
             exit 1
