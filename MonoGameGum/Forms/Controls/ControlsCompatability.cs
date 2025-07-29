@@ -136,6 +136,12 @@ namespace MonoGameGum.Forms.Controls
         public ComboBox(InteractiveGue visual) : base(visual) { }
     }
 
+    public enum DragDropReorderMode
+    {
+        NoReorder,
+        Immediate
+    }
+
     public class FrameworkElement : Gum.Forms.Controls.FrameworkElement
     {
         public FrameworkElement() : base() { }
@@ -144,6 +150,12 @@ namespace MonoGameGum.Forms.Controls
 
     public class ItemsControl : Gum.Forms.Controls.ItemsControl 
     {
+        public new ScrollBarVisibility VerticalScrollBarVisibility
+        {
+            get => (ScrollBarVisibility)(int)base.VerticalScrollBarVisibility;
+            set => base.VerticalScrollBarVisibility = (Gum.Forms.Controls.ScrollBarVisibility)(int)value;
+        }
+
         public ItemsControl() : base() { }
         public ItemsControl(InteractiveGue visual) : base(visual) { }
     }
@@ -156,8 +168,26 @@ namespace MonoGameGum.Forms.Controls
 
     public class ListBox : Gum.Forms.Controls.ListBox 
     {
+        public new ScrollBarVisibility VerticalScrollBarVisibility
+        {
+            get => (ScrollBarVisibility)(int)base.VerticalScrollBarVisibility;
+            set => base.VerticalScrollBarVisibility = (Gum.Forms.Controls.ScrollBarVisibility)(int)value;
+        }
+
+        public DragDropReorderMode DragDropReorderMode
+        {
+            get => (DragDropReorderMode)(int)base.DragDropReorderMode;
+            set => base.DragDropReorderMode = (Gum.Forms.Controls.DragDropReorderMode)(int)value;
+        }
+
         public ListBox() : base() { }
         public ListBox(InteractiveGue visual) : base(visual) { }
+
+        public new void ScrollIntoView(object item, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView) =>
+            base.ScrollIntoView(item, (Gum.Forms.Controls.ScrollIntoViewStyle)(int)scrollIntoViewStyle);
+
+        public void ScrollIndexIntoView(int itemIndex, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView) =>
+            base.ScrollIndexIntoView(itemIndex, (Gum.Forms.Controls.ScrollIntoViewStyle)(int)scrollIntoViewStyle);
     }
 
     public class ListBoxItem : Gum.Forms.Controls.ListBoxItem 
@@ -176,6 +206,12 @@ namespace MonoGameGum.Forms.Controls
     {
         public MenuItem() : base() { }
         public MenuItem(InteractiveGue visual) : base(visual) { }
+    }
+
+    public enum Orientation
+    {
+        Horizontal = 0,
+        Vertical = 1
     }
 
     public class Panel : Gum.Forms.Controls.Panel 
@@ -202,8 +238,39 @@ namespace MonoGameGum.Forms.Controls
         public ScrollBar(InteractiveGue visual) : base(visual) { }
     }
 
+    public enum ScrollBarVisibility
+    {
+        /// <summary>
+        /// The ScrollBar displays only if needed based on the size of the inner panel
+        /// </summary>
+        Auto = 1,
+        /// <summary>
+        /// The ScrollBar remains invisible even if the contents of the inner panel exceed the size of its container
+        /// </summary>
+        Hidden = 2,
+        /// <summary>
+        /// The ScrollBar always displays
+        /// </summary>
+        Visible = 3
+    }
+
+    public enum ScrollIntoViewStyle
+    {
+        BringIntoView,
+
+        Top,
+        Center,
+        Bottom
+    }
+
     public class ScrollViewer :Gum.Forms.Controls.ScrollViewer 
     {
+        public new ScrollBarVisibility VerticalScrollBarVisibility
+        {
+            get => (ScrollBarVisibility)(int)base.VerticalScrollBarVisibility;
+            set => base.VerticalScrollBarVisibility = (Gum.Forms.Controls.ScrollBarVisibility)(int)value;
+        }
+
         public ScrollViewer() : base() { }
         public ScrollViewer(InteractiveGue visual) : base(visual) { }
     }
@@ -219,6 +286,19 @@ namespace MonoGameGum.Forms.Controls
         public Splitter() : base() { }
         public Splitter(InteractiveGue visual) : base(visual) { }
     }
+
+    public class StackPanel : Gum.Forms.Controls.StackPanel
+    {
+        public new Orientation Orientation
+        {
+            get  => (Orientation)(int)base.Orientation;
+            set => base.Orientation = (Gum.Forms.Controls.Orientation)(int)value;
+        }
+
+        public StackPanel() : base() { }
+        public StackPanel(InteractiveGue visual) : base(visual) { }
+    }
+
 
     public abstract class TextBoxBase : Gum.Forms.Controls.TextBoxBase 
     {
@@ -237,13 +317,6 @@ namespace MonoGameGum.Forms.Controls
         public ToggleButton() : base() { }
         public ToggleButton(InteractiveGue visual) : base(visual) { }
     }
-
-    public class StackPanel : Gum.Forms.Controls.StackPanel
-    {
-        public StackPanel() : base() { }
-        public StackPanel(InteractiveGue visual) : base(visual) { }
-    }
-
     public class UserControl : Gum.Forms.Controls.UserControl 
     {
         public UserControl() : base() { }
