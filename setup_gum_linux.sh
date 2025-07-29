@@ -24,20 +24,20 @@ if ! command -v wine &> /dev/null; then
     echo "Wine is not installed. Attempting to install..."
 
     DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
-    VERSION=$(lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+    VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
 
     case "$DISTRO" in
         ubuntu)
-            if [[ "$VERSION" == "22.04" ]]; then
-                echo "Installing Wine for Ubuntu 22.04"
+            if [[ "$VERSION" == "22" ]]; then
+                echo "Installing Wine for Ubuntu 22.xx"
                 sudo dpkg --add-architecture i386 
                 sudo mkdir -pm755 /etc/apt/keyrings
                 wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
                 sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
                 sudo apt update
                 sudo apt install --install-recommends winehq-stable -y
-            elif [[ "$VERSION" == "24.04" ]]; then
-                echo "Installing Wine for Ubuntu 24.04"
+            elif [[ "$VERSION" == "24" ]]; then
+                echo "Installing Wine for Ubuntu 24.xx"
                 sudo dpkg --add-architecture i386 
                 sudo mkdir -pm755 /etc/apt/keyrings
                 wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
