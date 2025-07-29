@@ -228,4 +228,4 @@ fi
 ################################################################################
 echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
 echo "Pro Tip: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
-echo "You may need to close and reopen the terminal if it doesn't work at first."
+echo "You may need to close and reopen the terminal if it doesn't work at first, due to the update to your PATH."
