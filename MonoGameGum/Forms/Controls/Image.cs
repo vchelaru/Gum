@@ -16,7 +16,7 @@ namespace FlatRedBall.Forms.Controls;
 
 namespace Gum.Forms.Controls;
 #endif
-public class Image : FrameworkElement
+public class Image : MonoGameGum.Forms.Controls.FrameworkElement
 {
     global::RenderingLibrary.Graphics.Sprite mContainedSprite;
     

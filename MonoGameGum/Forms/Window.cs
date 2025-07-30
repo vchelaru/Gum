@@ -45,7 +45,7 @@ public enum ResizeMode
 /// <summary>
 /// A resizable, movable FrameworkElement
 /// </summary>
-public class Window : FrameworkElement
+public class Window : MonoGameGum.Forms.Controls.FrameworkElement
 {
     public const string WindowCategoryName = "WindowCategory";
 

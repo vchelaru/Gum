@@ -63,7 +63,7 @@ public class ScrollChangedEventArgs : EventArgs
 /// A control for displaying stacked items with a scroll bar. Items can be
 /// FrameworkElements (Forms) or regular visuals (GraphicalUiElements).
 /// </summary>
-public class ScrollViewer : FrameworkElement, IInputReceiver
+public class ScrollViewer : MonoGameGum.Forms.Controls.FrameworkElement, IInputReceiver
 {
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
     public const string ScrollViewerCategoryName = "ScrollViewerCategory";

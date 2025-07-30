@@ -29,12 +29,6 @@ namespace MonoGameGum.Forms
         public FrameworkElementTemplate(Func<Controls.FrameworkElement> creationFunc) : base(creationFunc) { }
     }
 
-    public class Window : Gum.Forms.Window 
-    {
-        public Window() : base() { }
-        public Window(InteractiveGue visual) : base(visual) { }
-    }
-
     public static class GraphicalUiElementFormsExtensions
     {
         public static FrameworkElementType GetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : Controls.FrameworkElement
@@ -112,6 +106,29 @@ namespace MonoGameGum.Forms
             return frameworkElement;
         }
 
+    }
+
+    public enum TextWrapping
+    {
+        // todo - support wrap with overflow
+
+        /// <summary>
+        /// No line wrapping is performed.
+        /// </summary>
+        NoWrap = 1,
+
+        /// <summary>
+        /// Line-breaking occurs if the line overflows beyond the available block width,
+        /// even if the standard line breaking algorithm cannot determine any line break
+        /// opportunity, as in the case of a very long word constrained in a fixed-width
+        /// container with no scrolling allowed.
+        /// </summary>
+        Wrap = 2
+    }
+    public class Window : Gum.Forms.Window 
+    {
+        public Window() : base() { }
+        public Window(InteractiveGue visual) : base(visual) { }
     }
 
 }
@@ -222,6 +239,12 @@ namespace MonoGameGum.Forms.Controls
 
     public class PasswordBox : Gum.Forms.Controls.PasswordBox 
     {
+        public new TextWrapping TextWrapping
+        {
+            get => (TextWrapping)(int)base.TextWrapping;
+            set => base.TextWrapping = (Gum.Forms.TextWrapping)(int)value;
+        }
+
         public PasswordBox() : base() { }
         public PasswordBox(InteractiveGue visual) : base(visual) { }
     }
@@ -230,6 +253,12 @@ namespace MonoGameGum.Forms.Controls
     {
         public RadioButton() : base() {}
         public RadioButton(InteractiveGue visual) : base(visual) { }
+    }
+
+    public enum ResizeBehavior
+    {
+        Rows,
+        Columns
     }
 
     public class ScrollBar : Gum.Forms.Controls.ScrollBar 
@@ -283,6 +312,23 @@ namespace MonoGameGum.Forms.Controls
 
     public class Splitter : Gum.Forms.Controls.Splitter 
     {
+        public new ResizeBehavior? ResizeBehavior
+        {
+            get => base.ResizeBehavior == null
+                ? null
+                : (ResizeBehavior)(int)base.ResizeBehavior;
+            set
+            {
+                if(value == null)
+                {
+                    base.ResizeBehavior = null;
+                }
+                else
+                {
+                    base.ResizeBehavior = (Gum.Forms.Controls.ResizeBehavior) (int)value;
+                }
+            }
+        }
         public Splitter() : base() { }
         public Splitter(InteractiveGue visual) : base(visual) { }
     }
@@ -299,17 +345,37 @@ namespace MonoGameGum.Forms.Controls
         public StackPanel(InteractiveGue visual) : base(visual) { }
     }
 
-
     public abstract class TextBoxBase : Gum.Forms.Controls.TextBoxBase 
     {
+        public new TextWrapping TextWrapping
+        {
+            get => (TextWrapping)(int)base.TextWrapping;
+            set => base.TextWrapping = (Gum.Forms.TextWrapping)(int)value;
+        }
+
         public TextBoxBase() : base() { }
         public TextBoxBase(InteractiveGue visual) : base(visual) { }
     }
 
     public class TextBox : Gum.Forms.Controls.TextBox
     {
+        public new TextWrapping TextWrapping
+        {
+            get => (TextWrapping)(int)base.TextWrapping;
+            set => base.TextWrapping = (Gum.Forms.TextWrapping)(int)value;
+        }
+
         public TextBox() : base() { }
         public TextBox(InteractiveGue visual) : base(visual) { }
+    }
+
+    public class TextCompositionEventArgs : RoutedEventArgs
+    {
+        /// <summary>
+        /// The new text value.
+        /// </summary>
+        public string Text { get; }
+        public TextCompositionEventArgs(string text) { Text = text; }
     }
 
     public class ToggleButton : Gum.Forms.Controls.ToggleButton 

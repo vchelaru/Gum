@@ -10,7 +10,7 @@ namespace Gum.Forms.Controls;
 
 #endif
 
-public class UserControl : FrameworkElement
+public class UserControl : MonoGameGum.Forms.Controls.FrameworkElement
 {
     public UserControl() : base() { }
 

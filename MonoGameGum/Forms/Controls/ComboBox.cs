@@ -36,7 +36,7 @@ namespace Gum.Forms.Controls;
 
 #endif
 
-public class ComboBox : FrameworkElement, IInputReceiver
+public class ComboBox : MonoGameGum.Forms.Controls.FrameworkElement, IInputReceiver
 {
     #region Fields/Properties
 

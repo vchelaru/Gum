@@ -11,7 +11,7 @@ namespace FlatRedBall.Forms.Controls;
 namespace Gum.Forms.Controls;
 #endif
 
-public class Label : FrameworkElement
+public class Label : MonoGameGum.Forms.Controls.FrameworkElement
 {
     protected GraphicalUiElement textComponent;
     protected global::RenderingLibrary.Graphics.IText coreTextObject;

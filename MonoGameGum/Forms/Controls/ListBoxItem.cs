@@ -12,7 +12,7 @@ namespace Gum.Forms.Controls;
 
 #endif
 
-public class ListBoxItem : FrameworkElement
+public class ListBoxItem : MonoGameGum.Forms.Controls.FrameworkElement
 {
     #region Fields/Properties
 

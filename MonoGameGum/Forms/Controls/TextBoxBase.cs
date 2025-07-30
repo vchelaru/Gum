@@ -39,7 +39,7 @@ public class TextCompositionEventArgs : RoutedEventArgs
 }
 #endregion
 
-public abstract class TextBoxBase : FrameworkElement, IInputReceiver
+public abstract class TextBoxBase : MonoGameGum.Forms.Controls.FrameworkElement, IInputReceiver
 {
     #region Fields/Properties
 
@@ -247,7 +247,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
     public event EventHandler SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
-    protected TextCompositionEventArgs RaisePreviewTextInput(string newText)
+    protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
         PreviewTextInput?.Invoke(this, args);

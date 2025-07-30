@@ -21,7 +21,7 @@ namespace Gum.Forms.Controls;
 /// Base control which can contain multiple children. This is most commonly used
 /// when instantiating a StackPanel.
 /// </summary>
-public class Panel : FrameworkElement
+public class Panel : MonoGameGum.Forms.Controls.FrameworkElement
 {
     List<FrameworkElement> _children = new List<FrameworkElement>();
 

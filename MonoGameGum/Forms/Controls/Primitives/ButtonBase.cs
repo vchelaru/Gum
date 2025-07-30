@@ -30,7 +30,7 @@ namespace Gum.Forms.Controls.Primitives;
 
 #endif
 
-public class ButtonBase : FrameworkElement, IInputReceiver
+public class ButtonBase : MonoGameGum.Forms.Controls.FrameworkElement, IInputReceiver
 {
     #region Fields / Properties
 
