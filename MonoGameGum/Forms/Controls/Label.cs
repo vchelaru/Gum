@@ -11,7 +11,12 @@ namespace FlatRedBall.Forms.Controls;
 namespace Gum.Forms.Controls;
 #endif
 
-public class Label : MonoGameGum.Forms.Controls.FrameworkElement
+public class Label :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     protected GraphicalUiElement textComponent;
     protected global::RenderingLibrary.Graphics.IText coreTextObject;

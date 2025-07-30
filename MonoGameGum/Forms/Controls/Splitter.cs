@@ -26,7 +26,12 @@ public enum ResizeBehavior
 /// <summary>
 /// Control which allows the user to resize two adjacent siblings.
 /// </summary>
-public class Splitter : MonoGameGum.Forms.Controls.FrameworkElement
+public class Splitter :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     /// <summary>
     /// The explicitly-set resize behavior. If null, resize behavior is determined

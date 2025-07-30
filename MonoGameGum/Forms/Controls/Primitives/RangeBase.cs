@@ -28,7 +28,12 @@ namespace Gum.Forms.Controls.Primitives;
 /// Base class for controls which display or allow a user to change a value between a Minimum and Maximum.
 /// This is the base class for ScrollBar and Slider.
 /// </summary>
-public abstract class RangeBase : MonoGameGum.Forms.Controls.FrameworkElement
+public abstract class RangeBase :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     #region Fields/Properties
 

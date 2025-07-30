@@ -30,7 +30,13 @@ namespace Gum.Forms.Controls.Primitives;
 
 #endif
 
-public class ButtonBase : MonoGameGum.Forms.Controls.FrameworkElement, IInputReceiver
+public class ButtonBase :
+#if RAYLIB
+    FrameworkElement,
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement, 
+#endif
+    IInputReceiver
 {
     #region Fields / Properties
 
@@ -337,7 +343,7 @@ public class ButtonBase : MonoGameGum.Forms.Controls.FrameworkElement, IInputRec
         IsFocused = false;
     }
 
-#if !FRB 
+#if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
 #if RAYLIB
