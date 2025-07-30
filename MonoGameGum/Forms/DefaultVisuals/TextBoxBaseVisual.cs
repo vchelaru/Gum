@@ -91,9 +91,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
             TextInstance.X = 4f;
             TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
             TextInstance.Y = 0f;
+            TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
             TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             TextInstance.Width = 0f;
             TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             TextInstance.Height = -4f;
@@ -107,18 +107,18 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             PlaceholderTextInstance = new TextRuntime();
             PlaceholderTextInstance.Name = "PlaceholderTextInstance";
-            PlaceholderTextInstance.Color = Styling.ActiveStyle.Colors.Gray;
+            PlaceholderTextInstance.X = 4f;
+            PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            PlaceholderTextInstance.Y = 0f;
+            PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            PlaceholderTextInstance.Width = -8f;
+            PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             PlaceholderTextInstance.Height = -4f;
             PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            PlaceholderTextInstance.Color = Styling.ActiveStyle.Colors.Gray;
             PlaceholderTextInstance.Text = "Text Placeholder";
-            PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            // We probably want to have this relative to children, otherwise placeholder wraps which is werid
-            PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            PlaceholderTextInstance.Width = 0f;
-            PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-            PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
             ClipContainer.AddChild(PlaceholderTextInstance);
 
