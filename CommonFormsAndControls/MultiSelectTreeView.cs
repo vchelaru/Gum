@@ -301,8 +301,8 @@ namespace CommonFormsAndControls
                 {
                     if (!mSelectedNodes.Contains(node))
                     {
-                        //SelectSingleNode(node);
-                        //SetNodeSelected(node, true);
+                        SelectSingleNode(node);
+                        SetNodeSelected(node, true);
                     }
                 }
 
