@@ -1,5 +1,7 @@
-﻿using Gum.Forms.Data;
+﻿using Gum.Forms.Controls;
+using Gum.Forms.Data;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,6 +167,11 @@ namespace MonoGameGum.Forms.Controls
         public FrameworkElement(InteractiveGue visual) : base(visual) { }
     }
 
+    public class Image : Gum.Forms.Controls.Image
+    {
+        public Image() : base() { }
+    }
+
     public class ItemsControl : Gum.Forms.Controls.ItemsControl 
     {
         public new ScrollBarVisibility VerticalScrollBarVisibility
@@ -175,6 +182,37 @@ namespace MonoGameGum.Forms.Controls
 
         public ItemsControl() : base() { }
         public ItemsControl(InteractiveGue visual) : base(visual) { }
+    }
+
+    public struct KeyCombo
+    {
+        public Keys PushedKey { get; set; }
+        public Keys? HeldKey { get; set; }
+        public bool IsTriggeredOnRepeat { get; set; }
+
+
+
+        // Implicit conversion from KeyCombo to KeyCombo2
+        public static implicit operator KeyCombo(Gum.Forms.Controls.KeyCombo original)
+        {
+            return new KeyCombo
+            {
+                PushedKey = original.PushedKey,
+                HeldKey = original.HeldKey,
+                IsTriggeredOnRepeat = original.IsTriggeredOnRepeat
+            };
+        }
+
+        // Implicit conversion from KeyCombo2 to KeyCombo
+        public static implicit operator Gum.Forms.Controls.KeyCombo(KeyCombo keyCombo2)
+        {
+            return new Gum.Forms.Controls.KeyCombo
+            {
+                PushedKey = keyCombo2.PushedKey,
+                HeldKey = keyCombo2.HeldKey,
+                IsTriggeredOnRepeat = keyCombo2.IsTriggeredOnRepeat
+            };
+        }
     }
 
     public class Label : Gum.Forms.Controls.Label 
