@@ -543,9 +543,9 @@ public class DragDropManager
 
     internal void HandleDragDropEvent(object sender, DragEventArgs e)
     {
+        var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
         var treeNodesToDrop = GetTreeNodesToDrop();
         mDraggedItem = null;
-        var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
         foreach(var draggedTreeNode in treeNodesToDrop )
         {
             object draggedObject = draggedTreeNode.Tag;
@@ -623,14 +623,14 @@ public class DragDropManager
             treeNodesToDrop.Add((ITreeNode)mDraggedItem);
         }
 
-        // The selected nodes should contain the dragged item, but I don't know for 100% certain.
-        // If not, then we'll just use the dragged item. If it does, then we'll also add all other
-        // selected items:
-        if (_selectedState.SelectedTreeNodes.Contains(mDraggedItem))
-        {
-            var whatToAdd = _selectedState.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
-            treeNodesToDrop.AddRange(whatToAdd);
-        }
+        // SelectedTreeNodes does not contain any nodes when only a single node is dragged/dropped
+        // but this will not cause errors because the addRange will just add nothing
+        var whatToAdd = _selectedState.SelectedTreeNodes.Where(
+                item => item != mDraggedItem 
+                && item.FullPath != mDraggedItem?.FullPath
+                && item != null 
+                && item.Tag != null);
+        treeNodesToDrop.AddRange(whatToAdd);
 
         return treeNodesToDrop;
     }
