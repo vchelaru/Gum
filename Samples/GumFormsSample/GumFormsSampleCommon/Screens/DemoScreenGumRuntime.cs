@@ -5,7 +5,6 @@ using GumRuntime;
 using MonoGameGum;
 using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultFromFileVisuals;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -20,7 +19,7 @@ namespace GumFormsSample.Screens;
 partial class DemoScreenGumRuntime
 {
 
-    MenuItem FileMenuItem;
+    Gum.Forms.Controls.MenuItem FileMenuItem;
 
     
     partial void CustomInitialize()
