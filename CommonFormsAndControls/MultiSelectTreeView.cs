@@ -301,6 +301,8 @@ namespace CommonFormsAndControls
                 {
                     if (!mSelectedNodes.Contains(node))
                     {
+                        // These were commented out from hash 3e123616856be6717c66b49b4f5dfcd5f9136907
+                        // Uncommented because they appear to fix secondary issue in #1143
                         SelectSingleNode(node);
                         SetNodeSelected(node, true);
                     }
