@@ -175,27 +175,13 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48
 
 This command initiates the installation of .NET Framework 4.8. A total of two installer dialogs appear one after another. Follow the steps for both to complete the installation. **This process may take a several minutes, so please be patient**.
 
-4. Download the XNA 4.0 Redistributable MSI file from Microsoft. You can download it using the following command:
-
-```sh
-curl -O https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BEBAC362A930/xnafx40_redist.msi
-```
-
-5. After downloading the MSI file, install it using the following command:
-
-```sh
-WINEPREFIX=$GUM_WINE_PREFIX_PATH wine msiexec /i xnafx40_redist.msi
-```
-
-Follow the installation prompts. At the end of the installation, it may display an error related to launching DirectX. **This is normal; just click "Close" on the error dialog.**
-
-6. Download the Gum Tool ZIP file from the FlatRedBall website and save it to your preferred location. You can download it using the following command:
+4. Download the Gum Tool ZIP file from the FlatRedBall website and save it to your preferred location. You can download it using the following command:
 
 ```sh
 curl -o Gum.zip https://files.flatredball.com/content/Tools/Gum/Gum.zip
 ```
 
-7. Unzip the downloaded Gum Tool ZIP file into the Program Files directory of the WINE folder, this will also remove any existing Gum Tool installed and the zip to clean up. Run the following command in the terminal:
+5. Unzip the downloaded Gum Tool ZIP file into the Program Files directory of the WINE folder, this will also remove any existing Gum Tool installed and the zip to clean up. Run the following command in the terminal:
 
 ```sh
 rm -rf $GUM_WINE_PREFIX_PATH/drive_c/Program\ Files/Gum && \
@@ -203,7 +189,7 @@ unzip Gum.zip -d $GUM_WINE_PREFIX_PATH/drive_c/Program\ Files/Gum && \
 rm -f Gum.zip
 ```
 
-8. Create a script to run the Gum Tool. Run the following command in the terminal:
+6. Create a script to run the Gum Tool. Run the following command in the terminal:
 
 ```sh
 GUM_EXE_PATH=$(find "$GUM_WINE_PREFIX_PATH" -name "Gum.exe" -type f) && \
@@ -212,7 +198,7 @@ printf '#!%s\nWINEPREFIX=%s wine "%s"\n' "/bin/bash" "$GUM_WINE_PREFIX_PATH" "$G
 chmod +x ~/bin/gum
 ```
 
-9. To ensure you can run the Gum Tool from any directory, add the script directory to your PATH. Most Linux and macOS users using macOS 10.14 or lower, will be using the BASH shell.
+7. To ensure you can run the Gum Tool from any directory, add the script directory to your PATH. Most Linux and macOS users using macOS 10.14 or lower, will be using the BASH shell.
 
 **For Bash SHELL**
 
@@ -230,7 +216,7 @@ if ! grep -q 'export PATH="\$HOME/bin:\$PATH"' ~/.zshrc 2>/dev/null; then
 fi
 ```
 
-10. Reload the shell configuration to apply the changes. Run the following command:
+8. Reload the shell configuration to apply the changes. Run the following command:
 
 **For BASH Shell**
 

@@ -133,24 +133,6 @@ echo "They may take a few minutes to install, please be patient"
 WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 
 ################################################################################
-### Download the xna redistributable msi file from Microsoft
-################################################################################
-echo "Installing XNA 4.0 Redistributable, please follow the installation prompts"
-echo "At the end of the installation it may say it has an error launching DirectX, this is normal, just click close on the error dialog"
-curl -O https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BEBAC362A930/xnafx40_redist.msi &> /dev/null
-
-################################################################################
-### Execute the XNA MSI file using WINE 
-################################################################################
-WINEPREFIX=$GUM_WINE_PREFIX_PATH wine msiexec /i xnafx40_redist.msi &> /dev/null || true 
-## We must return true, so when you click cancel (if for example you must rerun the script it wont't close the script!
-
-################################################################################
-### Clean up the file we downloaded.
-################################################################################
-rm -f ./xnafx40_redist.msi &> /dev/null
-
-################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
 ### of the wine folder
 ################################################################################
