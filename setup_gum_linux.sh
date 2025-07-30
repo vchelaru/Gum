@@ -6,8 +6,10 @@
 
 set -e
 
+GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
+
 echo "This is an experimental script."
-echo "Script last updated on the 8th of May 2025!"
+echo "Script last updated on the 29th of July 2025!"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -21,21 +23,21 @@ echo "Verifying that WINE is installed..."
 if ! command -v wine &> /dev/null; then
     echo "Wine is not installed. Attempting to install..."
 
-    DISTRO=$(lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
-    VERSION=$(lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+    DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
+    VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
 
     case "$DISTRO" in
-        Ubuntu)
-            if [[ "$VERSION" == "22.04" ]]; then
-                echo "Installing Wine for Ubuntu 22.04"
+        ubuntu)
+            if [[ "$VERSION" == "22" ]]; then
+                echo "Installing Wine for Ubuntu 22.xx"
                 sudo dpkg --add-architecture i386 
                 sudo mkdir -pm755 /etc/apt/keyrings
                 wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
                 sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
                 sudo apt update
                 sudo apt install --install-recommends winehq-stable -y
-            elif [[ "$VERSION" == "24.04" ]]; then
-                echo "Installing Wine for Ubuntu 24.04"
+            elif [[ "$VERSION" == "24" ]]; then
+                echo "Installing Wine for Ubuntu 24.xx"
                 sudo dpkg --add-architecture i386 
                 sudo mkdir -pm755 /etc/apt/keyrings
                 wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
@@ -45,7 +47,7 @@ if ! command -v wine &> /dev/null; then
             fi
             ;;
 
-        LinuxMint)
+        linuxmint)
             if [[ "$VERSION" == "20" ]]; then
                 BASE="focal"
             elif [[ "$VERSION" == "21" ]]; then
@@ -65,12 +67,12 @@ if ! command -v wine &> /dev/null; then
             sudo apt install --install-recommends winehq-stable -y
             ;;
 
-        Fedora|Nobara)
+        fedora|nobara)
             echo "Installing Wine for Fedora/Nobara"
             sudo dnf install -y wine
             ;;
 
-        Darwin)
+        darwin)
             echo "Detected macOS"
             echo "Please install Wine-stable manually:"
             echo "brew install --cask --no-quarantine wine-stable"
@@ -93,13 +95,13 @@ if ! command -v winetricks &> /dev/null; then
     echo "Winetricks is not installed. Attempting to install..."
 
     case "$DISTRO" in
-        Ubuntu|LinuxMint)
+        ubuntu|linuxmint)
             sudo apt install -y winetricks
             ;;
-        Fedora|Nobara)
+        fedora|nobara)
             sudo dnf install -y winetricks
             ;;
-        Darwin)
+        darwin)
             echo "Please install Winetricks manually:"
             echo "brew install winetricks"
             exit 1
@@ -114,63 +116,51 @@ fi
 echo "Winetricks is installed"
 
 ################################################################################
+### Install windows allfonts with winetricks.  They can take a few minutes to finish, please be patient
+################################################################################
+echo "Installing all fonts using winetricks"
+echo "An installer dialog may appear, follow the steps to install"
+echo "They may take a few minutes to install, please be patient"
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks allfonts &> /dev/null
+
+################################################################################
 ### Install dotnet48 with winetricks. This will cause two installation prompts
 ### to appear.  They can take a few minutes to finish, please be patient
 ################################################################################
 echo "Installing .NET Framework 4.8 using winetricks"
 echo "Two installer dialogs will appear, follow the steps for both to install"
 echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=~/.wine_gum_prefix/ winetricks dotnet48 &> /dev/null
-
-################################################################################
-### Download the xna redistributable msi file from Microsoft
-################################################################################
-echo "Installing XNA 4.0 Redistributable, please follow the installation prompts"
-echo "At the end of the installation it may say it has an error launching DirectX, this is normal, just click close on the error dialog"
-curl -O https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BEBAC362A930/xnafx40_redist.msi &> /dev/null
-
-################################################################################
-### Execute the XNA MSI file using WINE 
-################################################################################
-WINEPREFIX=~/.wine_gum_prefix/ wine msiexec /i xnafx40_redist.msi &> /dev/null || true 
-## We must return true, so when you click cancel (if for example you must rerun the script it wont't close the script!
-
-
-################################################################################
-### Clean up the file we downloaded.
-################################################################################
-rm -f ./xnafx40_redist.msi &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
 ### of the wine folder
 ################################################################################
 echo "Installing GUM Tool..."
-curl -L -o ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
+GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
+curl -L -o "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
     && echo "Download completed." || { echo "Download failed."; exit 1; }
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
 ################################################################################
 echo "Extracting GUM Tool..."
-unzip -q ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip -d ~/.wine_gum_prefix/drive_c/"Program Files"/Gum \
+GUM_WINE_EXTRACT_DIR="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum"
+rm -rf "$GUM_WINE_EXTRACT_DIR"
+unzip -q "$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
     && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
-
-################################################################################
-### Clean up the zip file we downloaded
-################################################################################
 echo "Cleaning up..."
-rm -f ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip \
+rm -f "$GUM_ZIP_FILE" \
     && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
-
 
 echo "Adding Gum to path"
 
 ################################################################################
 ### Define the script content
 ################################################################################
-SCRIPT_CONTENT='#!/bin/bash
-WINEPREFIX=~/.wine_gum_prefix/ wine ~/.wine_gum_prefix/drive_c/Program\ Files/Gum/Data/Debug/Gum.exe'
+GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f)
+SCRIPT_CONTENT="#!/bin/bash
+WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" wine \"$GUM_EXE_PATH\""
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
@@ -218,7 +208,6 @@ fi
 ################################################################################
 ### Finished
 ################################################################################
-echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'Gum'."
-echo "Pro Tip 1: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
-echo "Pro Tip 2: Install allfonts with the command winetricks allfonts, it'll make text look better (you maybe able to get by with just arial, but just to be safe."
-echo "You may need to close and reopen the terminal if it doesn't work at first."
+echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
+echo "Pro Tip: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
+echo "You may need to close and reopen the terminal if it doesn't work at first, due to the update to your PATH."
