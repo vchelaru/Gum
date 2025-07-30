@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 // Needs to be in this namespace since it was originally
 // added as a class in this namespace in the FrameworkElement.cs
 // file and now we don't want to break backwards compatability.
-namespace MonoGameGum.Forms.Controls;
+namespace Gum.Forms.Controls;
 public struct KeyCombo
 {
     public Keys PushedKey;
     public Keys? HeldKey;
     public bool IsTriggeredOnRepeat;
 }
+
 
 public static class KeyComboExtensions
 {

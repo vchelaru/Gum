@@ -2,10 +2,11 @@
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
-#elif RAYLIB
-using Gum.Forms.Data;
-#else
-namespace MonoGameGum.Forms.Data;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Data;
+
 #endif
 
 public class GumProperty

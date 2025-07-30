@@ -1,7 +1,7 @@
 ﻿using Gum.Mvvm;
 using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.Data;
+using Gum.Forms.Controls;
+using Gum.Forms.Data;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using Shouldly;
@@ -92,7 +92,7 @@ public class TextBoxTests : BaseTestClass
     public void HandleCharEntered_ShouldAddMultipleLines_IfWrap()
     {
         TextBox textBox = new();
-        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         textBox.IsFocused = true;
         textBox.Width = 50;
         textBox.AcceptsReturn = true;
@@ -149,7 +149,7 @@ public class TextBoxTests : BaseTestClass
     public void CaretIndex_ShouldAdjustCaretPosition_Multiline()
     {
         TextBox textBox = new();
-        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         textBox.AcceptsReturn = true;
 
         textBox.HandleCharEntered('\n');
@@ -185,7 +185,7 @@ public class TextBoxTests : BaseTestClass
     public void TextWrapping_NoWrap_ShouldRenderCorrectlyWithAcceptsReturn()
     {
         TextBox textBox = new();
-        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.NoWrap;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.NoWrap;
         textBox.AcceptsReturn = true;
         textBox.IsFocused = true;
 
@@ -225,7 +225,7 @@ public class TextBoxTests : BaseTestClass
     public void AcceptsReturn_ShouldAddMultipleLines_OnEnterPress()
     {
         TextBox textBox = new();
-        textBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
         textBox.AcceptsReturn = true;
 
         textBox.HandleCharEntered('1');

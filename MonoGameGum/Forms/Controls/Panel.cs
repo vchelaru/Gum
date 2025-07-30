@@ -10,18 +10,23 @@ using System.Threading.Tasks;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using FlatRedBall.Forms.Controls;
 namespace FlatRedBall.Forms.Controls;
-#elif RAYLIB
+#endif
+
+#if !FRB
 namespace Gum.Forms.Controls;
 
-#else
-namespace MonoGameGum.Forms.Controls;
 #endif
 
 /// <summary>
 /// Base control which can contain multiple children. This is most commonly used
 /// when instantiating a StackPanel.
 /// </summary>
-public class Panel : FrameworkElement
+public class Panel :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     List<FrameworkElement> _children = new List<FrameworkElement>();
 

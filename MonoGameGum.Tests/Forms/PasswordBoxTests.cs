@@ -1,6 +1,6 @@
 ﻿using Gum.Mvvm;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.Data;
+using Gum.Forms.Controls;
+using Gum.Forms.Data;
 using Shouldly;
 using System;
 using System.Collections.Generic;

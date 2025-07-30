@@ -6,11 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
+#if FRB
+namespace MonoGameGum.Forms.Controls;
+#endif
+
+
+#if !FRB
 namespace Gum.Forms.Controls;
 
-#else
-namespace MonoGameGum.Forms.Controls;
+
 #endif
 
 public enum ResizeBehavior
@@ -22,7 +26,12 @@ public enum ResizeBehavior
 /// <summary>
 /// Control which allows the user to resize two adjacent siblings.
 /// </summary>
-public class Splitter : FrameworkElement
+public class Splitter :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     /// <summary>
     /// The explicitly-set resize behavior. If null, resize behavior is determined

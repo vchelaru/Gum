@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Clipboard;
+using Gum.Wireframe;
 using System;
 using System.Reflection;
 
@@ -6,8 +7,11 @@ using System.Reflection;
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
-#else
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Controls;
+
 #endif
 
 public class TextBox : TextBoxBase
@@ -237,7 +241,7 @@ public class TextBox : TextBoxBase
         {
             var whatToCopy = DisplayedText.Substring(
                 selectionStart, selectionLength);
-            Clipboard.ClipboardImplementation.PushStringToClipboard(
+            ClipboardImplementation.PushStringToClipboard(
                 whatToCopy);
         }
     }
@@ -248,7 +252,7 @@ public class TextBox : TextBoxBase
         {
             var whatToCopy = DisplayedText.Substring(
                 selectionStart, selectionLength);
-            Clipboard.ClipboardImplementation.PushStringToClipboard(
+            ClipboardImplementation.PushStringToClipboard(
                 whatToCopy);
 
             DeleteSelection();

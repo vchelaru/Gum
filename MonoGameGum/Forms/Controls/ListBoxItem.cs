@@ -5,14 +5,19 @@ using System;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
-#elif RAYLIB
-
-namespace Gum.Forms.Controls;
-#else
-namespace MonoGameGum.Forms.Controls;
 #endif
 
-public class ListBoxItem : FrameworkElement
+#if !FRB
+namespace Gum.Forms.Controls;
+
+#endif
+
+public class ListBoxItem :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     #region Fields/Properties
 

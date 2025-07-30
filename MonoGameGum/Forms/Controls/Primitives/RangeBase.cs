@@ -13,19 +13,27 @@ using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #elif RAYLIB
+#else
+using MonoGameGum.Input;
+#endif
+
+
+#if !FRB
 using Gum.Forms.Controls;
 namespace Gum.Forms.Controls.Primitives;
 
-#else
-using MonoGameGum.Input;
-namespace MonoGameGum.Forms.Controls.Primitives;
 #endif
 
 /// <summary>
 /// Base class for controls which display or allow a user to change a value between a Minimum and Maximum.
 /// This is the base class for ScrollBar and Slider.
 /// </summary>
-public abstract class RangeBase : FrameworkElement
+public abstract class RangeBase :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     #region Fields/Properties
 

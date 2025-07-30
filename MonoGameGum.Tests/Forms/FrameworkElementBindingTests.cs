@@ -1,5 +1,5 @@
-﻿using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.Data;
+﻿using Gum.Forms.Controls;
+using Gum.Forms.Data;
 using Shouldly;
 using Xunit;
 
@@ -670,7 +670,7 @@ public class FrameworkElementBindingTests : BaseTestClass
     }
 
     [Fact]
-    public void ReplaceBindingContext_UnrelatedTypes()
+    public async Task ReplaceBindingContext_UnrelatedTypes()
     {
         // Arrange
         const string expectedText = nameof(AuxTestViewModel);
@@ -683,10 +683,9 @@ public class FrameworkElementBindingTests : BaseTestClass
         AuxTestViewModel vm2 = new() { Text = expectedText };
 
         // Act
-        Exception? exception = Record.Exception(() => textBox.BindingContext = vm2);
+        textBox.BindingContext = vm2; // should not throw
 
         // Assert
-        Assert.Null(exception);
         Assert.Equal(expectedText, textBox.Text);
     }
 

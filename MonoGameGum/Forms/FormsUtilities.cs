@@ -4,7 +4,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultFromFileVisuals;
+using Gum.Forms.DefaultFromFileVisuals;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
@@ -123,6 +123,15 @@ public class FormsUtilities
             if(!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
+            }
+            if(formsType.FullName.StartsWith("MonoGameGum.Forms."))
+            {
+                var baseType = formsType.BaseType;
+
+                if(baseType?.FullName.StartsWith("Gum.Forms.") == true)
+                {
+                    FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
+                }
             }
         }
 

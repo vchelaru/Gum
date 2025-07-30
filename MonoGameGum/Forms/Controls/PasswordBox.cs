@@ -1,12 +1,17 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Clipboard;
+using Gum.Wireframe;
 using System;
 using System.Security;
 
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
-#else
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+
+#if !FRB
+namespace Gum.Forms.Controls;
+
 #endif
 
 public class PasswordBox : TextBoxBase
@@ -234,7 +239,7 @@ public class PasswordBox : TextBoxBase
     protected override void HandlePaste()
     {
 
-        var whatToPaste = Clipboard.ClipboardImplementation.GetText();
+        var whatToPaste = ClipboardImplementation.GetText();
         if (!string.IsNullOrEmpty(whatToPaste))
         {
             if (selectionLength != 0)

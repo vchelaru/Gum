@@ -316,12 +316,14 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
-    public static void AddChild(this GraphicalUiElement element, FrameworkElement child)
+
+    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }
 
-    public static void AddToRoot(this FrameworkElement element)
+
+    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
     {
         GumService.Default.Root.Children.Add(element.Visual);
     }

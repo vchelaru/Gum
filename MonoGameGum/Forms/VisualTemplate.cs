@@ -7,13 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB
+
+
 namespace Gum.Forms;
-
-#else
-
-namespace MonoGameGum.Forms;
-#endif
 
 public class VisualTemplate
 {

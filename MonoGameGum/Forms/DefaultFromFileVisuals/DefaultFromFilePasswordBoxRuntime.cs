@@ -1,12 +1,12 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultFromFileVisuals;
+namespace Gum.Forms.DefaultFromFileVisuals;
 
 public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
 {

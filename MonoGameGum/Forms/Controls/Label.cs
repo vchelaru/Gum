@@ -4,14 +4,19 @@ using System;
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
-#elif RAYLIB
-namespace Gum.Forms.Controls;
-
-#else
-namespace MonoGameGum.Forms.Controls;
 #endif
 
-public class Label : FrameworkElement
+
+#if !FRB
+namespace Gum.Forms.Controls;
+#endif
+
+public class Label :
+#if RAYLIB
+    FrameworkElement
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement
+#endif
 {
     protected GraphicalUiElement textComponent;
     protected global::RenderingLibrary.Graphics.IText coreTextObject;

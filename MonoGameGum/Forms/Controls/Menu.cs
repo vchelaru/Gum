@@ -18,7 +18,12 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+
+#if !FRB
+namespace Gum.Forms.Controls;
+
 #endif
 
 public class Menu : ItemsControl
