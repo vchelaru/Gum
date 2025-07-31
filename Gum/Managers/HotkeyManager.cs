@@ -186,6 +186,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
+    private readonly FileCommands _fileCommands;
 
     // If adding any new keys here, modify HotkeyViewModel
     
@@ -196,6 +197,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _dialogService =  Locator.GetRequiredService<IDialogService>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
     }
 
     #region App Wide Keys
@@ -481,7 +483,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
             }
 
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentElement();
         }
         return handled;
     }

@@ -7,20 +7,6 @@ namespace Gum;
 
 public class GumCommands : Singleton<GumCommands>
 {
-    public FileCommands FileCommands
-    {
-        get;
-        private set;
-    }
-
-    public ToolCommands.ProjectCommands ProjectCommands { get; private set; }
-
-    public GumCommands()
-    {
-        FileCommands = new FileCommands();
-        ProjectCommands = Gum.ToolCommands.ProjectCommands.Self;
-    }
-
     /// <summary>
     /// Performs the argument action multiple times, swalling exceptions every time except the last. 
     /// This can be used to perform operations which may fail from time to time, like writing to disk.
@@ -52,10 +38,4 @@ public class GumCommands : Singleton<GumCommands>
             }
         }
     }
-
-    public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
-    {
-        FileCommands.Initialize(mainWindow, localizationManager);
-    }
-
 }

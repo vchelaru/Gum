@@ -89,6 +89,7 @@ public class UndoManager
     private readonly ISelectedState _selectedState;
     private readonly RenameLogic _renameLogic;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
     
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
@@ -132,11 +133,15 @@ public class UndoManager
 
     #endregion
 
-    public UndoManager(ISelectedState selectedState, RenameLogic renameLogic, GuiCommands guiCommands)
+    public UndoManager(ISelectedState selectedState, 
+        RenameLogic renameLogic, 
+        GuiCommands guiCommands,
+        FileCommands fileCommands)
     {
         _selectedState = selectedState;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }
@@ -496,8 +501,8 @@ public class UndoManager
             _selectedState.SelectedElement = toApplyTo;
         }
 
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveCurrentElement();
 
         // Don't do this anymore due to filtering through search
         //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);

@@ -29,16 +29,18 @@ namespace Gum.Managers
         private readonly UndoManager _undoManager;
         private readonly IDialogService _dialogService;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
 
         public DeleteLogic()
         {
-            _projectCommands = ProjectCommands.Self;
+            _projectCommands = Locator.GetRequiredService<ProjectCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
 
 
@@ -181,7 +183,7 @@ namespace Gum.Managers
                         objectsDeleted = array;
                         // We need to remove the reference
                         var behavior = _selectedState.SelectedBehavior;
-                        GumCommands.Self.ProjectCommands.RemoveBehavior(behavior);
+                        _projectCommands.RemoveBehavior(behavior);
                     }
                 }
 
@@ -326,11 +328,11 @@ namespace Gum.Managers
         {
             if(selectedElement != null)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
+                _fileCommands.TryAutoSaveElement(selectedElement);
             }
             else if(behavior != null)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                _fileCommands.TryAutoSaveBehavior(behavior);
             }
 
             ElementSave elementToReselect = selectedElement;
@@ -458,7 +460,7 @@ namespace Gum.Managers
 
                             if (shouldSave)
                             {
-                                GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
+                                _fileCommands.TryAutoSaveElement(ownerOfInstance);
                             }
                         }
                     }
@@ -472,7 +474,7 @@ namespace Gum.Managers
                     }
                 }
 
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                _fileCommands.TryAutoSaveCurrentElement();
 
                 _guiCommands.RefreshStateTreeView();
                 _guiCommands.RefreshVariables();

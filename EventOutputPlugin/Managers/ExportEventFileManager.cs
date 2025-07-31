@@ -8,12 +8,15 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Gum.Commands;
+using Gum.Services;
 using ToolsUtilities;
 
 namespace EventOutputPlugin.Managers
 {
     public class ExportEventFileManager
     {
+        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
         const string masterFileName = "gum_events.json";
         static ExportedEventCollection events;
 
@@ -162,7 +165,7 @@ namespace EventOutputPlugin.Managers
 
 
                         //System.IO.File.WriteAllText(file.FullPath, serialized);
-                        GumCommands.Self.FileCommands.SaveIfDiffers(file, serialized);
+                        _fileCommands.SaveIfDiffers(file, serialized);
                     });
             }
         }

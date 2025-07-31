@@ -21,32 +21,16 @@ public class ProjectCommands
 
     static ProjectCommands mSelf;
     private readonly ISelectedState _selectedState;
-    private readonly NameVerifier _nameVerifier;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
 
     #endregion
-
-    #region Properties
-
-    public static ProjectCommands Self
+    
+    public ProjectCommands(ISelectedState selectedState, GuiCommands guiCommands, FileCommands fileCommands)
     {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new ProjectCommands();
-            }
-            return mSelf;
-        }
-    }
-
-    #endregion
-
-    public ProjectCommands()
-    {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _selectedState = selectedState;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
     
     #region Screens
@@ -75,8 +59,8 @@ public class ProjectCommands
         ProjectManager.Self.GumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
 
 
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
-        GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+        _fileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveElement(screenSave);
 
         Plugins.PluginManager.Self.ElementAdd(screenSave);
     }
@@ -107,7 +91,7 @@ public class ProjectCommands
         if(removed)
         {
             Plugins.PluginManager.Self.ElementDelete(element);
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveProject();
         }
     }
 
@@ -163,11 +147,11 @@ public class ProjectCommands
         // I don't think we have to refresh the wireframe since nothing is being shown
         //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveProject();
 
         foreach (var element in elementsReferencingBehavior)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+            _fileCommands.TryAutoSaveElement(element);
         }
     }
 
@@ -186,8 +170,8 @@ public class ProjectCommands
         gumProject.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
 
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
-        GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+        _fileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveElement(componentSave);
         Plugins.PluginManager.Self.ElementAdd(componentSave);
 
         _selectedState.SelectedComponent = componentSave;

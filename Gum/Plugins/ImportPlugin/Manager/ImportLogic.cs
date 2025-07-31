@@ -18,6 +18,7 @@ public static class ImportLogic
 {
     private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
     private static readonly GuiCommands _guiCommands = Locator.GetRequiredService<GuiCommands>();
+    private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
     
     #region Screen
 
@@ -94,9 +95,9 @@ public static class ImportLogic
             {
                 _guiCommands.RefreshElementTreeView();
                 _selectedState.SelectedScreen = screenSave;
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
+                _fileCommands.TryAutoSaveProject();
             }
-            GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
+            _fileCommands.TryAutoSaveElement(screenSave);
         }
     }
 
@@ -162,7 +163,7 @@ public static class ImportLogic
         {
             _guiCommands.RefreshElementTreeView();
             _selectedState.SelectedComponent = lastImportedComponent;
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveProject();
         }
     }
 
@@ -223,9 +224,9 @@ public static class ImportLogic
             {
                 _guiCommands.RefreshElementTreeView();
                 _selectedState.SelectedComponent = componentSave;
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
+                _fileCommands.TryAutoSaveProject();
             }
-            GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+            _fileCommands.TryAutoSaveElement(componentSave);
 
             toReturn = componentSave;
         }
@@ -292,7 +293,7 @@ public static class ImportLogic
         {
             _guiCommands.RefreshElementTreeView();
             _selectedState.SelectedBehavior = lastImportedBehavior;
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveProject();
         }
     }
 
@@ -351,10 +352,10 @@ public static class ImportLogic
             {
                 _guiCommands.RefreshElementTreeView();
                 _selectedState.SelectedBehavior = behaviorSave;
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
+                _fileCommands.TryAutoSaveProject();
             }
 
-            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorSave);
+            _fileCommands.TryAutoSaveBehavior(behaviorSave);
 
             toReturn = behaviorSave;
         }

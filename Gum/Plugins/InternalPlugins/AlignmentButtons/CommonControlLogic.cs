@@ -12,12 +12,14 @@ public class CommonControlLogic
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
     
     public CommonControlLogic()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
     }
 
     bool SelectionInheritsFromText()
@@ -104,7 +106,7 @@ public class CommonControlLogic
     {
         _guiCommands.RefreshVariables(force: true);
         _wireframeCommands.Refresh();
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveCurrentElement();
     }
 
     bool StoredAttemptToPersistPositionsOnUnitChanges;

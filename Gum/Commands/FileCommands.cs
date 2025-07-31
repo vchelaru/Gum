@@ -16,25 +16,29 @@ namespace Gum.Commands
 {
     public class FileCommands
     {
-        private LocalizationManager _localizationManager;
+        private readonly LocalizationManager _localizationManager;
         private readonly ISelectedState _selectedState;
-        private readonly UndoManager _undoManager;
+        private readonly Lazy<UndoManager> _undoManager;
         private readonly IDialogService _dialogService;
         private readonly GuiCommands _guiCommands;
         
         MainWindow mainWindow;
 
-        public FileCommands()
+        public FileCommands(ISelectedState selectedState, 
+            Lazy<UndoManager> undoManager, 
+            IDialogService dialogService,
+            GuiCommands guiCommands,
+            LocalizationManager localizationManager)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
-            _dialogService = Locator.GetRequiredService<IDialogService>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _selectedState = selectedState;
+            _undoManager = undoManager;
+            _dialogService = dialogService;
+            _guiCommands = guiCommands;
+            _localizationManager = localizationManager;
         }
         
-        public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
+        public void Initialize(MainWindow mainWindow)
         {
-            _localizationManager = localizationManager;
             this.mainWindow = mainWindow;
         }
 
@@ -266,7 +270,7 @@ namespace Gum.Commands
             {
                 bool succeeded = true;
 
-                _undoManager.RecordUndo();
+                _undoManager.Value.RecordUndo();
 
                 bool doesProjectNeedToSave = false;
                 bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);

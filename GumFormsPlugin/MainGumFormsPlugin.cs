@@ -37,6 +37,7 @@ internal class MainGumFormsPlugin : PluginBase
     {
         _formsFileService = new FormsFileService();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        
     }
 
     public override void StartUp()
@@ -88,7 +89,7 @@ internal class MainGumFormsPlugin : PluginBase
         }
         #endregion
 
-        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService);
+        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands);
 
         var view = new AddFormsWindow(viewModel);
         view.ShowDialog();

@@ -23,6 +23,7 @@ namespace Gum.Plugins.BaseClasses
     public abstract class PluginBase : IPlugin
     {
         protected readonly GuiCommands _guiCommands;
+        protected readonly FileCommands _fileCommands;
         
         #region Events
 
@@ -221,6 +222,7 @@ namespace Gum.Plugins.BaseClasses
         protected PluginBase()
         {
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
 
         public abstract void StartUp();

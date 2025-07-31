@@ -50,13 +50,13 @@ namespace Gum.PropertyGridHelpers
             _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _fontManager = Locator.GetRequiredService<FontManager>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
 
         // this is needed as we unroll all the other singletons...
-        public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
+        public void Initialize(CircularReferenceManager circularReferenceManager)
         {
             _circularReferenceManager = circularReferenceManager;
-            _fileCommands = fileCommands;
         }
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;

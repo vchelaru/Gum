@@ -45,7 +45,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                 recentFilesMenuItem.DropDownItems.Add(
                     name,
                     null, 
-                    (not, used) => GumCommands.Self.FileCommands.LoadProject(item.FilePath.FullPath));
+                    (not, used) => _fileCommands.LoadProject(item.FilePath.FullPath));
             }
 
             var nonFavorites = recentFiles.Where(item => !item.IsFavorite).ToArray();
@@ -63,7 +63,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                     recentFilesMenuItem.DropDownItems.Add(
                         name, 
                         null, 
-                        (not, used) => GumCommands.Self.FileCommands.LoadProject(item.FilePath.FullPath));
+                        (not, used) => _fileCommands.LoadProject(item.FilePath.FullPath));
                 }
 
 
@@ -103,7 +103,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
             {
                 var fileToLoad = viewModel.SelectedItem.FullPath;
 
-                GumCommands.Self.FileCommands.LoadProject(fileToLoad);
+                _fileCommands.LoadProject(fileToLoad);
 
             }
 
@@ -118,7 +118,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
                         matching.IsFavorite = item.IsFavorite;
                     }
                 }
-                GumCommands.Self.FileCommands.SaveGeneralSettings();
+                _fileCommands.SaveGeneralSettings();
             }
 
         }

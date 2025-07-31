@@ -24,6 +24,8 @@ namespace Gum.Managers
         private readonly UndoManager _undoManager;
         private readonly EditCommands _editCommands;
         private readonly IDialogService _dialogService;
+        private readonly FileCommands _fileCommands;
+        private readonly ProjectCommands _projectCommands;
 
         private MenuStrip _menuStrip;
 
@@ -58,6 +60,8 @@ namespace Gum.Managers
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _editCommands = Locator.GetRequiredService<EditCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _projectCommands = Locator.GetRequiredService<ProjectCommands>();
         }
 
         public void Initialize()
@@ -161,8 +165,8 @@ namespace Gum.Managers
             this.newProjectToolStripMenuItem.Text = "New Project";
             this.newProjectToolStripMenuItem.Click += (not, used) =>
             {
-                GumCommands.Self.FileCommands.NewProject();
-                GumCommands.Self.FileCommands.ForceSaveProject();
+                _fileCommands.NewProject();
+                _fileCommands.ForceSaveProject();
             };
 
             // 
@@ -246,7 +250,7 @@ namespace Gum.Managers
                 else
                 {
                     // Don't do an auto save, force it!
-                    GumCommands.Self.FileCommands.ForceSaveProject(true);
+                    _fileCommands.ForceSaveProject(true);
                 }
             };
 
@@ -311,7 +315,7 @@ namespace Gum.Managers
                 else
                 {
                     // Don't do an auto save, force it!
-                    GumCommands.Self.FileCommands.ForceSaveProject();
+                    _fileCommands.ForceSaveProject();
                 }
             });
 
@@ -407,7 +411,7 @@ namespace Gum.Managers
 
         private void RemoveElementClicked(object sender, EventArgs e)
         {
-            ProjectCommands.Self.RemoveElement(_selectedState.SelectedElement);
+            _projectCommands.RemoveElement(_selectedState.SelectedElement);
             _selectedState.SelectedElement = null;
         }
 

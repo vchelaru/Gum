@@ -33,6 +33,7 @@ public abstract class WireframeEditor
     private readonly ElementCommands _elementCommands;
     private readonly UndoManager _undoManager;
     protected readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
     
     protected GrabbedState grabbedState = new GrabbedState();
 
@@ -60,6 +61,7 @@ public abstract class WireframeEditor
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -283,7 +285,7 @@ public abstract class WireframeEditor
             throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
         }
 
-        GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
+        _fileCommands.TryAutoSaveElement(selectedElement);
 
         using var undoLock = _undoManager.RequestLock();
 

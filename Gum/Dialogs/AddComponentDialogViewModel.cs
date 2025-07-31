@@ -14,11 +14,15 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
 
     private readonly NameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
+    private readonly ProjectCommands _projectCommands;
 
-    public AddComponentDialogViewModel(NameVerifier nameVerifier, ISelectedState selectedState)
+    public AddComponentDialogViewModel(NameVerifier nameVerifier, 
+        ISelectedState selectedState, 
+        ProjectCommands projectCommands)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
+        _projectCommands = projectCommands;
     }
 
     protected override void OnAffirmative()
@@ -47,9 +51,9 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
 
             ComponentSave componentSave = new ComponentSave();
 
-            ProjectCommands.Self.PrepareNewComponentSave(componentSave, relativeToComponents + Value);
+            _projectCommands.PrepareNewComponentSave(componentSave, relativeToComponents + Value);
 
-            ProjectCommands.Self.AddComponent(componentSave);
+            _projectCommands.AddComponent(componentSave);
         }
         base.OnAffirmative();
     }

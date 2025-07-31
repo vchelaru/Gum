@@ -28,23 +28,23 @@ public class StateTreeViewRightClickService
     private readonly EditCommands _editCommands;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
 
     System.Windows.Controls.ContextMenu _menuStrip;
-    GumCommands _gumCommands;
 
     public StateTreeViewRightClickService(ISelectedState selectedState, 
-        GumCommands gumCommands, 
         ElementCommands elementCommands, 
         EditCommands editCommands,
         IDialogService dialogService,
-        GuiCommands guiCommands)
+        GuiCommands guiCommands,
+        FileCommands fileCommands)
     {
         _selectedState = selectedState;
-        _gumCommands = gumCommands;
         _elementCommands = elementCommands;
         _editCommands = editCommands;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
@@ -181,7 +181,7 @@ public class StateTreeViewRightClickService
             {
                 _guiCommands.RefreshStateTreeView();
 
-                _gumCommands.FileCommands.TryAutoSaveCurrentObject();
+                _fileCommands.TryAutoSaveCurrentObject();
 
                 PopulateMenuStrip();
             }
@@ -339,7 +339,7 @@ public class StateTreeViewRightClickService
 
         _selectedState.SelectedStateSave = newState;
 
-        _gumCommands.FileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveCurrentElement();
     }
 
     public void RenameStateClick()

@@ -15,11 +15,13 @@ namespace Gum.PropertyGridHelpers
     {
         private readonly UndoManager _undoManager;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
         
         public VariableInCategoryPropagationLogic()
         {
             _undoManager = Locator.GetRequiredService<UndoManager>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
         public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
         {
@@ -173,7 +175,7 @@ namespace Gum.PropertyGridHelpers
                     }
 
                     // save everything
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    _fileCommands.TryAutoSaveCurrentElement();
                     _guiCommands.RefreshStateTreeView();
                     // no selection has changed, but we want to force refresh here because we know
                     // we really need a refresh - something was removed.

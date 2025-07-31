@@ -42,7 +42,7 @@ namespace Gum.Plugins.Inheritance
 
                     AdjustInstance(directBase, inheritingElement, clone.Name);
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    _fileCommands.TryAutoSaveElement(inheritingElement);
                     _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
@@ -59,7 +59,7 @@ namespace Gum.Plugins.Inheritance
                 {
                     inheritingElement.Instances.RemoveAll(item => item.Name == instance.Name);
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    _fileCommands.TryAutoSaveElement(inheritingElement);
                     _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
@@ -76,7 +76,7 @@ namespace Gum.Plugins.Inheritance
                 if(toRename != null)
                 {
                     toRename.Name = instance.Name;
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    _fileCommands.TryAutoSaveElement(inheritingElement);
                     _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }
@@ -100,7 +100,7 @@ namespace Gum.Plugins.Inheritance
         }
 
 
-        private static void HandleInstanceVariableBaseTypeSet(ElementSave container, InstanceSave instance)
+        private void HandleInstanceVariableBaseTypeSet(ElementSave container, InstanceSave instance)
         {
             var elementsInheritingFromContainer =
                                     ObjectFinder.Self.GetElementsInheritingFrom(container);
@@ -114,7 +114,7 @@ namespace Gum.Plugins.Inheritance
                 {
                     toChange.BaseType = instance.BaseType;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    _fileCommands.TryAutoSaveElement(inheritingElement);
                 }
 
             }
@@ -197,7 +197,7 @@ namespace Gum.Plugins.Inheritance
 
                 if(didShiftIndex)
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    _fileCommands.TryAutoSaveElement(inheritingElement);
                     _guiCommands.RefreshElementTreeView(inheritingElement);
                 }
             }

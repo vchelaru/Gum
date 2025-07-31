@@ -52,6 +52,7 @@ public class DragDropManager
     private readonly UndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
 
     #endregion
 
@@ -74,6 +75,7 @@ public class DragDropManager
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -478,7 +480,7 @@ public class DragDropManager
         behaviorInstanceSave.BaseType = draggedAsInstanceSave.BaseType;
         asBehaviorSave.RequiredInstances.Add(behaviorInstanceSave);
         _guiCommands.RefreshElementTreeView();
-        GumCommands.Self.FileCommands.TryAutoSaveBehavior(asBehaviorSave);
+        _fileCommands.TryAutoSaveBehavior(asBehaviorSave);
 
     }
 
@@ -725,7 +727,7 @@ public class DragDropManager
 
     private void SaveAndRefresh()
     {
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveCurrentElement();
         _guiCommands.RefreshVariables();
         _guiCommands.RefreshElementTreeView();
 
