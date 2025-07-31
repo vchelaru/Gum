@@ -177,6 +177,7 @@
     * [RemoveFromManagers](code/gum-code-reference/graphicaluielement/removefrommanagers.md)
     * [UpdateLayout](code/gum-code-reference/graphicaluielement/updatelayout.md)
   * [GumProjectSave](code/gum-code-reference/gumprojectsave.md)
+  * [GumService (GumUI)](code/gum-code-reference/gumservice-gumui.md)
   * [IDataUi](code/gum-code-reference/idataui.md)
   * [InstanceMember](code/gum-code-reference/instancemember.md)
   * [InstanceSave](code/gum-code-reference/instancesave.md)
