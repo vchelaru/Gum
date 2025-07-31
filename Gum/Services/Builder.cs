@@ -63,6 +63,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<NameVerifier>();
         services.AddSingleton<UndoManager>();
         services.AddSingleton<FontManager>();
+        services.AddSingleton<HotkeyManager>();
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
@@ -89,7 +90,6 @@ file static class ServiceCollectionExtensions
     public static void AddLegacyServices(this IServiceCollection services)
     {
         services.AddSingleton(SetVariableLogic.Self);
-        services.AddSingleton(HotkeyManager.Self);
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         
         services.AddSingleton<CircularReferenceManager>();

@@ -29,6 +29,8 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 public class WireframeControl : GraphicsDeviceControl
 {
     #region Fields
+    
+    private HotkeyManager _hotkeyManager;
 
     WireframeEditControl mWireframeEditControl;
     private SelectionManager _selectionManager;
@@ -97,14 +99,14 @@ public class WireframeControl : GraphicsDeviceControl
 
     void OnKeyDown(object sender, KeyEventArgs e)
     {
-        HotkeyManager.Self.HandleKeyDownWireframe(e);
+        _hotkeyManager.HandleKeyDownWireframe(e);
         CameraController.Self.HandleKeyPress(e);
 
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        bool handled = HotkeyManager.Self.ProcessCmdKeyWireframe(ref msg, keyData);
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(ref msg, keyData);
 
         if (handled)
         {
@@ -130,6 +132,7 @@ public class WireframeControl : GraphicsDeviceControl
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
+        _hotkeyManager = hotkeyManager;
         try
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -236,13 +239,13 @@ public class WireframeControl : GraphicsDeviceControl
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService,
-            HotkeyManager.Self);
+            _hotkeyManager);
         mLeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService,
-            HotkeyManager.Self);
+            _hotkeyManager);
         mLeftRuler.RulerSide = RulerSide.Left;
 
     }

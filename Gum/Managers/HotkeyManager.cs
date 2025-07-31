@@ -142,7 +142,7 @@ public class KeyCombination
 }
 #endregion
 
-public class HotkeyManager : Singleton<HotkeyManager>
+public class HotkeyManager
 {
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);
@@ -190,14 +190,18 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     // If adding any new keys here, modify HotkeyViewModel
     
-    public HotkeyManager()
+    public HotkeyManager(GuiCommands guiCommands, 
+        ISelectedState selectedState, 
+        ElementCommands elementCommands,
+        IDialogService dialogService,
+        FileCommands fileCommands)
     {
         _copyPasteLogic = CopyPasteLogic.Self;
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
-        _dialogService =  Locator.GetRequiredService<IDialogService>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _guiCommands = guiCommands;
+        _selectedState = selectedState;
+        _elementCommands = elementCommands;
+        _dialogService = dialogService;
+        _fileCommands = fileCommands;
     }
 
     #region App Wide Keys
