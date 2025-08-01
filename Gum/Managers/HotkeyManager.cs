@@ -142,7 +142,7 @@ public class KeyCombination
 }
 #endregion
 
-public class HotkeyManager : Singleton<HotkeyManager>
+public class HotkeyManager
 {
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);
@@ -186,16 +186,25 @@ public class HotkeyManager : Singleton<HotkeyManager>
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
+    private readonly FileCommands _fileCommands;
+    private readonly SetVariableLogic _setVariableLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
     
-    public HotkeyManager()
+    public HotkeyManager(GuiCommands guiCommands, 
+        ISelectedState selectedState, 
+        ElementCommands elementCommands,
+        IDialogService dialogService,
+        FileCommands fileCommands,
+        SetVariableLogic setVariableLogic)
     {
         _copyPasteLogic = CopyPasteLogic.Self;
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
-        _dialogService =  Locator.GetRequiredService<IDialogService>();
+        _guiCommands = guiCommands;
+        _selectedState = selectedState;
+        _elementCommands = elementCommands;
+        _dialogService = dialogService;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
     }
 
     #region App Wide Keys
@@ -311,7 +320,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
                 if (_dialogService.GetUserString("Enter new name", "Rename Instance", options) is { } newName)
                 {
                     selectedInstance.Name = newName;
-                    SetVariableLogic.Self.PropertyValueChanged("Name", oldName,
+                    _setVariableLogic.PropertyValueChanged("Name", oldName,
                         selectedInstance,
                         selectedInstance.ParentContainer?.DefaultState,
                         refresh: true,
@@ -481,7 +490,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
             }
 
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentElement();
         }
         return handled;
     }

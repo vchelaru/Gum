@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -18,6 +19,7 @@ namespace CodeOutputPlugin.Manager
     {
         private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
         private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
+        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
         
         public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
@@ -95,7 +97,7 @@ namespace CodeOutputPlugin.Manager
 
                 _dialogService.ShowMessage(childResponse.Message);
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                _fileCommands.TryAutoSaveElement(element);
             }
             else if (!string.IsNullOrEmpty(childResponse.Message))
             {

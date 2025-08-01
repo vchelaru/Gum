@@ -72,13 +72,19 @@ public class RenameLogic
     private readonly NameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
 
-    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier, IDialogService dialogService, GuiCommands guiCommands)
+    public RenameLogic(ISelectedState selectedState, 
+        NameVerifier nameVerifier, 
+        IDialogService dialogService, 
+        GuiCommands guiCommands,
+        FileCommands fileCommands)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     #region StateSave
@@ -96,7 +102,7 @@ public class RenameLogic
             stateSave.Name = newName;
             _guiCommands.RefreshStateTreeView();
             // I don't think we need to save the project when renaming a state:
-            //GumCommands.Self.FileCommands.TryAutoSaveProject();
+            //_fileCommands.TryAutoSaveProject();
 
             // Renaming the state should refresh the property grid
             // because it displays the state name at the top
@@ -104,7 +110,7 @@ public class RenameLogic
 
             PluginManager.Self.StateRename(stateSave, oldName);
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentElement();
         }
     }
 
@@ -192,11 +198,11 @@ public class RenameLogic
 
         _guiCommands.RefreshStateTreeView();
         // I don't think we need to save the project when renaming a state:
-        //GumCommands.Self.FileCommands.TryAutoSaveProject();
+        //_fileCommands.TryAutoSaveProject();
 
         PluginManager.Self.CategoryRename(category, oldName);
 
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+        _fileCommands.TryAutoSaveCurrentObject();
 
         if (owner is ElementSave ownerAsElementSave)
         {
@@ -207,7 +213,7 @@ public class RenameLogic
         {
             StandardElementsManagerGumTool.Self.FixCustomTypeConverters(item);
 
-            GumCommands.Self.FileCommands.TryAutoSaveElement(item);
+            _fileCommands.TryAutoSaveElement(item);
         }
     }
 
@@ -323,7 +329,7 @@ public class RenameLogic
                 // Even though this gets called from the PropertyGrid methods which eventually
                 // save this object, we want to force a save here to make sure it worked.  If it
                 // does, then we're safe to delete the old files.
-                GumCommands.Self.FileCommands.TryAutoSaveObject(instanceContainer);
+                _fileCommands.TryAutoSaveObject(instanceContainer);
 
                 if (isRenamingXmlFile)
                 {
@@ -373,7 +379,7 @@ public class RenameLogic
 
         PluginManager.Self.ElementRename(elementSave, oldName);
 
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveProject();
 
         var oldDirectory = oldXml.GetDirectoryContainingThis();
         var newDirectory = newXml.GetDirectoryContainingThis();
@@ -400,7 +406,7 @@ public class RenameLogic
 
         project.SortElementAndBehaviors();
 
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveProject();
 
         if (instance == null)
         {
@@ -434,7 +440,7 @@ public class RenameLogic
 
                 if (shouldSave)
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(screen);
+                    _fileCommands.TryAutoSaveElement(screen);
                 }
             }
 
@@ -466,7 +472,7 @@ public class RenameLogic
 
                 if (shouldSave)
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(component);
+                    _fileCommands.TryAutoSaveElement(component);
                 }
             }
 
@@ -539,7 +545,7 @@ public class RenameLogic
                         }
                         if (shouldSaveElement)
                         {
-                            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToCheckParent);
+                            _fileCommands.TryAutoSaveElement(elementToCheckParent);
                         }
 
                     }

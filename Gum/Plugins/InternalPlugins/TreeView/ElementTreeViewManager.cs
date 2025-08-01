@@ -112,7 +112,8 @@ public partial class ElementTreeViewManager
     private readonly EditCommands _editCommands;
     private readonly GuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
-
+    private readonly FileCommands _fileCommands;
+    private readonly HotkeyManager _hotkeyManager;
 
     public const int TransparentImageIndex = 0;
     public const int FolderImageIndex = 1;
@@ -276,8 +277,9 @@ public partial class ElementTreeViewManager
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _editCommands = Locator.GetRequiredService<EditCommands>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
-
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
@@ -1873,7 +1875,7 @@ public partial class ElementTreeViewManager
             OnSelect((SelectedNode as TreeNodeWrapper)?.Node);
         }
 
-        HotkeyManager.Self.HandleKeyDownElementTreeView(e);
+        _hotkeyManager.HandleKeyDownElementTreeView(e);
 
         if (didTreeViewHaveFocus)
         {
@@ -2115,7 +2117,7 @@ public partial class ElementTreeViewManager
                 }
             }
 
-            HotkeyManager.Self.HandleKeyDownAppWide(args);
+            _hotkeyManager.HandleKeyDownAppWide(args);
         };
 
         grid.Children.Add(searchTextBox);

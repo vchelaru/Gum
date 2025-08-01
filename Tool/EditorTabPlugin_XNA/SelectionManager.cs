@@ -76,6 +76,7 @@ public class SelectionManager
     private readonly EditingManager _editingManager;
     private readonly UndoManager _undoManager;
     private readonly IDialogService _dialogService;
+    private readonly HotkeyManager _hotkeyManager;
 
     public bool IsOverBody
     {
@@ -186,12 +187,17 @@ public class SelectionManager
 
     #region Methods
 
-    internal SelectionManager(ISelectedState selectedState, UndoManager undoManager, EditingManager editingManager, IDialogService dialogService)
+    internal SelectionManager(ISelectedState selectedState, 
+        UndoManager undoManager, 
+        EditingManager editingManager, 
+        IDialogService dialogService,
+        HotkeyManager hotkeyManager)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
         _undoManager = undoManager;
         _dialogService = dialogService;
+        _hotkeyManager = hotkeyManager;
     }
 
     public void Initialize(LayerService layerService)
@@ -609,7 +615,7 @@ public class SelectionManager
                 }
                 WireframeEditor = new PolygonWireframeEditor(
                     _layerService.OverlayLayer,
-                    global::Gum.Managers.HotkeyManager.Self,
+                    _hotkeyManager,
                     this,
                     _selectedState);
             }
@@ -632,7 +638,7 @@ public class SelectionManager
                 }
                 WireframeEditor = new PolygonWireframeEditor(
                     _layerService.OverlayLayer,
-                    global::Gum.Managers.HotkeyManager.Self,
+                    _hotkeyManager,
                     this,
                     _selectedState);
             }
@@ -656,7 +662,7 @@ public class SelectionManager
                     WireframeEditor = new StandardWireframeEditor(
                         _layerService.OverlayLayer,
                         lineColor, textColor, 
-                        global::Gum.Managers.HotkeyManager.Self,
+                        _hotkeyManager,
                         this,
                         _selectedState);
                 }

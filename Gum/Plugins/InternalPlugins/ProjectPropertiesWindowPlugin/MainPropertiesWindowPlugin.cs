@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.Gui.Controls;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -123,7 +123,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 }
                 else
                 {
-                    GumCommands.Self.FileCommands.LoadLocalizationFile();
+                    _fileCommands.LoadLocalizationFile();
 
                     WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
                 }
@@ -215,7 +215,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         {
             _wireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
 
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveProject();
         }
     }
 

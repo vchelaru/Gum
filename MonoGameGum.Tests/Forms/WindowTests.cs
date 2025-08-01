@@ -1,6 +1,6 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms;
+using Gum.Forms.Controls;
 using Moq;
 using Shouldly;
 using System;

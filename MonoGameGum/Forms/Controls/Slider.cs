@@ -19,17 +19,19 @@ using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-using Gum.Forms.Controls.Primitives;
 using Keys = Raylib_cs.KeyboardKey;
 
-namespace Gum.Forms.Controls;
 
 #else
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
-using MonoGameGum.Forms.Controls.Primitives;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+
+#if !FRB
+using Gum.Forms.Controls.Primitives;
+namespace Gum.Forms.Controls;
 #endif
 
 /// <summary>

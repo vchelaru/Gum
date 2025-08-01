@@ -1,4 +1,4 @@
-using CommonFormsAndControls;
+﻿using CommonFormsAndControls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -31,15 +31,25 @@ public class EditCommands
     private RenameLogic _renameLogic;
     private UndoManager _undoManager;
     private GuiCommands _guiCommands;
+    private FileCommands _fileCommands;
     private readonly IDialogService _dialogService;
+    private readonly ProjectCommands _projectCommands;
 
-    public EditCommands()
+    public EditCommands(ISelectedState selectedState, 
+        NameVerifier nameVerifier,
+        RenameLogic renameLogic,
+        UndoManager undoManager,
+        IDialogService dialogService,
+        FileCommands fileCommands,
+        ProjectCommands projectCommands)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
-        _renameLogic = Locator.GetRequiredService<RenameLogic>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _selectedState = selectedState;
+        _nameVerifier = nameVerifier;
+        _renameLogic = renameLogic;
+        _undoManager = undoManager;
+        _dialogService = dialogService;
+        _fileCommands = fileCommands;
+        _projectCommands = projectCommands;
     }
     #region State
 
@@ -199,12 +209,12 @@ public class EditCommands
 
         if (stateContainer is BehaviorSave behavior)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+            _fileCommands.TryAutoSaveBehavior(behavior);
 
         }
         else if (stateContainer is ElementSave asElement)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(asElement);
+            _fileCommands.TryAutoSaveElement(asElement);
         }
     }
 
@@ -278,7 +288,7 @@ public class EditCommands
     public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
     {
         container.RequiredVariables.Variables.Remove(variable);
-        GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
+        _fileCommands.TryAutoSaveBehavior(container);
         _guiCommands.RefreshVariables();
     }
 
@@ -320,8 +330,8 @@ public class EditCommands
 
                 _selectedState.SelectedBehavior = behavior;
 
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                _fileCommands.TryAutoSaveProject();
+                _fileCommands.TryAutoSaveBehavior(behavior);
             }
         }
     }
@@ -376,7 +386,7 @@ public class EditCommands
                     newScreen.Initialize(null);
                     StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
 
-                    ProjectCommands.Self.AddScreen(newScreen);
+                    _projectCommands.AddScreen(newScreen);
 
                     PluginManager.Self.ElementDuplicate(element, newScreen);
                 }
@@ -421,7 +431,7 @@ public class EditCommands
                     newComponent.Initialize(null);
                     StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
 
-                    ProjectCommands.Self.AddComponent(newComponent);
+                    _projectCommands.AddComponent(newComponent);
 
                     PluginManager.Self.ElementDuplicate(element, newComponent);
                 }
@@ -507,7 +517,7 @@ public class EditCommands
                     }
 
                     StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-                    ProjectCommands.Self.AddComponent(componentSave);
+                    _projectCommands.AddComponent(componentSave);
 
                 }
                 else

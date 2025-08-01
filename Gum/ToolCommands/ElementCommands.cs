@@ -25,13 +25,15 @@ namespace Gum.ToolCommands
 
         private readonly ISelectedState _selectedState;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
 
         #endregion
 
-        public ElementCommands()
+        public ElementCommands(ISelectedState selectedState, GuiCommands guiCommands, FileCommands fileCommands)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _selectedState = selectedState;
+            _guiCommands = guiCommands;
+            _fileCommands = fileCommands;
         }
 
         #region Instance
@@ -86,7 +88,7 @@ namespace Gum.ToolCommands
                 _selectedState.SelectedInstance = instanceSave;
             }
 
-            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToAddTo);
+            _fileCommands.TryAutoSaveElement(elementToAddTo);
 
             return instanceSave;
         }
@@ -177,11 +179,11 @@ namespace Gum.ToolCommands
 
             if(stateContainer is BehaviorSave behavior)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                _fileCommands.TryAutoSaveBehavior(behavior);
             }
             else
             {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(stateContainer as ElementSave);
+                _fileCommands.TryAutoSaveElement(stateContainer as ElementSave);
             }
         }
 
@@ -225,11 +227,11 @@ namespace Gum.ToolCommands
 
             if(elementToRemoveFrom is BehaviorSave behaviorSave)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorSave);
+                _fileCommands.TryAutoSaveBehavior(behaviorSave);
             }
             else if(elementToRemoveFrom is ElementSave elementSave)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(elementSave);
+                _fileCommands.TryAutoSaveElement(elementSave);
             }
         }
         #endregion
@@ -641,7 +643,7 @@ namespace Gum.ToolCommands
                 {
                     AddCategoriesFromBehavior(behaviorSave, component);
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(component);
+                    _fileCommands.TryAutoSaveElement(component);
                 }
             }
 
@@ -649,7 +651,7 @@ namespace Gum.ToolCommands
 
             PluginManager.Self.CategoryAdd(category);
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+            _fileCommands.TryAutoSaveCurrentObject();
 
             return category;
         }
@@ -703,7 +705,7 @@ namespace Gum.ToolCommands
                 _selectedState.SelectedInstance = instanceSave;
             }
 
-            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorToAddTo);
+            _fileCommands.TryAutoSaveBehavior(behaviorToAddTo);
 
             return instanceSave;
         }
@@ -732,7 +734,7 @@ namespace Gum.ToolCommands
 
                 if (performSave)
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                    _fileCommands.TryAutoSaveElement(componentSave);
                 }
             }
         }

@@ -36,6 +36,8 @@ public class ControlLogic : Singleton<ControlLogic>
     private readonly ISelectedState _selectedState;
     private readonly UndoManager _undoManager;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
+    private readonly SetVariableLogic _setVariableLogic;
     
     LineRectangle textureOutlineRectangle = null;
 
@@ -73,6 +75,8 @@ public class ControlLogic : Singleton<ControlLogic>
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     }
 
     public PluginTab CreateControl()
@@ -438,20 +442,20 @@ public class ControlLogic : Singleton<ControlLogic>
         shouldRefreshAccordingToVariableSets = false;
         {
             // This could be really heavy if we notify everyone of the changes. We should only do it when the editing stops...
-            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureLeft", oldTextureLeftValue,
+            _setVariableLogic.ReactToPropertyValueChanged("TextureLeft", oldTextureLeftValue,
                 element, instance, state, refresh: false);
-            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureTop", oldTextureTopValue,
+            _setVariableLogic.ReactToPropertyValueChanged("TextureTop", oldTextureTopValue,
                 element, instance, state, refresh: false);
-            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureWidth", oldTextureWidthValue,
+            _setVariableLogic.ReactToPropertyValueChanged("TextureWidth", oldTextureWidthValue,
                 element, instance, state, refresh: false);
-            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureHeight", oldTextureHeightValue,
+            _setVariableLogic.ReactToPropertyValueChanged("TextureHeight", oldTextureHeightValue,
                 element, instance, state, refresh: false);
         }
         shouldRefreshAccordingToVariableSets = true;
 
         _undoManager.RecordUndo();
 
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveCurrentElement();
     }
 
     public void RefreshOutline(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)

@@ -262,6 +262,7 @@ public class CodeGenerator
         // https://github.com/vchelaru/Gum/issues/598
         HashSet<string> neededUsings = new HashSet<string>();
         neededUsings.Add("GumRuntime");
+        neededUsings.Add("System.Linq");
 
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
             context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
@@ -1111,7 +1112,18 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
-            builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
+
+            var inheritsFromText = context.Element.BaseType == "Text";
+            if(inheritsFromText)
+            {
+                // special case for label:
+                builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.TextRuntime();");
+            }
+            else
+            {
+                builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
+            }
+
 
             builder.AppendLine(context.Tabs +
                 $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");

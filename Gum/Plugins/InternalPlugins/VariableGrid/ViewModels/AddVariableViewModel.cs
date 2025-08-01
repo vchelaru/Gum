@@ -102,16 +102,17 @@ public class AddVariableViewModel : DialogViewModel
     #endregion
 
     public AddVariableViewModel(GuiCommands guiCommands,
-        UndoManager undoManager, 
-        ElementCommands elementCommands, 
-        NameVerifier nameVerifier, 
-        ISelectedState selectedState, 
+        UndoManager undoManager,
+        ElementCommands elementCommands,
+        FileCommands fileCommands,
+        NameVerifier nameVerifier,
+        ISelectedState selectedState,
         IDialogService dialogService)
     {
         _guiCommands = guiCommands;
         _undoManager = undoManager;
         _elementCommands = elementCommands;
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _fileCommands = fileCommands;
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _dialogService = dialogService;
@@ -367,7 +368,7 @@ public class AddVariableViewModel : DialogViewModel
 
         foreach (var elementToSave in elementsToSave)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            _fileCommands.TryAutoSaveElement(elementToSave);
         }
     }
 

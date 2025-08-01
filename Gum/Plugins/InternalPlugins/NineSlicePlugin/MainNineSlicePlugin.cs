@@ -39,7 +39,7 @@ internal class MainNineSlicePlugin : InternalPlugin
             var nineSliceStandard = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
             nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
 
-            GumCommands.Self.FileCommands.TryAutoSaveElement(nineSliceStandard);    
+            _fileCommands.TryAutoSaveElement(nineSliceStandard);    
         }
         catch (Exception e)
         {

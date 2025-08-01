@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultFromFileVisuals;
+namespace Gum.Forms.DefaultFromFileVisuals;
 
 public class DefaultFromFileSliderRuntime : InteractiveGue
 {

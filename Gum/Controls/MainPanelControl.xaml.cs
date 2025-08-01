@@ -17,6 +17,8 @@ public partial class MainPanelControl : UserControl
     GridLength bottomRowLength;
 
     GridLength splitterLength;
+    
+    private readonly HotkeyManager _hotkeyManager;
 
     IEnumerable<TabControl> AllControls
     {
@@ -31,16 +33,17 @@ public partial class MainPanelControl : UserControl
     }
 
     bool isHidden;
-    public MainPanelControl()
+    public MainPanelControl(HotkeyManager hotkeyManager)
     {
         InitializeComponent();
 
+        _hotkeyManager = hotkeyManager;
         this.KeyDown += HandleKeyDown;
     }
 
     private void HandleKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        HotkeyManager.Self.HandleKeyDownAppWide(e);
+        _hotkeyManager.HandleKeyDownAppWide(e);
     }
 
     private void CenterBottomTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)

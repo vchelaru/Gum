@@ -23,16 +23,26 @@ namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
 using Keys = Raylib_cs.KeyboardKey;
-namespace Gum.Forms.Controls;
 
 #else
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
-namespace MonoGameGum.Forms.Controls;
 #endif
 
-public class ComboBox : FrameworkElement, IInputReceiver
+
+#if !FRB
+namespace Gum.Forms.Controls;
+
+#endif
+
+public class ComboBox :
+#if RAYLIB || FRB
+    FrameworkElement,
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement, 
+#endif 
+    IInputReceiver
 {
     #region Fields/Properties
 

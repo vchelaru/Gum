@@ -38,6 +38,12 @@ namespace Gum.PropertyGridHelpers
         private readonly UndoManager _undoManager;
         private readonly IDeleteVariableService _deleteVariableLogic;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
+        private readonly IEditVariableService _editVariablesService;
+        private readonly IExposeVariableService _exposeVariableService;
+        private readonly ISelectedState _selectedState;
+        private readonly SetVariableLogic _setVariableLogic;
+        
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -47,9 +53,7 @@ namespace Gum.PropertyGridHelpers
 
         InstanceSavePropertyDescriptor mPropertyDescriptor;
 
-        private readonly IEditVariableService _editVariablesService;
-        private readonly IExposeVariableService _exposeVariableService;
-        private readonly ISelectedState _selectedState;
+
         #endregion
 
         #region Properties
@@ -250,12 +254,13 @@ namespace Gum.PropertyGridHelpers
             _editVariablesService = Locator.GetRequiredService<IEditVariableService>();
             _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
             _objectFinder = ObjectFinder.Self;
-            _hotkeyManager = HotkeyManager.Self;
+            _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
             _deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
             _undoManager = undoManager;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
-
+            _fileCommands =  Locator.GetRequiredService<FileCommands>();
+            _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
             mStateSave = stateSave;
@@ -895,7 +900,7 @@ namespace Gum.PropertyGridHelpers
                     _guiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
                 }
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
+                _fileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
             }
 
             var gumElementOrInstanceSaveAsObject = this.Instance;
@@ -933,7 +938,7 @@ namespace Gum.PropertyGridHelpers
                     {
                         handledByExposedVariable = true;
 
-                        SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                        _setVariableLogic.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
                     }
 
                 }
@@ -943,7 +948,7 @@ namespace Gum.PropertyGridHelpers
             {
                 var element = gumElementOrInstanceSaveAsObject as ElementSave ??
                     (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
-                response = SetVariableLogic.Self.PropertyValueChanged(
+                response = _setVariableLogic.PropertyValueChanged(
                     name,
                     LastOldFullCommitValue,
                     gumElementOrInstanceSaveAsObject as InstanceSave,

@@ -22,7 +22,10 @@ using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Controls;
 #endif
 
 #region TextCompositionEventArgs Class
@@ -36,7 +39,13 @@ public class TextCompositionEventArgs : RoutedEventArgs
 }
 #endregion
 
-public abstract class TextBoxBase : FrameworkElement, IInputReceiver
+public abstract class TextBoxBase :
+#if RAYLIB || FRB
+    FrameworkElement,
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement,
+#endif
+    IInputReceiver
 {
     #region Fields/Properties
 
@@ -58,11 +67,11 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     }
 
     protected GraphicalUiElement textComponent;
-    protected RenderingLibrary.Graphics.Text coreTextObject;
+    protected global::RenderingLibrary.Graphics.Text coreTextObject;
 
 
     protected GraphicalUiElement placeholderComponent;
-    protected RenderingLibrary.Graphics.Text placeholderTextObject;
+    protected global::RenderingLibrary.Graphics.Text placeholderTextObject;
 
     protected GraphicalUiElement selectionInstance;
 
@@ -244,7 +253,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
     public event EventHandler SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
-    protected TextCompositionEventArgs RaisePreviewTextInput(string newText)
+    protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
         PreviewTextInput?.Invoke(this, args);
@@ -327,8 +336,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
 #endif
 
-        coreTextObject = textComponent.RenderableComponent as RenderingLibrary.Graphics.Text;
-        placeholderTextObject = placeholderComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        coreTextObject = textComponent.RenderableComponent as 
+            global::RenderingLibrary.Graphics.Text;
+        placeholderTextObject = placeholderComponent?.RenderableComponent as
+            global::RenderingLibrary.Graphics.Text;
 
 #if DEBUG
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
@@ -462,10 +473,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         {
             if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown)
             {
-                var xChange = MainCursor.XChange / RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
+                var xChange = MainCursor.XChange / global::RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
 
                 var bitmapFont = this.coreTextObject.BitmapFont;
-                var stringLength = bitmapFont.MeasureString(DisplayedText, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+                var stringLength = bitmapFont.MeasureString(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -521,7 +532,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             var bitmapFont = coreTextObject.BitmapFont;
             var lineHeight = bitmapFont.LineHeightInPixels;
             var topOfText = this.textComponent.GetAbsoluteTop();
-            if (this.coreTextObject?.VerticalAlignment == RenderingLibrary.Graphics.VerticalAlignment.Center)
+            if (this.coreTextObject?.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
             {
                 topOfText = this.textComponent.GetAbsoluteCenterY() - (lineHeight * coreTextObject.WrappedText.Count - 1) / 2.0f;
             }
@@ -566,7 +577,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
             char character = textToUse[i];
-            RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont.GetCharacterInfo(character);
+            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont.GetCharacterInfo(character);
 
             int advance = 0;
 
@@ -1399,13 +1410,13 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         else
         {
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = this.coreTextObject.BitmapFont.MeasureString(substring, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var firstMeasure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             substring = DisplayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
             selectionPosition.Width = 1 +
-                this.coreTextObject.BitmapFont.MeasureString(substring, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
+                this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -1508,7 +1519,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         if (this.coreTextObject.BitmapFont != null)
         {
-            var measure = this.coreTextObject.BitmapFont.MeasureString(substring, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+            var measure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             return measure + this.textComponent.X;
         }
         else
@@ -1526,7 +1537,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         float offset;
 
-        if (coreTextObject.VerticalAlignment == RenderingLibrary.Graphics.VerticalAlignment.Center)
+        if (coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
         {
             offset = lineNumber * lineHeight;
             offset -= lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;

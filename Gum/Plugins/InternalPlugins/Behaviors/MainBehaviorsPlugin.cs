@@ -173,7 +173,7 @@ public class MainBehaviorsPlugin : InternalPlugin
                 }
 
                 _guiCommands.RefreshStateTreeView();
-                GumCommands.Self.FileCommands.TryAutoSaveElement(component);
+                _fileCommands.TryAutoSaveElement(component);
             }
             viewModel.UpdateTo(component);
 

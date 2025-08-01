@@ -53,6 +53,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     private readonly ElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
+    private readonly ProjectCommands _projectCommands;
     
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -76,7 +78,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _projectCommands = Locator.GetRequiredService<ProjectCommands>();
     }
 
     #region Copy
@@ -239,7 +242,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
                 }
             }
 
-            GumCommands.Self.FileCommands.TryAutoSaveElement(sourceElement);
+            _fileCommands.TryAutoSaveElement(sourceElement);
             WireframeObjectManager.Self.RefreshAll(true);
             _guiCommands.RefreshVariables();
             _guiCommands.RefreshElementTreeView();
@@ -340,7 +343,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
         //_selectedState.SelectedInstance = targetInstance;
         _selectedState.SelectedStateSave = newStateSave;
 
-        GumCommands.Self.FileCommands.TryAutoSaveElement(container);
+        _fileCommands.TryAutoSaveElement(container);
     }
 
     public void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
@@ -583,7 +586,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         WireframeObjectManager.Self.RefreshAll(true);
         _guiCommands.RefreshElementTreeView(targetElement);
-        GumCommands.Self.FileCommands.TryAutoSaveElement(targetElement);
+        _fileCommands.TryAutoSaveElement(targetElement);
         _selectedState.SelectedInstances = newInstances;
 
         LastPastedInstances.Clear();
@@ -637,19 +640,19 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         if (toAdd is ScreenSave)
         {
-            ProjectCommands.Self.AddScreen(toAdd as ScreenSave);
+            _projectCommands.AddScreen(toAdd as ScreenSave);
         }
         else
         {
-            ProjectCommands.Self.AddComponent(toAdd as ComponentSave);
+            _projectCommands.AddComponent(toAdd as ComponentSave);
         }
 
         _selectedState.SelectedElement = toAdd;
 
         PluginManager.Self.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
-        GumCommands.Self.FileCommands.TryAutoSaveElement(toAdd);
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveElement(toAdd);
+        _fileCommands.TryAutoSaveProject();
     }
 
     #endregion

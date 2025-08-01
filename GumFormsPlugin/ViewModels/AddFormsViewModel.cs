@@ -11,6 +11,7 @@ using Gum.Mvvm;
 using GumFormsPlugin.Services;
 using Gum.Managers;
 using System.Reflection.Metadata.Ecma335;
+using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Newtonsoft.Json;
@@ -23,6 +24,7 @@ public class AddFormsViewModel : ViewModel
 
     private readonly FormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
+    private readonly FileCommands _fileCommands;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -32,10 +34,11 @@ public class AddFormsViewModel : ViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService)
+    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService, FileCommands fileCommands)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
+        _fileCommands = fileCommands;
     }
 
     public void DoIt()
@@ -52,10 +55,10 @@ public class AddFormsViewModel : ViewModel
 
             // reload standards:
             var fileName = GumState.Self.ProjectState.GumProjectSave.FullFileName;
-            bool wasSaved = GumCommands.Self.FileCommands.TryAutoSaveProject();
+            bool wasSaved = _fileCommands.TryAutoSaveProject();
             if (wasSaved)
             {
-                GumCommands.Self.FileCommands.LoadProject(fileName);
+                _fileCommands.LoadProject(fileName);
             }
             else
             {

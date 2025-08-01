@@ -21,7 +21,8 @@ public static class RenderableCloneLogic
                 break;
             default:
                 throw new NotImplementedException(
-                    $"Cannot clone the object because the renderable type {original.GetType()} is not currently cloneable. Please file an issue on github or mention this on discord");
+                    $"Cannot clone the object because the renderable type {original.GetType()} is not currently cloneable. " +
+                    $"Please file an issue on github or mention this on discord");
                 //break;
         }
 

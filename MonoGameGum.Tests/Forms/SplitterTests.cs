@@ -2,7 +2,7 @@
 using Gum.Managers;
 using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultFromFileVisuals;
+using Gum.Forms.DefaultFromFileVisuals;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -188,7 +188,7 @@ public class SplitterTests : BaseTestClass
 
         ObjectFinder.Self.GumProjectSave = gumProject;
 
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
         var gue = splitterComponent.ToGraphicalUiElement();
 

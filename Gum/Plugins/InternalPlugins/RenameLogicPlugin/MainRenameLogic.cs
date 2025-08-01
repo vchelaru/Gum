@@ -35,12 +35,12 @@ public class MainRenameLogic : InternalPlugin
 
             if(behavior != null)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                _fileCommands.TryAutoSaveBehavior(behavior);
             }
         }
     }
 
-    private static void ApplyVariableNameChangeFromStateRename(StateSave state, string oldName, ElementSave elementSave, StateSaveCategory category)
+    private void ApplyVariableNameChangeFromStateRename(StateSave state, string oldName, ElementSave elementSave, StateSaveCategory category)
     {
         string variableName = "State";
         if (category != null)
@@ -79,7 +79,7 @@ public class MainRenameLogic : InternalPlugin
 
         foreach (var elementToSave in elementsToSave)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            _fileCommands.TryAutoSaveElement(elementToSave);
         }
     }
 

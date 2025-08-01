@@ -13,6 +13,7 @@ namespace Gum.CommandLine
     {
         private readonly FontManager _fontManager;
         private readonly GuiCommands _guiCommands;
+        private readonly FileCommands _fileCommands;
         
         #region Fields/Properties
 
@@ -36,6 +37,7 @@ namespace Gum.CommandLine
         {
             _fontManager = Locator.GetRequiredService<FontManager>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _fileCommands = Locator.GetRequiredService<FileCommands>();
         }
 
         public async Task ReadCommandLine()
@@ -97,13 +99,13 @@ namespace Gum.CommandLine
             // 4. Exit
 
             // 1. and 2.
-            GumCommands.Self.FileCommands.LoadProject(gumxFile);
+            _fileCommands.LoadProject(gumxFile);
 
             // 3.
             await _fontManager.CreateAllMissingFontFiles(ProjectManager.Self.GumProjectSave);
 
             // 4.
-            GumCommands.Self.FileCommands.Exit();
+            _fileCommands.Exit();
         }
     }
 }

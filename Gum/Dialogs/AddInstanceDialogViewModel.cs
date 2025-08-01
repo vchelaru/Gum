@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.PropertyGridHelpers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -16,6 +17,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
     private readonly ElementCommands _elementCommands;
+    private static readonly SetVariableLogic _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     
     public bool ParentInstance { get; set; }
     
@@ -94,8 +96,8 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         stateToAssignOn.SetValue(variableName, oldParentValue, "string");
         stateToAssignOn.SetValue(existingInstanceVar, newInstance.Name, "string");
 
-        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, newInstance, targetElement.DefaultState);
-        SetVariableLogic.Self.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
+        _setVariableLogic.PropertyValueChanged("Parent", oldValue, newInstance, targetElement.DefaultState);
+        _setVariableLogic.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
     }
 
     public static void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
@@ -115,6 +117,6 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         }
 
         stateToAssignOn.SetValue(variableName, newParent, "string");
-        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, child, targetElement.DefaultState);
+        _setVariableLogic.PropertyValueChanged("Parent", oldValue, child, targetElement.DefaultState);
     }
 }

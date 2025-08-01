@@ -39,7 +39,7 @@ namespace Gum.Managers
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
             _guiCommands.RefreshVariables();
 
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveProject();
         }
     }
 }

@@ -18,13 +18,15 @@ using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum.Input;
-namespace Gum.Forms.Controls;
-
 #else
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
-namespace MonoGameGum.Forms.Controls;
+#endif
+
+#if !FRB
+namespace Gum.Forms.Controls;
+
 #endif
 
 #region Enums
@@ -61,7 +63,14 @@ public class ScrollChangedEventArgs : EventArgs
 /// A control for displaying stacked items with a scroll bar. Items can be
 /// FrameworkElements (Forms) or regular visuals (GraphicalUiElements).
 /// </summary>
-public class ScrollViewer : FrameworkElement, IInputReceiver
+public class ScrollViewer :
+#if RAYLIB || FRB
+    FrameworkElement,
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement, 
+#endif
+
+    IInputReceiver
 {
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
     public const string ScrollViewerCategoryName = "ScrollViewerCategory";

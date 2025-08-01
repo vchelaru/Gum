@@ -22,18 +22,21 @@ using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
-using Gum.GueDeriving;
 using RaylibGum.Input;
 using Keys = Raylib_cs.KeyboardKey;
 
-namespace Gum.Forms.Controls;
+using Gum.GueDeriving;
 
 #else
 using MonoGameGum.Input;
 using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 using Microsoft.Xna.Framework.Input;
-namespace MonoGameGum.Forms.Controls;
 #endif
+
+#if !FRB
+namespace Gum.Forms.Controls;
+#endif
+
 
 #region ScrollIntoViewStyle Enums
 public enum ScrollIntoViewStyle

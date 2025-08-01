@@ -1483,7 +1483,20 @@ public class CustomSetPropertyOnRenderable
                 {
                     if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                     {
-                        string message = $"Error setting SourceFile on Sprite in {graphicalUiElement.Tag}:\n{value}";
+                        string message = $"Error setting SourceFile on Sprite";
+
+                        if(graphicalUiElement.Tag != null)
+                        {
+                            message += $" in {graphicalUiElement.Tag}";
+                        }
+                        message += $"\n{value}";
+                        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                        message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+                        if(ObjectFinder.Self.GumProjectSave == null)
+                        {
+                            message += "\nNo Gum project has been loaded";
+                        }
+
                         throw new System.IO.FileNotFoundException(message, ex);
                     }
                     sprite.Texture = null;

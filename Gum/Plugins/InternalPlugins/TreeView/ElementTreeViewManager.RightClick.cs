@@ -138,7 +138,7 @@ public partial class ElementTreeViewManager
 
     void ForceSaveObjectClick(object sender, EventArgs e)
     {
-        GumCommands.Self.FileCommands.ForceSaveElement(_selectedState.SelectedElement);
+        _fileCommands.ForceSaveElement(_selectedState.SelectedElement);
     }
 
     void AddFolderClick(object sender, EventArgs e)
@@ -164,7 +164,7 @@ public partial class ElementTreeViewManager
             else if (treeNode.Tag is BehaviorSave behaviorSave)
             {
                 fullFile =
-                    GumCommands.Self.FileCommands.GetFullPathXmlFile(behaviorSave).FullPath;
+                    _fileCommands.GetFullPathXmlFile(behaviorSave).FullPath;
             }
             else
             {
@@ -568,7 +568,7 @@ public partial class ElementTreeViewManager
         {
             _guiCommands.RefreshElementTreeView();
             _selectedState.SelectedComponent = lastImportedComponent;
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveProject();
         }
     }
 

@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services.Dialogs;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using ToolsUtilities;
 
@@ -15,14 +16,20 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly NameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
     private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
+    private readonly ProjectCommands _projectCommands;
 
     public AddScreenDialogViewModel(NameVerifier nameVerifier, 
         ISelectedState selectedState, 
-        GuiCommands guiCommands)
+        GuiCommands guiCommands,
+        FileCommands fileCommands,
+        ProjectCommands projectCommands)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _projectCommands = projectCommands;
     }
 
     protected override void OnAffirmative()
@@ -45,14 +52,14 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
         
         string relativeToScreens = FileManager.MakeRelative(path, FileLocations.Self.ScreensFolder);
 
-        ScreenSave screenSave = GumCommands.Self.ProjectCommands.AddScreen(relativeToScreens + Value);
+        ScreenSave screenSave = _projectCommands.AddScreen(relativeToScreens + Value);
         
         _guiCommands.RefreshElementTreeView();
 
         _selectedState.SelectedScreen = screenSave;
 
-        GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
-        GumCommands.Self.FileCommands.TryAutoSaveProject();
+        _fileCommands.TryAutoSaveElement(screenSave);
+        _fileCommands.TryAutoSaveProject();
         
         base.OnAffirmative();
     }

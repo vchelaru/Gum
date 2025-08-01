@@ -33,7 +33,6 @@ public class MainStatePlugin : InternalPlugin
 
     PluginTab newPluginTab;
     private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
-    private readonly GumCommands _gumCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
     private readonly ObjectFinder _objectFinder;
@@ -48,9 +47,8 @@ public class MainStatePlugin : InternalPlugin
         var elementCommands = Locator.GetRequiredService<ElementCommands>();
         var editCommands = Locator.GetRequiredService<EditCommands>();
         var dialogService = Locator.GetRequiredService<IDialogService>();
-        var guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands, elementCommands, editCommands, dialogService, guiCommands);
-        _hotkeyManager = HotkeyManager.Self;
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, elementCommands, editCommands, dialogService, _guiCommands, _fileCommands);
+        _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _objectFinder = ObjectFinder.Self;
     }
 

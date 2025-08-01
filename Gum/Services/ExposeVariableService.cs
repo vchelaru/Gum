@@ -39,15 +39,22 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly NameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
 
-    public ExposeVariableService(FileCommands fileCommands)
+    public ExposeVariableService(
+        UndoManager undoManager,
+        GuiCommands guiCommands,
+        FileCommands fileCommands,
+        RenameLogic renameLogic,
+        ISelectedState selectedState,
+        NameVerifier nameVerifier,
+        IDialogService dialogService)
     {
-        _undoManager = Locator.GetRequiredService<UndoManager>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
         _fileCommands = fileCommands;
-        _renameLogic = Locator.GetRequiredService<RenameLogic>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _renameLogic = renameLogic;
+        _selectedState = selectedState;
+        _nameVerifier = nameVerifier;
+        _dialogService = dialogService;
     }
 
     public OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
@@ -142,7 +149,7 @@ internal class ExposeVariableService : IExposeVariableService
 
                 PluginManager.Self.VariableAdd(elementSave, tiw.Result);
 
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                _fileCommands.TryAutoSaveCurrentElement();
                 _guiCommands.RefreshVariables(force: true);
                 toReturn.Data = variableSave;
                 toReturn.Succeeded = true;

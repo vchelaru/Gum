@@ -1,4 +1,4 @@
-using CommonFormsAndControls.Forms;
+﻿using CommonFormsAndControls.Forms;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
@@ -101,6 +101,9 @@ internal class MainEditorTabPlugin : InternalPlugin
     private BackgroundSpriteService _backgroundSpriteService;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly FileCommands _fileCommands;
+    private readonly HotkeyManager _hotkeyManager;
+    private readonly SetVariableLogic _setVariableLogic;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -124,13 +127,17 @@ internal class MainEditorTabPlugin : InternalPlugin
         _editingManager = new EditingManager();
         UndoManager undoManager = Locator.GetRequiredService<UndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
-        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService);
+        HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService, hotkeyManager);
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _hotkeyManager = hotkeyManager;
+        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     }
 
     public override void StartUp()
@@ -588,7 +595,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _wireframeControl.Initialize(
             _wireframeEditControl, 
             gumEditorPanel, 
-            HotkeyManager.Self, 
+            _hotkeyManager, 
             _selectionManager, 
             _dragDropManager);
 
@@ -709,7 +716,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         }
         if (shouldUpdate)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            _fileCommands.TryAutoSaveCurrentElement();
             _guiCommands.RefreshVariables();
 
             WireframeObjectManager.Self.RefreshAll(true);
@@ -737,7 +744,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
 
-        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
+        _setVariableLogic.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
 
     }
 
@@ -774,7 +781,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                 _selectedState.SelectedStateSave.SetValue("SourceFile", fileName);
                 _selectedState.SelectedInstance = null;
-                SetVariableLogic.Self.PropertyValueChanged(
+                _setVariableLogic.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, 
                     _selectedState.SelectedInstance,
@@ -831,7 +838,7 @@ internal class MainEditorTabPlugin : InternalPlugin
                 _selectedState.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
                 _selectedState.SelectedInstance = instance;
 
-                SetVariableLogic.Self.PropertyValueChanged(
+                _setVariableLogic.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, instance,
                     _selectedState.SelectedStateSave);
