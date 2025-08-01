@@ -13,6 +13,6 @@ public class MenuTests
     {
         var menu = new MonoGameGum.Forms.Controls.Menu();
         menu.Visual.ShouldNotBeNull();
-        (menu.Visual is MonoGameGum.Forms.DefaultVisuals.MenuVisual).ShouldBeTrue();
+        (menu.Visual is Gum.Forms.DefaultVisuals.MenuVisual).ShouldBeTrue();
     }
 }

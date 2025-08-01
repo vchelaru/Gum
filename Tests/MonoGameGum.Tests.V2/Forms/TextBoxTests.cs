@@ -13,6 +13,6 @@ public class TextBoxTests
     {
         var textBox = new MonoGameGum.Forms.Controls.TextBox();
         textBox.Visual.ShouldNotBeNull();
-        (textBox.Visual is MonoGameGum.Forms.DefaultVisuals.TextBoxVisual).ShouldBeTrue();
+        (textBox.Visual is Gum.Forms.DefaultVisuals.TextBoxVisual).ShouldBeTrue();
     }
 }

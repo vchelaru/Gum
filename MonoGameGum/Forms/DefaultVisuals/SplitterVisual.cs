@@ -8,15 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
-using Gum.Forms.Controls;
 using Gum.GueDeriving;
-namespace Gum.Forms.DefaultVisuals;
-
 #else
-using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
-namespace MonoGameGum.Forms.DefaultVisuals;
 #endif
+using Gum.Forms.Controls;
+namespace Gum.Forms.DefaultVisuals;
 
 public class SplitterVisual : InteractiveGue
 {

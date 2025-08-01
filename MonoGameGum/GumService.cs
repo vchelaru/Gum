@@ -325,7 +325,10 @@ public static class GraphicalUiElementExtensionMethods
     {
         element.Children.Add(child.Visual);
     }
-
+    public static void AddChild(this GraphicalUiElement element, MonoGameGum.Forms.Controls.FrameworkElement child)
+    {
+        element.Children.Add(child.Visual);
+    }
 
     public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
     {

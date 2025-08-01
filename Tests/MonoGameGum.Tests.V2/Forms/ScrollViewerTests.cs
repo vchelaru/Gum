@@ -13,6 +13,6 @@ public class ScrollViewerTests
     {
         var scrollViewer = new MonoGameGum.Forms.Controls.ScrollViewer();
         scrollViewer.Visual.ShouldNotBeNull();
-        (scrollViewer.Visual is MonoGameGum.Forms.DefaultVisuals.ScrollViewerVisual).ShouldBeTrue();
+        (scrollViewer.Visual is Gum.Forms.DefaultVisuals.ScrollViewerVisual).ShouldBeTrue();
     }
 }

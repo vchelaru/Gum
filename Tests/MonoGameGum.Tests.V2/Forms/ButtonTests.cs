@@ -1,5 +1,5 @@
-﻿using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultVisuals;
+﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals;
 using Shouldly;
 using System;
 using System.Collections.Generic;

@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Styling = Gum.Forms.DefaultVisuals.Styling;
+
 namespace MonoGameGum.Forms.DefaultVisuals;
 
 public class DefaultButtonRuntime : InteractiveGue
@@ -44,11 +46,11 @@ public class DefaultButtonRuntime : InteractiveGue
             TextInstance.Name = "TextInstance";
             TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            TextInstance.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            TextInstance.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
             this.Children.Add(TextInstance);
 
