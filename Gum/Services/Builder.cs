@@ -2,7 +2,6 @@ using Gum.Commands;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.PropertyGridHelpers;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -26,20 +25,11 @@ internal static class GumBuilder
         IHost host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
-                services.AddCleanServices();
+                services.AddGum();
             })
             .Build();
         
         Locator.Register(host.Services);
-
-        // Register legacy services
-        ServiceCollection legacyServices = new();
-        legacyServices.AddLegacyServices();
-        Locator.Register(legacyServices.BuildServiceProvider());
-        
-        // This is needed until we unroll all the static singletons...
-        CircularReferenceManager circularReferenceManager = Locator.GetRequiredService<CircularReferenceManager>();
-        SetVariableLogic.Self.Initialize(circularReferenceManager);
         
         return host;
     }
@@ -47,17 +37,19 @@ internal static class GumBuilder
 
 file static class ServiceCollectionExtensions
 {
-    // Register services that have no dependencies on legacy services.
-    // These must not use the Locator for resolving dependencies.
-    public static void AddCleanServices(this IServiceCollection services)
+    public static void AddGum(this IServiceCollection services)
     {
-        //transients
+        // transients
         services.ForEachConcreteTypeAssignableTo<ViewModel>(
             typeof(GumBuilder).Assembly,
             static (isp, type) => isp.AddTransient(type)
         );
         services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
         
+        // static singletons
+        services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        
+        // singletons
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
@@ -67,12 +59,13 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
+        services.AddSingleton<CircularReferenceManager>();
+        services.AddSingleton<DragDropManager>();
         
-        //logic
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<RenameLogic>();
+        services.AddSingleton<SetVariableLogic>();
         
-        //commands
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
@@ -80,22 +73,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<FileCommands>();
         services.AddSingleton<ProjectCommands>();
         
+        // other
         services.AddDialogs();
     }
     
-    // Register legacy services that may use Locator or have unresolved dependencies.
-    // These may depend on services within this container, but should avoid doing so
-    // to ease migration. Once all their dependencies are in the clean container,
-    // they can be moved to AddCleanServices.
-    public static void AddLegacyServices(this IServiceCollection services)
-    {
-        services.AddSingleton(SetVariableLogic.Self);
-        services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
-        
-        services.AddSingleton<CircularReferenceManager>();
-        services.AddSingleton<DragDropManager>();
-    }
-
     private static IServiceCollection AddDialogs(this IServiceCollection services)
     {
         services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();

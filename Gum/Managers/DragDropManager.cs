@@ -53,6 +53,7 @@ public class DragDropManager
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
+    private readonly SetVariableLogic _setVariableLogic;
 
     #endregion
 
@@ -66,16 +67,23 @@ public class DragDropManager
 
     #endregion
 
-    public DragDropManager(CircularReferenceManager circularReferenceManager)
+    public DragDropManager(CircularReferenceManager circularReferenceManager,
+        ISelectedState selectedState,
+        ElementCommands elementCommands,
+        RenameLogic renameLogic,
+        UndoManager undoManager,
+        IDialogService dialogService,
+        GuiCommands guiCommands,
+        FileCommands fileCommands)
     {
         _circularReferenceManager = circularReferenceManager;
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
-        _renameLogic = Locator.GetRequiredService<RenameLogic>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _selectedState = selectedState;
+        _elementCommands = elementCommands;
+        _renameLogic = renameLogic;
+        _undoManager = undoManager;
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     #region Drag+drop File (from windows explorer)
@@ -524,7 +532,7 @@ public class DragDropManager
             stateToAssignOn.SetValue(variableName, parentName, "string");
             
 
-            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
+            _setVariableLogic.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
             targetTreeNode?.Expand();
         }
     }

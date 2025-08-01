@@ -7,13 +7,16 @@ namespace Gum.Dialogs;
 
 public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
 {
+    private readonly SetVariableLogic _setVariableLogic;
+    
     public override string? Title => "Rename Element";
     public override string Message => "Enter new name:";
     
     public ElementSave? ElementSave { get => Get<ElementSave?>(); set => Set(value); }
 
-    public RenameElementDialogViewModel()
+    public RenameElementDialogViewModel(SetVariableLogic setVariableLogic)
     {
+        _setVariableLogic = setVariableLogic;
         PreSelect = true;
         PropertyChanged += (_, args) =>
         {
@@ -49,7 +52,7 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
         
         ElementSave.Name = newName;
         
-        SetVariableLogic.Self.PropertyValueChanged("Name",
+        _setVariableLogic.PropertyValueChanged("Name",
             oldName,
             null,
             ElementSave.DefaultState,

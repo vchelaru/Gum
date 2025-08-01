@@ -187,6 +187,7 @@ public class HotkeyManager
     private readonly ElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
     private readonly FileCommands _fileCommands;
+    private readonly SetVariableLogic _setVariableLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
     
@@ -194,7 +195,8 @@ public class HotkeyManager
         ISelectedState selectedState, 
         ElementCommands elementCommands,
         IDialogService dialogService,
-        FileCommands fileCommands)
+        FileCommands fileCommands,
+        SetVariableLogic setVariableLogic)
     {
         _copyPasteLogic = CopyPasteLogic.Self;
         _guiCommands = guiCommands;
@@ -202,6 +204,7 @@ public class HotkeyManager
         _elementCommands = elementCommands;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
     }
 
     #region App Wide Keys
@@ -317,7 +320,7 @@ public class HotkeyManager
                 if (_dialogService.GetUserString("Enter new name", "Rename Instance", options) is { } newName)
                 {
                     selectedInstance.Name = newName;
-                    SetVariableLogic.Self.PropertyValueChanged("Name", oldName,
+                    _setVariableLogic.PropertyValueChanged("Name", oldName,
                         selectedInstance,
                         selectedInstance.ParentContainer?.DefaultState,
                         refresh: true,
