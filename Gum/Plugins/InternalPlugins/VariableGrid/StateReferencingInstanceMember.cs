@@ -260,7 +260,7 @@ namespace Gum.PropertyGridHelpers
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _fileCommands =  Locator.GetRequiredService<FileCommands>();
-
+            _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
             mStateSave = stateSave;
