@@ -17,7 +17,14 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
+#if FRB
 namespace MonoGameGum.Forms;
+#else
+namespace Gum.Forms;
+#endif
+
 
 /// <summary>
 /// The version to use for default visuals in a code-only project.

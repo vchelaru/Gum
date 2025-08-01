@@ -15,11 +15,16 @@ using RenderingLibrary.Graphics;
 
 
 #if RAYLIB
-using Gum.GueDeriving;
 using RaylibGum.Input;
 #else
 using  MonoGameGum.GueDeriving;
 #endif
+
+
+#if !FRB
+using Gum.GueDeriving;
+#endif
+
 
 namespace Gum.Forms;
 

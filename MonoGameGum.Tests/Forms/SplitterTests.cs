@@ -188,7 +188,7 @@ public class SplitterTests : BaseTestClass
 
         ObjectFinder.Self.GumProjectSave = gumProject;
 
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
         var gue = splitterComponent.ToGraphicalUiElement();
 
