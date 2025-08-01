@@ -13,6 +13,6 @@ public class PasswordBoxTests
     {
         var passwordBox = new MonoGameGum.Forms.Controls.PasswordBox();
         passwordBox.Visual.ShouldNotBeNull();
-        (passwordBox.Visual is MonoGameGum.Forms.DefaultVisuals.PasswordBoxVisual).ShouldBeTrue();
+        (passwordBox.Visual is Gum.Forms.DefaultVisuals.PasswordBoxVisual).ShouldBeTrue();
     }
 }

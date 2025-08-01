@@ -13,6 +13,6 @@ public class ScrollBarTests
     {
         var scrollBar = new MonoGameGum.Forms.Controls.ScrollBar();
         scrollBar.Visual.ShouldNotBeNull();
-        (scrollBar.Visual is MonoGameGum.Forms.DefaultVisuals.ScrollBarVisual).ShouldBeTrue();
+        (scrollBar.Visual is Gum.Forms.DefaultVisuals.ScrollBarVisual).ShouldBeTrue();
     }
 }

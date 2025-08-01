@@ -13,6 +13,6 @@ public class SplitterTests
     {
         var splitter = new MonoGameGum.Forms.Controls.Splitter();
         splitter.Visual.ShouldNotBeNull();
-        (splitter.Visual is MonoGameGum.Forms.DefaultVisuals.SplitterVisual).ShouldBeTrue();
+        (splitter.Visual is Gum.Forms.DefaultVisuals.SplitterVisual).ShouldBeTrue();
     }
 }

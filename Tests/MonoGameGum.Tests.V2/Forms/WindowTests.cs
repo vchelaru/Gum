@@ -14,6 +14,6 @@ public class WindowTests
     {
         var window = new Window();
         window.Visual.ShouldNotBeNull();
-        (window.Visual is MonoGameGum.Forms.DefaultVisuals.WindowVisual).ShouldBeTrue();
+        (window.Visual is Gum.Forms.DefaultVisuals.WindowVisual).ShouldBeTrue();
     }
 }
