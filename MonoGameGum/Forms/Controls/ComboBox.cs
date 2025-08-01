@@ -37,7 +37,7 @@ namespace Gum.Forms.Controls;
 #endif
 
 public class ComboBox :
-#if RAYLIB
+#if RAYLIB || FRB
     FrameworkElement,
 #else
     MonoGameGum.Forms.Controls.FrameworkElement, 

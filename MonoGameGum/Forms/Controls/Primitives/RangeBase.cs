@@ -29,7 +29,7 @@ namespace Gum.Forms.Controls.Primitives;
 /// This is the base class for ScrollBar and Slider.
 /// </summary>
 public abstract class RangeBase :
-#if RAYLIB
+#if RAYLIB || FRB
     FrameworkElement
 #else
     MonoGameGum.Forms.Controls.FrameworkElement
