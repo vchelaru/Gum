@@ -26,10 +26,10 @@ One option is to create the desired font by adjusting a Text's properties, then 
 
 Alternatively, fonts with custom outline colors can be created with Hiero.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 Outline quality tends to be better if it appears before the regular font color. When the outline effect is added, it will appear below the normal color. To move it up, click on the **Up button.**
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The first Text is using a custom Hiero font, the second is using a default font</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The first Text is using a custom Hiero font, the second is using a default font</p></figcaption></figure>
 
 For more information on custom fonts, see the [Use Custom Font](use-custom-font.md) page.

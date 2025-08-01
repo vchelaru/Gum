@@ -35,7 +35,7 @@ The Button type is a good example of why this property might be needed because t
 
 To resolve this ambiguity, the ButtonBehavior's Default Implementation is automatically set to Controls/ButtonStandard.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ButtonBehavior using ButtonStandard as the Default Implementation</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ButtonBehavior using ButtonStandard as the Default Implementation</p></figcaption></figure>
 
 For more information about whether you should set the Default Implementation, refer to the documentation for your particular runtime.
 

@@ -26,7 +26,7 @@ We can add a label to StackPanelInstance by drag+dropping the Label component in
 
 We can change its Text, Color, and Style in the Exposed section in the Variables tab.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1).png" alt=""><figcaption><p>Common Label properties in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Common Label properties in Gum</p></figcaption></figure>
 
 We can override these properties in code through the generated instance. For example, we can modify our TitleScreen's CustomInitialize method to change the label text.
 

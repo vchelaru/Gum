@@ -31,7 +31,7 @@ If a `Normal` `Blend` Sprite has an `Alpha` of `255`, then the Sprite completely
 
 If a Sprite has an `Alpha` of `128` (roughly half of 255), then it averages its color with whatever is below.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
 
 A Sprite with an `Alpha` of `25` (roughly 10%) blends with whatever is below, but its color is given a weight of roughly 10%.
 
