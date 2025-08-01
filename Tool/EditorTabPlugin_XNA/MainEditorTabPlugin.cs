@@ -102,6 +102,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly FileCommands _fileCommands;
+    private readonly HotkeyManager _hotkeyManager;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -125,7 +126,8 @@ internal class MainEditorTabPlugin : InternalPlugin
         _editingManager = new EditingManager();
         UndoManager undoManager = Locator.GetRequiredService<UndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
-        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService);
+        HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService, hotkeyManager);
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
@@ -133,6 +135,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _hotkeyManager = hotkeyManager;
     }
 
     public override void StartUp()
@@ -590,7 +593,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _wireframeControl.Initialize(
             _wireframeEditControl, 
             gumEditorPanel, 
-            HotkeyManager.Self, 
+            _hotkeyManager, 
             _selectionManager, 
             _dragDropManager);
 

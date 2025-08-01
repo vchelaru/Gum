@@ -253,7 +253,7 @@ namespace Gum.PropertyGridHelpers
             _editVariablesService = Locator.GetRequiredService<IEditVariableService>();
             _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
             _objectFinder = ObjectFinder.Self;
-            _hotkeyManager = HotkeyManager.Self;
+            _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
             _deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
             _undoManager = undoManager;
             _selectedState = Locator.GetRequiredService<ISelectedState>();

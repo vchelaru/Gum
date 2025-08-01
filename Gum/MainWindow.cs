@@ -65,7 +65,7 @@ namespace Gum
             
             InitializeComponent();
 
-            CreateMainWpfPanel();
+            CreateMainWpfPanel(services.GetRequiredService<HotkeyManager>());
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
@@ -145,11 +145,11 @@ namespace Gum
             }
         }
 
-        private void CreateMainWpfPanel()
+        private void CreateMainWpfPanel(HotkeyManager hotkeyManager)
         {
             var wpfHost = new ElementHost();
             wpfHost.Dock = DockStyle.Fill;
-            mainPanelControl = new MainPanelControl();
+            mainPanelControl = new MainPanelControl(hotkeyManager);
             wpfHost.Child = mainPanelControl;
             this.Controls.Add(wpfHost);
             this.PerformLayout();
