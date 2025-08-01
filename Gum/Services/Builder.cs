@@ -25,16 +25,11 @@ internal static class GumBuilder
         IHost host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
-                services.AddCleanServices();
+                services.AddGum();
             })
             .Build();
         
         Locator.Register(host.Services);
-
-        // Register legacy services
-        ServiceCollection legacyServices = new();
-        legacyServices.AddLegacyServices();
-        Locator.Register(legacyServices.BuildServiceProvider());
         
         return host;
     }
@@ -42,9 +37,7 @@ internal static class GumBuilder
 
 file static class ServiceCollectionExtensions
 {
-    // Register services that have no dependencies on legacy services.
-    // These must not use the Locator for resolving dependencies.
-    public static void AddCleanServices(this IServiceCollection services)
+    public static void AddGum(this IServiceCollection services)
     {
         // transients
         services.ForEachConcreteTypeAssignableTo<ViewModel>(
@@ -84,14 +77,6 @@ file static class ServiceCollectionExtensions
         services.AddDialogs();
     }
     
-    // Register legacy services that may use Locator or have unresolved dependencies.
-    // These may depend on services within this container, but should avoid doing so
-    // to ease migration. Once all their dependencies are in the clean container,
-    // they can be moved to AddCleanServices.
-    public static void AddLegacyServices(this IServiceCollection services)
-    {
-    }
-
     private static IServiceCollection AddDialogs(this IServiceCollection services)
     {
         services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
