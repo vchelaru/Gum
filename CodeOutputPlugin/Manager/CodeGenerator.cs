@@ -262,6 +262,7 @@ public class CodeGenerator
         // https://github.com/vchelaru/Gum/issues/598
         HashSet<string> neededUsings = new HashSet<string>();
         neededUsings.Add("GumRuntime");
+        neededUsings.Add("System.Linq");
 
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
             context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
