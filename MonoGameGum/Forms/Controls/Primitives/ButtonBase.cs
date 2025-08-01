@@ -31,7 +31,7 @@ namespace Gum.Forms.Controls.Primitives;
 #endif
 
 public class ButtonBase :
-#if RAYLIB
+#if RAYLIB || FRB
     FrameworkElement,
 #else
     MonoGameGum.Forms.Controls.FrameworkElement, 

@@ -39,7 +39,13 @@ public class TextCompositionEventArgs : RoutedEventArgs
 }
 #endregion
 
-public abstract class TextBoxBase : MonoGameGum.Forms.Controls.FrameworkElement, IInputReceiver
+public abstract class TextBoxBase :
+#if RAYLIB || FRB
+    FrameworkElement,
+#else
+    MonoGameGum.Forms.Controls.FrameworkElement,
+#endif
+    IInputReceiver
 {
     #region Fields/Properties
 

@@ -1,9 +1,11 @@
-﻿using Gum.Clipboard;
-using Gum.Wireframe;
+﻿using Gum.Wireframe;
 using System;
 using System.Security;
 
+
 #if FRB
+using FlatRedBall.Forms.Data;
+using FlatRedBall.Forms.Clipboard;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #endif
@@ -11,6 +13,7 @@ namespace FlatRedBall.Forms.Controls;
 
 #if !FRB
 namespace Gum.Forms.Controls;
+using Gum.Clipboard;
 
 #endif
 

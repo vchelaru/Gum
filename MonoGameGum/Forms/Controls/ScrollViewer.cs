@@ -64,7 +64,7 @@ public class ScrollChangedEventArgs : EventArgs
 /// FrameworkElements (Forms) or regular visuals (GraphicalUiElements).
 /// </summary>
 public class ScrollViewer :
-#if RAYLIB
+#if RAYLIB || FRB
     FrameworkElement,
 #else
     MonoGameGum.Forms.Controls.FrameworkElement, 
