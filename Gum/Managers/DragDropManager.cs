@@ -74,7 +74,8 @@ public class DragDropManager
         UndoManager undoManager,
         IDialogService dialogService,
         GuiCommands guiCommands,
-        FileCommands fileCommands)
+        FileCommands fileCommands,
+        SetVariableLogic setVariableLogic)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -84,6 +85,7 @@ public class DragDropManager
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
     }
 
     #region Drag+drop File (from windows explorer)

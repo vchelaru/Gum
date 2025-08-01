@@ -5,13 +5,11 @@ using System.ComponentModel;
 
 #if RAYLIB
 using Raylib_cs;
-namespace Gum.Forms.DefaultVisuals;
-
 #else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-namespace MonoGameGum.Forms.DefaultVisuals;
 #endif
+namespace Gum.Forms.DefaultVisuals;
 
 public class Styling
 {
@@ -35,7 +33,7 @@ public class Styling
 #else
         if (spriteSheet == null)
         {
-            this.SpriteSheet = (Texture2D)RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
+            this.SpriteSheet = (Texture2D)global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
         }
         else
         {

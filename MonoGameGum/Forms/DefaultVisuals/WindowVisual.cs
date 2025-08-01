@@ -8,14 +8,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
-using Gum.Forms.Controls;
 using Gum.GueDeriving;
-namespace Gum.Forms.DefaultVisuals;
 #else
-using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
-namespace MonoGameGum.Forms.DefaultVisuals;
 #endif
+using Gum.Forms.Controls;
+using Styling = Gum.Forms.DefaultVisuals.Styling;
+using MonoGameGum;
+
+namespace Gum.Forms.DefaultVisuals;
 
 public class WindowVisual : InteractiveGue
 {

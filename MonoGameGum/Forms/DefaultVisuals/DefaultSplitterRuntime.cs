@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Styling = Gum.Forms.DefaultVisuals.Styling;
+
 namespace MonoGameGum.Forms.DefaultVisuals;
 public class DefaultSplitterRuntime : InteractiveGue
 {

@@ -76,7 +76,7 @@ public class FormsUtilities
         }
 
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
-        Styling.ActiveStyle = new Styling(uiSpriteSheet);
+        Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new (uiSpriteSheet);
 
         switch (defaultVisualsVersion)
         {
@@ -102,22 +102,22 @@ public class FormsUtilities
 
 
 
-                TryAdd(typeof(Button), typeof(ButtonVisual));
-                TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
-                TryAdd(typeof(ComboBox), typeof(ComboBoxVisual));
-                TryAdd(typeof(Label), typeof(LabelVisual));
-                TryAdd(typeof(ListBox), typeof(ListBoxVisual));
-                TryAdd(typeof(ListBoxItem), typeof(ListBoxItemVisual));
-                TryAdd(typeof(Menu), typeof(MenuVisual));
-                TryAdd(typeof(MenuItem), typeof(MenuItemVisual));
-                TryAdd(typeof(PasswordBox), typeof(PasswordBoxVisual));
-                TryAdd(typeof(RadioButton), typeof(RadioButtonVisual));
-                TryAdd(typeof(ScrollBar), typeof(ScrollBarVisual));
-                TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
-                TryAdd(typeof(TextBox), typeof(TextBoxVisual));
-                TryAdd(typeof(Slider), typeof(SliderVisual));
-                TryAdd(typeof(Splitter), typeof(SplitterVisual));
-                TryAdd(typeof(Window), typeof(WindowVisual));
+                TryAdd(typeof(Button), typeof(Gum.Forms.DefaultVisuals.ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(Gum.Forms.DefaultVisuals.CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(Gum.Forms.DefaultVisuals.ComboBoxVisual));
+                TryAdd(typeof(Label), typeof(Gum.Forms.DefaultVisuals.LabelVisual));
+                TryAdd(typeof(ListBox), typeof(Gum.Forms.DefaultVisuals.ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(Gum.Forms.DefaultVisuals.ListBoxItemVisual));
+                TryAdd(typeof(Menu), typeof(Gum.Forms.DefaultVisuals.MenuVisual));
+                TryAdd(typeof(MenuItem), typeof(Gum.Forms.DefaultVisuals.MenuItemVisual));
+                TryAdd(typeof(PasswordBox), typeof(Gum.Forms.DefaultVisuals.PasswordBoxVisual));
+                TryAdd(typeof(RadioButton), typeof(Gum.Forms.DefaultVisuals.RadioButtonVisual));
+                TryAdd(typeof(ScrollBar), typeof(Gum.Forms.DefaultVisuals.ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(Gum.Forms.DefaultVisuals.ScrollViewerVisual));
+                TryAdd(typeof(TextBox), typeof(Gum.Forms.DefaultVisuals.TextBoxVisual));
+                TryAdd(typeof(Slider), typeof(Gum.Forms.DefaultVisuals.SliderVisual));
+                TryAdd(typeof(Splitter), typeof(Gum.Forms.DefaultVisuals.SplitterVisual));
+                TryAdd(typeof(Window), typeof(Gum.Forms.DefaultVisuals.WindowVisual));
 
                 break;
             default:
