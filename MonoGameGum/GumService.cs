@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using ToolsUtilities;
+using Gum.Forms;
 
 namespace MonoGameGum;
 
@@ -43,11 +44,11 @@ public class GumService
 
     public GameTime GameTime { get; private set; }
 
-    public Cursor Cursor => FormsUtilities.Cursor;
+    public Cursor Cursor => Gum.Forms.FormsUtilities.Cursor;
 
-    public Keyboard Keyboard => FormsUtilities.Keyboard;
+    public Keyboard Keyboard => Gum.Forms.FormsUtilities.Keyboard;
 
-    public GamePad[] Gamepads => FormsUtilities.Gamepads;
+    public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 
@@ -96,7 +97,10 @@ public class GumService
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
     }
 
-    public void Initialize(Game game, DefaultVisualsVersion defaultVisualsVersion)
+    public void Initialize(Game game, MonoGameGum.Forms.DefaultVisualsVersion defaultVisualsVersion) =>
+        Initialize(game, (Gum.Forms.DefaultVisualsVersion)(int)defaultVisualsVersion);
+
+    public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
     {
         if (game.GraphicsDevice == null)
         {
@@ -158,7 +162,7 @@ public class GumService
     GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, 
         string? gumProjectFile = null, 
         SystemManagers? systemManagers = null, 
-        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+        Gum.Forms.DefaultVisualsVersion defaultVisualsVersion = Gum.Forms.DefaultVisualsVersion.V1)
     {
         if(hasBeenInitialized)
         {
@@ -177,7 +181,7 @@ public class GumService
 #endif
         }
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
+        Gum.Forms.FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;
@@ -196,7 +200,7 @@ public class GumService
             gumProject = GumProjectSave.Load(gumProjectFile);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
-            FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+            Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
             var absoluteFile = gumProjectFile;
             if(FileManager.IsRelative(absoluteFile))
@@ -265,7 +269,7 @@ public class GumService
 
     public void Update(Game game, GameTime gameTime)
     {
-        FormsUtilities.SetDimensionsToCanvas(this.Root);
+        Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
         Update(game, gameTime, this.Root);
 
     }
@@ -276,7 +280,7 @@ public class GumService
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
     {
         GameTime = gameTime;
-        FormsUtilities.Update(game, gameTime, root);
+        Gum.Forms.FormsUtilities.Update(game, gameTime, root);
         this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
         root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
     }
@@ -284,7 +288,7 @@ public class GumService
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
         GameTime = gameTime;
-        FormsUtilities.Update(game, gameTime, roots);
+        Gum.Forms.FormsUtilities.Update(game, gameTime, roots);
         this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
         foreach(var item in roots)
         {

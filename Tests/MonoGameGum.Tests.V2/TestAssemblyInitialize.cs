@@ -34,7 +34,7 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
-        FormsUtilities.InitializeDefaults(defaultVisualsVersion: DefaultVisualsVersion.V2);
+        Gum.Forms.FormsUtilities.InitializeDefaults(defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.V2);
         CreateStubbedFonts();
 
         InitializeGumService();

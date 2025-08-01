@@ -2,6 +2,7 @@
 using Gum.Forms.Data;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,26 @@ using System.Threading.Tasks;
 // These classes were added late July 2025 to support older projects.
 // Eventually these will be removed and the new namespace will be used.
 // But until then , we need to support both namespaces.
+
 namespace MonoGameGum.Forms
 {
+
+
+
+    public enum DefaultVisualsVersion
+    {
+        /// <summary>
+        /// The first version introduced with the first version of Gum Forms.
+        /// Most controls use solid colors and ColoredRectangles for their backgrounds.
+        /// </summary>
+        V1,
+        /// <summary>
+        /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
+        /// and respects a centralized styling.
+        /// </summary>
+        V2
+    }
+
     [Obsolete("Use the version this class in Gum.Forms instead")]
     public class VisualTemplate : Gum.Forms.VisualTemplate 
     {
@@ -31,6 +50,13 @@ namespace MonoGameGum.Forms
     {
         public FrameworkElementTemplate(Type type) : base(type) { }
         public FrameworkElementTemplate(Func<Controls.FrameworkElement> creationFunc) : base(creationFunc) { }
+    }
+
+    public class FormsUtilities
+    {
+        public static Cursor Cursor => Gum.Forms.FormsUtilities.Cursor;
+        public static MonoGameGum.Input.Keyboard Keyboard => Gum.Forms.FormsUtilities.Keyboard;
+        public static MonoGameGum.Input.GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
     }
 
     [Obsolete("Use the version this class in Gum.Forms instead")]
