@@ -25,7 +25,7 @@ using Gum.Undo;
 
 namespace Gum.PropertyGridHelpers
 {
-    public class SetVariableLogic : Singleton<SetVariableLogic>
+    public class SetVariableLogic
     {
         private readonly VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
@@ -39,23 +39,28 @@ namespace Gum.PropertyGridHelpers
         private readonly WireframeCommands _wireframeCommands;
         private readonly GuiCommands _guiCommands;
 
-        public SetVariableLogic()
+        public SetVariableLogic(ISelectedState selectedState, 
+            NameVerifier nameVerifier, 
+            RenameLogic renameLogic, 
+            ElementCommands elementCommands, 
+            UndoManager undoManager,
+            WireframeCommands wireframeCommands,
+            VariableReferenceLogic variableReferenceLogic,
+            GuiCommands guiCommands,
+            FontManager fontManager,
+            FileCommands fileCommands,
+            CircularReferenceManager circularReferenceManager)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
-            _renameLogic = Locator.GetRequiredService<RenameLogic>();
-            _elementCommands = Locator.GetRequiredService<ElementCommands>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
-            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-            _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fontManager = Locator.GetRequiredService<FontManager>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
-        }
-
-        // this is needed as we unroll all the other singletons...
-        public void Initialize(CircularReferenceManager circularReferenceManager)
-        {
+            _selectedState = selectedState;
+            _nameVerifier = nameVerifier;
+            _renameLogic = renameLogic;
+            _elementCommands = elementCommands;
+            _undoManager = undoManager;
+            _wireframeCommands = wireframeCommands;
+            _variableReferenceLogic = variableReferenceLogic;
+            _guiCommands = guiCommands;
+            _fontManager = fontManager;
+            _fileCommands = fileCommands;
             _circularReferenceManager = circularReferenceManager;
         }
 

@@ -103,6 +103,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly WireframeCommands _wireframeCommands;
     private readonly FileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
+    private readonly SetVariableLogic _setVariableLogic;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -136,6 +137,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
         _hotkeyManager = hotkeyManager;
+        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     }
 
     public override void StartUp()
@@ -742,7 +744,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
 
-        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
+        _setVariableLogic.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
 
     }
 
@@ -779,7 +781,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                 _selectedState.SelectedStateSave.SetValue("SourceFile", fileName);
                 _selectedState.SelectedInstance = null;
-                SetVariableLogic.Self.PropertyValueChanged(
+                _setVariableLogic.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, 
                     _selectedState.SelectedInstance,
@@ -836,7 +838,7 @@ internal class MainEditorTabPlugin : InternalPlugin
                 _selectedState.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
                 _selectedState.SelectedInstance = instance;
 
-                SetVariableLogic.Self.PropertyValueChanged(
+                _setVariableLogic.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, instance,
                     _selectedState.SelectedStateSave);

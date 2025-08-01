@@ -42,6 +42,7 @@ namespace Gum.PropertyGridHelpers
         private readonly IEditVariableService _editVariablesService;
         private readonly IExposeVariableService _exposeVariableService;
         private readonly ISelectedState _selectedState;
+        private readonly SetVariableLogic _setVariableLogic;
         
         StateSave mStateSave;
         string mVariableName;
@@ -937,7 +938,7 @@ namespace Gum.PropertyGridHelpers
                     {
                         handledByExposedVariable = true;
 
-                        SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                        _setVariableLogic.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
                     }
 
                 }
@@ -947,7 +948,7 @@ namespace Gum.PropertyGridHelpers
             {
                 var element = gumElementOrInstanceSaveAsObject as ElementSave ??
                     (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
-                response = SetVariableLogic.Self.PropertyValueChanged(
+                response = _setVariableLogic.PropertyValueChanged(
                     name,
                     LastOldFullCommitValue,
                     gumElementOrInstanceSaveAsObject as InstanceSave,

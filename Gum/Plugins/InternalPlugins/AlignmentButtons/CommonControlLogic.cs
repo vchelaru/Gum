@@ -13,6 +13,7 @@ public class CommonControlLogic
     private readonly WireframeCommands _wireframeCommands;
     private readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
+    private readonly SetVariableLogic _setVariableLogic;
     
     public CommonControlLogic()
     {
@@ -20,6 +21,7 @@ public class CommonControlLogic
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     }
 
     bool SelectionInheritsFromText()
@@ -81,7 +83,7 @@ public class CommonControlLogic
 
             // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
             RecordSetVariablePersistPositions();
-            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, instance, _selectedState.SelectedStateSave, refresh: false);
+            _setVariableLogic.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, instance, _selectedState.SelectedStateSave, refresh: false);
             ResumeSetVariablePersistOptions();
         }
 
@@ -96,7 +98,7 @@ public class CommonControlLogic
 
                 // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
                 RecordSetVariablePersistPositions();
-                SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, _selectedState.SelectedStateSave, refresh: false);
+                _setVariableLogic.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, _selectedState.SelectedStateSave, refresh: false);
                 ResumeSetVariablePersistOptions();
             }
         }
@@ -112,12 +114,12 @@ public class CommonControlLogic
     bool StoredAttemptToPersistPositionsOnUnitChanges;
     private void RecordSetVariablePersistPositions()
     {
-        StoredAttemptToPersistPositionsOnUnitChanges = SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges;
-        SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges = false;
+        StoredAttemptToPersistPositionsOnUnitChanges = _setVariableLogic.AttemptToPersistPositionsOnUnitChanges;
+        _setVariableLogic.AttemptToPersistPositionsOnUnitChanges = false;
     }
 
     private void ResumeSetVariablePersistOptions()
     {
-        SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges = StoredAttemptToPersistPositionsOnUnitChanges;
+        _setVariableLogic.AttemptToPersistPositionsOnUnitChanges = StoredAttemptToPersistPositionsOnUnitChanges;
     }
 }
