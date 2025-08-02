@@ -94,7 +94,8 @@ public class GumService
                 "so that the Game has a valid GrahicsDevice");
         }
 
-        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
+        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile, defaultVisualsVersion:
+            Gum.Forms.DefaultVisualsVersion.V2);
     }
 
     public void Initialize(Game game, MonoGameGum.Forms.DefaultVisualsVersion defaultVisualsVersion) =>
