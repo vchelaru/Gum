@@ -293,10 +293,26 @@ public class FormsUtilities
             keyboard, 
             gameTime.TotalGameTime.TotalSeconds);
 
-
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
+
+        // It's possible that a cursor pushes on a control, which would set its state to Pushed. After the cursor releases,
+        // the control is no longer pushed, so it should update its state to reflect that it is no longer pushed, such as
+        // by showing hover or focused state. This need was uncovered by the MonoGame iOS sample which focused the slider when
+        // hovering, but the state never got updated on release.
+        if(cursor.PrimaryClick)
+        {
+            if (InteractiveGue.CurrentInputReceiver is FrameworkElement frameworkElementInputReceiver)
+            {
+                frameworkElementInputReceiver.UpdateState();
+            }
+            if(frameworkElementOver != null && frameworkElementOver != InteractiveGue.CurrentInputReceiver)
+            {
+                frameworkElementOver.UpdateState();
+            }
+        }
+
 
         var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
 
