@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ public class SliderTests : BaseTestClass
     [Fact]
     public void Value_ShouldBeLimited_WhenOutsideOfMinimumAndMaximum()
     {
-        var slider = new MonoGameGum.Forms.Controls.Slider
+        Slider slider = new ()
         {
             Minimum = 0,
             Maximum = 100
@@ -26,7 +27,7 @@ public class SliderTests : BaseTestClass
     [Fact]
     public void Value_ShouldBeAdjusted_WhenMinimumAndMaximumChange()
     {
-        var slider = new MonoGameGum.Forms.Controls.Slider
+        Slider slider = new ()
         {
             Minimum = 0,
             Maximum = 100,
@@ -40,5 +41,27 @@ public class SliderTests : BaseTestClass
         slider.Value = 90;
         slider.Maximum = 75;
         slider.Maximum.ShouldBe(75);
+    }
+
+    [Fact]
+    public void IsFocused_ShouldUpdateState()
+    {
+        Slider slider = new();
+
+        var visual = slider.Visual;
+
+        var focusedState = visual.Categories[Slider.SliderCategoryName]
+            .States.First(item => item.Name == FrameworkElement.FocusedStateName);
+
+        focusedState.Clear();
+        bool wasSet = false;
+        focusedState.Apply = () =>
+        {
+            wasSet = true;
+        };
+
+        slider.IsFocused = true;
+
+        wasSet.ShouldBeTrue();
     }
 }
