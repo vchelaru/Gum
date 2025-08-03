@@ -259,7 +259,7 @@ Feel free to open this file and add more frames to be used by your NineSlice.
 
 Notice that most of the frames are white so that they can be colored in Gum using the pre-defined color values in the Styles component. If you intend for your borders to be dynamically colored, you should also use the white color. For example, a new rounded rectangle style can be added below the existing styles.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1).png" alt=""><figcaption><p>New rounded rectangle style </p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1).png" alt=""><figcaption><p>New rounded rectangle style </p></figcaption></figure>
 
 Be sure to save your .png file so it shows up in Gum.
 

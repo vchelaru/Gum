@@ -1,7 +1,7 @@
 # Gum Forms
 
 {% hint style="danger" %}
-This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was  retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
+This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
 
 This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
 
@@ -80,7 +80,7 @@ public class Game1 : Game
 
 If you have followed through the tutorial series, then your project should already have Forms components. If not, you need to add Forms components to your screen by using the Add Forms Components menu item.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
 
 For more information, see the [Setup tutorial](setup.md#creating-a-new-gum-project) which provides step-by-step instructions for adding Forms to your project.
 

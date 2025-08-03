@@ -10,4 +10,4 @@ The following image shows a NineSlice with a Texture Left value of 96.
 
 Texture Left controls the left side of the region that the NineSlice displays on its source file. In this case, the left-edge of the source rectangle is 96 pixels from the left edge of the entire file.&#x20;
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Texture Left set to 96 pixels in the Texture Coordinates tab</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Texture Left set to 96 pixels in the Texture Coordinates tab</p></figcaption></figure>

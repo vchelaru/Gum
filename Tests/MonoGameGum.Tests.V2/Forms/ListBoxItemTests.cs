@@ -13,6 +13,6 @@ public class ListBoxItemTests
     {
         var listBoxItem = new MonoGameGum.Forms.Controls.ListBoxItem();
         listBoxItem.Visual.ShouldNotBeNull();
-        (listBoxItem.Visual is MonoGameGum.Forms.DefaultVisuals.ListBoxItemVisual).ShouldBeTrue();
+        (listBoxItem.Visual is Gum.Forms.DefaultVisuals.ListBoxItemVisual).ShouldBeTrue();
     }
 }

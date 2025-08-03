@@ -8,16 +8,14 @@ using RenderingLibrary.Graphics;
 #if RAYLIB
 using Raylib_cs;
 using Gum.GueDeriving;
-using Gum.Forms.Controls;
-namespace Gum.Forms.DefaultVisuals;
 
 #else
 using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.Forms.Controls;
-namespace MonoGameGum.Forms.DefaultVisuals;
 #endif
+using Gum.Forms.Controls;
+namespace Gum.Forms.DefaultVisuals;
 
 public class ButtonVisual : InteractiveGue
 {
@@ -81,7 +79,7 @@ public class ButtonVisual : InteractiveGue
         TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         TextInstance.HorizontalAlignment = HorizontalAlignment.Center;
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
-        TextInstance.Color = Color.White;
+        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         this.AddChild(TextInstance);
 

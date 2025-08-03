@@ -24,4 +24,4 @@ The rectangles on the left each have an `Alpha` value of `255`. These rectangles
 
 The rectangles on the right each have an `Alpha` of `128`, so the red rectangle is visible behind the blue rectangle.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Container Alpha on the left, individual Alpha on the right</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Container Alpha on the left, individual Alpha on the right</p></figcaption></figure>

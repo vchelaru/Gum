@@ -13,6 +13,6 @@ public class RadioButtonTests
     {
         var radioButton = new MonoGameGum.Forms.Controls.RadioButton();
         radioButton.Visual.ShouldNotBeNull();
-        (radioButton.Visual is MonoGameGum.Forms.DefaultVisuals.RadioButtonVisual).ShouldBeTrue();
+        (radioButton.Visual is Gum.Forms.DefaultVisuals.RadioButtonVisual).ShouldBeTrue();
     }
 }

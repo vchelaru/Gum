@@ -10,17 +10,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
-using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Raylib_cs;
-namespace Gum.Forms.DefaultVisuals;
 #else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
-namespace MonoGameGum.Forms.DefaultVisuals;
 #endif
+using Gum.Forms.Controls;
+namespace Gum.Forms.DefaultVisuals;
 
 public class ComboBoxVisual : InteractiveGue
 {

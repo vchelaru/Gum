@@ -1,6 +1,6 @@
-﻿using MonoGameGum.Forms.Controls;
+﻿using Gum.Forms.Controls;
 
-namespace MonoGameGum.Forms.DefaultVisuals
+namespace Gum.Forms.DefaultVisuals
 {
     public class TextBoxVisual : TextBoxBaseVisual
     {

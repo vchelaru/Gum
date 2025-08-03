@@ -1,7 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultVisuals;
+namespace Gum.Forms.DefaultVisuals;
 
 public class MenuVisual : InteractiveGue
 {

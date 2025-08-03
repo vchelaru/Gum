@@ -13,6 +13,6 @@ public class SliderTests
     {
         var slider = new MonoGameGum.Forms.Controls.Slider();
         slider.Visual.ShouldNotBeNull();
-        (slider.Visual is MonoGameGum.Forms.DefaultVisuals.SliderVisual).ShouldBeTrue();
+        (slider.Visual is Gum.Forms.DefaultVisuals.SliderVisual).ShouldBeTrue();
     }
 }

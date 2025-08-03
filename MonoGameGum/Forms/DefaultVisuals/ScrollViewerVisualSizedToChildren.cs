@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultVisuals;
+namespace Gum.Forms.DefaultVisuals;
 internal class ScrollViewerVisualSizedToChildren : ScrollViewerVisual
 {
     public ScrollViewerVisualSizedToChildren(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 

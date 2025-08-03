@@ -13,6 +13,6 @@ public class LabelTests
     {
         var label = new MonoGameGum.Forms.Controls.Label();
         label.Visual.ShouldNotBeNull();
-        (label.Visual is MonoGameGum.Forms.DefaultVisuals.LabelVisual).ShouldBeTrue();
+        (label.Visual is Gum.Forms.DefaultVisuals.LabelVisual).ShouldBeTrue();
     }
 }
