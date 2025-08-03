@@ -78,37 +78,37 @@
     </Variable>
     <Variable>
       <Type>ColorCategory</Type>
-      <Name>NineSliceInstance.ColorCategoryState</Name>
+      <Name>TrackBackground.ColorCategoryState</Name>
       <Value xsi:type="xsd:string">DarkGray</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>NineSliceInstance.Height</Name>
+      <Name>TrackBackground.Height</Name>
       <Value xsi:type="xsd:float">8</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>NineSliceInstance.HeightUnits</Name>
+      <Name>TrackBackground.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>NineSliceInstance.Parent</Name>
+      <Name>TrackBackground.Parent</Name>
       <Value xsi:type="xsd:string">TrackInstance</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>StyleCategory</Type>
-      <Name>NineSliceInstance.StyleCategoryState</Name>
+      <Name>TrackBackground.StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Bordered</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>NineSliceInstance.Width</Name>
+      <Name>TrackBackground.Width</Name>
       <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -352,7 +352,7 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>NineSliceInstance</Name>
+    <Name>TrackBackground</Name>
     <BaseType>NineSlice</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
