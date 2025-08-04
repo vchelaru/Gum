@@ -155,7 +155,62 @@ public class BmfcSave
         }
         return newRange;
     }
+    
+    public static string GenerateRangesFromFile(string fileName)
+    {
+        var text = System.IO.File.ReadAllText(fileName);
+        var uniqueValues = new System.Collections.Generic.HashSet<int>();
+        foreach (var c in text)
+        {
+            uniqueValues.Add((int)c);
+        }
 
+        var ordered = uniqueValues.OrderBy(item => item).ToList();
+        var builder = new System.Text.StringBuilder();
+
+        void AppendRange(int start, int end)
+        {
+            if(builder.Length > 0)
+            {
+                builder.Append(',');
+            }
+            if(start == end)
+            {
+                builder.Append(start);
+            }
+            else
+            {
+                builder.Append(start).Append('-').Append(end);
+            }
+        }
+
+        int currentStart = -1;
+        int previous = -1;
+        foreach(var val in ordered)
+        {
+            if(currentStart == -1)
+            {
+                currentStart = previous = val;
+            }
+            else if(val == previous + 1)
+            {
+                previous = val;
+            }
+            else
+            {
+                AppendRange(currentStart, previous);
+                currentStart = previous = val;
+            }
+        }
+
+        if(currentStart != -1)
+        {
+            AppendRange(currentStart, previous);
+        }
+
+        return builder.ToString();
+    }
+    
     public string FontCacheFileName
     {
         get
