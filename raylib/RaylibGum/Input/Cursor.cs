@@ -237,13 +237,15 @@ public class Cursor : ICursor
     public bool MiddleDoubleClick { get; private set; }
 
 
-    public InteractiveGue WindowPushed { get; set; }
+    public InteractiveGue? WindowPushed { get; set; }
+
+    public InteractiveGue? VisualRightPushed { get; set; }
 
     /// <summary>
     /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
     /// FormsUtilities.
     /// </summary>
-    public InteractiveGue WindowOver { get; set; }
+    public InteractiveGue? WindowOver { get; set; }
 
     // todo - need to have this actually change the cursor. For now doing this to satisfy the interface:
     Cursors? ICursor.CustomCursor
