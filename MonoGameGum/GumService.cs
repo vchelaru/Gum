@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using ToolsUtilities;
 using Gum.Forms;
+using System.Collections.Specialized;
 
 namespace MonoGameGum;
 
@@ -78,6 +79,18 @@ public class GumService
 
     #region Initialize
 
+    public GumService()
+    {
+        Root.Width = 0;
+        Root.WidthUnits = DimensionUnitType.RelativeToParent;
+        Root.Height = 0;
+        Root.HeightUnits = DimensionUnitType.RelativeToParent;
+        Root.Name = "Main Root";
+        Root.HasEvents = false;
+
+        Root.Children.CollectionChanged += (o,e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root,e);
+    }
+
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
@@ -94,7 +107,8 @@ public class GumService
                 "so that the Game has a valid GrahicsDevice");
         }
 
-        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
+        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile, defaultVisualsVersion:
+            Gum.Forms.DefaultVisualsVersion.V2);
     }
 
     public void Initialize(Game game, MonoGameGum.Forms.DefaultVisualsVersion defaultVisualsVersion) =>
@@ -183,12 +197,6 @@ public class GumService
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
         Gum.Forms.FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
-        Root.Width = 0;
-        Root.WidthUnits = DimensionUnitType.RelativeToParent;
-        Root.Height = 0;
-        Root.HeightUnits = DimensionUnitType.RelativeToParent;
-        Root.Name = "Main Root";
-        Root.HasEvents = false;
 
         Root.AddToManagers(SystemManagers);
 

@@ -73,6 +73,11 @@ public partial class InteractiveGue : BindableGue
 {
     static List<Action> nextPushActions = new List<Action>();
     static List<Action> nextClickActions = new List<Action>();
+
+    /// <summary>
+    /// The current game time, assigned internally when calling GumService.Update. This can be used by UI elements to perform
+    /// timing-based actions, such as moving a slider on a long press.
+    /// </summary>
     public static double CurrentGameTime { get; internal set; }
 
     static IInputReceiver currentInputReceiver;
