@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using MonoGameGum.GueDeriving;
 using System;
 
 #if FRB
@@ -63,6 +64,10 @@ public class Label :
     protected virtual void RefreshInternalVisualReferences()
     {
         if (base.Visual?.Name == "TextInstance")
+        {
+            textComponent = base.Visual;
+        }
+        else if(base.Visual?.RenderableComponent is global::RenderingLibrary.Graphics.IText)
         {
             textComponent = base.Visual;
         }
