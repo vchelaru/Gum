@@ -20,7 +20,7 @@ namespace Gum.Forms.DefaultVisuals;
 public class SliderVisual : InteractiveGue
 {
     public ContainerRuntime TrackInstance { get; private set; }
-    public NineSliceRuntime NineSliceInstance { get; private set; }
+    public NineSliceRuntime TrackBackground { get; private set; }
     public ButtonVisual ThumbInstance { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
     public class SliderCategoryStates
@@ -59,19 +59,19 @@ public class SliderVisual : InteractiveGue
         TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.AddChild(TrackInstance);
 
-        NineSliceInstance = new NineSliceRuntime();
-        NineSliceInstance.Name = "NineSliceInstance";
-        NineSliceInstance.Y = 0;
-        NineSliceInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        NineSliceInstance.YOrigin = VerticalAlignment.Center;
-        NineSliceInstance.Width = 0f;
-        NineSliceInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        NineSliceInstance.Height = 8f;
-        NineSliceInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        NineSliceInstance.Color = Styling.ActiveStyle.Colors.DarkGray;
-        NineSliceInstance.Texture = uiSpriteSheetTexture;
-        NineSliceInstance.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
-        TrackInstance.AddChild(NineSliceInstance);
+        TrackBackground = new NineSliceRuntime();
+        TrackBackground.Name = "TrackBackground";
+        TrackBackground.Y = 0;
+        TrackBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
+        TrackBackground.YOrigin = VerticalAlignment.Center;
+        TrackBackground.Width = 0f;
+        TrackBackground.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        TrackBackground.Height = 8f;
+        TrackBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        TrackBackground.Color = Styling.ActiveStyle.Colors.DarkGray;
+        TrackBackground.Texture = uiSpriteSheetTexture;
+        TrackBackground.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
+        TrackInstance.AddChild(TrackBackground);
 
         ThumbInstance = new ButtonVisual();
         ThumbInstance.Name = "ThumbInstance";
