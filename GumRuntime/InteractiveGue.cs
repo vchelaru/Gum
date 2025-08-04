@@ -157,6 +157,12 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler Click;
 
     /// <summary>
+    /// Event which is raised whenever this is right-clicked by a cursor. A right-click occurs
+    /// when the cursor is over this and is first pushed, then released.
+    /// </summary>
+    public event EventHandler RightClick;
+
+    /// <summary>
     /// Event which is raised whenever this is pushed by a cursor. A push occurs
     /// when the cursor is over this and the left mouse button is pushed (not down last frame,
     /// down this frame).
@@ -244,14 +250,12 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler RemovedAsPushed;
 
     public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
+    public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  
 
     // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
     public void TryCallRollOff()
     {
-        if (RollOff != null)
-        {
-            RollOff(this, EventArgs.Empty);
-        }
+        RollOff?.Invoke(this, EventArgs.Empty);
     }
 
     public void TryCallDragging()
@@ -347,6 +351,8 @@ public partial class InteractiveGue : BindableGue
                 ||
                 asInteractive?.Push != null ||
                 asInteractive?.Click != null ||
+                asInteractive?.RightClick != null ||
+
                 asInteractive?.RollOn != null ||
                 asInteractive?.RollOff != null ||
                 asInteractive?.RollOver != null ||
@@ -400,6 +406,15 @@ public partial class InteractiveGue : BindableGue
                             //cursor.GrabWindow(this);
 
                         }
+                        if(cursor.SecondaryPush && asInteractive.IsEnabled)
+                        {
+                            cursor.VisualRightPushed = asInteractive;
+
+                            //if(asInteractive.RightPush != null)
+                            //{
+                                //...
+                            //}
+                        }
 
                         if (cursor.PrimaryClick && asInteractive.IsEnabled) // both pushing and clicking can occur in one frame because of buffered input
                         {
@@ -428,7 +443,18 @@ public partial class InteractiveGue : BindableGue
                                 //}
                             }
                         }
-                       
+                        if(cursor.SecondaryClick && asInteractive.IsEnabled)
+                        {
+                            if(cursor.VisualRightPushed == asInteractive)
+                            {
+                                if (asInteractive.RightClick != null)
+                                {
+                                    var args = new InputEventArgs() { InputDevice = cursor };
+                                    asInteractive.RightClick(asInteractive, args);
+                                }
+                            }
+                        }
+
                     }
                 }
                 if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
@@ -833,8 +859,9 @@ public interface ICursor
     bool MiddleClick { get; }
     bool MiddleDoubleClick { get; }
 
-    InteractiveGue WindowPushed { get; set; }
-    InteractiveGue WindowOver { get; set; }
+    InteractiveGue? WindowPushed { get; set; }
+    InteractiveGue? VisualRightPushed { get; set; }
+    InteractiveGue? WindowOver { get; set; }
 }
 
 public interface IInputReceiverKeyboard
@@ -881,6 +908,7 @@ public static class GueInteractiveExtensionMethods
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
         var windowOverBefore = cursor.WindowOver;
         var windowPushedBefore = cursor.WindowPushed;
+        var VisualRightPushedBefore = cursor.VisualRightPushed;
 
         var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth &&
             cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
@@ -951,6 +979,10 @@ public static class GueInteractiveExtensionMethods
         if(cursor.PrimaryDown == false)
         {
             cursor.WindowPushed = null;
+        }
+        if(cursor.SecondaryDown == false)
+        {
+            cursor.VisualRightPushed = null;
         }
         if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
         {
