@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MonoGameGum.Input;
 
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
@@ -41,6 +42,9 @@ public class BaseTestClass : IDisposable
             HeldKey = Microsoft.Xna.Framework.Input.Keys.RightShift,
             IsTriggeredOnRepeat = true
         });
+
+        // just to remove any mocks:
+        FrameworkElement.MainCursor = new Cursor();
 
         InteractiveGue.CurrentInputReceiver = null;
 

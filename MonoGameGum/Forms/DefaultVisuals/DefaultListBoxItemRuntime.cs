@@ -116,6 +116,10 @@ public class DefaultListBoxItemRuntime : InteractiveGue
             AddState(FrameworkElement.FocusedStateName);
             AddVariable("Background.Visible", false);
             AddVariable("FocusedIndicator.Visible", true);
+
+            AddState(FrameworkElement.DisabledStateName);
+            AddVariable("Background.Visible", false);
+            AddVariable("FocusedIndicator.Visible", true);
         }
 
         if (tryCreateFormsObject)
