@@ -49,7 +49,10 @@ namespace Gum
 
         #endregion
 
-        public MainWindow()
+        public MainWindow(IMainWindowHandleProvider mainWindowHandleProvider,
+            HotkeyManager hotkeyManager,
+            GuiCommands guiCommands,
+            FileCommands fileCommands)
         {
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
@@ -57,23 +60,19 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
-            IHost host = GumBuilder.BuildGum();
-            
-            IServiceProvider services = host.Services;
-            
-            ((MainFormWindowHandleProvider)services.GetRequiredService<IMainWindowHandleProvider>()).Initialize(() => Handle);
+            ((MainFormWindowHandleProvider)mainWindowHandleProvider).Initialize(() => Handle);
             
             InitializeComponent();
 
-            CreateMainWpfPanel(services.GetRequiredService<HotkeyManager>());
+            CreateMainWpfPanel(hotkeyManager);
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
 
             // Initialize before the StateView is created...
-            _guiCommands = services.GetRequiredService<GuiCommands>();
+            _guiCommands = guiCommands;
             _guiCommands.Initialize(this, mainPanelControl);
-            services.GetRequiredService<FileCommands>().Initialize(this);
+            fileCommands.Initialize(this);
 
             TypeManager.Self.Initialize();
 

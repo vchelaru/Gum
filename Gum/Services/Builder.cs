@@ -19,19 +19,13 @@ namespace Gum.Services;
 
 internal static class GumBuilder
 {
-    public static IHost BuildGum(string[]? args = null)
+    public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
-        // Build Host
-        IHost host = Host.CreateDefaultBuilder(args)
+        return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
                 services.AddGum();
-            })
-            .Build();
-        
-        Locator.Register(host.Services);
-        
-        return host;
+            });
     }
 }
 
