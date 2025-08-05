@@ -203,7 +203,7 @@ public class FormsUtilities
                     {
                         InteractiveGue.CurrentInputReceiver = null;
                     }
-                    else if (removedElements.Contains(topParent))
+                    else if (removedElements?.Contains(topParent) == true)
                     {
                         InteractiveGue.CurrentInputReceiver = null;
                     }
