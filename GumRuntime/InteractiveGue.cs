@@ -143,6 +143,24 @@ public partial class InteractiveGue : BindableGue
         }
     }
 
+    public bool IsEnabledRecursively => GetIsEnabledRecursively(this);
+
+    static bool GetIsEnabledRecursively(InteractiveGue interactiveGue)
+    {
+        if (!interactiveGue.IsEnabled)
+        {
+            return false;
+        }
+        else if (interactiveGue.Parent is InteractiveGue parent)
+        {
+            return GetIsEnabledRecursively(parent);
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     /// <summary>
     /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
     /// </summary>
@@ -329,7 +347,7 @@ public partial class InteractiveGue : BindableGue
 
                     // If the child either has events or exposes children events, then give it a chance to handle this activity.
 
-                    if (child != null &&  HasCursorOver(cursor, child, layer))
+                    if (child != null && HasCursorOver(cursor, child, layer))
                     {
                         handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
 
@@ -337,6 +355,7 @@ public partial class InteractiveGue : BindableGue
                         {
                             break;
                         }
+
                     }
                 }
 
@@ -394,7 +413,7 @@ public partial class InteractiveGue : BindableGue
                         cursor.WindowOver = asInteractive;
                         handledActions.SetWindowOver = true;
 
-                        if (cursor.PrimaryPush && asInteractive.IsEnabled)
+                        if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively)
                         {
 
                             cursor.WindowPushed = asInteractive;
@@ -406,7 +425,7 @@ public partial class InteractiveGue : BindableGue
                             //cursor.GrabWindow(this);
 
                         }
-                        if(cursor.SecondaryPush && asInteractive.IsEnabled)
+                        if(cursor.SecondaryPush && asInteractive.IsEnabledRecursively)
                         {
                             cursor.VisualRightPushed = asInteractive;
 
@@ -416,7 +435,7 @@ public partial class InteractiveGue : BindableGue
                             //}
                         }
 
-                        if (cursor.PrimaryClick && asInteractive.IsEnabled) // both pushing and clicking can occur in one frame because of buffered input
+                        if (cursor.PrimaryClick && asInteractive.IsEnabledRecursively) // both pushing and clicking can occur in one frame because of buffered input
                         {
                             if (cursor.WindowPushed == asInteractive)
                             {
@@ -443,7 +462,7 @@ public partial class InteractiveGue : BindableGue
                                 //}
                             }
                         }
-                        if(cursor.SecondaryClick && asInteractive.IsEnabled)
+                        if(cursor.SecondaryClick && asInteractive.IsEnabledRecursively)
                         {
                             if(cursor.VisualRightPushed == asInteractive)
                             {
@@ -457,7 +476,7 @@ public partial class InteractiveGue : BindableGue
 
                     }
                 }
-                if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
+                if (asInteractive?.HasEvents == true && asInteractive?.IsEnabledRecursively == true)
                 {
                     if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
                     {
@@ -473,6 +492,7 @@ public partial class InteractiveGue : BindableGue
                         handledActions.HandledMouseWheel = args.Handled;
                     }
                 }
+
             }
         }
 

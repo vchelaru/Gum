@@ -322,6 +322,19 @@ public class ListBox : ItemsControl, IInputReceiver
         get; set;
     }
 
+    public override bool IsEnabled
+    {
+        get =>base.IsEnabled;
+        set
+        {
+            base.IsEnabled = value;
+            foreach(var item in this.ListBoxItems)
+            {
+                item.UpdateState();
+            }
+        }
+    }
+
     #endregion
 
     #region Events
@@ -677,6 +690,11 @@ public class ListBox : ItemsControl, IInputReceiver
                 HandleListBoxItemPushed, 
                 HandleListBoxItemClicked,
                 HandleListBoxItemDragging);
+            if(this.IsEnabled == false)
+            {
+                // so this appears disabled:
+                newItem.UpdateState();
+            }
         }
     }
 

@@ -33,6 +33,7 @@ public class ListBoxItemVisual : InteractiveGue
         public StateSave Highlighted { get; set; } = new StateSave() { Name = FrameworkElement.HighlightedStateName };
         public StateSave Selected { get; set; } = new StateSave() { Name = FrameworkElement.SelectedStateName };
         public StateSave Focused { get; set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
+        public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
     }
 
     public ListBoxItemCategoryStates States;
@@ -115,22 +116,24 @@ public class ListBoxItemVisual : InteractiveGue
             });
         }
 
-        void AddState(StateSave state, bool isBackgroundVisible, bool isFocusedVisible, Color? backgroundColor = null)
+        void AddState(StateSave state, bool isBackgroundVisible, bool isFocusedVisible, 
+            Color textColor, Color? backgroundColor = null)
         {
             ListBoxItemCategory.States.Add(state);
             AddVariable(state, "Background.Visible", isBackgroundVisible);
             AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
-
+            AddVariable(state, "TextInstance.Color", textColor);
             if (backgroundColor != null)
             {
                 AddVariable(state, "Background.Color", backgroundColor);
             }
         }
 
-        AddState(States.Enabled, false, false);
-        AddState(States.Highlighted, true, false, Styling.ActiveStyle.Colors.Primary);
-        AddState(States.Selected, true, false, Styling.ActiveStyle.Colors.Accent);
-        AddState(States.Focused, false, true);
+        AddState(States.Enabled, false, false, Styling.ActiveStyle.Colors.White);
+        AddState(States.Highlighted, true, false, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.Primary);
+        AddState(States.Selected, true, false, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.Accent);
+        AddState(States.Focused, false, true, Styling.ActiveStyle.Colors.White);
+        AddState(States.Disabled, false, false, Styling.ActiveStyle.Colors.Gray);
 
         if (tryCreateFormsObject)
         {

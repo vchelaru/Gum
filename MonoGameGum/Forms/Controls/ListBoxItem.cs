@@ -216,12 +216,11 @@ public class ListBoxItem :
 
         const string category = "ListBoxItemCategoryState";
 
-        //if(IsEnabled == false)
-        //{
-        //    // todo?
-        //}
-
-        if (IsFocused)
+        if (this.Visual.IsEnabledRecursively == false)
+        {
+            Visual.SetProperty(category, DisabledStateName);
+        }
+        else if (IsFocused)
         {
             Visual.SetProperty(category, FocusedStateName);
         }
