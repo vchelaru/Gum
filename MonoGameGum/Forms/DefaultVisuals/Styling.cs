@@ -19,7 +19,8 @@ public class Styling
     public static Styling ActiveStyle { get; set; }
 
     private Texture2D _spriteSheet;
-    public Texture2D SpriteSheet { 
+    public Texture2D SpriteSheet 
+    { 
         get => _spriteSheet;
         set
         {
