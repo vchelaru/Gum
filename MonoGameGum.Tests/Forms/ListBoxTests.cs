@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class ListBoxTests
+public class ListBoxTests : BaseTestClass
 {
     [Fact]
     public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
@@ -87,13 +87,31 @@ public class ListBoxTests
 
         Mock<ICursor> mockCursor = SetupForPush();
 
+        mockCursor.SetupProperty(x => x.WindowOver);
+        mockCursor.SetupProperty(x => x.WindowPushed);
+
+
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             listBox.Visual,
             mockCursor.Object,
             null,
             0);
 
-        listBox.SelectedObject.ShouldNotBeNull();
+
+        if(listBox.SelectedObject == null)
+        {
+            var firstListBoxItem = listBox.ListBoxItems[0];
+
+            var isOverFirst = mockCursor.Object.WindowOver ==
+                firstListBoxItem.Visual;
+
+            string diagnostics =
+                $"WindowOver: {mockCursor.Object.WindowOver}" +
+                $" WindowPushed: {mockCursor.Object.WindowPushed}" +
+                $" Is over first: {isOverFirst}";
+            throw new Exception(diagnostics);
+        }
+
     }
 
     private static Mock<ICursor> SetupForPush()
@@ -107,6 +125,11 @@ public class ListBoxTests
             .Returns(20);
         mockCursor.Setup(c => c.Y)
             .Returns(20);
+
+        mockCursor.Setup(c => c.LastInputDevice)
+            .Returns(InputDevice.Mouse);
+
+        FrameworkElement.MainCursor = mockCursor.Object;
 
         mockCursor.Setup(c => c.PrimaryPush).Returns(true);
         return mockCursor;
