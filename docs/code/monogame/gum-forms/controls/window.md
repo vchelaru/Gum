@@ -69,6 +69,32 @@ window.ResizeMode = ResizeMode.NoResize;
 
 The following code shows how to force dock a window to the right side of the screen. The user can still resize the window horizontally by grabbing the left edge of the window since the left side has not been disabled.
 
+{% tabs %}
+{% tab title="Code-only V2" %}
+```csharp
+var window = new Window();
+window.AddToRoot();
+
+window.Dock(Dock.Right);
+
+var windowVisual = (WindowVisual)window.Visual;
+
+// make it so the user cannot resize or move the window
+// except for horizontally:
+windowVisual.TitleBarInstance.IsEnabled = false;
+
+windowVisual.BorderTopLeftInstance.IsEnabled = false;
+windowVisual.BorderTopRightInstance.IsEnabled = false;
+windowVisual.BorderBottomLeftInstance.IsEnabled = false;
+windowVisual.BorderBottomRightInstance.IsEnabled = false;
+
+windowVisual.BorderTopInstance.IsEnabled = false;
+windowVisual.BorderBottomInstance.IsEnabled = false;
+windowVisual.BorderRightInstance.IsEnabled = false;
+```
+{% endtab %}
+
+{% tab title="General" %}
 ```csharp
 var window = new Window();
 window.AddToRoot();
@@ -88,6 +114,8 @@ window.GetFrameworkElement("BorderTopInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderBottomInstance").IsEnabled = false;
 window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/14_06 16 42.gif" alt=""><figcaption><p>Window resizing only from the left edge</p></figcaption></figure>
 
