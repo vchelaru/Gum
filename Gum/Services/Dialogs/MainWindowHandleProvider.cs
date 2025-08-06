@@ -4,17 +4,17 @@ namespace Gum.Services.Dialogs;
 
 public interface IMainWindowHandleProvider
 {
-    IntPtr GetMainWindowHandle();
+    IntPtr MainWindowHandle { get; }
 }
 
 internal class MainFormWindowHandleProvider : IMainWindowHandleProvider
 {
-    public IntPtr GetMainWindowHandle() => Getter?.Invoke() ?? IntPtr.Zero;
-    
-    private Func<IntPtr>? Getter { get; set; }
-    
-    public void Initialize(Func<IntPtr> getMainWindowHandle)
+    private Lazy<MainWindow> MainWindow { get; }
+
+    public IntPtr MainWindowHandle => MainWindow.Value.Handle;
+
+    public MainFormWindowHandleProvider(Lazy<MainWindow> mainWindow)
     {
-        Getter = getMainWindowHandle;
+        MainWindow = mainWindow;
     }
 }
