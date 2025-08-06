@@ -930,8 +930,11 @@ public static class GueInteractiveExtensionMethods
         var windowPushedBefore = cursor.WindowPushed;
         var VisualRightPushedBefore = cursor.VisualRightPushed;
 
-        var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth &&
-            cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
+        var cursorX = cursor.XRespectingGumZoomAndBounds();
+        var cursorY = cursor.YRespectingGumZoomAndBounds();
+
+        var isInWindow = cursorX >= 0 && cursorX < GraphicalUiElement.CanvasWidth &&
+            cursorY >= 0 && cursorY < GraphicalUiElement.CanvasHeight;
 
         HandledActions actions = new HandledActions();
         var lastWindowOver = cursor.WindowOver;
@@ -1015,6 +1018,8 @@ public static class GueInteractiveExtensionMethods
             InteractiveGue.DoNextClickActions();
 
         }
+
+
 
         if (cursor.PrimaryPush && isInWindow)
         {
