@@ -11,8 +11,9 @@ public class MenuTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var menu = new MonoGameGum.Forms.Controls.Menu();
+        var menu = new Gum.Forms.Controls.Menu();
         menu.Visual.ShouldNotBeNull();
         (menu.Visual is Gum.Forms.DefaultVisuals.MenuVisual).ShouldBeTrue();
     }
+    
 }

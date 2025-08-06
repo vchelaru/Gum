@@ -24,7 +24,28 @@ public class ComboBoxVisual : InteractiveGue
 {
     public NineSliceRuntime Background {  get; private set; }
     public TextRuntime TextInstance { get; private set; }
-    public ListBoxVisual ListBoxInstance { get; private set; }
+
+    ListBoxVisual listBoxInstance;
+    public ListBoxVisual ListBoxInstance 
+    { 
+        get => listBoxInstance;
+        set
+        {
+#if DEBUG
+            if(value == null)
+            {
+                throw new NullReferenceException("ListBoxInstance cannot be set to a null ListBox");
+            }
+            if(value.Name != "ListBoxInstance")
+            {
+                throw new InvalidOperationException("The assigned ListBox must be named ListBoxInstance");
+            }
+#endif
+            listBoxInstance = value;
+            this.FormsControl.ListBox = listBoxInstance.FormsControl as ListBox;
+            PositionAndAttachListBox(listBoxInstance);
+        }
+    }
     public SpriteRuntime DropdownIndicator { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
@@ -87,14 +108,8 @@ public class ComboBoxVisual : InteractiveGue
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Strong);
         this.AddChild(TextInstance);
 
-        ListBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
-        ListBoxInstance.Name = "ListBoxInstance";
-        ListBoxInstance.Y = 28f;
-        ListBoxInstance.Width = 0f;
-        ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        ListBoxInstance.Height = 128f;
-        ListBoxInstance.Visible = false;
-        this.AddChild(ListBoxInstance);
+        listBoxInstance = new ListBoxVisual(tryCreateFormsObject: false);
+        PositionAndAttachListBox(listBoxInstance);
 
         DropdownIndicator = new SpriteRuntime();
         DropdownIndicator.Name = "DropdownIndicator";
@@ -165,6 +180,17 @@ public class ComboBoxVisual : InteractiveGue
         {
             FormsControlAsObject = new ComboBox(this);
         }
+    }
+
+    private void PositionAndAttachListBox(ListBoxVisual listBoxVisual)
+    {
+        listBoxVisual.Name = "ListBoxInstance";
+        listBoxVisual.Y = 28f;
+        listBoxVisual.Width = 0f;
+        listBoxVisual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        listBoxVisual.Height = 128f;
+        listBoxVisual.Visible = false;
+        this.AddChild(listBoxInstance);
     }
 
     public ComboBox FormsControl => FormsControlAsObject as ComboBox;
