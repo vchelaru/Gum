@@ -16,7 +16,6 @@ public class MenuTests
         menu.Visual.ShouldNotBeNull();
         (menu.Visual is Gum.Forms.DefaultVisuals.MenuVisual).ShouldBeTrue();
     }
-
     [Fact]
     public void AbsoluteHeight_ShouldNotBe0_IfNoItemsAreAdded()
     {

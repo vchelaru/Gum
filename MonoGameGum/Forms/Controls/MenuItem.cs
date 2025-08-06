@@ -353,7 +353,20 @@ public class MenuItem : ItemsControl
             }
             else
             {
-                itemsPopup = new ScrollViewer(visualTemplateVisual);
+                if(visualTemplateVisual.FormsControlAsObject is ScrollViewer templateScrollViewer)
+                {
+                    itemsPopup = templateScrollViewer;
+                }
+                else if(visualTemplateVisual.FormsControlAsObject != null)
+                {
+                    throw new InvalidOperationException("Error showing Menuitem sub-item " +
+                        $"ScrollViewer through template because {visualTemplateVisual} is associated with a forms control " +
+                        $"{visualTemplateVisual.FormsControlAsObject}");
+                }
+                else
+                {
+                    itemsPopup = new ScrollViewer(visualTemplateVisual);
+                }
             }
             //itemsPopup.InnerPanel.Height = 0;
             //itemsPopup.InnerPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;

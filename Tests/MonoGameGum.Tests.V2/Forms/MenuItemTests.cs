@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,27 @@ public class MenuItemTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var menuItem = new MonoGameGum.Forms.Controls.MenuItem();
+        MenuItem menuItem = new ();
         menuItem.Visual.ShouldNotBeNull();
         (menuItem.Visual is Gum.Forms.DefaultVisuals.MenuItemVisual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShowSubItem_ShouldAcceptVisualTemplate_OfScrollViewerVisual()
+    {
+        MenuItem menuItem = new();
+        for(int i = 0; i < 10; i++)
+        {
+            menuItem.Items.Add(i);
+        }
+
+        menuItem.ScrollViewerVisualTemplate = new Gum.Forms.VisualTemplate(() =>
+        {
+            var scrollViewer = new ScrollViewer();
+            return scrollViewer.Visual;
+        });
+
+        // no exception should be thrown
+        menuItem.IsSelected = true;
     }
 }

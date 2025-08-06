@@ -210,12 +210,12 @@ panel.AddToRoot();
 var button1 = new Button();
 panel.AddChild(button1);
 var button1Visual = (ButtonVisual)button1.Visual;
-button1Visual.Background.ApplyState(Styling.NineSlice.Outlined);
+button1Visual.Background.ApplyState(Styling.ActiveStyle.NineSlice.Outlined);
 
 var button2 = new Button();
 panel.AddChild(button2);
 var button2Visual = (ButtonVisual)button2.Visual;
-button2Visual.Background.ApplyState(Styling.NineSlice.BracketHorizontal);
+button2Visual.Background.ApplyState(Styling.ActiveStyle.NineSlice.BracketHorizontal);
 
 var defaultButton = new Button();
 panel.AddChild(defaultButton);
