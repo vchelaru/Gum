@@ -272,6 +272,7 @@
       * [TextBox](code/monogame/gum-forms/controls/textbox.md)
       * [Window](code/monogame/gum-forms/controls/window.md)
     * [Control Customization In Code](code/monogame/gum-forms/control-customization/README.md)
+      * [ComboBox](code/monogame/gum-forms/control-customization/combobox.md)
       * [ListBoxItem](code/monogame/gum-forms/control-customization/listboxitem.md)
       * [MenuItem](code/monogame/gum-forms/control-customization/menuitem.md)
       * [TextBox](code/monogame/gum-forms/control-customization/textbox.md)
