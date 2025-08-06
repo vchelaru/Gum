@@ -2,7 +2,7 @@
 
 namespace Gum.Services.Dialogs;
 
-internal interface IMainWindowHandleProvider
+public interface IMainWindowHandleProvider
 {
     IntPtr GetMainWindowHandle();
 }

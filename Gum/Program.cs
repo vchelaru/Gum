@@ -4,6 +4,9 @@ using Microsoft.AppCenter.Crashes;
 using System;
 using System.IO;
 using System.Windows.Forms;
+using Gum.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Gum
 {
@@ -16,17 +19,25 @@ namespace Gum
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static int Main()
+        static int Main(string[]? args)
         {
             System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            IHost host = GumBuilder.CreateHostBuilder(args).ConfigureServices(services =>
+            {
+                services.AddSingleton<MainWindow>();
+            }).Build();
+            
+            Locator.Register(host.Services);
+            host.Start();
+            
             MainWindow mainWindow = null;
 
             try
             {
-                mainWindow = new MainWindow();
+                mainWindow = host.Services.GetRequiredService<MainWindow>();
             }
             catch(FileNotFoundException)
             {
@@ -38,7 +49,7 @@ namespace Gum
             }
 
             Application.Run(mainWindow);
-
+            
             return RunResponseCodes.Success;
         }
 
