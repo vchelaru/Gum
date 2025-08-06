@@ -35,8 +35,6 @@ public class GuiCommands
 {
     #region Fields/Properties
 
-    public MainWindow MainWindow { get; private set; }
-
     public System.Windows.Forms.Cursor AddCursor { get; set; }
 
 
@@ -52,9 +50,8 @@ public class GuiCommands
         _lazySelectedState = lazySelectedState;
     }
 
-    internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
+    internal void Initialize(MainPanelControl mainPanelControl)
     {
-        this.MainWindow = mainWindow;
         this.mainPanelControl = mainPanelControl;
     }
 
@@ -225,8 +222,6 @@ public class GuiCommands
             //height = 0;
             height = 64;
         }
-
-        var scaledX = MainWindow.LogicalToDeviceUnits(System.Windows.Forms.Control.MousePosition.X);
 
         var source = System.Windows.PresentationSource.FromVisual(mainPanelControl);
 

@@ -53,20 +53,25 @@ namespace Gum.Managers
 
         #endregion
 
-        public MenuStripManager()
+        public MenuStripManager(GuiCommands guiCommands,
+            ISelectedState selectedState,
+            UndoManager undoManager,
+            EditCommands editCommands,
+            IDialogService dialogService,
+            FileCommands fileCommands,
+            ProjectCommands projectCommands)
         {
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
-            _editCommands = Locator.GetRequiredService<EditCommands>();
-            _dialogService = Locator.GetRequiredService<IDialogService>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
-            _projectCommands = Locator.GetRequiredService<ProjectCommands>();
+            _guiCommands = guiCommands;
+            _selectedState = selectedState;
+            _undoManager = undoManager;
+            _editCommands = editCommands;
+            _dialogService = dialogService;
+            _fileCommands = fileCommands;
+            _projectCommands = projectCommands;
         }
 
-        public void Initialize()
+        public MenuStrip CreateMenuStrip()
         {
-            var mainWindow = _guiCommands.MainWindow;
             // Load Recent handled in MainRecentFilesPlugin
 
             #region Local Functions
@@ -254,8 +259,6 @@ namespace Gum.Managers
                 }
             };
 
-            
-
             // 
             // aboutToolStripMenuItem
             // 
@@ -348,15 +351,9 @@ namespace Gum.Managers
             this._menuStrip.Size = new System.Drawing.Size(1076, 24);
             this._menuStrip.TabIndex = 0;
             this._menuStrip.Text = "menuStrip1";
-
-            mainWindow.Controls.Add(this._menuStrip);
-            mainWindow.MainMenuStrip = this._menuStrip;
-
-
-
-
+            
             RefreshUI();
-
+            return this._menuStrip;
         }
 
         private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)

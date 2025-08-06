@@ -63,6 +63,7 @@ public partial class WireframeObjectManager
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
     }
 
     private bool GetIfSelectedStateIsSetRecursively()

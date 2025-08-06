@@ -21,8 +21,6 @@ namespace Gum.Commands
         private readonly Lazy<UndoManager> _undoManager;
         private readonly IDialogService _dialogService;
         private readonly GuiCommands _guiCommands;
-        
-        MainWindow mainWindow;
 
         public FileCommands(ISelectedState selectedState, 
             Lazy<UndoManager> undoManager, 
@@ -35,11 +33,6 @@ namespace Gum.Commands
             _dialogService = dialogService;
             _guiCommands = guiCommands;
             _localizationManager = localizationManager;
-        }
-        
-        public void Initialize(MainWindow mainWindow)
-        {
-            this.mainWindow = mainWindow;
         }
 
         /// <summary>
@@ -353,11 +346,6 @@ namespace Gum.Commands
             string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
             return directory + BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
-        }
-
-        public void Exit()
-        {
-            mainWindow.Close();
         }
 
         internal void SaveGeneralSettings()

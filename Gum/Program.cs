@@ -61,4 +61,6 @@ namespace Gum
         public const int UnknownFailure = 1;
         public const int XnaNotInstalled = 2;
     }
+
+    public record CloseMainWindowMessage;
 }
