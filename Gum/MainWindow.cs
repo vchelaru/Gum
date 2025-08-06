@@ -121,9 +121,8 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-
-            var localizationManager = Locator.GetRequiredService<LocalizationManager>();
-            Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
+            
+            WireframeObjectManager.Self.Initialize();
 
             PluginManager.Self.XnaInitialized();
 
