@@ -23,6 +23,8 @@ public class MenuVisual : InteractiveGue
     {
         X = 0;
         Y = 0;
+        // a small value that prevents it from being invisible due to 0 height
+        MinHeight = 5;
         Width = 0;
         WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Height = 0;

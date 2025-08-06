@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,14 @@ public class MenuTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var menu = new Gum.Forms.Controls.Menu();
+        Menu menu = new ();
         menu.Visual.ShouldNotBeNull();
         (menu.Visual is Gum.Forms.DefaultVisuals.MenuVisual).ShouldBeTrue();
     }
-    
+    [Fact]
+    public void AbsoluteHeight_ShouldNotBe0_IfNoItemsAreAdded()
+    {
+        Menu menu = new();
+        menu.Visual.GetAbsoluteHeight().ShouldBeGreaterThan(0);
+    }
 }
