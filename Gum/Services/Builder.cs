@@ -12,26 +12,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Mvvm;
 using Gum.Services.Dialogs;
+using Gum.Wireframe;
 
 namespace Gum.Services;
 
 internal static class GumBuilder
 {
-    public static IHost BuildGum(string[]? args = null)
+    public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
-        // Build Host
-        IHost host = Host.CreateDefaultBuilder(args)
+        return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services =>
             {
                 services.AddGum();
-            })
-            .Build();
-        
-        Locator.Register(host.Services);
-        
-        return host;
+            });
     }
 }
 
@@ -61,6 +57,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<DragDropManager>();
+        services.AddSingleton<MenuStripManager>();
         
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<RenameLogic>();
@@ -72,6 +69,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ElementCommands>();
         services.AddSingleton<FileCommands>();
         services.AddSingleton<ProjectCommands>();
+
+        services.AddSingleton<IMessenger, WeakReferenceMessenger>();
         
         // other
         services.AddDialogs();

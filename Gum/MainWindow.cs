@@ -9,6 +9,7 @@ using Gum.Reflection;
 using Gum.Wireframe;
 using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
@@ -37,7 +38,7 @@ namespace Gum
     }
     #endregion
 
-    public partial class MainWindow : Form
+    public partial class MainWindow : Form, IRecipient<CloseMainWindowMessage>
     {
         #region Fields/Properties
 
@@ -49,7 +50,10 @@ namespace Gum
 
         #endregion
 
-        public MainWindow()
+        public MainWindow(HotkeyManager hotkeyManager,
+            GuiCommands guiCommands,
+            MenuStripManager menuStripManager,
+            IMessenger messenger)
         {
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
@@ -57,23 +61,18 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
-            IHost host = GumBuilder.BuildGum();
-            
-            IServiceProvider services = host.Services;
-            
-            ((MainFormWindowHandleProvider)services.GetRequiredService<IMainWindowHandleProvider>()).Initialize(() => Handle);
+            messenger.RegisterAll(this);
             
             InitializeComponent();
 
-            CreateMainWpfPanel(services.GetRequiredService<HotkeyManager>());
+            CreateMainWpfPanel(hotkeyManager);
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
 
             // Initialize before the StateView is created...
-            _guiCommands = services.GetRequiredService<GuiCommands>();
-            _guiCommands.Initialize(this, mainPanelControl);
-            services.GetRequiredService<FileCommands>().Initialize(this);
+            _guiCommands = guiCommands;
+            _guiCommands.Initialize(mainPanelControl);
 
             TypeManager.Self.Initialize();
 
@@ -100,7 +99,7 @@ namespace Gum
             PropertyGridManager.Self.InitializeEarly();
 
             // bah we have to do this before initializing all plugins because we need the menu strip to exist:
-            MainMenuStripPlugin.InitializeMenuStrip();
+            this.Controls.Add(MainMenuStrip = menuStripManager.CreateMenuStrip());
 
             PluginManager.Self.Initialize(this);
 
@@ -122,9 +121,8 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-
-            var localizationManager = Locator.GetRequiredService<LocalizationManager>();
-            Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
+            
+            WireframeObjectManager.Self.Initialize();
 
             PluginManager.Self.XnaInitialized();
 
@@ -212,6 +210,11 @@ namespace Gum
             settings.MainWindowState = WindowState;
 
             settings.Save();
+        }
+
+        void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message)
+        {
+            Close();
         }
     }
 }

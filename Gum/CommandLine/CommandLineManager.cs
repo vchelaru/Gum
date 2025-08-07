@@ -4,6 +4,7 @@ using Gum.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using ToolsUtilities;
 
@@ -14,6 +15,7 @@ namespace Gum.CommandLine
         private readonly FontManager _fontManager;
         private readonly GuiCommands _guiCommands;
         private readonly FileCommands _fileCommands;
+        private readonly IMessenger _messenger;
         
         #region Fields/Properties
 
@@ -38,6 +40,7 @@ namespace Gum.CommandLine
             _fontManager = Locator.GetRequiredService<FontManager>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _messenger = Locator.GetRequiredService<IMessenger>();
         }
 
         public async Task ReadCommandLine()
@@ -105,7 +108,7 @@ namespace Gum.CommandLine
             await _fontManager.CreateAllMissingFontFiles(ProjectManager.Self.GumProjectSave);
 
             // 4.
-            _fileCommands.Exit();
+            _messenger.Send<CloseMainWindowMessage>();
         }
     }
 }

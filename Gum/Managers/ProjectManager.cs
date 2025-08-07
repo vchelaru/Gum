@@ -200,33 +200,39 @@ namespace Gum
 
             if (mGumProjectSave != null)
             {
-                bool wasModified = mGumProjectSave.Initialize();
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(mGumProjectSave);
-                RecreateMissingStandardElements();
+                bool wasModified = false;
+                ObjectFinder.Self.EnableCache();
+                {
 
-                if (RecreateMissingDefinedByBaseObjects())
-                {
-                    wasModified = true;
-                }
+                    wasModified = mGumProjectSave.Initialize();
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(mGumProjectSave);
+                    RecreateMissingStandardElements();
 
-                if (mGumProjectSave.AddNewStandardElementTypes())
-                {
-                    wasModified = true;
-                }
-                if (FixSlashesInNames(mGumProjectSave))
-                {
-                    wasModified = true;
-                }
-                if (RemoveSpacesInVariables(mGumProjectSave))
-                {
-                    wasModified = true;
-                }
-                if (RemoveDuplicateVariables(mGumProjectSave))
-                {
-                    wasModified = true;
-                }
+                    if (RecreateMissingDefinedByBaseObjects())
+                    {
+                        wasModified = true;
+                    }
 
-                mGumProjectSave.FixStandardVariables();
+                    if (mGumProjectSave.AddNewStandardElementTypes())
+                    {
+                        wasModified = true;
+                    }
+                    if (FixSlashesInNames(mGumProjectSave))
+                    {
+                        wasModified = true;
+                    }
+                    if (RemoveSpacesInVariables(mGumProjectSave))
+                    {
+                        wasModified = true;
+                    }
+                    if (RemoveDuplicateVariables(mGumProjectSave))
+                    {
+                        wasModified = true;
+                    }
+
+                    mGumProjectSave.FixStandardVariables();
+                }
+                ObjectFinder.Self.DisableCache();
 
                 FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis().FullPath;
                 mGumProjectSave.RemoveDuplicateVariables();
