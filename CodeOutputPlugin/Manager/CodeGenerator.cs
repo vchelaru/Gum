@@ -1139,9 +1139,9 @@ public class CodeGenerator
             if (context.Element is ScreenSave)
             {
                 builder.AppendLine(context.Tabs + "visual.Width = 0;");
-                builder.AppendLine(context.Tabs + "visual.WidthUnits = DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
                 builder.AppendLine(context.Tabs + "visual.Height = 0;");
-                builder.AppendLine(context.Tabs + "visual.HeightUnits = DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
 
             builder.AppendLine(context.Tabs + "return visual;");
