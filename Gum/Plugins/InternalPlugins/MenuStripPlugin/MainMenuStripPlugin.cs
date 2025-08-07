@@ -13,21 +13,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Commands;
+using Gum.Services;
 
 namespace Gum.Plugins.InternalPlugins.MenuStripPlugin;
 
 [Export(typeof(PluginBase))]
 public class MainMenuStripPlugin : InternalPlugin
 {
-    static MenuStripManager _menuStripManager;
+    private readonly MenuStripManager _menuStripManager;
 
-    public static void InitializeMenuStrip()
+    public MainMenuStripPlugin()
     {
-        _menuStripManager = new MenuStripManager();
-        _menuStripManager.Initialize();
-
+        _menuStripManager = Locator.GetRequiredService<MenuStripManager>();
     }
-
+    
     public override void StartUp()
     {
         AssignEvents();

@@ -143,6 +143,24 @@ public partial class InteractiveGue : BindableGue
         }
     }
 
+    public bool IsEnabledRecursively => GetIsEnabledRecursively(this);
+
+    static bool GetIsEnabledRecursively(InteractiveGue interactiveGue)
+    {
+        if (!interactiveGue.IsEnabled)
+        {
+            return false;
+        }
+        else if (interactiveGue.Parent is InteractiveGue parent)
+        {
+            return GetIsEnabledRecursively(parent);
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     /// <summary>
     /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
     /// </summary>
@@ -155,6 +173,12 @@ public partial class InteractiveGue : BindableGue
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
     public event EventHandler Click;
+
+    /// <summary>
+    /// Event which is raised whenever this is right-clicked by a cursor. A right-click occurs
+    /// when the cursor is over this and is first pushed, then released.
+    /// </summary>
+    public event EventHandler RightClick;
 
     /// <summary>
     /// Event which is raised whenever this is pushed by a cursor. A push occurs
@@ -244,14 +268,12 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler RemovedAsPushed;
 
     public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
+    public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  
 
     // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
     public void TryCallRollOff()
     {
-        if (RollOff != null)
-        {
-            RollOff(this, EventArgs.Empty);
-        }
+        RollOff?.Invoke(this, EventArgs.Empty);
     }
 
     public void TryCallDragging()
@@ -325,7 +347,7 @@ public partial class InteractiveGue : BindableGue
 
                     // If the child either has events or exposes children events, then give it a chance to handle this activity.
 
-                    if (child != null &&  HasCursorOver(cursor, child, layer))
+                    if (child != null && HasCursorOver(cursor, child, layer))
                     {
                         handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
 
@@ -333,6 +355,7 @@ public partial class InteractiveGue : BindableGue
                         {
                             break;
                         }
+
                     }
                 }
 
@@ -347,6 +370,8 @@ public partial class InteractiveGue : BindableGue
                 ||
                 asInteractive?.Push != null ||
                 asInteractive?.Click != null ||
+                asInteractive?.RightClick != null ||
+
                 asInteractive?.RollOn != null ||
                 asInteractive?.RollOff != null ||
                 asInteractive?.RollOver != null ||
@@ -388,7 +413,7 @@ public partial class InteractiveGue : BindableGue
                         cursor.WindowOver = asInteractive;
                         handledActions.SetWindowOver = true;
 
-                        if (cursor.PrimaryPush && asInteractive.IsEnabled)
+                        if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively)
                         {
 
                             cursor.WindowPushed = asInteractive;
@@ -400,8 +425,17 @@ public partial class InteractiveGue : BindableGue
                             //cursor.GrabWindow(this);
 
                         }
+                        if(cursor.SecondaryPush && asInteractive.IsEnabledRecursively)
+                        {
+                            cursor.VisualRightPushed = asInteractive;
 
-                        if (cursor.PrimaryClick && asInteractive.IsEnabled) // both pushing and clicking can occur in one frame because of buffered input
+                            //if(asInteractive.RightPush != null)
+                            //{
+                                //...
+                            //}
+                        }
+
+                        if (cursor.PrimaryClick && asInteractive.IsEnabledRecursively) // both pushing and clicking can occur in one frame because of buffered input
                         {
                             if (cursor.WindowPushed == asInteractive)
                             {
@@ -428,10 +462,21 @@ public partial class InteractiveGue : BindableGue
                                 //}
                             }
                         }
-                       
+                        if(cursor.SecondaryClick && asInteractive.IsEnabledRecursively)
+                        {
+                            if(cursor.VisualRightPushed == asInteractive)
+                            {
+                                if (asInteractive.RightClick != null)
+                                {
+                                    var args = new InputEventArgs() { InputDevice = cursor };
+                                    asInteractive.RightClick(asInteractive, args);
+                                }
+                            }
+                        }
+
                     }
                 }
-                if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
+                if (asInteractive?.HasEvents == true && asInteractive?.IsEnabledRecursively == true)
                 {
                     if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
                     {
@@ -447,6 +492,7 @@ public partial class InteractiveGue : BindableGue
                         handledActions.HandledMouseWheel = args.Handled;
                     }
                 }
+
             }
         }
 
@@ -833,8 +879,9 @@ public interface ICursor
     bool MiddleClick { get; }
     bool MiddleDoubleClick { get; }
 
-    InteractiveGue WindowPushed { get; set; }
-    InteractiveGue WindowOver { get; set; }
+    InteractiveGue? WindowPushed { get; set; }
+    InteractiveGue? VisualRightPushed { get; set; }
+    InteractiveGue? WindowOver { get; set; }
 }
 
 public interface IInputReceiverKeyboard
@@ -881,9 +928,13 @@ public static class GueInteractiveExtensionMethods
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
         var windowOverBefore = cursor.WindowOver;
         var windowPushedBefore = cursor.WindowPushed;
+        var VisualRightPushedBefore = cursor.VisualRightPushed;
 
-        var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth &&
-            cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
+        var cursorX = cursor.XRespectingGumZoomAndBounds();
+        var cursorY = cursor.YRespectingGumZoomAndBounds();
+
+        var isInWindow = cursorX >= 0 && cursorX < GraphicalUiElement.CanvasWidth &&
+            cursorY >= 0 && cursorY < GraphicalUiElement.CanvasHeight;
 
         HandledActions actions = new HandledActions();
         var lastWindowOver = cursor.WindowOver;
@@ -952,6 +1003,10 @@ public static class GueInteractiveExtensionMethods
         {
             cursor.WindowPushed = null;
         }
+        if(cursor.SecondaryDown == false)
+        {
+            cursor.VisualRightPushed = null;
+        }
         if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
         {
             cursor.WindowPushed.TryCallDragging();
@@ -963,6 +1018,8 @@ public static class GueInteractiveExtensionMethods
             InteractiveGue.DoNextClickActions();
 
         }
+
+
 
         if (cursor.PrimaryPush && isInWindow)
         {

@@ -66,6 +66,10 @@ public class Label :
         {
             textComponent = base.Visual;
         }
+        else if(base.Visual?.RenderableComponent is global::RenderingLibrary.Graphics.IText)
+        {
+            textComponent = base.Visual;
+        }
         else
         {
             textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");

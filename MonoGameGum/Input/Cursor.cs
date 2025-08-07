@@ -241,6 +241,8 @@ public class Cursor : ICursor
     //    change in .NET 10 with extension properties.
     public InteractiveGue WindowPushed { get; set; }
 
+    public InteractiveGue VisualRightPushed { get; set; }
+
     /// <summary>
     /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
     /// FormsUtilities.

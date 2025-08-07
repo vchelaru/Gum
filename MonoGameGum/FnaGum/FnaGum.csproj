@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.FNA</PackageId>
-		<Version>2025.8.3.2</Version>
+		<Version>2025.8.4.1</Version>
 
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>

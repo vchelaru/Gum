@@ -1,4 +1,5 @@
 ﻿using MonoGameGum.Forms.Controls;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -24,5 +25,15 @@ public class LabelTests : BaseTestClass
         var rawText = (Text)label.TextComponent.RenderableComponent;
         rawText.InlineVariables.Count.ShouldBe(4, "because the font starts default and changes 4 times with tags: bold, not bold, italic, not italic");
         rawText.RawText.ShouldBe("This is bold and italic text.");
+    }
+
+
+    [Fact]
+    public void Constructor_ShouldAcceptTextRuntimeVisual()
+    {
+        Label label = new Label(new TextRuntime());
+
+        label.Text = "Hello test";
+        label.Text.ShouldBe("Hello test");
     }
 }

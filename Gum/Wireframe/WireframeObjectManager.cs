@@ -75,11 +75,8 @@ public partial class WireframeObjectManager
     
     #region Initialize
 
-    public void Initialize(
-        LocalizationManager localizationManager
-        )
+    public void Initialize()
     {
-        _localizationManager = localizationManager;
         gueManager = new GraphicalUiElementManager();
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
@@ -182,16 +179,20 @@ public partial class WireframeObjectManager
                 {
                     RootGue = PluginManager.Self.CreateGraphicalUiElement(elementSave);
 
-                    // Always set default first, then if the selected state is not the default, then apply that after:
-                    RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-                    var selectedState = _selectedState.SelectedStateSave;
-                    if(selectedState != null && selectedState != elementSave.DefaultState)
+                    if(RootGue != null)
                     {
-                        RootGue.ApplyState(selectedState);
+                        // Always set default first, then if the selected state is not the default, then apply that after:
+                        RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                        var selectedState = _selectedState.SelectedStateSave;
+                        if(selectedState != null && selectedState != elementSave.DefaultState)
+                        {
+                            RootGue.ApplyState(selectedState);
+                        }
+
+
+                        AddAllIpsos(RootGue);
                     }
 
-
-                    AddAllIpsos(RootGue);
                 }
                 catch(Exception e)
                 {

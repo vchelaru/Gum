@@ -41,6 +41,9 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
         InitializeGumService();
 
         FrameworkElement.KeyboardsForUiControl.Clear();
+
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
     }
 
     private void InitializeGumService()

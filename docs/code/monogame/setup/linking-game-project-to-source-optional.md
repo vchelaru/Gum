@@ -27,12 +27,9 @@ To replace this package with source references:
 2. Remove the NuGet package by selecting Gum.MonoGame and pressing the Delete key.
 3. Right-click on your Solution in the Solution Explorer and select **Add** -> **Existing Project...**
 4. Select \<Gum Root>/MonoGameGum/MonoGameGum.csproj
-5. Repeat the previous step for the following csproj file: \<Gum Root>/GumCommon/GumCommon.csproj
-   1. \<Gum Root>/GumDataTypes/GumDataTypesNet6.csproj
-   2.  \<Gum Root>/ToolsUtilities/ToolsUtilitiesStandard.csproj\
+5.  Repeat the previous step for the following csproj file: \<Gum Root>/GumCommon/GumCommon.csproj
 
-
-       <figure><img src="../../../.gitbook/assets/22_20 38 19.png" alt=""><figcaption><p>A game project and Gum source code projects in the Visual Studio Solution Explorer</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/22_20 38 19.png" alt=""><figcaption><p>A game project and Gum source code projects in the Visual Studio Solution Explorer</p></figcaption></figure>
 6. Right-click on your game project's Dependencies folder and select Add Project Reference...
 7.  Check the Gum projects you added to the solution earlier and click OK\
 
