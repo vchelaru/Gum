@@ -5330,16 +5330,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private bool TrySetValueOnThis(string propertyName, object value)
     {
+        // See issue 1209
+        int ValueToInt() =>
+            value is int intValue ? intValue :
+            value is string stringValue ? int.Parse(stringValue) :
+            throw new InvalidCastException($"value is of unexpected type {value.GetType()}");
+        
         bool toReturn = false;
         try
         {
             switch (propertyName)
             {
                 case "AutoGridHorizontalCells":
-                    this.AutoGridHorizontalCells = (int)value;
+                    this.AutoGridHorizontalCells = ValueToInt();
                     break;
                 case "AutoGridVerticalCells":
-                    this.AutoGridVerticalCells = (int)value;
+                    this.AutoGridVerticalCells = ValueToInt();
                     break;
                 case "ChildrenLayout":
                 case "Children Layout":
@@ -5431,22 +5437,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "TextureLeft":
                 case "Texture Left":
-                    this.TextureLeft = (int)value;
+                    this.TextureLeft = ValueToInt();
                     toReturn = true;
                     break;
                 case "TextureTop":
                 case "Texture Top":
-                    this.TextureTop = (int)value;
+                    this.TextureTop = ValueToInt();
                     toReturn = true;
                     break;
                 case "TextureWidth":
                 case "Texture Width":
-                    this.TextureWidth = (int)value;
+                    this.TextureWidth = ValueToInt();
                     toReturn = true;
                     break;
                 case "TextureHeight":
                 case "Texture Height":
-                    this.TextureHeight = (int)value;
+                    this.TextureHeight = ValueToInt();
                     toReturn = true;
 
                     break;
