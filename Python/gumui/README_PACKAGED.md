@@ -126,3 +126,22 @@ This is a FOSS (Free and Open Source Software) project.
 - Github: https://github.com/vchelaru/Gum
 - Discord: https://discord.gg/EvqwmSQuBz
 - Documentation: https://docs.flatredball.com/gum
+
+# Change Log
+
+## 0.1.3
+
+* Added this changelog
+
+## 0.1.2
+
+* Added missing import of Converts to the from line
+* Added a grandchild example
+
+## 0.1.1
+
+* First proof of concept working release
+
+## 0.1.0
+
+* Deleted first push attempt
