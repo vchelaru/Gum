@@ -309,7 +309,10 @@ public class FontManager
             //info.RedirectStandardOutput = true;
             //info.CreateNoWindow = true;
 
-            System.Diagnostics.Debug.WriteLine($"Running: {info.FileName} {info.Arguments}");
+            var filenameAndArgs = $"{info.FileName} {info.Arguments}";
+            System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
+            _guiCommands.PrintOutput(filenameAndArgs);
+
 
             Process process = Process.Start(info);
             if(createTask)
