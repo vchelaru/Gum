@@ -768,17 +768,13 @@ namespace Gum.Managers
 
         public Func<string, StateSave> CustomGetDefaultState;
 
-        public StateSave GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
+        public StateSave? TryGetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
         {
-            if (mDefaults == null)
-            {
-                throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
-            }
-            if(string.IsNullOrEmpty(type))
+            if (string.IsNullOrEmpty(type))
             {
                 return null;
             }
-            if(mDefaults.ContainsKey(type))
+            if (mDefaults.ContainsKey(type))
             {
                 return mDefaults[type];
 
@@ -789,12 +785,12 @@ namespace Gum.Managers
                 StateSave customState = CustomGetDefaultState?.Invoke(type);
                 // Vic says - not sure if this is still used. If so, we need to create a 
                 // CustomGetDefaultState that returns a state as shown below.
-//#if SKIA
-//                // In Skia we will assume that any type that comes through has a default state:
-//                customState = new StateSave();
-//                AddPositioningVariables(customState, addOriginVariables: true);
-//                mDefaults[type] = customState;
-//#endif
+                //#if SKIA
+                //                // In Skia we will assume that any type that comes through has a default state:
+                //                customState = new StateSave();
+                //                AddPositioningVariables(customState, addOriginVariables: true);
+                //                mDefaults[type] = customState;
+                //#endif
 
                 if (customState == null && throwExceptionOnMissing)
                 {
@@ -806,6 +802,15 @@ namespace Gum.Managers
                     return customState;
                 }
             }
+        }
+
+        public StateSave? GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
+        {
+            if (mDefaults == null)
+            {
+                throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
+            }
+            return TryGetDefaultStateFor(type, throwExceptionOnMissing);
         }
 
         public bool IsDefaultType(string type)

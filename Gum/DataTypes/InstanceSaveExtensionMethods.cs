@@ -45,10 +45,12 @@ namespace Gum.DataTypes
 
             if(baseElementType != null)
             {
-                var baseDefault = StandardElementsManager.Self.GetDefaultStateFor(baseElementType.Name);
+                StateSave? baseDefault = null;
+
+                baseDefault = StandardElementsManager.Self.TryGetDefaultStateFor(baseElementType.Name);
 
                 // todo - eventually we may want to look at plugins here, but for now we'll do the built-in standards
-                if(baseDefault != null)
+                if (baseDefault != null)
                 {
                     foreach(var state in parent.AllStates)
                     {
