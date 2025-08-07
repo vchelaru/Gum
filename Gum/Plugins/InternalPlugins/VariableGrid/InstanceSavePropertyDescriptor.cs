@@ -74,6 +74,10 @@ namespace Gum.DataTypes.ComponentModel
 
         public string Category { get; set; } = "";
 
+        /// <summary>
+        /// How the property should be displayed in the UI. This may not match the actual type of the property, but rather how it should be presented.
+        /// For example, a float may be represented as a string in the UI, but the ComponentType would still be float.
+        /// </summary>
         public Type PropertyType
         {
             get 
@@ -108,6 +112,6 @@ namespace Gum.DataTypes.ComponentModel
             }
         }
 
-        public override string ToString() => $"{Name} ({PropertyType})";
+        public override string ToString() => $"{Name} ({ComponentType} displayed as {PropertyType})";
     }
 }

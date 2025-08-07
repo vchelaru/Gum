@@ -288,6 +288,7 @@
   * [Samples](code/monogame/samples/README.md)
     * [MonoGameGumFormsSample](code/monogame/samples/monogamegumformssample.md)
 * [Nez](code/nez.md)
+* [PyGame](code/pygame.md)
 * [Silk.NET](code/silk.net/README.md)
   * [Setup](code/silk.net/setup.md)
 * [SkiaGum](code/skiagum/README.md)

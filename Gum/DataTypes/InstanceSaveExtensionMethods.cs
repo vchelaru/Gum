@@ -39,8 +39,78 @@ namespace Gum.DataTypes
             return found;
         }
 
-        public static void Initialize(this InstanceSave instanceSave)
+        public static void Initialize(this InstanceSave instanceSave, ElementSave parent, ref bool wasModified)
         {
+            var baseElementType = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
+
+            if(baseElementType != null)
+            {
+                StateSave? baseDefault = null;
+
+                baseDefault = StandardElementsManager.Self.TryGetDefaultStateFor(baseElementType.Name);
+
+                // todo - eventually we may want to look at plugins here, but for now we'll do the built-in standards
+                if (baseDefault != null)
+                {
+                    foreach(var state in parent.AllStates)
+                    {
+                        foreach(var variable in state.Variables)
+                        {
+                            if(!variable.Name.StartsWith(instanceSave.Name + "."))
+                            {
+                                // This is a variable that is set by the instance, so we don't want to overwrite it
+                                continue;
+                            }
+
+                            var foundBaseVariable = baseDefault.Variables.GetVariableSave(variable.GetRootName());
+
+                            if(foundBaseVariable != null)
+                            {
+                                // compare the types
+                                var type = foundBaseVariable.Type;
+                                var assignedValue = variable.Value;
+                                if(assignedValue is string)
+                                {
+                                    switch(type)
+                                    { 
+                                        case "bool":
+                                            if(bool.TryParse(assignedValue as string, out bool parsedBool))
+                                            {
+                                                variable.Value = parsedBool;
+                                                wasModified = true;
+                                            }
+                                            break;
+                                        case "int":
+                                            if(int.TryParse(assignedValue as string, out int parsedInt))
+                                            {
+                                                variable.Value = parsedInt;
+                                                wasModified = true;
+                                            }
+                                            break;
+                                        case "float":
+                                            if(float.TryParse(assignedValue as string, out float parsedFloat))
+                                            {
+                                                variable.Value = parsedFloat;
+                                                wasModified = true;
+                                            }
+                                            break;
+                                        case "double":
+                                            if(double.TryParse(assignedValue as string, out double parsedDouble))
+                                            {
+                                                variable.Value = parsedDouble;
+                                                wasModified = true;
+                                            }
+                                            break;
+                                            // add more types here if needed
+                                    }
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+            }
             // nothing to do currently?
 
         }
