@@ -62,7 +62,7 @@ internal class DialogService : IDialogService
         // this lets wpf center the new window on the winforms window
         _ = new WindowInteropHelper(window)
         {
-            Owner = _handleProvider.GetMainWindowHandle()
+            Owner = _handleProvider.MainWindowHandle
         };
 
         

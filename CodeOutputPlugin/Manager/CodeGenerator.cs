@@ -1000,20 +1000,20 @@ public class CodeGenerator
 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = " +
-                    $"MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
+                    $"global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
             }
             else
             {
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+                    $"global::{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
             }
         }
         else
         {
             context.StringBuilder.AppendLine(
                 $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+                $"global::{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
         }
     }
 
@@ -1109,7 +1109,7 @@ public class CodeGenerator
 
 
 
-            builder.AppendLine(context.Tabs + "var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
+            builder.AppendLine(context.Tabs + "var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
@@ -1117,11 +1117,11 @@ public class CodeGenerator
             if(inheritsFromText)
             {
                 // special case for label:
-                builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.TextRuntime();");
+                builder.AppendLine(context.Tabs + "var visual = new global::MonoGameGum.GueDeriving.TextRuntime();");
             }
             else
             {
-                builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
+                builder.AppendLine(context.Tabs + "var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();");
             }
 
 
@@ -1139,9 +1139,9 @@ public class CodeGenerator
             if (context.Element is ScreenSave)
             {
                 builder.AppendLine(context.Tabs + "visual.Width = 0;");
-                builder.AppendLine(context.Tabs + "visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
                 builder.AppendLine(context.Tabs + "visual.Height = 0;");
-                builder.AppendLine(context.Tabs + "visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
 
             builder.AppendLine(context.Tabs + "return visual;");
@@ -1150,7 +1150,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "});");
 
             builder.AppendLine(context.Tabs +
-                $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
+                $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
                 $"[typeof({className})] = template;");
 
             var element = context.Element;
@@ -1162,7 +1162,7 @@ public class CodeGenerator
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
-                        $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
+                        $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
                 }
             }
 
@@ -1207,7 +1207,7 @@ public class CodeGenerator
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
-                        $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
+                        $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
                 }
             }
 
@@ -1242,24 +1242,24 @@ public class CodeGenerator
 
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
     {
-        { "ButtonBehavior", "MonoGameGum.Forms.Controls.Button" },
-        { "CheckBoxBehavior", "MonoGameGum.Forms.Controls.CheckBox" },
-        { "ComboBoxBehavior", "MonoGameGum.Forms.Controls.ComboBox" },
-        { "LabelBehavior", "MonoGameGum.Forms.Controls.Label" },
-        { "ListBoxBehavior", "MonoGameGum.Forms.Controls.ListBox" },
-        { "ListBoxItemBehavior", "MonoGameGum.Forms.Controls.ListBoxItem" },
-        { "MenuBehavior", "MonoGameGum.Forms.Controls.Menu" },
-        { "MenuItemBehavior", "MonoGameGum.Forms.Controls.MenuItem" },
-        { "PanelBehavior", "MonoGameGum.Forms.Controls.Panel" },
-        { "PasswordBoxBehavior", "MonoGameGum.Forms.Controls.PasswordBox" },
-        { "RadioButtonBehavior", "MonoGameGum.Forms.Controls.RadioButton" },
-        { "ScrollBarBehavior", "MonoGameGum.Forms.Controls.ScrollBar" },
-        { "ScrollViewerBehavior", "MonoGameGum.Forms.Controls.ScrollViewer" },
-        { "SliderBehavior", "MonoGameGum.Forms.Controls.Slider" },
-        { "SplitterBehavior", "MonoGameGum.Forms.Controls.Splitter" },
-        { "StackPanelBehavior", "MonoGameGum.Forms.Controls.StackPanel" },
-        { "TextBoxBehavior", "MonoGameGum.Forms.Controls.TextBox" },
-        { "WindowBehavior", "MonoGameGum.Forms.Window" },
+        { "ButtonBehavior", "global::MonoGameGum.Forms.Controls.Button" },
+        { "CheckBoxBehavior", "global::MonoGameGum.Forms.Controls.CheckBox" },
+        { "ComboBoxBehavior", "global::MonoGameGum.Forms.Controls.ComboBox" },
+        { "LabelBehavior", "global::MonoGameGum.Forms.Controls.Label" },
+        { "ListBoxBehavior", "global::MonoGameGum.Forms.Controls.ListBox" },
+        { "ListBoxItemBehavior", "global::MonoGameGum.Forms.Controls.ListBoxItem" },
+        { "MenuBehavior", "global::MonoGameGum.Forms.Controls.Menu" },
+        { "MenuItemBehavior", "global::MonoGameGum.Forms.Controls.MenuItem" },
+        { "PanelBehavior", "global::MonoGameGum.Forms.Controls.Panel" },
+        { "PasswordBoxBehavior", "global::MonoGameGum.Forms.Controls.PasswordBox" },
+        { "RadioButtonBehavior", "global::MonoGameGum.Forms.Controls.RadioButton" },
+        { "ScrollBarBehavior", "global::MonoGameGum.Forms.Controls.ScrollBar" },
+        { "ScrollViewerBehavior", "global::MonoGameGum.Forms.Controls.ScrollViewer" },
+        { "SliderBehavior", "global::MonoGameGum.Forms.Controls.Slider" },
+        { "SplitterBehavior", "global::MonoGameGum.Forms.Controls.Splitter" },
+        { "StackPanelBehavior", "global::MonoGameGum.Forms.Controls.StackPanel" },
+        { "TextBoxBehavior", "global::MonoGameGum.Forms.Controls.TextBox" },
+        { "WindowBehavior", "global::MonoGameGum.Forms.Window" },
     };
 
     static void AddGumFormsMembers(CodeGenerationContext context)
@@ -3255,10 +3255,10 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
-            string tagCategories = "((Gum.DataTypes.ElementSave)this.Tag).Categories";
+            string tagCategories = "((global::Gum.DataTypes.ElementSave)this.Tag).Categories";
             if (codeProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                tagCategories = "((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories";
+                tagCategories = "((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories";
             }
 
             stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = {tagCategories}.FirstOrDefault(item => item.Name == \"{category}\");");

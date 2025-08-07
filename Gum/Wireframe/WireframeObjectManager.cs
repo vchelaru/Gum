@@ -75,11 +75,8 @@ public partial class WireframeObjectManager
     
     #region Initialize
 
-    public void Initialize(
-        LocalizationManager localizationManager
-        )
+    public void Initialize()
     {
-        _localizationManager = localizationManager;
         gueManager = new GraphicalUiElementManager();
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;

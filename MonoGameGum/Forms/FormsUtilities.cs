@@ -16,6 +16,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
 
 
 
@@ -164,7 +165,7 @@ public class FormsUtilities
     static ContainerRuntime CreateFullscreenContainer(string name, SystemManagers systemManagers)
     {
         var container = new ContainerRuntime();
-
+        container.Children.CollectionChanged += (o,e) => HandleRootCollectionChanged (container, e);
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.Width = GraphicalUiElement.CanvasWidth;
@@ -173,7 +174,55 @@ public class FormsUtilities
 
         container.AddToManagers(systemManagers);
 
+
+
         return container;
+    }
+
+    internal static void HandleRootCollectionChanged(InteractiveGue container, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Remove ||
+            e.Action == NotifyCollectionChangedAction.Replace ||
+            e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            if (InteractiveGue.CurrentInputReceiver != null)
+            {
+                var recieverVisual = InteractiveGue.CurrentInputReceiver as InteractiveGue;
+                if (InteractiveGue.CurrentInputReceiver is Gum.Forms.Controls.FrameworkElement frameworkElement)
+                {
+                    recieverVisual = frameworkElement.Visual;
+                }
+
+                if (recieverVisual != null)
+                {
+                    var removedElements = e.OldItems;
+
+                    var topParent = GetRootElement(recieverVisual);
+
+                    if (e.Action == NotifyCollectionChangedAction.Reset && topParent == container)
+                    {
+                        InteractiveGue.CurrentInputReceiver = null;
+                    }
+                    else if (removedElements?.Contains(topParent) == true)
+                    {
+                        InteractiveGue.CurrentInputReceiver = null;
+                    }
+                }
+
+            }
+        }
+    }
+
+    static GraphicalUiElement GetRootElement(GraphicalUiElement item)
+    {
+        if (item.Parent is GraphicalUiElement parentGue)
+        {
+            return GetRootElement(parentGue);
+        }
+        else
+        {
+            return item;
+        }
     }
 
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
@@ -293,10 +342,26 @@ public class FormsUtilities
             keyboard, 
             gameTime.TotalGameTime.TotalSeconds);
 
-
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
+
+        // It's possible that a cursor pushes on a control, which would set its state to Pushed. After the cursor releases,
+        // the control is no longer pushed, so it should update its state to reflect that it is no longer pushed, such as
+        // by showing hover or focused state. This need was uncovered by the MonoGame iOS sample which focused the slider when
+        // hovering, but the state never got updated on release.
+        if(cursor.PrimaryClick)
+        {
+            if (InteractiveGue.CurrentInputReceiver is FrameworkElement frameworkElementInputReceiver)
+            {
+                frameworkElementInputReceiver.UpdateState();
+            }
+            if(frameworkElementOver != null && frameworkElementOver != InteractiveGue.CurrentInputReceiver)
+            {
+                frameworkElementOver.UpdateState();
+            }
+        }
+
 
         var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
 

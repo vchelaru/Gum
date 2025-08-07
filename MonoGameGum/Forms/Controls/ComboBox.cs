@@ -50,6 +50,28 @@ public class ComboBox :
     GraphicalUiElement textComponent;
     global::RenderingLibrary.Graphics.IText coreTextObject;
 
+    /// <summary>
+    /// Replaces the internal ListBox with the provided instance.
+    /// This replaces the Items, SelectedObject, and SelectedIndex unless
+    /// the properties are bound.
+    /// </summary>
+    public ListBox ListBox
+    {
+        get => listBox;
+        set
+        {
+            // If the user replaces this, it's up to the user to set the positions
+            // and parenting properly!
+            if(value != listBox)
+            {
+                listBox = value;
+
+
+
+                listBox.IsVisible = false;
+            }
+        }
+    }
 
     public string Text
     {
@@ -244,13 +266,13 @@ public class ComboBox :
             throw new Exception("Gum object must have an object called \"TextInstance\"");
         }
 #endif
+        coreTextObject = textComponent.RenderableComponent as
+            global::RenderingLibrary.Graphics.IText;
+
         // remove it because it's gotta be a "popup"
 
         Visual.Children.Remove(listBoxInstance);
         listBoxInstance.RemoveFromManagers();
-
-        coreTextObject = textComponent.RenderableComponent as
-            global::RenderingLibrary.Graphics.IText;
 
         if (listBoxInstance.FormsControlAsObject == null)
         {

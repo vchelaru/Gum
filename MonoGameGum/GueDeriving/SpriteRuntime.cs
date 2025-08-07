@@ -129,10 +129,16 @@ namespace MonoGameGum.GueDeriving
 
         #endregion
 
-        public Microsoft.Xna.Framework.Rectangle? SourceRectangle
+        public Microsoft.Xna.Framework.Rectangle SourceRectangle
         {
-            get => ContainedSprite.SourceRectangle?.ToXNA();
-            set => ContainedSprite.SourceRectangle = value?.ToSystemDrawing();
+            get => new Microsoft.Xna.Framework.Rectangle(TextureLeft, TextureTop, TextureWidth, TextureHeight);
+            set
+            {
+                TextureLeft = value.X;
+                TextureTop = value.Y;
+                TextureWidth = value.Width;
+                TextureHeight = value.Height;
+            }
         }
 
         public bool Animate
