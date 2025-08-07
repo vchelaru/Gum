@@ -255,10 +255,10 @@ public class CustomSetPropertyOnRenderable
             handled = true;
         }
 
-            // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
-            // are handled by GraphicalUiElement so we don't have to handle it here
+        // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
+        // are handled by GraphicalUiElement so we don't have to handle it here
 
-            return handled;
+        return handled;
     }
 
     private static void AssignSourceFileOnNineSlice(string value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)
