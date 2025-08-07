@@ -770,6 +770,10 @@ namespace Gum.Managers
 
         public StateSave? TryGetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
         {
+            if(mDefaults == null)
+            {
+                return null;
+            }
             if (string.IsNullOrEmpty(type))
             {
                 return null;
