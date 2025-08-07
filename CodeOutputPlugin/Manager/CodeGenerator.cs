@@ -1006,14 +1006,14 @@ public class CodeGenerator
             {
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"global::{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
             }
         }
         else
         {
             context.StringBuilder.AppendLine(
                 $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                $"global::{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+                $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
         }
     }
 
