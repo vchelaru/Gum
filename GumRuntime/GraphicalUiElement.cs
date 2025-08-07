@@ -16,6 +16,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using ToolsUtilitiesStandard.Helpers;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
@@ -5330,11 +5331,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private bool TrySetValueOnThis(string propertyName, object value)
     {
-        // See issue 1209
-        int ValueToInt() =>
-            value is int intValue ? intValue :
-            value is string stringValue ? int.Parse(stringValue) :
-            throw new InvalidCastException($"value is of unexpected type {value.GetType()}");
+        // See issue 1209 & PR 1210
+        int ValueToInt()
+        {
+            switch (value)
+            {
+                case int intVal:
+                    return intVal;
+                
+                case string strVal:
+                    string filteredVal = Regex.Replace(strVal, @"\D", string.Empty);
+                    return int.Parse(filteredVal);
+                
+                default:
+                    throw new InvalidCastException($"value is of unexpected type {value.GetType()}");
+            }
+        }
         
         bool toReturn = false;
         try
