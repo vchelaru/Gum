@@ -59,7 +59,7 @@ namespace Gum.DataTypes
             foreach (InstanceSave instance in elementSave.Instances)
             {
                 instance.ParentContainer = elementSave;
-                instance.Initialize();
+                instance.Initialize(elementSave, ref wasModified);
             }
 
             return wasModified;
