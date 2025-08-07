@@ -31,7 +31,7 @@ There are really only 3 important things after you import.  Create an Instance o
 
 1. First you need to import the `GumUI` and `PyGame`
 ```python
-from gumui import GumUI, GraphicalUiElement, InvisibleRenderable
+from gumui import GumUI, GraphicalUiElement, InvisibleRenderable, Converters
 import pygame
 from pygame.locals import *
 ```
@@ -39,8 +39,8 @@ from pygame.locals import *
 ```python
 pygame.init()
 BLACK = (0, 0, 0)
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 960
+SCREEN_WIDTH = 680
+SCREEN_HEIGHT = 480
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 ```
 3. Setup timing to force to 60 FPS (Frames Per Second)
@@ -91,11 +91,30 @@ To add another UI element "square" you create an instance of GraphicalUiElement,
 child = GraphicalUiElement(InvisibleRenderable())
 myUi.RootElement.Children.Add(child)
 
-child.XUnits = Converters.GeneralUnitType.PixelsFromSmall
-child.Width = 32
+child.X = 100
+child.Y = 100
+child.Width = 200
 child.YUnits = Converters.GeneralUnitType.PixelsFromSmall
-child.Height = 32
+child.Height = 200
 ```
+
+# Adding grandchildren and great grandchildren
+
+Here another child (100x100) is added to the larger (200x200) child from above.
+
+```python
+grandChild = GraphicalUiElement(InvisibleRenderable())
+child.Children.Add(grandChild)
+
+grandChild.XUnits = Converters.GeneralUnitType.PixelsFromSmall
+grandChild.X = 10
+grandChild.Y = 10
+grandChild.Width = 100
+grandChild.YUnits = Converters.GeneralUnitType.PixelsFromSmall
+grandChild.Height = 100
+```
+
+Notice how the (100x100) rectangle is drawn at (10, 10), but that position is relative to the parent so it's actually drawn at (110, 110)
 
 To see the full list of properties available for a GraphicalUiElement see this documentation
 https://docs.flatredball.com/gum/code/gum-code-reference/graphicaluielement
