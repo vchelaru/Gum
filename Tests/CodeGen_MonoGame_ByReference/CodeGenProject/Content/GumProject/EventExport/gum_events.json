@@ -1,0 +1,20 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "Screen1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-08-07T04:27:31.5788486Z"
+      },
+      {
+        "NewName": "Screen1.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-07T04:50:57.5064932Z"
+      }
+    ]
+  }
+}
