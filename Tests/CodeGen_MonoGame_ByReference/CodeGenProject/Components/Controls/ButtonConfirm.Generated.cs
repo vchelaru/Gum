@@ -90,9 +90,9 @@ partial class ButtonConfirm : global::MonoGameGum.Forms.Controls.Button
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDerivingNineSliceRuntime;
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDerivingTextRuntime;
-        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDerivingNineSliceRuntime;
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

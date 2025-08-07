@@ -100,10 +100,10 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::MonoGameGum.GueDerivingNineSliceRuntime;
+        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         Radio = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Radio");
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDerivingTextRuntime;
-        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDerivingNineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

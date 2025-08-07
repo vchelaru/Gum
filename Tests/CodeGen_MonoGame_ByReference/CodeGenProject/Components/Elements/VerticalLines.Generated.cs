@@ -54,7 +54,7 @@ partial class VerticalLines : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        LinesSprite = this.Visual?.GetGraphicalUiElementByName("LinesSprite") as global::MonoGameGum.GueDerivingSpriteRuntime;
+        LinesSprite = this.Visual?.GetGraphicalUiElementByName("LinesSprite") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

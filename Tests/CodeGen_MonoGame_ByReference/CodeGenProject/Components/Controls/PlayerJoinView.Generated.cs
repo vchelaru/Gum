@@ -52,7 +52,7 @@ partial class PlayerJoinView : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDerivingContainerRuntime;
+        InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         PlayerJoinViewItem1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem1");
         PlayerJoinViewItem2 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem2");
         PlayerJoinViewItem3 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem3");

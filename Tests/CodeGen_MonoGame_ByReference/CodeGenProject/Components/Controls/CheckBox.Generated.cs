@@ -107,10 +107,10 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        CheckboxBackground = this.Visual?.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDerivingNineSliceRuntime;
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDerivingTextRuntime;
+        CheckboxBackground = this.Visual?.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
         Check = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Check");
-        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDerivingNineSliceRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

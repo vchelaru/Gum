@@ -49,9 +49,9 @@ partial class DividerVertical : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        AccentTop = this.Visual?.GetGraphicalUiElementByName("AccentTop") as global::MonoGameGum.GueDerivingSpriteRuntime;
-        Line = this.Visual?.GetGraphicalUiElementByName("Line") as global::MonoGameGum.GueDerivingSpriteRuntime;
-        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as global::MonoGameGum.GueDerivingSpriteRuntime;
+        AccentTop = this.Visual?.GetGraphicalUiElementByName("AccentTop") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        Line = this.Visual?.GetGraphicalUiElementByName("Line") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

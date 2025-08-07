@@ -148,7 +148,7 @@ partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        IconSprite = this.Visual?.GetGraphicalUiElementByName("IconSprite") as global::MonoGameGum.GueDerivingSpriteRuntime;
+        IconSprite = this.Visual?.GetGraphicalUiElementByName("IconSprite") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

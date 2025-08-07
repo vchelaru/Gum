@@ -84,10 +84,10 @@ partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDerivingNineSliceRuntime;
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDerivingTextRuntime;
-        SubmenuIndicatorInstance = this.Visual?.GetGraphicalUiElementByName("SubmenuIndicatorInstance") as global::MonoGameGum.GueDerivingTextRuntime;
-        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::MonoGameGum.GueDerivingContainerRuntime;
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        SubmenuIndicatorInstance = this.Visual?.GetGraphicalUiElementByName("SubmenuIndicatorInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

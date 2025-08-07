@@ -151,8 +151,8 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDerivingNineSliceRuntime;
-        ControllerDisplayNameTextInstance = this.Visual?.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as global::MonoGameGum.GueDerivingTextRuntime;
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        ControllerDisplayNameTextInstance = this.Visual?.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
         InputDeviceIcon = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"InputDeviceIcon");
         CustomInitialize();
     }

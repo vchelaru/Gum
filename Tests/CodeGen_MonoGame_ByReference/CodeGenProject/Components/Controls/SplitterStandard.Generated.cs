@@ -48,7 +48,7 @@ partial class SplitterStandard : global::MonoGameGum.Forms.Controls.Splitter
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDerivingNineSliceRuntime;
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
