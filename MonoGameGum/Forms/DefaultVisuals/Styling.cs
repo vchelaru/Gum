@@ -25,11 +25,8 @@ public class Styling
         set
         {
             _spriteSheet = value;
-            if (UseDefaults)
-            {
-                NineSlice.UpdateTextures(_spriteSheet);
-                Icons.UpdateTextures(_spriteSheet);
-            }
+            NineSlice.UpdateTextures(_spriteSheet);
+            Icons.UpdateTextures(_spriteSheet);
         }
     }
 
@@ -44,6 +41,10 @@ public class Styling
 
     public Styling(Texture2D? spriteSheet, bool useDefaults = true)
     {
+        UseDefaults = useDefaults;
+        NineSlice = new();
+        Icons = new();
+
 #if RAYLIB
         this.SpriteSheet = spriteSheet.Value;
 #else
@@ -62,9 +63,6 @@ public class Styling
             ActiveStyle = this;
         }
 
-        UseDefaults = useDefaults;
-        NineSlice = new();
-        Icons = new();
         if (useDefaults)
         {
             NineSlice.UseDefaults(this.SpriteSheet);
@@ -81,7 +79,7 @@ public class Styling
     /// <param name="height"></param>
     /// <param name="texture"></param>
     /// <returns></returns>
-    public static StateSave CreateTextureCoordinateState(int left, int top, int width, int height, Texture2D? texture)
+    public static StateSave CreateTextureCoordinateState(int left, int top, int width, int height, Texture2D? texture = null)
     {
         var variables = new List<VariableSave>
         {
@@ -101,6 +99,20 @@ public class Styling
         {
             Variables = variables
         };
+    }
+
+    public static void UpdateTexturePosition(StateSave stateSave, int left, int top, int width, int height, Texture2D? texture = null)
+    {
+        stateSave?.SetValue("TextureLeft", left, "int");
+        stateSave?.SetValue("TextureTop", top, "int");
+        stateSave?.SetValue("TextureWidth", width, "int");
+        stateSave?.SetValue("TextureHeight", height, "int");
+        stateSave?.SetValue("TextureAddress", Gum.Managers.TextureAddress.Custom, "int");
+
+        if (texture != null)
+        {
+            stateSave?.SetValue("Texture", texture, "Texture2D");
+        }
     }
 }
 
@@ -156,28 +168,19 @@ public class NineSlice
 
     public void UpdateTextures(Texture2D texture)
     {
-        UpdateTextureInState(Solid, texture);
-        UpdateTextureInState(Bordered, texture);
-        UpdateTextureInState(BracketVertical, texture);
-        UpdateTextureInState(BracketHorizontal, texture);
-        UpdateTextureInState(Tab, texture);
-        UpdateTextureInState(TabBordered, texture);
-        UpdateTextureInState(Outlined, texture);
-        UpdateTextureInState(OutlinedHeavy, texture);
-        UpdateTextureInState(Panel, texture);
-        UpdateTextureInState(CircleSolid, texture);
-        UpdateTextureInState(CircleBordered, texture);
-        UpdateTextureInState(CircleOutlined, texture);
-        UpdateTextureInState(CircleOutlinedHeavy, texture);
-    }
-
-    private void UpdateTextureInState(StateSave state, Texture2D texture)
-    {
-        var valueToChange = state?.Variables?.FirstOrDefault(v => v.Name == "Texture");
-        if (valueToChange != null)
-        {
-            valueToChange.Value = texture;
-        }
+        Solid?.SetValue("Texture", texture, "Texture2D");
+        Bordered?.SetValue("Texture", texture, "Texture2D");
+        BracketVertical?.SetValue("Texture", texture, "Texture2D");
+        BracketHorizontal?.SetValue("Texture", texture, "Texture2D");
+        Tab?.SetValue("Texture", texture, "Texture2D");
+        TabBordered?.SetValue("Texture", texture, "Texture2D");
+        Outlined?.SetValue("Texture", texture, "Texture2D");
+        OutlinedHeavy?.SetValue("Texture", texture, "Texture2D");
+        Panel?.SetValue("Texture", texture, "Texture2D");
+        CircleSolid?.SetValue("Texture", texture, "Texture2D");
+        CircleBordered?.SetValue("Texture", texture, "Texture2D");
+        CircleOutlined?.SetValue("Texture", texture, "Texture2D");
+        CircleOutlinedHeavy?.SetValue("Texture", texture, "Texture2D");
     }
 }
 
@@ -330,86 +333,78 @@ public class Icons
 
     public void UpdateTextures(Texture2D texture)
     {
-        UpdateTextureInState(Arrow1, texture);
-        UpdateTextureInState(Arrow2, texture);
-        UpdateTextureInState(Arrow3, texture);
-        UpdateTextureInState(Basket, texture);
-        UpdateTextureInState(Battery, texture);
-        UpdateTextureInState(Check, texture);
-        UpdateTextureInState(CheckeredFlag, texture);
-        UpdateTextureInState(Circle1, texture);
-        UpdateTextureInState(Circle2, texture);
-        UpdateTextureInState(Close, texture);
-        UpdateTextureInState(Crosshairs, texture);
-        UpdateTextureInState(Currency, texture);
-        UpdateTextureInState(Cursor, texture);
-        UpdateTextureInState(CursorText, texture);
-        UpdateTextureInState(Dash, texture);
-        UpdateTextureInState(Delete, texture);
-        UpdateTextureInState(Enter, texture);
-        UpdateTextureInState(Expand, texture);
-        UpdateTextureInState(Gamepad, texture);
-        UpdateTextureInState(GamepadNES, texture);
-        UpdateTextureInState(GamepadSNES, texture);
-        UpdateTextureInState(GamepadNintendo64, texture);
-        UpdateTextureInState(GamepadGamecube, texture);
-        UpdateTextureInState(GamepadSwitchPro, texture);
-        UpdateTextureInState(GamepadXbox, texture);
-        UpdateTextureInState(GamepadPlaystationDualShock, texture);
-        UpdateTextureInState(GamepadSegaGenesis, texture);
-        UpdateTextureInState(Gear, texture);
-        UpdateTextureInState(FastForward, texture);
-        UpdateTextureInState(FastForwardBar, texture);
-        UpdateTextureInState(FitToScreen, texture);
-        UpdateTextureInState(Flame1, texture);
-        UpdateTextureInState(Flame2, texture);
-        UpdateTextureInState(Heart, texture);
-        UpdateTextureInState(Info, texture);
-        UpdateTextureInState(Keyboard, texture);
-        UpdateTextureInState(Leaf, texture);
-        UpdateTextureInState(Lightning, texture);
-        UpdateTextureInState(Minimize, texture);
-        UpdateTextureInState(Monitor, texture);
-        UpdateTextureInState(Mouse, texture);
-        UpdateTextureInState(Music, texture);
-        UpdateTextureInState(Pause, texture);
-        UpdateTextureInState(Pencil, texture);
-        UpdateTextureInState(Play, texture);
-        UpdateTextureInState(PlayBar, texture);
-        UpdateTextureInState(Power, texture);
-        UpdateTextureInState(Radiation, texture);
-        UpdateTextureInState(Reduce, texture);
-        UpdateTextureInState(Shield, texture);
-        UpdateTextureInState(Shot, texture);
-        UpdateTextureInState(Skull, texture);
-        UpdateTextureInState(Sliders, texture);
-        UpdateTextureInState(SoundMaximum, texture);
-        UpdateTextureInState(SoundMinimum, texture);
-        UpdateTextureInState(Speech, texture);
-        UpdateTextureInState(Star, texture);
-        UpdateTextureInState(Stop, texture);
-        UpdateTextureInState(Temperature, texture);
-        UpdateTextureInState(Touch, texture);
-        UpdateTextureInState(Trash, texture);
-        UpdateTextureInState(Trophy, texture);
-        UpdateTextureInState(User, texture);
-        UpdateTextureInState(UserAdd, texture);
-        UpdateTextureInState(UserDelete, texture);
-        UpdateTextureInState(UserGear, texture);
-        UpdateTextureInState(UserMulti, texture);
-        UpdateTextureInState(UserRemove, texture);
-        UpdateTextureInState(Warning, texture);
-        UpdateTextureInState(Wrench, texture);
+        Arrow1?.SetValue("Texture", texture, "Texture2D");
+        Arrow2?.SetValue("Texture", texture, "Texture2D");
+        Arrow3?.SetValue("Texture", texture, "Texture2D");
+        Basket?.SetValue("Texture", texture, "Texture2D");
+        Battery?.SetValue("Texture", texture, "Texture2D");
+        Check?.SetValue("Texture", texture, "Texture2D");
+        CheckeredFlag?.SetValue("Texture", texture, "Texture2D");
+        Circle1?.SetValue("Texture", texture, "Texture2D");
+        Circle2?.SetValue("Texture", texture, "Texture2D");
+        Close?.SetValue("Texture", texture, "Texture2D");
+        Crosshairs?.SetValue("Texture", texture, "Texture2D");
+        Currency?.SetValue("Texture", texture, "Texture2D");
+        Cursor?.SetValue("Texture", texture, "Texture2D");
+        CursorText?.SetValue("Texture", texture, "Texture2D");
+        Dash?.SetValue("Texture", texture, "Texture2D");
+        Delete?.SetValue("Texture", texture, "Texture2D");
+        Enter?.SetValue("Texture", texture, "Texture2D");
+        Expand?.SetValue("Texture", texture, "Texture2D");
+        Gamepad?.SetValue("Texture", texture, "Texture2D");
+        GamepadNES?.SetValue("Texture", texture, "Texture2D");
+        GamepadSNES?.SetValue("Texture", texture, "Texture2D");
+        GamepadNintendo64?.SetValue("Texture", texture, "Texture2D");
+        GamepadGamecube?.SetValue("Texture", texture, "Texture2D");
+        GamepadSwitchPro?.SetValue("Texture", texture, "Texture2D");
+        GamepadXbox?.SetValue("Texture", texture, "Texture2D");
+        GamepadPlaystationDualShock?.SetValue("Texture", texture, "Texture2D");
+        GamepadSegaGenesis?.SetValue("Texture", texture, "Texture2D");
+        Gear?.SetValue("Texture", texture, "Texture2D");
+        FastForward?.SetValue("Texture", texture, "Texture2D");
+        FastForwardBar?.SetValue("Texture", texture, "Texture2D");
+        FitToScreen?.SetValue("Texture", texture, "Texture2D");
+        Flame1?.SetValue("Texture", texture, "Texture2D");
+        Flame2?.SetValue("Texture", texture, "Texture2D");
+        Heart?.SetValue("Texture", texture, "Texture2D");
+        Info?.SetValue("Texture", texture, "Texture2D");
+        Keyboard?.SetValue("Texture", texture, "Texture2D");
+        Leaf?.SetValue("Texture", texture, "Texture2D");
+        Lightning?.SetValue("Texture", texture, "Texture2D");
+        Minimize?.SetValue("Texture", texture, "Texture2D");
+        Monitor?.SetValue("Texture", texture, "Texture2D");
+        Mouse?.SetValue("Texture", texture, "Texture2D");
+        Music?.SetValue("Texture", texture, "Texture2D");
+        Pause?.SetValue("Texture", texture, "Texture2D");
+        Pencil?.SetValue("Texture", texture, "Texture2D");
+        Play?.SetValue("Texture", texture, "Texture2D");
+        PlayBar?.SetValue("Texture", texture, "Texture2D");
+        Power?.SetValue("Texture", texture, "Texture2D");
+        Radiation?.SetValue("Texture", texture, "Texture2D");
+        Reduce?.SetValue("Texture", texture, "Texture2D");
+        Shield?.SetValue("Texture", texture, "Texture2D");
+        Shot?.SetValue("Texture", texture, "Texture2D");
+        Skull?.SetValue("Texture", texture, "Texture2D");
+        Sliders?.SetValue("Texture", texture, "Texture2D");
+        SoundMaximum?.SetValue("Texture", texture, "Texture2D");
+        SoundMinimum?.SetValue("Texture", texture, "Texture2D");
+        Speech?.SetValue("Texture", texture, "Texture2D");
+        Star?.SetValue("Texture", texture, "Texture2D");
+        Stop?.SetValue("Texture", texture, "Texture2D");
+        Temperature?.SetValue("Texture", texture, "Texture2D");
+        Touch?.SetValue("Texture", texture, "Texture2D");
+        Trash?.SetValue("Texture", texture, "Texture2D");
+        Trophy?.SetValue("Texture", texture, "Texture2D");
+        User?.SetValue("Texture", texture, "Texture2D");
+        UserAdd?.SetValue("Texture", texture, "Texture2D");
+        UserDelete?.SetValue("Texture", texture, "Texture2D");
+        UserGear?.SetValue("Texture", texture, "Texture2D");
+        UserMulti?.SetValue("Texture", texture, "Texture2D");
+        UserRemove?.SetValue("Texture", texture, "Texture2D");
+        Warning?.SetValue("Texture", texture, "Texture2D");
+        Wrench?.SetValue("Texture", texture, "Texture2D");
     }
 
-    private void UpdateTextureInState(StateSave state, Texture2D texture)
-    {
-        var valueToChange = state?.Variables?.FirstOrDefault(v => v.Name == "Texture");
-        if (valueToChange != null)
-        {
-            valueToChange.Value = texture;
-        }
-    }
 }
 
 public class Text
