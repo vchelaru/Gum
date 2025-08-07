@@ -1006,14 +1006,14 @@ public class CodeGenerator
             {
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+                    $"global::MonoGameGum.GueDeriving{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
             }
         }
         else
         {
             context.StringBuilder.AppendLine(
                 $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+                $"global::MonoGameGum.GueDeriving{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
         }
     }
 
@@ -1032,7 +1032,7 @@ public class CodeGenerator
 
         var tabs = context.Tabs;
 
-        context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance.BaseType, visualApi, context)}();");
+        context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::MonoGameGum.GueDeriving{GetClassNameForType(instance.BaseType, visualApi, context)}();");
 
         if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
@@ -1139,9 +1139,9 @@ public class CodeGenerator
             if (context.Element is ScreenSave)
             {
                 builder.AppendLine(context.Tabs + "visual.Width = 0;");
-                builder.AppendLine(context.Tabs + "visual.WidthUnits = DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
                 builder.AppendLine(context.Tabs + "visual.Height = 0;");
-                builder.AppendLine(context.Tabs + "visual.HeightUnits = DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
 
             builder.AppendLine(context.Tabs + "return visual;");
