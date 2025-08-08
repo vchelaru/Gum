@@ -1,0 +1,13 @@
+{
+  "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing System.Linq;\r\n",
+  "CodeProjectRoot": "C:\\Users\\vchel\\Documents\\GitHub\\Gum\\Tests\\CodeGen_MonoGame_ByReference\\",
+  "RootNamespace": "CodeGen_MonoGame_ByReference",
+  "AppendFolderToNamespace": true,
+  "InheritanceLocation": 1,
+  "ObjectInstantiationType": 1,
+  "DefaultScreenBase": "Gum.Wireframe.BindableGue",
+  "OutputLibrary": 4,
+  "AdjustPixelValuesForDensity": false,
+  "BaseTypesNotCodeGenerated": null,
+  "GenerateGumDataTypes": false
+}
