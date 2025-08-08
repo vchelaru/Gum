@@ -249,7 +249,11 @@ namespace GumRuntime
 #if DEBUG
             if (stateSave == null)
             {
-                throw new Exception("State cannot be null");
+                throw new ArgumentNullException(nameof(stateSave), "State cannot be null");
+            }
+            if(graphicalElement == null)
+            {
+                throw new ArgumentNullException(nameof(graphicalElement));
             }
 #endif
             if (!string.IsNullOrEmpty(elementSave.BaseType))

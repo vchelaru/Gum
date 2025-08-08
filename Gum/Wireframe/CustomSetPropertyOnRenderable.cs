@@ -23,6 +23,7 @@ using System.IO;
 using MonoGameGum.Localization;
 using System.Security.Policy;
 using Gum.Managers;
+using Microsoft.Xna.Framework.Graphics;
 
 #if GUM
 using Gum.Services;
@@ -246,6 +247,11 @@ public class CustomSetPropertyOnRenderable
         else if (propertyName == "Blue")
         {
             nineSlice.Blue = (int)value;
+            handled = true;
+        }
+        else if (propertyName == "Texture")
+        {
+            nineSlice.SetSingleTexture((Texture2D)value);
             handled = true;
         }
 

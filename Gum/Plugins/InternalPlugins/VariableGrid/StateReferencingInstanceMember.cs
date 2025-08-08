@@ -971,12 +971,24 @@ namespace Gum.PropertyGridHelpers
 
                 if (typeFromPropertyDescriptor == typeof(string))
                 {
-                    var typeFromVariable = GetTypeFromVariableRecursively();
+                    // August 7, 2025
+                    // If a variable sneaks
+                    // in without a Type on it
+                    // then this will default to 
+                    // string. But maybe we can use
+                    // ComponentType? This would be faster
+                    // and shifts the responsibility to the 
+                    // PropertyDescriptor.
+                    //var typeFromVariable = GetTypeFromVariableRecursively();
 
-                    if (typeFromVariable != typeof(string))
-                    {
-                        toReturn = typeFromVariable;
-                    }
+                    //if (typeFromVariable != typeof(string))
+                    //{
+                    //    toReturn = typeFromVariable;
+                    //}
+
+                    // Can't we use the component type?
+                    toReturn = mPropertyDescriptor.ComponentType;
+
                 }
 
                 return toReturn;
