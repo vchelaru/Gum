@@ -52,6 +52,10 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
+
+        [XmlIgnore]
+        public Type PreferredDisplayer { get; set; }
+
         public string GetRootName()
         {
 
