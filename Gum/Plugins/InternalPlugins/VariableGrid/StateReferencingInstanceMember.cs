@@ -306,8 +306,11 @@ namespace Gum.PropertyGridHelpers
 
             ModifyContextMenu(instanceSave, stateListCategoryContainer, ispd);
 
-            VariableSave standardVariable = null;
-            if (stateListCategoryContainer is ElementSave elementSave)
+            VariableSave? standardVariable = null;
+
+            var elementSave = stateListCategoryContainer as ElementSave;
+
+            if (elementSave != null)
             {
                 standardVariable = _objectFinder.GetRootVariable(mVariableName, elementSave);
             }
@@ -317,7 +320,7 @@ namespace Gum.PropertyGridHelpers
             {
                 var standardElement = _objectFinder.GetContainerOf(standardVariable);
 
-                if (standardElement != null && standardElement is StandardElementSave)
+                if (standardElement is StandardElementSave)
                 {
                     try
                     {
@@ -348,6 +351,47 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
             }
+            else
+            {
+                VariableListSave? standardVariableList = null;
+                if (elementSave != null)
+                {
+                    standardVariableList = _objectFinder.GetRootVariableList(mVariableName, elementSave);
+                }
+                ElementSave? standardElement = null;
+
+                if (standardVariableList != null)
+                {
+                    standardElement = ObjectFinder.Self.GetElementContainerOf(standardVariableList);
+                }
+
+                VariableListSave? definingVariableList = null;
+                if (standardElement != null)
+                {
+                    var defaultState = StandardElementsManager.Self.GetDefaultStateFor(standardElement.Name);
+                    definingVariableList = defaultState?.VariableLists.FirstOrDefault(item => item.Name == standardVariableList.Name);
+
+                }
+
+                if(definingVariableList != null)
+                {
+                    if (definingVariableList.PreferredDisplayer != null)
+                    {
+                        this.PreferredDisplayer = definingVariableList.PreferredDisplayer;
+                    }
+                    // eventually VariableLists will have these same properties. When they do, add this code
+                    //this.DetailText = definingVariableList.DetailText;
+
+                    //foreach (var kvp in definingVariableList.PropertiesToSetOnDisplayer)
+                    //{
+                    //    this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+                    //}
+
+                    //this.SortValue = definingVariableList.DesiredOrder;
+                }
+
+            }
+
 
         }
 

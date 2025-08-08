@@ -561,6 +561,21 @@ namespace Gum.Managers
             return null;
         }
 
+        public ElementSave? GetElementContainerOf(VariableListSave variableList)
+        {
+            foreach (var element in GumProjectSave.AllElements)
+            {
+                foreach (var state in element.AllStates)
+                {
+                    if (state.VariableLists.Contains(variableList))
+                    {
+                        return element;
+                    }
+                }
+            }
+            return null;
+        }
+
         public List<ElementSave> GetElementsReferencing(BehaviorSave behavior)
         {
             List<ElementSave> referencingElements = new List<ElementSave>();
