@@ -141,7 +141,7 @@ partial class PlayerJoinViewItemRuntime : ContainerRuntime
     {
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         ControllerDisplayNameTextInstance = this.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        InputDeviceIcon = this.GetGraphicalUiElementByName("InputDeviceIcon") as global::MonoGameGum.GueDeriving.IconRuntime;
+        InputDeviceIcon = this.GetGraphicalUiElementByName("InputDeviceIcon") as IconRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

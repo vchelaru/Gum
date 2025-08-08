@@ -74,11 +74,11 @@ partial class ScrollBarRuntime : ContainerRuntime
         {
             FormsControlAsObject = new global::MonoGameGum.Forms.Controls.ScrollBar(this);
         }
-        UpButtonInstance = this.GetGraphicalUiElementByName("UpButtonInstance") as global::MonoGameGum.GueDeriving.ButtonIconRuntime;
-        DownButtonInstance = this.GetGraphicalUiElementByName("DownButtonInstance") as global::MonoGameGum.GueDeriving.ButtonIconRuntime;
+        UpButtonInstance = this.GetGraphicalUiElementByName("UpButtonInstance") as ButtonIconRuntime;
+        DownButtonInstance = this.GetGraphicalUiElementByName("DownButtonInstance") as ButtonIconRuntime;
         TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        ThumbInstance = this.GetGraphicalUiElementByName("ThumbInstance") as global::MonoGameGum.GueDeriving.ButtonStandardRuntime;
+        ThumbInstance = this.GetGraphicalUiElementByName("ThumbInstance") as ButtonStandardRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -13,7 +13,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-partial class LabelRuntime : SkiaGum.GueDeriving.ContainerRuntime
+partial class LabelRuntime : global::MonoGameGum.GueDeriving.TextRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()

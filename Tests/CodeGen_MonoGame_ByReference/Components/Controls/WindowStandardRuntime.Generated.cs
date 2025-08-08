@@ -53,16 +53,16 @@ partial class WindowStandardRuntime : ContainerRuntime
             FormsControlAsObject = new global::MonoGameGum.Forms.Window(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        TitleBarInstance = this.GetGraphicalUiElementByName("TitleBarInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderTopLeftInstance = this.GetGraphicalUiElementByName("BorderTopLeftInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderTopRightInstance = this.GetGraphicalUiElementByName("BorderTopRightInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderBottomLeftInstance = this.GetGraphicalUiElementByName("BorderBottomLeftInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderBottomRightInstance = this.GetGraphicalUiElementByName("BorderBottomRightInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderTopInstance = this.GetGraphicalUiElementByName("BorderTopInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderBottomInstance = this.GetGraphicalUiElementByName("BorderBottomInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderLeftInstance = this.GetGraphicalUiElementByName("BorderLeftInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
-        BorderRightInstance = this.GetGraphicalUiElementByName("BorderRightInstance") as global::MonoGameGum.GueDeriving.PanelRuntime;
+        InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as PanelRuntime;
+        TitleBarInstance = this.GetGraphicalUiElementByName("TitleBarInstance") as PanelRuntime;
+        BorderTopLeftInstance = this.GetGraphicalUiElementByName("BorderTopLeftInstance") as PanelRuntime;
+        BorderTopRightInstance = this.GetGraphicalUiElementByName("BorderTopRightInstance") as PanelRuntime;
+        BorderBottomLeftInstance = this.GetGraphicalUiElementByName("BorderBottomLeftInstance") as PanelRuntime;
+        BorderBottomRightInstance = this.GetGraphicalUiElementByName("BorderBottomRightInstance") as PanelRuntime;
+        BorderTopInstance = this.GetGraphicalUiElementByName("BorderTopInstance") as PanelRuntime;
+        BorderBottomInstance = this.GetGraphicalUiElementByName("BorderBottomInstance") as PanelRuntime;
+        BorderLeftInstance = this.GetGraphicalUiElementByName("BorderLeftInstance") as PanelRuntime;
+        BorderRightInstance = this.GetGraphicalUiElementByName("BorderRightInstance") as PanelRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -94,7 +94,7 @@ partial class RadioButtonRuntime : ContainerRuntime
             FormsControlAsObject = new global::MonoGameGum.Forms.Controls.RadioButton(this);
         }
         RadioBackground = this.GetGraphicalUiElementByName("RadioBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        Radio = this.GetGraphicalUiElementByName("Radio") as global::MonoGameGum.GueDeriving.IconRuntime;
+        Radio = this.GetGraphicalUiElementByName("Radio") as IconRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();

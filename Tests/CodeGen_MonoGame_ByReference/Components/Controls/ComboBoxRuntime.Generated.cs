@@ -84,8 +84,8 @@ partial class ComboBoxRuntime : ContainerRuntime
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        ListBoxInstance = this.GetGraphicalUiElementByName("ListBoxInstance") as global::MonoGameGum.GueDeriving.ListBoxRuntime;
-        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as global::MonoGameGum.GueDeriving.IconRuntime;
+        ListBoxInstance = this.GetGraphicalUiElementByName("ListBoxInstance") as ListBoxRuntime;
+        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

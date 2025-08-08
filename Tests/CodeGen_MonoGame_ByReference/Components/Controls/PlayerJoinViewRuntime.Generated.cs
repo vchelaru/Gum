@@ -41,10 +41,10 @@ partial class PlayerJoinViewRuntime : ContainerRuntime
     public override void AfterFullCreation()
     {
         InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        PlayerJoinViewItem1 = this.GetGraphicalUiElementByName("PlayerJoinViewItem1") as global::MonoGameGum.GueDeriving.PlayerJoinViewItemRuntime;
-        PlayerJoinViewItem2 = this.GetGraphicalUiElementByName("PlayerJoinViewItem2") as global::MonoGameGum.GueDeriving.PlayerJoinViewItemRuntime;
-        PlayerJoinViewItem3 = this.GetGraphicalUiElementByName("PlayerJoinViewItem3") as global::MonoGameGum.GueDeriving.PlayerJoinViewItemRuntime;
-        PlayerJoinViewItem4 = this.GetGraphicalUiElementByName("PlayerJoinViewItem4") as global::MonoGameGum.GueDeriving.PlayerJoinViewItemRuntime;
+        PlayerJoinViewItem1 = this.GetGraphicalUiElementByName("PlayerJoinViewItem1") as PlayerJoinViewItemRuntime;
+        PlayerJoinViewItem2 = this.GetGraphicalUiElementByName("PlayerJoinViewItem2") as PlayerJoinViewItemRuntime;
+        PlayerJoinViewItem3 = this.GetGraphicalUiElementByName("PlayerJoinViewItem3") as PlayerJoinViewItemRuntime;
+        PlayerJoinViewItem4 = this.GetGraphicalUiElementByName("PlayerJoinViewItem4") as PlayerJoinViewItemRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ExampleScreen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>ContainerInstance.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Height</Name>
+      <Value xsi:type="xsd:float">358</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Width</Name>
+      <Value xsi:type="xsd:float">256</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>ContainerInstance.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>ContainerInstance.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>ContainerInstance.YOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>ContainerInstance.YUnits</Name>
+      <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance1.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance2.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance3.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance4.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>ContainerInstance</Name>
+    <BaseType>Container</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance1</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance2</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance3</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance4</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>

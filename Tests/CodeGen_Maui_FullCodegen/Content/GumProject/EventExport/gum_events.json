@@ -1,0 +1,104 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "StandardsContainerComponent",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-08-08T03:29:09.7639888Z"
+      },
+      {
+        "NewName": "StandardsContainerComponent (Container).ArcInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:29:13.1285729Z"
+      },
+      {
+        "NewName": "StandardsContainerComponent (Container).CircleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:29:28.2535658Z"
+      },
+      {
+        "NewName": "StandardsContainerComponent (Container).ColoredCircleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:29:35.2465476Z"
+      },
+      {
+        "NewName": "StandardsContainerComponent (Container).ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:29:42.7182577Z"
+      },
+      {
+        "NewName": "StandardsContainerComponent (Container).RoundedRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:29:54.182958Z"
+      },
+      {
+        "NewName": "StandardsContainerComponent (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:30:20.4842198Z"
+      },
+      {
+        "NewName": "ExampleScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-08-08T03:30:47.2412622Z"
+      },
+      {
+        "NewName": "ExampleScreen.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:30:53.2854821Z"
+      },
+      {
+        "NewName": "ExampleScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:31:17.7011784Z"
+      },
+      {
+        "NewName": "ExampleScreen.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:31:20.367031Z"
+      },
+      {
+        "NewName": "ExampleScreen.TextInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:31:20.7697152Z"
+      },
+      {
+        "NewName": "ExampleScreen.TextInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:31:21.1110796Z"
+      },
+      {
+        "NewName": "ExampleScreen.TextInstance4",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-08-08T03:31:21.4618062Z"
+      }
+    ]
+  }
+}

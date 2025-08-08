@@ -85,8 +85,8 @@ partial class PercentBarRuntime : ContainerRuntime
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         BarContainer = this.GetGraphicalUiElementByName("BarContainer") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         Bar = this.GetGraphicalUiElementByName("Bar") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        CautionLinesInstance = this.GetGraphicalUiElementByName("CautionLinesInstance") as global::MonoGameGum.GueDeriving.CautionLinesRuntime;
-        VerticalLinesInstance = this.GetGraphicalUiElementByName("VerticalLinesInstance") as global::MonoGameGum.GueDeriving.VerticalLinesRuntime;
+        CautionLinesInstance = this.GetGraphicalUiElementByName("CautionLinesInstance") as CautionLinesRuntime;
+        VerticalLinesInstance = this.GetGraphicalUiElementByName("VerticalLinesInstance") as VerticalLinesRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -41,7 +41,7 @@ partial class TreeViewRuntime : ContainerRuntime
     public override void AfterFullCreation()
     {
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as global::MonoGameGum.GueDeriving.ScrollBarRuntime;
+        VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as ScrollBarRuntime;
         ClipContainerInstance = this.GetGraphicalUiElementByName("ClipContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;

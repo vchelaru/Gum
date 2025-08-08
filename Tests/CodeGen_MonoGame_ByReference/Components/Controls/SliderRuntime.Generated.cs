@@ -88,7 +88,7 @@ partial class SliderRuntime : ContainerRuntime
         }
         TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        ThumbInstance = this.GetGraphicalUiElementByName("ThumbInstance") as global::MonoGameGum.GueDeriving.ButtonStandardRuntime;
+        ThumbInstance = this.GetGraphicalUiElementByName("ThumbInstance") as ButtonStandardRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

@@ -40,7 +40,7 @@ partial class DialogBoxRuntime : ContainerRuntime
     {
         NineSliceInstance = this.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        ContinueIndicatorInstance = this.GetGraphicalUiElementByName("ContinueIndicatorInstance") as global::MonoGameGum.GueDeriving.IconRuntime;
+        ContinueIndicatorInstance = this.GetGraphicalUiElementByName("ContinueIndicatorInstance") as IconRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

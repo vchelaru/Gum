@@ -102,7 +102,7 @@ partial class CheckBoxRuntime : ContainerRuntime
         }
         CheckboxBackground = this.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Check = this.GetGraphicalUiElementByName("Check") as global::MonoGameGum.GueDeriving.IconRuntime;
+        Check = this.GetGraphicalUiElementByName("Check") as IconRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

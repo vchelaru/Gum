@@ -74,7 +74,7 @@ partial class TreeViewToggleRuntime : ContainerRuntime
     public override void AfterFullCreation()
     {
         NineSliceInstance = this.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as global::MonoGameGum.GueDeriving.IconRuntime;
+        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

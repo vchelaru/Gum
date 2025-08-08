@@ -506,6 +506,18 @@ public class CodeGenerator
                     inheritance = gumFormsType;
                 }
             }
+            else if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                var standardElement = ObjectFinder.Self.GetStandardElement(element.BaseType);
+                if(standardElement != null)
+                {
+                    inheritance = "global::MonoGameGum.GueDeriving." + element.BaseType + "Runtime";
+                }
+                else
+                {
+                    inheritance = element.BaseType + "Runtime";
+                }
+            }
             else
             {
                 inheritance = "SkiaGum.GueDeriving.ContainerRuntime";
@@ -1011,9 +1023,20 @@ public class CodeGenerator
         }
         else
         {
-            context.StringBuilder.AppendLine(
-                $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+            var isStandardElement = ObjectFinder.Self.GetStandardElement(context.Instance.BaseType) != null;
+            if(isStandardElement)
+            {
+                context.StringBuilder.AppendLine(
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+
+            }
+            else
+            {
+                context.StringBuilder.AppendLine(
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                    $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+            }
         }
     }
 
@@ -1032,7 +1055,15 @@ public class CodeGenerator
 
         var tabs = context.Tabs;
 
-        context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::MonoGameGum.GueDeriving{GetClassNameForType(instance.BaseType, visualApi, context)}();");
+        string prefix = "";
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
+        {
+            context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::SkiaGum.GueDeriving.{GetClassNameForType(instance.BaseType, visualApi, context)}();");
+        }
+        else
+        {
+            context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::MonoGameGum.GueDeriving.{GetClassNameForType(instance.BaseType, visualApi, context)}();");
+        }
 
         if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
