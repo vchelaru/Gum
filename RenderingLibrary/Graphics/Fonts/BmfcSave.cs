@@ -5,6 +5,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace RenderingLibrary.Graphics.Fonts;
 
@@ -85,11 +87,109 @@ public class BmfcSave
         {
             newRange = DefaultRanges;
         }
-        template = template.Replace("chars=32-126,160-255", $"chars={newRange}");
+        
+        var charsReplacement = GenerateSplitRangesString(newRange);
+        template = template.Replace("chars=32-126,160-255", charsReplacement);
 
         FileManager.SaveText(template, fileName);
     }
+static string GenerateSplitRangesString(string ranges, int maxGroupSize = 100)
+    {
+        var allChars = ParseCharRanges(ranges);
+        var groups = SplitIntoGroups(allChars, maxGroupSize);
+        var builder = new StringBuilder();
+        for(int i = 0; i < groups.Count; i++)
+        {
+            if(i > 0)
+            {
+                builder.Append(Environment.NewLine);
+            }
+            builder.Append("chars=").Append(GroupToRangeStr(groups[i]));
+        }
+        return builder.ToString();
+    }
 
+    static List<int> ParseCharRanges(string charsStr)
+    {
+        var allChars = new List<int>();
+        var ranges = charsStr.Split([','], StringSplitOptions.RemoveEmptyEntries);
+        foreach(var part in ranges)
+        {
+            if(part.Contains('-'))
+            {
+                var split = part.Split('-');
+                if(int.TryParse(split[0], out int start) && int.TryParse(split[1], out int end))
+                {
+                    for(int i = start; i <= end; i++)
+                    {
+                        allChars.Add(i);
+                    }
+                }
+            }
+            else if(int.TryParse(part, out int value))
+            {
+                allChars.Add(value);
+            }
+        }
+        return allChars;
+    }
+
+    static List<List<int>> SplitIntoGroups(List<int> charList, int maxCharsPerGroup)
+    {
+        var groups = new List<List<int>>();
+        var current = new List<int>(maxCharsPerGroup);
+        foreach(var codepoint in charList)
+        {
+            current.Add(codepoint);
+            if(current.Count >= maxCharsPerGroup)
+            {
+                groups.Add(current);
+                current = new List<int>(maxCharsPerGroup);
+            }
+        }
+        if(current.Count > 0)
+        {
+            groups.Add(current);
+        }
+        return groups;
+    }
+
+    static string GroupToRangeStr(List<int> group)
+    {
+        group.Sort();
+        var ranges = new List<string>();
+        int start = group[0];
+        int prev = group[0];
+        for(int i = 1; i < group.Count; i++)
+        {
+            int codepoint = group[i];
+            if(codepoint == prev + 1)
+            {
+                prev = codepoint;
+            }
+            else
+            {
+                if(start == prev)
+                {
+                    ranges.Add(start.ToString());
+                }
+                else
+                {
+                    ranges.Add($"{start}-{prev}");
+                }
+                start = prev = codepoint;
+            }
+        }
+        if(start == prev)
+        {
+            ranges.Add(start.ToString());
+        }
+        else
+        {
+            ranges.Add($"{start}-{prev}");
+        }
+        return string.Join(",", ranges);
+    }
     public static bool GetIfIsValidRange(string newRange)
     {
         try
@@ -155,7 +255,62 @@ public class BmfcSave
         }
         return newRange;
     }
+    
+    public static string GenerateRangesFromFile(string fileName)
+    {
+        var text = System.IO.File.ReadAllText(fileName);
+        var uniqueValues = new System.Collections.Generic.HashSet<int>();
+        foreach (var c in text)
+        {
+            uniqueValues.Add((int)c);
+        }
 
+        var ordered = uniqueValues.OrderBy(item => item).ToList();
+        var builder = new System.Text.StringBuilder();
+
+        void AppendRange(int start, int end)
+        {
+            if(builder.Length > 0)
+            {
+                builder.Append(',');
+            }
+            if(start == end)
+            {
+                builder.Append(start);
+            }
+            else
+            {
+                builder.Append(start).Append('-').Append(end);
+            }
+        }
+
+        int currentStart = -1;
+        int previous = -1;
+        foreach(var val in ordered)
+        {
+            if(currentStart == -1)
+            {
+                currentStart = previous = val;
+            }
+            else if(val == previous + 1)
+            {
+                previous = val;
+            }
+            else
+            {
+                AppendRange(currentStart, previous);
+                currentStart = previous = val;
+            }
+        }
+
+        if(currentStart != -1)
+        {
+            AppendRange(currentStart, previous);
+        }
+
+        return builder.ToString();
+    }
+    
     public string FontCacheFileName
     {
         get

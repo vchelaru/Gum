@@ -67,6 +67,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             control.ViewModel = null;
             control.ViewModel = viewModel;
+            RefreshFontRangeEditability();
         }
     }
 
@@ -91,6 +92,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 control.ViewModel = viewModel;
                 _guiCommands.ShowTabForControl(control);
             }
+            RefreshFontRangeEditability();
         }
         catch (Exception ex)
         {
@@ -189,6 +191,31 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     }
                 }
                 break;
+            case nameof(viewModel.FontCharacterFile):
+                if(!string.IsNullOrEmpty(viewModel.FontCharacterFile) && FileManager.IsRelative(viewModel.FontCharacterFile) == false)
+                {
+                    viewModel.FontCharacterFile = FileManager.MakeRelative(viewModel.FontCharacterFile,
+                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                    shouldSaveAndRefresh = false;
+                }
+
+                if(!string.IsNullOrEmpty(viewModel.FontCharacterFile))
+                {
+                    var absolute = viewModel.FontCharacterFile;
+                    if(FileManager.IsRelative(absolute))
+                    {
+                        absolute = FileManager.RelativeDirectory + absolute;
+                    }
+
+                    if(System.IO.File.Exists(absolute))
+                    {
+                        var ranges = BmfcSave.GenerateRangesFromFile(absolute);
+                        viewModel.FontRanges = ranges;
+                    }
+                }
+
+                RefreshFontRangeEditability();
+                break;
             case nameof(viewModel.GuideLineColor):
                 _wireframeCommands.RefreshGuides();
                 break;
@@ -219,7 +246,18 @@ class MainPropertiesWindowPlugin : InternalPlugin
         }
     }
 
-
+    private void RefreshFontRangeEditability()
+    {
+        if(control != null)
+        {
+            var member = control.DataGrid.GetInstanceMember(nameof(viewModel.FontRanges));
+            if(member != null)
+            {
+                member.IsReadOnly = !string.IsNullOrEmpty(viewModel.FontCharacterFile);
+            }
+            control.DataGrid.Refresh();
+        }
+    }
     private void HandleCloseClicked(object sender, EventArgs e)
     {
         _guiCommands.RemoveControl(control);

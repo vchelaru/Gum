@@ -82,7 +82,7 @@ public class GumProjectSave
 
     public int FontSpacingVertical { get; set; } = 1;
     public int FontSpacingHorizontal { get; set; } = 1;
-
+    public string FontCharacterFile { get; set; }
     public int Version { get; set; }
 
     public int DefaultCanvasWidth
