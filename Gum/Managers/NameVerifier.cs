@@ -320,8 +320,8 @@ namespace Gum.Managers
         {
             if (name == null) return null;
             
-            string withoutSpaces = name.Replace(" ", "_");
-            return withoutSpaces.ToLowerInvariant();
+            string formatted = name.Replace(" ", "_");
+            return formatted.ToLowerInvariant();
         }
 
         public bool IsNameValidAndroidFile(string name, out string whyNotValid)
