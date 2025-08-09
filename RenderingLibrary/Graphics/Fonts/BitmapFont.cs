@@ -334,17 +334,7 @@ public class BitmapFont : IDisposable
 
         this.mOutlineThickness = parsedData.Info?.Outline ?? 0;
 
-        // The .fnt file's characters may not be sorted by Id, especially when
-        // using an external character file (such as a custom CJK list). Using
-        // the last character's Id assumes the list is ordered, which can result
-        // in an array that's too small and cause IndexOutOfRange exceptions
-        // when populating characters.  Instead, allocate based on the maximum
-        // Id found in the file.
-        var nonNegativeChars = parsedData.Chars.Where(c => c.Id >= 0);
-        var maxCharId = nonNegativeChars.Any() ? nonNegativeChars.Max(c => c.Id) : -1;
-        var maxKerningFirst = parsedData.Kernings.Where(k => k.First >= 0)
-            .Select(k => k.First).DefaultIfEmpty(-1).Max();
-        var charArraySize = System.Math.Max(maxCharId, maxKerningFirst) + 1;
+        var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
         mCharacterInfo = new BitmapCharacterInfo[charArraySize];
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
@@ -435,13 +425,9 @@ public class BitmapFont : IDisposable
         {
             // TODO: Ask VIC why BMFont generator will create a char id="-1" entry, which crashes this code.
             // This is a temporary fix until he can tell me
-            if (charInfo.Id < 0)
+            if (charInfo.Id == -1)
             {
                 continue;
-            }
-            if(charInfo.Id >= mCharacterInfo.Length)
-            {
-                Array.Resize(ref mCharacterInfo, charInfo.Id + 1);
             }
             mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, textureWidth,
                 textureHeight, mLineHeightInPixels);
@@ -458,10 +444,6 @@ public class BitmapFont : IDisposable
 
         foreach (var kerning in parsedData.Kernings)
         {
-            if(kerning.First < 0 || kerning.First >= mCharacterInfo.Length)
-            {
-                continue;
-            }
             var character = mCharacterInfo[kerning.First];
             if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
             {
