@@ -1,0 +1,182 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "setup:venv",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-NoProfile", "-ExecutionPolicy", "Bypass",
+          "-Command",
+          "if(!(Test-Path .venv)){ py -3 -m venv .venv }"
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": ["-c", "[ -d .venv ] || python3 -m venv .venv"]
+      },
+      "osx": {
+        "command": "bash",
+        "args": ["-c", "[ -d .venv ] || python3 -m venv .venv"]
+      }
+    },
+
+    {
+      "label": "setup:pip upgrade",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"]
+      }
+    },
+
+    {
+      "label": "setup:pip install",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["-m", "pip", "install", "-r", "requirements.txt"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "-r", "requirements.txt"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["-m", "pip", "install", "-r", "requirements.txt"]
+      }
+    },
+
+    {
+      "label": "setup:build gum dlls",
+      "type": "shell",
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\build_dlls_from_source.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_dlls_from_source.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_dlls_from_source.py"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "setup:gen stubs",
+      "type": "shell",
+      "problemMatcher": [],
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\pylance_stubs.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/pylance_stubs.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/pylance_stubs.py"]
+      }
+    },
+
+    {
+      "label": "setup:all",
+      "dependsOn": [
+        "setup:venv",
+        "setup:pip upgrade",
+        "setup:pip install",
+        "setup:build gum dlls",
+        "setup:gen stubs"
+      ],
+      "dependsOrder": "sequence",
+      "group": { "kind": "build", "isDefault": true }
+    },
+
+    {
+      "label": "build:gumui",
+      "type": "shell",
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\build_gumui.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_gumui.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/build_gumui.py"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "tools:clean",
+      "type": "shell",
+      "group": { "kind": "build", "isDefault": false },
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\cleanup_python_repo.py", "--yes"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/cleanup_python_repo.py", "--yes"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/cleanup_python_repo.py", "--yes"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "build:rebuild all",
+      "dependsOn": [
+        "tools:clean",
+        "setup:all",
+        "build:gumui"
+      ],
+      "dependsOrder": "sequence",
+      "group": { "kind": "build", "isDefault": false }
+    },
+    {
+      "label": "publish:pypi",
+      "type": "shell",
+      "windows": {
+        "command": ".venv\\Scripts\\python.exe",
+        "args": ["tools\\publish_to_pypi.py"]
+      },
+      "linux": {
+        "command": ".venv/bin/python",
+        "args": ["tools/publish_to_pypi.py"]
+      },
+      "osx": {
+        "command": ".venv/bin/python",
+        "args": ["tools/publish_to_pypi.py"]
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": false }
+    }
+
+  ]
+}
