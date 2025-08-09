@@ -15,7 +15,7 @@ namespace Gum.Plugins.Undos
 
             control.DataContext = new UndosViewModel();
 
-            _guiCommands.AddControl(control, "History", TabLocation.RightBottom);
+            _tabManager.AddControl(control, "History", TabLocation.RightBottom);
 
         }
     }

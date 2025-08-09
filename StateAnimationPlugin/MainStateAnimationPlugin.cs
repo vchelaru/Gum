@@ -126,7 +126,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (element != null && !_guiCommands.IsTabVisible(pluginTab))
+        if (element != null && !_tabManager.IsTabVisible(pluginTab))
         {
             var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
 
@@ -249,7 +249,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleToggleTabVisibility(object sender, EventArgs e)
     {
-        if (!_guiCommands.IsTabVisible(pluginTab))
+        if (!_tabManager.IsTabVisible(pluginTab))
         {
             pluginTab.Show();
         }
@@ -277,11 +277,11 @@ public class MainStateAnimationPlugin : PluginBase
             mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
         }
 
-        var wasShown = _guiCommands.ShowTabForControl(mMainWindow);
+        var wasShown = _tabManager.ShowTabForControl(mMainWindow);
 
         if (!wasShown)
         {
-            pluginTab = _guiCommands.AddControl(mMainWindow, "Animations",
+            pluginTab = _tabManager.AddControl(mMainWindow, "Animations",
                 TabLocation.RightBottom);
 
             pluginTab.TabShown += HandleTabShown;

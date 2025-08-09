@@ -34,6 +34,7 @@ public partial class PropertyGridManager
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IDialogService _dialogService;
     private readonly LocalizationManager _localizationManager;
+    private readonly ITabManager _tabManager;
     
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
@@ -113,6 +114,7 @@ public partial class PropertyGridManager
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _tabManager = Locator.GetRequiredService<ITabManager>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -129,7 +131,7 @@ public partial class PropertyGridManager
 
         mainControl = new Gum.MainPropertyGrid();
 
-        _guiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+        _tabManager.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
         mVariablesDataGrid = mainControl.DataGrid;
 
