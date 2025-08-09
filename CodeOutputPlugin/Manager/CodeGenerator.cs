@@ -825,7 +825,7 @@ public class CodeGenerator
 
         if (className == null)
         {
-            string message = $"Could not find instance {context.InstanceNameInCode} Gum type." +
+            string message = $"Could not find instance {context.InstanceNameInCode} Gum type. " +
                              "Check if it is an instance of a deleted Gum component.";
             context.StringBuilder.AppendLine($"{context.Tabs}// {message}");
             return;
