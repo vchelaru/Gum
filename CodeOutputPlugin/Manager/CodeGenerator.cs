@@ -383,7 +383,10 @@ public class CodeGenerator
 
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
-
+    
+    /// <returns>
+    /// The class name corresponding to the given <paramref name="gumType"/>, or <c>null</c> if that type couldn't be found.
+    /// </returns>
     public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context)
     {
         string className = null;
