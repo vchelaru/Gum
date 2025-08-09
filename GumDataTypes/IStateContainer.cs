@@ -5,6 +5,7 @@ namespace Gum.DataTypes
 {
     public interface IStateContainer
     {
+        public string Name { get; }
         IList<StateSave> UncategorizedStates
         {
             get;
