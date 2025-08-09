@@ -1087,7 +1087,7 @@ namespace Gum.Managers
         /// <param name="name">The name, including the period such as "InstanceName.X"</param>
         /// <param name="instance">The instance, which should match the instance in the variable name.</param>
         /// <returns>The root VariableSave</returns>
-        public VariableSave GetRootVariable(string name, InstanceSave instance)
+        public VariableSave? GetRootVariable(string name, InstanceSave instance)
         {
             // This could be referencing an invalid type
             var instanceElement = GetElementSave(instance.BaseType);
@@ -1157,13 +1157,13 @@ namespace Gum.Managers
         /// <param name="name">Fully qualified variable name</param>
         /// <param name="element">The element containing the variable</param>
         /// <returns>The root variable if found</returns>
-        public VariableSave GetRootVariable(string name, ElementSave element)
+        public VariableSave? GetRootVariable(string name, ElementSave element)
         {
             var exposedVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == name);
 
             var effectiveName = exposedVariable?.Name ?? name;
 
-            VariableSave toReturn = null;
+            VariableSave? toReturn = null;
 
             if(effectiveName.Contains('.'))
             {
