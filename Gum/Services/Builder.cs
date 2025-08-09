@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Controls;
 using Gum.Mvvm;
 using Gum.Services.Dialogs;
 using Gum.Wireframe;
@@ -71,6 +72,9 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ProjectCommands>();
 
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
+
+        services.AddSingleton<MainPanelControl>();
+        services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelControl>());
         
         // other
         services.AddDialogs();

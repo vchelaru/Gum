@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Gum
 {
@@ -32,19 +33,22 @@ namespace Gum
             
             Locator.Register(host.Services);
             host.Start();
-            
-            MainWindow mainWindow = null;
+
+            ILogger logger = host.Services.GetRequiredService<ILogger<Application>>();
+            MainWindow? mainWindow;
 
             try
             {
                 mainWindow = host.Services.GetRequiredService<MainWindow>();
             }
-            catch(FileNotFoundException)
+            catch(FileNotFoundException e)
             {
+                logger.LogError(e, "XNA not installed");
                 return RunResponseCodes.XnaNotInstalled;
             }
             catch (Exception e)
             {
+                logger.LogError(e, "Unknown failure");
                 return RunResponseCodes.UnknownFailure;
             }
 

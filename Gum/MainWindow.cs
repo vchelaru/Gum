@@ -50,10 +50,11 @@ namespace Gum
 
         #endregion
 
-        public MainWindow(HotkeyManager hotkeyManager,
+        public MainWindow(MainPanelControl mainPanelControl,
             GuiCommands guiCommands,
             MenuStripManager menuStripManager,
-            IMessenger messenger)
+            IMessenger messenger
+            )
         {
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
@@ -65,7 +66,7 @@ namespace Gum
             
             InitializeComponent();
 
-            CreateMainWpfPanel(hotkeyManager);
+            AddMainPanelControl(mainPanelControl);
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
@@ -143,11 +144,10 @@ namespace Gum
             }
         }
 
-        private void CreateMainWpfPanel(HotkeyManager hotkeyManager)
+        private void AddMainPanelControl(MainPanelControl mainPanelControl)
         {
             var wpfHost = new ElementHost();
             wpfHost.Dock = DockStyle.Fill;
-            mainPanelControl = new MainPanelControl(hotkeyManager);
             wpfHost.Child = mainPanelControl;
             this.Controls.Add(wpfHost);
             this.PerformLayout();

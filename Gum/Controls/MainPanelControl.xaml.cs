@@ -10,7 +10,7 @@ namespace Gum.Controls;
 /// <summary>
 /// Interaction logic for MainPanelControl.xaml
 /// </summary>
-public partial class MainPanelControl : UserControl
+public partial class MainPanelControl : UserControl, ITabManager
 {
     GridLength expandedLeftColumnLength;
     GridLength expandedMiddleColumnLength;
@@ -92,7 +92,7 @@ public partial class MainPanelControl : UserControl
     }
 
 
-    public PluginTab AddWinformsControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation)
+    private PluginTab AddWinformsControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation)
     {
         // todo: check if control has already been added. Right now this can't be done trough the Gum commands
         // so it's only used "internally", so no checking is being done.
@@ -115,7 +115,7 @@ public partial class MainPanelControl : UserControl
         return AddWpfControl(host, tabTitle, tabLocation);
     }
 
-    public PluginTab AddWpfControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
+    private PluginTab AddWpfControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
         // This should be moved to the MainPanelControl wpf 
 
@@ -174,7 +174,7 @@ public partial class MainPanelControl : UserControl
         return tabControl;
     }
 
-    public void RemoveWpfControl(FrameworkElement control)
+    private void RemoveWpfControl(FrameworkElement control)
     {
         List<Control> controls = new List<Control>();
 
@@ -241,7 +241,7 @@ public partial class MainPanelControl : UserControl
         return tabPage.Content == control;
     }
 
-    public bool IsTabVisible(PluginTab pluginTab)
+    private bool IsTabVisible(PluginTab pluginTab)
     {
         foreach (var tabControl in AllControls)
         {
@@ -253,7 +253,7 @@ public partial class MainPanelControl : UserControl
         return false;
     }
 
-    internal bool ShowTabForControl(System.Windows.Controls.UserControl control)
+    private bool ShowTabForControl(System.Windows.Controls.UserControl control)
     {
         var found = false;
         foreach(var tabControl in AllControls)
@@ -287,7 +287,7 @@ public partial class MainPanelControl : UserControl
         //tabControl.SelectedIndex = index;
     }
     
-    public void ShowTab(PluginTab pluginTab, bool focus = true)
+    private void ShowTab(PluginTab pluginTab, bool focus = true)
     {
         if(!IsTabVisible(pluginTab))
         {
@@ -304,7 +304,7 @@ public partial class MainPanelControl : UserControl
         }
     }
 
-    public void HideTab(PluginTab pluginTab)
+    private void HideTab(PluginTab pluginTab)
     {
         var wasRemoved = false;
         foreach (var tabControl in AllControls)
@@ -322,7 +322,7 @@ public partial class MainPanelControl : UserControl
         }
     }
 
-    internal bool IsTabFocused(PluginTab pluginTab)
+    private bool IsTabFocused(PluginTab pluginTab)
     {
         foreach (var tabControl in AllControls)
         {
@@ -333,4 +333,26 @@ public partial class MainPanelControl : UserControl
         }
         return false;
     }
+
+    // ITabManager implementation
+    PluginTab ITabManager.AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation) =>
+        AddWinformsControl(control, tabTitle, tabLocation);
+
+    PluginTab ITabManager.AddControl(FrameworkElement element, string tabTitle, TabLocation tabLocation) =>
+        AddWpfControl(element, tabTitle, tabLocation);
+
+    void ITabManager.RemoveControl(FrameworkElement element) =>
+        RemoveWpfControl(element);
+
+    bool ITabManager.ShowTabForControl(System.Windows.Controls.UserControl control) =>
+        ShowTabForControl(control);
+    
+    void ITabManager.ShowTab(PluginTab pluginTab, bool focus) =>
+        ShowTab(pluginTab, focus);
+    void ITabManager.HideTab(PluginTab pluginTab) =>
+        HideTab(pluginTab);
+    bool ITabManager.IsTabVisible(PluginTab pluginTab) =>
+        IsTabVisible(pluginTab);
+    bool ITabManager.IsTabFocused(PluginTab pluginTab) =>
+        IsTabFocused(pluginTab);
 }
