@@ -255,12 +255,12 @@ namespace Gum.Managers
         {
             whyNotValid = null;
 
-            if (objectToIgnore != instanceContainer && name == instanceContainer.Name)
+            if (objectToIgnore != instanceContainer && Standardize(name) == Standardize(instanceContainer.Name))
             {
                 whyNotValid = $"The element is named '{instanceContainer.Name}'";
             }
 
-            var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
+            var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && Standardize(item.Name) == Standardize(name));
             if (instance != null)
             {
                 whyNotValid = $"There is already an instance named '{instance.Name}'";
@@ -268,13 +268,15 @@ namespace Gum.Managers
 
             var stateContainer = instanceContainer as IStateContainer;
 
-            var state = stateContainer?.AllStates.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
+            var state = stateContainer?.AllStates.FirstOrDefault(item => item != objectToIgnore && Standardize(item.Name) == Standardize(name));
             if (state != null)
             {
                 whyNotValid = $"There is already a state named '{state.Name}'";
             }
             
-            var variable = stateContainer?.AllStates.SelectMany(item => item.Variables).FirstOrDefault(item => item != objectToIgnore && item.ExposedAsName == name);
+            var variable = stateContainer?.AllStates
+                                          .SelectMany(item => item.Variables)
+                                          .FirstOrDefault(item => item != objectToIgnore && Standardize(item.ExposedAsName) == Standardize(name));
             if (variable != null)
             {
                 whyNotValid = $"There is already a variable named '{variable.Name}'";
@@ -284,7 +286,6 @@ namespace Gum.Managers
             //{
             //    whyNotValid = "There is a standard element named " + element.Name + " so this name can't be used.";
             //}
-
         }
 
         private void IsNameAnExistingElement(string name, string folderName, object objectToIgnore, out string whyNotValid)
@@ -317,6 +318,8 @@ namespace Gum.Managers
 
         private string Standardize(string name)
         {
+            if (name == null) return null;
+            
             string withoutSpaces = name.Replace(" ", string.Empty);
             return withoutSpaces.ToLowerInvariant();
         }
