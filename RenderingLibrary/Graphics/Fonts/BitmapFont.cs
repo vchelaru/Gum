@@ -334,37 +334,7 @@ public class BitmapFont : IDisposable
 
         this.mOutlineThickness = parsedData.Info?.Outline ?? 0;
 
-       // var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
-       // Older logic assumed the chars collection was sorted by Id and used the
-       // last entry to determine array size. Some font generators (especially
-       // when using custom character sets) may not output the characters in
-       // sequential order which caused an IndexOutOfRangeException when a
-       // character with a larger Id appeared earlier in the list. Using the
-       // maximum Id instead guarantees the backing array is large enough
-       // regardless of ordering. Additionally, kerning pairs can reference
-       // characters that do not appear in the char list, so we also include the
-       // largest Id referenced by any kerning entry when sizing the array.
-
-       var charArraySize = 0;
-       if (parsedData.Chars.Count > 0)
-       {
-           charArraySize = parsedData.Chars
-               .Where(item => item.Id >= 0)
-               .Select(item => item.Id)
-               .DefaultIfEmpty(0)
-               .Max();
-       }
-       if (parsedData.Kernings.Count > 0)
-       {
-           var maxKerning = parsedData.Kernings
-               .Where(k => k.First >= 0 && k.Second >= 0)
-               .Select(k => System.Math.Max(k.First, k.Second))
-               .DefaultIfEmpty(0)
-               .Max();
-           charArraySize = System.Math.Max(charArraySize, maxKerning);
-       }
-       charArraySize++;
-       
+        var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
         mCharacterInfo = new BitmapCharacterInfo[charArraySize];
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
@@ -455,19 +425,10 @@ public class BitmapFont : IDisposable
         {
             // TODO: Ask VIC why BMFont generator will create a char id="-1" entry, which crashes this code.
             // This is a temporary fix until he can tell me
-            // if (charInfo.Id == -1)
-            // {
-            //     continue;
-            // }
-            
-            //Yuan: Some generators may include characters with negative IDs (such as -1)
-            // which don't represent valid glyphs. Ignore these to prevent indexing
-            // errors when populating the character array.
-            if (charInfo.Id < 0 || charInfo.Id >= mCharacterInfo.Length)
+            if (charInfo.Id == -1)
             {
                 continue;
             }
-            
             mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, textureWidth,
                 textureHeight, mLineHeightInPixels);
         }
@@ -483,16 +444,10 @@ public class BitmapFont : IDisposable
 
         foreach (var kerning in parsedData.Kernings)
         {
-            // Ignore invalid kerning pairs that reference characters outside the
-            // backing array to avoid out-of-range exceptions.
-            if (kerning.First >= 0 && kerning.First < mCharacterInfo.Length &&
-                kerning.Second >= 0 && kerning.Second < mCharacterInfo.Length)
+            var character = mCharacterInfo[kerning.First];
+            if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
             {
-                var character = mCharacterInfo[kerning.First];
-                if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
-                {
-                    character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
-                }
+                character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
             }
         }
     }
