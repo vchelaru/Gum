@@ -93,23 +93,42 @@ public class BmfcSave
 
         FileManager.SaveText(template, fileName);
     }
-static string GenerateSplitRangesString(string ranges, int maxGroupSize = 100)
+    
+    private static string GenerateSplitRangesString(string ranges, int maxBlocksPerLine = 10)
     {
         var allChars = ParseCharRanges(ranges);
-        var groups = SplitIntoGroups(allChars, maxGroupSize);
+        var blocks = ConvertToRanges(allChars);
+
         var builder = new StringBuilder();
-        for(int i = 0; i < groups.Count; i++)
+        for(int i = 0; i < blocks.Count; i++)
         {
-            if(i > 0)
+            if(i % maxBlocksPerLine == 0)
             {
-                builder.Append(Environment.NewLine);
+                if(i > 0)
+                {
+                    builder.Append(Environment.NewLine);
+                }
+                builder.Append("chars=");
             }
-            builder.Append("chars=").Append(GroupToRangeStr(groups[i]));
+            else
+            {
+                builder.Append(',');
+            }
+
+            var block = blocks[i];
+            if(block.start == block.end)
+            {
+                builder.Append(block.start);
+            }
+            else
+            {
+                builder.Append(block.start).Append('-').Append(block.end);
+            }
         }
         return builder.ToString();
     }
 
-    static List<int> ParseCharRanges(string charsStr)
+    private static List<int> ParseCharRanges(string charsStr)
     {
         var allChars = new List<int>();
         var ranges = charsStr.Split([','], StringSplitOptions.RemoveEmptyEntries);
@@ -134,61 +153,32 @@ static string GenerateSplitRangesString(string ranges, int maxGroupSize = 100)
         return allChars;
     }
 
-    static List<List<int>> SplitIntoGroups(List<int> charList, int maxCharsPerGroup)
+    static List<(int start, int end)> ConvertToRanges(List<int> codes)
     {
-        var groups = new List<List<int>>();
-        var current = new List<int>(maxCharsPerGroup);
-        foreach(var codepoint in charList)
+        var ranges = new List<(int start, int end)>();
+        if(codes.Count == 0)
         {
-            current.Add(codepoint);
-            if(current.Count >= maxCharsPerGroup)
-            {
-                groups.Add(current);
-                current = new List<int>(maxCharsPerGroup);
-            }
+            return ranges;
         }
-        if(current.Count > 0)
-        {
-            groups.Add(current);
-        }
-        return groups;
-    }
 
-    static string GroupToRangeStr(List<int> group)
-    {
-        group.Sort();
-        var ranges = new List<string>();
-        int start = group[0];
-        int prev = group[0];
-        for(int i = 1; i < group.Count; i++)
+        codes.Sort();
+        int start = codes[0];
+        int prev = codes[0];
+        for(int i = 1; i < codes.Count; i++)
         {
-            int codepoint = group[i];
+            int codepoint = codes[i];
             if(codepoint == prev + 1)
             {
                 prev = codepoint;
             }
             else
             {
-                if(start == prev)
-                {
-                    ranges.Add(start.ToString());
-                }
-                else
-                {
-                    ranges.Add($"{start}-{prev}");
-                }
+                ranges.Add((start, prev));
                 start = prev = codepoint;
             }
         }
-        if(start == prev)
-        {
-            ranges.Add(start.ToString());
-        }
-        else
-        {
-            ranges.Add($"{start}-{prev}");
-        }
-        return string.Join(",", ranges);
+        ranges.Add((start, prev));
+        return ranges;
     }
     public static bool GetIfIsValidRange(string newRange)
     {
