@@ -320,7 +320,7 @@ namespace Gum.Managers
         {
             if (name == null) return null;
             
-            string withoutSpaces = name.Replace(" ", string.Empty);
+            string withoutSpaces = name.Replace(" ", "_");
             return withoutSpaces.ToLowerInvariant();
         }
 

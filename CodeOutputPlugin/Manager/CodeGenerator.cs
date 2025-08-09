@@ -446,8 +446,9 @@ public class CodeGenerator
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
             className = $"{strippedType}{suffix}";
         }
-        
-        return className;
+
+        string formattedClassName = className.Replace(" ", "_");
+        return formattedClassName;
     }
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
