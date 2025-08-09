@@ -291,28 +291,34 @@ namespace Gum.Managers
         {
             whyNotValid = null;
 
-            var newStandardizedNameWithFolder = (folderName + name).ToLowerInvariant();
+            string newStandardizedNameWithFolder = Standardize(folderName + name);
 
             var standardElement = ObjectFinder.Self.GumProjectSave.StandardElements.FirstOrDefault(item =>
-                item != objectToIgnore && item.Name.ToLowerInvariant() == newStandardizedNameWithFolder);
+                item != objectToIgnore && Standardize(item.Name) == newStandardizedNameWithFolder);
             if (standardElement != null)
             {
                 whyNotValid = "There is a standard element named " + standardElement.Name + " so this name can't be used.";
             }
 
             var component = ObjectFinder.Self.GumProjectSave.Components.FirstOrDefault(item =>
-                item != objectToIgnore && item.Name.ToLowerInvariant() == newStandardizedNameWithFolder);
+                item != objectToIgnore && Standardize(item.Name) == newStandardizedNameWithFolder);
             if (component != null)
             {
                 whyNotValid = "There is a component named " + component.Name + " so this name can't be used.";
             }
 
             var screen = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item =>
-                item != objectToIgnore && item.Name.ToLowerInvariant() == newStandardizedNameWithFolder);
+                item != objectToIgnore && Standardize(item.Name) == newStandardizedNameWithFolder);
             if (screen != null)
             {
                 whyNotValid = "There is a screen named " + screen.Name + " so this name can't be used.";
             }
+        }
+
+        private string Standardize(string name)
+        {
+            string withoutSpaces = name.Replace(" ", string.Empty);
+            return withoutSpaces.ToLowerInvariant();
         }
 
         public bool IsNameValidAndroidFile(string name, out string whyNotValid)
