@@ -88,6 +88,11 @@ public class BmfcSave
             newRange = DefaultRanges;
         }
         
+        else
+        {
+            newRange = EnsureRangesContainSpace(newRange);
+        }
+        
         var charsReplacement = GenerateSplitRangesString(newRange);
         template = template.Replace("chars=32-126,160-255", charsReplacement);
 
@@ -180,6 +185,41 @@ public class BmfcSave
         ranges.Add((start, prev));
         return ranges;
     }
+    
+    public static string EnsureRangesContainSpace(string ranges)
+    {
+        const int spaceChar = (int)' ';
+
+        if (string.IsNullOrEmpty(ranges))
+        {
+            return spaceChar.ToString();
+        }
+
+        bool containsSpace = ranges.Split(',').Any(part =>
+        {
+            if (part.Contains('-'))
+            {
+                var split = part.Split('-');
+                if (int.TryParse(split[0], out var start) && int.TryParse(split[1], out var end))
+                {
+                    return spaceChar >= start && spaceChar <= end;
+                }
+            }
+            else if (int.TryParse(part, out var value))
+            {
+                return value == spaceChar;
+            }
+            return false;
+        });
+
+        if (!containsSpace)
+        {
+            ranges = spaceChar + "," + ranges;
+        }
+
+        return ranges;
+    }
+    
     public static bool GetIfIsValidRange(string newRange)
     {
         try
