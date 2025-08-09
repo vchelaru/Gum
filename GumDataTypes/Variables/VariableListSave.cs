@@ -4,6 +4,7 @@ using System.Collections;
 using ToolsUtilities;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using System;
 
 namespace Gum.DataTypes.Variables
 {

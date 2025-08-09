@@ -224,7 +224,7 @@
   * [Tutorials](code/monogame/tutorials/README.md)
     * [Gum Project Forms Tutorial](code/monogame/tutorials/gum-project-forms-tutorial/README.md)
       * [Setup](code/monogame/tutorials/gum-project-forms-tutorial/setup.md)
-      * [Gum Screens](code/monogame/tutorials/gum-project-forms-tutorial/gum-screens.md)
+      * [Gum Screens and Code Generation](code/monogame/tutorials/gum-project-forms-tutorial/gum-screens.md)
       * [Common Component Types](code/monogame/tutorials/gum-project-forms-tutorial/common-component-types.md)
       * [Styling](code/monogame/tutorials/gum-project-forms-tutorial/styling.md)
       * [Multiple Screens](code/monogame/tutorials/gum-project-forms-tutorial/multiple-screens.md)
