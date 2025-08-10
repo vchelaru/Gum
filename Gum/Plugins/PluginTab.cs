@@ -126,7 +126,11 @@ namespace Gum.Plugins
         public void Show(bool select = true)
         {
             IsVisible = true;
-            IsSelected = select;
+            
+            if (select) // don't explicitly de-select
+            {
+                IsSelected = true;
+            }
         }
     }
 }

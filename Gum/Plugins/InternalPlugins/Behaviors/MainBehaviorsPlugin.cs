@@ -219,7 +219,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         {
             viewModel.UpdateTo(asComponent);
 
-            this.behaviorsTab.Show(false);
+            this.behaviorsTab.Show(select: false);
         }
         else
         {

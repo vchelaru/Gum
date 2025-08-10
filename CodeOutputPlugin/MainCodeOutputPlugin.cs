@@ -294,7 +294,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         if(shouldShow)
         {
-            pluginTab.Show(false);
+            pluginTab.Show(select: false);
         }
         else
         {
