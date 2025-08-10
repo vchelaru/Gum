@@ -34,6 +34,7 @@ public partial class PropertyGridManager
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IDialogService _dialogService;
     private readonly LocalizationManager _localizationManager;
+    private readonly ITabManager _tabManager;
     
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
@@ -113,6 +114,7 @@ public partial class PropertyGridManager
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _tabManager = Locator.GetRequiredService<ITabManager>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -129,7 +131,7 @@ public partial class PropertyGridManager
 
         mainControl = new Gum.MainPropertyGrid();
 
-        _guiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+        _tabManager.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
         mVariablesDataGrid = mainControl.DataGrid;
 
@@ -684,10 +686,7 @@ public partial class PropertyGridManager
 
         _colorPickerLogic.UpdateColorCategory(categories, element, instance);
 
-        SetDisplayerForAlignment(categories);
-
         UpdateFileFilters(categories);
-
     }
 
     private void UpdateFileFilters(List<MemberCategory> categories)
@@ -701,148 +700,6 @@ public partial class PropertyGridManager
                     member.PropertiesToSetOnDisplayer.Add("Filter", "Bitmap Font Generator Font|*.fnt");
                 }
             }
-        }
-    }
-
-    private void SetDisplayerForAlignment(List<MemberCategory> categories)
-    {
-        // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
-        foreach (var category in categories)
-        {
-            foreach (var member in category.Members)
-            {
-                var propertyType = member.PropertyType;
-
-                if(propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment))
-                {
-
-                    if (member.Name == "HorizontalAlignment" || member.Name.EndsWith(".HorizontalAlignment"))
-                    {
-                        member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
-                    }
-                    else if (member.Name == "XOrigin" || member.Name.EndsWith(".XOrigin"))
-                    {
-                        member.PreferredDisplayer = typeof(XOriginControl);
-                    }
-                    else
-                    {
-                        string rootName = GetRootName(member);
-                        if (rootName == "HorizontalAlignment")
-                        {
-                            member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
-                        }
-                        else if (rootName == "XOrigin")
-                        {
-                            member.PreferredDisplayer = typeof(XOriginControl);
-                        }
-                    }
-                }
-                else if(propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment))
-                {
-
-                    if (member.Name == "VerticalAlignment" || member.Name.EndsWith(".VerticalAlignment"))
-                    {
-                        member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
-                    }
-                    else if (member.Name == "YOrigin" || member.Name.EndsWith(".YOrigin"))
-                    {
-                        member.PreferredDisplayer = typeof(YOriginControl);
-                    }
-                    else
-                    {
-                        string rootName = GetRootName(member);
-                        if (rootName == "VerticalAlignment")
-                        {
-                            member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
-                        }
-                        else if (rootName == "YOrigin")
-                        {
-                            member.PreferredDisplayer = typeof(YOriginControl);
-                        }
-                    }
-                }
-                else if(propertyType == typeof(PositionUnitType))
-                {
-
-                    if (member.Name == "XUnits" || member.Name.EndsWith(".XUnits"))
-                    {
-                        member.PreferredDisplayer = typeof(XUnitsControl);
-                    }
-                    else if (member.Name == "YUnits" || member.Name.EndsWith(".YUnits"))
-                    {
-                        member.PreferredDisplayer = typeof(YUnitsControl);
-                    }
-                    else
-                    {
-                        string rootName = GetRootName(member);
-
-                        if (rootName == "XUnits")
-                        {
-                            member.PreferredDisplayer = typeof(XUnitsControl);
-                        }
-                        else if (rootName == "YUnits")
-                        {
-                            member.PreferredDisplayer = typeof(YUnitsControl);
-                        }
-                    }
-                }
-                else if(propertyType == typeof(DimensionUnitType))
-                {
-                    if (member.Name == "WidthUnits" || member.Name.EndsWith(".WidthUnits"))
-                    {
-                        member.PreferredDisplayer = typeof(WidthUnitsControl);
-                    }
-                    else if (member.Name == "HeightUnits" || member.Name.EndsWith(".HeightUnits"))
-                    {
-                        member.PreferredDisplayer = typeof(HeightUnitsControl);
-                    }
-                    else
-                    {
-                        string rootName = GetRootName(member);
-                        if (rootName == "WidthUnits")
-                        {
-                            member.PreferredDisplayer = typeof(WidthUnitsControl);
-                        }
-                        else if (rootName == "HeightUnits")
-                        {
-                            member.PreferredDisplayer = typeof(HeightUnitsControl);
-                        }
-                    }
-
-                }
-                else if (propertyType == typeof(ChildrenLayout))
-                {
-                    //if(member.Name == "ChildrenLayout" || member.Name.EndsWith(".ChildrenLayout"))
-                    //{
-                        member.PreferredDisplayer = typeof(ChildrenLayoutControl);
-                    //}
-
-                }
-                else if(propertyType == typeof(TextOverflowHorizontalMode))
-                {
-                    member.PreferredDisplayer = typeof(TextOverflowHorizontalModeControl);
-                }
-                else if (propertyType == typeof(TextOverflowVerticalMode))
-                {
-                    member.PreferredDisplayer = typeof(TextOverflowVerticalModeControl);
-                }
-                else if(propertyType == typeof(List<string>))
-                {
-                    member.PreferredDisplayer = typeof(WpfDataUi.Controls.StringListTextBoxDisplay);
-                }
-
-            }
-        }
-
-        static string GetRootName(InstanceMember member)
-        {
-            var srim = member as StateReferencingInstanceMember;
-
-            var element = srim.ElementSave;
-            var variable = srim.Name;
-
-            var rootName = ObjectFinder.Self.GetRootVariable(variable, element)?.Name;
-            return rootName;
         }
     }
 

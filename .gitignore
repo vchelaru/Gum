@@ -19,3 +19,11 @@ GumFormsPlugin/Content/FormsGumProject/EventExport/gum_events.json
 # SonarQube and SonarScanner excludes
 .sonarqube/
 coverage.xml
+/Tests/CodeGen_MonoGame_ByReference/CodeGenProject/.config
+/Tests/CodeGen_MonoGame_ByReference/CodeGenProject/.vscode
+Tests/CodeGen_MonoGame_ByReference/Content/GumProject/EventExport/gum_events.json
+/Tests/CodeGen_MonoGameForms_FullCodegen/.config
+/Tests/CodeGen_MonoGameForms_FullCodegen/.vscode
+Tests/CodeGen_MonoGameForms_FullCodegen/Content/EventExport/gum_events.json
+Tests/CodeGen_Maui_FullCodegen/Content/GumProject/EventExport/gum_events.json
+Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject/Content/GumProject/EventExport/gum_events.json

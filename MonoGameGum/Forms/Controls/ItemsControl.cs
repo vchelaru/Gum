@@ -49,7 +49,7 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    IList items;
+    IList items = new ObservableCollection<object>();
     /// <summary>
     /// The items contained by this ItemsControl. This can contain regular
     /// data such as strings, instances of ViewModels, or FrameworkElement instances
@@ -77,12 +77,12 @@ public class ItemsControl : ScrollViewer
             if (items != value)
             {
                 var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-                    GraphicalUiElement.IsAllLayoutSuspended = true;
+                GraphicalUiElement.IsAllLayoutSuspended = true;
 
                 if (items != null)
                 {
                     ClearVisualsInternal();
-                    HandleItemsCollectionChanged(this,                     
+                    HandleItemsCollectionChanged(this,
                         new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                 }
 
@@ -91,29 +91,32 @@ public class ItemsControl : ScrollViewer
                     notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
                 }
                 items = value;
-                if (items is INotifyCollectionChanged newNotifyCollectionChanged)
-                {
-                    newNotifyCollectionChanged.CollectionChanged += HandleItemsCollectionChanged;
-                }
+                ForceUpdateToItems();
 
-                if (items?.Count > 0)
+                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+                if (!wasSuppressed)
                 {
-                    // refresh!
-                    var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                        items, startingIndex: 0);
-                    HandleItemsCollectionChanged(this, args);
+                    Visual.ResumeLayout(recursive: true);
                 }
-
-                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                    if (!wasSuppressed)
-                    {
-                        Visual.ResumeLayout(recursive: true);
-                    }
             }
         }
     }
 
+    private void ForceUpdateToItems()
+    {
+        if (items is INotifyCollectionChanged newNotifyCollectionChanged)
+        {
+            newNotifyCollectionChanged.CollectionChanged += HandleItemsCollectionChanged;
+        }
 
+        if (items?.Count > 0)
+        {
+            // refresh!
+            var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                items, startingIndex: 0);
+            HandleItemsCollectionChanged(this, args);
+        }
+    }
 
     public FrameworkElementTemplate FrameworkElementTemplate { get; set; }
 
@@ -157,19 +160,19 @@ public class ItemsControl : ScrollViewer
 
     public ItemsControl() : base()
     {
-        Items = new ObservableCollection<object>();
+        ForceUpdateToItems();
     }
 
     public ItemsControl(InteractiveGue visual) : base(visual)
     {
-        Items = new ObservableCollection<object>();
+        ForceUpdateToItems();
     }
 
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
 
-        if(InnerPanel != null)
+        if (InnerPanel != null)
         {
             InnerPanel.Children.CollectionChanged += HandleInnerPanelCollectionChanged;
         }
@@ -194,7 +197,7 @@ public class ItemsControl : ScrollViewer
             var template = VisualTemplate ?? DefaultFormsTemplates[typeof(ListBoxItem)];
             var toReturn = template.CreateContent(vm);
 
-            if(toReturn != null && toReturn is not InteractiveGue)
+            if (toReturn != null && toReturn is not InteractiveGue)
             {
                 throw new InvalidOperationException(
                     "The visual template for this ListBox returned an instance which did not inherit from InteractiveGue. This is a requirement.");
@@ -234,7 +237,7 @@ public class ItemsControl : ScrollViewer
     {
         base.ReactToVisualRemoved();
 
-        if(InnerPanel != null)
+        if (InnerPanel != null)
         {
             InnerPanel.Children.CollectionChanged -= HandleInnerPanelCollectionChanged;
         }
@@ -242,19 +245,19 @@ public class ItemsControl : ScrollViewer
 
     private void HandleInnerPanelCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-        switch(e.Action)
+        switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
                 {
 
                     int absoluteIndex = e.NewStartingIndex;
-                    foreach(var item in e.NewItems)
+                    foreach (var item in e.NewItems)
                     {
                         var asGue = item as InteractiveGue;
 
                         var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
 
-                        if(newFrameworkItem != null)
+                        if (newFrameworkItem != null)
                         {
                             HandleCollectionNewItemCreated(newFrameworkItem, absoluteIndex);
                         }
@@ -270,7 +273,7 @@ public class ItemsControl : ScrollViewer
                 {
                     int absoluteIndex = e.OldStartingIndex;
 
-                    foreach(var item in e.OldItems)
+                    foreach (var item in e.OldItems)
                     {
                         var asGue = item as InteractiveGue;
                         var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
@@ -308,7 +311,7 @@ public class ItemsControl : ScrollViewer
 
                     var shouldSuppressLayout = e.NewItems.Count > 0 && InnerPanel != null;
                     var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
-                    if(shouldSuppressLayout)
+                    if (shouldSuppressLayout)
                     {
                         GraphicalUiElement.IsAllLayoutSuspended = true;
                     }
@@ -326,12 +329,12 @@ public class ItemsControl : ScrollViewer
 
                         index++;
                     }
-                    if(shouldSuppressLayout)
+                    if (shouldSuppressLayout)
                     {
                         GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                         if (!wasSuppressed)
                         {
-                            InnerPanel?.ResumeLayout(recursive:true);
+                            InnerPanel?.ResumeLayout(recursive: true);
                         }
                     }
                 }
@@ -343,9 +346,9 @@ public class ItemsControl : ScrollViewer
 
                 object? itemToMove = default;
                 // need to move the item to the new index:
-                if(InnerPanel != null)
+                if (InnerPanel != null)
                 {
-                    if(oldIndex < InnerPanel.Children.Count)
+                    if (oldIndex < InnerPanel.Children.Count)
                     {
                         InnerPanel.Children.Move(oldIndex, newIndex);
                     }
@@ -358,7 +361,7 @@ public class ItemsControl : ScrollViewer
                 {
                     var index = e.OldStartingIndex;
 
-                    if(InnerPanel != null)
+                    if (InnerPanel != null)
                     {
                         var listItem = InnerPanel.Children[index];
                         listItem.Parent = null;
@@ -373,7 +376,7 @@ public class ItemsControl : ScrollViewer
 
                     //var listItem = InnerPanel.Children[index];
                     //HandleCollectionReplace(index);
-                    
+
                 }
                 break;
             case NotifyCollectionChangedAction.Reset:
@@ -392,7 +395,7 @@ public class ItemsControl : ScrollViewer
 
     private void ClearVisualsInternal()
     {
-        if(InnerPanel != null)
+        if (InnerPanel != null)
         {
             InnerPanel.Children.Clear();
 

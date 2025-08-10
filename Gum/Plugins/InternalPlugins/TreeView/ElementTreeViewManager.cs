@@ -114,6 +114,7 @@ public partial class ElementTreeViewManager
     private readonly IDialogService _dialogService;
     private readonly FileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
+    private readonly ITabManager _tabManager;
 
     public const int TransparentImageIndex = 0;
     public const int FolderImageIndex = 1;
@@ -280,6 +281,7 @@ public partial class ElementTreeViewManager
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        _tabManager = Locator.GetRequiredService<ITabManager>();
         
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
@@ -524,7 +526,7 @@ public partial class ElementTreeViewManager
             new System.Windows.Controls.RowDefinition() 
             { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
 
-        _guiCommands.AddControl(grid, "Project", TabLocation.Left);
+        _tabManager.AddControl(grid, "Project", TabLocation.Left);
 
         ObjectTreeView.Dock = DockStyle.Fill;
         //panel.Controls.Add(ObjectTreeView);

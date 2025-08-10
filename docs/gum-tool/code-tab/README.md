@@ -2,9 +2,15 @@
 
 ## Introduction
 
-The Code tab provides generated code for your current Gum objects.
+The Code tab provides generated code for your current Gum objects. The code tab is available if a Screen or Component is selected.
 
-<figure><img src="../../.gitbook/assets/image (90).png" alt=""><figcaption><p>Code tab displaying generated code for the selected component</p></figcaption></figure>
+If you have not yet set up code generation, you may see buttons to help you with code generation.
+
+<figure><img src="../../.gitbook/assets/09_06 34 44.png" alt=""><figcaption></figcaption></figure>
+
+If you have already set up code generation, or if your Gum project does not have an associated .csproj file then you will see options for code generation.
+
+<figure><img src="../../.gitbook/assets/09_06 29 20.png" alt=""><figcaption><p>Code tab displaying generated code for the selected component</p></figcaption></figure>
 
 This tab provides the following functionality:
 
@@ -14,38 +20,29 @@ This tab provides the following functionality:
 
 If you are working with Gum in a C# environment then the Code tab can help you write Gum code.
 
-## Enabling CodeGen Preview
+## Viewing Generated Code
 
-To enable code generation:
-
-1. Select a Screen, Component, or instance
-2. Check the **Is CodeGen Plugin Enabled** checkbox
-3. Check the **Show CodeGen Preview** checkbox to display the current selection in the preview window
-
-<figure><img src="../../.gitbook/assets/image (91).png" alt=""><figcaption><p>Generated code preview displayed in Gum</p></figcaption></figure>
-
-{% hint style="info" %}
-The generation of code may make selection slightly slower, especially when viewing complex screens or components. If you are experiencing performance problems, you may consider unchecking the **Show CodeGen Preview** checkbox when performing editing.
-{% endhint %}
+The Code tab automatically displays the selected Screen, Component, or instance. If you are using code generation just for previwing code, you should select the Manually Setu Code Generation button. This enables the modification of properties without generating any code.
 
 ## Previewing Instances
 
 If you have a single instance selected, the preview window displays the code for creating the instance and assigning its variables. This is especially useful if you are unsure how to reproduce a particular layout in code. For example, the following image shows the generated code for a Text named TextInstance.
 
-<figure><img src="../../.gitbook/assets/image (92).png" alt=""><figcaption><p>Generated code for a Text named TextInstance</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/09_06 39 27.png" alt=""><figcaption><p>Generated code for a Text named TextInstance</p></figcaption></figure>
 
-The generated code shows all of the assignments necessary to reproduce the current instance's layout. Keep in mind that only explicitly-set variables are displayed. Any default (green background) variables are not assigned in generated code.
+The generated code shows all of the assignments necessary to reproduce the current instance's layout. Keep in mind that only explicitly-set variables are displayed. Any default variables (variables which appear with a green background in the Variables tab) are not assigned in generated code.
 
 ## Previewing Entire Screens and Components
 
 If a Screen or Component is selected, then an entire class for the component is displayed in the preview window. This generated code includes:
 
 * `using` statements
-* A `partial` class with the suggested name. The name appends the word "Runtime" to the Screen or Component name
+* A `partial` class with the suggested name. The name may append the word "Runtime" to the Screen or Component name depending on the target platform.
+* Inheritance depending on the current platform and base type.
 * `enum` declaration for all categories
 * Properties for each category including switch statements assigning all properties for each state
 * A property for each instance in the Screen or Component
-* Initialization of all variables including variables on the instances
+* Initialization of all variables including variables on the instances if using full code generation
 
 ## Automatic Saving of Generated Code
 
@@ -55,19 +52,51 @@ The Code tab supports the automatic copying of files to disk. By using this feat
 Projects should be backed up or committed to source control before enabling automatic code generation to make it easy to undo changes.
 {% endhint %}
 
-To set up automatic code generation, first enable the code generation plugin as shown above. The Show CodeGen Preview checkbox does not need to be checked.
+To set up code generation, either click the **Auto Setup Code Generation** button, or modify the values in the Code tab for code generation.
 
-Next, modify the values in the Project-Wide Code Generation section and the Element Code Generation section as discussed in the following sections:
+* For MonoGame/KNI/FNA projects, see the [tutorial on setting up code generation](../../code/monogame/tutorials/gum-project-forms-tutorial/gum-screens.md).
+* For FlatRedBall projects, code generation is automatically handled by the FlatRedBall Editor.
+
+See the sections below for information about each code generation option.
+
+### Code Project Root
+
+The location of the folder containing the .csproj file. This path is used to determine where to generate the code files. Gum generates two folders at this location:
+
+* Components
+* Screens
+
+If you would like Gum to place these folders in a subfolder rather than at the same location as your .csproj file, then you can specify a subfolder here.
+
+If an absolute path is entered, it is saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
+
+Since the path is saved as relative to your .gumx location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your .gumx.
 
 ### Output Library
 
-Select the desired Output Library, such as **MonoGame**.
+Select the desired Output Library, such as **MonoGame + Forms**. This should match the type of project you are developing.
 
 ### Object Instantiation Type
 
-If you are planning on loading the .gumx project, select the **FindByName** option.
+This option controls how much code is generated by Gum. The following options are available:
 
-If you would like the entire project generated, select the **FullyInCode** option. This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially important if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
+#### Reference Loaded Gum Project
+
+This generates minimal code for access to objects. Specifically this generates:
+
+* Instantiation of Screens and Components using a strongly-typed class
+* Access to instances through strongly typed property names
+* Setting of states through enums
+
+This approach allows for the customization of Gum files without requiring full code regeneration. Games which use this type of code generation can still support modding, so long as the modified files do not remove instances or change their names. This type of code generation still requires the loading of the Gum project (.gumx and associated files).
+
+{% hint style="info" %}
+As of August 2025 this is the only type of code generation supported for MonoGame, KNI, and FNA.&#x20;
+{% endhint %}
+
+#### Fully in Code
+
+This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially important if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
 
 For more details see the [Runtime Generation Details](runtime-generation-details.md) page.
 
@@ -85,12 +114,6 @@ If you plan on creating Screens, you should also add using statements for your c
 using {YourProjectNamespace}.Components;
 ```
 
-### Code Project Root
-
-Enter the location of the folder containing the .csproj file in the Code Project Root text box. If an absolute path is entered, it is saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
-
-Since the path is saved as relative to your .gumx location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your .gumx.
-
 ### Root Namespace
 
 Enter the project's Root Namespace, such as `MyGame`.
@@ -101,9 +124,9 @@ Enter the type that you would like all Screen runtimes to inherit from. If you'r
 
 ### Generation Behavior
 
-Select NeverGenerate for components which should not generate to disk
+This controls when Gum generates code for a component.
 
-Select GenerateManually if you would like to generate code only when the Generate Code button is clicked.
-
-Select GenerateAutomaticallyOnPropertyChange to generate code whenever a property changed. This option is useful once you are comfortable with code generation. It results in code being generated automatically as you make edits in Gum.
+* NeverGenerate - generated code is not saved for this component
+* GenerateManually - generated code is only saved for this element if the **Generate Code** button is clicked, or if it is a requirement for another component or screen which is generated.
+* GenerateAutomaticallyOnPropertyChanged - this is generated whenever a change is made to this element in Gum.
 

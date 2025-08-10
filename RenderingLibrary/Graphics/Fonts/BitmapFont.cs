@@ -435,8 +435,11 @@ public class BitmapFont : IDisposable
 
         if(wasSpaceCreatedDynamically)
         {
-            mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, textureWidth,
-                textureHeight, mLineHeightInPixels);
+            if(mCharacterInfo.Length > (int)' ')
+            {
+                mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, textureWidth,
+                    textureHeight, mLineHeightInPixels);
+            }
         }
 
         foreach (var kerning in parsedData.Kernings)

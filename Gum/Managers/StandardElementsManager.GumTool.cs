@@ -1,9 +1,11 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Controls;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,17 +35,73 @@ namespace Gum.Managers
                     {
                         MakeDegreesAngle(variable);
                     }
-                    else if (variable.Type == "string" &&  variable.Name == "Parent")
+                    else if(variable.Type == nameof(TextOverflowVerticalMode))
+                    {
+                        variable.PreferredDisplayer = typeof(TextOverflowVerticalModeControl);
+                    }
+                    else if (variable.Type == nameof(TextOverflowHorizontalMode))
+                    {
+                        variable.PreferredDisplayer = typeof(TextOverflowHorizontalModeControl);
+                    }
+                    else if(variable.Type == nameof(ChildrenLayout))
+                    {
+                        variable.PreferredDisplayer = typeof(ChildrenLayoutControl);
+                    }
+                    else if(variable.Type == nameof(DimensionUnitType))
+                    {
+                        if(variable.Name == "WidthUnits")
+                        {
+                            variable.PreferredDisplayer = typeof(WidthUnitsControl);
+                        }
+                        else if(variable.Name == "HeightUnits")
+                        {
+                            variable.PreferredDisplayer = typeof(HeightUnitsControl);
+                        }
+                    }
+                    else if(variable.Type == nameof(PositionUnitType))
+                    {
+                        if(variable.Name == "XUnits")
+                        {
+                            variable.PreferredDisplayer = typeof(XUnitsControl);
+                        }
+                        else if(variable.Name == "YUnits")
+                        {
+                            variable.PreferredDisplayer = typeof(YUnitsControl);
+                        }
+                    }
+                    else if(variable.Type == nameof(VerticalAlignment))
+                    {
+                        if(variable.Name == "VerticalAlignment")
+                        {
+                            variable.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
+                        }
+                        else if(variable.Name == "YOrigin")
+                        {
+                            variable.PreferredDisplayer = typeof(YOriginControl);
+                        }
+                    }
+                    else if(variable.Type == nameof(HorizontalAlignment))
+                    {
+                        if(variable.Name == "HorizontalAlignment")
+                        {
+                            variable.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
+                        }
+                        else if(variable.Name == "XOrigin")
+                        {
+                            variable.PreferredDisplayer = typeof(XOriginControl);
+                        }
+                    }
+                    else if (variable.Type == "string" && variable.Name == "Parent")
                     {
                         variable.CustomTypeConverter = new AvailableInstancesConverter() { IncludeScreenBounds = true };
                         variable.PropertiesToSetOnDisplayer["IsEditable"] = true;
                     }
-                    else if(variable.Type == "State" && variable.Name == "State")
+                    else if (variable.Type == "State" && variable.Name == "State")
                     {
                         variable.Category = "States and Visibility";
                         variable.CustomTypeConverter = new AvailableStatesConverter(null);
                     }
-                    else if(variable.Name == "Red" ||
+                    else if (variable.Name == "Red" ||
                         variable.Name == "Green" ||
                         variable.Name == "Blue" ||
                         variable.Name == "Alpha")
@@ -51,6 +109,13 @@ namespace Gum.Managers
                         variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
                         variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
                         variable.PreferredDisplayer = typeof(SliderDisplay);
+                    }
+                }
+                foreach(var variableList in state.VariableLists)
+                {
+                    if(variableList.Name == "VariableReferences")
+                    {
+                        variableList.PreferredDisplayer = typeof(StringListTextBoxDisplay);
                     }
                 }
             }

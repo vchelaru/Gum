@@ -5,6 +5,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace RenderingLibrary.Graphics.Fonts;
 
@@ -85,11 +87,139 @@ public class BmfcSave
         {
             newRange = DefaultRanges;
         }
-        template = template.Replace("chars=32-126,160-255", $"chars={newRange}");
+        
+        else
+        {
+            newRange = EnsureRangesContainSpace(newRange);
+        }
+        
+        var charsReplacement = GenerateSplitRangesString(newRange);
+        template = template.Replace("chars=32-126,160-255", charsReplacement);
 
         FileManager.SaveText(template, fileName);
     }
+    
+    private static string GenerateSplitRangesString(string ranges, int maxBlocksPerLine = 10)
+    {
+        var allChars = ParseCharRanges(ranges);
+        var blocks = ConvertToRanges(allChars);
 
+        var builder = new StringBuilder();
+        for(int i = 0; i < blocks.Count; i++)
+        {
+            if(i % maxBlocksPerLine == 0)
+            {
+                if(i > 0)
+                {
+                    builder.Append(Environment.NewLine);
+                }
+                builder.Append("chars=");
+            }
+            else
+            {
+                builder.Append(',');
+            }
+
+            var block = blocks[i];
+            if(block.start == block.end)
+            {
+                builder.Append(block.start);
+            }
+            else
+            {
+                builder.Append(block.start).Append('-').Append(block.end);
+            }
+        }
+        return builder.ToString();
+    }
+
+    private static List<int> ParseCharRanges(string charsStr)
+    {
+        var allChars = new List<int>();
+        var ranges = charsStr.Split([','], StringSplitOptions.RemoveEmptyEntries);
+        foreach(var part in ranges)
+        {
+            if(part.Contains('-'))
+            {
+                var split = part.Split('-');
+                if(int.TryParse(split[0], out int start) && int.TryParse(split[1], out int end))
+                {
+                    for(int i = start; i <= end; i++)
+                    {
+                        allChars.Add(i);
+                    }
+                }
+            }
+            else if(int.TryParse(part, out int value))
+            {
+                allChars.Add(value);
+            }
+        }
+        return allChars;
+    }
+
+    static List<(int start, int end)> ConvertToRanges(List<int> codes)
+    {
+        var ranges = new List<(int start, int end)>();
+        if(codes.Count == 0)
+        {
+            return ranges;
+        }
+
+        codes.Sort();
+        int start = codes[0];
+        int prev = codes[0];
+        for(int i = 1; i < codes.Count; i++)
+        {
+            int codepoint = codes[i];
+            if(codepoint == prev + 1)
+            {
+                prev = codepoint;
+            }
+            else
+            {
+                ranges.Add((start, prev));
+                start = prev = codepoint;
+            }
+        }
+        ranges.Add((start, prev));
+        return ranges;
+    }
+    
+    public static string EnsureRangesContainSpace(string ranges)
+    {
+        const int spaceChar = (int)' ';
+
+        if (string.IsNullOrEmpty(ranges))
+        {
+            return spaceChar.ToString();
+        }
+
+        bool containsSpace = ranges.Split(',').Any(part =>
+        {
+            if (part.Contains('-'))
+            {
+                var split = part.Split('-');
+                if (int.TryParse(split[0], out var start) && int.TryParse(split[1], out var end))
+                {
+                    return spaceChar >= start && spaceChar <= end;
+                }
+            }
+            else if (int.TryParse(part, out var value))
+            {
+                return value == spaceChar;
+            }
+            return false;
+        });
+
+        if (!containsSpace)
+        {
+            ranges = spaceChar + "," + ranges;
+        }
+
+        return ranges;
+    }
+    
     public static bool GetIfIsValidRange(string newRange)
     {
         try
@@ -155,7 +285,62 @@ public class BmfcSave
         }
         return newRange;
     }
+    
+    public static string GenerateRangesFromFile(string fileName)
+    {
+        var text = System.IO.File.ReadAllText(fileName);
+        var uniqueValues = new System.Collections.Generic.HashSet<int>();
+        foreach (var c in text)
+        {
+            uniqueValues.Add((int)c);
+        }
 
+        var ordered = uniqueValues.OrderBy(item => item).ToList();
+        var builder = new System.Text.StringBuilder();
+
+        void AppendRange(int start, int end)
+        {
+            if(builder.Length > 0)
+            {
+                builder.Append(',');
+            }
+            if(start == end)
+            {
+                builder.Append(start);
+            }
+            else
+            {
+                builder.Append(start).Append('-').Append(end);
+            }
+        }
+
+        int currentStart = -1;
+        int previous = -1;
+        foreach(var val in ordered)
+        {
+            if(currentStart == -1)
+            {
+                currentStart = previous = val;
+            }
+            else if(val == previous + 1)
+            {
+                previous = val;
+            }
+            else
+            {
+                AppendRange(currentStart, previous);
+                currentStart = previous = val;
+            }
+        }
+
+        if(currentStart != -1)
+        {
+            AppendRange(currentStart, previous);
+        }
+
+        return builder.ToString();
+    }
+    
     public string FontCacheFileName
     {
         get

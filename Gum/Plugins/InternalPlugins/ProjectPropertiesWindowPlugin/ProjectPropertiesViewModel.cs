@@ -173,6 +173,13 @@ public class ProjectPropertiesViewModel : ViewModel
         get => Get<int?>();
         set => Set(value);
     }
+    
+    public string FontCharacterFile
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+
 
     public bool IsUpdatingFromModel { get; private set; }
 
@@ -204,6 +211,7 @@ public class ProjectPropertiesViewModel : ViewModel
             FontRanges = this.gumProject.FontRanges;
             FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
             FontSpacingVertical = this.gumProject.FontSpacingVertical;
+            FontCharacterFile = this.gumProject.FontCharacterFile;
 
             RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
@@ -273,6 +281,7 @@ public class ProjectPropertiesViewModel : ViewModel
         this.gumProject.CurrentLanguageIndex = LanguageIndex;
         this.gumProject.ShowLocalizationInGum = ShowLocalization;
         this.gumProject.FontRanges = FontRanges;
+        this.gumProject.FontCharacterFile = FontCharacterFile;
 
         this.gumProject.FontSpacingHorizontal = FontSpacingHorizontal;
         this.gumProject.FontSpacingVertical = FontSpacingVertical;

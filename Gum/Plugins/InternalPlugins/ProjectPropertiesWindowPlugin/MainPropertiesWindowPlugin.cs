@@ -41,12 +41,14 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly FontManager _fontManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
+    private readonly ITabManager _tabManager;
 
     public MainPropertiesWindowPlugin()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _tabManager = Locator.GetRequiredService<ITabManager>();
     }
 
     public override void StartUp()
@@ -67,6 +69,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             control.ViewModel = null;
             control.ViewModel = viewModel;
+            RefreshFontRangeEditability();
         }
     }
 
@@ -82,15 +85,16 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             var wasShown = 
-                _guiCommands.ShowTabForControl(control);
+                _tabManager.ShowTabForControl(control);
 
             if(!wasShown)
             {
-                var tab = _guiCommands.AddControl(control, "Project Properties");
+                var tab = _tabManager.AddControl(control, "Project Properties");
                 tab.CanClose = true;
                 control.ViewModel = viewModel;
-                _guiCommands.ShowTabForControl(control);
+                _tabManager.ShowTabForControl(control);
             }
+            RefreshFontRangeEditability();
         }
         catch (Exception ex)
         {
@@ -189,6 +193,31 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     }
                 }
                 break;
+            case nameof(viewModel.FontCharacterFile):
+                if(!string.IsNullOrEmpty(viewModel.FontCharacterFile) && FileManager.IsRelative(viewModel.FontCharacterFile) == false)
+                {
+                    viewModel.FontCharacterFile = FileManager.MakeRelative(viewModel.FontCharacterFile,
+                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                    shouldSaveAndRefresh = false;
+                }
+
+                if(!string.IsNullOrEmpty(viewModel.FontCharacterFile))
+                {
+                    var absolute = viewModel.FontCharacterFile;
+                    if(FileManager.IsRelative(absolute))
+                    {
+                        absolute = FileManager.RelativeDirectory + absolute;
+                    }
+
+                    if(System.IO.File.Exists(absolute))
+                    {
+                        var ranges = BmfcSave.GenerateRangesFromFile(absolute);
+                        viewModel.FontRanges = ranges;
+                    }
+                }
+
+                RefreshFontRangeEditability();
+                break;
             case nameof(viewModel.GuideLineColor):
                 _wireframeCommands.RefreshGuides();
                 break;
@@ -219,9 +248,20 @@ class MainPropertiesWindowPlugin : InternalPlugin
         }
     }
 
-
+    private void RefreshFontRangeEditability()
+    {
+        if(control != null)
+        {
+            var member = control.DataGrid.GetInstanceMember(nameof(viewModel.FontRanges));
+            if(member != null)
+            {
+                member.IsReadOnly = !string.IsNullOrEmpty(viewModel.FontCharacterFile);
+            }
+            control.DataGrid.Refresh();
+        }
+    }
     private void HandleCloseClicked(object sender, EventArgs e)
     {
-        _guiCommands.RemoveControl(control);
+        _tabManager.RemoveControl(control);
     }
 }

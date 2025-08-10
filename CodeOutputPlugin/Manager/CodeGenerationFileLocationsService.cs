@@ -1,5 +1,6 @@
 ﻿using CodeOutputPlugin.Models;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -13,32 +14,41 @@ namespace CodeOutputPlugin.Manager;
 internal class CodeGenerationFileLocationsService
 {
     public FilePath GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-    CodeOutputProjectSettings codeOutputProjectSettings, string forcedElementName = null, VisualApi? visualApi = null)
+    CodeOutputProjectSettings codeOutputProjectSettings, string? forcedElementName = null, VisualApi? visualApi = null)
     {
-        var elementName = forcedElementName ?? selectedElement.Name;
-        var effectiveVisualApi = visualApi ?? CodeGenerator.GetVisualApiForElement(selectedElement);
-
         string generatedFileName = elementSettings.GeneratedFileName;
 
-        if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+        if(!string.IsNullOrEmpty(forcedElementName))
         {
-            string prefix = selectedElement is ScreenSave ? "Screens"
-                : selectedElement is ComponentSave ? "Components"
-                : "Standards";
-            var splitName = (prefix + "/" + elementName).Split('/');
+            var foundElement = ObjectFinder.Self.GetElementSave(forcedElementName!);
+            selectedElement = foundElement ?? selectedElement;
+        }
+        if(selectedElement != null)
+        {
+            var elementName = selectedElement?.Name;
 
-            var context = new CodeGenerationContext();
-            context.CodeOutputProjectSettings = codeOutputProjectSettings;
+            var effectiveVisualApi = visualApi ?? CodeGenerator.GetVisualApiForElement(selectedElement);
 
-            var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(elementName, effectiveVisualApi, context));
-
-            var folder = codeOutputProjectSettings.CodeProjectRoot;
-            if (FileManager.IsRelative(folder))
+            if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
             {
-                folder = GumState.Self.ProjectState.ProjectDirectory + folder;
-            }
+                string prefix = selectedElement is ScreenSave ? "Screens"
+                    : selectedElement is ComponentSave ? "Components"
+                    : "Standards";
+                var splitName = (prefix + "/" + elementName).Split('/');
 
-            generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
+                var context = new CodeGenerationContext();
+                context.CodeOutputProjectSettings = codeOutputProjectSettings;
+
+                var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(selectedElement, effectiveVisualApi, context));
+
+                var folder = codeOutputProjectSettings.CodeProjectRoot;
+                if (FileManager.IsRelative(folder))
+                {
+                    folder = GumState.Self.ProjectState.ProjectDirectory + folder;
+                }
+
+                generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
+            }
         }
 
         if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))

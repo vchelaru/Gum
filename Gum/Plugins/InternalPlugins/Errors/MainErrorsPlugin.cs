@@ -36,7 +36,7 @@ public class MainErrorsPlugin : InternalPlugin
     {
         control = new ErrorDisplay();
         control.DataContext = viewModel;
-        tabPage = _guiCommands.AddControl(control, "Errors", TabLocation.RightBottom);
+        tabPage = _tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
 
         _tabPageHeader = new ErrorTabHeader();
         tabPage.TabItem.Header = _tabPageHeader;
