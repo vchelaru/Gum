@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -117,15 +117,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
     private void HandleShowFileWatch(object sender, EventArgs e)
     {
-        var isShown = _tabManager.IsTabVisible(pluginTab);
-        if(isShown)
-        {
-            pluginTab.Hide();
-        }
-        else
-        {
-            pluginTab.Show();
-        }
+        pluginTab.IsVisible = !pluginTab.IsVisible;
     }
 
     private void HandleRefreshDisplayTimerElapsed(object sender, ElapsedEventArgs e)

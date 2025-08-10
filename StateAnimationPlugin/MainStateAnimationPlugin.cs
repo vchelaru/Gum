@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -126,7 +126,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (element != null && !_tabManager.IsTabVisible(pluginTab))
+        if (element != null && !pluginTab.IsVisible)
         {
             var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
 
@@ -249,14 +249,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleToggleTabVisibility(object sender, EventArgs e)
     {
-        if (!_tabManager.IsTabVisible(pluginTab))
-        {
-            pluginTab.Show();
-        }
-        else
-        {
-            pluginTab.Hide();
-        }
+        pluginTab.IsVisible = !pluginTab.IsVisible;
     }
 
     private void CreateAnimationWindow()

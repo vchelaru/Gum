@@ -194,7 +194,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         if(element == _selectedState.SelectedElement)
         {
-            this.behaviorsTab.Show(focus: true);
+            this.behaviorsTab.Show();
         }
     }
 
@@ -219,7 +219,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         {
             viewModel.UpdateTo(asComponent);
 
-            this.behaviorsTab.Show(focus: false);
+            this.behaviorsTab.Show(select: false);
         }
         else
         {
