@@ -275,7 +275,8 @@ namespace Gum.Managers
         }
 
         /// <summary>
-        /// Returns the ElementSave (Screen, Component, or Standard Element) for the argument elementName
+        /// Returns the ElementSave (Screen, Component, or Standard Element) for the argument elementName. The name should be relative to its directory, so
+        /// if looking for MainMenu, then this should pass "MainMenu" and not "Screens/MainMenu"
         /// </summary>
         /// <param name="elementName">The name of the ElementSave to search for</param>
         /// <returns>The matching ElementSave, or null if none is found</returns>
