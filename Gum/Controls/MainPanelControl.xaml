@@ -5,7 +5,30 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Gum.Controls"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             d:DataContext="{d:DesignInstance Type=local:MainPanelViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
+            <Style x:Key="PluginTabStyle" TargetType="{x:Type TabItem}" BasedOn="{StaticResource {x:Type TabItem}}">
+                <Setter Property="Content" Value="{Binding Content}"/>
+                <Setter Property="Header" Value="{Binding CustomHeaderContent}"/>
+                <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <EventSetter Event="MouseDown" Handler="TabHeader_OnMiddleMouseDown"></EventSetter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding CustomHeaderContent}" Value="{x:Null}">
+                        <Setter Property="Header" Value="{Binding Title, FallbackValue='Untitled'}"></Setter>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="PluginTabControlStyle" TargetType="{x:Type TabControl}" BasedOn="{StaticResource {x:Type TabControl}}">
+                <Setter Property="ItemContainerStyle" Value="{StaticResource PluginTabStyle}" />
+                <Setter Property="SelectedIndex" Value="{Binding SelectedTabIndex}"/>
+                <Setter Property="SelectedItem" Value="{Binding SelectedTab}"/>
+                <Setter Property="ItemsSource" Value="{Binding Tabs}"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" x:Name="LeftColumn"></ColumnDefinition>
@@ -23,12 +46,14 @@
                 <RowDefinition Height="2*"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <TabControl x:Name="CenterTopTabControl" Grid.Row="0"></TabControl>
+            <TabControl x:Name="CenterTopTabControl" Grid.Row="0" DataContext="{Binding CenterTopContainer}" 
+                        Style="{StaticResource PluginTabControlStyle}"></TabControl>
 
             <GridSplitter Height="4" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ></GridSplitter>
 
 
-            <TabControl x:Name="CenterBottomTabControl" Grid.Row="2" ></TabControl>
+            <TabControl x:Name="CenterBottomTabControl" Grid.Row="2" DataContext="{Binding CenterBottomContainer}" 
+                        Style="{StaticResource PluginTabControlStyle}"></TabControl>
 
         </Grid>
 
@@ -39,13 +64,18 @@
                 <RowDefinition Height="1*" x:Name="BottomRightPanel"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <TabControl x:Name="RightTopTabControl" Grid.Row="0"></TabControl>
+            <TabControl x:Name="RightTopTabControl" Grid.Row="0" DataContext="{Binding RightTopContainer}" 
+                        Style="{StaticResource PluginTabControlStyle}"></TabControl>
             <GridSplitter Height="4" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ></GridSplitter>
 
-            <TabControl x:Name="RightBottomTabControl" Grid.Row="2"></TabControl>
+            <TabControl x:Name="RightBottomTabControl" Grid.Row="2" DataContext="{Binding RightBottomContainer}" 
+                        Style="{StaticResource PluginTabControlStyle}"></TabControl>
         </Grid>
 
-        <TabControl x:Name="LeftTabControl" Grid.Row="0"></TabControl>
+        <TabControl x:Name="LeftTabControl" 
+                    Grid.Row="0" 
+                    DataContext="{Binding LeftContainer}" 
+                    Style="{StaticResource PluginTabControlStyle}"></TabControl>
         <GridSplitter Width="4" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Stretch"></GridSplitter>
 
         <GridSplitter Width="4" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Stretch"></GridSplitter>
