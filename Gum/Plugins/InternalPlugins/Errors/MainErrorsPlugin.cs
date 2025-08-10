@@ -39,7 +39,7 @@ public class MainErrorsPlugin : InternalPlugin
         tabPage = _tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
 
         _tabPageHeader = new ErrorTabHeader();
-        tabPage.TabItem.Header = _tabPageHeader;
+        tabPage.CustomHeaderContent = _tabPageHeader;
     }
 
     private void AssignEvents()

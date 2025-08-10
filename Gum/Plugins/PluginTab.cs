@@ -1,73 +1,136 @@
-﻿using System;
+using System;
+using System.ComponentModel;
+using System.Windows;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Commands;
-using Gum.Managers;
+using Gum.Mvvm;
 using Gum.Services;
+using Gum.ViewModels;
 
 namespace Gum.Plugins
 {
-    public class PluginTab
+    public partial class PluginTab : ViewModel
     {
-        private readonly ITabManager _tabManager;
+        public event Action? TabShown;
+        public event Action? TabHidden;
+        public event Action? GotFocus;
         
         public string Title
         {
-            get => (string)TabItem.Header;
-            set => TabItem.Header = value;
+            get => Get<string>();
+            set => Set(value);
+        }
+        
+        public TabLocation SuggestedLocation { get; set; } = TabLocation.RightBottom;
+        
+        public FrameworkElement Content
+        {
+            get => Get<FrameworkElement>();
+            private set => Set(value);
         }
 
-        public TabLocation SuggestedLocation
+        public FrameworkElement? CustomHeaderContent
         {
-            get; set;
-        } = TabLocation.RightBottom;
+            get => Get<FrameworkElement?>();
+            set => Set(value);
+        }
 
-        PluginTabItem tabItem;
-        internal PluginTabItem TabItem
+        public PluginTabContainerViewModel? ParentContainer
         {
-            get => tabItem;
+            get => Get<PluginTabContainerViewModel>();
             set
             {
-                if (tabItem != value)
-                {
-                    tabItem = value;
+                PluginTabContainerViewModel? previousParent = ParentContainer;
 
-                    if(tabItem != null)
+                if (Set(value))
+                {
+                    if (previousParent is not null)
                     {
-                        tabItem.MiddleMouseClicked += (_, _) => HandleMiddleMouseClicked();
-                        tabItem.GotFocus += (_, _) => GotFocus?.Invoke();
+                        previousParent.PropertyChanged -= OnParentContainerChanged;
+                        previousParent.Tabs.Remove(this);
+                    }
+
+                    if (value is {} newParent)
+                    {
+                        newParent.PropertyChanged += OnParentContainerChanged;
+                        if (!newParent.Tabs.Contains(this))
+                        {
+                            newParent.Tabs.Add(this);
+                        }
                     }
                 }
             }
         }
-        public event Action GotFocus;
 
-        public PluginTab()
+        private void OnParentContainerChanged(object sender, PropertyChangedEventArgs e)
         {
-            _tabManager = Locator.GetRequiredService<ITabManager>();
-        }
-
-        private void HandleMiddleMouseClicked()
-        {
-            if(CanClose)
+            if (e.PropertyName == nameof(PluginTabContainerViewModel.SelectedTab))
             {
-                Hide();
+                NotifyPropertyChanged(nameof(IsSelected));
+            }
+        }
+        
+        public bool IsVisible
+        {
+            get => Get<bool>();
+            set
+            {
+                if (Set(value))
+                {
+                    if(value)
+                    {
+                        TabShown?.Invoke();
+                    }
+                    else
+                    {
+                        TabHidden?.Invoke();
+                        IsSelected = false;
+                    }
+                }
+            }
+        }
+        
+        public bool IsSelected
+        {
+            get => ParentContainer?.SelectedTab == this;
+            set
+            {
+                if (value && ParentContainer is { } parent)
+                {
+                    parent.SelectedTab = this;
+                }
             }
         }
 
-        public void Show(bool focus = true) => _tabManager.ShowTab(this, focus);
-        public void Hide() => _tabManager.HideTab(this);
+        public bool CanClose
+        {
+            get => Get<bool>();
+            set
+            {
+                if (Set(value))
+                {
+                    HideCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
 
-        public void RaiseTabShown() => TabShown?.Invoke();
-        public event Action TabShown;
+        public PluginTab(FrameworkElement content)
+        {
+            Content = content;
+            IsVisible = true;
+        }
+        
+        [RelayCommand(CanExecute = nameof(CanClose))]
+        public void Hide() => IsVisible = false;
 
-        public void RaiseTabHidden() => TabHidden?.Invoke();
-        public event Action TabHidden;
-
-
-        public void Focus() => TabItem.Focus();
-
-        public bool IsFocused =>
-            _tabManager.IsTabFocused(this);
-
-        public bool CanClose { get; set; }
+        public void Show(bool select = true)
+        {
+            IsVisible = true;
+            
+            if (select) // don't explicitly de-select
+            {
+                IsSelected = true;
+            }
+        }
     }
 }
