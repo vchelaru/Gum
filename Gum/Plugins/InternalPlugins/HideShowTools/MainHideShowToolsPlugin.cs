@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gum.Controls;
+using Gum.Services;
 
 namespace Gum.Plugins.InternalPlugins.HideShowTools;
 
@@ -13,8 +15,13 @@ namespace Gum.Plugins.InternalPlugins.HideShowTools;
 internal class MainHideShowToolsPlugin : InternalPlugin
 {
     private ToolStripMenuItem menuItem;
-    bool areToolsVisible = true;
+    private readonly MainPanelViewModel _mainPanelViewModel;
 
+    public MainHideShowToolsPlugin()
+    {
+        _mainPanelViewModel = Locator.GetRequiredService<MainPanelViewModel>();
+    }
+    
     public override void StartUp()
     {
         menuItem = AddMenuItem("View", "Hide Tools");
@@ -23,18 +30,7 @@ internal class MainHideShowToolsPlugin : InternalPlugin
 
     private void HandleMenuItemClick(object sender, EventArgs e)
     {
-        if (areToolsVisible)
-        {
-            menuItem.Text = "Show Tools";
-            _guiCommands.HideTools();
-            areToolsVisible = false;
-
-        }
-        else
-        {
-            menuItem.Text = "Hide Tools";
-            _guiCommands.ShowTools();
-            areToolsVisible = true;
-        }
+        _mainPanelViewModel.IsToolsVisible = !_mainPanelViewModel.IsToolsVisible;
+        menuItem.Text = _mainPanelViewModel.IsToolsVisible ? "Hide Tools" : "Show Tools";
     }
 }

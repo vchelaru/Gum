@@ -23,8 +23,16 @@ public class MainPanelViewModel : ViewModel, ITabManager
     public PluginTabContainerViewModel LeftContainer { get; }
     public PluginTabContainerViewModel CenterContainer { get; }
 
+    public bool IsToolsVisible
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     public MainPanelViewModel(Func<TabLocation, PluginTabContainerViewModel> tabContainerFactory)
     {
+        IsToolsVisible = true;
+        
         TabContainers =
         [
             CenterBottomContainer = tabContainerFactory(TabLocation.CenterBottom),

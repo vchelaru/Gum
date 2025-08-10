@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace Gum.Controls;
@@ -13,6 +14,26 @@ namespace Gum.Controls;
 /// </summary>
 public partial class MainPanelControl : UserControl
 {
+    public static readonly DependencyProperty IsToolsVisibleProperty = DependencyProperty.Register(
+        nameof(IsToolsVisible), typeof(bool), typeof(MainPanelControl), new PropertyMetadata(true, static (o, args) =>
+        {
+            MainPanelControl mainPanelControl = (MainPanelControl)o;
+            if (args.NewValue is true)
+            {
+                mainPanelControl.ShowTools();
+            }
+            else
+            {
+                mainPanelControl.HideTools();
+            }
+        }));
+
+    public bool IsToolsVisible
+    {
+        get { return (bool)GetValue(IsToolsVisibleProperty); }
+        set { SetValue(IsToolsVisibleProperty, value); }
+    }
+    
     GridLength expandedLeftColumnLength;
     GridLength expandedMiddleColumnLength;
     GridLength bottomRowLength;
@@ -26,6 +47,7 @@ public partial class MainPanelControl : UserControl
     {
         InitializeComponent();
         DataContext = viewModel;
+        SetBinding(IsToolsVisibleProperty, new Binding(nameof(viewModel.IsToolsVisible)));
         _hotkeyManager = hotkeyManager;
         this.KeyDown += HandleKeyDown;
     }
@@ -35,7 +57,7 @@ public partial class MainPanelControl : UserControl
         _hotkeyManager.HandleKeyDownAppWide(e);
     }
     
-    public void HideTools()
+    private void HideTools()
     {
         if(!isHidden)
         {
@@ -58,7 +80,7 @@ public partial class MainPanelControl : UserControl
         }
     }
 
-    public void ShowTools()
+    private void ShowTools()
     {
         if(isHidden)
         {
