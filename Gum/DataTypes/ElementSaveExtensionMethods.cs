@@ -281,22 +281,22 @@ namespace Gum.DataTypes
             return null;
         }
 
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, Func<StateSaveCategory, bool> condition) =>
+            GetStateSaveCategoryRecursively(element, condition, out ElementSave? _);
+        
         public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName) =>
             GetStateSaveCategoryRecursively(element, categoryName, out ElementSave? _);
 
-        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName, 
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName, out ElementSave? categoryContainer) => 
+            GetStateSaveCategoryRecursively(element, item => item.Name == categoryName, out categoryContainer);
+        
+        /// <returns>
+        /// The first category of this element that meets the given <paramref name="condition"/>.
+        /// </returns>
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, Func<StateSaveCategory, bool> condition, 
             out ElementSave? categoryContainer)
         {
-
-            StateSaveCategory? foundCategory = null;
-            foreach(var item in element.Categories)
-            {
-                if( item.Name == categoryName)
-                {
-                    foundCategory = item;
-                    break;
-                }
-            }
+            StateSaveCategory? foundCategory = element.Categories.FirstOrDefault(condition);
 
             if (foundCategory != null)
             {
@@ -315,13 +315,12 @@ namespace Gum.DataTypes
                 }
                 else
                 {
-                    return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                    return baseElement.GetStateSaveCategoryRecursively(condition, out categoryContainer);
                 }
             }
 
             categoryContainer = null;
             return null;
-        }
-
+        }        
     }
 }

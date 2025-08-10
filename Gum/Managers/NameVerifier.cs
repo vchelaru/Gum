@@ -79,6 +79,16 @@ namespace Gum.Managers
             }
             return string.IsNullOrEmpty(whyNotValid);
         }
+        internal bool IsCategoryNameValid(string name, ElementSave categoryContainer, out string whyNotValid)
+        {
+            string standardizedName = Standardize(name);
+            StateSaveCategory existingCategory = categoryContainer.GetStateSaveCategoryRecursively(
+                condition: item => Standardize(item.Name) == standardizedName
+            );
+
+            whyNotValid = $"Cannot add category — a category with the name {name} is already defined in {categoryContainer}";
+            return existingCategory != null;
+        }
         internal bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
         {
             IsNameValidCommon(name, out whyNotValid);
@@ -258,14 +268,6 @@ namespace Gum.Managers
                 whyNotValid = "There is a screen named " + screen.Name + " so this name can't be used.";
             }
         }
-        private string Standardize(string name)
-        {
-            if (name == null) return null;
-
-            string formatted = name.Replace(" ", "_");
-            return formatted.ToLowerInvariant();
-        }
-
         public bool IsNameValidAndroidFile(string name, out string whyNotValid)
         {
             whyNotValid = null;
@@ -285,6 +287,13 @@ namespace Gum.Managers
                 //(c >= 'A' && c <= 'Z' && allowUpperCase) ||
                 (c == '_') ||
                 (c >= '0' && c <= '9');
+        }
+        private string Standardize(string name)
+        {
+            if (name == null) return null;
+
+            string formatted = name.Replace(" ", "_");
+            return formatted.ToLowerInvariant();
         }
     }
 }
