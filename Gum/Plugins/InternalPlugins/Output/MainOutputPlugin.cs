@@ -27,7 +27,7 @@ namespace Gum.Plugins.Output
             outputTextBox.TabIndex = 0;
             outputTextBox.Text = "";
 
-            _guiCommands.AddWinformsControl(outputTextBox, "Output", TabLocation.RightBottom);
+            _tabManager.AddControl(outputTextBox, "Output", TabLocation.RightBottom);
             OutputManager.Self.Initialize(outputTextBox);
         }
     }

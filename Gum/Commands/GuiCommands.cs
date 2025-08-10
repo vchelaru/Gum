@@ -135,68 +135,6 @@ public class GuiCommands
 
     #endregion
 
-    #region Tab Controls
-
-    public PluginTab AddControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
-    {
-        CheckForInitialization();
-        return mainPanelControl.AddWpfControl(control, tabTitle, tabLocation);
-    }
-
-    public void ShowTab(PluginTab tab, bool focus = true) =>
-        mainPanelControl.ShowTab(tab, focus);
-
-    public void HideTab(PluginTab tab)
-    {
-        mainPanelControl.HideTab(tab);
-    }
-
-    public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation)
-    {
-        CheckForInitialization();
-        return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
-    }
-
-    private void CheckForInitialization()
-    {
-        if (mainPanelControl == null)
-        {
-            throw new InvalidOperationException("Need to call Initialize first");
-        }
-    }
-
-    public PluginTab AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
-    {
-        return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
-    }
-
-    public bool IsTabVisible(PluginTab pluginTab)
-    {
-        return mainPanelControl.IsTabVisible(pluginTab);
-    }
-
-
-    public void RemoveControl(System.Windows.Controls.UserControl control)
-    {
-        mainPanelControl.RemoveWpfControl(control);
-    }
-
-    /// <summary>
-    /// Selects the tab which contains the argument control
-    /// </summary>
-    /// <param name="control">The control to show.</param>
-    /// <returns>Whether the control was shown. If the control is not found, false is returned.</returns>
-    public bool ShowTabForControl(System.Windows.Controls.UserControl control)
-    {
-        return mainPanelControl.ShowTabForControl(control);
-    }
-
-
-    internal bool IsTabFocused(PluginTab pluginTab) =>
-                    mainPanelControl.IsTabFocused(pluginTab);
-
-    #endregion
-
     #region Move to Cursor
 
     public void PositionWindowByCursor(System.Windows.Forms.Form window)

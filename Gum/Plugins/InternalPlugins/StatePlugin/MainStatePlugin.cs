@@ -101,7 +101,7 @@ public class MainStatePlugin : InternalPlugin
         stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager, _selectedState);
         _stateTreeViewRightClickService.SetMenuStrip(stateTreeView.TreeViewContextMenu, stateTreeView);
         
-        newPluginTab = _guiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
+        newPluginTab = _tabManager.AddControl(stateTreeView, "States", TabLocation.CenterTop);
     }
 
     #endregion

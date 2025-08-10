@@ -38,6 +38,7 @@ public class ControlLogic : Singleton<ControlLogic>
     private readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly ITabManager _tabManager;
     
     LineRectangle textureOutlineRectangle = null;
 
@@ -77,6 +78,7 @@ public class ControlLogic : Singleton<ControlLogic>
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _tabManager = Locator.GetRequiredService<ITabManager>();
     }
 
     public PluginTab CreateControl()
@@ -108,7 +110,7 @@ public class ControlLogic : Singleton<ControlLogic>
 
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
-        var pluginTab = _guiCommands.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
+        var pluginTab = _tabManager.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
         innerControl.DoubleClick += (not, used) =>
             HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
 

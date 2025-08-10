@@ -408,7 +408,15 @@ namespace Gum.PropertyGridHelpers
                     //Type type = typeof(List<string>);
 
                     StateReferencingInstanceMember srim;
-                    var propertyDescriptor = new InstanceSavePropertyDescriptor(variableList.Name, null, null);
+
+                    Type? type = null;
+
+                    if(variableList.Type == "string")
+                    {
+                        type = typeof(List<string>);
+                    }
+
+                    var propertyDescriptor = new InstanceSavePropertyDescriptor(variableList.Name, type, null);
                     if (instance != null)
                     {
                         srim =
@@ -422,9 +430,13 @@ namespace Gum.PropertyGridHelpers
 
                     // moved to internal
                     //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
-                    srim.PreferredDisplayer = typeof(ListBoxDisplay);
+                    // Only if it wasn't already set:
+                    if(srim.PreferredDisplayer == null)
+                    {
+                        srim.PreferredDisplayer = typeof(ListBoxDisplay);
+                    }
 
-                    string category = propertyDescriptor.Category?.Trim();
+                    string? category = propertyDescriptor.Category?.Trim();
 
                     var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
 

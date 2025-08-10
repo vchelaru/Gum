@@ -4,6 +4,7 @@ using System.Collections;
 using ToolsUtilities;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using System;
 
 namespace Gum.DataTypes.Variables
 {
@@ -51,6 +52,10 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
+
+
+        [XmlIgnore]
+        public Type PreferredDisplayer { get; set; }
 
         public string GetRootName()
         {

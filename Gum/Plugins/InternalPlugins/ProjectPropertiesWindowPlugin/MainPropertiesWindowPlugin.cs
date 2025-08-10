@@ -41,12 +41,14 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly FontManager _fontManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
+    private readonly ITabManager _tabManager;
 
     public MainPropertiesWindowPlugin()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _tabManager = Locator.GetRequiredService<ITabManager>();
     }
 
     public override void StartUp()
@@ -83,14 +85,14 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             var wasShown = 
-                _guiCommands.ShowTabForControl(control);
+                _tabManager.ShowTabForControl(control);
 
             if(!wasShown)
             {
-                var tab = _guiCommands.AddControl(control, "Project Properties");
+                var tab = _tabManager.AddControl(control, "Project Properties");
                 tab.CanClose = true;
                 control.ViewModel = viewModel;
-                _guiCommands.ShowTabForControl(control);
+                _tabManager.ShowTabForControl(control);
             }
             RefreshFontRangeEditability();
         }
@@ -260,6 +262,6 @@ class MainPropertiesWindowPlugin : InternalPlugin
     }
     private void HandleCloseClicked(object sender, EventArgs e)
     {
-        _guiCommands.RemoveControl(control);
+        _tabManager.RemoveControl(control);
     }
 }

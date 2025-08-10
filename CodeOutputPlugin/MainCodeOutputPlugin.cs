@@ -373,7 +373,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         control.DataContext = viewModel;
 
-        pluginTab = _guiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+        pluginTab = _tabManager.AddControl(control, "Code", TabLocation.RightBottom);
         pluginTab.GotFocus += () => RefreshCodeDisplay();
     }
 

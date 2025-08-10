@@ -899,7 +899,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         // be added to the gumEditorPanel 2nd, no idea why
         CreateWireframeEditControl(gumEditorPanel);
 
-        _guiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
+        _tabManager.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
         _wireframeControl.XnaUpdate += () =>
         {
