@@ -81,6 +81,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
     public DialogBoxRuntime DialogBoxInstance { get; protected set; }
     public WindowStandardRuntime WindowStandardInstance { get; protected set; }
     public LabelRuntime LabelInstance1 { get; protected set; }
+    // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
 
     public DemoScreenGumRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
@@ -154,6 +155,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
         DialogBoxInstance = this.GetGraphicalUiElementByName("DialogBoxInstance") as DialogBoxRuntime;
         WindowStandardInstance = this.GetGraphicalUiElementByName("WindowStandardInstance") as WindowStandardRuntime;
         LabelInstance1 = this.GetGraphicalUiElementByName("LabelInstance1") as LabelRuntime;
+        DeletedComponentInstance = this.GetGraphicalUiElementByName("DeletedComponentInstance") as ;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
