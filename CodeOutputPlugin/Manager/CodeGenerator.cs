@@ -1056,9 +1056,12 @@ public class CodeGenerator
             }
             else
             {
+                string className = GetClassNameForType(context.Instance, context.VisualApi, context);
+                if (className == null) return;
+                
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"{GetClassNameForType(context.Instance, context.VisualApi, context)};");
+                    $"global::MonoGameGum.GueDeriving.{className};");
             }
         }
     }
