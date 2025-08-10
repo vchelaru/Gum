@@ -84,7 +84,7 @@ namespace Gum.Managers
             IsNameValidCommon(name, out whyNotValid);
             if(string.IsNullOrEmpty(whyNotValid))
             {
-                var existing = category?.States.Find(item => item.Name == name && item != stateSave);
+                var existing = category?.States.Find(item => Standardize(item.Name) == Standardize(name) && item != stateSave);
                 if (existing != null)
                 {
                     whyNotValid = $"The category {category.Name} already has a state named {name}";
