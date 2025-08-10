@@ -9,18 +9,41 @@
              d:DataContext="{d:DesignInstance Type=local:MainPanelViewModel}">
     <UserControl.Resources>
         <ResourceDictionary>
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <local:PluginTabHeaderTemplateSelector x:Key="TabHeaderTemplateSelector" />
+            
+            <!-- When CustomHeaderContent exists, just present it -->
+            <DataTemplate x:Key="TabCustomHeaderTemplate">
+                <ContentPresenter Content="{Binding}" />
+            </DataTemplate>
+
+            <!-- Fallback to Title on the TabItem's DataContext -->
+            <DataTemplate x:Key="TabTitleHeaderTemplate">
+                <TextBlock Text="{Binding DataContext.Title,
+                                  RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+            </DataTemplate>
+
+            <local:PluginTabHeaderTemplateSelector
+                x:Key="PluginTabHeaderSelector"
+                CustomHeaderTemplate="{StaticResource TabCustomHeaderTemplate}"
+                TitleHeaderTemplate="{StaticResource TabTitleHeaderTemplate}" />
+            
             <Style x:Key="PluginTabStyle" TargetType="{x:Type TabItem}" BasedOn="{StaticResource {x:Type TabItem}}">
-                <Setter Property="Content" Value="{Binding Content}"/>
                 <Setter Property="Header" Value="{Binding CustomHeaderContent}"/>
+                <Setter Property="HeaderTemplateSelector" Value="{StaticResource PluginTabHeaderSelector}"/>
+                
+                <Setter Property="ContentTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <ContentPresenter Content="{Binding Content}" />
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+                
                 <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <EventSetter Event="MouseDown" Handler="TabHeader_OnMiddleMouseDown"></EventSetter>
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding CustomHeaderContent}" Value="{x:Null}">
-                        <Setter Property="Header" Value="{Binding Title, FallbackValue='Untitled'}"></Setter>
-                    </DataTrigger>
-                </Style.Triggers>
             </Style>
+            
             <Style x:Key="PluginTabControlStyle" TargetType="{x:Type TabControl}" BasedOn="{StaticResource {x:Type TabControl}}">
                 <Setter Property="ItemContainerStyle" Value="{StaticResource PluginTabStyle}" />
                 <Setter Property="SelectedIndex" Value="{Binding SelectedTabIndex}"/>
