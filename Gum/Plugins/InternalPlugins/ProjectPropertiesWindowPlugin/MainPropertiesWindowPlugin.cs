@@ -272,14 +272,30 @@ class MainPropertiesWindowPlugin : InternalPlugin
             _fileCommands.TryAutoSaveProject();
         }
     }
-    private void HandleFileChanged(FilePath file)
+    private async void HandleFileChanged(FilePath file)
     {
         if(_fontCharacterFileAbsolute != null && file == _fontCharacterFileAbsolute)
         {
             if(System.IO.File.Exists(_fontCharacterFileAbsolute.FullPath))
             {
                 var ranges = BmfcSave.GenerateRangesFromFile(_fontCharacterFileAbsolute.FullPath);
-                _guiCommands.DoOnUiThread(() => viewModel.FontRanges = ranges);
+
+                _guiCommands.DoOnUiThread(() =>
+                {
+                    viewModel.FontRanges = ranges;
+                    control?.DataGrid.Refresh();
+                });
+
+                try
+                {
+                    _fontManager.DeleteFontCacheFolder();
+                }
+                catch(System.IO.IOException)
+                {
+                    // ignore, if the folder is locked fonts will be recreated on next change
+                }
+
+                await _fontManager.CreateAllMissingFontFiles(ProjectState.Self.GumProjectSave);
             }
         }
     }
