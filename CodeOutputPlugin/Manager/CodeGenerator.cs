@@ -1,4 +1,4 @@
-﻿using CodeOutputPlugin.Models;
+using CodeOutputPlugin.Models;
 using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
