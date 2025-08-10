@@ -385,18 +385,16 @@ public class CodeGenerator
 
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
-    //public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified:false)
+    
+    /// <returns>
+    /// The corresponding class name, or <c>null</c> if that type couldn't be found.
+    /// </returns>
     public static string? GetClassNameForType(InstanceSave instanceSave, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
     {
         var element = ObjectFinder.Self.GetElementSave(instanceSave);
-
-        if(element != null)
-        {
-            return GetClassNameForType(element, visualApi, context, isFullyQualified);
-        }
-        return null;
+        return element == null ? null : GetClassNameForType(element, visualApi, context, isFullyQualified);
     }
-
+    
     public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
     {
         string? className = null;
@@ -831,8 +829,15 @@ public class CodeGenerator
         {
             accessString += "override ";
         }
-
-
+        
+        if (className == null)
+        {
+            string message = $"Could not find instance {context.InstanceNameInCode} Gum type." +
+                             "Check if it is an instance of a deleted Gum component.";
+            context.StringBuilder.AppendLine($"{context.Tabs}// {message}");
+            return;
+        }
+        
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
         context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.InstanceNameInCode} {{ get; protected set; }}");
@@ -1031,9 +1036,12 @@ public class CodeGenerator
             }
             else
             {
+                string className = GetClassNameForType(context.Instance, context.VisualApi, context);
+                if (className == null) return;
+                
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance, context.VisualApi, context)};");
+                    $"global::MonoGameGum.GueDeriving.{className};");
             }
         }
         else
