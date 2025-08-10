@@ -61,12 +61,6 @@ public class GuiCommands
             _selectedState.SelectedElement);
     }
 
-    internal void BroadcastBehaviorReferencesChanged()
-    {
-        PluginManager.Self.BehaviorReferencesChanged(
-            _selectedState.SelectedElement);
-    }
-
     #region Refresh Commands
 
     internal void RefreshStateTreeView()
@@ -137,13 +131,6 @@ public class GuiCommands
 
     #region Move to Cursor
 
-    public void PositionWindowByCursor(System.Windows.Forms.Form window)
-    {
-        var mousePosition = GetMousePosition();
-
-        window.Location = new System.Drawing.Point(mousePosition.X - window.Width / 2, mousePosition.Y - window.Height / 2);
-    }
-
     public void MoveToCursor(System.Windows.Window window)
     {
         window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
@@ -191,17 +178,6 @@ public class GuiCommands
     {
         return MainWindow.MousePosition;
     }
-
-    public void HideTools()
-    {
-        mainPanelControl.HideTools();
-    }
-
-    public void ShowTools()
-    {
-        mainPanelControl.ShowTools();
-    }
-
 
     public void ToggleToolVisibility()
     {
