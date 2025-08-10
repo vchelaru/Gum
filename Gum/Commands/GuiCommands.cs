@@ -39,7 +39,6 @@ public class GuiCommands
 
 
     MainPanelControl mainPanelControl;
-    private ITabManager _tabManager => mainPanelControl;
 
     private readonly Lazy<ISelectedState> _lazySelectedState;
     private ISelectedState _selectedState => _lazySelectedState.Value;
@@ -133,68 +132,6 @@ public class GuiCommands
     {
         PluginManager.Self.RefreshElementTreeView(instanceContainer);
     }
-
-    #endregion
-
-    #region Tab Controls
-
-    public PluginTab AddControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
-    {
-        CheckForInitialization();
-        return _tabManager.AddControl(control, tabTitle, tabLocation);
-    }
-
-    public void ShowTab(PluginTab tab, bool focus = true) =>
-        _tabManager.ShowTab(tab, focus);
-
-    public void HideTab(PluginTab tab)
-    { 
-        _tabManager.HideTab(tab);
-    }
-
-    public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation)
-    {
-        CheckForInitialization();
-        return _tabManager.AddControl(control, tabTitle, tabLocation);
-    }
-
-    private void CheckForInitialization()
-    {
-        if (_tabManager == null)
-        {
-            throw new InvalidOperationException("Need to call Initialize first");
-        }
-    }
-
-    public PluginTab AddWinformsControl(Control control, string tabTitle, TabLocation tabLocation)
-    {
-        return _tabManager.AddControl(control, tabTitle, tabLocation);
-    }
-
-    public bool IsTabVisible(PluginTab pluginTab)
-    {
-        return _tabManager.IsTabVisible(pluginTab);
-    }
-
-
-    public void RemoveControl(System.Windows.Controls.UserControl control)
-    {
-        _tabManager.RemoveControl(control);
-    }
-
-    /// <summary>
-    /// Selects the tab which contains the argument control
-    /// </summary>
-    /// <param name="control">The control to show.</param>
-    /// <returns>Whether the control was shown. If the control is not found, false is returned.</returns>
-    public bool ShowTabForControl(System.Windows.Controls.UserControl control)
-    {
-        return _tabManager.ShowTabForControl(control);
-    }
-
-
-    internal bool IsTabFocused(PluginTab pluginTab) =>
-                    _tabManager.IsTabFocused(pluginTab);
 
     #endregion
 

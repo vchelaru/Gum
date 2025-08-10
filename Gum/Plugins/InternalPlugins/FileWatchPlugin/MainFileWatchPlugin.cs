@@ -41,7 +41,7 @@ public class MainFileWatchPlugin : InternalPlugin
         _fileWatchLogic = FileWatchLogic.Self;
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
 
-        pluginTab = _guiCommands.AddControl(control, "File Watch", TabLocation.RightBottom);
+        pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();
 
         pluginTab.TabHidden += HandleTabHidden;
@@ -117,7 +117,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
     private void HandleShowFileWatch(object sender, EventArgs e)
     {
-        var isShown = _guiCommands.IsTabVisible(pluginTab);
+        var isShown = _tabManager.IsTabVisible(pluginTab);
         if(isShown)
         {
             pluginTab.Hide();

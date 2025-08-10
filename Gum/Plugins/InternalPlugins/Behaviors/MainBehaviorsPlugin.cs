@@ -45,7 +45,6 @@ public class MainBehaviorsPlugin : InternalPlugin
         control = new BehaviorsControl();
         control.DataContext = viewModel;
         behaviorsTab = this.CreateTab(control, "Behaviors", TabLocation.CenterBottom);
-        behaviorsTab.Hide();
 
         stateDataUiGrid = new DataUiGrid();
         AssignEvents();

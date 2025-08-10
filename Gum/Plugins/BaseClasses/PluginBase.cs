@@ -24,6 +24,7 @@ namespace Gum.Plugins.BaseClasses
     {
         protected readonly GuiCommands _guiCommands;
         protected readonly FileCommands _fileCommands;
+        protected readonly ITabManager _tabManager;
         
         #region Events
 
@@ -223,6 +224,7 @@ namespace Gum.Plugins.BaseClasses
         {
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _tabManager = Locator.GetRequiredService<ITabManager>();
         }
 
         public abstract void StartUp();
@@ -341,29 +343,20 @@ namespace Gum.Plugins.BaseClasses
 
             //return CreateTab(wpfHost, tabName);
 
-            var page = new PluginTabItem();
-            page.Header = tabName;
-            page.Content = control;
-
-
-            PluginTab pluginTab = new PluginTab();
-            pluginTab.TabItem = page;
-            pluginTab.Title = tabName;
-
-            pluginTab.SuggestedLocation = defaultLocation;
-
-            return pluginTab;
-
+            PluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
+            newTab.SuggestedLocation = defaultLocation;
+            newTab.Hide();
+            return newTab;
         }
 
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
         {
-            return _guiCommands.AddControl(control, tabName, tabLocation);
+            return _tabManager.AddControl(control, tabName, tabLocation);
         }
 
         public void RemoveControl(System.Windows.Controls.UserControl control)
         {
-            _guiCommands.RemoveControl(control);
+            _tabManager.RemoveControl(control);
         }
 
         #endregion
