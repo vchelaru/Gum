@@ -106,3 +106,14 @@ public partial class MainPanelControl : UserControl
         }
     }
 }
+
+public class PluginTabHeaderTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate? CustomHeaderTemplate { get; set; }
+    public DataTemplate? TitleHeaderTemplate { get; set; }
+
+    public override DataTemplate SelectTemplate(object item, DependencyObject container)
+    {
+        return item != null ? CustomHeaderTemplate! : TitleHeaderTemplate!;
+    }
+}
