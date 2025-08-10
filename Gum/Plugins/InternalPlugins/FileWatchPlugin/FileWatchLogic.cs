@@ -123,6 +123,13 @@ namespace Gum.Logic.FileWatch
                         .GetDirectoryContainingThis();
                     directories.Add(localizationDirectory);
                 }
+                if (!string.IsNullOrEmpty(gumProject.FontCharacterFile))
+                {
+                    var fontCharacterDirectory = new FilePath(
+                            GumState.Self.ProjectState.ProjectDirectory + gumProject.FontCharacterFile)
+                        .GetDirectoryContainingThis();
+                    directories.Add(fontCharacterDirectory);
+                }
             }
 
             return directories;

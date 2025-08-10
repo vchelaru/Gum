@@ -3,6 +3,8 @@ using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
 using System;
+using Gum.ToolStates;
+using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 
@@ -212,6 +214,13 @@ public class ProjectPropertiesViewModel : ViewModel
             FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
             FontSpacingVertical = this.gumProject.FontSpacingVertical;
             FontCharacterFile = this.gumProject.FontCharacterFile;
+            
+            if(!string.IsNullOrEmpty(FontCharacterFile) && FileManager.IsRelative(FontCharacterFile) == false)
+            {
+                FontCharacterFile = FileManager.MakeRelative(FontCharacterFile,
+                    GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                this.gumProject.FontCharacterFile = FontCharacterFile;
+            }
 
             RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
             CanvasHeight = this.gumProject.DefaultCanvasHeight;

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using Gum.Commands;
+using Gum.Logic.FileWatch;
 using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -42,6 +43,8 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly ITabManager _tabManager;
+    
+    private FilePath? _fontCharacterFileAbsolute;
 
     public MainPropertiesWindowPlugin()
     {
@@ -60,6 +63,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
         // todo - handle loading new Gum project when this window is shown - re-call BindTo
         this.ProjectLoad += HandleProjectLoad;
+        this.ReactToFileChanged += HandleFileChanged;
     }
 
     private void HandleProjectLoad(GumProjectSave obj)
@@ -70,6 +74,22 @@ class MainPropertiesWindowPlugin : InternalPlugin
             control.ViewModel = null;
             control.ViewModel = viewModel;
             RefreshFontRangeEditability();
+            
+            if(!string.IsNullOrEmpty(viewModel.FontCharacterFile))
+            {
+                var absolute = viewModel.FontCharacterFile;
+                if(FileManager.IsRelative(absolute))
+                {
+                    absolute = FileManager.RelativeDirectory + absolute;
+                }
+                _fontCharacterFileAbsolute = absolute;
+            }
+            else
+            {
+                _fontCharacterFileAbsolute = null;
+            }
+
+            FileWatchLogic.Self.RefreshRootDirectory();
         }
     }
 
@@ -208,12 +228,17 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     {
                         absolute = FileManager.RelativeDirectory + absolute;
                     }
-
+                    _fontCharacterFileAbsolute = absolute;
+                    
                     if(System.IO.File.Exists(absolute))
                     {
                         var ranges = BmfcSave.GenerateRangesFromFile(absolute);
                         viewModel.FontRanges = ranges;
                     }
+                }
+                else
+                {
+                    _fontCharacterFileAbsolute = null;
                 }
 
                 RefreshFontRangeEditability();
@@ -247,7 +272,17 @@ class MainPropertiesWindowPlugin : InternalPlugin
             _fileCommands.TryAutoSaveProject();
         }
     }
-
+    private void HandleFileChanged(FilePath file)
+    {
+        if(_fontCharacterFileAbsolute != null && file == _fontCharacterFileAbsolute)
+        {
+            if(System.IO.File.Exists(_fontCharacterFileAbsolute.FullPath))
+            {
+                var ranges = BmfcSave.GenerateRangesFromFile(_fontCharacterFileAbsolute.FullPath);
+                _guiCommands.DoOnUiThread(() => viewModel.FontRanges = ranges);
+            }
+        }
+    }
     private void RefreshFontRangeEditability()
     {
         if(control != null)
