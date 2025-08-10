@@ -176,9 +176,9 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
     
-    public string FontCharacterFile
+    public bool UseFontCharacterFile
     {
-        get => Get<string>();
+        get => Get<bool>();
         set => Set(value);
     }
 
@@ -213,14 +213,7 @@ public class ProjectPropertiesViewModel : ViewModel
             FontRanges = this.gumProject.FontRanges;
             FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
             FontSpacingVertical = this.gumProject.FontSpacingVertical;
-            FontCharacterFile = this.gumProject.FontCharacterFile;
-            
-            if(!string.IsNullOrEmpty(FontCharacterFile) && FileManager.IsRelative(FontCharacterFile) == false)
-            {
-                FontCharacterFile = FileManager.MakeRelative(FontCharacterFile,
-                    GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
-                this.gumProject.FontCharacterFile = FontCharacterFile;
-            }
+            UseFontCharacterFile = this.gumProject.UseFontCharacterFile;
 
             RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
@@ -290,7 +283,7 @@ public class ProjectPropertiesViewModel : ViewModel
         this.gumProject.CurrentLanguageIndex = LanguageIndex;
         this.gumProject.ShowLocalizationInGum = ShowLocalization;
         this.gumProject.FontRanges = FontRanges;
-        this.gumProject.FontCharacterFile = FontCharacterFile;
+        this.gumProject.UseFontCharacterFile = UseFontCharacterFile;
 
         this.gumProject.FontSpacingHorizontal = FontSpacingHorizontal;
         this.gumProject.FontSpacingVertical = FontSpacingVertical;

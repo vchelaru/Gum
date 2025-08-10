@@ -123,10 +123,10 @@ namespace Gum.Logic.FileWatch
                         .GetDirectoryContainingThis();
                     directories.Add(localizationDirectory);
                 }
-                if (!string.IsNullOrEmpty(gumProject.FontCharacterFile))
+                if (gumProject.UseFontCharacterFile)
                 {
                     var fontCharacterDirectory = new FilePath(
-                            GumState.Self.ProjectState.ProjectDirectory + gumProject.FontCharacterFile)
+                            GumState.Self.ProjectState.ProjectDirectory + ".gumfcs")
                         .GetDirectoryContainingThis();
                     directories.Add(fontCharacterDirectory);
                 }

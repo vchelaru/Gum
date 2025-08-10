@@ -75,14 +75,16 @@ class MainPropertiesWindowPlugin : InternalPlugin
             control.ViewModel = viewModel;
             RefreshFontRangeEditability();
             
-            if(!string.IsNullOrEmpty(viewModel.FontCharacterFile))
+            if(viewModel.UseFontCharacterFile)
             {
-                var absolute = viewModel.FontCharacterFile;
-                if(FileManager.IsRelative(absolute))
-                {
-                    absolute = FileManager.RelativeDirectory + absolute;
-                }
+                var absolute = new FilePath(GumState.Self.ProjectState.ProjectDirectory + ".gumfcs");
                 _fontCharacterFileAbsolute = absolute;
+
+                if(System.IO.File.Exists(absolute.FullPath))
+                {
+                    var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
+                    viewModel.FontRanges = ranges;
+                }
             }
             else
             {
@@ -213,26 +215,15 @@ class MainPropertiesWindowPlugin : InternalPlugin
                     }
                 }
                 break;
-            case nameof(viewModel.FontCharacterFile):
-                if(!string.IsNullOrEmpty(viewModel.FontCharacterFile) && FileManager.IsRelative(viewModel.FontCharacterFile) == false)
+            case nameof(viewModel.UseFontCharacterFile):
+                if(viewModel.UseFontCharacterFile)
                 {
-                    viewModel.FontCharacterFile = FileManager.MakeRelative(viewModel.FontCharacterFile,
-                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
-                    shouldSaveAndRefresh = false;
-                }
-
-                if(!string.IsNullOrEmpty(viewModel.FontCharacterFile))
-                {
-                    var absolute = viewModel.FontCharacterFile;
-                    if(FileManager.IsRelative(absolute))
-                    {
-                        absolute = FileManager.RelativeDirectory + absolute;
-                    }
+                    var absolute = new FilePath(GumState.Self.ProjectState.ProjectDirectory + ".gumfcs");
                     _fontCharacterFileAbsolute = absolute;
-                    
-                    if(System.IO.File.Exists(absolute))
+
+                    if(System.IO.File.Exists(absolute.FullPath))
                     {
-                        var ranges = BmfcSave.GenerateRangesFromFile(absolute);
+                        var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
                         viewModel.FontRanges = ranges;
                     }
                 }
@@ -306,7 +297,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             var member = control.DataGrid.GetInstanceMember(nameof(viewModel.FontRanges));
             if(member != null)
             {
-                member.IsReadOnly = !string.IsNullOrEmpty(viewModel.FontCharacterFile);
+                member.IsReadOnly = viewModel.UseFontCharacterFile;
             }
             control.DataGrid.Refresh();
         }
