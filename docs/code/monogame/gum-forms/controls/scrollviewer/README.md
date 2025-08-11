@@ -61,7 +61,7 @@ for (int i = 0; i < 30; i++)
 
 ## Code Example: Wrapping Children
 
-The following code shows how to wrap children in a ScrollViewer. It modifies the InnerPanel.Visual to change the layout type.
+The following code shows how to wrap children in a ScrollViewer. It modifies the `InnerPanel` to change the layout type.
 
 ```csharp
 var scrollViewer = new ScrollViewer();
@@ -81,6 +81,8 @@ for(int i= 0; i < 100; i++)
     scrollViewer.AddChild(button);
 }
 ```
+
+<figure><img src="../../../../../.gitbook/assets/11_07 54 07.png" alt=""><figcaption><p>ScrollViewer with wrapped children</p></figcaption></figure>
 
 ## VerticalScrollBarVisibility
 
