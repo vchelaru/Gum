@@ -41,7 +41,7 @@ partial class ExposedVariableComponent : MonoGameGum.Forms.Controls.FrameworkEle
         set => ContainerInstance.XOrigin = value;
     }
 
-    public PositionUnitType ContainerInstanceXUnits
+    public global::Gum.Converters.GeneralUnitType ContainerInstanceXUnits
     {
         get => ContainerInstance.XUnits;
         set => ContainerInstance.XUnits = value;
@@ -53,7 +53,7 @@ partial class ExposedVariableComponent : MonoGameGum.Forms.Controls.FrameworkEle
         set => ContainerInstance.YOrigin = value;
     }
 
-    public PositionUnitType ContainerInstanceYUnits
+    public global::Gum.Converters.GeneralUnitType ContainerInstanceYUnits
     {
         get => ContainerInstance.YUnits;
         set => ContainerInstance.YUnits = value;

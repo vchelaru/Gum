@@ -396,6 +396,9 @@ public class MainCodeOutputPlugin : PluginBase
         
         switch(propertyName)
         {
+            case nameof(viewModel.WhichElementsToGenerate):
+                // do nothing
+                break;
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
