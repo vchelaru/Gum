@@ -79,7 +79,7 @@ partial class ButtonCloseRuntime : ContainerRuntime
             FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Button(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        Icon = this.GetGraphicalUiElementByName("Icon") as IconRuntime;
+        Icon = this.GetGraphicalUiElementByName("Icon") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

@@ -51,10 +51,10 @@ partial class InputDeviceSelectorRuntime : ContainerRuntime
         ContainerInstance1 = this.GetGraphicalUiElementByName("ContainerInstance1") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         InputDeviceContainerInstance = this.GetGraphicalUiElementByName("InputDeviceContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         ContainerInstance2 = this.GetGraphicalUiElementByName("ContainerInstance2") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        InputDeviceSelectionItemInstance = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance") as InputDeviceSelectionItemRuntime;
-        InputDeviceSelectionItemInstance1 = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance1") as InputDeviceSelectionItemRuntime;
-        InputDeviceSelectionItemInstance2 = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance2") as InputDeviceSelectionItemRuntime;
-        InputDeviceSelectionItemInstance3 = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance3") as InputDeviceSelectionItemRuntime;
+        InputDeviceSelectionItemInstance = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance") as CodeGen_MonoGame_ByReference.Components.Controls.InputDeviceSelectionItemRuntime;
+        InputDeviceSelectionItemInstance1 = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance1") as CodeGen_MonoGame_ByReference.Components.Controls.InputDeviceSelectionItemRuntime;
+        InputDeviceSelectionItemInstance2 = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance2") as CodeGen_MonoGame_ByReference.Components.Controls.InputDeviceSelectionItemRuntime;
+        InputDeviceSelectionItemInstance3 = this.GetGraphicalUiElementByName("InputDeviceSelectionItemInstance3") as CodeGen_MonoGame_ByReference.Components.Controls.InputDeviceSelectionItemRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
