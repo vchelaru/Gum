@@ -44,7 +44,7 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {
-        if (StateContainer is ElementSave element && _nameVerifier.IsCategoryNameValid(value, element, out string whyNotValid))
+        if (StateContainer is ElementSave element && !_nameVerifier.IsCategoryNameValid(value, element, out string whyNotValid))
             return whyNotValid;
 
         return base.Validate(value);

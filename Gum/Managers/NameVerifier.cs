@@ -81,8 +81,9 @@ namespace Gum.Managers
         }
         internal bool IsCategoryNameValid(string name, ElementSave categoryContainer, out string whyNotValid)
         {
+            whyNotValid = null;
+            
             string standardizedName = Standardize(name);
-
             string existingName = null;
             StateSaveCategory existing = categoryContainer.GetStateSaveCategoryRecursively(item =>
             {
@@ -95,7 +96,7 @@ namespace Gum.Managers
                 return false;
             });
 
-            whyNotValid = $"Cannot add category — a category with the name {existingName} is already defined in {categoryContainer}";
+            if (existingName != null) whyNotValid = $"Cannot add category — a category with the name {existingName} is already defined in {categoryContainer}";
             return existing != null;
         }
         internal bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
