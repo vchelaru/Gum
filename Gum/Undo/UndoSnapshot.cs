@@ -23,8 +23,7 @@ public class UndoComparison
 
     public List<InstanceSave> AddedInstances;
     public List<InstanceSave> RemovedInstances;
-
-
+    
     public List<StateSave> AddedStates;
     public List<StateSave> RemovedStates;
 
@@ -361,22 +360,20 @@ public class UndoSnapshot
 
     private static void AddVariableModifications(StateSave stateToApply, StateSave currentState, UndoComparison snapshot)
     {
-        if(stateToApply == null || currentState == null)
-        {
-            return;
-        }
-        var newVariableNameLists = stateToApply.Variables.Select(item => item.Name).ToList();
-        newVariableNameLists.AddRange(stateToApply.VariableLists.Select(item => item.Name));
-        var newVariableHash = newVariableNameLists.ToHashSet();
+        if (stateToApply == null || currentState == null) return;
+        
+        List<string> newVariableNameList = stateToApply.Variables.Select(item => item.Name).ToList();
+        newVariableNameList.AddRange(stateToApply.VariableLists.Select(item => item.Name));
+        HashSet<string> newVariableNameHash = newVariableNameList.ToHashSet();
 
-        var oldVariableNameList = currentState.Variables.Select(item => item.Name).ToList();
+        List<string> oldVariableNameList = currentState.Variables.Select(item => item.Name).ToList();
         oldVariableNameList.AddRange(currentState.VariableLists.Select(item => item.Name));
-        var oldVariableHash = oldVariableNameList.ToHashSet();
+        HashSet<string> oldVariableNameHash = oldVariableNameList.ToHashSet();
 
-        var addedVariables = stateToApply.Variables.Where(item => oldVariableHash.Contains(item.Name) == false);
-        var removedVariables = currentState.Variables.Where(item => newVariableHash.Contains(item.Name) == false);
-        var addedVariableLists = stateToApply.VariableLists.Where(item => oldVariableHash.Contains(item.Name) == false);
-        var removedVariableLists = currentState.VariableLists.Where(item => newVariableHash.Contains(item.Name) == false);
+        IEnumerable<VariableSave> addedVariables = stateToApply.Variables.Where(item => !oldVariableNameHash.Contains(item.Name));
+        IEnumerable<VariableSave> removedVariables = currentState.Variables.Where(item => !newVariableNameHash.Contains(item.Name));
+        IEnumerable<VariableListSave> addedVariableLists = stateToApply.VariableLists.Where(item => !oldVariableNameHash.Contains(item.Name));
+        IEnumerable<VariableListSave> removedVariableLists = currentState.VariableLists.Where(item => !newVariableNameHash.Contains(item.Name));
 
         var modifiedState = new StateSave();
         modifiedState.Name = stateToApply.Name ?? "<default>";
