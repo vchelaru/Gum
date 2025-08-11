@@ -81,6 +81,8 @@ namespace Gum.DataTypes.Variables
                 }
             }
         }
+        
+        public string StandardizedName { get; set; }
 
         public object Value
         {
