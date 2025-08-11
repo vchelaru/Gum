@@ -13,17 +13,17 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Title => "New Category";
     public override string Message => "Enter new Category name";
     
-    private readonly ElementCommands _elementCommands;
-    private readonly UndoManager _undoManager;
-    private readonly NameVerifier _nameVerifier;
+    private readonly IElementCommands _elementCommands;
+    private readonly IUndoManager _undoManager;
+    private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
     private IStateContainer StateContainer => _selectedState.SelectedStateContainer;
 
     public AddCategoryDialogViewModel(
         ISelectedState selectedState,
-        ElementCommands elementCommands,
-        UndoManager undoManager,
-        NameVerifier nameVerifier)
+        IElementCommands elementCommands,
+        IUndoManager undoManager,
+        INameVerifier nameVerifier)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -44,8 +44,10 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {
-        if (StateContainer is ElementSave element && !_nameVerifier.IsCategoryNameValid(value, element, out string whyNotValid))
+        if (!_nameVerifier.IsCategoryNameValid(value, StateContainer, out string whyNotValid))
+        {
             return whyNotValid;
+        }
 
         return base.Validate(value);
     }
