@@ -294,7 +294,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         if(shouldShow)
         {
-            pluginTab.Show(focus:false);
+            pluginTab.Show(select: false);
         }
         else
         {
@@ -307,7 +307,7 @@ public class MainCodeOutputPlugin : PluginBase
             control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
         }
         ///////////////////////early out////////////////////
-        if(!pluginTab.IsFocused)
+        if(!pluginTab.IsSelected)
         {
             return;
         }
@@ -322,31 +322,39 @@ public class MainCodeOutputPlugin : PluginBase
 
         if(settings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
         {
-            switch(viewModel.WhatToView)
+            ObjectFinder.Self.EnableCache();
+            try
             {
-                case ViewModels.WhatToView.SelectedElement:
+                switch(viewModel.WhatToView)
+                {
+                    case ViewModels.WhatToView.SelectedElement:
 
-                    if (instance != null)
-                    {
-                        string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
-                        viewModel.Code = code;
-                    }
-                    else if(selectedElement != null && selectedElement is not StandardElementSave)
-                    {
+                        if (instance != null)
+                        {
+                            string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
+                            viewModel.Code = code;
+                        }
+                        else if(selectedElement != null && selectedElement is not StandardElementSave)
+                        {
 
-                        string gumCode = _codeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
-                        viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
-                    }
-                    break;
-                case ViewModels.WhatToView.SelectedState:
-                    var state = _selectedState.SelectedStateSave;
+                            string gumCode = _codeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                            viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
+                        }
+                        break;
+                    case ViewModels.WhatToView.SelectedState:
+                        var state = _selectedState.SelectedStateSave;
 
-                    if (state != null && selectedElement != null)
-                    {
-                        string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
-                        viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
-                    }
-                    break;
+                        if (state != null && selectedElement != null)
+                        {
+                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
+                            viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
+                        }
+                        break;
+                }
+            }
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
             }
         }
         else if(selectedElement == null)
@@ -388,6 +396,9 @@ public class MainCodeOutputPlugin : PluginBase
         
         switch(propertyName)
         {
+            case nameof(viewModel.WhichElementsToGenerate):
+                // do nothing
+                break;
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
@@ -428,29 +439,37 @@ public class MainCodeOutputPlugin : PluginBase
         }
         else if (_selectedState.SelectedElement != null)
         {
-            if(viewModel.IsAllInProjectGenerating)
+            ObjectFinder.Self.EnableCache();
+            try
             {
-                int numberOfElements = 0;
-                foreach(var element in GumState.Self.ProjectState.GumProjectSave.AllElements)
+                if(viewModel.IsAllInProjectGenerating)
                 {
-                    if(element is StandardElementSave)
+                    int numberOfElements = 0;
+                    foreach(var element in GumState.Self.ProjectState.GumProjectSave.AllElements)
                     {
-                        continue;
+                        if(element is StandardElementSave)
+                        {
+                            continue;
+                        }
+
+                        var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+                        if(elementOutputSettings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
+                        {
+                            _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
+                            numberOfElements++;
+                        }
                     }
 
-                    var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
-                    if(elementOutputSettings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
-                    {
-                        _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
-                        numberOfElements++;
-                    }
+                    _dialogService.ShowMessage($"Generated code for {numberOfElements} element(s)");
                 }
-
-                _dialogService.ShowMessage($"Generated code for {numberOfElements} element(s)");
+                else
+                {
+                    GenerateCodeForElement(showPopups:true, _selectedState.SelectedElement);
+                }
             }
-            else
+            finally
             {
-                GenerateCodeForElement(showPopups:true, _selectedState.SelectedElement);
+                ObjectFinder.Self.DisableCache();
             }
         }
     }

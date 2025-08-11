@@ -19,7 +19,7 @@ using Gum.Services;
 
 namespace Gum.ToolCommands
 {
-    public class ElementCommands
+    public class ElementCommands : IElementCommands
     {
         #region Fields
 

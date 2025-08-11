@@ -1,6 +1,6 @@
 {
   "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing System.Linq;\r\n",
-  "CodeProjectRoot": "C:\\Users\\vchel\\Documents\\GitHub\\Gum\\Tests\\CodeGen_MonoGame_ByReference\\CodeGenProject\\",
+  "CodeProjectRoot": "..\\..\\",
   "RootNamespace": "CodeGenProject",
   "AppendFolderToNamespace": true,
   "InheritanceLocation": 1,

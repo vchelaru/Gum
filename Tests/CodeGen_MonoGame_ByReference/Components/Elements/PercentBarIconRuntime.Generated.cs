@@ -94,11 +94,11 @@ partial class PercentBarIconRuntime : ContainerRuntime
     public override void AfterFullCreation()
     {
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
+        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;
         BarContainer = this.GetGraphicalUiElementByName("BarContainer") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         Bar = this.GetGraphicalUiElementByName("Bar") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        CautionLinesInstance = this.GetGraphicalUiElementByName("CautionLinesInstance") as CautionLinesRuntime;
-        VerticalLinesInstance = this.GetGraphicalUiElementByName("VerticalLinesInstance") as VerticalLinesRuntime;
+        CautionLinesInstance = this.GetGraphicalUiElementByName("CautionLinesInstance") as CodeGen_MonoGame_ByReference.Components.Elements.CautionLinesRuntime;
+        VerticalLinesInstance = this.GetGraphicalUiElementByName("VerticalLinesInstance") as CodeGen_MonoGame_ByReference.Components.Elements.VerticalLinesRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

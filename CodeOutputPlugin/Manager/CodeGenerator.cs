@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Net.Mime;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -633,6 +634,12 @@ public class CodeGenerator
         var bindingBehavior = GetBindingBehavior(container, instanceName);
         var type = exposedVariable.Type;
 
+        if(type == nameof(PositionUnitType))
+        {
+            // at runtime we use the general unit type:
+            type = "global::Gum.Converters.GeneralUnitType";
+        }
+
         var isState = exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category);
 
         var shouldGenerate = true;
@@ -1017,9 +1024,15 @@ public class CodeGenerator
     {
         var isGeneratingFormsControls = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms;
 
+        var instance = context.Instance;
+
+        if (instance == null)
+        {
+            throw new NullReferenceException("context.Instance should not be null here");
+        }
+
         if (isGeneratingFormsControls)
         {
-            var instance = context.Instance;
 
             var element = ObjectFinder.Self.GetElementSave(instance);
 
@@ -1028,7 +1041,7 @@ public class CodeGenerator
             if (isInstanceFormsForms)
             {
 
-                var classNameString = GetClassNameForType(context.Instance, context.VisualApi, context);
+                var classNameString = GetClassNameForType(instance, context.VisualApi, context);
 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = " +
@@ -1036,29 +1049,33 @@ public class CodeGenerator
             }
             else
             {
-                string className = GetClassNameForType(context.Instance, context.VisualApi, context);
+                string? className = GetClassNameForType(instance, context.VisualApi, context);
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::MonoGameGum.GueDeriving.{className};");
             }
         }
         else
         {
-            var isStandardElement = ObjectFinder.Self.GetStandardElement(context.Instance.BaseType) != null;
+            var isStandardElement = ObjectFinder.Self.GetStandardElement(instance.BaseType) != null;
             if(isStandardElement)
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance, context.VisualApi, context)};");
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"global::MonoGameGum.GueDeriving.{GetClassNameForType(instance, context.VisualApi, context)};");
 
             }
             else
             {
+                string? className = GetClassNameForType(instance, context.VisualApi, context, isFullyQualified:true);
+                if (className == null) return;
+                
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-                    $"{GetClassNameForType(context.Instance, context.VisualApi, context)};");
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    // do not prefix global::MonoGameGum... because this is a custom component
+                    $"{className};");
             }
         }
     }

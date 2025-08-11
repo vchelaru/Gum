@@ -194,11 +194,12 @@ public class AddVariableViewModel : DialogViewModel
         {
             var behavior = _selectedState.SelectedBehavior;
 
-            var newVariable = new VariableSave();
-
-            newVariable.Name = name;
-            newVariable.Type = type;
-            newVariable.Value = DefaultValue;
+            var newVariable = new VariableSave
+            {
+                Name = name,
+                Type = type,
+                Value = DefaultValue
+            };
 
             using var undoLock = _undoManager.RequestLock();
 

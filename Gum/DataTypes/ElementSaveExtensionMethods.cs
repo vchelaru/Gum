@@ -281,47 +281,46 @@ namespace Gum.DataTypes
             return null;
         }
 
-        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName) =>
-            GetStateSaveCategoryRecursively(element, categoryName, out ElementSave? _);
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, Func<StateSaveCategory, bool> condition) =>
+            GetStateSaveCategoryRecursively(element, condition, out IStateContainer? _);
+        
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string categoryName) =>
+            GetStateSaveCategoryRecursively(element, categoryName, out IStateContainer? _);
 
-        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName, 
-            out ElementSave? categoryContainer)
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string categoryName, out IStateContainer? categoryContainer) => 
+            GetStateSaveCategoryRecursively(element, item => item.Name == categoryName, out categoryContainer);
+        
+        /// <returns>
+        /// The first category of this element that meets the given <paramref name="condition"/>.
+        /// </returns>
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer stateContainer, Func<StateSaveCategory, bool> condition, 
+            out IStateContainer? foundStateContainer)
         {
-
-            StateSaveCategory? foundCategory = null;
-            foreach(var item in element.Categories)
-            {
-                if( item.Name == categoryName)
-                {
-                    foundCategory = item;
-                    break;
-                }
-            }
+            StateSaveCategory? foundCategory = stateContainer.Categories.FirstOrDefault(condition);
 
             if (foundCategory != null)
             {
-                categoryContainer = element;
+                foundStateContainer = stateContainer;
                 return foundCategory;
             }
 
-            if (!string.IsNullOrEmpty(element.BaseType))
+            if (stateContainer is ElementSave elementSave && !string.IsNullOrEmpty(elementSave.BaseType))
             {
-                var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
 
                 if(baseElement == null)
                 {
-                    categoryContainer = null;
+                    foundStateContainer = null;
                     return null;
                 }
                 else
                 {
-                    return baseElement.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                    return baseElement.GetStateSaveCategoryRecursively(condition, out foundStateContainer);
                 }
             }
 
-            categoryContainer = null;
+            foundStateContainer = null;
             return null;
-        }
-
+        }        
     }
 }

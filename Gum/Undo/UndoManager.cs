@@ -82,7 +82,7 @@ public class UndoOperationEventArgs : EventArgs
 
 #endregion
 
-public class UndoManager
+public class UndoManager : IUndoManager
 {
     #region Fields
 

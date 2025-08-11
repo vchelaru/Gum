@@ -71,9 +71,9 @@ partial class InputDeviceSelectionItemRuntime : ContainerRuntime
     public override void AfterFullCreation()
     {
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
+        IconInstance = this.GetGraphicalUiElementByName("IconInstance") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        RemoveDeviceButtonInstance = this.GetGraphicalUiElementByName("RemoveDeviceButtonInstance") as ButtonCloseRuntime;
+        RemoveDeviceButtonInstance = this.GetGraphicalUiElementByName("RemoveDeviceButtonInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ButtonCloseRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
