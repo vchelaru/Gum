@@ -1029,7 +1029,7 @@ public class CodeGenerator
 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{context.InstanceNameInCode} = " +
-                    $"global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.InstanceNameInCode}\");");
+                    $"global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
             }
             else
             {
@@ -1037,7 +1037,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.InstanceNameInCode}\") as " +
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
                     $"global::MonoGameGum.GueDeriving.{className};");
             }
         }
@@ -1047,14 +1047,14 @@ public class CodeGenerator
             if(isStandardElement)
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.InstanceNameInCode}\") as " +
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
                     $"global::MonoGameGum.GueDeriving.{GetClassNameForType(context.Instance, context.VisualApi, context)};");
 
             }
             else
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.InstanceNameInCode}\") as " +
+                    $"{context.Tabs}{context.InstanceNameInCode} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
                     $"{GetClassNameForType(context.Instance, context.VisualApi, context)};");
             }
         }
