@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ScreenWithMissingInstance</Name>
+  <State>
+    <Name>Default</Name>
+  </State>
+  <Instance>
+    <Name>InvalidInstance</Name>
+    <BaseType>InvalidInstanceType</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>

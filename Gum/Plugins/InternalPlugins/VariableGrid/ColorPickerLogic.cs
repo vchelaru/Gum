@@ -138,7 +138,6 @@ public class ColorPickerLogic
 
             var indexToInsertAfter = Math.Max(category.Members.IndexOf(redVariable), Math.Max(category.Members.IndexOf(greenVariable), category.Members.IndexOf(blueVariable)));
             category.Members.Insert(indexToInsertAfter + 1, instanceMember);
-
         }
     }
 

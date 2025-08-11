@@ -53,16 +53,16 @@ partial class WindowStandardRuntime : ContainerRuntime
             FormsControlAsObject = new global::MonoGameGum.Forms.Window(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as PanelRuntime;
-        TitleBarInstance = this.GetGraphicalUiElementByName("TitleBarInstance") as PanelRuntime;
-        BorderTopLeftInstance = this.GetGraphicalUiElementByName("BorderTopLeftInstance") as PanelRuntime;
-        BorderTopRightInstance = this.GetGraphicalUiElementByName("BorderTopRightInstance") as PanelRuntime;
-        BorderBottomLeftInstance = this.GetGraphicalUiElementByName("BorderBottomLeftInstance") as PanelRuntime;
-        BorderBottomRightInstance = this.GetGraphicalUiElementByName("BorderBottomRightInstance") as PanelRuntime;
-        BorderTopInstance = this.GetGraphicalUiElementByName("BorderTopInstance") as PanelRuntime;
-        BorderBottomInstance = this.GetGraphicalUiElementByName("BorderBottomInstance") as PanelRuntime;
-        BorderLeftInstance = this.GetGraphicalUiElementByName("BorderLeftInstance") as PanelRuntime;
-        BorderRightInstance = this.GetGraphicalUiElementByName("BorderRightInstance") as PanelRuntime;
+        InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        TitleBarInstance = this.GetGraphicalUiElementByName("TitleBarInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderTopLeftInstance = this.GetGraphicalUiElementByName("BorderTopLeftInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderTopRightInstance = this.GetGraphicalUiElementByName("BorderTopRightInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderBottomLeftInstance = this.GetGraphicalUiElementByName("BorderBottomLeftInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderBottomRightInstance = this.GetGraphicalUiElementByName("BorderBottomRightInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderTopInstance = this.GetGraphicalUiElementByName("BorderTopInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderBottomInstance = this.GetGraphicalUiElementByName("BorderBottomInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderLeftInstance = this.GetGraphicalUiElementByName("BorderLeftInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
+        BorderRightInstance = this.GetGraphicalUiElementByName("BorderRightInstance") as CodeGen_MonoGame_ByReference.Components.Controls.PanelRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

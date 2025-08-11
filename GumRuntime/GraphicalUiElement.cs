@@ -735,7 +735,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #if DEBUG
             if (float.IsNaN(value) || float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
             {
-                throw new Exception($"Invalid Rotaiton value set: {value}");
+                throw new Exception($"Invalid Rotation value set: {value}");
             }
 #endif
             if (mRotation != value)
@@ -6242,6 +6242,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     string customFontFile;
+    /// <summary>
+    /// Specifies the name of the custom font. This can be specified relative to
+    /// FileManager.RelativeDirectory, which is the Content folder for code-only projects,
+    /// or the folder containing the .gumx project if loading a Gum project. This should
+    /// include the .fnt extension.
+    /// </summary>
     public string CustomFontFile
     {
         get { return customFontFile; }
@@ -6249,6 +6255,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     string font;
+    /// <summary>
+    /// The font name, such as "Arial", which is used to load fonts from 
+    /// </summary>
     public string Font
     {
         get { return font; }

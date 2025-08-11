@@ -40,11 +40,11 @@ partial class SettingsViewRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        FullscreenCheckboxInstance = this.GetGraphicalUiElementByName("FullscreenCheckboxInstance") as CheckBoxRuntime;
-        MusicVolumeLabel = this.GetGraphicalUiElementByName("MusicVolumeLabel") as LabelRuntime;
-        MusicSliderInstance = this.GetGraphicalUiElementByName("MusicSliderInstance") as SliderRuntime;
-        SoundVolumeLabel = this.GetGraphicalUiElementByName("SoundVolumeLabel") as LabelRuntime;
-        SoundSliderInstance = this.GetGraphicalUiElementByName("SoundSliderInstance") as SliderRuntime;
+        FullscreenCheckboxInstance = this.GetGraphicalUiElementByName("FullscreenCheckboxInstance") as CodeGen_MonoGame_ByReference.Components.Controls.CheckBoxRuntime;
+        MusicVolumeLabel = this.GetGraphicalUiElementByName("MusicVolumeLabel") as CodeGen_MonoGame_ByReference.Components.Controls.LabelRuntime;
+        MusicSliderInstance = this.GetGraphicalUiElementByName("MusicSliderInstance") as CodeGen_MonoGame_ByReference.Components.Controls.SliderRuntime;
+        SoundVolumeLabel = this.GetGraphicalUiElementByName("SoundVolumeLabel") as CodeGen_MonoGame_ByReference.Components.Controls.LabelRuntime;
+        SoundSliderInstance = this.GetGraphicalUiElementByName("SoundSliderInstance") as CodeGen_MonoGame_ByReference.Components.Controls.SliderRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

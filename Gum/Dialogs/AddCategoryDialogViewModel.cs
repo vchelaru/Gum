@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -12,19 +13,22 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Title => "New Category";
     public override string Message => "Enter new Category name";
     
-    private readonly ElementCommands _elementCommands;
-    private readonly UndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
+    private readonly IUndoManager _undoManager;
+    private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
     private IStateContainer StateContainer => _selectedState.SelectedStateContainer;
 
     public AddCategoryDialogViewModel(
         ISelectedState selectedState,
-        ElementCommands elementCommands,
-        UndoManager undoManager)
+        IElementCommands elementCommands,
+        IUndoManager undoManager,
+        INameVerifier nameVerifier)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _undoManager = undoManager;
+        _nameVerifier = nameVerifier;
     }
 
     protected override void OnAffirmative()
@@ -40,12 +44,9 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {
-        
-        if (StateContainer is ElementSave element &&
-            element.GetStateSaveCategoryRecursively(value, out ElementSave categoryContainer) is not null)
+        if (!_nameVerifier.IsCategoryNameValid(value, StateContainer, out string whyNotValid))
         {
-            return
-                $"Cannot add category - a category with the name {value} is already defined in {categoryContainer}";
+            return whyNotValid;
         }
 
         return base.Validate(value);
