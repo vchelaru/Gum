@@ -54,7 +54,7 @@ public class AddCategoryDialogViewModelTests
 
         _viewModel.Validate();
 
-        var error = _viewModel.Error;
+        string? error = _viewModel.Error;
         error.ShouldBe("Invalid category name");
     }
 
@@ -74,7 +74,7 @@ public class AddCategoryDialogViewModelTests
 
         _viewModel.Value = "NewCategory";
         _viewModel.Validate();
-        var error = _viewModel.Error;
+        string? error = _viewModel.Error;
         error.ShouldBe("Invalid behavior category name");
     }
 }
