@@ -385,13 +385,6 @@ public class CodeGenerator
 
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
-
-    private static string ToCSharpName(string nonFormatted)
-    {
-        return nonFormatted
-            .Replace(".", string.Empty)
-            .Replace(" ", "_");
-    }
     
     /// <returns>
     /// The corresponding class name, or <c>null</c> if that type couldn't be found.
@@ -461,7 +454,7 @@ public class CodeGenerator
             className = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings) + "." + className;
         }
 
-        return ToCSharpName(className);
+        return className;
     }
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
@@ -594,7 +587,7 @@ public class CodeGenerator
             if (variable.IsCustomVariable)
             {
                 var type = variable.Type;
-                var name = ToCSharpName(variable.Name);
+                var name = variable.Name;
                 stringBuilder.AppendLine(context.Tabs + $"public {type} {name}");
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
@@ -638,8 +631,6 @@ public class CodeGenerator
         //////////////End Early Out///////////////////
 
         var bindingBehavior = GetBindingBehavior(container, instanceName);
-        
-        var name = ToCSharpName(exposedVariable.ExposedAsName);
         var type = exposedVariable.Type;
 
         var isState = exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category);
@@ -667,15 +658,14 @@ public class CodeGenerator
             if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
             {
                 var containerClassName = GetClassNameForType(container, VisualApi.XamarinForms, context);
-                
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {name}Property = " +
-                    $"BindableProperty.Create(nameof({name}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {name}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({name}Property);");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({name}Property, value);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
@@ -693,18 +683,18 @@ public class CodeGenerator
                     defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
                 }
 
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {name}Property = " +
-                    $"BindableProperty.Create(nameof({name}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{name}PropertyChanged{defaultAssignmentWithComma});");
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged{defaultAssignmentWithComma});");
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {name}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({name}Property);");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({name}Property, value);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{name}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{exposedVariable.ExposedAsName}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
@@ -716,7 +706,7 @@ public class CodeGenerator
                 }
                 else
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{ToCSharpName(exposedVariable.Name)} = ({type})newValue;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "_")} = ({type})newValue;");
                 }
 
                 tabCount--;
@@ -758,7 +748,7 @@ public class CodeGenerator
                     }
                 }
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {name}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
@@ -779,25 +769,25 @@ public class CodeGenerator
 
                 if (hasGetter)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {ToCSharpName(sourceObjectName)}.{rootVariable?.Name};");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName.Replace(" ", "_")}.{rootVariable?.Name};");
                 }
 
 
                 if (shouldSetStateByString)
                 {
-                    var rightSide = $"{ToCSharpName(sourceObjectName)}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                    var rightSide = $"{sourceObjectName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
                 }
                 else
                 {
                     if (rootVariable?.Name == "SourceFile")
                     {
-                        var variableName = ToCSharpName(sourceObjectName) + ".SourceFileName";
+                        var variableName = sourceObjectName + ".SourceFileName";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
                     }
                     else
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {ToCSharpName(sourceObjectName)}.{rootVariable?.Name} = value;");
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName.Replace(" ", "_")}.{rootVariable?.Name} = value;");
                     }
                 }
 
