@@ -294,7 +294,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         if(shouldShow)
         {
-            pluginTab.Show(focus:false);
+            pluginTab.Show(select: false);
         }
         else
         {
@@ -307,7 +307,7 @@ public class MainCodeOutputPlugin : PluginBase
             control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
         }
         ///////////////////////early out////////////////////
-        if(!pluginTab.IsFocused)
+        if(!pluginTab.IsSelected)
         {
             return;
         }
@@ -396,6 +396,9 @@ public class MainCodeOutputPlugin : PluginBase
         
         switch(propertyName)
         {
+            case nameof(viewModel.WhichElementsToGenerate):
+                // do nothing
+                break;
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);

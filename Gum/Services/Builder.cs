@@ -1,4 +1,5 @@
 using Gum.Commands;
+using Gum.Controls;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -13,10 +14,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
-using Gum.Controls;
+using System.Linq.Expressions;
 using Gum.Mvvm;
 using Gum.Services.Dialogs;
-using Gum.Wireframe;
 
 namespace Gum.Services;
 
@@ -74,10 +74,12 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
 
         services.AddSingleton<MainPanelControl>();
-        services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelControl>());
+        services.AddSingleton<MainPanelViewModel>();
+        services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelViewModel>());
         
         // other
         services.AddDialogs();
+        services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
     }
     
     private static IServiceCollection AddDialogs(this IServiceCollection services)
@@ -119,5 +121,85 @@ file static class ServiceCollectionHelpers
         }
 
         return services;
+    }
+}
+
+file static class ViewModelFuncFactoryRegistration
+{
+    public static IServiceCollection AddViewModelFuncFactories(this IServiceCollection services, Assembly targetAssembly)
+    {
+        Type[] allTypes = targetAssembly.GetTypes();
+
+        foreach (Type type in allTypes)
+        {
+            if (!type.IsClass || type.IsAbstract)
+                continue;
+
+            foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.Instance))
+            {
+                foreach (ParameterInfo param in ctor.GetParameters())
+                {
+                    if (!IsFuncType(param.ParameterType))
+                        continue;
+
+                    Type[] funcArgs = param.ParameterType.GetGenericArguments();
+                    Type resultType = funcArgs.Last();
+
+                    if (!typeof(ViewModel).IsAssignableFrom(resultType))
+                        continue;
+
+                    RegisterFuncFactory(services, param.ParameterType, funcArgs);
+                }
+            }
+        }
+
+        return services;
+    }
+
+    private static bool IsFuncType(Type t)
+    {
+        if (!t.IsGenericType) return false;
+        Type? def = t.GetGenericTypeDefinition();
+        return def.FullName!.StartsWith("System.Func");
+    }
+
+    private static void RegisterFuncFactory(IServiceCollection services, Type funcType, Type[] typeArgs)
+    {
+        if (services.Any(sd => sd.ServiceType == funcType))
+            return;
+
+        Type resultType = typeArgs.Last();
+        Type[] paramTypes = typeArgs.Take(typeArgs.Length - 1).ToArray();
+
+        ObjectFactory factory = ActivatorUtilities.CreateFactory(resultType, paramTypes);
+
+        var factoryDelegate = BuildFactoryLambda(funcType, factory, paramTypes, resultType);
+        Delegate factoryFunc = (Delegate)factoryDelegate;
+        services.AddTransient(funcType, sp => factoryFunc.DynamicInvoke(sp)!);
+    }
+
+    private static object BuildFactoryLambda(Type funcType, ObjectFactory factory, Type[] paramTypes, Type resultType)
+    {
+        ParameterExpression spParam = Expression.Parameter(typeof(IServiceProvider), "sp");
+
+        ParameterExpression[] delegateParams = paramTypes.Select(Expression.Parameter).ToArray();
+
+        NewArrayExpression argsArray = Expression.NewArrayInit(typeof(object),
+            delegateParams.Select(p => Expression.Convert(p, typeof(object)))
+        );
+
+        MethodCallExpression factoryCall = Expression.Call(
+            Expression.Constant(factory),
+            typeof(ObjectFactory).GetMethod("Invoke")!,
+            spParam,
+            argsArray
+        );
+
+        UnaryExpression castResult = Expression.Convert(factoryCall, resultType);
+
+        LambdaExpression innerLambda = Expression.Lambda(funcType, castResult, delegateParams);
+
+        Type outerFuncType = typeof(Func<,>).MakeGenericType(typeof(IServiceProvider), funcType);
+        return Expression.Lambda(outerFuncType, innerLambda, spParam).Compile();
     }
 }

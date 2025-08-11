@@ -1,4 +1,4 @@
-﻿using Gum.Plugins.BaseClasses;
+using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.Hotkey.Views;
 using System;
 using System.ComponentModel.Composition;
@@ -41,16 +41,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
 
         private void HandleToggleTabVisibility(object sender, EventArgs e)
         {
-            if(!_tabManager.IsTabVisible(pluginTab))
-            {
-                pluginTab.Show();
-            } 
-            else
-            {
-                pluginTab.Hide();
-
-
-            }
+            pluginTab.IsVisible = !pluginTab.IsVisible;
         }
     }
 }

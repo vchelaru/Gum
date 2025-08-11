@@ -633,6 +633,12 @@ public class CodeGenerator
         var bindingBehavior = GetBindingBehavior(container, instanceName);
         var type = exposedVariable.Type;
 
+        if(type == nameof(PositionUnitType))
+        {
+            // at runtime we use the general unit type:
+            type = "global::Gum.Converters.GeneralUnitType";
+        }
+
         var isState = exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category);
 
         var shouldGenerate = true;
