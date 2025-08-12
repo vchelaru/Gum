@@ -205,7 +205,7 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
         if (ControllerDisplayNameTextInstance.ElementSave != null) ControllerDisplayNameTextInstance.AddStatesAndCategoriesRecursivelyToGue(ControllerDisplayNameTextInstance.ElementSave);
         if (ControllerDisplayNameTextInstance.ElementSave != null) ControllerDisplayNameTextInstance.SetInitialState();
         ControllerDisplayNameTextInstance.Name = "ControllerDisplayNameTextInstance";
-        InputDeviceIcon = new Icon();
+        InputDeviceIcon = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         InputDeviceIcon.Name = "InputDeviceIcon";
     }
     protected virtual void AssignParents()

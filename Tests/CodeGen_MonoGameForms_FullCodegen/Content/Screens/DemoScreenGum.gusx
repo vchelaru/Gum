@@ -2266,5 +2266,20 @@
     <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
+  <Instance>
+    <Name>DeletedComponentInstance</Name>
+    <BaseType>DeletedComponent</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Spaced Component Instance</Name>
+    <BaseType>Spaced Component</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>this</Name>
+    <BaseType>interface</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
   <Behaviors />
 </ScreenSave>

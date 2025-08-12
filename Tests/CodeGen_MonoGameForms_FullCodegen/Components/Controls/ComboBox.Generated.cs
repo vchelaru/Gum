@@ -135,9 +135,9 @@ partial class ComboBox : global::MonoGameGum.Forms.Controls.ComboBox
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        ListBoxInstance = new ListBox();
+        ListBoxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ListBox();
         ListBoxInstance.Name = "ListBoxInstance";
-        IconInstance = new Icon();
+        IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
         FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");

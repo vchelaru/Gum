@@ -286,7 +286,7 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        Check = new Icon();
+        Check = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         Check.Name = "Check";
         FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");

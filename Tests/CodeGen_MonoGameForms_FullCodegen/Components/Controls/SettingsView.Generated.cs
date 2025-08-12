@@ -61,15 +61,15 @@ partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
-        FullscreenCheckboxInstance = new CheckBox();
+        FullscreenCheckboxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.CheckBox();
         FullscreenCheckboxInstance.Name = "FullscreenCheckboxInstance";
-        MusicVolumeLabel = new Label();
+        MusicVolumeLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         MusicVolumeLabel.Name = "MusicVolumeLabel";
-        MusicSliderInstance = new Slider();
+        MusicSliderInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         MusicSliderInstance.Name = "MusicSliderInstance";
-        SoundVolumeLabel = new Label();
+        SoundVolumeLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         SoundVolumeLabel.Name = "SoundVolumeLabel";
-        SoundSliderInstance = new Slider();
+        SoundSliderInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         SoundSliderInstance.Name = "SoundSliderInstance";
     }
     protected virtual void AssignParents()

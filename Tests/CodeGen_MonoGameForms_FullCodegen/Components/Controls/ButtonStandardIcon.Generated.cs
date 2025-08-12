@@ -152,7 +152,7 @@ partial class ButtonStandardIcon : global::MonoGameGum.Forms.Controls.Button
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        Icon = new Icon();
+        Icon = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         Icon.Name = "Icon";
         FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");

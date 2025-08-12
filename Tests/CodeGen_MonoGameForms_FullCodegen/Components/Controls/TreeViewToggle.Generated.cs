@@ -149,7 +149,7 @@ partial class TreeViewToggle : MonoGameGum.Forms.Controls.FrameworkElement
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.AddStatesAndCategoriesRecursivelyToGue(NineSliceInstance.ElementSave);
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.SetInitialState();
         NineSliceInstance.Name = "NineSliceInstance";
-        IconInstance = new Icon();
+        IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
     }
     protected virtual void AssignParents()

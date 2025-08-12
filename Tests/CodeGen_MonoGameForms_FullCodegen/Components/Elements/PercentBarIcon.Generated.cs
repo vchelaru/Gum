@@ -116,7 +116,7 @@ partial class PercentBarIcon : MonoGameGum.Forms.Controls.FrameworkElement
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        IconInstance = new Icon();
+        IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
         BarContainer = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         BarContainer.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
@@ -128,9 +128,9 @@ partial class PercentBarIcon : MonoGameGum.Forms.Controls.FrameworkElement
         if (Bar.ElementSave != null) Bar.AddStatesAndCategoriesRecursivelyToGue(Bar.ElementSave);
         if (Bar.ElementSave != null) Bar.SetInitialState();
         Bar.Name = "Bar";
-        CautionLinesInstance = new CautionLines();
+        CautionLinesInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.CautionLines();
         CautionLinesInstance.Name = "CautionLinesInstance";
-        VerticalLinesInstance = new VerticalLines();
+        VerticalLinesInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.VerticalLines();
         VerticalLinesInstance.Name = "VerticalLinesInstance";
     }
     protected virtual void AssignParents()

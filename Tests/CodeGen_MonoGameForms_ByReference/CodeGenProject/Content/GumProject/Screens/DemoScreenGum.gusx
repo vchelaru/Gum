@@ -1761,6 +1761,11 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>Spaced Category</Type>
+      <Name>Spaced CategoryState</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>string</Type>
       <Name>TextBoxInstance.Parent</Name>
       <Value xsi:type="xsd:string">MarginContainer</Value>
@@ -1971,6 +1976,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
+  <Category>
+    <Name>Spaced Category</Name>
+    <State>
+      <Name>Spaced State</Name>
+    </State>
+  </Category>
   <Instance>
     <Name>DemoSettingsMenu</Name>
     <BaseType>Container</BaseType>
@@ -2264,6 +2275,21 @@
   <Instance>
     <Name>LabelInstance1</Name>
     <BaseType>Controls/Label</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>DeletedComponentInstance</Name>
+    <BaseType>DeletedComponent</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Spaced ComponentInstance</Name>
+    <BaseType>Spaced Component</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>interface</Name>
+    <BaseType>interface</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
