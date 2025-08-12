@@ -21,7 +21,7 @@ namespace Gum.Managers
 
         private readonly GuiCommands _guiCommands;
         private readonly ISelectedState _selectedState;
-        private readonly UndoManager _undoManager;
+        private readonly IUndoManager _undoManager;
         private readonly EditCommands _editCommands;
         private readonly IDialogService _dialogService;
         private readonly FileCommands _fileCommands;
@@ -55,7 +55,7 @@ namespace Gum.Managers
 
         public MenuStripManager(GuiCommands guiCommands,
             ISelectedState selectedState,
-            UndoManager undoManager,
+            IUndoManager undoManager,
             EditCommands editCommands,
             IDialogService dialogService,
             FileCommands fileCommands,

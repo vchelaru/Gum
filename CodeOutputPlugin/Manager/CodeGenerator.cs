@@ -1093,13 +1093,20 @@ public class CodeGenerator
         var tabs = context.Tabs;
 
         string prefix = "";
+        var isInstanceStandard = ObjectFinder.Self.GetStandardElement(instance.BaseType) != null;
         if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
         {
-            context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::SkiaGum.GueDeriving.{GetClassNameForType(instance, visualApi, context)}();");
+            if(isInstanceStandard)
+            {
+                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::SkiaGum.GueDeriving.{GetClassNameForType(instance, visualApi, context)}();");
+            }
+            else
+            {
+                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance, visualApi, context, isFullyQualified:true)}();");
+            }
         }
         else
         {
-            var isInstanceStandard = ObjectFinder.Self.GetStandardElement(instance.BaseType) != null;
             if(isInstanceStandard)
             {
                 context.StringBuilder.AppendLine($"{tabs}{instanceName} = new global::MonoGameGum.GueDeriving.{GetClassNameForType(instance, visualApi, context)}();");
@@ -1107,7 +1114,7 @@ public class CodeGenerator
             else
             {
                 // todo - eventually we may want to prefix the expected namespace?
-                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance, visualApi, context)}();");
+                context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance, visualApi, context, isFullyQualified:true)}();");
             }
 
         }
@@ -4138,7 +4145,7 @@ public class CodeGenerator
 
                 if (contextInstance != null)
                 {
-
+                    var standardizedParentName = ToCSharpName(parentName);
                     if (IsTabControl(parentInstance))
                     {
                         var stringBuilder = new StringBuilder();
@@ -4170,11 +4177,11 @@ public class CodeGenerator
                     }
                     else if (hasContent)
                     {
-                        return $"{parentName}.Content = {context.GetInstanceNameInCode(contextInstance)};";
+                        return $"{standardizedParentName}.Content = {context.GetInstanceNameInCode(contextInstance)};";
                     }
                     else
                     {
-                        return $"{parentName}.Children.Add({context.GetInstanceNameInCode(contextInstance)});";
+                        return $"{standardizedParentName}.Children.Add({context.GetInstanceNameInCode(contextInstance)});";
                     }
                 }
 
@@ -4513,7 +4520,7 @@ public class CodeGenerator
         {
             var owner = string.IsNullOrEmpty(variable.Value as string)
                 ? "this"
-                : variable.Value;
+                : ToCSharpName((string)variable.Value);
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {

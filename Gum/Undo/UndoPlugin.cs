@@ -12,11 +12,11 @@ namespace Gum.Undo;
 public class UndoPlugin : InternalPlugin
 {
     private readonly ISelectedState _selectedState;
-    private readonly UndoManager _undoManager;
+    private readonly IUndoManager _undoManager;
     public UndoPlugin() 
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
     }
 
     public override void StartUp()

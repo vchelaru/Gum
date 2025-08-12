@@ -14,15 +14,15 @@ public class AddStateDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Message => "Enter new state name";
     
     private readonly ISelectedState _selectedState;
-    private readonly NameVerifier _nameVerifier;
-    private readonly UndoManager _undoManager;
-    private readonly ElementCommands _elementCommands;
+    private readonly INameVerifier _nameVerifier;
+    private readonly IUndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
     
     public AddStateDialogViewModel(
         ISelectedState selectedState,
-        NameVerifier nameVerifier, 
-        UndoManager undoManager, 
-        ElementCommands elementCommands)
+        INameVerifier nameVerifier, 
+        IUndoManager undoManager, 
+        IElementCommands elementCommands)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

@@ -96,7 +96,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly LocalizationManager _localizationManager;
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
-    private readonly ElementCommands _elementCommands;
+    private readonly IElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private BackgroundSpriteService _backgroundSpriteService;
     private readonly ISelectedState _selectedState;
@@ -125,12 +125,12 @@ internal class MainEditorTabPlugin : InternalPlugin
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
-        UndoManager undoManager = Locator.GetRequiredService<UndoManager>();
+        IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
         HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService, hotkeyManager);
         _screenshotService = new ScreenshotService(_selectionManager);
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();

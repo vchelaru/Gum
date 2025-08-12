@@ -5,8 +5,8 @@
   <State>
     <Name>Default</Name>
     <Variable>
-      <Type>Spaced State Category</Type>
-      <Name>Spaced State CategoryState</Name>
+      <Type>Category1</Type>
+      <Name>Category1State</Name>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -32,9 +32,9 @@
     </Variable>
   </State>
   <Category>
-    <Name>Spaced State Category</Name>
+    <Name>Category1</Name>
     <State>
-      <Name>Spaced State</Name>
+      <Name>State with space</Name>
     </State>
   </Category>
   <Behaviors />

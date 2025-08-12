@@ -21,12 +21,12 @@ public class DeleteObjectPlugin : InternalPlugin
     private GroupBox deleteGroupBox;
     private RadioButton deleteJustParent;
     private RadioButton deleteAllContainedObjects;
-    private readonly ElementCommands _elementCommands;
+    private readonly IElementCommands _elementCommands;
     private readonly WireframeCommands _wireframeCommands;
 
     public DeleteObjectPlugin()
     {
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
