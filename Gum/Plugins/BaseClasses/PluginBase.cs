@@ -354,6 +354,11 @@ namespace Gum.Plugins.BaseClasses
             return _tabManager.AddControl(control, tabName, tabLocation);
         }
 
+        public void RemoveTab(PluginTab tab)
+        {
+            _tabManager.RemovePlugin(tab);
+        }
+
         #endregion
 
         #region Event calling
