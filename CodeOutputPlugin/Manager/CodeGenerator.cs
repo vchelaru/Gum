@@ -215,7 +215,7 @@ public class CodeGenerator
     public static int CanvasHeight { get; set; } = 854;
 
     public static LocalizationManager LocalizationManager { get; set; }
-    public static NameVerifier NameVerifier { get; set; }
+    public static INameVerifier NameVerifier { get; set; }
 
     /// <summary>
     /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.

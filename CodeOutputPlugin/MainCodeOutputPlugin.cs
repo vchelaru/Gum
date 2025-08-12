@@ -42,7 +42,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly ISelectedState _selectedState;
     private readonly RenameService _renameService;
     private readonly LocalizationManager _localizationManager;
-    private readonly NameVerifier _nameVerifier;
+    private readonly INameVerifier _nameVerifier;
     private readonly IGuiCommands _guiCommands;
     private readonly CodeGenerator _codeGenerator;
     private readonly IDialogService _dialogService;
@@ -70,7 +70,7 @@ public class MainCodeOutputPlugin : PluginBase
         _codeGenerator = new CodeGenerator();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
-        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService);
         _renameService = new RenameService(_codeGenerationService);
