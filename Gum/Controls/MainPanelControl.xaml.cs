@@ -112,8 +112,8 @@ public class PluginTabHeaderTemplateSelector : DataTemplateSelector
     public DataTemplate? CustomHeaderTemplate { get; set; }
     public DataTemplate? TitleHeaderTemplate { get; set; }
 
-    public override DataTemplate SelectTemplate(object item, DependencyObject container)
+    public override DataTemplate SelectTemplate(object? item, DependencyObject container)
     {
-        return item != null ? CustomHeaderTemplate! : TitleHeaderTemplate!;
+        return item is PluginTab { CustomHeaderContent: not null } ? CustomHeaderTemplate! : TitleHeaderTemplate!;
     }
 }

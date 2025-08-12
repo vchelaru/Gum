@@ -14,13 +14,12 @@
             
             <!-- When CustomHeaderContent exists, just present it -->
             <DataTemplate x:Key="TabCustomHeaderTemplate">
-                <ContentPresenter Content="{Binding}" />
+                <ContentPresenter Content="{Binding CustomHeaderContent}" />
             </DataTemplate>
 
             <!-- Fallback to Title on the TabItem's DataContext -->
             <DataTemplate x:Key="TabTitleHeaderTemplate">
-                <TextBlock Text="{Binding DataContext.Title,
-                                  RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                <TextBlock Text="{Binding Title}"/>
             </DataTemplate>
 
             <local:PluginTabHeaderTemplateSelector
@@ -29,7 +28,6 @@
                 TitleHeaderTemplate="{StaticResource TabTitleHeaderTemplate}" />
             
             <Style x:Key="PluginTabStyle" TargetType="{x:Type TabItem}" BasedOn="{StaticResource {x:Type TabItem}}">
-                <Setter Property="Header" Value="{Binding CustomHeaderContent}"/>
                 <Setter Property="HeaderTemplateSelector" Value="{StaticResource PluginTabHeaderSelector}"/>
                 
                 <Setter Property="ContentTemplate">
