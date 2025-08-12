@@ -3230,19 +3230,19 @@ public class CodeGenerator
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{enumDeclarator} m{categoryName}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"{enumDeclarator} private _{category.Name}State;");
 
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumDeclarator} {categoryName}State");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => m{categoryName}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => private _{category.Name}State;");
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"m{categoryName}State = value;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private _{category.Name}State = value;");
                 CodeGenerationContext context = new CodeGenerationContext();
                 context.Element = element;
                 context.TabCount = tabCount;
