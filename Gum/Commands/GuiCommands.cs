@@ -31,7 +31,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
-public class GuiCommands
+public class GuiCommands : IGuiCommands
 {
     #region Fields/Properties
 
@@ -50,12 +50,12 @@ public class GuiCommands
         _lazySelectedState = lazySelectedState;
     }
 
-    internal void Initialize(MainPanelControl mainPanelControl)
+    public void Initialize(MainPanelControl mainPanelControl)
     {
         this.mainPanelControl = mainPanelControl;
     }
 
-    internal void BroadcastRefreshBehaviorView()
+    public void BroadcastRefreshBehaviorView()
     {
         PluginManager.Self.RefreshBehaviorView(
             _selectedState.SelectedElement);
@@ -63,7 +63,7 @@ public class GuiCommands
 
     #region Refresh Commands
 
-    internal void RefreshStateTreeView()
+    public void RefreshStateTreeView()
     {
         PluginManager.Self.RefreshStateTreeView();
     }
@@ -196,7 +196,7 @@ public class GuiCommands
 
     #endregion
 
-    internal void FocusSearch()
+    public void FocusSearch()
     {
         PluginManager.Self.FocusSearch();
     }

@@ -47,15 +47,15 @@ public enum VariableEditMode
 
 public class EditVariableService : IEditVariableService
 {
-    private readonly RenameLogic _renameLogic;
+    private readonly IRenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
 
-    public EditVariableService(RenameLogic renameLogic, 
+    public EditVariableService(IRenameLogic renameLogic, 
         IDialogService dialogService, 
-        GuiCommands guiCommands,
-        FileCommands fileCommands)
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands)
     {
         _renameLogic = renameLogic;
         _dialogService = dialogService;

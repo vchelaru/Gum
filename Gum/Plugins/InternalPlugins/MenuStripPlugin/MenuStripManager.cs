@@ -19,12 +19,12 @@ namespace Gum.Managers
     {
         #region Fields
 
-        private readonly GuiCommands _guiCommands;
+        private readonly IGuiCommands _guiCommands;
         private readonly ISelectedState _selectedState;
         private readonly IUndoManager _undoManager;
         private readonly EditCommands _editCommands;
         private readonly IDialogService _dialogService;
-        private readonly FileCommands _fileCommands;
+        private readonly IFileCommands _fileCommands;
         private readonly ProjectCommands _projectCommands;
 
         private MenuStrip _menuStrip;
@@ -53,12 +53,12 @@ namespace Gum.Managers
 
         #endregion
 
-        public MenuStripManager(GuiCommands guiCommands,
+        public MenuStripManager(IGuiCommands guiCommands,
             ISelectedState selectedState,
             IUndoManager undoManager,
             EditCommands editCommands,
             IDialogService dialogService,
-            FileCommands fileCommands,
+            IFileCommands fileCommands,
             ProjectCommands projectCommands)
         {
             _guiCommands = guiCommands;

@@ -20,9 +20,9 @@ namespace Gum.Managers;
 
 public class FontManager 
 {
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
 
-    public FontManager(GuiCommands guiCommands)
+    public FontManager(IGuiCommands guiCommands)
     {
         _guiCommands = guiCommands;
     }

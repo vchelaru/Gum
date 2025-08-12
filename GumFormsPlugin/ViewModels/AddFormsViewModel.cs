@@ -24,7 +24,7 @@ public class AddFormsViewModel : ViewModel
 
     private readonly FormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
-    private readonly FileCommands _fileCommands;
+    private readonly IFileCommands _fileCommands;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -34,7 +34,7 @@ public class AddFormsViewModel : ViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService, FileCommands fileCommands)
+    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService, IFileCommands fileCommands)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;

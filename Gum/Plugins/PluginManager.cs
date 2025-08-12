@@ -23,6 +23,8 @@ using Gum.Services;
 using RenderingLibrary;
 using System.Numerics;
 using Gum.Commands;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Undo;
 
 namespace Gum.Plugins
 {
@@ -58,7 +60,8 @@ namespace Gum.Plugins
         static List<PluginManager> mInstances = new List<PluginManager>();
         private bool mGlobal;
 
-        private readonly GuiCommands _guiCommands;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IMessenger _messenger;
 
         public static string PluginFolder
         {
@@ -652,7 +655,10 @@ namespace Gum.Plugins
 
         public PluginManager()
         {
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _messenger = Locator.GetRequiredService<IMessenger>();
+
+            _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
         }
 
 

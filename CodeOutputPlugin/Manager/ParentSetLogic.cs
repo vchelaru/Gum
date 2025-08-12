@@ -19,7 +19,7 @@ namespace CodeOutputPlugin.Manager
     {
         private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
         private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
-        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
+        private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
         
         public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {

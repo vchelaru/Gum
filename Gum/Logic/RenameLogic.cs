@@ -64,21 +64,21 @@ public class VariableChangeResponse
 
 #endregion
 
-public class RenameLogic
+public class RenameLogic : IRenameLogic
 {
     static bool isRenamingXmlFile;
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
 
     public RenameLogic(ISelectedState selectedState, 
         INameVerifier nameVerifier, 
         IDialogService dialogService, 
-        GuiCommands guiCommands,
-        FileCommands fileCommands)
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

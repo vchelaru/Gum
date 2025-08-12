@@ -92,7 +92,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
 
     readonly ScrollbarService _scrollbarService;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly LocalizationManager _localizationManager;
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
@@ -101,7 +101,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private BackgroundSpriteService _backgroundSpriteService;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly SetVariableLogic _setVariableLogic;
     private DragDropManager _dragDropManager;
@@ -122,7 +122,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         
         _scrollbarService = new ScrollbarService();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
@@ -135,7 +135,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     }
@@ -305,6 +305,9 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleAfterUndo()
     {
         _selectionManager.Refresh();
+
+        // reset everything. This is slow, but is easy
+        WireframeObjectManager.Self.RefreshAll(true);
     }
 
     private void HandleIpsoSelected(IPositionedSizedObject ipso)

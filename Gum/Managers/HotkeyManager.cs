@@ -182,20 +182,20 @@ public class HotkeyManager
     public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
     private readonly CopyPasteLogic _copyPasteLogic;
-    private readonly Commands.GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
-    private readonly FileCommands _fileCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
     
-    public HotkeyManager(GuiCommands guiCommands, 
+    public HotkeyManager(IGuiCommands guiCommands, 
         ISelectedState selectedState, 
         IElementCommands elementCommands,
         IDialogService dialogService,
-        FileCommands fileCommands,
+        IFileCommands fileCommands,
         SetVariableLogic setVariableLogic)
     {
         _copyPasteLogic = CopyPasteLogic.Self;
