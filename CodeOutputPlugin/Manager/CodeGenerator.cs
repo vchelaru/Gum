@@ -1,35 +1,18 @@
 using CodeOutputPlugin.Models;
-using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.ToolStates;
-using GumDataTypes.Variables;
-using GumRuntime;
-using Newtonsoft.Json.Linq;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
-using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using System.Management.Instrumentation;
-using System.Net.Mime;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Contexts;
-using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
 using ToolsUtilities;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace CodeOutputPlugin.Manager;
 
@@ -226,6 +209,7 @@ public class CodeGenerator
     public static int CanvasHeight { get; set; } = 854;
 
     public static LocalizationManager LocalizationManager { get; set; }
+    public static NameVerifier NameVerifier { get; set; }
 
     /// <summary>
     /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
@@ -4994,6 +4978,10 @@ public class CodeGenerator
         if (value.Length > 0 && char.IsDigit(value[0]))
         {
             value = "_" + value;
+        }
+        else if (NameVerifier.IsCSharpReservedKeyword(value))
+        {
+            value = "@" + value;
         }
         
         return value.Replace(" ", "_");
