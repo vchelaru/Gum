@@ -121,7 +121,7 @@ public class UndoComparison
         if (UnexposedVariables?.Count > 0)
         {
             if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
-            toReturn += $"Unexposed variables: {string.Join(", ", UnexposedVariables.Select(item => item.Name))}";
+            toReturn += $"Un-exposed variables: {string.Join(", ", UnexposedVariables.Select(item => item.Name))}";
         }
         
         return toReturn;
