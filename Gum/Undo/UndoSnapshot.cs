@@ -28,6 +28,8 @@ public class UndoComparison
     public List<StateSave> RemovedStates;
 
     public List<StateSave> ModifiedStates;
+    public List<VariableSave> ExposedVariables;
+    public List<VariableSave> UnexposedVariables;
 
     public override string ToString()
     {
@@ -111,6 +113,17 @@ public class UndoComparison
             }
 
         }
+        if (ExposedVariables?.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+            toReturn += $"Exposed variables: {string.Join(", ", ExposedVariables.Select(item => item.Name))}";
+        }
+        if (UnexposedVariables?.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+            toReturn += $"Unexposed variables: {string.Join(", ", UnexposedVariables.Select(item => item.Name))}";
+        }
+        
         return toReturn;
     }
 }
@@ -374,7 +387,7 @@ public class UndoSnapshot
         IEnumerable<VariableSave> removedVariables = currentState.Variables.Where(item => !newVariableNameHash.Contains(item.Name));
         IEnumerable<VariableListSave> addedVariableLists = stateToApply.VariableLists.Where(item => !oldVariableNameHash.Contains(item.Name));
         IEnumerable<VariableListSave> removedVariableLists = currentState.VariableLists.Where(item => !newVariableNameHash.Contains(item.Name));
-
+        
         var modifiedState = new StateSave();
         modifiedState.Name = stateToApply.Name ?? "<default>";
         snapshot.ModifiedStates.Add(modifiedState);
@@ -402,11 +415,28 @@ public class UndoSnapshot
             var matchingOldVariable = currentState.Variables.FirstOrDefault(otherVariable => otherVariable.Name == newVariable.Name);
             if (matchingOldVariable != null)
             {
-                var areEqual = (newVariable.Value == null && matchingOldVariable.Value == null) ||
+                bool areEqual = (newVariable.Value == null && matchingOldVariable.Value == null) ||
                     (newVariable.Value != null && newVariable.Value.Equals(matchingOldVariable.Value));
 
-                areEqual = areEqual &&  newVariable.ExposedAsName == matchingOldVariable.ExposedAsName;
-
+                bool isNewlyExposed = matchingOldVariable.ExposedAsName == null &&
+                                      newVariable.ExposedAsName != null;
+                bool isNewlyUnexposed = newVariable.ExposedAsName == null &&
+                                        matchingOldVariable.ExposedAsName != null;
+                
+                if (isNewlyExposed)
+                {
+                    snapshot.ExposedVariables ??= [];
+                    snapshot.ExposedVariables.Add(newVariable);
+                    continue;
+                }
+                if (isNewlyUnexposed)
+                {
+                    snapshot.UnexposedVariables ??= [];
+                    snapshot.UnexposedVariables.Add(newVariable);
+                    continue;
+                }
+                
+                areEqual = areEqual && newVariable.ExposedAsName == matchingOldVariable.ExposedAsName;
                 if (!areEqual)
                 {
                     modifiedState.Variables.Add(newVariable);
