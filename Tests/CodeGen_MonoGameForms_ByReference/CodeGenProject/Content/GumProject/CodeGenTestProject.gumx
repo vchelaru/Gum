@@ -24,6 +24,11 @@
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
+  <ScreenReference>
+    <Name>Spaced Screen</Name>
+    <ElementType>Screen</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ScreenReference>
   <ComponentReference>
     <Name>Controls/ButtonClose</Name>
     <ElementType>Component</ElementType>
@@ -250,7 +255,7 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
-    <Name>ExposedVariableComponent</Name>
+    <Name>Spaced Component</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>

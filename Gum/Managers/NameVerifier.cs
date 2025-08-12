@@ -52,15 +52,15 @@ public class NameVerifier : INameVerifier
     private readonly StandardElementsManager _standardElementsManager;
     #endregion
     #region Folder
-    public bool IsFolderNameValid(string folderName, out string whyNotValid)
-    {
-        IsNameValidCommon(folderName, out whyNotValid);
-        return string.IsNullOrEmpty(whyNotValid);
-    }
     #endregion
     public NameVerifier()
     {
         _standardElementsManager = StandardElementsManager.Self;
+    }
+    public bool IsFolderNameValid(string folderName, out string whyNotValid)
+    {
+        IsNameValidCommon(folderName, out whyNotValid);
+        return string.IsNullOrEmpty(whyNotValid);
     }
     public bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid)
     {
@@ -83,29 +83,39 @@ public class NameVerifier : INameVerifier
     {
         IsNameValidCommon(name, out whyNotValid);
 
-
-        string standardizedName = Standardize(name);
-        string? existingName = null;
-        StateSaveCategory? existing = categoryContainer.GetStateSaveCategoryRecursively(item =>
+        if(string.IsNullOrEmpty(whyNotValid))
         {
-            if (Standardize(item.Name) == standardizedName)
+            if(name.Contains(" "))
             {
-                existingName = item.Name;
-                return true;
+                whyNotValid = "Category names cannot contain spaces";
             }
+        }
 
-            return false;
-        });
-
-        if (existingName != null)
+        if(string.IsNullOrEmpty(whyNotValid))
         {
-            whyNotValid = $"A category with the name {existingName} is already defined in {categoryContainer.Name}";
+            string standardizedName = Standardize(name);
+            string? existingName = null;
+            StateSaveCategory? existing = categoryContainer.GetStateSaveCategoryRecursively(item =>
+            {
+                if (Standardize(item.Name) == standardizedName)
+                {
+                    existingName = item.Name;
+                    return true;
+                }
+
+                return false;
+            });
+
+            if (existingName != null)
+            {
+                whyNotValid = $"A category with the name {existingName} is already defined in {categoryContainer.Name}";
+            }
         }
         
 
         return string.IsNullOrEmpty(whyNotValid);
     }
-    internal bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
+    public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
     {
         IsNameValidCommon(name, out whyNotValid);
         if(string.IsNullOrEmpty(whyNotValid))
@@ -154,6 +164,15 @@ public class NameVerifier : INameVerifier
     {
         whyNotValid = null;
         IsNameValidCommon(variableName, out whyNotValid);
+
+        // variables should not allow spaces because previous versions of Gum used to have variables with spaces
+        // and that caused confusion when creating variable referencs. Therefore, Gum strips spaces from names. We 
+        // should prevent spaces from being added here:
+        if(string.IsNullOrEmpty(whyNotValid) && variableName.Contains(" "))
+        {
+            whyNotValid = "Variable names cannot contain spaces";
+        }
+
         if (string.IsNullOrEmpty(whyNotValid) && elementSave != null)
         {
             IsNameAlreadyUsed(variableName, variableSave, elementSave, out whyNotValid);

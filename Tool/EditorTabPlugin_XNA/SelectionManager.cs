@@ -74,7 +74,7 @@ public class SelectionManager
 
     private readonly ISelectedState _selectedState;
     private readonly EditingManager _editingManager;
-    private readonly UndoManager _undoManager;
+    private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
 
@@ -188,7 +188,7 @@ public class SelectionManager
     #region Methods
 
     internal SelectionManager(ISelectedState selectedState, 
-        UndoManager undoManager, 
+        IUndoManager undoManager, 
         EditingManager editingManager, 
         IDialogService dialogService,
         HotkeyManager hotkeyManager)

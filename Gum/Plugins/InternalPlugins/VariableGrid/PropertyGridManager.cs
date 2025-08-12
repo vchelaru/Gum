@@ -27,7 +27,7 @@ public partial class PropertyGridManager
 
     private readonly ISelectedState _selectedState;
     private readonly IExposeVariableService _exposeVariableService;
-    private readonly UndoManager _undoManager;
+    private readonly IUndoManager _undoManager;
     private readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
     private readonly ObjectFinder _objectFinder;
@@ -107,7 +107,7 @@ public partial class PropertyGridManager
         _exposeVariableService =
             Locator.GetRequiredService<IExposeVariableService>();
         _undoManager =
-            Locator.GetRequiredService<UndoManager>();
+            Locator.GetRequiredService<IUndoManager>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _objectFinder = ObjectFinder.Self;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();

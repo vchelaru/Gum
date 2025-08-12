@@ -25,8 +25,8 @@ namespace Gum.Managers
     {
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
-        private readonly ElementCommands _elementCommands;
-        private readonly UndoManager _undoManager;
+        private readonly IElementCommands _elementCommands;
+        private readonly IUndoManager _undoManager;
         private readonly IDialogService _dialogService;
         private readonly GuiCommands _guiCommands;
         private readonly FileCommands _fileCommands;
@@ -35,9 +35,8 @@ namespace Gum.Managers
         {
             _projectCommands = Locator.GetRequiredService<ProjectCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _elementCommands = Locator.GetRequiredService<ElementCommands>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
-            _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _undoManager = Locator.GetRequiredService<IUndoManager>();
+            _elementCommands = Locator.GetRequiredService<IElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _fileCommands = Locator.GetRequiredService<FileCommands>();

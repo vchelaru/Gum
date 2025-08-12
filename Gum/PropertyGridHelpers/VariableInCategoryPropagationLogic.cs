@@ -13,13 +13,13 @@ namespace Gum.PropertyGridHelpers
 {
     public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic>
     {
-        private readonly UndoManager _undoManager;
+        private readonly IUndoManager _undoManager;
         private readonly GuiCommands _guiCommands;
         private readonly FileCommands _fileCommands;
         
         public VariableInCategoryPropagationLogic()
         {
-            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _undoManager = Locator.GetRequiredService<IUndoManager>();
             _guiCommands = Locator.GetRequiredService<GuiCommands>();
             _fileCommands = Locator.GetRequiredService<FileCommands>();
         }

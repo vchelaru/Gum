@@ -5,6 +5,7 @@ using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using CodeGen_MonoGame_ByReference.Components.Controls;
 using CodeGen_MonoGame_ByReference.Components.Elements;
+using CodeGen_MonoGame_ByReference.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -82,6 +83,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
     public WindowStandardRuntime WindowStandardInstance { get; protected set; }
     public LabelRuntime LabelInstance1 { get; protected set; }
     // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
+    public Spaced_ComponentRuntime Spaced_Component_Instance { get; protected set; }
 
     public DemoScreenGumRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
@@ -155,6 +157,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
         DialogBoxInstance = this.GetGraphicalUiElementByName("DialogBoxInstance") as CodeGen_MonoGame_ByReference.Components.Controls.DialogBoxRuntime;
         WindowStandardInstance = this.GetGraphicalUiElementByName("WindowStandardInstance") as CodeGen_MonoGame_ByReference.Components.Controls.WindowStandardRuntime;
         LabelInstance1 = this.GetGraphicalUiElementByName("LabelInstance1") as CodeGen_MonoGame_ByReference.Components.Controls.LabelRuntime;
+        Spaced_Component_Instance = this.GetGraphicalUiElementByName("Spaced Component Instance") as Spaced_ComponentRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

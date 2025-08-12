@@ -24,7 +24,7 @@ public class StateTreeViewRightClickService
 {
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
-    private readonly ElementCommands _elementCommands;
+    private readonly IElementCommands _elementCommands;
     private readonly EditCommands _editCommands;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
@@ -33,7 +33,7 @@ public class StateTreeViewRightClickService
     System.Windows.Controls.ContextMenu _menuStrip;
 
     public StateTreeViewRightClickService(ISelectedState selectedState, 
-        ElementCommands elementCommands, 
+        IElementCommands elementCommands, 
         EditCommands editCommands,
         IDialogService dialogService,
         GuiCommands guiCommands,

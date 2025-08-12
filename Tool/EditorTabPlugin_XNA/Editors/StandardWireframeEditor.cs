@@ -45,7 +45,7 @@ public class StandardWireframeEditor : WireframeEditor
     DimensionDisplay heightDimensionDisplay;
 
     bool mHasGrabbed = false;
-    private readonly ElementCommands _elementCommands;
+    private readonly IElementCommands _elementCommands;
     private readonly SelectionManager _selectionManager;
 
     public InputLibrary.Cursor Cursor
@@ -85,7 +85,7 @@ public class StandardWireframeEditor : WireframeEditor
               selectionManager,
               selectedState)
     {
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _selectionManager = selectionManager;
 
         mResizeHandles = new ResizeHandles(layer, lineColor);

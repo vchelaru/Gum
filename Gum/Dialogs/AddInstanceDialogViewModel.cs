@@ -15,8 +15,8 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Message => "Enter new object name";
 
     private readonly ISelectedState _selectedState;
-    private readonly NameVerifier _nameVerifier;
-    private readonly ElementCommands _elementCommands;
+    private readonly INameVerifier _nameVerifier;
+    private readonly IElementCommands _elementCommands;
     private static readonly SetVariableLogic _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
     
     public bool ParentInstance { get; set; }
@@ -24,8 +24,8 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 
     public AddInstanceDialogViewModel(
         ISelectedState selectedState,
-        NameVerifier nameVerifier, 
-        ElementCommands elementCommands)
+        INameVerifier nameVerifier, 
+        IElementCommands elementCommands)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

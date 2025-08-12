@@ -97,8 +97,6 @@ public class UndoManager : IUndoManager
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
 
-    static UndoManager mSelf;
-
     UndoSnapshot recordedSnapshot;
     
     public UndoSnapshot RecordedSnapshot => recordedSnapshot;

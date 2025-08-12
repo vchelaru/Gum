@@ -41,7 +41,7 @@ namespace Gum.PropertyGridHelpers
         static PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
         private readonly SubtextLogic _subtextLogic;
         private readonly ISelectedState _selectedState;
-        private readonly UndoManager _undoManager;
+        private readonly IUndoManager _undoManager;
 
         #endregion
 
@@ -49,7 +49,7 @@ namespace Gum.PropertyGridHelpers
         {
             _subtextLogic = subtextLogic;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _undoManager = Locator.GetRequiredService<IUndoManager>();
         }
 
         private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
