@@ -42,7 +42,7 @@ namespace Gum
     {
         #region Fields/Properties
 
-        private readonly GuiCommands _guiCommands;
+        private readonly IGuiCommands _guiCommands;
         
         private System.Windows.Forms.Timer FileWatchTimer;
 
@@ -51,7 +51,7 @@ namespace Gum
         #endregion
 
         public MainWindow(MainPanelControl mainPanelControl,
-            GuiCommands guiCommands,
+            IGuiCommands guiCommands,
             MenuStripManager menuStripManager,
             IMessenger messenger
             )

@@ -129,7 +129,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public WindowStandard WindowStandardInstance { get; protected set; }
     public Label LabelInstance1 { get; protected set; }
     // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
-    public Spaced_Component Spaced_ComponentInstance { get; protected set; }
+    public Spaced_Component Spaced_Component_Instance { get; protected set; }
     public @interface @interface { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)
@@ -203,7 +203,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         DialogBoxInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DialogBox>(this.Visual,"DialogBoxInstance");
         WindowStandardInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<WindowStandard>(this.Visual,"WindowStandardInstance");
         LabelInstance1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance1");
-        Spaced_ComponentInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced ComponentInstance");
+        Spaced_Component_Instance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced_Component_Instance");
         @interface = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<@interface>(this.Visual,"interface");
         CustomInitialize();
     }

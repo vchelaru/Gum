@@ -12,16 +12,16 @@ namespace Gum.Logic
     public class ReorderLogic : Singleton<ReorderLogic>
     {
         private readonly ISelectedState _selectedState;
-        private readonly UndoManager _undoManager;
-        private readonly GuiCommands _guiCommands;
-        private readonly FileCommands _fileCommands;
+        private readonly IUndoManager _undoManager;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IFileCommands _fileCommands;
 
         public ReorderLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _undoManager = Locator.GetRequiredService<IUndoManager>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands = Locator.GetRequiredService<IFileCommands>();
         }
         
         public void MoveSelectedInstanceForward()

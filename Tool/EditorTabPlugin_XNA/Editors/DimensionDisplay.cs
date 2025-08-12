@@ -37,14 +37,14 @@ namespace Gum.Wireframe.Editors
 
         ToolFontService _toolFontService;
 
-        private readonly GuiCommands _guiCommands;
+        private readonly IGuiCommands _guiCommands;
 
         #endregion
 
         public DimensionDisplay()
         {
             _toolFontService = ToolFontService.Self;
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         }
 
         public void AddToManagers(SystemManagers systemManagers, Layer layer)

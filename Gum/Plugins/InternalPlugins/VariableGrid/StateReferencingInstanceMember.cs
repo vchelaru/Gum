@@ -35,10 +35,10 @@ namespace Gum.PropertyGridHelpers
 
         ObjectFinder _objectFinder;
         private readonly HotkeyManager _hotkeyManager;
-        private readonly UndoManager _undoManager;
+        private readonly IUndoManager _undoManager;
         private readonly IDeleteVariableService _deleteVariableLogic;
-        private readonly GuiCommands _guiCommands;
-        private readonly FileCommands _fileCommands;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IFileCommands _fileCommands;
         private readonly IEditVariableService _editVariablesService;
         private readonly IExposeVariableService _exposeVariableService;
         private readonly ISelectedState _selectedState;
@@ -248,7 +248,7 @@ namespace Gum.PropertyGridHelpers
             StateSaveCategory stateSaveCategory,
             string variableName, InstanceSave instanceSave,
             IStateContainer stateListCategoryContainer,
-            UndoManager undoManager) :
+            IUndoManager undoManager) :
             base(variableName, stateSave)
         {
             _editVariablesService = Locator.GetRequiredService<IEditVariableService>();
@@ -258,8 +258,8 @@ namespace Gum.PropertyGridHelpers
             _deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
             _undoManager = undoManager;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands =  Locator.GetRequiredService<FileCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands =  Locator.GetRequiredService<IFileCommands>();
             _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;

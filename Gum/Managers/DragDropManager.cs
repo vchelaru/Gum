@@ -47,12 +47,12 @@ public class DragDropManager
     ITreeNode? mDraggedItem;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
-    private readonly ElementCommands _elementCommands;
-    private readonly RenameLogic _renameLogic;
-    private readonly UndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
+    private readonly IRenameLogic _renameLogic;
+    private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
 
     #endregion
@@ -69,12 +69,12 @@ public class DragDropManager
 
     public DragDropManager(CircularReferenceManager circularReferenceManager,
         ISelectedState selectedState,
-        ElementCommands elementCommands,
-        RenameLogic renameLogic,
-        UndoManager undoManager,
+        IElementCommands elementCommands,
+        IRenameLogic renameLogic,
+        IUndoManager undoManager,
         IDialogService dialogService,
-        GuiCommands guiCommands,
-        FileCommands fileCommands,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
         SetVariableLogic setVariableLogic)
     {
         _circularReferenceManager = circularReferenceManager;

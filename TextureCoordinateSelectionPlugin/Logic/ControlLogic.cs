@@ -34,9 +34,9 @@ public enum RefreshType
 public class ControlLogic : Singleton<ControlLogic>
 {
     private readonly ISelectedState _selectedState;
-    private readonly UndoManager _undoManager;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IUndoManager _undoManager;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
     
@@ -74,9 +74,9 @@ public class ControlLogic : Singleton<ControlLogic>
     public ControlLogic()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
     }

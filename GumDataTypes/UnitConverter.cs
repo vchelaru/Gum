@@ -6,6 +6,11 @@ using Gum.Managers;
 
 namespace Gum.Managers
 {
+    /// <summary>
+    /// Enumeration used for positioning which differentiates between
+    /// vertical and horizontal values. These are not used by runtimes,
+    /// only used in the tool to be explicit.
+    /// </summary>
     public enum PositionUnitType
     {
         PixelsFromLeft,

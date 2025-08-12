@@ -31,21 +31,21 @@ public interface IExposeVariableService
 
 internal class ExposeVariableService : IExposeVariableService
 {
-    private readonly UndoManager _undoManager;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
-    private readonly RenameLogic _renameLogic;
+    private readonly IUndoManager _undoManager;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly IRenameLogic _renameLogic;
     private readonly ISelectedState _selectedState;
-    private readonly NameVerifier _nameVerifier;
+    private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
 
     public ExposeVariableService(
-        UndoManager undoManager,
-        GuiCommands guiCommands,
-        FileCommands fileCommands,
-        RenameLogic renameLogic,
+        IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        IRenameLogic renameLogic,
         ISelectedState selectedState,
-        NameVerifier nameVerifier,
+        INameVerifier nameVerifier,
         IDialogService dialogService)
     {
         _undoManager = undoManager;

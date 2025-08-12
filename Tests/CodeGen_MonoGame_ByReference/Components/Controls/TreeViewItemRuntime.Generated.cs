@@ -38,8 +38,8 @@ partial class TreeViewItemRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        ToggleButtonInstance = this.GetGraphicalUiElementByName("ToggleButtonInstance") as TreeViewToggleRuntime;
-        ListBoxItemInstance = this.GetGraphicalUiElementByName("ListBoxItemInstance") as ListBoxItemRuntime;
+        ToggleButtonInstance = this.GetGraphicalUiElementByName("ToggleButtonInstance") as CodeGen_MonoGame_ByReference.Components.Controls.TreeViewToggleRuntime;
+        ListBoxItemInstance = this.GetGraphicalUiElementByName("ListBoxItemInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ListBoxItemRuntime;
         InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         CustomInitialize();
     }

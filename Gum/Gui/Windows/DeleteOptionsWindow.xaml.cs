@@ -35,7 +35,7 @@ namespace Gum.Gui.Windows
 
         private void HandleLoaded(object sender, RoutedEventArgs e)
         {
-            Locator.GetRequiredService<GuiCommands>().MoveToCursor(this);
+            Locator.GetRequiredService<IGuiCommands>().MoveToCursor(this);
         }
 
         private void YesButtonClick(object sender, RoutedEventArgs e)

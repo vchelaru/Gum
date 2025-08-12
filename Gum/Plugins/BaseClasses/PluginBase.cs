@@ -22,8 +22,8 @@ namespace Gum.Plugins.BaseClasses
 {
     public abstract class PluginBase : IPlugin
     {
-        protected readonly GuiCommands _guiCommands;
-        protected readonly FileCommands _fileCommands;
+        protected readonly IGuiCommands _guiCommands;
+        protected readonly IFileCommands _fileCommands;
         protected readonly ITabManager _tabManager;
         
         #region Events
@@ -222,8 +222,8 @@ namespace Gum.Plugins.BaseClasses
 
         protected PluginBase()
         {
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _tabManager = Locator.GetRequiredService<ITabManager>();
         }
 

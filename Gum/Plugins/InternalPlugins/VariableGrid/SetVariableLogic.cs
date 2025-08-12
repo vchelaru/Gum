@@ -28,27 +28,27 @@ namespace Gum.PropertyGridHelpers
     public class SetVariableLogic
     {
         private readonly VariableReferenceLogic _variableReferenceLogic;
-        private CircularReferenceManager _circularReferenceManager;
-        private FontManager _fontManager;
-        private FileCommands _fileCommands;
+        private readonly CircularReferenceManager _circularReferenceManager;
+        private readonly FontManager _fontManager;
+        private readonly IFileCommands _fileCommands;
         private readonly ISelectedState _selectedState;
-        private readonly NameVerifier _nameVerifier;
-        private readonly RenameLogic _renameLogic;
-        private readonly ElementCommands _elementCommands;
-        private readonly UndoManager _undoManager;
+        private readonly INameVerifier _nameVerifier;
+        private readonly IRenameLogic _renameLogic;
+        private readonly IElementCommands _elementCommands;
+        private readonly IUndoManager _undoManager;
         private readonly WireframeCommands _wireframeCommands;
-        private readonly GuiCommands _guiCommands;
+        private readonly IGuiCommands _guiCommands;
 
         public SetVariableLogic(ISelectedState selectedState, 
-            NameVerifier nameVerifier, 
-            RenameLogic renameLogic, 
-            ElementCommands elementCommands, 
-            UndoManager undoManager,
+            INameVerifier nameVerifier, 
+            IRenameLogic renameLogic, 
+            IElementCommands elementCommands, 
+            IUndoManager undoManager,
             WireframeCommands wireframeCommands,
             VariableReferenceLogic variableReferenceLogic,
-            GuiCommands guiCommands,
+            IGuiCommands guiCommands,
             FontManager fontManager,
-            FileCommands fileCommands,
+            IFileCommands fileCommands,
             CircularReferenceManager circularReferenceManager)
         {
             _selectedState = selectedState;

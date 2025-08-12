@@ -2283,13 +2283,8 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>Spaced ComponentInstance</Name>
+    <Name>Spaced Component Instance</Name>
     <BaseType>Spaced Component</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>interface</Name>
-    <BaseType>interface</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

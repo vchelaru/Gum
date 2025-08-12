@@ -43,7 +43,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly RenameService _renameService;
     private readonly LocalizationManager _localizationManager;
     private readonly NameVerifier _nameVerifier;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly CodeGenerator _codeGenerator;
     private readonly IDialogService _dialogService;
     
@@ -71,7 +71,7 @@ public class MainCodeOutputPlugin : PluginBase
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService);
         _renameService = new RenameService(_codeGenerationService);
 
@@ -399,6 +399,9 @@ public class MainCodeOutputPlugin : PluginBase
         
         switch(propertyName)
         {
+            case nameof(viewModel.WhichElementsToGenerate):
+                // do nothing
+                break;
             case nameof(viewModel.InheritanceLocation):
                 codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                 CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);

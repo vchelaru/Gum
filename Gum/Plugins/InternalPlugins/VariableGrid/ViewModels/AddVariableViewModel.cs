@@ -41,12 +41,12 @@ public class AddVariableViewModel : DialogViewModel
         set => Set(value);
     }
 
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
-    private readonly UndoManager _undoManager;
-    private readonly ElementCommands _elementCommands;
-    private readonly FileCommands _fileCommands;
-    private readonly NameVerifier _nameVerifier;
+    private readonly IUndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
 
     public List<string> AvailableTypes
@@ -101,11 +101,11 @@ public class AddVariableViewModel : DialogViewModel
 
     #endregion
 
-    public AddVariableViewModel(GuiCommands guiCommands,
-        UndoManager undoManager,
-        ElementCommands elementCommands,
-        FileCommands fileCommands,
-        NameVerifier nameVerifier,
+    public AddVariableViewModel(IGuiCommands guiCommands,
+        IUndoManager undoManager,
+        IElementCommands elementCommands,
+        IFileCommands fileCommands,
+        INameVerifier nameVerifier,
         ISelectedState selectedState,
         IDialogService dialogService)
     {
@@ -194,11 +194,12 @@ public class AddVariableViewModel : DialogViewModel
         {
             var behavior = _selectedState.SelectedBehavior;
 
-            var newVariable = new VariableSave();
-
-            newVariable.Name = name;
-            newVariable.Type = type;
-            newVariable.Value = DefaultValue;
+            var newVariable = new VariableSave
+            {
+                Name = name,
+                Type = type,
+                Value = DefaultValue
+            };
 
             using var undoLock = _undoManager.RequestLock();
 

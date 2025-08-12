@@ -22,7 +22,7 @@ public class SelectedState : ISelectedState
 {
     #region Fields
     
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
 
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
@@ -298,7 +298,7 @@ public class SelectedState : ISelectedState
 
     #endregion
 
-    public SelectedState(GuiCommands guiCommands)
+    public SelectedState(IGuiCommands guiCommands)
     {
         _guiCommands = guiCommands;
     }

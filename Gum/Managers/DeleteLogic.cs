@@ -25,22 +25,21 @@ namespace Gum.Managers
     {
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
-        private readonly ElementCommands _elementCommands;
-        private readonly UndoManager _undoManager;
+        private readonly IElementCommands _elementCommands;
+        private readonly IUndoManager _undoManager;
         private readonly IDialogService _dialogService;
-        private readonly GuiCommands _guiCommands;
-        private readonly FileCommands _fileCommands;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IFileCommands _fileCommands;
 
         public DeleteLogic()
         {
             _projectCommands = Locator.GetRequiredService<ProjectCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _elementCommands = Locator.GetRequiredService<ElementCommands>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
-            _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _undoManager = Locator.GetRequiredService<IUndoManager>();
+            _elementCommands = Locator.GetRequiredService<IElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands = Locator.GetRequiredService<IFileCommands>();
         }
 
 

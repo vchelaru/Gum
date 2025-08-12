@@ -55,14 +55,14 @@ public partial class WireframeObjectManager
     FontManager _fontManager;
     private readonly ISelectedState _selectedState;
     private readonly IDialogService _dialogService;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
 
     public WireframeObjectManager()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
     }
 

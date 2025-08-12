@@ -364,7 +364,7 @@ namespace SkiaPlugin.Managers
             {
 #if GUM
 // This should probably be handled in a plugin somewhere:
-                Locator.GetRequiredService<GuiCommands>().RefreshVariables(force: true);
+                Locator.GetRequiredService<IGuiCommands>().RefreshVariables(force: true);
 #endif
             }
         }

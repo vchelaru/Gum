@@ -38,7 +38,7 @@ public enum WhichElementsToGenerate
 public class CodeWindowViewModel : ViewModel
 {
     private readonly IDialogService _dialogService;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     
     public WhatToView WhatToView
     {
@@ -158,7 +158,7 @@ public class CodeWindowViewModel : ViewModel
     public CodeWindowViewModel()
     {
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
     }
 
     public FilePath? GetCsprojDirectoryAboveGumx()

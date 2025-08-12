@@ -16,15 +16,15 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Title => "Rename Folder";
     public override string Message => "Enter new folder name:";
     
-    private readonly NameVerifier _nameVerifier;
-    private readonly RenameLogic _renameLogic;
-    private readonly GuiCommands _guiCommands;
+    private readonly INameVerifier _nameVerifier;
+    private readonly IRenameLogic _renameLogic;
+    private readonly IGuiCommands _guiCommands;
     public TreeNode? FolderNode { get; set; }
     
     public RenameFolderDialogViewModel(
-        NameVerifier nameVerifier, 
-        RenameLogic renameLogic,
-        GuiCommands guiCommands)
+        INameVerifier nameVerifier, 
+        IRenameLogic renameLogic,
+        IGuiCommands guiCommands)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;

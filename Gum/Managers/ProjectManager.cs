@@ -38,10 +38,10 @@ namespace Gum
         bool mHaveErrorsOccurredLoadingProject = false;
         
         private readonly ISelectedState _selectedState;
-        private readonly ElementCommands _elementCommands;
+        private readonly IElementCommands _elementCommands;
         private readonly IDialogService _dialogService;
-        private readonly GuiCommands _guiCommands;
-        private readonly FileCommands _fileCommands;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IFileCommands _fileCommands;
 
         #endregion
 
@@ -88,10 +88,10 @@ namespace Gum
         private ProjectManager()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _elementCommands = Locator.GetRequiredService<IElementCommands>();
             _dialogService = Locator.GetRequiredService<IDialogService>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands = Locator.GetRequiredService<IFileCommands>();
         }
 
         public void LoadSettings()

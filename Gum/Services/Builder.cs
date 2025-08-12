@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using System.Linq.Expressions;
 using Gum.Mvvm;
 using Gum.Services.Dialogs;
+using Gum.Plugins;
 
 namespace Gum.Services;
 
@@ -45,12 +46,12 @@ file static class ServiceCollectionExtensions
         
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
-        
+
         // singletons
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<LocalizationManager>();
-        services.AddSingleton<NameVerifier>();
-        services.AddSingleton<UndoManager>();
+        services.AddSingleton<INameVerifier, NameVerifier>();
+        services.AddSingleton<IUndoManager, UndoManager>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
         services.AddSingleton<IEditVariableService, EditVariableService>();
@@ -61,14 +62,14 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<MenuStripManager>();
         
         services.AddSingleton<VariableReferenceLogic>();
-        services.AddSingleton<RenameLogic>();
+        services.AddSingleton<IRenameLogic, RenameLogic>();
         services.AddSingleton<SetVariableLogic>();
         
         services.AddSingleton<WireframeCommands>();
-        services.AddSingleton<GuiCommands>();
+        services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<EditCommands>();
-        services.AddSingleton<ElementCommands>();
-        services.AddSingleton<FileCommands>();
+        services.AddSingleton<IElementCommands, ElementCommands>();
+        services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<ProjectCommands>();
 
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
@@ -80,6 +81,7 @@ file static class ServiceCollectionExtensions
         // other
         services.AddDialogs();
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
+
     }
     
     private static IServiceCollection AddDialogs(this IServiceCollection services)
