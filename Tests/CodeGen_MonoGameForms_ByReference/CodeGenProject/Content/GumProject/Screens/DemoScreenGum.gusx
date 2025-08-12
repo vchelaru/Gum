@@ -2266,5 +2266,10 @@
     <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
+  <Instance>
+    <Name>Spaced Component Instance</Name>
+    <BaseType>Spaced Component</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
   <Behaviors />
 </ScreenSave>

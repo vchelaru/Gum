@@ -18,12 +18,12 @@ namespace Gum.Commands
     {
         private readonly LocalizationManager _localizationManager;
         private readonly ISelectedState _selectedState;
-        private readonly Lazy<UndoManager> _undoManager;
+        private readonly Lazy<IUndoManager> _undoManager;
         private readonly IDialogService _dialogService;
         private readonly GuiCommands _guiCommands;
 
         public FileCommands(ISelectedState selectedState, 
-            Lazy<UndoManager> undoManager, 
+            Lazy<IUndoManager> undoManager, 
             IDialogService dialogService,
             GuiCommands guiCommands,
             LocalizationManager localizationManager)

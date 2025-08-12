@@ -92,7 +92,7 @@ partial class ButtonStandardIconRuntime : ContainerRuntime
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Icon = this.GetGraphicalUiElementByName("Icon") as IconRuntime;
+        Icon = this.GetGraphicalUiElementByName("Icon") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

@@ -17,7 +17,7 @@ namespace Gum.Plugins.Undos
     public class UndosViewModel : INotifyPropertyChanged
     {
         private readonly ISelectedState _selectedState;
-        private readonly UndoManager _undoManager;
+        private readonly IUndoManager _undoManager;
         //ObservableCollection<string> mUndos = new ObservableCollection<string>();
         //public ObservableCollection<string> Undos
         //{
@@ -192,7 +192,7 @@ namespace Gum.Plugins.Undos
         public UndosViewModel()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _undoManager = Locator.GetRequiredService<IUndoManager>();
             _undoManager.UndosChanged += HandleUndosChanged;
         }
 

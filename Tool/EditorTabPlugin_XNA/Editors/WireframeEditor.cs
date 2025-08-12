@@ -30,8 +30,8 @@ public abstract class WireframeEditor
     private readonly SelectionManager _selectionManager;
     private readonly SetVariableLogic _setVariableLogic;
     protected readonly ISelectedState _selectedState;
-    private readonly ElementCommands _elementCommands;
-    private readonly UndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
+    private readonly IUndoManager _undoManager;
     protected readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
     
@@ -58,8 +58,8 @@ public abstract class WireframeEditor
         _selectionManager = selectionManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _selectedState = selectedState;
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _fileCommands = Locator.GetRequiredService<FileCommands>();
     }

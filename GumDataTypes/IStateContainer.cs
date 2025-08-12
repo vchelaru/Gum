@@ -1,24 +1,23 @@
 ﻿using Gum.DataTypes.Variables;
 using System.Collections.Generic;
 
-namespace Gum.DataTypes
+namespace Gum.DataTypes;
+
+public interface IStateContainer
 {
-    public interface IStateContainer
+    public string Name { get; }
+    IList<StateSave> UncategorizedStates
     {
-        public string Name { get; }
-        IList<StateSave> UncategorizedStates
-        {
-            get;
-        }
+        get;
+    }
 
-        IEnumerable<StateSave> AllStates
-        {
-            get;
-        }
+    IEnumerable<StateSave> AllStates
+    {
+        get;
+    }
 
-        IList<StateSaveCategory> Categories
-        {
-            get;
-        }
+    IList<StateSaveCategory> Categories
+    {
+        get;
     }
 }

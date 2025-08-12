@@ -184,7 +184,7 @@ public class HotkeyManager
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly Commands.GuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
-    private readonly ElementCommands _elementCommands;
+    private readonly IElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
     private readonly FileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
@@ -193,7 +193,7 @@ public class HotkeyManager
     
     public HotkeyManager(GuiCommands guiCommands, 
         ISelectedState selectedState, 
-        ElementCommands elementCommands,
+        IElementCommands elementCommands,
         IDialogService dialogService,
         FileCommands fileCommands,
         SetVariableLogic setVariableLogic)
