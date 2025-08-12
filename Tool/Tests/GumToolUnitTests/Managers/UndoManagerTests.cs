@@ -33,7 +33,10 @@ public class UndoManagerTests
         _messenger = new Mock<IMessenger>();
 
         ComponentSave component = new();
-        component.States.Add(new Gum.DataTypes.Variables.StateSave { });
+        component.States.Add(new Gum.DataTypes.Variables.StateSave 
+        {
+            Name="Default"
+        });
 
 
         _selectedState
@@ -94,7 +97,37 @@ public class UndoManagerTests
 
         var elementHistory = _undoManager.CurrentElementHistory;
         elementHistory.Actions.Count.ShouldBe(1);
+
+        var comparisonInformation = UndoSnapshot.CompareAgainst(
+            component,
+            elementHistory.Actions[0].UndoState.Element);
+
+        comparisonInformation.ToString().ShouldBe("Variables in Default: X=10");   
     }
 
+    [Fact]
+    public void currentElementHistory_ShouldReportExposedVariables()
+    {
+        {
+            ComponentSave component = _selectedState.Object.SelectedComponent;
 
+            component.DefaultState.SetValue("X", 10f);
+
+            _undoManager.RecordState();
+
+            var xVariable = component.DefaultState.GetVariableSave("X");
+            xVariable.ExposedAsName = "ExposedX";
+
+            _undoManager.RecordUndo();
+
+            var elementHistory = _undoManager.CurrentElementHistory;
+            elementHistory.Actions.Count.ShouldBe(1);
+
+            var comparisonInformation = UndoSnapshot.CompareAgainst(
+                component,
+                elementHistory.Actions[0].UndoState.Element);
+
+            comparisonInformation.ToString().ShouldBe("Un-exposed variables: X");
+        }
+    }
 }
