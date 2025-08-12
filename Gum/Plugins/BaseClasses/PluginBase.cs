@@ -351,8 +351,7 @@ namespace Gum.Plugins.BaseClasses
 
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
         {
-            //todo: add tabs through here instead of exposing ITabManager
-            throw new NotImplementedException();
+            return _tabManager.AddControl(control, tabName, tabLocation);
         }
 
         #endregion
