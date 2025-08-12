@@ -15,13 +15,13 @@ namespace Gum.Plugins.Fonts;
 public class MainFontPlugin : InternalPlugin
 {
 
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly FontManager _fontManager;
     private readonly IDialogService _dialogService;
 
     public MainFontPlugin()
     {
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _fontManager = Locator.GetRequiredService<FontManager>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
     }

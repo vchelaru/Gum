@@ -16,7 +16,7 @@ namespace SkiaPlugin.Managers
 {
     static class StandardAdder
     {
-        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
+        private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
         public static void AddAllStandards()
         {
             AddStandard("Arc", DefaultStateManager.GetArcState());

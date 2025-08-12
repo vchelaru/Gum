@@ -18,10 +18,10 @@ internal class CodeGenerationService
 {
     private readonly CodeGenerator _codeGenerator;
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
 
-    public CodeGenerationService(GuiCommands guiCommands, CodeGenerator codeGenerator, IDialogService dialogService)
+    public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator, IDialogService dialogService)
     {
         _codeGenerator = codeGenerator;
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();

@@ -1,18 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Gum.DataTypes.Variables;
-using Gum.ToolStates;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Gum.Commands;
 using Gum.DataTypes;
-using Gum.Wireframe;
-using ToolsUtilities;
+using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.Managers;
+using Gum.Plugins;
+using Gum.ToolStates;
+using Gum.Wireframe;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Windows.Controls;
-using Gum.Commands;
-using Gum.DataTypes.Behaviors;
-using Gum.Managers;
+using ToolsUtilities;
 
 namespace Gum.Undo;
 
@@ -87,10 +89,11 @@ public class UndoManager : IUndoManager
     #region Fields
 
     private readonly ISelectedState _selectedState;
-    private readonly RenameLogic _renameLogic;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
-    
+    private readonly IRenameLogic _renameLogic;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly IMessenger _messenger;
+
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
     bool isRecordingUndos = true;
@@ -132,14 +135,17 @@ public class UndoManager : IUndoManager
     #endregion
 
     public UndoManager(ISelectedState selectedState, 
-        RenameLogic renameLogic, 
-        GuiCommands guiCommands,
-        FileCommands fileCommands)
+        IRenameLogic renameLogic, 
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        IMessenger messenger)
     {
         _selectedState = selectedState;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _messenger = messenger;
+
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }
@@ -471,12 +477,9 @@ public class UndoManager : IUndoManager
 
         InvokeUndosChanged(UndoOperation.Undo);
 
-        Plugins.PluginManager.Self.AfterUndo();
+        _messenger.Send(new AfterUndoMessage());
 
         _guiCommands.RefreshElementTreeView(toApplyTo);
-
-        // reset everything. This is slow, but is easy
-        WireframeObjectManager.Self.RefreshAll(true);
 
         if (shouldRefreshStateTreeView)
         {

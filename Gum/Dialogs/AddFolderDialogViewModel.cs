@@ -13,12 +13,12 @@ public class AddFolderDialogViewModel : GetUserStringDialogBaseViewModel
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
 
     public AddFolderDialogViewModel(
         ISelectedState selectedState,
         INameVerifier nameVerifier, 
-        GuiCommands guiCommands)
+        IGuiCommands guiCommands)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

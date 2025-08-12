@@ -27,17 +27,17 @@ public class VariableReferenceLogic
 {
     #region Fields/Properties
 
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
-    private readonly FileCommands _fileCommands;
+    private readonly IFileCommands _fileCommands;
 
     #endregion
 
-    public VariableReferenceLogic(GuiCommands guiCommands, 
+    public VariableReferenceLogic(IGuiCommands guiCommands, 
         WireframeCommands wireframeCommands, 
         IDialogService dialogService,
-        FileCommands fileCommands)
+        IFileCommands fileCommands)
     {
         _guiCommands = guiCommands;
         _wireframeCommands = wireframeCommands;

@@ -16,7 +16,7 @@ namespace EventOutputPlugin.Managers
 {
     public class ExportEventFileManager
     {
-        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
+        private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
         const string masterFileName = "gum_events.json";
         static ExportedEventCollection events;
 

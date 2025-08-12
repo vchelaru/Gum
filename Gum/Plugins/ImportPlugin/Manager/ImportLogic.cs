@@ -17,8 +17,8 @@ namespace Gum.Plugins.ImportPlugin.Manager;
 public static class ImportLogic
 {
     private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
-    private static readonly GuiCommands _guiCommands = Locator.GetRequiredService<GuiCommands>();
-    private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
+    private static readonly IGuiCommands _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+    private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
     
     #region Screen
 
