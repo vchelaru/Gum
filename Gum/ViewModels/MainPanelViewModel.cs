@@ -94,5 +94,5 @@ public class MainPanelViewModel : ViewModel, ITabManager
         return newPluginTab;
     }
     
-    public void RemovePlugin(PluginTab tab) => PluginTabs.Remove(tab);
+    public void RemoveTab(PluginTab tab) => PluginTabs.Remove(tab);
 }

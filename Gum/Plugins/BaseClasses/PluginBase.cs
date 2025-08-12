@@ -356,7 +356,7 @@ namespace Gum.Plugins.BaseClasses
 
         public void RemoveTab(PluginTab tab)
         {
-            _tabManager.RemovePlugin(tab);
+            _tabManager.RemoveTab(tab);
         }
 
         #endregion
