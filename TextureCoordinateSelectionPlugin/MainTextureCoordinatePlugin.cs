@@ -104,7 +104,7 @@ public class MainTextureCoordinatePlugin : PluginBase
 
         if(hasTextureCoordinates)
         {
-            textureCoordinatePluginTab.Show(select: false);
+            textureCoordinatePluginTab.Show();
             RefreshControl();
         }
         else

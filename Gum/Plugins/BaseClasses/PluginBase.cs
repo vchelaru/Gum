@@ -344,19 +344,15 @@ namespace Gum.Plugins.BaseClasses
             //return CreateTab(wpfHost, tabName);
 
             PluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
-            newTab.SuggestedLocation = defaultLocation;
+            newTab.Location = defaultLocation;
             newTab.Hide();
             return newTab;
         }
 
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
         {
-            return _tabManager.AddControl(control, tabName, tabLocation);
-        }
-
-        public void RemoveControl(System.Windows.Controls.UserControl control)
-        {
-            _tabManager.RemoveControl(control);
+            //todo: add tabs through here instead of exposing ITabManager
+            throw new NotImplementedException();
         }
 
         #endregion

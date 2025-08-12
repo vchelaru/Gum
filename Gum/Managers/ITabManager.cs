@@ -7,6 +7,4 @@ public interface ITabManager
 {
     PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation);
     PluginTab AddControl(FrameworkElement element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom);
-    void RemoveControl(FrameworkElement element);
-    bool ShowTabForControl(System.Windows.Controls.UserControl control);
 }
