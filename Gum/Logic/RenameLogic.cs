@@ -69,13 +69,13 @@ public class RenameLogic
     static bool isRenamingXmlFile;
 
     private readonly ISelectedState _selectedState;
-    private readonly NameVerifier _nameVerifier;
+    private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
     private readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
 
     public RenameLogic(ISelectedState selectedState, 
-        NameVerifier nameVerifier, 
+        INameVerifier nameVerifier, 
         IDialogService dialogService, 
         GuiCommands guiCommands,
         FileCommands fileCommands)

@@ -17,7 +17,7 @@ public class AlignmentViewModel : ViewModel
 {
     private readonly CommonControlLogic _commonControlLogic;
     private readonly ISelectedState _selectedState;
-    private readonly UndoManager _undoManager;
+    private readonly IUndoManager _undoManager;
 
     public float DockMargin
     {
@@ -29,7 +29,7 @@ public class AlignmentViewModel : ViewModel
     {
         _commonControlLogic = commonControlLogic;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
     }
 
     #region Anchor Actions

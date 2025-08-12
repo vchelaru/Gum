@@ -2,6 +2,7 @@
 using GumRuntime;
 using System.Linq;
 using SkiaGum.GueDeriving;
+using CodeGen_Maui_FullCodegen.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -20,6 +21,7 @@ partial class ExampleScreenRuntime : Gum.Wireframe.BindableGue
     public TextRuntime TextInstance2 { get; protected set; }
     public TextRuntime TextInstance3 { get; protected set; }
     public TextRuntime TextInstance4 { get; protected set; }
+    public EmptyComponentRuntime EmptyComponentInstance { get; protected set; }
 
     public ExampleScreenRuntime(bool fullInstantiation = true)
     {
@@ -66,6 +68,8 @@ partial class ExampleScreenRuntime : Gum.Wireframe.BindableGue
         if (TextInstance4.ElementSave != null) TextInstance4.AddStatesAndCategoriesRecursivelyToGue(TextInstance4.ElementSave);
         if (TextInstance4.ElementSave != null) TextInstance4.SetInitialState();
         TextInstance4.Name = "TextInstance4";
+        EmptyComponentInstance = new CodeGen_Maui_FullCodegen.Components.EmptyComponentRuntime();
+        EmptyComponentInstance.Name = "EmptyComponentInstance";
     }
     protected virtual void AssignParents()
     {
@@ -75,6 +79,7 @@ partial class ExampleScreenRuntime : Gum.Wireframe.BindableGue
         ContainerInstance.Children.Add(TextInstance2);
         ContainerInstance.Children.Add(TextInstance3);
         ContainerInstance.Children.Add(TextInstance4);
+        this.WhatThisContains.Add(EmptyComponentInstance);
     }
     private void ApplyDefaultVariables()
     {
@@ -87,6 +92,7 @@ partial class ExampleScreenRuntime : Gum.Wireframe.BindableGue
         this.ContainerInstance.Y = 0f;
         this.ContainerInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.ContainerInstance.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+
 
 
 

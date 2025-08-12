@@ -139,8 +139,9 @@ namespace Gum.DataTypes
                             }
                             else
                             {
-
-                                category = element.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                                
+                                category = element.GetStateSaveCategoryRecursively(categoryName, out IStateContainer foundCategoryContainer);
+                                categoryContainer = foundCategoryContainer as ElementSave;
                                 return category != null;
                             }
                         }
@@ -156,7 +157,8 @@ namespace Gum.DataTypes
                 else
                 {
 
-                    category = container.GetStateSaveCategoryRecursively(categoryName, out categoryContainer);
+                    category = container.GetStateSaveCategoryRecursively(categoryName, out IStateContainer foundCategoryContainer);
+                    categoryContainer = foundCategoryContainer as ElementSave;
 
                     return category != null;
                 }

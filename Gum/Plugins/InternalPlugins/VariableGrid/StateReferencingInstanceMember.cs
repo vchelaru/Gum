@@ -35,7 +35,7 @@ namespace Gum.PropertyGridHelpers
 
         ObjectFinder _objectFinder;
         private readonly HotkeyManager _hotkeyManager;
-        private readonly UndoManager _undoManager;
+        private readonly IUndoManager _undoManager;
         private readonly IDeleteVariableService _deleteVariableLogic;
         private readonly GuiCommands _guiCommands;
         private readonly FileCommands _fileCommands;
@@ -248,7 +248,7 @@ namespace Gum.PropertyGridHelpers
             StateSaveCategory stateSaveCategory,
             string variableName, InstanceSave instanceSave,
             IStateContainer stateListCategoryContainer,
-            UndoManager undoManager) :
+            IUndoManager undoManager) :
             base(variableName, stateSave)
         {
             _editVariablesService = Locator.GetRequiredService<IEditVariableService>();

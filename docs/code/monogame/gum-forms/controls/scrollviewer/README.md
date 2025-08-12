@@ -33,7 +33,7 @@ for (int i = 0; i < 30; i++)
 
 ## Code Example: Creating a ScrollViewer With Non-Forms Children
 
-The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be added to the ScrollViewer through its InnerPanel.
+The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be added to the ScrollViewer through AddChild.
 
 ```csharp
 var scrollViewer = new ScrollViewer();
@@ -48,16 +48,41 @@ var random = new System.Random();
 for (int i = 0; i < 30; i++)
 {
     var innerRectangle = new ColoredRectangleRuntime();
+    scrollViewer.AddChild(innerRectangle);
     innerRectangle.X = random.NextSingle() * 150;
     // no need to set innerRectangle.Y since each rectangle stacks
     innerRectangle.Width = 30;
     innerRectangle.Height = 30;
     innerRectangle.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
-    scrollViewer.InnerPanel.Children.Add(innerRectangle);
 }
 ```
 
 <figure><img src="../../../../../.gitbook/assets/13_09 44 12.gif" alt=""><figcaption><p>ScrollViewer displaying multiple ColoredRectangles</p></figcaption></figure>
+
+## Code Example: Wrapping Children
+
+The following code shows how to wrap children in a ScrollViewer. It modifies the `InnerPanel` to change the layout type.
+
+```csharp
+var scrollViewer = new ScrollViewer();
+scrollViewer.Width = 310;
+scrollViewer.AddToRoot();
+scrollViewer.Anchor(Anchor.Center);
+var innerPanel = scrollViewer.InnerPanel;
+innerPanel.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+innerPanel.WrapsChildren = true;
+
+for(int i= 0; i < 100; i++)
+{
+    var button = new Button();
+    button.Width = 70;
+    button.Text = $"Btn {i}";
+    button.Anchor(Anchor.TopLeft);
+    scrollViewer.AddChild(button);
+}
+```
+
+<figure><img src="../../../../../.gitbook/assets/11_07 54 07.png" alt=""><figcaption><p>ScrollViewer with wrapped children</p></figcaption></figure>
 
 ## VerticalScrollBarVisibility
 

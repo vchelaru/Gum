@@ -22,13 +22,13 @@ public interface IDeleteVariableService
 }
 public class DeleteVariableService : IDeleteVariableService
 {
-    private readonly UndoManager _undoManager;
+    private readonly IUndoManager _undoManager;
     private readonly FileCommands _fileCommands;
     private readonly GuiCommands _guiCommands;
     private readonly RenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
 
-    public DeleteVariableService(UndoManager undoManager,
+    public DeleteVariableService(IUndoManager undoManager,
         FileCommands fileCommands,
         GuiCommands guiCommands,
         RenameLogic renameLogic,

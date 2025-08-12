@@ -82,7 +82,7 @@ public class UndoOperationEventArgs : EventArgs
 
 #endregion
 
-public class UndoManager
+public class UndoManager : IUndoManager
 {
     #region Fields
 
@@ -96,8 +96,6 @@ public class UndoManager
     bool isRecordingUndos = true;
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
-
-    static UndoManager mSelf;
 
     UndoSnapshot recordedSnapshot;
     

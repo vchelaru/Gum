@@ -12,12 +12,12 @@ public class AddFolderDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Message => "Enter new folder name";
 
     private readonly ISelectedState _selectedState;
-    private readonly NameVerifier _nameVerifier;
+    private readonly INameVerifier _nameVerifier;
     private readonly GuiCommands _guiCommands;
 
     public AddFolderDialogViewModel(
         ISelectedState selectedState,
-        NameVerifier nameVerifier, 
+        INameVerifier nameVerifier, 
         GuiCommands guiCommands)
     {
         _selectedState = selectedState;

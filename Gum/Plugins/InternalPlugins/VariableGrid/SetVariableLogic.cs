@@ -32,18 +32,18 @@ namespace Gum.PropertyGridHelpers
         private FontManager _fontManager;
         private FileCommands _fileCommands;
         private readonly ISelectedState _selectedState;
-        private readonly NameVerifier _nameVerifier;
+        private readonly INameVerifier _nameVerifier;
         private readonly RenameLogic _renameLogic;
-        private readonly ElementCommands _elementCommands;
-        private readonly UndoManager _undoManager;
+        private readonly IElementCommands _elementCommands;
+        private readonly IUndoManager _undoManager;
         private readonly WireframeCommands _wireframeCommands;
         private readonly GuiCommands _guiCommands;
 
         public SetVariableLogic(ISelectedState selectedState, 
-            NameVerifier nameVerifier, 
+            INameVerifier nameVerifier, 
             RenameLogic renameLogic, 
-            ElementCommands elementCommands, 
-            UndoManager undoManager,
+            IElementCommands elementCommands, 
+            IUndoManager undoManager,
             WireframeCommands wireframeCommands,
             VariableReferenceLogic variableReferenceLogic,
             GuiCommands guiCommands,

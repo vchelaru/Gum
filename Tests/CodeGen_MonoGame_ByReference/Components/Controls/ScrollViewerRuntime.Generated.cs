@@ -107,7 +107,7 @@ partial class ScrollViewerRuntime : ContainerRuntime
             FormsControlAsObject = new global::MonoGameGum.Forms.Controls.ScrollViewer(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as ScrollBarRuntime;
+        VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ScrollBarRuntime;
         ClipContainerInstance = this.GetGraphicalUiElementByName("ClipContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;

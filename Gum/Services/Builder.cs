@@ -49,8 +49,8 @@ file static class ServiceCollectionExtensions
         // singletons
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<LocalizationManager>();
-        services.AddSingleton<NameVerifier>();
-        services.AddSingleton<UndoManager>();
+        services.AddSingleton<INameVerifier, NameVerifier>();
+        services.AddSingleton<IUndoManager, UndoManager>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
         services.AddSingleton<IEditVariableService, EditVariableService>();
@@ -67,7 +67,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<GuiCommands>();
         services.AddSingleton<EditCommands>();
-        services.AddSingleton<ElementCommands>();
+        services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<FileCommands>();
         services.AddSingleton<ProjectCommands>();
 

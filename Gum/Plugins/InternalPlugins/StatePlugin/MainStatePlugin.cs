@@ -44,7 +44,7 @@ public class MainStatePlugin : InternalPlugin
     public MainStatePlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        var elementCommands = Locator.GetRequiredService<ElementCommands>();
+        var elementCommands = Locator.GetRequiredService<IElementCommands>();
         var editCommands = Locator.GetRequiredService<EditCommands>();
         var dialogService = Locator.GetRequiredService<IDialogService>();
         _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, elementCommands, editCommands, dialogService, _guiCommands, _fileCommands);
