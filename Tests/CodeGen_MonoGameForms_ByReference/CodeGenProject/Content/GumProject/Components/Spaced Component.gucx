@@ -5,24 +5,14 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>Category</Type>
+      <Name>CategoryState</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int</Type>
       <Name>Spaced Variable</Name>
       <Value xsi:type="xsd:int">10</Value>
-      <Type>Category1</Type>
-      <Name>Category1State</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Spaced State Variable</Name>
-      <Value xsi:type="xsd:float">1</Value>
-      <SetsValue>true</SetsValue>
-      <IsCustomVariable>true</IsCustomVariable>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Spaced Variable</Name>
-      <Value xsi:type="xsd:float">1</Value>
       <SetsValue>true</SetsValue>
       <IsCustomVariable>true</IsCustomVariable>
     </Variable>
@@ -35,9 +25,9 @@
     </Variable>
   </State>
   <Category>
-    <Name>Category1</Name>
+    <Name>Category</Name>
     <State>
-      <Name>State with space</Name>
+      <Name>Spaced State</Name>
     </State>
   </Category>
   <Behaviors />

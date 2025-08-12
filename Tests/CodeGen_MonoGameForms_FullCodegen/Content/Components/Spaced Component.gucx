@@ -5,16 +5,9 @@
   <State>
     <Name>Default</Name>
     <Variable>
-      <Type>Spaced Category</Type>
-      <Name>Spaced CategoryState</Name>
+      <Type>Category</Type>
+      <Name>CategoryState</Name>
       <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Spaced Variable</Name>
-      <Value xsi:type="xsd:int">10</Value>
-      <SetsValue>true</SetsValue>
-      <IsCustomVariable>true</IsCustomVariable>
     </Variable>
     <Variable>
       <Type>State</Type>
@@ -25,7 +18,7 @@
     </Variable>
   </State>
   <Category>
-    <Name>Spaced Category</Name>
+    <Name>Category</Name>
     <State>
       <Name>Spaced State</Name>
     </State>

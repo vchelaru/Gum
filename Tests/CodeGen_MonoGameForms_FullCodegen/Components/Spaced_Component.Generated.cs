@@ -33,35 +33,30 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
             return gue;
         });
     }
-    public enum Spaced_Category
+    public enum Category
     {
         Spaced_State,
     }
 
-    Spaced_Category? mSpaced_CategoryState;
-    public Spaced_Category? Spaced_CategoryState
+    Category? mCategoryState;
+    public Category? CategoryState
     {
-        get => mSpaced_CategoryState;
+        get => mCategoryState;
         set
         {
-            mSpaced_CategoryState = value;
+            mCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
                 switch (value)
                 {
-                    case Spaced_Category.Spaced_State:
+                    case Category.Spaced_State:
                         break;
                 }
             }
         }
     }
 
-    public int Spaced_Variable
-    {
-        get;
-        set;
-    }
     public Spaced_Component(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
@@ -86,7 +81,6 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
     }
     private void ApplyDefaultVariables()
     {
-        this.Visual.Spaced_Variable = 10;
     }
     partial void CustomInitialize();
 }
