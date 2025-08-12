@@ -52,7 +52,10 @@ public class MainTextureCoordinatePlugin : PluginBase
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
     {
-        this.textureCoordinatePluginTab?.Hide();
+        if (textureCoordinatePluginTab is not null)
+        {
+            RemoveTab(textureCoordinatePluginTab);
+        };
 
         return true;
     }
@@ -104,7 +107,7 @@ public class MainTextureCoordinatePlugin : PluginBase
 
         if(hasTextureCoordinates)
         {
-            textureCoordinatePluginTab.Show(select: false);
+            textureCoordinatePluginTab.Show();
             RefreshControl();
         }
         else

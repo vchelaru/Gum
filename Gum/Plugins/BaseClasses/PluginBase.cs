@@ -344,7 +344,7 @@ namespace Gum.Plugins.BaseClasses
             //return CreateTab(wpfHost, tabName);
 
             PluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
-            newTab.SuggestedLocation = defaultLocation;
+            newTab.Location = defaultLocation;
             newTab.Hide();
             return newTab;
         }
@@ -354,9 +354,9 @@ namespace Gum.Plugins.BaseClasses
             return _tabManager.AddControl(control, tabName, tabLocation);
         }
 
-        public void RemoveControl(System.Windows.Controls.UserControl control)
+        public void RemoveTab(PluginTab tab)
         {
-            _tabManager.RemoveControl(control);
+            _tabManager.RemoveTab(tab);
         }
 
         #endregion

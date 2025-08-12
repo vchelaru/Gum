@@ -46,7 +46,7 @@ namespace PerformanceMeasurementPlugin
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
         {
-            _tabManager.RemoveControl(view);
+            //_tabManager.HideTabForControl(view);
             return true;
         }
     }
