@@ -15,7 +15,6 @@ public interface IGuiCommands
     void RefreshStateTreeView();
     void RefreshVariables(bool force = false);
     void RefreshVariableValues();
-    int UiZoomValue { get; set; }
     void RefreshElementTreeView();
     void RefreshElementTreeView(IInstanceContainer instanceContainer);
     void MoveToCursor(System.Windows.Window window);
@@ -23,5 +22,4 @@ public interface IGuiCommands
     void ToggleToolVisibility();
     void FocusSearch();
     Spinner ShowSpinner();
-    void DoOnUiThread(Action action);
 }

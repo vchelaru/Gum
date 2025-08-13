@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using ToolsUtilities;
+using Gum.Messages;
+using Gum.Extensions;
 
 namespace Gum.CommandLine
 {
@@ -26,6 +28,7 @@ namespace Gum.CommandLine
         }
 
         public bool ShouldExitImmediately { get; set; }
+        public bool ShouldCodeGenAll { get; private set; }
 
         public string ElementName
         {
@@ -60,7 +63,11 @@ namespace Gum.CommandLine
                     {
                         await HandleRebuildFontCommand(commandLineArgs, i);
                         ShouldExitImmediately = true;
-                        break;
+                    }
+                    else if(arg?.ToLowerInvariant() == "--generatecode")
+                    {
+                        ShouldCodeGenAll = true;
+                        ShouldExitImmediately = true;
                     }
                     else
                     {
@@ -70,13 +77,13 @@ namespace Gum.CommandLine
                         {
                             GlueProjectToLoad = arg;
                         }
-                        else if(argExtension == GumProjectSave.ComponentExtension ||
+                        else if (argExtension == GumProjectSave.ComponentExtension ||
                             argExtension == GumProjectSave.ScreenExtension ||
                             argExtension == GumProjectSave.StandardExtension)
                         {
                             ElementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
 
-                            string gluxDirectory = FileManager.GetDirectory( FileManager.GetDirectory(arg));
+                            string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(arg));
 
                             GlueProjectToLoad = System.IO.Directory.GetFiles(gluxDirectory)
                                 .FirstOrDefault(item => item.ToLowerInvariant().EndsWith(".gumx"));

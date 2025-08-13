@@ -39,12 +39,6 @@ public class MainMenuStripPlugin : InternalPlugin
         this.InstanceSelected += HandleInstanceSelected;
         this.BehaviorVariableSelected += HandleBehaviorVariableSelected;
         this.AfterUndo += HandleAfterUndo;
-        this.UiZoomValueChanged += HandleUiZoomValueChanged;
-    }
-
-    private void HandleUiZoomValueChanged()
-    {
-        _menuStripManager.HandleUiZoomValueChanged();
     }
 
     private void HandleAfterUndo()

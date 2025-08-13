@@ -41,13 +41,13 @@ partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkEle
         HasInputDevice,
     }
 
-    JoinedCategory? mJoinedCategoryState;
+    private JoinedCategory? _joinedCategoryState;
     public JoinedCategory? JoinedCategoryState
     {
-        get => mJoinedCategoryState;
+        get => _joinedCategoryState;
         set
         {
-            mJoinedCategoryState = value;
+            _joinedCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -98,14 +98,14 @@ partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkEle
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        IconInstance = new Icon();
+        IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
         TextInstance = new global::MonoGameGum.GueDeriving.TextRuntime();
         TextInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        RemoveDeviceButtonInstance = new ButtonClose();
+        RemoveDeviceButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonClose();
         RemoveDeviceButtonInstance.Name = "RemoveDeviceButtonInstance";
     }
     protected virtual void AssignParents()

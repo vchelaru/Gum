@@ -7,9 +7,9 @@ using RenderingLibrary.Graphics;
 
 using System.Linq;
 
-namespace CodeGenProject.Screens
+namespace CodeGen_MonoGame_ByReference.Components
 {
-    partial class DemoScreenGum
+    partial class interfaceRuntime
     {
         partial void CustomInitialize()
         {

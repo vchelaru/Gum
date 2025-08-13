@@ -43,13 +43,13 @@ partial class ListBox : global::MonoGameGum.Forms.Controls.ListBox
         DisabledFocused,
     }
 
-    ListBoxCategory? mListBoxCategoryState;
+    private ListBoxCategory? _listBoxCategoryState;
     public ListBoxCategory? ListBoxCategoryState
     {
-        get => mListBoxCategoryState;
+        get => _listBoxCategoryState;
         set
         {
-            mListBoxCategoryState = value;
+            _listBoxCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -105,7 +105,7 @@ partial class ListBox : global::MonoGameGum.Forms.Controls.ListBox
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        VerticalScrollBarInstance = new ScrollBar();
+        VerticalScrollBarInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ScrollBar();
         VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
         ClipContainerInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         ClipContainerInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");

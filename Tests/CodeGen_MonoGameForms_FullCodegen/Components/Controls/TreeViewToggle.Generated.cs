@@ -46,13 +46,13 @@ partial class TreeViewToggle : MonoGameGum.Forms.Controls.FrameworkElement
         PushedOff,
     }
 
-    ToggleCategory? mToggleCategoryState;
+    private ToggleCategory? _toggleCategoryState;
     public ToggleCategory? ToggleCategoryState
     {
-        get => mToggleCategoryState;
+        get => _toggleCategoryState;
         set
         {
-            mToggleCategoryState = value;
+            _toggleCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -149,7 +149,7 @@ partial class TreeViewToggle : MonoGameGum.Forms.Controls.FrameworkElement
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.AddStatesAndCategoriesRecursivelyToGue(NineSliceInstance.ElementSave);
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.SetInitialState();
         NineSliceInstance.Name = "NineSliceInstance";
-        IconInstance = new Icon();
+        IconInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance.Name = "IconInstance";
     }
     protected virtual void AssignParents()

@@ -45,13 +45,13 @@ partial class ButtonIcon : global::MonoGameGum.Forms.Controls.Button
         DisabledFocused,
     }
 
-    ButtonCategory? mButtonCategoryState;
+    private ButtonCategory? _buttonCategoryState;
     public ButtonCategory? ButtonCategoryState
     {
-        get => mButtonCategoryState;
+        get => _buttonCategoryState;
         set
         {
-            mButtonCategoryState = value;
+            _buttonCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -135,7 +135,7 @@ partial class ButtonIcon : global::MonoGameGum.Forms.Controls.Button
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        Icon = new Icon();
+        Icon = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         Icon.Name = "Icon";
         FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");

@@ -20,18 +20,18 @@ partial class Spaced_ComponentRuntime : ContainerRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Spaced Component", typeof(Spaced_ComponentRuntime));
     }
-    public enum Spaced State Category
+    public enum Spaced_State_Category
     {
-        Spaced State,
+        Spaced_State,
     }
 
-    Spaced State Category? _spaced State CategoryState;
-    public Spaced State Category? Spaced State CategoryState
+    Spaced_State_Category? _spaced_State_CategoryState;
+    public Spaced_State_Category? Spaced_State_CategoryState
     {
-        get => _spaced State CategoryState;
+        get => _spaced_State_CategoryState;
         set
         {
-            _spaced State CategoryState = value;
+            _spaced_State_CategoryState = value;
             if(value != null)
             {
                 if(Categories.ContainsKey("Spaced State Category"))

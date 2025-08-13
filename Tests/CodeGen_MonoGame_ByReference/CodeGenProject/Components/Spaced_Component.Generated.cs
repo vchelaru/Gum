@@ -33,29 +33,29 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
             return gue;
         });
     }
-    public enum Spaced_State_Category
+    public enum Category
     {
         Spaced_State,
     }
 
-    Spaced_State_Category? _spaced_State_CategoryState;
-    public Spaced_State_Category? Spaced_State_CategoryState
+    Category? _categoryState;
+    public Category? CategoryState
     {
-        get => _spaced_State_CategoryState;
+        get => _categoryState;
         set
         {
-            _spaced_State_CategoryState = value;
+            _categoryState = value;
             if(value != null)
             {
-                if(Visual.Categories.ContainsKey("Spaced State Category"))
+                if(Visual.Categories.ContainsKey("Category"))
                 {
-                    var category = Visual.Categories["Spaced State Category"];
+                    var category = Visual.Categories["Category"];
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
                 else
                 {
-                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "Spaced State Category");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "Category");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -63,12 +63,7 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
 
-    public float Spaced_State_Variable
-    {
-        get;
-        set;
-    }
-    public float Spaced_Variable
+    public int Spaced_Variable
     {
         get;
         set;

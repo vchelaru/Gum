@@ -1972,6 +1972,11 @@
     </Variable>
   </State>
   <Instance>
+    <Name>this</Name>
+    <BaseType>interface</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
     <Name>DemoSettingsMenu</Name>
     <BaseType>Container</BaseType>
     <DefinedByBase>false</DefinedByBase>
@@ -2264,6 +2269,16 @@
   <Instance>
     <Name>LabelInstance1</Name>
     <BaseType>Controls/Label</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>DeletedComponentInstance</Name>
+    <BaseType>DeletedComponent</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Spaced Component Instance</Name>
+    <BaseType>Spaced Component</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
