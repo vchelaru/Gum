@@ -2,134 +2,140 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
-using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 namespace Gum.Managers;
 
 public class NameVerifier : INameVerifier
 {
     #region Fields/Properties
-    
-    public static readonly char[] InvalidCharacters =
-        [
-            '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', 
-                '(', ')', '-', '=', '+', ';', '\'', ':', '"', '<', 
-                ',', '>', '.', '/', '\\', '?', '[', '{', ']', '}', 
-                '|'
-            // Spaces are handled separately
-            //    ' ' 
-        ];
-        private static readonly HashSet<string> InvalidWindowsFileNames =
-        [
-            "con",
-            "prn",
-            "aux",
-            "nul",
-            "com0",
-            "com1",
-            "com2",
-            "com3",
-            "com4",
-            "com5",
-            "com6",
-            "com7",
-            "com8",
-            "com9",
-            "lpt0",
-            "lpt1",
-            "lpt2",
-            "lpt3",
-            "lpt4",
-            "lpt5",
-            "lpt6",
-            "lpt7",
-            "lpt8",
-            "lpt9"
-        ];
-        private static readonly HashSet<string> CSharpReservedKeywords =
-        [
-            "abstract",
-            "as",
-            "base",
-            "bool",
-            "break",
-            "byte",
-            "case",
-            "catch",
-            "char",
-            "checked",
-            "class",
-            "const",
-            "continue",
-            "decimal",
-            "default",
-            "delegate",
-            "do",
-            "double",
-            "else",
-            "enum",
-            "event",
-            "explicit",
-            "extern",
-            "false",
-            "finally",
-            "fixed",
-            "float",
-            "for",
-            "foreach",
-            "goto",
-            "if",
-            "implicit",
-            "in",
-            "int",
-            "interface",
-            "internal",
-            "is",
-            "lock",
-            "long",
-            "namespace",
-            "new",
-            "null",
-            "object",
-            "operator",
-            "out",
-            "override",
-            "params",
-            "private",
-            "protected",
-            "public",
-            "readonly",
-            "ref",
-            "return",
-            "sbyte",
-            "sealed",
-            "short",
-            "sizeof",
-            "stackalloc",
-            "static",
-            "string",
-            "struct",
-            "switch",
-            "this",
-            "throw",
-            "true",
-            "try",
-            "typeof",
-            "uint",
-            "ulong",
-            "unchecked",
-            "unsafe",
-            "ushort",
-            "using",
-            "virtual",
-            "void",
-            "volatile",
-            "while"
-        ];
 
-        private readonly StandardElementsManager _standardElementsManager;
+    public static readonly ImmutableArray<UnicodeCategory> ValidCharacterCategories =
+    [
+        UnicodeCategory.UppercaseLetter,
+        UnicodeCategory.LowercaseLetter,
+        UnicodeCategory.TitlecaseLetter,
+        UnicodeCategory.ModifierLetter,
+        UnicodeCategory.LetterNumber,
+        UnicodeCategory.DecimalDigitNumber,
+        UnicodeCategory.ConnectorPunctuation,
+        UnicodeCategory.NonSpacingMark,
+        UnicodeCategory.SpacingCombiningMark,
+        UnicodeCategory.Format
+    ];
+
+    private static readonly ImmutableHashSet<string> InvalidWindowsFileNames =
+    [
+        "con",
+        "prn",
+        "aux",
+        "nul",
+        "com0",
+        "com1",
+        "com2",
+        "com3",
+        "com4",
+        "com5",
+        "com6",
+        "com7",
+        "com8",
+        "com9",
+        "lpt0",
+        "lpt1",
+        "lpt2",
+        "lpt3",
+        "lpt4",
+        "lpt5",
+        "lpt6",
+        "lpt7",
+        "lpt8",
+        "lpt9"
+    ];
+
+    private static readonly ImmutableHashSet<string> CSharpReservedKeywords =
+    [
+        "abstract",
+        "as",
+        "base",
+        "bool",
+        "break",
+        "byte",
+        "case",
+        "catch",
+        "char",
+        "checked",
+        "class",
+        "const",
+        "continue",
+        "decimal",
+        "default",
+        "delegate",
+        "do",
+        "double",
+        "else",
+        "enum",
+        "event",
+        "explicit",
+        "extern",
+        "false",
+        "finally",
+        "fixed",
+        "float",
+        "for",
+        "foreach",
+        "goto",
+        "if",
+        "implicit",
+        "in",
+        "int",
+        "interface",
+        "internal",
+        "is",
+        "lock",
+        "long",
+        "namespace",
+        "new",
+        "null",
+        "object",
+        "operator",
+        "out",
+        "override",
+        "params",
+        "private",
+        "protected",
+        "public",
+        "readonly",
+        "ref",
+        "return",
+        "sbyte",
+        "sealed",
+        "short",
+        "sizeof",
+        "stackalloc",
+        "static",
+        "string",
+        "struct",
+        "switch",
+        "this",
+        "throw",
+        "true",
+        "try",
+        "typeof",
+        "uint",
+        "ulong",
+        "unchecked",
+        "unsafe",
+        "ushort",
+        "using",
+        "virtual",
+        "void",
+        "volatile",
+        "while"
+    ];
+
+    private readonly StandardElementsManager _standardElementsManager;
     
     #endregion
     
@@ -299,18 +305,26 @@ public class NameVerifier : INameVerifier
         if (string.IsNullOrWhiteSpace(name))
         {
             whyNotValid = "Empty names are not valid";
-        }
-        else if (name.IndexOfAny(InvalidCharacters) != -1)
-        {
-            whyNotValid = "The name can't contain invalid character " + name[name.IndexOfAny(InvalidCharacters)];
+            return;
         }
         if(string.IsNullOrEmpty(whyNotValid) && name.StartsWith(" "))
         {
             whyNotValid = "The name can't begin with a space";
+            return;
         }
         if (string.IsNullOrEmpty(whyNotValid) && name.EndsWith(" "))
         {
             whyNotValid = "The name can't end with a space";
+            return;
+        }
+        foreach (char character in name)
+        {
+            var category = char.GetUnicodeCategory(character);
+            if (!ValidCharacterCategories.Contains(category))
+            {
+                whyNotValid = $"Character {character} is invalid";
+                return;
+            }
         }
     }
     private void IsNameValidVariable(string name, out string whyNotValid)
@@ -330,9 +344,22 @@ public class NameVerifier : INameVerifier
             whyNotValid = $"The name {name} is a reserved file name in Windows";
         }
     }
-    public bool IsCSharpReservedKeyword(string word)
+    public bool IsValidCSharpName(string name, out string whyNotValid)
     {
-        return CSharpReservedKeywords.Contains(word);
+        if (name[0] != '_' && !char.IsLetter(name[0]))
+        {
+            whyNotValid = $"Name may not begin with character {name[0]}";
+            return false;
+        }
+        
+        if (CSharpReservedKeywords.Contains(name))
+        {
+            whyNotValid = "Name is a C# reserved keyword";
+            return false;
+        }
+        
+        whyNotValid = null;
+        return true;
     }
     public bool IsComponentNameAlreadyUsed(string name)
     {

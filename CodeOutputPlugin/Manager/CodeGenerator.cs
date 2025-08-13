@@ -5022,18 +5022,26 @@ public class CodeGenerator
         return isRightType;
     }
     
-    internal static string ToCSharpName(string value)
+    internal static string ToCSharpName(string name)
     {
-        if (value.Length > 0 && char.IsDigit(value[0]))
+        if (NameVerifier.IsValidCSharpName(name, out string whyNotValid))
         {
-            value = "_" + value;
-        }
-        else if (NameVerifier.IsCSharpReservedKeyword(value))
-        {
-            value = "@" + value;
+            if (whyNotValid == $"Name may not begin with character {name[0]}")
+            {
+                name = "_" + name;
+            }
+            else if (whyNotValid == "Name is a C# reserved keyword")
+            {
+                name = "@" + name;
+            }
+            else
+            {
+                throw new NotImplementedException("Reason why name is invalid C# name is unhandled.\n" +
+                                                  $"Reason: {whyNotValid}");
+            }
         }
         
-        return value.Replace(" ", "_");
+        return name.Replace(" ", "_");
     }
 
     #endregion
