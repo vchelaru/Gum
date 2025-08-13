@@ -255,6 +255,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>interface</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Spaced Component</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>

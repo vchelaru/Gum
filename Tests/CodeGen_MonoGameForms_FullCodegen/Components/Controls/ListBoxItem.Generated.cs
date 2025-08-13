@@ -42,13 +42,13 @@ partial class ListBoxItem : global::MonoGameGum.Forms.Controls.ListBoxItem
         Focused,
     }
 
-    ListBoxItemCategory? mListBoxItemCategoryState;
+    private ListBoxItemCategory? _listBoxItemCategoryState;
     public ListBoxItemCategory? ListBoxItemCategoryState
     {
-        get => mListBoxItemCategoryState;
+        get => _listBoxItemCategoryState;
         set
         {
-            mListBoxItemCategoryState = value;
+            _listBoxItemCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

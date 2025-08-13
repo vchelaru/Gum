@@ -1,4 +1,4 @@
-//Code for Spaced Component (Container)
+//Code for interface (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,7 +13,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components;
-partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
+partial class @interface : MonoGameGum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
@@ -21,41 +21,41 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
         var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Spaced Component");
+            var element = ObjectFinder.Self.GetElementSave("interface");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
-            if(createForms) visual.FormsControlAsObject = new Spaced_Component(visual);
+            if(createForms) visual.FormsControlAsObject = new @interface(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Spaced_Component)] = template;
-        ElementSaveExtensions.RegisterGueInstantiation("Spaced Component", () => 
+        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(@interface)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("interface", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
             return gue;
         });
     }
-    public enum Category
+    public enum @class
     {
-        Spaced_State,
+        @checked,
     }
 
-    Category? _categoryState;
-    public Category? CategoryState
+    @class? _classState;
+    public @class? @classState
     {
-        get => _categoryState;
+        get => _classState;
         set
         {
-            _categoryState = value;
+            _classState = value;
             if(value != null)
             {
-                if(Visual.Categories.ContainsKey("Category"))
+                if(Visual.Categories.ContainsKey("class"))
                 {
-                    var category = Visual.Categories["Category"];
+                    var category = Visual.Categories["class"];
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
                 else
                 {
-                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "Category");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "class");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -63,15 +63,15 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
 
-    public int Spaced_Variable
+    public string @object
     {
         get;
         set;
     }
-    public Spaced_Component(InteractiveGue visual) : base(visual)
+    public @interface(InteractiveGue visual) : base(visual)
     {
     }
-    public Spaced_Component()
+    public @interface()
     {
 
 

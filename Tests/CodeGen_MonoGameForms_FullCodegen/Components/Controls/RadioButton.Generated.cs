@@ -53,13 +53,13 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
         DisabledFocusedOff,
     }
 
-    RadioButtonCategory? mRadioButtonCategoryState;
+    private RadioButtonCategory? _radioButtonCategoryState;
     public RadioButtonCategory? RadioButtonCategoryState
     {
-        get => mRadioButtonCategoryState;
+        get => _radioButtonCategoryState;
         set
         {
-            mRadioButtonCategoryState = value;
+            _radioButtonCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -204,7 +204,7 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
         if (RadioBackground.ElementSave != null) RadioBackground.AddStatesAndCategoriesRecursivelyToGue(RadioBackground.ElementSave);
         if (RadioBackground.ElementSave != null) RadioBackground.SetInitialState();
         RadioBackground.Name = "RadioBackground";
-        Radio = new Icon();
+        Radio = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         Radio.Name = "Radio";
         TextInstance = new global::MonoGameGum.GueDeriving.TextRuntime();
         TextInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Text");

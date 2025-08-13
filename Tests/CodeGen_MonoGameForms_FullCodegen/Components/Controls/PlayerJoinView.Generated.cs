@@ -66,13 +66,13 @@ partial class PlayerJoinView : MonoGameGum.Forms.Controls.FrameworkElement
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        PlayerJoinViewItem1 = new PlayerJoinViewItem();
+        PlayerJoinViewItem1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem1.Name = "PlayerJoinViewItem1";
-        PlayerJoinViewItem2 = new PlayerJoinViewItem();
+        PlayerJoinViewItem2 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem2.Name = "PlayerJoinViewItem2";
-        PlayerJoinViewItem3 = new PlayerJoinViewItem();
+        PlayerJoinViewItem3 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem3.Name = "PlayerJoinViewItem3";
-        PlayerJoinViewItem4 = new PlayerJoinViewItem();
+        PlayerJoinViewItem4 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem4.Name = "PlayerJoinViewItem4";
     }
     protected virtual void AssignParents()

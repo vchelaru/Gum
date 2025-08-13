@@ -46,13 +46,13 @@ partial class Slider : global::MonoGameGum.Forms.Controls.Slider
         Pushed,
     }
 
-    SliderCategory? mSliderCategoryState;
+    private SliderCategory? _sliderCategoryState;
     public SliderCategory? SliderCategoryState
     {
-        get => mSliderCategoryState;
+        get => _sliderCategoryState;
         set
         {
-            mSliderCategoryState = value;
+            _sliderCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -132,7 +132,7 @@ partial class Slider : global::MonoGameGum.Forms.Controls.Slider
         if (TrackBackground.ElementSave != null) TrackBackground.AddStatesAndCategoriesRecursivelyToGue(TrackBackground.ElementSave);
         if (TrackBackground.ElementSave != null) TrackBackground.SetInitialState();
         TrackBackground.Name = "TrackBackground";
-        ThumbInstance = new ButtonStandard();
+        ThumbInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ThumbInstance.Name = "ThumbInstance";
         FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");

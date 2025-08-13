@@ -157,7 +157,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
         DialogBoxInstance = this.GetGraphicalUiElementByName("DialogBoxInstance") as CodeGen_MonoGame_ByReference.Components.Controls.DialogBoxRuntime;
         WindowStandardInstance = this.GetGraphicalUiElementByName("WindowStandardInstance") as CodeGen_MonoGame_ByReference.Components.Controls.WindowStandardRuntime;
         LabelInstance1 = this.GetGraphicalUiElementByName("LabelInstance1") as CodeGen_MonoGame_ByReference.Components.Controls.LabelRuntime;
-        Spaced_Component_Instance = this.GetGraphicalUiElementByName("Spaced Component Instance") as Spaced_ComponentRuntime;
+        Spaced_Component_Instance = this.GetGraphicalUiElementByName("Spaced Component Instance") as CodeGen_MonoGame_ByReference.Components.Spaced_ComponentRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

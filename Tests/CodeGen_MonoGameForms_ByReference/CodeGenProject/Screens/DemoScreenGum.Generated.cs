@@ -40,6 +40,35 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
             return gue;
         });
     }
+    public enum Spaced_Category
+    {
+        Spaced_State,
+    }
+
+    Spaced_Category? _spaced_CategoryState;
+    public Spaced_Category? Spaced_CategoryState
+    {
+        get => _spaced_CategoryState;
+        set
+        {
+            _spaced_CategoryState = value;
+            if(value != null)
+            {
+                if(Visual.Categories.ContainsKey("Spaced Category"))
+                {
+                    var category = Visual.Categories["Spaced Category"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "Spaced Category");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+            }
+        }
+    }
     public ContainerRuntime DemoSettingsMenu { get; protected set; }
     public NineSliceRuntime Background { get; protected set; }
     public ContainerRuntime MenuTitle { get; protected set; }
@@ -99,6 +128,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public DialogBox DialogBoxInstance { get; protected set; }
     public WindowStandard WindowStandardInstance { get; protected set; }
     public Label LabelInstance1 { get; protected set; }
+    // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
     public Spaced_Component Spaced_Component_Instance { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)

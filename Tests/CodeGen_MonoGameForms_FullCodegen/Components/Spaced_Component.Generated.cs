@@ -12,7 +12,7 @@ using RenderingLibrary.Graphics;
 
 using System.Linq;
 
-namespace CodeGenProject.Components;
+namespace CodeGen_MonoGameForms_FullCodegen.Components;
 partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -38,50 +38,49 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
         Spaced_State,
     }
 
-    Category? _categoryState;
+    private Category? _categoryState;
     public Category? CategoryState
     {
         get => _categoryState;
         set
         {
             _categoryState = value;
-            if(value != null)
+            var appliedDynamically = false;
+            if(!appliedDynamically)
             {
-                if(Visual.Categories.ContainsKey("Category"))
+                switch (value)
                 {
-                    var category = Visual.Categories["Category"];
-                    var state = category.States.Find(item => item.Name == value.ToString());
-                    this.Visual.ApplyState(state);
-                }
-                else
-                {
-                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "Category");
-                    var state = category.States.Find(item => item.Name == value.ToString());
-                    this.Visual.ApplyState(state);
+                    case Category.Spaced_State:
+                        break;
                 }
             }
         }
     }
 
-    public int Spaced_Variable
-    {
-        get;
-        set;
-    }
     public Spaced_Component(InteractiveGue visual) : base(visual)
     {
-    }
-    public Spaced_Component()
-    {
-
-
-
-    }
-    protected override void ReactToVisualChanged()
-    {
-        base.ReactToVisualChanged();
+        InitializeInstances();
         CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    public Spaced_Component() : base(new ContainerRuntime())
+    {
+
+
+        InitializeInstances();
+
+        ApplyDefaultVariables();
+        AssignParents();
+        CustomInitialize();
+    }
+    protected virtual void InitializeInstances()
+    {
+        base.ReactToVisualChanged();
+    }
+    protected virtual void AssignParents()
+    {
+    }
+    private void ApplyDefaultVariables()
+    {
+    }
     partial void CustomInitialize();
 }

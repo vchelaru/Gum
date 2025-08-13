@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>Spaced Component</Name>
+  <Name>interface</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
     <Variable>
-      <Type>Category</Type>
-      <Name>CategoryState</Name>
+      <Type>class</Type>
+      <Name>classState</Name>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>int</Type>
-      <Name>Spaced Variable</Name>
-      <Value xsi:type="xsd:int">10</Value>
+      <Type>float</Type>
+      <Name>object</Name>
+      <Value xsi:type="xsd:float">1</Value>
       <SetsValue>true</SetsValue>
       <IsCustomVariable>true</IsCustomVariable>
     </Variable>
@@ -25,9 +25,9 @@
     </Variable>
   </State>
   <Category>
-    <Name>Category</Name>
+    <Name>class</Name>
     <State>
-      <Name>Spaced State</Name>
+      <Name>checked</Name>
     </State>
   </Category>
   <Behaviors />
