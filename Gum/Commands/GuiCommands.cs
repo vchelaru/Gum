@@ -41,13 +41,15 @@ public class GuiCommands : IGuiCommands
     MainPanelControl mainPanelControl;
 
     private readonly Lazy<ISelectedState> _lazySelectedState;
+    private readonly IDispatcher _dispatcher;
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
     #endregion
 
-    public GuiCommands(Lazy<ISelectedState> lazySelectedState)
+    public GuiCommands(Lazy<ISelectedState> lazySelectedState, IDispatcher dispatcher)
     {
         _lazySelectedState = lazySelectedState;
+        _dispatcher = dispatcher;
     }
 
     public void Initialize(MainPanelControl mainPanelControl)
@@ -169,7 +171,7 @@ public class GuiCommands : IGuiCommands
 
     public void PrintOutput(string output)
     {
-        DoOnUiThread(() => OutputManager.Self.AddOutput(output));
+        _dispatcher.Invoke(() => OutputManager.Self.AddOutput(output));
     }
 
     #region Show/Hide Tools
@@ -208,10 +210,4 @@ public class GuiCommands : IGuiCommands
 
         return spinner;
     }
-
-    public void DoOnUiThread(Action action)
-    {
-        mainPanelControl.Dispatcher.Invoke(action);
-    }
-
 }

@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Gui.Controls;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -42,6 +42,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly FontManager _fontManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
+    private readonly IDispatcher _dispatcher;
     
     private FilePath? _fontCharacterFileAbsolute;
 
@@ -52,6 +53,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         _fontManager = Locator.GetRequiredService<FontManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _dispatcher = Locator.GetRequiredService<IDispatcher>();
     }
 
     public override void StartUp()
@@ -263,7 +265,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             {
                 var ranges = BmfcSave.GenerateRangesFromFile(_fontCharacterFileAbsolute.FullPath);
 
-                _guiCommands.DoOnUiThread(() =>
+                _dispatcher.Invoke(() =>
                 {
                     viewModel.FontRanges = ranges;
                     control?.DataGrid.Refresh();

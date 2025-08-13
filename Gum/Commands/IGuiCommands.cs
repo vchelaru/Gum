@@ -1,4 +1,4 @@
-﻿using Gum.Controls;
+using Gum.Controls;
 using Gum.DataTypes;
 using System;
 using System.Collections.Generic;
@@ -23,5 +23,4 @@ public interface IGuiCommands
     void ToggleToolVisibility();
     void FocusSearch();
     Spinner ShowSpinner();
-    void DoOnUiThread(Action action);
 }
