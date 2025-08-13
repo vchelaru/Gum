@@ -138,6 +138,35 @@ public class NameVerifierTests
         whyNotValid.ShouldBe("Category names cannot contain spaces");
 
     }
+    
+    [Fact]
+    public void IsCategoryNameValid_ShouldReturnFalse_ForSameNameAsContainer()
+    {
+        IStateContainer component = new ComponentSave { Name = "ContainerName" };
+        bool isValid = _nameVerifier.IsCategoryNameValid(component.Name, component, out string whyNotValid);
+
+        isValid.ShouldBeFalse("Because category name can't be the same as it container's. " +
+                              "This would cause compiler errors when generating Forms code.");
+        
+        whyNotValid.ShouldBe("Category name cannot be the same as its container's");
+    }
+
+    #endregion
+
+    #region StateSave
+
+    [Fact]
+    public void IsStateNameValid_ShouldBeFalse_ForSameAsCategory()
+    {
+        StateSaveCategory category = new() { Name = "CategoryName" };
+        StateSave state = new();
+        bool isValid = _nameVerifier.IsStateNameValid(category.Name, category, state, out string whyNotValid);
+        
+        isValid.ShouldBeFalse("Because category name can't be the same as it category's. " +
+                              "This would cause compiler errors when generating Forms code.");
+        
+        whyNotValid.ShouldBe("Category name cannot be the same as its category's");
+    }
 
     #endregion
 }
