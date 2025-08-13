@@ -586,9 +586,7 @@ namespace Gum.Plugins
 
         internal void ReactToFileChanged(FilePath filePath) =>
             CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
-
-        internal void HandleUiZoomValueChanged() =>
-            CallMethodOnPlugin(plugin => plugin.CallUiZoomValueChanged());
+        
 
         public void SetHighlightedIpso(IPositionedSizedObject positionedSizedObject) =>
             CallMethodOnPlugin(plugin => plugin.CallSetHighlightedIpso(positionedSizedObject));

@@ -1,4 +1,4 @@
-using Gum.Controls;
+﻿using Gum.Controls;
 using Gum.DataTypes;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,6 @@ public interface IGuiCommands
     void RefreshStateTreeView();
     void RefreshVariables(bool force = false);
     void RefreshVariableValues();
-    int UiZoomValue { get; set; }
     void RefreshElementTreeView();
     void RefreshElementTreeView(IInstanceContainer instanceContainer);
     void MoveToCursor(System.Windows.Window window);

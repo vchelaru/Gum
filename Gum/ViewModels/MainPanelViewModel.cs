@@ -12,12 +12,23 @@ using Gum.Controls;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins;
+using Gum.Services;
 using Control = System.Windows.Forms.Control;
 
 namespace Gum.Controls;
 
-public class MainPanelViewModel : ViewModel, ITabManager
+public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<UiScalingChangedMessage>
 {
+    private readonly IUiSettingsService _uiSettingsService;
+    
+    private const double DefaultFontSize = 12;
+
+    public double FontSize
+    {
+        get => Get<double>();
+        private set => Set(value);
+    }
+    
     private readonly Func<FrameworkElement, PluginTab> _pluginTabFactory;
     private ObservableCollection<PluginTab> PluginTabs { get; } = [];
 
@@ -34,10 +45,12 @@ public class MainPanelViewModel : ViewModel, ITabManager
         set => Set(value);
     }
 
-    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory)
+    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger)
     {
         _pluginTabFactory = pluginTabFactory;
+        messenger.RegisterAll(this);
         
+        FontSize = DefaultFontSize;
         IsToolsVisible = true;
         PluginTabs.CollectionChanged += PluginTabsOnCollectionChanged;
         
@@ -95,4 +108,9 @@ public class MainPanelViewModel : ViewModel, ITabManager
     }
     
     public void RemoveTab(PluginTab tab) => PluginTabs.Remove(tab);
+    
+    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
+    {
+        FontSize = DefaultFontSize * message.Scale;
+    }
 }

@@ -188,6 +188,7 @@ public class HotkeyManager
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly IUiSettingsService _uiSettingsService;
 
     // If adding any new keys here, modify HotkeyViewModel
     
@@ -196,7 +197,8 @@ public class HotkeyManager
         IElementCommands elementCommands,
         IDialogService dialogService,
         IFileCommands fileCommands,
-        SetVariableLogic setVariableLogic)
+        SetVariableLogic setVariableLogic,
+        IUiSettingsService uiSettingsService)
     {
         _copyPasteLogic = CopyPasteLogic.Self;
         _guiCommands = guiCommands;
@@ -205,6 +207,7 @@ public class HotkeyManager
         _dialogService = dialogService;
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
+        _uiSettingsService = uiSettingsService;
     }
 
     #region App Wide Keys
@@ -251,40 +254,16 @@ public class HotkeyManager
         if (e.Handled)
             return;
 
-        ScaleAppFont();
-       
-        void ScaleAppFont()
+        int direction = 
+            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
+            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
+            0;
+        
+        if (direction != 0)
         {
-            int? direction = ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
-                ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 : null;
-
-            if (direction is {} dir)
-            {
-                var currentZoom = _guiCommands.UiZoomValue;
-                if (dir > 0)
-                {
-                    if (currentZoom < 100)
-                    {
-                        _guiCommands.UiZoomValue += 10;
-                    }
-                    else
-                    {
-                        _guiCommands.UiZoomValue += 25;
-                    }
-                }
-                else
-                {
-                    if (currentZoom <= 100)
-                    {
-                        _guiCommands.UiZoomValue -= 10;
-                    }
-                    else
-                    {
-                        _guiCommands.UiZoomValue -= 25;
-                    }
-                }
-                e.Handled = true;
-            }
+            double step = _uiSettingsService.Scale < 1 ? 0.1 : 0.25;
+            _uiSettingsService.Scale += direction > 0 ? step : -step;
+            e.Handled = true;
         }
     }
 

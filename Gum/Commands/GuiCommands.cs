@@ -83,42 +83,6 @@ public class GuiCommands : IGuiCommands
         PropertyGridManager.Self.RefreshVariablesDataGridValues();
     }
 
-    const int DefaultFontSize = 11;
-
-    int _uiZoomValue = 100;
-    const int MinUiZoomValue = 70;
-    const int MaxUiZoomValue = 500;
-    public int UiZoomValue
-    {
-        get => _uiZoomValue;
-        set
-        {
-            if (value > MaxUiZoomValue)
-            {
-                _uiZoomValue = MaxUiZoomValue;
-            }
-            else if (value < MinUiZoomValue)
-            {
-                _uiZoomValue = MinUiZoomValue;
-            }
-            else
-            {
-                _uiZoomValue = value;
-            }
-            UpdateUiToZoomValue();
-        }
-    }
-
-    private void UpdateUiToZoomValue()
-    {
-        var fontSize = DefaultFontSize * UiZoomValue / 100.0f;
-
-        mainPanelControl.FontSize = fontSize;
-
-        PluginManager.Self.HandleUiZoomValueChanged();
-    }
-
-
     public void RefreshElementTreeView()
     {
         PluginManager.Self.RefreshElementTreeView();

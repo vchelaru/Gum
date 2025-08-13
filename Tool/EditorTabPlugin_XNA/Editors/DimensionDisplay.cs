@@ -37,14 +37,14 @@ namespace Gum.Wireframe.Editors
 
         ToolFontService _toolFontService;
 
-        private readonly IGuiCommands _guiCommands;
+        private readonly IUiSettingsService _uiSettingsService;
 
         #endregion
 
         public DimensionDisplay()
         {
             _toolFontService = ToolFontService.Self;
-            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
         }
 
         public void AddToManagers(SystemManagers systemManagers, Layer layer)
@@ -116,7 +116,7 @@ namespace Gum.Wireframe.Editors
 
             // Adjust the Font size based on the UI's scale.  Instead of the Editors zoom level.
             // This should have ZERO affect for anyone not using UI level zoom
-            float scaleFactor = _guiCommands.UiZoomValue / 100;
+            float scaleFactor = (float)_uiSettingsService.Scale;
             float decreasedScaleFactor = scaleFactor * 0.75f;
             float finalizedScaleFactor = decreasedScaleFactor < 1 ? 1 : decreasedScaleFactor;
 
