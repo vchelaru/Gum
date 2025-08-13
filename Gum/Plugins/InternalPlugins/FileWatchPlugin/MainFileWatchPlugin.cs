@@ -26,7 +26,7 @@ public class MainFileWatchPlugin : InternalPlugin
     System.Windows.Forms.ToolStripMenuItem showFileWatchMenuItem;
     private FileWatchManager _fileWatchManager;
     private FileWatchLogic _fileWatchLogic;
-    private IGuiCommands _guiCommands;
+    private IDispatcher _dispatcher;
 
     #endregion
 
@@ -39,7 +39,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
         _fileWatchManager = FileWatchManager.Self;
         _fileWatchLogic = FileWatchLogic.Self;
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _dispatcher = Locator.GetRequiredService<IDispatcher>();
 
         pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();
@@ -122,7 +122,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
     private void HandleRefreshDisplayTimerElapsed(object sender, ElapsedEventArgs e)
     {
-        _guiCommands.DoOnUiThread(() =>
+        _dispatcher.Invoke(() =>
         {
             if(_fileWatchManager.CurrentFilePathWatching == null)
             {
