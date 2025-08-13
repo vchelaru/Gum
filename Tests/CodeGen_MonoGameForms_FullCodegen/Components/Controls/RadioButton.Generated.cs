@@ -53,13 +53,13 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
         DisabledFocusedOff,
     }
 
-    RadioButtonCategory? mRadioButtonCategoryState;
+    private RadioButtonCategory? _radioButtonCategoryState;
     public RadioButtonCategory? RadioButtonCategoryState
     {
-        get => mRadioButtonCategoryState;
+        get => _radioButtonCategoryState;
         set
         {
-            mRadioButtonCategoryState = value;
+            _radioButtonCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

@@ -24,6 +24,9 @@ using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using DialogResult = System.Windows.Forms.DialogResult;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Extensions;
+using Gum.Messages;
 
 namespace Gum
 {
@@ -42,6 +45,7 @@ namespace Gum
         private readonly IDialogService _dialogService;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
+        private readonly IMessenger _messenger;
 
         #endregion
 
@@ -92,6 +96,7 @@ namespace Gum
             _dialogService = Locator.GetRequiredService<IDialogService>();
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
+            _messenger =  Locator.GetRequiredService<IMessenger>();
         }
 
         public void LoadSettings()
@@ -124,6 +129,15 @@ namespace Gum
                 else
                 {
                     CreateNewProject();
+                }
+            }
+            else
+            {
+                if(CommandLineManager.Self.ShouldCodeGenAll)
+                {
+                    _fileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+
+                    await _messenger.SendAsync(new RequestCodeGenerationMessage());
                 }
             }
         }

@@ -43,13 +43,13 @@ partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
         Disabled,
     }
 
-    MenuItemCategory? mMenuItemCategoryState;
+    private MenuItemCategory? _menuItemCategoryState;
     public MenuItemCategory? MenuItemCategoryState
     {
-        get => mMenuItemCategoryState;
+        get => _menuItemCategoryState;
         set
         {
-            mMenuItemCategoryState = value;
+            _menuItemCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

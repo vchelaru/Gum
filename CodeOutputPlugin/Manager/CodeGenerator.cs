@@ -428,6 +428,11 @@ public class CodeGenerator
 
         }
 
+        if(NameVerifier.IsCSharpReservedKeyword(className))
+        {
+            className = "@" + className;
+        }
+
         if(isFullyQualified && container is ElementSave elementSave)
         {
             className = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings) + "." + className;
@@ -1058,6 +1063,15 @@ public class CodeGenerator
     private static void FillWithInstanceInstantiation(CodeGenerationContext context)
     {
         var instance = context.Instance;
+
+        var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+        ///////////////////////Early Out//////////////////////////////
+        if(baseElement == null)
+        {
+            return;
+        }
+        //////////////////////End Early Out///////////////////////////
         var instanceName = ToCSharpName(context.Instance.Name);
 
         var strippedType = instance.BaseType;
@@ -1120,7 +1134,8 @@ public class CodeGenerator
             context.StringBuilder.AppendLine($"{tabs}{instanceName}.BindingContext = this;");
         }
 
-        if (visualApi == VisualApi.Gum)
+
+        if (visualApi == VisualApi.Gum && baseElement != null)
         {
             // Use instance.Name so it is "raw"
             context.StringBuilder.AppendLine($"{tabs}{instanceName}.Name = \"{instance.Name}\";");
@@ -2466,8 +2481,16 @@ public class CodeGenerator
 
     private static void FillWithParentAssignments(CodeGenerationContext context)
     {
-        var container = context.Element;
         var instance = context.Instance;
+
+        ////////////////////////Early Out////////////////////////////
+        if(instance != null && ObjectFinder.Self.GetElementSave(instance.BaseType) == null)
+        {
+            return;
+        }
+        ////////////////////////////////////////////////////////////
+
+        var container = context.Element;
         var instanceNameInCode = ToCSharpName(instance.Name);
         //context.Instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings;
 
@@ -3230,19 +3253,25 @@ public class CodeGenerator
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{enumDeclarator} private _{category.Name}State;");
+                var categoryFieldName = char.ToLower(category.Name[0]) + category.Name.Substring(1);
+                if(categoryFieldName.StartsWith("@"))
+                {
+                    // remove "@" because we'll have an underscore
+                    categoryFieldName = categoryFieldName.Substring(1);
+                }
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private {enumDeclarator} _{categoryFieldName}State;");
 
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumDeclarator} {categoryName}State");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => private _{category.Name}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => _{categoryFieldName}State;");
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"private _{category.Name}State = value;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"_{categoryFieldName}State = value;");
                 CodeGenerationContext context = new CodeGenerationContext();
                 context.Element = element;
                 context.TabCount = tabCount;
@@ -3271,7 +3300,14 @@ public class CodeGenerator
         {
             var propertyName = $"{categoryName}State";
 
-            var fieldName = "_" + char.ToLower(propertyName[0]) + propertyName.Substring(1);
+            var fieldName = char.ToLower(propertyName[0]) + propertyName.Substring(1);
+
+            if(fieldName.StartsWith("@"))
+            {
+                fieldName = fieldName.Substring(1);
+            }
+
+            fieldName = "_" + fieldName;
 
             stringBuilder.AppendLine(ToTabs(tabCount) + $"{categoryName}? {fieldName};");
 
@@ -4337,8 +4373,15 @@ public class CodeGenerator
         {
             if (variable.IsCustomVariable)
             {
-                // assign it:
-                context.StringBuilder.AppendLine($"{context.CodePrefix}.{ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                if(string.IsNullOrEmpty( variable.SourceObject))
+                {
+                    context.StringBuilder.AppendLine($"{context.Tabs}this.{ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                }
+                else
+                {
+                    // assign it:
+                    context.StringBuilder.AppendLine($"{context.CodePrefix}.{ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
+                }
 
             }
         }

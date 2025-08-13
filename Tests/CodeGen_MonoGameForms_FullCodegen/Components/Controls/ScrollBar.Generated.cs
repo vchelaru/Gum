@@ -39,13 +39,13 @@ partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
     {
     }
 
-    ScrollBarCategory? mScrollBarCategoryState;
+    private ScrollBarCategory? _scrollBarCategoryState;
     public ScrollBarCategory? ScrollBarCategoryState
     {
-        get => mScrollBarCategoryState;
+        get => _scrollBarCategoryState;
         set
         {
-            mScrollBarCategoryState = value;
+            _scrollBarCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

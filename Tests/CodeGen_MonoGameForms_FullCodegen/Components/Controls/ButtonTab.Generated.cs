@@ -44,13 +44,13 @@ partial class ButtonTab : global::MonoGameGum.Forms.Controls.Button
         DisabledFocused,
     }
 
-    ButtonCategory? mButtonCategoryState;
+    private ButtonCategory? _buttonCategoryState;
     public ButtonCategory? ButtonCategoryState
     {
-        get => mButtonCategoryState;
+        get => _buttonCategoryState;
         set
         {
-            mButtonCategoryState = value;
+            _buttonCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

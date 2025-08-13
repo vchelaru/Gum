@@ -46,13 +46,13 @@ partial class Slider : global::MonoGameGum.Forms.Controls.Slider
         Pushed,
     }
 
-    SliderCategory? mSliderCategoryState;
+    private SliderCategory? _sliderCategoryState;
     public SliderCategory? SliderCategoryState
     {
-        get => mSliderCategoryState;
+        get => _sliderCategoryState;
         set
         {
-            mSliderCategoryState = value;
+            _sliderCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

@@ -3,9 +3,9 @@ using GumRuntime;
 using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
+using CodeGen_MonoGameForms_FullCodegen.Components;
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using CodeGen_MonoGameForms_FullCodegen.Components.Elements;
-using CodeGen_MonoGameForms_FullCodegen.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -40,6 +40,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
             return gue;
         });
     }
+    public @interface @this { get; protected set; }
     public ContainerRuntime DemoSettingsMenu { get; protected set; }
     public NineSliceRuntime Background { get; protected set; }
     public ContainerRuntime MenuTitle { get; protected set; }
@@ -101,7 +102,6 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public Label LabelInstance1 { get; protected set; }
     // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
     public Spaced_Component Spaced_Component_Instance { get; protected set; }
-    public @interface @this { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)
     {
@@ -122,6 +122,8 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
+        @this = new CodeGen_MonoGameForms_FullCodegen.Components.@interface();
+        @this.Name = "this";
         DemoSettingsMenu = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         DemoSettingsMenu.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (DemoSettingsMenu.ElementSave != null) DemoSettingsMenu.AddStatesAndCategoriesRecursivelyToGue(DemoSettingsMenu.ElementSave);
@@ -285,15 +287,12 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         WindowStandardInstance.Name = "WindowStandardInstance";
         LabelInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance1.Name = "LabelInstance1";
-        DeletedComponentInstance = new ();
-        DeletedComponentInstance.Name = "DeletedComponentInstance";
         Spaced_Component_Instance = new CodeGen_MonoGameForms_FullCodegen.Components.Spaced_Component();
         Spaced_Component_Instance.Name = "Spaced Component Instance";
-        @this = new CodeGen_MonoGameForms_FullCodegen.Components.interface();
-        @this.Name = "this";
     }
     protected virtual void AssignParents()
     {
+        this.AddChild(@this);
         this.AddChild(DemoSettingsMenu);
         DemoSettingsMenu.AddChild(Background);
         MenuItems.AddChild(MenuTitle);
@@ -353,12 +352,11 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         this.AddChild(DialogBoxInstance);
         this.AddChild(WindowStandardInstance);
         WindowStandardInstance.AddChild(LabelInstance1);
-        this.AddChild(DeletedComponentInstance);
         this.AddChild(Spaced_Component_Instance);
-        this.AddChild(@this);
     }
     private void ApplyDefaultVariables()
     {
+
         this.DemoSettingsMenu.Height = 16f;
         this.DemoSettingsMenu.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         this.DemoSettingsMenu.Width = 400f;
@@ -689,7 +687,6 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         this.LabelInstance1.Visual.Y = 22f;
         this.LabelInstance1.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.LabelInstance1.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-
 
 
 

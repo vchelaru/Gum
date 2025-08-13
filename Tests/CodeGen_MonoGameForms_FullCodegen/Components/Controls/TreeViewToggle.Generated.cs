@@ -46,13 +46,13 @@ partial class TreeViewToggle : MonoGameGum.Forms.Controls.FrameworkElement
         PushedOff,
     }
 
-    ToggleCategory? mToggleCategoryState;
+    private ToggleCategory? _toggleCategoryState;
     public ToggleCategory? ToggleCategoryState
     {
-        get => mToggleCategoryState;
+        get => _toggleCategoryState;
         set
         {
-            mToggleCategoryState = value;
+            _toggleCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

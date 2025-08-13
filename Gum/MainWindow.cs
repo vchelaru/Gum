@@ -200,6 +200,10 @@ namespace Gum
                     WindowState = settings.MainWindowState;
                 }
             }
+            else
+            {
+                Close();
+            }
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)

@@ -43,13 +43,13 @@ partial class ListBox : global::MonoGameGum.Forms.Controls.ListBox
         DisabledFocused,
     }
 
-    ListBoxCategory? mListBoxCategoryState;
+    private ListBoxCategory? _listBoxCategoryState;
     public ListBoxCategory? ListBoxCategoryState
     {
-        get => mListBoxCategoryState;
+        get => _listBoxCategoryState;
         set
         {
-            mListBoxCategoryState = value;
+            _listBoxCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

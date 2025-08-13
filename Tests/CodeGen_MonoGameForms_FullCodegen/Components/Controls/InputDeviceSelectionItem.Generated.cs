@@ -41,13 +41,13 @@ partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkEle
         HasInputDevice,
     }
 
-    JoinedCategory? mJoinedCategoryState;
+    private JoinedCategory? _joinedCategoryState;
     public JoinedCategory? JoinedCategoryState
     {
-        get => mJoinedCategoryState;
+        get => _joinedCategoryState;
         set
         {
-            mJoinedCategoryState = value;
+            _joinedCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

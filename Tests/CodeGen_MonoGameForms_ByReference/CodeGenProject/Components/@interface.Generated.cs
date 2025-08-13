@@ -38,13 +38,13 @@ partial class @interface : MonoGameGum.Forms.Controls.FrameworkElement
         @checked,
     }
 
-    @class? _@classState;
+    @class? _classState;
     public @class? @classState
     {
-        get => _@classState;
+        get => _classState;
         set
         {
-            _@classState = value;
+            _classState = value;
             if(value != null)
             {
                 if(Visual.Categories.ContainsKey("class"))

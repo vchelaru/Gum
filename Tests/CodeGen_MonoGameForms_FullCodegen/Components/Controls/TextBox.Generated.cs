@@ -47,13 +47,13 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
         Multi,
     }
 
-    TextBoxCategory? mTextBoxCategoryState;
+    private TextBoxCategory? _textBoxCategoryState;
     public TextBoxCategory? TextBoxCategoryState
     {
-        get => mTextBoxCategoryState;
+        get => _textBoxCategoryState;
         set
         {
-            mTextBoxCategoryState = value;
+            _textBoxCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -88,13 +88,13 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
         }
     }
 
-    LineModeCategory? mLineModeCategoryState;
+    private LineModeCategory? _lineModeCategoryState;
     public LineModeCategory? LineModeCategoryState
     {
-        get => mLineModeCategoryState;
+        get => _lineModeCategoryState;
         set
         {
-            mLineModeCategoryState = value;
+            _lineModeCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

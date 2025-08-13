@@ -47,13 +47,13 @@ partial class ComboBox : global::MonoGameGum.Forms.Controls.ComboBox
         DisabledFocused,
     }
 
-    ComboBoxCategory? mComboBoxCategoryState;
+    private ComboBoxCategory? _comboBoxCategoryState;
     public ComboBoxCategory? ComboBoxCategoryState
     {
-        get => mComboBoxCategoryState;
+        get => _comboBoxCategoryState;
         set
         {
-            mComboBoxCategoryState = value;
+            _comboBoxCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

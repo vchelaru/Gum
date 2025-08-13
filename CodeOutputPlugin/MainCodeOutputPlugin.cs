@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Messages;
 
 namespace CodeOutputPlugin;
 
@@ -41,6 +43,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly CodeGenerationService _codeGenerationService;
     private readonly ISelectedState _selectedState;
     private readonly RenameService _renameService;
+    private readonly IMessenger _messenger;
     private readonly LocalizationManager _localizationManager;
     private readonly INameVerifier _nameVerifier;
     private readonly IGuiCommands _guiCommands;
@@ -74,11 +77,23 @@ public class MainCodeOutputPlugin : PluginBase
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService);
         _renameService = new RenameService(_codeGenerationService);
+        _messenger = Locator.GetRequiredService<IMessenger>();
+
+        _messenger.Register<RequestCodeGenerationMessage>(
+            this, 
+            (_, message) => HanndleRequestCodeGeneration(message));
 
         // The methos in CodeGenerator need to be changed to not be static then we can get rid
         // of this:
         CodeGenerator.LocalizationManager = _localizationManager;
         CodeGenerator.NameVerifier = _nameVerifier;
+    }
+
+    private void HanndleRequestCodeGeneration(RequestCodeGenerationMessage message)
+    {
+        HandleGenerateAllCodeButtonClicked(showPopups:false);
+
+        message.TaskCompletionSource.SetResult(true);
     }
 
     public override void StartUp()
@@ -477,21 +492,26 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void HandleGenerateAllCodeButtonClicked()
+    private void HandleGenerateAllCodeButtonClicked(bool showPopups = true)
     {
         var gumProject = GumState.Self.ProjectState.GumProjectSave;
         foreach (var screen in gumProject.Screens)
         {
             var screenOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(screen);
-            _codeGenerationService.GenerateCodeForElement(screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
+            _codeGenerationService.GenerateCodeForElement(
+                screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
         }
         foreach(var component in gumProject.Components)
         {
             var componentOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
-            _codeGenerationService.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
+            _codeGenerationService.GenerateCodeForElement(
+                component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
         }
 
-        _dialogService.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
+        if(showPopups)
+        {
+            _dialogService.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
+        }
     }
 
     private void GenerateCodeForSelectedElement(bool showPopups)

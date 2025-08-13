@@ -42,13 +42,13 @@ partial class PasswordBox : global::MonoGameGum.Forms.Controls.PasswordBox
         Selected,
     }
 
-    PasswordBoxCategory? mPasswordBoxCategoryState;
+    private PasswordBoxCategory? _passwordBoxCategoryState;
     public PasswordBoxCategory? PasswordBoxCategoryState
     {
-        get => mPasswordBoxCategoryState;
+        get => _passwordBoxCategoryState;
         set
         {
-            mPasswordBoxCategoryState = value;
+            _passwordBoxCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

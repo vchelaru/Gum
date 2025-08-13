@@ -38,13 +38,13 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
         Spaced_State,
     }
 
-    Category? mCategoryState;
+    private Category? _categoryState;
     public Category? CategoryState
     {
-        get => mCategoryState;
+        get => _categoryState;
         set
         {
-            mCategoryState = value;
+            _categoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

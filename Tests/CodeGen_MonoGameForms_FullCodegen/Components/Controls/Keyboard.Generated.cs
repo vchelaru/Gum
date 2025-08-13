@@ -41,13 +41,13 @@ partial class Keyboard : MonoGameGum.Forms.Controls.FrameworkElement
         NoMovement,
     }
 
-    CursorMoveCategory? mCursorMoveCategoryState;
+    private CursorMoveCategory? _cursorMoveCategoryState;
     public CursorMoveCategory? CursorMoveCategoryState
     {
-        get => mCursorMoveCategoryState;
+        get => _cursorMoveCategoryState;
         set
         {
-            mCursorMoveCategoryState = value;
+            _cursorMoveCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

@@ -41,13 +41,13 @@ partial class PercentBarIcon : MonoGameGum.Forms.Controls.FrameworkElement
         VerticalLines,
     }
 
-    BarDecorCategory? mBarDecorCategoryState;
+    private BarDecorCategory? _barDecorCategoryState;
     public BarDecorCategory? BarDecorCategoryState
     {
-        get => mBarDecorCategoryState;
+        get => _barDecorCategoryState;
         set
         {
-            mBarDecorCategoryState = value;
+            _barDecorCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

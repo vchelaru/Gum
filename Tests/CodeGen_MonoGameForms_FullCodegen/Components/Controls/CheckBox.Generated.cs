@@ -60,13 +60,13 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
         DisabledFocusedIndeterminate,
     }
 
-    CheckBoxCategory? mCheckBoxCategoryState;
+    private CheckBoxCategory? _checkBoxCategoryState;
     public CheckBoxCategory? CheckBoxCategoryState
     {
-        get => mCheckBoxCategoryState;
+        get => _checkBoxCategoryState;
         set
         {
-            mCheckBoxCategoryState = value;
+            _checkBoxCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

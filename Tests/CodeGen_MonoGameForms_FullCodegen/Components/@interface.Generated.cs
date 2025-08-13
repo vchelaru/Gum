@@ -38,13 +38,13 @@ partial class @interface : MonoGameGum.Forms.Controls.FrameworkElement
         @checked,
     }
 
-    @class? m@classState;
+    private @class? _classState;
     public @class? @classState
     {
-        get => m@classState;
+        get => _classState;
         set
         {
-            m@classState = value;
+            _classState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -86,7 +86,7 @@ partial class @interface : MonoGameGum.Forms.Controls.FrameworkElement
     }
     private void ApplyDefaultVariables()
     {
-        this.Visual.@object = 1f;
+        this.@object = 1f;
     }
     partial void CustomInitialize();
 }

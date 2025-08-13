@@ -46,13 +46,13 @@ partial class ScrollViewer : global::MonoGameGum.Forms.Controls.ScrollViewer
         Focused,
     }
 
-    ScrollBarVisibility? mScrollBarVisibilityState;
+    private ScrollBarVisibility? _scrollBarVisibilityState;
     public ScrollBarVisibility? ScrollBarVisibilityState
     {
-        get => mScrollBarVisibilityState;
+        get => _scrollBarVisibilityState;
         set
         {
-            mScrollBarVisibilityState = value;
+            _scrollBarVisibilityState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -69,13 +69,13 @@ partial class ScrollViewer : global::MonoGameGum.Forms.Controls.ScrollViewer
         }
     }
 
-    ScrollViewerCategory? mScrollViewerCategoryState;
+    private ScrollViewerCategory? _scrollViewerCategoryState;
     public ScrollViewerCategory? ScrollViewerCategoryState
     {
-        get => mScrollViewerCategoryState;
+        get => _scrollViewerCategoryState;
         set
         {
-            mScrollViewerCategoryState = value;
+            _scrollViewerCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
