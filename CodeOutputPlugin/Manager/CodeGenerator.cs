@@ -5019,7 +5019,7 @@ public class CodeGenerator
     
     internal static string ToCSharpName(string name)
     {
-        if (NameVerifier.IsValidCSharpName(name, out string whyNotValid))
+        if (!NameVerifier.IsValidCSharpName(name, out string whyNotValid))
         {
             if (whyNotValid == $"Name may not begin with character {name[0]}")
             {
