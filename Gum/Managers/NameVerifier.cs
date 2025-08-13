@@ -319,10 +319,12 @@ public class NameVerifier : INameVerifier
         }
         foreach (char character in name)
         {
+            if (character == ' ') continue;
+            
             var category = char.GetUnicodeCategory(character);
             if (!ValidCharacterCategories.Contains(category))
             {
-                whyNotValid = $"Character {character} is invalid";
+                whyNotValid = $"The name can't contain invalid character {character}";
                 return;
             }
         }
