@@ -424,13 +424,8 @@ public class CodeGenerator
             }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = $"{strippedType}{suffix}";
+            className = ToCSharpName($"{strippedType}{suffix}");
 
-        }
-
-        if(NameVerifier.IsCSharpReservedKeyword(className))
-        {
-            className = "@" + className;
         }
 
         if(isFullyQualified && container is ElementSave elementSave)

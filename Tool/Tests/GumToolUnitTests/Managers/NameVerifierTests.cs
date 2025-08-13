@@ -51,7 +51,7 @@ public class NameVerifierTests
         var isValid = _nameVerifier.IsCategoryNameValid("ValidCategory", behavior, out string whyNotValid);
         isValid.ShouldBeTrue();
     }
-
+    
     [Fact]
     public void IsCategoryNameValid_ShouldReturnFalse_ForEmptyName_Component()
     {
@@ -136,7 +136,6 @@ public class NameVerifierTests
         isValid.ShouldBeFalse("Because spaces are not allowed. This makes variable references difficult to parse");
 
         whyNotValid.ShouldBe("Category names cannot contain spaces");
-
     }
 
     #endregion
