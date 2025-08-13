@@ -195,8 +195,6 @@ namespace Gum.Plugins.BaseClasses
         // Parameters are: extension, parentElement, instance, changedMember
         public event Func<string, ElementSave, InstanceSave, string, bool>? IsExtensionValid;
 
-        public event Action? UiZoomValueChanged;
-
         public event Action<IPositionedSizedObject>? SetHighlightedIpso;
         public event Action<IPositionedSizedObject?>? IpsoSelected;
         public event Func<IEnumerable<IPositionedSizedObject>?> GetSelectedIpsos;
@@ -523,8 +521,6 @@ namespace Gum.Plugins.BaseClasses
 
         public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
-
-        public void CallUiZoomValueChanged() => UiZoomValueChanged?.Invoke();
 
         public void CallSetHighlightedIpso(IPositionedSizedObject element) =>
             SetHighlightedIpso?.Invoke(element);

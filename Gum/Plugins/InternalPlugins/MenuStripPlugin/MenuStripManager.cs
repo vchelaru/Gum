@@ -6,6 +6,7 @@ using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
 using System.Diagnostics;
+using CommunityToolkit.Mvvm.Messaging;
 using ExCSS;
 using Gum.Commands;
 using Gum.Dialogs;
@@ -15,7 +16,7 @@ using Gum.Services.Dialogs;
 
 namespace Gum.Managers
 {
-    public class MenuStripManager
+    public class MenuStripManager : IRecipient<UiScalingChangedMessage>
     {
         #region Fields
 
@@ -59,7 +60,8 @@ namespace Gum.Managers
             EditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
-            ProjectCommands projectCommands)
+            ProjectCommands projectCommands,
+            IMessenger messenger)
         {
             _guiCommands = guiCommands;
             _selectedState = selectedState;
@@ -68,6 +70,7 @@ namespace Gum.Managers
             _dialogService = dialogService;
             _fileCommands = fileCommands;
             _projectCommands = projectCommands;
+            messenger.RegisterAll(this);
         }
 
         public MenuStrip CreateMenuStrip()
@@ -428,13 +431,15 @@ namespace Gum.Managers
 
         const int DefaultFontSize = 11;
 
-        internal void HandleUiZoomValueChanged()
-        {
-            var fontSize = DefaultFontSize * _guiCommands.UiZoomValue / 100.0f;
+        
+        void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
+        {            
+            var fontSize = DefaultFontSize * (float)message.Scale;
 
             _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily,
                 fontSize * 0.75f);
         }
+        
     }
 
 }

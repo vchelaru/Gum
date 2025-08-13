@@ -1,4 +1,5 @@
 <UserControl
+    FontSize="{Binding FontSize, Mode=OneWay}"
     d:DataContext="{d:DesignInstance Type=local:MainPanelViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"

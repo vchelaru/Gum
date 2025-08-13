@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
 using Gum.Undo;
 using ToolsUtilities;
@@ -38,7 +39,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
 [Export(typeof(PluginBase))]
-internal class MainEditorTabPlugin : InternalPlugin
+internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChangedMessage>
 {
     #region Fields/Properties
 
@@ -138,6 +139,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
     }
 
     public override void StartUp()
@@ -191,9 +193,6 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
 
         this.GetWorldCursorPosition += HandleGetWorldCursorPosition;
-
-
-        this.UiZoomValueChanged += HandleUiZoomValueChanged;
 
         this.GuidesChanged += HandleGuidesChanged;
 
@@ -429,11 +428,11 @@ internal class MainEditorTabPlugin : InternalPlugin
         Wireframe.WireframeObjectManager.Self.RefreshAll(true);
     }
 
-    private void HandleUiZoomValueChanged()
+    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
     {
         // Uncommenting this makes the area for teh combo box properly grow, but it
         // kills the wireframe view. Not sure why....
-        _wireframeEditControl.Height = _defaultWireframeEditControlHeight * _guiCommands.UiZoomValue / 100;
+        _wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Scale);
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)

@@ -83,6 +83,7 @@ file static class ServiceCollectionExtensions
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
         services.AddSingleton<IDispatcher>(provider =>
             new AppDispatcher(() => provider.GetRequiredService<MainPanelControl>().Dispatcher));
+        services.AddSingleton<IUiSettingsService, UiSettingsService>();
 
     }
     
