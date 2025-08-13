@@ -156,6 +156,15 @@ public class NameVerifierTests
     #region StateSave
 
     [Fact]
+    public void IsStateNameValid_ShouldBeTrue_ForValidName()
+    {
+        StateSaveCategory category = new();
+        StateSave state = new();
+        bool isValid = _nameVerifier.IsStateNameValid(category.Name, category, state, out _);
+        isValid.ShouldBeTrue();
+    }
+    
+    [Fact]
     public void IsStateNameValid_ShouldBeFalse_ForSameAsCategory()
     {
         StateSaveCategory category = new() { Name = "CategoryName" };
@@ -165,7 +174,7 @@ public class NameVerifierTests
         isValid.ShouldBeFalse("Because category name can't be the same as it category's. " +
                               "This would cause compiler errors when generating Forms code.");
         
-        whyNotValid.ShouldBe("Category name cannot be the same as its category's");
+        whyNotValid.ShouldBe("State name cannot be the same as its category's");
     }
 
     #endregion
