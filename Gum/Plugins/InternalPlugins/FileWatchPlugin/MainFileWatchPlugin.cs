@@ -26,7 +26,7 @@ public class MainFileWatchPlugin : InternalPlugin
     System.Windows.Forms.ToolStripMenuItem showFileWatchMenuItem;
     private FileWatchManager _fileWatchManager;
     private FileWatchLogic _fileWatchLogic;
-    private GuiCommands _guiCommands;
+    private IGuiCommands _guiCommands;
 
     #endregion
 
@@ -39,7 +39,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
         _fileWatchManager = FileWatchManager.Self;
         _fileWatchLogic = FileWatchLogic.Self;
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
 
         pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();

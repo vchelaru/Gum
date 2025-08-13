@@ -44,8 +44,9 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         control = new BehaviorsControl();
         control.DataContext = viewModel;
-        behaviorsTab = this.CreateTab(control, "Behaviors", TabLocation.CenterBottom);
-
+        behaviorsTab = _tabManager.AddControl(control, "Behaviors", TabLocation.CenterBottom);
+        behaviorsTab.Hide();
+        
         stateDataUiGrid = new DataUiGrid();
         AssignEvents();
     }
@@ -219,7 +220,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         {
             viewModel.UpdateTo(asComponent);
 
-            this.behaviorsTab.Show(select: false);
+            this.behaviorsTab.Show();
         }
         else
         {

@@ -52,8 +52,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
-    private readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly ProjectCommands _projectCommands;
     
     public CopiedData CopiedData { get; private set; } = new CopiedData();
@@ -77,8 +77,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _projectCommands = Locator.GetRequiredService<ProjectCommands>();
     }
 

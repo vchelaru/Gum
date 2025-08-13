@@ -41,11 +41,11 @@ public class AddVariableViewModel : DialogViewModel
         set => Set(value);
     }
 
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly IElementCommands _elementCommands;
-    private readonly FileCommands _fileCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
 
@@ -101,10 +101,10 @@ public class AddVariableViewModel : DialogViewModel
 
     #endregion
 
-    public AddVariableViewModel(GuiCommands guiCommands,
+    public AddVariableViewModel(IGuiCommands guiCommands,
         IUndoManager undoManager,
         IElementCommands elementCommands,
-        FileCommands fileCommands,
+        IFileCommands fileCommands,
         INameVerifier nameVerifier,
         ISelectedState selectedState,
         IDialogService dialogService)

@@ -17,7 +17,7 @@ namespace PerformanceMeasurementPlugin
     public class MainPlugin : PluginBase
     {
         PerformanceView view;
-        private readonly GuiCommands _guiCommands;
+        private readonly IGuiCommands _guiCommands;
 
         public override string FriendlyName
         {
@@ -31,7 +31,7 @@ namespace PerformanceMeasurementPlugin
 
         public MainPlugin()
         {
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         }
 
         public override void StartUp()
@@ -46,7 +46,7 @@ namespace PerformanceMeasurementPlugin
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
         {
-            _tabManager.RemoveControl(view);
+            //_tabManager.HideTabForControl(view);
             return true;
         }
     }

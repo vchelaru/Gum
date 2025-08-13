@@ -32,8 +32,8 @@ public abstract class WireframeEditor
     protected readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IUndoManager _undoManager;
-    protected readonly GuiCommands _guiCommands;
-    private readonly FileCommands _fileCommands;
+    protected readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
     
     protected GrabbedState grabbedState = new GrabbedState();
 
@@ -60,8 +60,8 @@ public abstract class WireframeEditor
         _selectedState = selectedState;
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);

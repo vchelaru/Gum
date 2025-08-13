@@ -110,9 +110,9 @@ public partial class ElementTreeViewManager
 
     private readonly ISelectedState _selectedState;
     private readonly EditCommands _editCommands;
-    private readonly GuiCommands _guiCommands;
+    private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
-    private readonly FileCommands _fileCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ITabManager _tabManager;
 
@@ -277,9 +277,9 @@ public partial class ElementTreeViewManager
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _editCommands = Locator.GetRequiredService<EditCommands>();
-        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _fileCommands = Locator.GetRequiredService<FileCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
         

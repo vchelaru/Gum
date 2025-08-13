@@ -11,9 +11,8 @@ namespace Gum.Plugins.AlignmentButtons
     public class AlignmentMainPlugin : InternalPlugin
     {
         private readonly ISelectedState _selectedState;
-        
-        AlignmentPluginControl control;
-        bool isAdded = false;
+
+        private PluginTab _tab;
 
         public AlignmentMainPlugin()
         {
@@ -23,7 +22,8 @@ namespace Gum.Plugins.AlignmentButtons
         public override void StartUp()
         {
             AssignEvents();
-
+            _tab = _tabManager.AddControl(new Gum.Plugins.AlignmentButtons.AlignmentPluginControl(), "Alignment");
+            RefreshTabVisibility();
         }
 
         private void AssignEvents()
@@ -44,28 +44,13 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void RefreshTabVisibility()
         {
-            bool shouldAdd = DetermineIfShouldShowTab();
-
-            if (shouldAdd)
+            if (DetermineIfShouldShowTab())
             {
-                if (control == null)
-                {
-                    control = new Gum.Plugins.AlignmentButtons.AlignmentPluginControl();
-                }
-
-                if (!isAdded)
-                {
-                    _tabManager.AddControl(control, "Alignment");
-                    isAdded = true;
-                }
+                _tab.Show();
             }
             else
             {
-                if (control != null && isAdded)
-                {
-                    _tabManager.RemoveControl(control);
-                    isAdded = false;
-                }
+                _tab.Hide();
             }
         }
 

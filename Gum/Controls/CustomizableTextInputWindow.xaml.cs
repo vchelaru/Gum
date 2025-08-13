@@ -63,7 +63,7 @@ public partial class CustomizableTextInputWindow : Window
 
         this.WindowStartupLocation = WindowStartupLocation.Manual;
 
-        GuiCommands guiCommands = Locator.GetRequiredService<GuiCommands>();
+        IGuiCommands guiCommands = Locator.GetRequiredService<IGuiCommands>();
         guiCommands.MoveToCursor(this);
 
         ValidationLabel.Visibility = Visibility.Hidden;
