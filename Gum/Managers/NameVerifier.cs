@@ -167,20 +167,21 @@ public class NameVerifier : INameVerifier
     public bool IsCategoryNameValid(string name, IStateContainer categoryContainer, out string whyNotValid)
     {
         IsNameValidCommon(name, out whyNotValid);
+
+        if (string.IsNullOrEmpty(whyNotValid) && name == categoryContainer.Name)
+        {
+            whyNotValid = "Category name cannot be the same as its container's";
+            return false;
+        }
+            
+        if(string.IsNullOrEmpty(whyNotValid) && name.Contains(" "))
+        {
+            whyNotValid = "Category names cannot contain spaces";
+            return false;
+        }
+            
         if(string.IsNullOrEmpty(whyNotValid))
         {
-            if (name == categoryContainer.Name)
-            {
-                whyNotValid = "Category name cannot be the same as its container's";
-                return false;
-            }
-            
-            if(name.Contains(" "))
-            {
-                whyNotValid = "Category names cannot contain spaces";
-                return false;
-            }
-            
             string standardizedName = Standardize(name);
             string? existingName = null;
             categoryContainer.GetStateSaveCategoryRecursively(item =>
@@ -199,7 +200,7 @@ public class NameVerifier : INameVerifier
             }
         }
 
-        return true;
+        return string.IsNullOrEmpty(whyNotValid);
     }
     public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
     {
