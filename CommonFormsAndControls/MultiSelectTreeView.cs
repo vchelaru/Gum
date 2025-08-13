@@ -20,14 +20,14 @@ namespace CommonFormsAndControls
 		private TreeNode mSelectedNode;
         private bool mSelectedNodeChanged = false;
         private List<TreeNode> mSelectedNodes = null;
-
+        private ImageList ElementTreeImages;
         private TreeNode nodeOnDragStart;
-
+        public ImageList ElementTreeImageList => ElementTreeImages;
 
         #endregion
 
         #region Properties
-        
+
         public bool AlwaysHaveOneNodeSelected
         {
             get;
@@ -614,7 +614,7 @@ namespace CommonFormsAndControls
 
         public MultiSelectTreeView()
 		{
-            
+            InitializeComponent();
 			mSelectedNodes = new List<TreeNode>();
 			mOriginalColors = new Dictionary<TreeNode, Color>();
 			// Create a timer
@@ -1013,6 +1013,30 @@ namespace CommonFormsAndControls
         }
 
         #endregion
+
+        private void InitializeComponent()
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
+            this.ElementTreeImages = new System.Windows.Forms.ImageList();
+            this.SuspendLayout();
+            // 
+            // ElementTreeImages
+            // 
+            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
+            this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
+            this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
+            this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
+            this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
+            this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
+            this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
+            this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
+            this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
+            this.ElementTreeImages.Images.SetKeyName(7, "state.png");
+            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
+            this.ElementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
+            this.ResumeLayout(false);
+
+        }
     }
 
     #region Tree Node Extension Methods
