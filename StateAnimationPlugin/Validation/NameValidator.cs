@@ -17,22 +17,23 @@ namespace StateAnimationPlugin.Validation
             if(string.IsNullOrEmpty(animationName))
             {
                 whyNotValid = "Animation names cannot be empty";
+                return false;
             }
-
-            else if(animationName.Contains(" "))
+            if(animationName.Contains(" "))
             {
-                whyNotValid = "Animation names cannot have spaces";   
+                whyNotValid = "Animation names cannot have spaces";
+                return false;
             }
-            else if (animationName.IndexOfAny(Gum.Managers.NameVerifier.InvalidCharacters) != -1)
+            if (Gum.Managers.NameVerifier.IsNameValidCommon(animationName, out whyNotValid))
             {
-                whyNotValid = "The name can't contain invalid character " + animationName[animationName.IndexOfAny(Gum.Managers.NameVerifier.InvalidCharacters)];
+                return false;
             }
-            else if(existingAnimations.Any(item=>item.Name.Equals(animationName, StringComparison.InvariantCultureIgnoreCase)))
+            if(existingAnimations.Any(item=>item.Name.Equals(animationName, StringComparison.InvariantCultureIgnoreCase)))
             {
                 whyNotValid = $"The name \"{animationName}\" is already being used.";
+                return false;
             }
-
-
+            
             return string.IsNullOrEmpty(whyNotValid);
         }
     }

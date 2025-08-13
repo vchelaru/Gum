@@ -299,23 +299,24 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    private void IsNameValidCommon(string name, out string whyNotValid)
+    public static bool IsNameValidCommon(string name, out string whyNotValid)
     {
         whyNotValid = null;
+        
         if (string.IsNullOrWhiteSpace(name))
         {
             whyNotValid = "Empty names are not valid";
-            return;
+            return false;
         }
         if(string.IsNullOrEmpty(whyNotValid) && name.StartsWith(" "))
         {
             whyNotValid = "The name can't begin with a space";
-            return;
+            return false;
         }
         if (string.IsNullOrEmpty(whyNotValid) && name.EndsWith(" "))
         {
             whyNotValid = "The name can't end with a space";
-            return;
+            return false;
         }
         foreach (char character in name)
         {
@@ -325,9 +326,11 @@ public class NameVerifier : INameVerifier
             if (!ValidCharacterCategories.Contains(category))
             {
                 whyNotValid = $"The name can't contain invalid character {character}";
-                return;
+                return false;
             }
         }
+        
+        return true;
     }
     private void IsNameValidVariable(string name, out string whyNotValid)
     {
