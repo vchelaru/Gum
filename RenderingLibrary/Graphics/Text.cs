@@ -150,7 +150,9 @@ namespace RenderingLibrary.Graphics
         public bool mIsTextureCreationSuppressed;
 
         // Defaulting to false, will be turned on in future version
-        public static bool IsMidWordLineBreakEnabled = false;
+        // Updating to true on August 3, 2025 for:
+        // https://github.com/vchelaru/Gum/issues/1254
+        public static bool IsMidWordLineBreakEnabled = true;
 
         SystemManagers mManagers;
 
