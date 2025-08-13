@@ -12,11 +12,11 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
     public override string Title => "Add Component";
     public override string Message => "Enter new Component name:";
 
-    private readonly NameVerifier _nameVerifier;
+    private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
     private readonly ProjectCommands _projectCommands;
 
-    public AddComponentDialogViewModel(NameVerifier nameVerifier, 
+    public AddComponentDialogViewModel(INameVerifier nameVerifier, 
         ISelectedState selectedState, 
         ProjectCommands projectCommands)
     {

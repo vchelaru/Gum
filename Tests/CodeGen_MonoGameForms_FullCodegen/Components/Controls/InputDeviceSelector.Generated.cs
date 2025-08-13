@@ -104,13 +104,13 @@ partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
         if (ContainerInstance2.ElementSave != null) ContainerInstance2.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance2.ElementSave);
         if (ContainerInstance2.ElementSave != null) ContainerInstance2.SetInitialState();
         ContainerInstance2.Name = "ContainerInstance2";
-        InputDeviceSelectionItemInstance = new InputDeviceSelectionItem();
+        InputDeviceSelectionItemInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance.Name = "InputDeviceSelectionItemInstance";
-        InputDeviceSelectionItemInstance1 = new InputDeviceSelectionItem();
+        InputDeviceSelectionItemInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance1.Name = "InputDeviceSelectionItemInstance1";
-        InputDeviceSelectionItemInstance2 = new InputDeviceSelectionItem();
+        InputDeviceSelectionItemInstance2 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance2.Name = "InputDeviceSelectionItemInstance2";
-        InputDeviceSelectionItemInstance3 = new InputDeviceSelectionItem();
+        InputDeviceSelectionItemInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance3.Name = "InputDeviceSelectionItemInstance3";
     }
     protected virtual void AssignParents()

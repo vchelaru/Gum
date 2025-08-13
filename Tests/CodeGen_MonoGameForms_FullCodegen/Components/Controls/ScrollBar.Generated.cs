@@ -39,13 +39,13 @@ partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
     {
     }
 
-    ScrollBarCategory? mScrollBarCategoryState;
+    private ScrollBarCategory? _scrollBarCategoryState;
     public ScrollBarCategory? ScrollBarCategoryState
     {
-        get => mScrollBarCategoryState;
+        get => _scrollBarCategoryState;
         set
         {
-            mScrollBarCategoryState = value;
+            _scrollBarCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -83,9 +83,9 @@ partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
-        UpButtonInstance = new ButtonIcon();
+        UpButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonIcon();
         UpButtonInstance.Name = "UpButtonInstance";
-        DownButtonInstance = new ButtonIcon();
+        DownButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonIcon();
         DownButtonInstance.Name = "DownButtonInstance";
         TrackInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         TrackInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
@@ -97,7 +97,7 @@ partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
         if (TrackBackground.ElementSave != null) TrackBackground.AddStatesAndCategoriesRecursivelyToGue(TrackBackground.ElementSave);
         if (TrackBackground.ElementSave != null) TrackBackground.SetInitialState();
         TrackBackground.Name = "TrackBackground";
-        ThumbInstance = new ButtonStandard();
+        ThumbInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ThumbInstance.Name = "ThumbInstance";
     }
     protected virtual void AssignParents()

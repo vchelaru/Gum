@@ -1,49 +1,92 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Forms.Integration;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Controls;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins;
-using Gum.ViewModels;
+using Gum.Services;
 using Control = System.Windows.Forms.Control;
 
 namespace Gum.Controls;
 
-public class MainPanelViewModel : ViewModel, ITabManager
+public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<UiScalingChangedMessage>
 {
-    public IReadOnlyList<PluginTabContainerViewModel> TabContainers { get; }
+    private readonly IUiSettingsService _uiSettingsService;
     
-    public PluginTabContainerViewModel CenterBottomContainer { get; }
-    public PluginTabContainerViewModel RightBottomContainer { get; }
-    public PluginTabContainerViewModel RightTopContainer { get; }
-    public PluginTabContainerViewModel CenterTopContainer { get; }
-    public PluginTabContainerViewModel LeftContainer { get; }
-    public PluginTabContainerViewModel CenterContainer { get; }
+    private const double DefaultFontSize = 12;
 
+    public double FontSize
+    {
+        get => Get<double>();
+        private set => Set(value);
+    }
+    
+    private readonly Func<FrameworkElement, PluginTab> _pluginTabFactory;
+    private ObservableCollection<PluginTab> PluginTabs { get; } = [];
+
+    public ICollectionView CenterView { get; }
+    public ICollectionView RightBottomView { get; }
+    public ICollectionView RightTopView { get; }
+    public ICollectionView CenterTopView { get; }
+    public ICollectionView CenterBottomView { get; }
+    public ICollectionView LeftView { get; }
+    
     public bool IsToolsVisible
     {
         get => Get<bool>();
         set => Set(value);
     }
 
-    public MainPanelViewModel(Func<TabLocation, PluginTabContainerViewModel> tabContainerFactory)
+    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger)
     {
-        IsToolsVisible = true;
+        _pluginTabFactory = pluginTabFactory;
+        messenger.RegisterAll(this);
         
-        TabContainers =
-        [
-            CenterBottomContainer = tabContainerFactory(TabLocation.CenterBottom),
-            RightBottomContainer = tabContainerFactory(TabLocation.RightBottom),
-            RightTopContainer = tabContainerFactory(TabLocation.RightTop),
-            CenterTopContainer = tabContainerFactory(TabLocation.CenterTop),
-            LeftContainer = tabContainerFactory(TabLocation.Left),
-            CenterContainer = tabContainerFactory(TabLocation.Center)
-        ];
+        FontSize = DefaultFontSize;
+        IsToolsVisible = true;
+        PluginTabs.CollectionChanged += PluginTabsOnCollectionChanged;
+        
+        CenterView = CreateView(TabLocation.Center);
+        RightBottomView = CreateView(TabLocation.RightBottom);
+        RightTopView = CreateView(TabLocation.RightTop);
+        CenterTopView = CreateView(TabLocation.CenterTop);
+        CenterBottomView = CreateView(TabLocation.CenterBottom);
+        LeftView = CreateView(TabLocation.Left);
+        
+        ICollectionView CreateView(TabLocation location)
+        {
+            ListCollectionView view = new(PluginTabs);
+            view.IsLiveFiltering = true;
+            view.LiveFilteringProperties.Add(nameof(PluginTab.IsVisible));
+            view.LiveFilteringProperties.Add(nameof(PluginTab.Location));
+
+            view.Filter = o => o is PluginTab tab && tab.Location == location && tab.IsVisible;
+        
+            return view;
+        }
     }
 
+    private void PluginTabsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems?.OfType<PluginTab>() is { } newTabs)
+        {
+            foreach (PluginTab newTab in newTabs)
+            {
+                if (!PluginTabs.Any(p => p.Location == newTab.Location && p.IsSelected))
+                {
+                    newTab.IsSelected = true;
+                }
+            }
+        }
+    }
 
     public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle,
         TabLocation tabLocation) =>
@@ -56,45 +99,18 @@ public class MainPanelViewModel : ViewModel, ITabManager
         element.Resources = new System.Windows.ResourceDictionary();
         element.Resources.Source = new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
 
-        PluginTab newPluginTab = new(element)
-        {
-            Title = tabTitle,
-            SuggestedLocation = tabLocation
-        };
+        PluginTab newPluginTab = _pluginTabFactory(element);
+        newPluginTab.Title = tabTitle;
+        newPluginTab.Location = tabLocation;
         
-        TabContainers.First(c => c.Location == tabLocation).Tabs.Add(newPluginTab);
+        PluginTabs.Add(newPluginTab);
         return newPluginTab;
     }
-
-    public void RemoveControl(FrameworkElement element)
+    
+    public void RemoveTab(PluginTab tab) => PluginTabs.Remove(tab);
+    
+    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
     {
-        if (TabContainers.SelectMany(c => c.Tabs).FirstOrDefault(t => t.Content == element) is { } tab)
-        {
-            TabContainers.First(c => c.Tabs.Contains(tab)).Tabs.Remove(tab);
-        }
-    }
-
-    public bool ShowTabForControl(System.Windows.Controls.UserControl control)
-    {
-        if (TabContainers.SelectMany(c => c.Tabs)
-                .FirstOrDefault(t => t.Content == control) is not { } tab)
-        {
-            return false;
-        }
-        
-        tab.Show();
-        return true;
-    }
-
-    public bool ShowTabForControl(Control control)
-    {
-        if (TabContainers.SelectMany(c => c.Tabs)
-                .FirstOrDefault(t => t.Content is WindowsFormsHost host && host.Child == control) is not { } tab)
-        {
-            return false;
-        }
-        
-        tab.Show();
-        return true;
+        FontSize = DefaultFontSize * message.Scale;
     }
 }

@@ -3,6 +3,7 @@ using GumRuntime;
 using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
+using CodeGen_MonoGameForms_FullCodegen.Components;
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using CodeGen_MonoGameForms_FullCodegen.Components.Elements;
 using Gum.Converters;
@@ -39,6 +40,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
             return gue;
         });
     }
+    public @interface @this { get; protected set; }
     public ContainerRuntime DemoSettingsMenu { get; protected set; }
     public NineSliceRuntime Background { get; protected set; }
     public ContainerRuntime MenuTitle { get; protected set; }
@@ -98,6 +100,8 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public DialogBox DialogBoxInstance { get; protected set; }
     public WindowStandard WindowStandardInstance { get; protected set; }
     public Label LabelInstance1 { get; protected set; }
+    // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
+    public Spaced_Component Spaced_Component_Instance { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)
     {
@@ -118,6 +122,8 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
+        @this = new CodeGen_MonoGameForms_FullCodegen.Components.@interface();
+        @this.Name = "this";
         DemoSettingsMenu = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         DemoSettingsMenu.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (DemoSettingsMenu.ElementSave != null) DemoSettingsMenu.AddStatesAndCategoriesRecursivelyToGue(DemoSettingsMenu.ElementSave);
@@ -153,65 +159,65 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         if (TitleText1.ElementSave != null) TitleText1.AddStatesAndCategoriesRecursivelyToGue(TitleText1.ElementSave);
         if (TitleText1.ElementSave != null) TitleText1.SetInitialState();
         TitleText1.Name = "TitleText1";
-        ButtonCloseInstance1 = new ButtonClose();
+        ButtonCloseInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonClose();
         ButtonCloseInstance1.Name = "ButtonCloseInstance1";
-        DividerInstance = new DividerHorizontal();
+        DividerInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.DividerHorizontal();
         DividerInstance.Name = "DividerInstance";
-        DividerInstance4 = new DividerHorizontal();
+        DividerInstance4 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.DividerHorizontal();
         DividerInstance4.Name = "DividerInstance4";
-        ResolutionLabel = new Label();
+        ResolutionLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         ResolutionLabel.Name = "ResolutionLabel";
-        ResolutionBox = new ListBox();
+        ResolutionBox = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ListBox();
         ResolutionBox.Name = "ResolutionBox";
-        DetectResolutionsButton = new ButtonStandard();
+        DetectResolutionsButton = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         DetectResolutionsButton.Name = "DetectResolutionsButton";
-        ShowDialogButton = new ButtonStandard();
+        ShowDialogButton = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ShowDialogButton.Name = "ShowDialogButton";
-        ShowToastButton = new ButtonStandard();
+        ShowToastButton = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ShowToastButton.Name = "ShowToastButton";
-        FullScreenCheckbox = new CheckBox();
+        FullScreenCheckbox = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.CheckBox();
         FullScreenCheckbox.Name = "FullScreenCheckbox";
-        DividerInstance1 = new DividerHorizontal();
+        DividerInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.DividerHorizontal();
         DividerInstance1.Name = "DividerInstance1";
-        MusicLabel = new Label();
+        MusicLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         MusicLabel.Name = "MusicLabel";
-        MusicSlider = new Slider();
+        MusicSlider = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         MusicSlider.Name = "MusicSlider";
-        SoundLabel = new Label();
+        SoundLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         SoundLabel.Name = "SoundLabel";
-        SoundSlider = new Slider();
+        SoundSlider = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         SoundSlider.Name = "SoundSlider";
-        DividerInstance2 = new DividerHorizontal();
+        DividerInstance2 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.DividerHorizontal();
         DividerInstance2.Name = "DividerInstance2";
-        ControlLabel = new Label();
+        ControlLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         ControlLabel.Name = "ControlLabel";
-        RadioButtonInstance = new RadioButton();
+        RadioButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.RadioButton();
         RadioButtonInstance.Name = "RadioButtonInstance";
-        RadioButtonInstance1 = new RadioButton();
+        RadioButtonInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.RadioButton();
         RadioButtonInstance1.Name = "RadioButtonInstance1";
-        RadioButtonInstance2 = new RadioButton();
+        RadioButtonInstance2 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.RadioButton();
         RadioButtonInstance2.Name = "RadioButtonInstance2";
-        DividerInstance3 = new DividerHorizontal();
+        DividerInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.DividerHorizontal();
         DividerInstance3.Name = "DividerInstance3";
-        DifficultyLabel = new Label();
+        DifficultyLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         DifficultyLabel.Name = "DifficultyLabel";
         Background1 = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background1.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background1.ElementSave != null) Background1.AddStatesAndCategoriesRecursivelyToGue(Background1.ElementSave);
         if (Background1.ElementSave != null) Background1.SetInitialState();
         Background1.Name = "Background1";
-        ComboBoxInstance = new ComboBox();
+        ComboBoxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ComboBox();
         ComboBoxInstance.Name = "ComboBoxInstance";
         ButtonContainer = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         ButtonContainer.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (ButtonContainer.ElementSave != null) ButtonContainer.AddStatesAndCategoriesRecursivelyToGue(ButtonContainer.ElementSave);
         if (ButtonContainer.ElementSave != null) ButtonContainer.SetInitialState();
         ButtonContainer.Name = "ButtonContainer";
-        ButtonConfirmInstance = new ButtonConfirm();
+        ButtonConfirmInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonConfirm();
         ButtonConfirmInstance.Name = "ButtonConfirmInstance";
-        WindowOkButton = new ButtonConfirm();
+        WindowOkButton = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonConfirm();
         WindowOkButton.Name = "WindowOkButton";
-        ButtonDenyInstance = new ButtonDeny();
+        ButtonDenyInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonDeny();
         ButtonDenyInstance.Name = "ButtonDenyInstance";
         DemoDialog = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         DemoDialog.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
@@ -223,13 +229,13 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         if (MarginContainer.ElementSave != null) MarginContainer.AddStatesAndCategoriesRecursivelyToGue(MarginContainer.ElementSave);
         if (MarginContainer.ElementSave != null) MarginContainer.SetInitialState();
         MarginContainer.Name = "MarginContainer";
-        LabelInstance = new Label();
+        LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance.Name = "LabelInstance";
-        TextBoxInstance = new TextBox();
+        TextBoxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.TextBox();
         TextBoxInstance.Name = "TextBoxInstance";
-        TextBoxInstance1 = new PasswordBox();
+        TextBoxInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PasswordBox();
         TextBoxInstance1.Name = "TextBoxInstance1";
-        MultiLineTextBox = new TextBox();
+        MultiLineTextBox = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.TextBox();
         MultiLineTextBox.Name = "MultiLineTextBox";
         DemoHud = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         DemoHud.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
@@ -246,44 +252,47 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         if (MenuTitle2.ElementSave != null) MenuTitle2.AddStatesAndCategoriesRecursivelyToGue(MenuTitle2.ElementSave);
         if (MenuTitle2.ElementSave != null) MenuTitle2.SetInitialState();
         MenuTitle2.Name = "MenuTitle2";
-        PercentBarInstance = new PercentBar();
+        PercentBarInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         PercentBarInstance.Name = "PercentBarInstance";
-        HitpointsBar1 = new PercentBar();
+        HitpointsBar1 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         HitpointsBar1.Name = "HitpointsBar1";
-        HitpointsBar2 = new PercentBar();
+        HitpointsBar2 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         HitpointsBar2.Name = "HitpointsBar2";
-        HitpointsBar3 = new PercentBar();
+        HitpointsBar3 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         HitpointsBar3.Name = "HitpointsBar3";
-        PercentBarInstance1 = new PercentBar();
+        PercentBarInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         PercentBarInstance1.Name = "PercentBarInstance1";
-        PercentBarInstance2 = new PercentBar();
+        PercentBarInstance2 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         PercentBarInstance2.Name = "PercentBarInstance2";
-        DividerInstance5 = new DividerHorizontal();
+        DividerInstance5 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.DividerHorizontal();
         DividerInstance5.Name = "DividerInstance5";
-        ButtonCloseInstance2 = new ButtonClose();
+        ButtonCloseInstance2 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonClose();
         ButtonCloseInstance2.Name = "ButtonCloseInstance2";
-        PercentBarInstance3 = new PercentBar();
+        PercentBarInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         PercentBarInstance3.Name = "PercentBarInstance3";
-        PercentBarInstance4 = new PercentBar();
+        PercentBarInstance4 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBar();
         PercentBarInstance4.Name = "PercentBarInstance4";
-        PercentBarInstance5 = new PercentBarIcon();
+        PercentBarInstance5 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.PercentBarIcon();
         PercentBarInstance5.Name = "PercentBarInstance5";
         ContainerInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         ContainerInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (ContainerInstance.ElementSave != null) ContainerInstance.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance.ElementSave);
         if (ContainerInstance.ElementSave != null) ContainerInstance.SetInitialState();
         ContainerInstance.Name = "ContainerInstance";
-        TreeViewInstance = new TreeView();
+        TreeViewInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.TreeView();
         TreeViewInstance.Name = "TreeViewInstance";
-        DialogBoxInstance = new DialogBox();
+        DialogBoxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.DialogBox();
         DialogBoxInstance.Name = "DialogBoxInstance";
-        WindowStandardInstance = new WindowStandard();
+        WindowStandardInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.WindowStandard();
         WindowStandardInstance.Name = "WindowStandardInstance";
-        LabelInstance1 = new Label();
+        LabelInstance1 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance1.Name = "LabelInstance1";
+        Spaced_Component_Instance = new CodeGen_MonoGameForms_FullCodegen.Components.Spaced_Component();
+        Spaced_Component_Instance.Name = "Spaced Component Instance";
     }
     protected virtual void AssignParents()
     {
+        this.AddChild(@this);
         this.AddChild(DemoSettingsMenu);
         DemoSettingsMenu.AddChild(Background);
         MenuItems.AddChild(MenuTitle);
@@ -343,9 +352,11 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         this.AddChild(DialogBoxInstance);
         this.AddChild(WindowStandardInstance);
         WindowStandardInstance.AddChild(LabelInstance1);
+        this.AddChild(Spaced_Component_Instance);
     }
     private void ApplyDefaultVariables()
     {
+
         this.DemoSettingsMenu.Height = 16f;
         this.DemoSettingsMenu.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         this.DemoSettingsMenu.Width = 400f;
@@ -676,6 +687,8 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         this.LabelInstance1.Visual.Y = 22f;
         this.LabelInstance1.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.LabelInstance1.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+
+
 
     }
     partial void CustomInitialize();

@@ -21,8 +21,8 @@ public class MainBehaviorsPlugin : InternalPlugin
 {
     BehaviorsControl control;
     private readonly ISelectedState _selectedState;
-    private readonly ElementCommands _elementCommands;
-    private readonly UndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
+    private readonly IUndoManager _undoManager;
     
     BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
@@ -31,8 +31,8 @@ public class MainBehaviorsPlugin : InternalPlugin
     public MainBehaviorsPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<ElementCommands>();
-        _undoManager = Locator.GetRequiredService<UndoManager>();
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
     }
 
     public override void StartUp()
@@ -44,8 +44,9 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         control = new BehaviorsControl();
         control.DataContext = viewModel;
-        behaviorsTab = this.CreateTab(control, "Behaviors", TabLocation.CenterBottom);
-
+        behaviorsTab = _tabManager.AddControl(control, "Behaviors", TabLocation.CenterBottom);
+        behaviorsTab.Hide();
+        
         stateDataUiGrid = new DataUiGrid();
         AssignEvents();
     }
@@ -219,7 +220,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         {
             viewModel.UpdateTo(asComponent);
 
-            this.behaviorsTab.Show(select: false);
+            this.behaviorsTab.Show();
         }
         else
         {

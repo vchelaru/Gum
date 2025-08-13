@@ -72,25 +72,25 @@ partial class WindowStandard : global::MonoGameGum.Forms.Window
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        InnerPanelInstance = new Panel();
+        InnerPanelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        TitleBarInstance = new Panel();
+        TitleBarInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         TitleBarInstance.Name = "TitleBarInstance";
-        BorderTopLeftInstance = new Panel();
+        BorderTopLeftInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderTopLeftInstance.Name = "BorderTopLeftInstance";
-        BorderTopRightInstance = new Panel();
+        BorderTopRightInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderTopRightInstance.Name = "BorderTopRightInstance";
-        BorderBottomLeftInstance = new Panel();
+        BorderBottomLeftInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderBottomLeftInstance.Name = "BorderBottomLeftInstance";
-        BorderBottomRightInstance = new Panel();
+        BorderBottomRightInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderBottomRightInstance.Name = "BorderBottomRightInstance";
-        BorderTopInstance = new Panel();
+        BorderTopInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderTopInstance.Name = "BorderTopInstance";
-        BorderBottomInstance = new Panel();
+        BorderBottomInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderBottomInstance.Name = "BorderBottomInstance";
-        BorderLeftInstance = new Panel();
+        BorderLeftInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderLeftInstance.Name = "BorderLeftInstance";
-        BorderRightInstance = new Panel();
+        BorderRightInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Panel();
         BorderRightInstance.Name = "BorderRightInstance";
     }
     protected virtual void AssignParents()

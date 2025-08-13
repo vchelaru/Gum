@@ -19,7 +19,7 @@ namespace Gum.Gui.Windows
 {
     public partial class CreateComponentWindow : System.Windows.Window
     {
-        private readonly NameVerifier _nameVerifier;
+        private readonly INameVerifier _nameVerifier;
         public string Result
         {
             get => componentName.Text;
@@ -28,7 +28,7 @@ namespace Gum.Gui.Windows
 
         public CreateComponentWindow()
         {
-            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            _nameVerifier = Locator.GetRequiredService<INameVerifier>();
             InitializeComponent();
         }
 

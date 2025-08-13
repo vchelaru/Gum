@@ -7,14 +7,16 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using ToolsUtilities;
+using Gum.Messages;
+using Gum.Extensions;
 
 namespace Gum.CommandLine
 {
     public class CommandLineManager : Singleton<CommandLineManager>
     {
         private readonly FontManager _fontManager;
-        private readonly GuiCommands _guiCommands;
-        private readonly FileCommands _fileCommands;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IFileCommands _fileCommands;
         private readonly IMessenger _messenger;
         
         #region Fields/Properties
@@ -26,6 +28,7 @@ namespace Gum.CommandLine
         }
 
         public bool ShouldExitImmediately { get; set; }
+        public bool ShouldCodeGenAll { get; private set; }
 
         public string ElementName
         {
@@ -38,8 +41,8 @@ namespace Gum.CommandLine
         public CommandLineManager()
         {
             _fontManager = Locator.GetRequiredService<FontManager>();
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _messenger = Locator.GetRequiredService<IMessenger>();
         }
 
@@ -60,7 +63,11 @@ namespace Gum.CommandLine
                     {
                         await HandleRebuildFontCommand(commandLineArgs, i);
                         ShouldExitImmediately = true;
-                        break;
+                    }
+                    else if(arg?.ToLowerInvariant() == "--generatecode")
+                    {
+                        ShouldCodeGenAll = true;
+                        ShouldExitImmediately = true;
                     }
                     else
                     {
@@ -70,13 +77,13 @@ namespace Gum.CommandLine
                         {
                             GlueProjectToLoad = arg;
                         }
-                        else if(argExtension == GumProjectSave.ComponentExtension ||
+                        else if (argExtension == GumProjectSave.ComponentExtension ||
                             argExtension == GumProjectSave.ScreenExtension ||
                             argExtension == GumProjectSave.StandardExtension)
                         {
                             ElementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
 
-                            string gluxDirectory = FileManager.GetDirectory( FileManager.GetDirectory(arg));
+                            string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(arg));
 
                             GlueProjectToLoad = System.IO.Directory.GetFiles(gluxDirectory)
                                 .FirstOrDefault(item => item.ToLowerInvariant().EndsWith(".gumx"));

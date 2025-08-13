@@ -7,9 +7,9 @@ using RenderingLibrary.Graphics;
 
 using System.Linq;
 
-namespace CodeGenProject.Screens
+namespace CodeGen_Maui_FullCodegen.Screens
 {
-    partial class DemoScreenGum
+    partial class With_Spaces_ScreenRuntime
     {
         partial void CustomInitialize()
         {

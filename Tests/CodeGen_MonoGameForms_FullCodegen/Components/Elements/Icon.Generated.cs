@@ -109,13 +109,13 @@ partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
         Wrench,
     }
 
-    IconCategory? mIconCategoryState;
+    private IconCategory? _iconCategoryState;
     public IconCategory? IconCategoryState
     {
-        get => mIconCategoryState;
+        get => _iconCategoryState;
         set
         {
-            mIconCategoryState = value;
+            _iconCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

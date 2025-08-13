@@ -70,7 +70,7 @@ partial class DialogBox : MonoGameGum.Forms.Controls.FrameworkElement
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        ContinueIndicatorInstance = new Icon();
+        ContinueIndicatorInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         ContinueIndicatorInstance.Name = "ContinueIndicatorInstance";
     }
     protected virtual void AssignParents()

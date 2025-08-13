@@ -26,21 +26,21 @@ namespace Gum.Commands;
 
 public class EditCommands
 {
-    private ISelectedState _selectedState;
-    private NameVerifier _nameVerifier;
-    private RenameLogic _renameLogic;
-    private UndoManager _undoManager;
-    private GuiCommands _guiCommands;
-    private FileCommands _fileCommands;
+    private readonly ISelectedState _selectedState;
+    private readonly INameVerifier _nameVerifier;
+    private readonly IRenameLogic _renameLogic;
+    private readonly IUndoManager _undoManager;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly ProjectCommands _projectCommands;
 
     public EditCommands(ISelectedState selectedState, 
-        NameVerifier nameVerifier,
-        RenameLogic renameLogic,
-        UndoManager undoManager,
+        INameVerifier nameVerifier,
+        IRenameLogic renameLogic,
+        IUndoManager undoManager,
         IDialogService dialogService,
-        FileCommands fileCommands,
+        IFileCommands fileCommands,
         ProjectCommands projectCommands)
     {
         _selectedState = selectedState;

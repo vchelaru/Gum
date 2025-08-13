@@ -254,7 +254,6 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void CreateAnimationWindow()
     {
-        var shouldCreate = mMainWindow == null;
         if (mMainWindow == null)
         {
             _settingsManager.LoadOrCreateSettings();
@@ -268,12 +267,7 @@ public class MainStateAnimationPlugin : PluginBase
             mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
             mMainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
             mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
-        }
-
-        var wasShown = _tabManager.ShowTabForControl(mMainWindow);
-
-        if (!wasShown)
-        {
+            
             pluginTab = _tabManager.AddControl(mMainWindow, "Animations",
                 TabLocation.RightBottom);
 

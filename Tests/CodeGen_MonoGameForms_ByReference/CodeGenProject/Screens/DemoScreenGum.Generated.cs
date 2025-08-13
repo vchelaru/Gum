@@ -5,6 +5,7 @@ using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using CodeGenProject.Components.Controls;
 using CodeGenProject.Components.Elements;
+using CodeGenProject.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -38,6 +39,35 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
             var gue = template.CreateContent(null, true) as InteractiveGue;
             return gue;
         });
+    }
+    public enum Spaced_Category
+    {
+        Spaced_State,
+    }
+
+    Spaced_Category? _spaced_CategoryState;
+    public Spaced_Category? Spaced_CategoryState
+    {
+        get => _spaced_CategoryState;
+        set
+        {
+            _spaced_CategoryState = value;
+            if(value != null)
+            {
+                if(Visual.Categories.ContainsKey("Spaced Category"))
+                {
+                    var category = Visual.Categories["Spaced Category"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "Spaced Category");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.Visual.ApplyState(state);
+                }
+            }
+        }
     }
     public ContainerRuntime DemoSettingsMenu { get; protected set; }
     public NineSliceRuntime Background { get; protected set; }
@@ -98,6 +128,8 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public DialogBox DialogBoxInstance { get; protected set; }
     public WindowStandard WindowStandardInstance { get; protected set; }
     public Label LabelInstance1 { get; protected set; }
+    // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
+    public Spaced_Component Spaced_Component_Instance { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)
     {
@@ -170,6 +202,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         DialogBoxInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<DialogBox>(this.Visual,"DialogBoxInstance");
         WindowStandardInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<WindowStandard>(this.Visual,"WindowStandardInstance");
         LabelInstance1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance1");
+        Spaced_Component_Instance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced Component Instance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

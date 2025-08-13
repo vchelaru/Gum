@@ -42,16 +42,18 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly FontManager _fontManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
-    private readonly ITabManager _tabManager;
+    private readonly IDispatcher _dispatcher;
     
     private FilePath? _fontCharacterFileAbsolute;
+
+    private PluginTab? _pluginTab;
 
     public MainPropertiesWindowPlugin()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _tabManager = Locator.GetRequiredService<ITabManager>();
+        _dispatcher = Locator.GetRequiredService<IDispatcher>();
     }
 
     public override void StartUp()
@@ -64,6 +66,12 @@ class MainPropertiesWindowPlugin : InternalPlugin
         // todo - handle loading new Gum project when this window is shown - re-call BindTo
         this.ProjectLoad += HandleProjectLoad;
         this.ReactToFileChanged += HandleFileChanged;
+
+        control = new();
+        control.CloseClicked += HandleCloseClicked;
+        
+        _pluginTab = _tabManager.AddControl(control, "Project Properties");
+        _pluginTab.Hide();
     }
 
     private void HandleProjectLoad(GumProjectSave obj)
@@ -99,23 +107,9 @@ class MainPropertiesWindowPlugin : InternalPlugin
     {
         try
         {
-            if (control == null)
-            {
-                control = new ProjectPropertiesControl();
-                control.CloseClicked += HandleCloseClicked;
-            }
-
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
-            var wasShown = 
-                _tabManager.ShowTabForControl(control);
-
-            if(!wasShown)
-            {
-                var tab = _tabManager.AddControl(control, "Project Properties");
-                tab.CanClose = true;
-                control.ViewModel = viewModel;
-                _tabManager.ShowTabForControl(control);
-            }
+            control.ViewModel = viewModel;
+            _pluginTab?.Show();
             RefreshFontRangeEditability();
         }
         catch (Exception ex)
@@ -271,7 +265,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             {
                 var ranges = BmfcSave.GenerateRangesFromFile(_fontCharacterFileAbsolute.FullPath);
 
-                _guiCommands.DoOnUiThread(() =>
+                _dispatcher.Invoke(() =>
                 {
                     viewModel.FontRanges = ranges;
                     control?.DataGrid.Refresh();
@@ -304,6 +298,6 @@ class MainPropertiesWindowPlugin : InternalPlugin
     }
     private void HandleCloseClicked(object sender, EventArgs e)
     {
-        _tabManager.RemoveControl(control);
+        _pluginTab?.Hide();
     }
 }

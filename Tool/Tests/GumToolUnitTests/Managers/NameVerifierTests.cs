@@ -6,19 +6,33 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
 public class NameVerifierTests
 {
-    NameVerifier _nameVerifier;
+    private readonly NameVerifier _nameVerifier;
 
     public NameVerifierTests()
     {
         _nameVerifier = new NameVerifier();
     }
 
+    #region Variables
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnFalse_ForVariablesWithSpaces()
+    {
+        var isValid = _nameVerifier.IsVariableNameValid("Name with space", new ComponentSave(), new VariableSave(), out string whyNotValid);
+
+        isValid.ShouldBeFalse("Because spaces are not allowed. This makes variable references difficult to parse");
+
+        whyNotValid.ShouldBe("Variable names cannot contain spaces");
+    }
+
+    #endregion
 
     #region StateSaveCategory
 
@@ -115,25 +129,14 @@ public class NameVerifierTests
     }
 
     [Fact]
-    public void IsCategoryNameValid_ShouldReturnFalse_ForNamesWithMatchingWhitespace_Component()
+    public void IsCategoryNameValid_ShouldReturnFalse_ForNamesWithSpaces()
     {
-        ComponentSave component = new ComponentSave();
-        component.Name = "TestComponent";
-        component.Categories.Add(new StateSaveCategory { Name = "Existing_Category" });
-        var isValid = _nameVerifier.IsCategoryNameValid("Existing Category", component, out string whyNotValid);
-        isValid.ShouldBeFalse();
-        whyNotValid.ShouldBe("A category with the name Existing_Category is already defined in TestComponent");
-    }
+        var isValid = _nameVerifier.IsCategoryNameValid("name with spaces", new ComponentSave(), out string whyNotValid);
 
-    [Fact]
-    public void IsCategoryNameValid_ShouldReturnFalse_ForNamesWithMatchingWhitespace_Behavior()
-    {
-        BehaviorSave behavior = new BehaviorSave();
-        behavior.Name = "TestComponent";
-        behavior.Categories.Add(new StateSaveCategory { Name = "Existing_Category" });
-        var isValid = _nameVerifier.IsCategoryNameValid("Existing Category", behavior, out string whyNotValid);
-        isValid.ShouldBeFalse();
-        whyNotValid.ShouldBe("A category with the name Existing_Category is already defined in TestComponent");
+        isValid.ShouldBeFalse("Because spaces are not allowed. This makes variable references difficult to parse");
+
+        whyNotValid.ShouldBe("Category names cannot contain spaces");
+
     }
 
     #endregion

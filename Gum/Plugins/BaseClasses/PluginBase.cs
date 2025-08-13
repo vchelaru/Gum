@@ -22,8 +22,8 @@ namespace Gum.Plugins.BaseClasses
 {
     public abstract class PluginBase : IPlugin
     {
-        protected readonly GuiCommands _guiCommands;
-        protected readonly FileCommands _fileCommands;
+        protected readonly IGuiCommands _guiCommands;
+        protected readonly IFileCommands _fileCommands;
         protected readonly ITabManager _tabManager;
         
         #region Events
@@ -195,8 +195,6 @@ namespace Gum.Plugins.BaseClasses
         // Parameters are: extension, parentElement, instance, changedMember
         public event Func<string, ElementSave, InstanceSave, string, bool>? IsExtensionValid;
 
-        public event Action? UiZoomValueChanged;
-
         public event Action<IPositionedSizedObject>? SetHighlightedIpso;
         public event Action<IPositionedSizedObject?>? IpsoSelected;
         public event Func<IEnumerable<IPositionedSizedObject>?> GetSelectedIpsos;
@@ -222,8 +220,8 @@ namespace Gum.Plugins.BaseClasses
 
         protected PluginBase()
         {
-            _guiCommands = Locator.GetRequiredService<GuiCommands>();
-            _fileCommands = Locator.GetRequiredService<FileCommands>();
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _tabManager = Locator.GetRequiredService<ITabManager>();
         }
 
@@ -344,7 +342,7 @@ namespace Gum.Plugins.BaseClasses
             //return CreateTab(wpfHost, tabName);
 
             PluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
-            newTab.SuggestedLocation = defaultLocation;
+            newTab.Location = defaultLocation;
             newTab.Hide();
             return newTab;
         }
@@ -354,9 +352,9 @@ namespace Gum.Plugins.BaseClasses
             return _tabManager.AddControl(control, tabName, tabLocation);
         }
 
-        public void RemoveControl(System.Windows.Controls.UserControl control)
+        public void RemoveTab(PluginTab tab)
         {
-            _tabManager.RemoveControl(control);
+            _tabManager.RemoveTab(tab);
         }
 
         #endregion
@@ -523,8 +521,6 @@ namespace Gum.Plugins.BaseClasses
 
         public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
-
-        public void CallUiZoomValueChanged() => UiZoomValueChanged?.Invoke();
 
         public void CallSetHighlightedIpso(IPositionedSizedObject element) =>
             SetHighlightedIpso?.Invoke(element);

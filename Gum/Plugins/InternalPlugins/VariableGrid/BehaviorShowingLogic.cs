@@ -11,7 +11,7 @@ namespace Gum.Plugins.VariableGrid
 {
     internal static class BehaviorShowingLogic
     {
-        private static readonly FileCommands _fileCommands = Locator.GetRequiredService<FileCommands>();
+        private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
         public static List<MemberCategory> GetCategoriesFor(BehaviorSave behavior)
         {
             List<MemberCategory> toReturn = new List<MemberCategory>();

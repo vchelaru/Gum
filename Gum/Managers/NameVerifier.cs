@@ -11,57 +11,142 @@ namespace Gum.Managers;
 public class NameVerifier : INameVerifier
 {
     #region Fields/Properties
-    public static char[] InvalidCharacters =
-            new char[] 
-        { 
-            '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', 
-            '(', ')', '-', '=', '+', ';', '\'', ':', '"', '<', 
-            ',', '>', '.', '/', '\\', '?', '[', '{', ']', '}', 
-            '|', 
-            // Spaces are handled separately
-        //    ' ' 
-        };
-    public static HashSet<string> InvalidWindowsFileNames = new HashSet<string>
-    {
-        "con",
-        "prn",
-        "aux",
-        "nul",
-        "com0",
-        "com1",
-        "com2",
-        "com3",
-        "com4",
-        "com5",
-        "com6",
-        "com7",
-        "com8",
-        "com9",
-        "lpt0",
-        "lpt1",
-        "lpt2",
-        "lpt3",
-        "lpt4",
-        "lpt5",
-        "lpt6",
-        "lpt7",
-        "lpt8",
-        "lpt9",
-    };
     
-    private readonly StandardElementsManager _standardElementsManager;
+    public static readonly char[] InvalidCharacters =
+        [
+            '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', 
+                '(', ')', '-', '=', '+', ';', '\'', ':', '"', '<', 
+                ',', '>', '.', '/', '\\', '?', '[', '{', ']', '}', 
+                '|'
+            // Spaces are handled separately
+            //    ' ' 
+        ];
+        private static readonly HashSet<string> InvalidWindowsFileNames =
+        [
+            "con",
+            "prn",
+            "aux",
+            "nul",
+            "com0",
+            "com1",
+            "com2",
+            "com3",
+            "com4",
+            "com5",
+            "com6",
+            "com7",
+            "com8",
+            "com9",
+            "lpt0",
+            "lpt1",
+            "lpt2",
+            "lpt3",
+            "lpt4",
+            "lpt5",
+            "lpt6",
+            "lpt7",
+            "lpt8",
+            "lpt9"
+        ];
+        private static readonly HashSet<string> CSharpReservedKeywords =
+        [
+            "abstract",
+            "as",
+            "base",
+            "bool",
+            "break",
+            "byte",
+            "case",
+            "catch",
+            "char",
+            "checked",
+            "class",
+            "const",
+            "continue",
+            "decimal",
+            "default",
+            "delegate",
+            "do",
+            "double",
+            "else",
+            "enum",
+            "event",
+            "explicit",
+            "extern",
+            "false",
+            "finally",
+            "fixed",
+            "float",
+            "for",
+            "foreach",
+            "goto",
+            "if",
+            "implicit",
+            "in",
+            "int",
+            "interface",
+            "internal",
+            "is",
+            "lock",
+            "long",
+            "namespace",
+            "new",
+            "null",
+            "object",
+            "operator",
+            "out",
+            "override",
+            "params",
+            "private",
+            "protected",
+            "public",
+            "readonly",
+            "ref",
+            "return",
+            "sbyte",
+            "sealed",
+            "short",
+            "sizeof",
+            "stackalloc",
+            "static",
+            "string",
+            "struct",
+            "switch",
+            "this",
+            "throw",
+            "true",
+            "try",
+            "typeof",
+            "uint",
+            "ulong",
+            "unchecked",
+            "unsafe",
+            "ushort",
+            "using",
+            "virtual",
+            "void",
+            "volatile",
+            "while"
+        ];
+
+        private readonly StandardElementsManager _standardElementsManager;
+    
     #endregion
+    
     #region Folder
+    
+    public NameVerifier()
+    {
+        _standardElementsManager = StandardElementsManager.Self;
+    }
     public bool IsFolderNameValid(string folderName, out string whyNotValid)
     {
         IsNameValidCommon(folderName, out whyNotValid);
         return string.IsNullOrEmpty(whyNotValid);
     }
+    
     #endregion
-    public NameVerifier()
-    {
-        _standardElementsManager = StandardElementsManager.Self;
-    }
+    
     public bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid)
     {
         IsNameValidCommon(componentNameWithoutFolder, out whyNotValid);
@@ -83,29 +168,39 @@ public class NameVerifier : INameVerifier
     {
         IsNameValidCommon(name, out whyNotValid);
 
-
-        string standardizedName = Standardize(name);
-        string? existingName = null;
-        StateSaveCategory? existing = categoryContainer.GetStateSaveCategoryRecursively(item =>
+        if(string.IsNullOrEmpty(whyNotValid))
         {
-            if (Standardize(item.Name) == standardizedName)
+            if(name.Contains(" "))
             {
-                existingName = item.Name;
-                return true;
+                whyNotValid = "Category names cannot contain spaces";
             }
+        }
 
-            return false;
-        });
-
-        if (existingName != null)
+        if(string.IsNullOrEmpty(whyNotValid))
         {
-            whyNotValid = $"A category with the name {existingName} is already defined in {categoryContainer.Name}";
+            string standardizedName = Standardize(name);
+            string? existingName = null;
+            StateSaveCategory? existing = categoryContainer.GetStateSaveCategoryRecursively(item =>
+            {
+                if (Standardize(item.Name) == standardizedName)
+                {
+                    existingName = item.Name;
+                    return true;
+                }
+
+                return false;
+            });
+
+            if (existingName != null)
+            {
+                whyNotValid = $"A category with the name {existingName} is already defined in {categoryContainer.Name}";
+            }
         }
         
 
         return string.IsNullOrEmpty(whyNotValid);
     }
-    internal bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
+    public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
     {
         IsNameValidCommon(name, out whyNotValid);
         if(string.IsNullOrEmpty(whyNotValid))
@@ -154,6 +249,15 @@ public class NameVerifier : INameVerifier
     {
         whyNotValid = null;
         IsNameValidCommon(variableName, out whyNotValid);
+
+        // variables should not allow spaces because previous versions of Gum used to have variables with spaces
+        // and that caused confusion when creating variable referencs. Therefore, Gum strips spaces from names. We 
+        // should prevent spaces from being added here:
+        if(string.IsNullOrEmpty(whyNotValid) && variableName.Contains(" "))
+        {
+            whyNotValid = "Variable names cannot contain spaces";
+        }
+
         if (string.IsNullOrEmpty(whyNotValid) && elementSave != null)
         {
             IsNameAlreadyUsed(variableName, variableSave, elementSave, out whyNotValid);
@@ -225,6 +329,10 @@ public class NameVerifier : INameVerifier
         {
             whyNotValid = $"The name {name} is a reserved file name in Windows";
         }
+    }
+    public bool IsCSharpReservedKeyword(string word)
+    {
+        return CSharpReservedKeywords.Contains(word);
     }
     public bool IsComponentNameAlreadyUsed(string name)
     {

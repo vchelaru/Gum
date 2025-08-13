@@ -24,12 +24,12 @@ namespace Gum.ToolCommands
         #region Fields
 
         private readonly ISelectedState _selectedState;
-        private readonly GuiCommands _guiCommands;
-        private readonly FileCommands _fileCommands;
+        private readonly IGuiCommands _guiCommands;
+        private readonly IFileCommands _fileCommands;
 
         #endregion
 
-        public ElementCommands(ISelectedState selectedState, GuiCommands guiCommands, FileCommands fileCommands)
+        public ElementCommands(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands)
         {
             _selectedState = selectedState;
             _guiCommands = guiCommands;

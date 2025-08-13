@@ -1,16 +1,15 @@
 using System;
-using System.ComponentModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.Input;
-using Gum.Commands;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Mvvm;
-using Gum.Services;
-using Gum.ViewModels;
+using Gum.Plugins;
 
 namespace Gum.Plugins
 {
-    public partial class PluginTab : ViewModel
+    public partial class PluginTab : ViewModel, IRecipient<TabSelectedMessage>
     {
+        private readonly IMessenger _messenger;
         public event Action? TabShown;
         public event Action? TabHidden;
         public event Action? GotFocus;
@@ -20,8 +19,12 @@ namespace Gum.Plugins
             get => Get<string>();
             set => Set(value);
         }
-        
-        public TabLocation SuggestedLocation { get; set; } = TabLocation.RightBottom;
+
+        public TabLocation Location
+        {
+            get => Get<TabLocation>();
+            set => Set(value);
+        }
         
         public FrameworkElement Content
         {
@@ -33,41 +36,6 @@ namespace Gum.Plugins
         {
             get => Get<FrameworkElement?>();
             set => Set(value);
-        }
-
-        public PluginTabContainerViewModel? ParentContainer
-        {
-            get => Get<PluginTabContainerViewModel>();
-            set
-            {
-                PluginTabContainerViewModel? previousParent = ParentContainer;
-
-                if (Set(value))
-                {
-                    if (previousParent is not null)
-                    {
-                        previousParent.PropertyChanged -= OnParentContainerChanged;
-                        previousParent.Tabs.Remove(this);
-                    }
-
-                    if (value is {} newParent)
-                    {
-                        newParent.PropertyChanged += OnParentContainerChanged;
-                        if (!newParent.Tabs.Contains(this))
-                        {
-                            newParent.Tabs.Add(this);
-                        }
-                    }
-                }
-            }
-        }
-
-        private void OnParentContainerChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(PluginTabContainerViewModel.SelectedTab))
-            {
-                NotifyPropertyChanged(nameof(IsSelected));
-            }
         }
         
         public bool IsVisible
@@ -84,7 +52,6 @@ namespace Gum.Plugins
                     else
                     {
                         TabHidden?.Invoke();
-                        IsSelected = false;
                     }
                 }
             }
@@ -92,14 +59,14 @@ namespace Gum.Plugins
         
         public bool IsSelected
         {
-            get => ParentContainer?.SelectedTab == this;
+            get => Get<bool>();
             set
             {
-                if (value && ParentContainer is { } parent)
+                if (Set(value) && value)
                 {
-                    parent.SelectedTab = this;
+                    _messenger.Send<TabSelectedMessage>(new(this));
                 }
-            }
+            } 
         }
 
         public bool CanClose
@@ -114,23 +81,36 @@ namespace Gum.Plugins
             }
         }
 
-        public PluginTab(FrameworkElement content)
+        public PluginTab(FrameworkElement content, IMessenger messenger)
         {
+            _messenger = messenger;
+            _messenger.RegisterAll(this);
+            
+            CanClose = true;
+            Location = TabLocation.RightBottom;
             Content = content;
             IsVisible = true;
         }
-        
-        [RelayCommand(CanExecute = nameof(CanClose))]
-        public void Hide() => IsVisible = false;
 
-        public void Show(bool select = true)
+        [RelayCommand(CanExecute = nameof(CanClose))]
+        public void Hide()
         {
-            IsVisible = true;
-            
-            if (select) // don't explicitly de-select
+            if (CanClose)
             {
-                IsSelected = true;
+                IsVisible = false;
+            }
+        }
+
+        public void Show() => IsVisible = true;
+
+        public void Receive(TabSelectedMessage message)
+        {
+            if (message.Tab != this && message.Tab.Location == Location)
+            {
+                IsSelected = false;
             }
         }
     }
 }
+
+public record TabSelectedMessage(PluginTab Tab);

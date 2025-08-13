@@ -31,7 +31,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
-public class GuiCommands
+public class GuiCommands : IGuiCommands
 {
     #region Fields/Properties
 
@@ -41,21 +41,23 @@ public class GuiCommands
     MainPanelControl mainPanelControl;
 
     private readonly Lazy<ISelectedState> _lazySelectedState;
+    private readonly IDispatcher _dispatcher;
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
     #endregion
 
-    public GuiCommands(Lazy<ISelectedState> lazySelectedState)
+    public GuiCommands(Lazy<ISelectedState> lazySelectedState, IDispatcher dispatcher)
     {
         _lazySelectedState = lazySelectedState;
+        _dispatcher = dispatcher;
     }
 
-    internal void Initialize(MainPanelControl mainPanelControl)
+    public void Initialize(MainPanelControl mainPanelControl)
     {
         this.mainPanelControl = mainPanelControl;
     }
 
-    internal void BroadcastRefreshBehaviorView()
+    public void BroadcastRefreshBehaviorView()
     {
         PluginManager.Self.RefreshBehaviorView(
             _selectedState.SelectedElement);
@@ -63,7 +65,7 @@ public class GuiCommands
 
     #region Refresh Commands
 
-    internal void RefreshStateTreeView()
+    public void RefreshStateTreeView()
     {
         PluginManager.Self.RefreshStateTreeView();
     }
@@ -80,42 +82,6 @@ public class GuiCommands
     {
         PropertyGridManager.Self.RefreshVariablesDataGridValues();
     }
-
-    const int DefaultFontSize = 11;
-
-    int _uiZoomValue = 100;
-    const int MinUiZoomValue = 70;
-    const int MaxUiZoomValue = 500;
-    public int UiZoomValue
-    {
-        get => _uiZoomValue;
-        set
-        {
-            if (value > MaxUiZoomValue)
-            {
-                _uiZoomValue = MaxUiZoomValue;
-            }
-            else if (value < MinUiZoomValue)
-            {
-                _uiZoomValue = MinUiZoomValue;
-            }
-            else
-            {
-                _uiZoomValue = value;
-            }
-            UpdateUiToZoomValue();
-        }
-    }
-
-    private void UpdateUiToZoomValue()
-    {
-        var fontSize = DefaultFontSize * UiZoomValue / 100.0f;
-
-        mainPanelControl.FontSize = fontSize;
-
-        PluginManager.Self.HandleUiZoomValueChanged();
-    }
-
 
     public void RefreshElementTreeView()
     {
@@ -169,7 +135,7 @@ public class GuiCommands
 
     public void PrintOutput(string output)
     {
-        DoOnUiThread(() => OutputManager.Self.AddOutput(output));
+        _dispatcher.Invoke(() => OutputManager.Self.AddOutput(output));
     }
 
     #region Show/Hide Tools
@@ -196,7 +162,7 @@ public class GuiCommands
 
     #endregion
 
-    internal void FocusSearch()
+    public void FocusSearch()
     {
         PluginManager.Self.FocusSearch();
     }
@@ -208,10 +174,4 @@ public class GuiCommands
 
         return spinner;
     }
-
-    public void DoOnUiThread(Action action)
-    {
-        mainPanelControl.Dispatcher.Invoke(action);
-    }
-
 }

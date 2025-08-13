@@ -61,13 +61,13 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
         PlayStationDualShock,
     }
 
-    PlayerJoinCategory? mPlayerJoinCategoryState;
+    private PlayerJoinCategory? _playerJoinCategoryState;
     public PlayerJoinCategory? PlayerJoinCategoryState
     {
-        get => mPlayerJoinCategoryState;
+        get => _playerJoinCategoryState;
         set
         {
-            mPlayerJoinCategoryState = value;
+            _playerJoinCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -90,13 +90,13 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
 
-    PlayerIndexCategory? mPlayerIndexCategoryState;
+    private PlayerIndexCategory? _playerIndexCategoryState;
     public PlayerIndexCategory? PlayerIndexCategoryState
     {
-        get => mPlayerIndexCategoryState;
+        get => _playerIndexCategoryState;
         set
         {
-            mPlayerIndexCategoryState = value;
+            _playerIndexCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -115,13 +115,13 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
 
-    GamepadLayoutCategory? mGamepadLayoutCategoryState;
+    private GamepadLayoutCategory? _gamepadLayoutCategoryState;
     public GamepadLayoutCategory? GamepadLayoutCategoryState
     {
-        get => mGamepadLayoutCategoryState;
+        get => _gamepadLayoutCategoryState;
         set
         {
-            mGamepadLayoutCategoryState = value;
+            _gamepadLayoutCategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
@@ -205,7 +205,7 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
         if (ControllerDisplayNameTextInstance.ElementSave != null) ControllerDisplayNameTextInstance.AddStatesAndCategoriesRecursivelyToGue(ControllerDisplayNameTextInstance.ElementSave);
         if (ControllerDisplayNameTextInstance.ElementSave != null) ControllerDisplayNameTextInstance.SetInitialState();
         ControllerDisplayNameTextInstance.Name = "ControllerDisplayNameTextInstance";
-        InputDeviceIcon = new Icon();
+        InputDeviceIcon = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         InputDeviceIcon.Name = "InputDeviceIcon";
     }
     protected virtual void AssignParents()

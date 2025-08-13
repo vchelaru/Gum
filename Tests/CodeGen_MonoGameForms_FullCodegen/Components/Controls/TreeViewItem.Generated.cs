@@ -61,9 +61,9 @@ partial class TreeViewItem : MonoGameGum.Forms.Controls.FrameworkElement
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
-        ToggleButtonInstance = new TreeViewToggle();
+        ToggleButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.TreeViewToggle();
         ToggleButtonInstance.Name = "ToggleButtonInstance";
-        ListBoxItemInstance = new ListBoxItem();
+        ListBoxItemInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ListBoxItem();
         ListBoxItemInstance.Name = "ListBoxItemInstance";
         InnerPanelInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         InnerPanelInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
