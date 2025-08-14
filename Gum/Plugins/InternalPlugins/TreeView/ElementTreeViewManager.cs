@@ -513,15 +513,14 @@ public partial class ElementTreeViewManager
     #endregion
     
 
-    public void Initialize(IContainer components, 
-        ImageList ElementTreeImages)
+    public void Initialize()
     {
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _copyPasteLogic = CopyPasteLogic.Self;
 
-        CreateObjectTreeView(ElementTreeImages);
+        CreateObjectTreeView();
 
-        CreateContextMenuStrip(components);
+        CreateContextMenuStrip();
 
         RefreshUi();
 
@@ -574,17 +573,16 @@ public partial class ElementTreeViewManager
         searchTextBox.Focus();
     }
 
-    private void CreateContextMenuStrip(IContainer components)
+    private void CreateContextMenuStrip()
     {
-        this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip(components);
+        this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip();
         this.mMenuStrip.Name = "ElementMenuStrip";
         this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
         this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
     }
 
-    private void CreateObjectTreeView(ImageList ElementTreeImages)
+    private void CreateObjectTreeView()
     {
-        System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
         this.ObjectTreeView = new CommonFormsAndControls.MultiSelectTreeView();
         this.ObjectTreeView.IsSelectingOnPush = false;
         this.ObjectTreeView.AllowDrop = true;
@@ -592,13 +590,12 @@ public partial class ElementTreeViewManager
         this.ObjectTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
         this.ObjectTreeView.HotTracking = true;
         this.ObjectTreeView.ImageIndex = 0;
-        this.ObjectTreeView.ImageList = ElementTreeImages;
-        unmodifiableImageList = ElementTreeImages;
+        this.ObjectTreeView.ImageList = ObjectTreeView.ElementTreeImageList;
+        unmodifiableImageList = ObjectTreeView.ElementTreeImageList;
         this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
         this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
         this.ObjectTreeView.Name = "ObjectTreeView";
         this.ObjectTreeView.SelectedImageIndex = 0;
-        this.ObjectTreeView.SelectedNodes = ((System.Collections.Generic.List<System.Windows.Forms.TreeNode>)(resources.GetObject("ObjectTreeView.SelectedNodes")));
         this.ObjectTreeView.Size = new System.Drawing.Size(196, 621);
         this.ObjectTreeView.TabIndex = 0;
         this.ObjectTreeView.AfterClickSelect += this.ObjectTreeView_AfterClickSelect;
