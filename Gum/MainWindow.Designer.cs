@@ -1,4 +1,4 @@
-﻿namespace Gum
+namespace Gum
 {
     partial class MainWindow
     {
@@ -30,25 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
-
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.SuspendLayout();
-            // 
-            // ElementTreeImages
-            // 
-            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
-            this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
-            this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
-            this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
-            this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
-            this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
-            this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
-            this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
-            this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
-            this.ElementTreeImages.Images.SetKeyName(7, "state.png");
-            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
-            this.ElementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
             // 
             // PropertyGridMenuStrip
             // 
@@ -72,8 +55,6 @@
 
         #endregion
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
-
-        private System.Windows.Forms.ImageList ElementTreeImages;
 
     }
 }
