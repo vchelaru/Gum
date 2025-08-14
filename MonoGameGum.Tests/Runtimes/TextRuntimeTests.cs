@@ -49,25 +49,74 @@ public class TextRuntimeTests
     [Fact]
     public void TextRuntime_ShouldWrap_IfOnlyLettersExist()
     {
+        Text text = new();
         Text.IsMidWordLineBreakEnabled = true;
-        TextRuntime textRuntime = new();
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        textRuntime.Width = 100; // Set a fixed width
+        text.Width = 100;
 
-        textRuntime.Text = "abcdefghijklmnopqrstuvwxyz";
+        text.RawText = "abcdefghijklmnopqrstuvwxyz";
 
-        var innerText = (Text)textRuntime.RenderableComponent;
-
-        innerText.WrappedText.Count.ShouldBeGreaterThan(1);
-        innerText.WrappedText[0].ShouldStartWith("abc");
-        innerText.WrappedText[1].ShouldNotStartWith("abc");
-        char lastLine0 = innerText.WrappedText[0].Last();
-        char firstCharacterInSecondLine = innerText.WrappedText[1][0];
+        text.WrappedText.Count.ShouldBeGreaterThan(1);
+        text.WrappedText[0].ShouldStartWith("abc");
+        text.WrappedText[1].ShouldNotStartWith("abc");
+        text.WrappedText[1].ShouldStartWith("mno");
+        char lastLine0 = text.WrappedText[0].Last();
+        char firstCharacterInSecondLine = text.WrappedText[1][0];
         firstCharacterInSecondLine.ShouldBe((char)(lastLine0 + 1));
     }
-//Hyphens and dashes - These are natural break points where you can wrap
-//After punctuation - Periods, commas, semicolons, etc. (though be careful with decimal points)
-//Between different character types - Like between letters and numbers, or letters and symbols
-//Zero-width spaces - HTML &zwj; or Unicode characters specifically for this purpose
+    //Hyphens and dashes - These are natural break points where you can wrap
+    //After punctuation - Periods, commas, semicolons, etc. (though be careful with decimal points)
+    //Between different character types - Like between letters and numbers, or letters and symbols
+    //Zero-width spaces - HTML &zwj; or Unicode characters specifically for this purpose
+
+    [Fact]
+    public void TextRuntime_ShouldWrapMidWord_WithMultipleLines()
+    {
+        // bypassing TextRuntime to test this directly:
+        var text = new Text();
+        text.Width = 14;
+        Text.IsMidWordLineBreakEnabled = true;
+
+        text.RawText = "01\n01";
+
+        text.WrappedText.Count.ShouldBe(4);
+        text.WrappedText[0].ShouldBe("0");
+        text.WrappedText[1].ShouldBe("1\n");
+        text.WrappedText[2].ShouldBe("0");
+        text.WrappedText[3].ShouldBe("1");
+    }
+
+    [Fact]
+    public void TextRuntime_ShouldWrapMidWord_WithMultipleWords()
+    {
+        // bypassing TextRuntime to test this directly:
+        var text = new Text();
+        text.Width = 14;
+        Text.IsMidWordLineBreakEnabled = true;
+
+        text.RawText = "01 01";
+
+        text.WrappedText.Count.ShouldBe(4);
+        text.WrappedText[0].ShouldBe("0");
+        text.WrappedText[1].ShouldBe("1 ");
+        text.WrappedText[2].ShouldBe("0");
+        text.WrappedText[3].ShouldBe("1");
+    }
+
+    [Fact]
+    public void TextRuntime_ShouldWrapMidWord_IfWidthMatchesLetterWidthExactly()
+    {
+        // each letter is 10 wide, so let's set a width that is a multiple of that:
+        Text text = new();
+        Text.IsMidWordLineBreakEnabled = true;
+        text.Width = 30;
+
+        text.RawText = "abcdefghijklmnopqrstuvwxyz";
+
+        text.WrappedText.Count.ShouldBe(9);
+        text.WrappedText[0].ShouldNotBeEmpty("abc");
+        text.WrappedText[1].ShouldNotBeEmpty("def");
+        text.WrappedText[2].ShouldNotBeEmpty("ghi");
+        text.WrappedText[3].ShouldNotBeEmpty("jkl");
+    }
 
 }
