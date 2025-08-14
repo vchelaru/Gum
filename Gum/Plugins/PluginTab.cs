@@ -65,6 +65,7 @@ namespace Gum.Plugins
                 if (Set(value) && value)
                 {
                     _messenger.Send<TabSelectedMessage>(new(this));
+                    GotFocus?.Invoke();
                 }
             } 
         }
