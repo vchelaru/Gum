@@ -51,7 +51,6 @@ namespace Gum
         #endregion
 
         public MainWindow(MainPanelControl mainPanelControl,
-            IGuiCommands guiCommands,
             MenuStripManager menuStripManager,
             IMessenger messenger
             )
@@ -70,18 +69,12 @@ namespace Gum
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
-
-            // Initialize before the StateView is created...
-            _guiCommands = guiCommands;
-            _guiCommands.Initialize(mainPanelControl);
-
+            
             TypeManager.Self.Initialize();
 
             // This has to happen before plugins are loaded since they may depend on settings...
             ProjectManager.Self.LoadSettings();
-
-            Cursor addCursor = LoadAddCursor();
-            _guiCommands.AddCursor = addCursor;
+            
             // Vic says - I tried
             // to instantiate the ElementTreeImages
             // in the ElementTreeViewManager. I move 
@@ -129,21 +122,7 @@ namespace Gum
 
             InitializeFileWatchTimer();
         }
-
-        private Cursor LoadAddCursor()
-        {
-            try
-            {
-                var cursor = new System.Windows.Forms.Cursor(this.GetType(), "Content.Cursors.AddCursor.cur");
-                return cursor;
-            }
-            catch
-            {
-                // Vic got this to crash on Sean's machine. Not sure why, but let's tolerate it since it's not breaking
-                return Cursor.Current;
-            }
-        }
-
+        
         private void AddMainPanelControl(MainPanelControl mainPanelControl)
         {
             var wpfHost = new ElementHost();

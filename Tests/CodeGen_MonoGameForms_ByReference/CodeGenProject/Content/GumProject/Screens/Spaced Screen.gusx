@@ -9,6 +9,18 @@
       <Value xsi:type="xsd:string">State with space</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Spaced ComponentInstance.X</Name>
+      <Value xsi:type="xsd:float">22</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Spaced ComponentInstance.Y</Name>
+      <Value xsi:type="xsd:float">28</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
   </State>
   <Instance>
     <Name>Spaced ComponentInstance</Name>

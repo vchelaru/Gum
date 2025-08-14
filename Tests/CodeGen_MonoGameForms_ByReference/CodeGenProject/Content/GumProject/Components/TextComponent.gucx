@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>TextComponent</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>float</Type>
+      <Name>Height</Name>
+      <Value xsi:type="xsd:float">357</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>LongLineWrappingText.Text</Name>
+      <Value xsi:type="xsd:string">This is text that is quite long, and will line wrap based on its size. I'm adding a little more text here just to make sure it wraps.</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>LongLineWrappingText.Width</Name>
+      <Value xsi:type="xsd:float">150</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>LongLineWrappingText.WidthUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>LongLineWrappingText.X</Name>
+      <Value xsi:type="xsd:float">36</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>LongLineWrappingText.Y</Name>
+      <Value xsi:type="xsd:float">31</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>State</Type>
+      <Name>State</Name>
+      <Value xsi:type="xsd:string">Default</Value>
+      <Category>States and Visibility</Category>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Width</Name>
+      <Value xsi:type="xsd:float">549</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>LongLineWrappingText</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ComponentSave>

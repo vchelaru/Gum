@@ -99,9 +99,6 @@ namespace StateAnimationPlugin.Views
 
         private void HandleLoaded(object sender, RoutedEventArgs e)
         {
-            IGuiCommands guiCommands = Locator.GetRequiredService<IGuiCommands>();
-            guiCommands.MoveToCursor(this);
-
             ListBox.Focus();
         }
 

@@ -371,7 +371,10 @@ namespace WpfDataUi.Controls
                 for (int i = 0; i < this.ComboBox.Items.Count; i++)
                 {
                     var item = this.ComboBox.Items[i];
-                    if (CustomOptions.ElementAt(i)?.Equals(item) != true)
+
+                    var customOption = CustomOptions.ElementAt(i);
+
+                    if (customOption?.Equals(item) != true)
                     {
                         shouldRefresh = true;
                         break;
