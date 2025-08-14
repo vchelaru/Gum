@@ -374,8 +374,13 @@ public class CodeGenerator
         return element == null ? null : GetClassNameForType(element, visualApi, context, isFullyQualified);
     }
     
-    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
+    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false) =>
+        GetClassNameForType(container, visualApi, context, out _, isFullyQualified);
+    
+    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, out bool isPrefixed, bool isFullyQualified = false)
     {
+        isPrefixed = false;
+        
         string? className = null;
         var specialHandledCase = false;
 
@@ -424,15 +429,14 @@ public class CodeGenerator
             }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = ToCSharpName($"{strippedType}{suffix}");
-
+            className = ToCSharpName($"{strippedType}{suffix}", out isPrefixed);
         }
 
         if(isFullyQualified && container is ElementSave elementSave)
         {
             className = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings) + "." + className;
         }
-
+        
         return ToCSharpName(className);
     }
 
@@ -5016,18 +5020,24 @@ public class CodeGenerator
 
         return isRightType;
     }
+
+    internal static string ToCSharpName(string name) => ToCSharpName(name, out _);
     
-    internal static string ToCSharpName(string name)
+    internal static string ToCSharpName(string name, out bool isPrefixed)
     {
+        isPrefixed = false;
+        
         if (!NameVerifier.IsValidCSharpName(name, out string whyNotValid, out CommonValidationError validationError))
         {
             if (validationError == CommonValidationError.InvalidStartingCharacterForCSharp)
             {
                 name = "_" + name;
+                isPrefixed = true;
             }
             else if (validationError == CommonValidationError.ReservedCSharpKeyword)
             {
                 name = "@" + name;
+                isPrefixed = true;
             }
             else
             {
