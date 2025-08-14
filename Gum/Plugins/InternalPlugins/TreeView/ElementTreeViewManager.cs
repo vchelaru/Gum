@@ -154,7 +154,7 @@ public partial class ElementTreeViewManager
     TreeNode mBehaviorsTreeNode;
     TreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
-
+    private Cursor AddCursor { get; }
 
 
     FlatSearchListBox FlatList;
@@ -284,6 +284,20 @@ public partial class ElementTreeViewManager
         _tabManager = Locator.GetRequiredService<ITabManager>();
         
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
+        AddCursor = GetAddCursor();
+
+        Cursor GetAddCursor()
+        {
+            try
+            {
+                return new Cursor(typeof(MainWindow), "Content.Cursors.AddCursor.cur");
+            }
+            catch
+            {
+                // Vic got this to crash on Sean's machine. Not sure why, but let's tolerate it since it's not breaking
+                return Cursor.Current;
+            }
+        }
     }
 
     #region Methods
@@ -631,7 +645,7 @@ public partial class ElementTreeViewManager
             if(InputLibrary.Cursor.Self.IsInWindow)
             {
                 e.UseDefaultCursors = false;
-                System.Windows.Forms.Cursor.Current = _guiCommands.AddCursor;
+                System.Windows.Forms.Cursor.Current = AddCursor;
             }
         };
     }

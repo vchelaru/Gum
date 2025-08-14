@@ -62,10 +62,7 @@ public partial class CustomizableTextInputWindow : Window
         TextBox.Focus();
 
         this.WindowStartupLocation = WindowStartupLocation.Manual;
-
-        IGuiCommands guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        guiCommands.MoveToCursor(this);
-
+        
         ValidationLabel.Visibility = Visibility.Hidden;
         this.Loaded += HandleLoaded;
     }
