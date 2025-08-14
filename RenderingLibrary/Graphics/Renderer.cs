@@ -511,8 +511,6 @@ public class Renderer : IRenderer
 
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
-
-
         Texture oldRenderTarget = null;
 
         // RenderTargetCount isn't supported in raw XNA or KNI
@@ -543,35 +541,37 @@ public class Renderer : IRenderer
             var cameraRight = Camera.AbsoluteRight;
             var cameraTop = Camera.AbsoluteTop;
             var cameraBottom = Camera.AbsoluteBottom;
-            var oldCameraZoom = Camera.Zoom;
+            //var oldCameraZoom = Camera.Zoom;
 
             float extraToAddX = 0;
             float extraToAddY = 0;
-            float extraToSubtractWidth = 0;
-            float extraToSubtractHeight = 0;
+            // float extraToSubtractWidth = 0;
+            // float extraToSubtractHeight = 0;
+            //
+            // var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
+            // var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
 
-            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
-            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
-
-            if(cameraLeft > renderable.X)
+            if(cameraLeft > oldX)
             {
-                extraToAddX = cameraLeft - renderable.X;
+                extraToAddX = cameraLeft - oldX;
             }
-            if(cameraTop > renderable.Y)
+            if(cameraTop > oldY)
             {
-                extraToAddY = cameraTop - renderable.Y;
+                extraToAddY = cameraTop - oldY;
             }
 
             if(cameraRight < oldX + oldWidth)
             {
-                extraToSubtractWidth = oldX + oldWidth - cameraRight;
+                // no need to do anything, the render target has already been clipped
+                //extraToSubtractWidth = oldX + oldWidth - cameraRight;
             }
             if(cameraBottom < oldY + oldHeight)
             {
-                extraToSubtractHeight = oldY + oldHeight - cameraBottom;
+                // no need to do anything, the render target has already been clipped
+                // extraToSubtractHeight = oldY + oldHeight - cameraBottom;
             }
 
-                //renderable.X -= extraToAddX;
+            //renderable.X -= extraToAddX;
             renderable.Width += extraToAddX;
             renderable.Height += extraToAddY;
 
