@@ -8,6 +8,17 @@ using System.Globalization;
 using System.Linq;
 namespace Gum.Managers;
 
+public enum CommonValidationError
+{
+    None,
+    IsEmpty,
+    StartsWithSpace,
+    EndsWithSpace,
+    InvalidCharacter,
+    InvalidStartingCharacterForCSharp,
+    ReservedCSharpKeyword
+}
+
 public class NameVerifier : INameVerifier
 {
     #region Fields/Properties
@@ -147,7 +158,7 @@ public class NameVerifier : INameVerifier
     }
     public bool IsFolderNameValid(string folderName, out string whyNotValid)
     {
-        IsNameValidCommon(folderName, out whyNotValid);
+        IsNameValidCommon(folderName, out whyNotValid, out _);
         return string.IsNullOrEmpty(whyNotValid);
     }
     
@@ -155,7 +166,7 @@ public class NameVerifier : INameVerifier
     
     public bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid)
     {
-        IsNameValidCommon(componentNameWithoutFolder, out whyNotValid);
+        IsNameValidCommon(componentNameWithoutFolder, out whyNotValid, out _);
         if (string.IsNullOrEmpty(whyNotValid))
         {
             IsFileNameWindowsReserved(componentNameWithoutFolder, out whyNotValid);
@@ -172,7 +183,7 @@ public class NameVerifier : INameVerifier
     }
     public bool IsCategoryNameValid(string name, IStateContainer categoryContainer, out string whyNotValid)
     {
-        IsNameValidCommon(name, out whyNotValid);
+        IsNameValidCommon(name, out whyNotValid, out _);
 
         if(string.IsNullOrEmpty(whyNotValid))
         {
@@ -208,7 +219,7 @@ public class NameVerifier : INameVerifier
     }
     public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
     {
-        IsNameValidCommon(name, out whyNotValid);
+        IsNameValidCommon(name, out whyNotValid, out _);
         if(string.IsNullOrEmpty(whyNotValid))
         {
             var existing = category?.States.Find(item => Standardize(item.Name) == Standardize(name) && item != stateSave);
@@ -221,7 +232,7 @@ public class NameVerifier : INameVerifier
     }
     public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, IInstanceContainer instanceContainer, out string whyNotValid)
     {
-        IsNameValidCommon(instanceName, out whyNotValid);
+        IsNameValidCommon(instanceName, out whyNotValid, out _);
         //if (string.IsNullOrEmpty(whyNotValid))
         //{
         //    IsNameValidVariable(instanceName, out whyNotValid);
@@ -254,7 +265,7 @@ public class NameVerifier : INameVerifier
     public bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string whyNotValid)
     {
         whyNotValid = null;
-        IsNameValidCommon(variableName, out whyNotValid);
+        IsNameValidCommon(variableName, out whyNotValid, out _);
 
         // variables should not allow spaces because previous versions of Gum used to have variables with spaces
         // and that caused confusion when creating variable referencs. Therefore, Gum strips spaces from names. We 
@@ -288,7 +299,7 @@ public class NameVerifier : INameVerifier
     }
     public bool IsBehaviorNameValid(string behaviorName, BehaviorSave behaviorSave, out string whyNotValid)
     {
-        IsNameValidCommon(behaviorName, out whyNotValid);
+        IsNameValidCommon(behaviorName, out whyNotValid, out _);
         if (string.IsNullOrEmpty(whyNotValid))
         {
             IsFileNameWindowsReserved(behaviorName, out whyNotValid);
@@ -299,23 +310,26 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public static bool IsNameValidCommon(string name, out string whyNotValid)
+    public bool IsNameValidCommon(string name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
         whyNotValid = null;
         
         if (string.IsNullOrWhiteSpace(name))
         {
             whyNotValid = "Empty names are not valid";
+            commonValidationError = CommonValidationError.IsEmpty;
             return false;
         }
         if(string.IsNullOrEmpty(whyNotValid) && name.StartsWith(" "))
         {
             whyNotValid = "The name can't begin with a space";
+            commonValidationError = CommonValidationError.StartsWithSpace;
             return false;
         }
         if (string.IsNullOrEmpty(whyNotValid) && name.EndsWith(" "))
         {
             whyNotValid = "The name can't end with a space";
+            commonValidationError = CommonValidationError.EndsWithSpace;
             return false;
         }
         foreach (char character in name)
@@ -326,10 +340,11 @@ public class NameVerifier : INameVerifier
             if (!ValidCharacterCategories.Contains(category))
             {
                 whyNotValid = $"The name can't contain invalid character {character}";
+                commonValidationError = CommonValidationError.InvalidCharacter;
                 return false;
             }
         }
-        
+        commonValidationError = CommonValidationError.None;
         return true;
     }
     private void IsNameValidVariable(string name, out string whyNotValid)
@@ -349,21 +364,24 @@ public class NameVerifier : INameVerifier
             whyNotValid = $"The name {name} is a reserved file name in Windows";
         }
     }
-    public bool IsValidCSharpName(string name, out string whyNotValid)
+    public bool IsValidCSharpName(string name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
         if (name[0] != '_' && !char.IsLetter(name[0]))
         {
             whyNotValid = $"Name may not begin with character {name[0]}";
+            commonValidationError = CommonValidationError.InvalidStartingCharacterForCSharp;
             return false;
         }
         
         if (CSharpReservedKeywords.Contains(name))
         {
             whyNotValid = "Name is a C# reserved keyword";
+            commonValidationError = CommonValidationError.ReservedCSharpKeyword;
             return false;
         }
         
         whyNotValid = null;
+        commonValidationError = CommonValidationError.None;
         return true;
     }
     public bool IsComponentNameAlreadyUsed(string name)

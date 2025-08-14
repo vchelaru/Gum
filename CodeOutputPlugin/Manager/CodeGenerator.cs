@@ -3532,7 +3532,7 @@ public class CodeGenerator
 
     #endregion
 
-    private static void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
+    private void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
     {
         var element = context.Element;
         if (element is ScreenSave)
@@ -5019,13 +5019,13 @@ public class CodeGenerator
     
     internal static string ToCSharpName(string name)
     {
-        if (!NameVerifier.IsValidCSharpName(name, out string whyNotValid))
+        if (!NameVerifier.IsValidCSharpName(name, out string whyNotValid, out CommonValidationError validationError))
         {
-            if (whyNotValid == $"Name may not begin with character {name[0]}")
+            if (validationError == CommonValidationError.InvalidStartingCharacterForCSharp)
             {
                 name = "_" + name;
             }
-            else if (whyNotValid == "Name is a C# reserved keyword")
+            else if (validationError == CommonValidationError.ReservedCSharpKeyword)
             {
                 name = "@" + name;
             }
