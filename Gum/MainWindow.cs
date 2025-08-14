@@ -75,18 +75,7 @@ namespace Gum
             // This has to happen before plugins are loaded since they may depend on settings...
             ProjectManager.Self.LoadSettings();
             
-            // Vic says - I tried
-            // to instantiate the ElementTreeImages
-            // in the ElementTreeViewManager. I move 
-            // the code there and it works, but then at
-            // some point it stops working and it breaks. Not 
-            // sure why, Winforms editor must be doing something
-            // beyond the generation of code which isn't working when
-            // I move it to custom code. Oh well, maybe one day I'll move
-            // to a wpf window and can get rid of this
-            // For Vic K: This should die. We won't need it once we move to
-            // a WPF treeview. 
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages);
+            ElementTreeViewManager.Self.Initialize();
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?

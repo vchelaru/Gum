@@ -404,26 +404,24 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         var matrix = this.GetRotationMatrix();
 
 
-        int currentSourceX = SourceRectangle.Value.X;
-        int currentSourceY = SourceRectangle.Value.Y;
-
-        int rightTextureCoordinate = SourceRectangle.Value.Right;
-        int bottomTextureCoordinate = SourceRectangle.Value.Bottom;
-
-        float spriteLeft = this.X;
-        float spriteTop = this.Y;
+        int startX = oldSource.X;
+        int startY = oldSource.Y;
+        int endX = oldSource.Right;
+        int endY = oldSource.Bottom;
 
         float offsetXFromTopLeft = 0;
         float offsetYFromTopLeft = 0;
 
-        int xIterations = SourceRectangle.Value.Left / Texture.Width;
-        int yIterations = SourceRectangle.Value.Top / Texture.Height;
-
-        for(int textureCoordinateTop = currentSourceY; textureCoordinateTop < bottomTextureCoordinate; )
+        for(int y = startY; y < endY; )
         {
-            xIterations = oldSource.Left / Texture.Width;
-            for(int textureCoordinateLeft = currentSourceX; textureCoordinateLeft < rightTextureCoordinate;)
+            int texTop = ((y % Texture.Height) + Texture.Height) % Texture.Height;
+            int texHeight = System.Math.Min(Texture.Height - texTop, endY - y);
+
+            for(int x = startX; x < endX; )
             {
+                int texLeft = ((x % Texture.Width) + Texture.Width) % Texture.Width;
+                int texWidth = System.Math.Min(Texture.Width - texLeft, endX - x);
+
                 System.Numerics.Vector3 position;
                 position.X = oldX;
                 position.Y = oldY;
@@ -434,28 +432,19 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
                 this.X = position.X;
                 this.Y = position.Y;
 
-                var textureCoordinateRight = System.Math.Min(Texture.Width, oldSource.Right - xIterations * Texture.Width);
-                var textureCoordinateBottom = System.Math.Min(Texture.Height, oldSource.Bottom - yIterations * Texture.Height);
+                this.SourceRectangle = new Rectangle(texLeft, texTop, texWidth, texHeight);
 
-                this.SourceRectangle = new Rectangle(
-                    textureCoordinateLeft - xIterations * Texture.Width, 
-                    textureCoordinateTop - yIterations * Texture.Height, 
-                    textureCoordinateRight - (textureCoordinateLeft - xIterations * Texture.Width), 
-                    textureCoordinateBottom - (textureCoordinateTop - yIterations * Texture.Height ));
-
-                // todo - multiply:
-                this.Width = SourceRectangle.Value.Width * textureWidthScale;
-                this.Height = SourceRectangle.Value.Height * textureHeightScale;
+                this.Width = texWidth * textureWidthScale;
+                this.Height = texHeight * textureHeightScale;
 
                 Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
 
-                offsetXFromTopLeft += SourceRectangle.Value.Width * textureWidthScale;
-                xIterations++;
-                textureCoordinateLeft = ((textureCoordinateLeft / Texture.Width) + 1) * Texture.Width;
+                offsetXFromTopLeft += texWidth * textureWidthScale;
+                x += texWidth;
             }
-            offsetYFromTopLeft += SourceRectangle.Value.Height * textureHeightScale;
-            yIterations++;
-            textureCoordinateTop = ((textureCoordinateTop / Texture.Height) + 1) * Texture.Height;
+
+            offsetYFromTopLeft += texHeight * textureHeightScale;
+            y += texHeight;
             offsetXFromTopLeft = 0;
         }
 
