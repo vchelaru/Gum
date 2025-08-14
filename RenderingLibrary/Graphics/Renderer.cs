@@ -929,7 +929,31 @@ class RenderTargetService
 
         var width = Math.MathFunctions.RoundToInt((right - left)* camera.Zoom);
         var height = Math.MathFunctions.RoundToInt((bottom - top)* camera.Zoom);
+        
+        if(width <= 0 || height <= 0)
+        {
+            // In some situations such as component previews, the layout may not
+            // yet be updated when this method is first called. Try to force a
+            // layout update so a valid size can be obtained before giving up.
+            if(renderable is GraphicalUiElement gue)
+            {
+                gue.UpdateLayout();
 
+                left = renderable.GetAbsoluteLeft();
+                right = renderable.GetAbsoluteRight();
+                top = renderable.GetAbsoluteTop();
+                bottom = renderable.GetAbsoluteBottom();
+
+                left = System.Math.Max(camera.AbsoluteLeft, left);
+                right = System.Math.Min(camera.AbsoluteRight, right);
+                top = System.Math.Max(camera.AbsoluteTop, top);
+                bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
+
+                width = Math.MathFunctions.RoundToInt((right - left) * camera.Zoom);
+                height = Math.MathFunctions.RoundToInt((bottom - top) * camera.Zoom);
+            }
+        }
+        
         if(width <= 0 || height <= 0)
         {
             return null;
