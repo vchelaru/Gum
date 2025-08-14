@@ -150,7 +150,7 @@ namespace WpfDataUi.Controls
             // the value under the cursor
             // If we're default, then go ahead and change the value
             bool canRefresh =
-                this.TextBox.IsFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault;
+                this.TextBox.IsKeyboardFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault;
 
             canRefresh = canRefresh && !IsInSet;
 
