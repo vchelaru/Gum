@@ -23,6 +23,7 @@ using Gum.Dialogs;
 using WpfInput = System.Windows.Input;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Cursors = System.Windows.Forms.Cursors;
 
 namespace Gum.Managers;
 
@@ -290,7 +291,7 @@ public partial class ElementTreeViewManager
         {
             try
             {
-                return new Cursor(typeof(MainWindow), "Content.Cursors.AddCursor.cur");
+                return new Cursor(typeof(Gum.Program), "Content.Cursors.AddCursor.cur");
             }
             catch
             {
