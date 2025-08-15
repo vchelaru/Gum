@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos 
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
