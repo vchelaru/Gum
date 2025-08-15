@@ -432,6 +432,8 @@ public class CodeGenerator
             className = ToCSharpName($"{strippedType}{suffix}", out isPrefixed);
         }
 
+        className = ToCSharpName(className);
+
         if(isFullyQualified && container is ElementSave elementSave)
         {
             var prefixNamespace = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings);
@@ -441,8 +443,8 @@ public class CodeGenerator
                 className = prefixNamespace + "." + className;
             }
         }
-        
-        return ToCSharpName(className);
+
+        return className;
     }
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
