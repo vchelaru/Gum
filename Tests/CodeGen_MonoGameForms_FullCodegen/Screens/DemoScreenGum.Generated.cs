@@ -123,7 +123,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
-        @this = new CodeGen_MonoGameForms_FullCodegen.Components.interface();
+        @this = new CodeGen_MonoGameForms_FullCodegen.Components.@interface();
         @this.Name = "this";
         DemoSettingsMenu = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         DemoSettingsMenu.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
@@ -290,7 +290,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         LabelInstance1.Name = "LabelInstance1";
         Spaced_Component_Instance = new CodeGen_MonoGameForms_FullCodegen.Components.Spaced_Component();
         Spaced_Component_Instance.Name = "Spaced Component Instance";
-        _123Instance = new CodeGen_MonoGameForms_FullCodegen.Components.123Component();
+        _123Instance = new CodeGen_MonoGameForms_FullCodegen.Components._123Component();
         _123Instance.Name = "123Instance";
     }
     protected virtual void AssignParents()
