@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
@@ -6,6 +7,7 @@ using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
 using System.Diagnostics;
+using System.Linq;
 using CommunityToolkit.Mvvm.Messaging;
 using ExCSS;
 using Gum.Commands;
@@ -440,6 +442,46 @@ namespace Gum.Managers
                 fontSize * 0.75f);
         }
         
-    }
+        public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
+        {
+            string menuName = menuAndSubmenus.Last();
 
+            ToolStripMenuItem menuItem = new ToolStripMenuItem(menuName);
+
+            string menuNameToAddTo = menuAndSubmenus.First();
+
+            var menuToAddTo =
+                _menuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(
+                    item=>item.Text == menuNameToAddTo);
+            //true);
+
+            if (menuToAddTo == null)
+            {
+                menuToAddTo = new ToolStripMenuItem(menuNameToAddTo);
+
+                // Don't call Add - this will put the menu item after the "Help" menu item, which should be last
+                //MenuStrip.Items.Add(menuToAddTo);
+
+                int indexToInsertAt = _menuStrip.Items.Count - 1;
+                _menuStrip.Items.Insert(indexToInsertAt, menuToAddTo);
+            }
+
+
+            menuToAddTo.DropDownItems.Add(menuItem);
+            return menuItem;
+
+        }
+    
+        public ToolStripMenuItem GetItem(string name)
+        {
+            foreach (ToolStripMenuItem item in _menuStrip.Items)
+            {
+                if (item.Text == name)
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+    }
 }

@@ -18,6 +18,7 @@ using System.Linq.Expressions;
 using Gum.Mvvm;
 using Gum.Services.Dialogs;
 using Gum.Plugins;
+using Gum.ViewModels;
 
 namespace Gum.Services;
 
@@ -78,6 +79,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<MainPanelControl>();
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelViewModel>());
+        services.AddSingleton<MainWindowViewModel>();
         
         // other
         services.AddDialogs();

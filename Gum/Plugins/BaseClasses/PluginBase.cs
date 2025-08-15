@@ -25,6 +25,7 @@ namespace Gum.Plugins.BaseClasses
         protected readonly IGuiCommands _guiCommands;
         protected readonly IFileCommands _fileCommands;
         protected readonly ITabManager _tabManager;
+        private readonly MenuStripManager _menuStripManager;
         
         #region Events
 
@@ -212,7 +213,6 @@ namespace Gum.Plugins.BaseClasses
             get;
             set;
         }
-        public MenuStrip MenuStrip { get; set; }
 
         public abstract string FriendlyName { get; }
 
@@ -223,6 +223,7 @@ namespace Gum.Plugins.BaseClasses
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _tabManager = Locator.GetRequiredService<ITabManager>();
+            _menuStripManager = Locator.GetRequiredService<MenuStripManager>();
         }
 
         public abstract void StartUp();
@@ -239,52 +240,15 @@ namespace Gum.Plugins.BaseClasses
         /// new List<string> { "Edit", "Properties" }
         /// </param>
         /// <returns>The newly-created menu item.</returns>
-        public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
-        {
-            string menuName = menuAndSubmenus.Last();
-
-            ToolStripMenuItem menuItem = new ToolStripMenuItem(menuName);
-
-            string menuNameToAddTo = menuAndSubmenus.First();
-
-            var menuToAddTo =
-                MenuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(
-                    item=>item.Text == menuNameToAddTo);
-                //true);
-
-            if (menuToAddTo == null)
-            {
-                menuToAddTo = new ToolStripMenuItem(menuNameToAddTo);
-
-                // Don't call Add - this will put the menu item after the "Help" menu item, which should be last
-                //MenuStrip.Items.Add(menuToAddTo);
-
-                int indexToInsertAt = MenuStrip.Items.Count - 1;
-                MenuStrip.Items.Insert(indexToInsertAt, menuToAddTo);
-            }
-
-
-            menuToAddTo.DropDownItems.Add(menuItem);
-            return menuItem;
-
-        }
-
+        public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus) =>
+            _menuStripManager.AddMenuItem(menuAndSubmenus);
+        
         public ToolStripMenuItem AddMenuItem(params string[] menuAndSubmenus)
         {
             return AddMenuItem((IEnumerable<string>)menuAndSubmenus);
         }
 
-        ToolStripMenuItem GetItem(string name)
-        {
-            foreach (ToolStripMenuItem item in MenuStrip.Items)
-            {
-                if (item.Text == name)
-                {
-                    return item;
-                }
-            }
-            return null;
-        }
+        ToolStripMenuItem GetItem(string name) => _menuStripManager.GetItem(name);
 
         public ToolStripMenuItem GetChildMenuItem(string parentText, string childText)
         {

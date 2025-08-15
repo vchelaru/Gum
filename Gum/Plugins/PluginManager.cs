@@ -660,10 +660,10 @@ namespace Gum.Plugins
         }
 
 
-        public void Initialize(MainWindow mainWindow)
+        public void Initialize()
         {
             LoadPluginSettings();
-            LoadPlugins(this, mainWindow);
+            LoadPlugins(this);
             mInstances.Add(this);
         }
 
@@ -746,12 +746,8 @@ namespace Gum.Plugins
         }
 
 
-        private void LoadPlugins(PluginManager instance, MainWindow mainWindow)
+        private void LoadPlugins(PluginManager instance)
         {
-            if (mainWindow.MainMenuStrip == null)
-            {
-                throw new InvalidOperationException("MainMenuStrip must be set before loading plugins");
-            }
             #region Get the Catalog
 
 
@@ -807,17 +803,6 @@ namespace Gum.Plugins
 
             foreach (PluginBase plugin in instance.Plugins)
             {
-
-                // We used to do this all in an assign references method,
-                // but we now do it here so that the Startup function can have
-                // access to these references.
-                if (plugin is MainWindowPlugin)
-                {
-                    ((MainWindowPlugin)plugin).MainWindow = mainWindow;
-                }
-
-                plugin.MenuStrip = mainWindow.MainMenuStrip;
-
                 StartupPlugin(plugin, instance);
             }
 
