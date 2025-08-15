@@ -150,7 +150,10 @@ namespace RenderingLibrary.Graphics
         public bool mIsTextureCreationSuppressed;
 
         // Defaulting to false, will be turned on in future version
-        public static bool IsMidWordLineBreakEnabled = false;
+        // Updating to true on August 3, 2025 for:
+        // https://github.com/vchelaru/Gum/issues/1254
+        // It's now turned on, and we have more unit tests to cover this.
+        public static bool IsMidWordLineBreakEnabled = true;
 
         SystemManagers mManagers;
 
@@ -730,6 +733,7 @@ namespace RenderingLibrary.Graphics
 
         }
 
+        const string ellipsis = "...";
         public void UpdateLines(List<string> lines)
         {
             var effectiveMaxNumberOfLines = MaxNumberOfLines;
@@ -744,89 +748,72 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
-            if (string.IsNullOrEmpty(mRawText))
-            {
-                return;
-            }
-
-            if (effectiveMaxNumberOfLines == 0)
+            if (string.IsNullOrEmpty(mRawText) || effectiveMaxNumberOfLines == 0)
             {
                 return;
             }
             /////////END EARLY OUT///////////
 
-            float ellipsisWidth = 0;
-            const string ellipsis = "...";
-            if (effectiveMaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
-            {
-                ellipsisWidth = MeasureString(ellipsis);
-            }
+            float ellipsisWidth = (effectiveMaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
+                ? ellipsisWidth = MeasureString(ellipsis)
+                : 0;
 
-            string stringToUse = null;
-            if (!string.IsNullOrEmpty(mRawText))
-            {
-                // multiline text editing in Gum can add \r's, so get rid of those:
-                stringToUse = mRawText.Replace("\r\n", "\n");
-            }
+            string? stringToUse = string.IsNullOrEmpty(mRawText)
+                ? null
+                : stringToUse = mRawText.Replace("\r\n", "\n");
+            
 
-            float wrappingWidth;
-
-            if (mWidth == null)
-            {
-                wrappingWidth = float.PositiveInfinity;
-            }
-            else
-            {
-                wrappingWidth = mWidth.Value / mFontScale;
-            }
-
+            float wrappingWidth = mWidth / mFontScale ?? float.PositiveInfinity; 
 
             // This allocates like crazy but we're
             // on the PC and prob won't be calling this
             // very frequently so let's 
-            String line = String.Empty;
+            String currentLine = String.Empty;
             String returnString = String.Empty;
+
+            // The words to process, including the current word
+            List<string> remainingWordsToProcess = new();
 
             // The user may have entered "\n" in the string, which would 
             // be written as "\\n".  Let's replace that, shall we?
-            List<string> wordList = new();
-
             if (!string.IsNullOrEmpty(mRawText))
             {
                 // multiline text editing in Gum can add \r's, so get rid of those:
                 stringToUse = mRawText.Replace("\r\n", "\n");
-                wordList.AddRange(stringToUse.Split(whatToSplitOn));
+                remainingWordsToProcess.AddRange(stringToUse.Split(whatToSplitOn));
             }
 
 
             bool isLastLine = false;
-            while (wordList.Count != 0)
+            while (remainingWordsToProcess.Count != 0)
             {
                 isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
 
-                string word = wordList[0];
-                var wordBeforeNewlineRemoval = word;
-                var isLastWord = wordList.Count == 1;
+                // The current word, separated by newlines if one exists. The remainingWordsToProcess
+                // continues to hold the unmodified word
+                string currentWord = remainingWordsToProcess[0];
+                var wordBeforeNewlineRemoval = currentWord;
+                var isLastWord = remainingWordsToProcess.Count == 1;
 
                 bool containsNewline = false;
                 bool startsWithNewline = false;
 
-                if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
+                if (ToolsUtilities.StringFunctions.ContainsNoAlloc(currentWord, '\n'))
                 {
-                    startsWithNewline = word.StartsWith("\n");
+                    startsWithNewline = currentWord.StartsWith("\n");
 
                     // Newline is an explicit character that the user might
                     // enter in a textbox. We don't want to lose this character
                     // becuse it can be deleted.
                     //word = word.Substring(0, word.IndexOf('\n'));
-                    word = word.Substring(0, word.IndexOf('\n') + 1);
+                    currentWord = currentWord.Substring(0, currentWord.IndexOf('\n') + 1);
                     containsNewline = true;
                 }
 
                 // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
                 // to include part of the word:
 
-                float linePlusWordWidth = MeasureString(line + word);
+                float linePlusWordWidth = MeasureString(currentLine + currentWord);
 
                 var shouldAddEllipsis =
                     IsTruncatingWithEllipsisOnLastLine &&
@@ -838,121 +825,147 @@ namespace RenderingLibrary.Graphics
                 if (shouldAddEllipsis)
                 {
                     var addedEllipsis = false;
-                    for (int i = 1; i < word.Length; i++)
+                    for (int i = 1; i < currentWord.Length; i++)
                     {
-                        var substringEnd = word.SubstringEnd(i);
+                        var substringEnd = currentWord.SubstringEnd(i);
 
-                        float linePlusWordSub = MeasureString(line + substringEnd);
+                        float linePlusWordSub = MeasureString(currentLine + substringEnd);
 
                         if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
                         {
-                            lines.Add(line + substringEnd + ellipsis);
+                            lines.Add(currentLine + substringEnd + ellipsis);
                             addedEllipsis = true;
                             break;
                         }
                     }
 
-                    if (!addedEllipsis && line.EndsWith(" "))
+                    if (!addedEllipsis && currentLine.EndsWith(" "))
                     {
-                        lines.Add(line.SubstringEnd(1) + ellipsis);
+                        lines.Add(currentLine.SubstringEnd(1) + ellipsis);
 
                     }
                     break;
                 }
-                bool didLineWrapWithBrokenWord = false;
+
+                bool handledByLineTooLong = false;
 
                 if (linePlusWordWidth > wrappingWidth)
                 {
-                    if (!string.IsNullOrEmpty(line))
+                    if (!string.IsNullOrEmpty(currentLine))
                     {
+                        handledByLineTooLong = true;
                         // We already have a line started, so let's add it
                         // and start the next line
-                        lines.Add(line);
+                        lines.Add(currentLine);
                         if (lines.Count == effectiveMaxNumberOfLines)
                         {
                             break;
                         }
 
-                        line = String.Empty;
+                        currentLine = String.Empty;
                     }
                     // we don't have a line started, but we have a word that is too
                     // long. if we're not using ellipses, then we should measure the 
                     // string, add what we can, and go to the next line:
                     else if(IsMidWordLineBreakEnabled)
                     {
-                        for (int i = 1; i < word.Length; i++)
+                        handledByLineTooLong = true;
+                        if (currentWord.Length == 1)
                         {
-                            var substring = word.Substring(0, i+1);
-                            float substringLength = MeasureString(substring);
-                            if (substringLength == wrappingWidth)
+                            lines.Add(currentWord);
+                            remainingWordsToProcess.RemoveAt(0);
+                        }
+                        else
+                        {
+                            for (int i = 1; i < currentWord.Length; i++)
                             {
-                                // add this word to the lines, and subtract what was added
-                                // from the current word:
-                                var stringToAdd = substring;
-                                wordList[0] = word.Substring(i+1);
-                                word = stringToAdd;
-                                wordList.Insert(0, stringToAdd);
-                                didLineWrapWithBrokenWord = true;
-                                break;
-                            }
-                            else if (substringLength > wrappingWidth)
-                            {
-                                var stringToAdd = word.Substring(0, i );
-                                wordList[0] = word.Substring(i );
-                                word = stringToAdd;
-                                wordList.Insert(0, stringToAdd);
-                                didLineWrapWithBrokenWord = true;
-                                break;
+                                var substring = currentWord.Substring(0, i + 1);
+                                float substringLength = MeasureString(substring);
+
+                                if (substringLength >= wrappingWidth)
+                                {
+                                    string stringToAdd = string.Empty;
+
+
+                                    // word fits perfectly in the line, so add
+                                    // the substring
+                                    if (substringLength == wrappingWidth)
+                                    {
+                                        // add this word to the lines, and subtract what was added
+                                        // from the current word:
+                                        stringToAdd = currentWord.Substring(0, i + 1);
+                                        lines.Add(stringToAdd);
+
+                                        // Be sure to use remainingWordsToProcess[0] so we get everything
+                                        // before it was broken up by newlines
+                                        currentWord = remainingWordsToProcess[0].Substring(i + 1);
+                                        remainingWordsToProcess[0] = currentWord;
+                                        break;
+                                    }
+                                    else if (substringLength > wrappingWidth)
+                                    {
+                                        stringToAdd = currentWord.Substring(0, i);
+                                        lines.Add(stringToAdd);
+
+                                        // Be sure to use remainingWordsToProcess[0] so we get everything
+                                        // before it was broken up by newlines
+                                        currentWord = remainingWordsToProcess[0].Substring(i);
+                                        remainingWordsToProcess[0] = currentWord;
+                                        break;
+                                    }
+                                }
+
                             }
                         }
 
                         //returnString = returnString + line + '\n';
-                        line = String.Empty;
+                        currentLine = String.Empty;
                     }
                 }
-
-                // If it's the first word and it's empty, don't add anything
-                // update - but this prevents the word from starting with a space, which it should be able to 
-                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
+                if(!handledByLineTooLong)
                 {
-
-                    if ((wordList.Count > 1 || word == "") &&
-                        // Update Feb 19, 2023
-                        // don't insert space after if it's a newline. That messes up indexes.
-                        !containsNewline && !didLineWrapWithBrokenWord)
+                    // If it's the first word and it's empty, don't add anything
+                    // update - but this prevents the word from starting with a space, which it should be able to 
+                    //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                     {
-                        line = line + word + ' ';
+
+                        if ((remainingWordsToProcess.Count > 1 || currentWord == "") &&
+                            // Update Feb 19, 2023
+                            // don't insert space after if it's a newline. That messes up indexes.
+                            !containsNewline)
+                        {
+                            currentLine = currentLine + currentWord + ' ';
+                        }
+                        else
+                        {
+                            currentLine = currentLine + currentWord;
+                        }
                     }
-                    else
+
+                    remainingWordsToProcess.RemoveAt(0);
+
+                    if (containsNewline)
                     {
-                        line = line + word;
-                    }
-                }
-
-                wordList.RemoveAt(0);
-
-                if (containsNewline || didLineWrapWithBrokenWord)
-                {
-                    lines.Add(line);
+                        lines.Add(currentLine);
 
 
-                    if (lines.Count == effectiveMaxNumberOfLines)
-                    {
-                        break;
-                    }
-                    line = string.Empty;
+                        if (lines.Count == effectiveMaxNumberOfLines)
+                        {
+                            break;
+                        }
+                        currentLine = string.Empty;
 
-                    if(!didLineWrapWithBrokenWord)
-                    {
                         int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
-                        wordList.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
+                        remainingWordsToProcess.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
                     }
+
                 }
+
             }
 
             if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
             {
-                lines.Add(line);
+                lines.Add(currentLine);
             }
 
             mNeedsBitmapFontRefresh = true;

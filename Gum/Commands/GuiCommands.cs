@@ -34,12 +34,7 @@ namespace Gum.Commands;
 public class GuiCommands : IGuiCommands
 {
     #region Fields/Properties
-
-    public System.Windows.Forms.Cursor AddCursor { get; set; }
-
-
-    MainPanelControl mainPanelControl;
-
+    
     private readonly Lazy<ISelectedState> _lazySelectedState;
     private readonly IDispatcher _dispatcher;
     private ISelectedState _selectedState => _lazySelectedState.Value;
@@ -51,12 +46,7 @@ public class GuiCommands : IGuiCommands
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
     }
-
-    public void Initialize(MainPanelControl mainPanelControl)
-    {
-        this.mainPanelControl = mainPanelControl;
-    }
-
+    
     public void BroadcastRefreshBehaviorView()
     {
         PluginManager.Self.RefreshBehaviorView(
@@ -95,56 +85,13 @@ public class GuiCommands : IGuiCommands
 
     #endregion
 
-    #region Move to Cursor
-
-    public void MoveToCursor(System.Windows.Window window)
-    {
-        window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
-
-        double width = window.Width;
-        if (double.IsNaN(width))
-        {
-            width = 0;
-        }
-        double height = window.Height;
-        if (double.IsNaN(height))
-        {
-            // Let's just assume some small height so it doesn't appear down below the cursor:
-            //height = 0;
-            height = 64;
-        }
-
-        var source = System.Windows.PresentationSource.FromVisual(mainPanelControl);
-
-
-        double mousePositionX = Control.MousePosition.X;
-        double mousePositionY = Control.MousePosition.Y;
-
-        if (source != null)
-        {
-            mousePositionX /= source.CompositionTarget.TransformToDevice.M11;
-            mousePositionY /= source.CompositionTarget.TransformToDevice.M22;
-        }
-
-        window.Left = mousePositionX - width / 2;
-        window.Top = mousePositionY - height / 2;
-
-        window.ShiftWindowOntoScreen();
-    }
-    #endregion
-
     public void PrintOutput(string output)
     {
         _dispatcher.Invoke(() => OutputManager.Self.AddOutput(output));
     }
 
     #region Show/Hide Tools
-
-    public System.Drawing.Point GetMousePosition()
-    {
-        return MainWindow.MousePosition;
-    }
-
+    
     public void ToggleToolVisibility()
     {
         //var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;

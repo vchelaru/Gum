@@ -110,6 +110,8 @@ class MainPropertiesWindowPlugin : InternalPlugin
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             control.ViewModel = viewModel;
             _pluginTab?.Show();
+            _pluginTab.CanClose = true;
+            _pluginTab.IsSelected = true;
             RefreshFontRangeEditability();
         }
         catch (Exception ex)

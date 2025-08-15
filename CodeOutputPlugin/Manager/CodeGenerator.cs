@@ -4391,7 +4391,7 @@ public class CodeGenerator
 
             FillWithNonParentVariableAssignments(context);
 
-            TryGenerateApplyLocalizationForInstance(context, context.StringBuilder, instance);
+            TryGenerateApplyLocalizationForInstance(context, context.StringBuilder);
 
             var instanceApi = GetVisualApiForInstance(instance, context.Element);
             var screenOrComponent = context.Element is ScreenSave
@@ -4711,8 +4711,13 @@ public class CodeGenerator
     public static string StringIdPrefix = "T_";
     public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
 
-    private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
+    private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder)
     {
+        var instance = context.Instance;
+        if(instance == null)
+        {
+            throw new InvalidOperationException("Instance cannot be null in TryGenerateApplyLocalizationForInstance");
+        }
         var component = ObjectFinder.Self.GetComponent(instance);
 
         if (component != null)
@@ -4721,7 +4726,7 @@ public class CodeGenerator
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
-                stringBuilder.AppendLine(context.Tabs + $"{ToCSharpName(context.Instance.Name)}.ApplyLocalization();");
+                stringBuilder.AppendLine(context.Tabs + $"{ToCSharpName(instance.Name)}.ApplyLocalization();");
 
             }
         }
@@ -4781,7 +4786,7 @@ public class CodeGenerator
             {
                 context.Instance = instance;
 
-                TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
+                TryGenerateApplyLocalizationForInstance(context, stringBuilder);
             }
 
 

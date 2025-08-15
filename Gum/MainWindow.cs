@@ -51,7 +51,6 @@ namespace Gum
         #endregion
 
         public MainWindow(MainPanelControl mainPanelControl,
-            IGuiCommands guiCommands,
             MenuStripManager menuStripManager,
             IMessenger messenger
             )
@@ -70,30 +69,13 @@ namespace Gum
 
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
-
-            // Initialize before the StateView is created...
-            _guiCommands = guiCommands;
-            _guiCommands.Initialize(mainPanelControl);
-
+            
             TypeManager.Self.Initialize();
 
             // This has to happen before plugins are loaded since they may depend on settings...
             ProjectManager.Self.LoadSettings();
-
-            Cursor addCursor = LoadAddCursor();
-            _guiCommands.AddCursor = addCursor;
-            // Vic says - I tried
-            // to instantiate the ElementTreeImages
-            // in the ElementTreeViewManager. I move 
-            // the code there and it works, but then at
-            // some point it stops working and it breaks. Not 
-            // sure why, Winforms editor must be doing something
-            // beyond the generation of code which isn't working when
-            // I move it to custom code. Oh well, maybe one day I'll move
-            // to a wpf window and can get rid of this
-            // For Vic K: This should die. We won't need it once we move to
-            // a WPF treeview. 
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages);
+            
+            ElementTreeViewManager.Self.Initialize();
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?
@@ -129,21 +111,7 @@ namespace Gum
 
             InitializeFileWatchTimer();
         }
-
-        private Cursor LoadAddCursor()
-        {
-            try
-            {
-                var cursor = new System.Windows.Forms.Cursor(this.GetType(), "Content.Cursors.AddCursor.cur");
-                return cursor;
-            }
-            catch
-            {
-                // Vic got this to crash on Sean's machine. Not sure why, but let's tolerate it since it's not breaking
-                return Cursor.Current;
-            }
-        }
-
+        
         private void AddMainPanelControl(MainPanelControl mainPanelControl)
         {
             var wpfHost = new ElementHost();

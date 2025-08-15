@@ -315,6 +315,14 @@ namespace Gum.PropertyGridHelpers
                 standardVariable = _objectFinder.GetRootVariable(mVariableName, elementSave);
             }
 
+            if(RootVariableName == "BaseType" && instanceSave != null && ObjectFinder.Self.GetElementSave(instanceSave) == null)
+            {
+                // special case - if it's a base type and we have an instance,
+                // and if that instance references an invalid type, let's make
+                // this editable so the user can see their current value:
+                this.PropertiesToSetOnDisplayer["IsEditable"] = true;
+            }
+
             // todo - this needs to go to the standard elements manager
             if (standardVariable != null)
             {

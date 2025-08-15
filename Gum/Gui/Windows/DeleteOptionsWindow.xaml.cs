@@ -29,13 +29,6 @@ namespace Gum.Gui.Windows
         public DeleteOptionsWindow()
         {
             InitializeComponent();
-
-            this.Loaded += HandleLoaded;
-        }
-
-        private void HandleLoaded(object sender, RoutedEventArgs e)
-        {
-            Locator.GetRequiredService<IGuiCommands>().MoveToCursor(this);
         }
 
         private void YesButtonClick(object sender, RoutedEventArgs e)

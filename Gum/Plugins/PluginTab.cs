@@ -65,6 +65,7 @@ namespace Gum.Plugins
                 if (Set(value) && value)
                 {
                     _messenger.Send<TabSelectedMessage>(new(this));
+                    GotFocus?.Invoke();
                 }
             } 
         }
@@ -76,7 +77,7 @@ namespace Gum.Plugins
             {
                 if (Set(value))
                 {
-                    HideCommand.NotifyCanExecuteChanged();
+                    CloseCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -86,21 +87,22 @@ namespace Gum.Plugins
             _messenger = messenger;
             _messenger.RegisterAll(this);
             
-            CanClose = true;
             Location = TabLocation.RightBottom;
             Content = content;
             IsVisible = true;
         }
 
         [RelayCommand(CanExecute = nameof(CanClose))]
-        public void Hide()
+        public void Close()
         {
             if (CanClose)
             {
                 IsVisible = false;
             }
         }
-
+        
+        public void Hide() => IsVisible = false;
+        
         public void Show() => IsVisible = true;
 
         public void Receive(TabSelectedMessage message)

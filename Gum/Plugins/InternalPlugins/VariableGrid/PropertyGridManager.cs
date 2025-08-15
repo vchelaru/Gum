@@ -632,11 +632,11 @@ public partial class PropertyGridManager
         return categories;
     }
 
-    private List<MemberCategory> GetMemberCategories(ElementSave element, StateSave state, StateSaveCategory stateCategory, InstanceSave instance)
+    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory stateCategory, InstanceSave instance)
     {
         List<MemberCategory> categories = new List<MemberCategory>();
 
-        mLastElement = element;
+        mLastElement = instanceOwner;
         mLastState = state;
         mLastInstanceSaves.Clear();
         if(instance != null)
@@ -648,7 +648,7 @@ public partial class PropertyGridManager
         var stateSave = _selectedState.SelectedStateSave;
         if (stateSave != null)
         {
-            GetMemberCategoriesForState(element, instance, categories, stateSave, stateCategory);
+            GetMemberCategoriesForState(instanceOwner, instance, categories, stateSave, stateCategory);
         }
         else if(stateCategory != null)
         {
@@ -658,10 +658,10 @@ public partial class PropertyGridManager
 
     }
 
-    private void GetMemberCategoriesForState(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    private void GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
     {
         categories.Clear();
-        mPropertyGridDisplayer.GetCategories(element, instance, categories, stateSave, stateSaveCategory);
+        mPropertyGridDisplayer.GetCategories(instanceOwner, instance, categories, stateSave, stateSaveCategory);
 
         foreach (var category in categories)
         {
@@ -675,7 +675,7 @@ public partial class PropertyGridManager
         }
 
         ReorganizeCategories(categories);
-        CustomizeVariables(categories, stateSave, element, instance);
+        CustomizeVariables(categories, stateSave, instanceOwner, instance);
     }
 
     private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, ElementSave element, InstanceSave instance)
