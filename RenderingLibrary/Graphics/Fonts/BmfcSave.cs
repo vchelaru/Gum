@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RenderingLibrary.Graphics.Fonts;
@@ -136,7 +137,7 @@ public class BmfcSave
     private static List<int> ParseCharRanges(string charsStr)
     {
         var allChars = new List<int>();
-        var ranges = charsStr.Split([','], StringSplitOptions.RemoveEmptyEntries);
+        var ranges = charsStr.Split([','], options: StringSplitOptions.RemoveEmptyEntries);
         foreach(var part in ranges)
         {
             if(part.Contains('-'))
