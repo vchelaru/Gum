@@ -13,4 +13,5 @@ public class AppDispatcher : IDispatcher
     }
 
     public void Invoke(Action action) => Dispatcher.Value.Invoke(action);
+    public void Post(Action action) => Dispatcher.Value.BeginInvoke(action, DispatcherPriority.Background);
 }
