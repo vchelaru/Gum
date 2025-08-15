@@ -434,7 +434,12 @@ public class CodeGenerator
 
         if(isFullyQualified && container is ElementSave elementSave)
         {
-            className = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings) + "." + className;
+            var prefixNamespace = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings);
+            // If we don't have a namespace specified for the project, this can be empty
+            if(!string.IsNullOrWhiteSpace(prefixNamespace))
+            {
+                className = prefixNamespace + "." + className;
+            }
         }
         
         return ToCSharpName(className);
