@@ -42,7 +42,8 @@ jobs:
           dotnet restore "AllLibraries.sln"
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
-      - name: Build Generated Code Projects
+      - name: Build Generated Code Projects (Windows Only)
+        if: runner.os == 'Windows'
         run: |
           dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln"
           dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
