@@ -34,7 +34,7 @@ namespace Gum
     {
         #region Fields
 
-        GumProjectSave mGumProjectSave;
+        GumProjectSave? _gumProjectSave;
 
         static ProjectManager mSelf;
 
@@ -63,13 +63,7 @@ namespace Gum
             }
         }
 
-        public GumProjectSave GumProjectSave
-        {
-            get
-            {
-                return mGumProjectSave;
-            }
-        }
+        public GumProjectSave? GumProjectSave => _gumProjectSave;
 
         public GeneralSettingsFile GeneralSettingsFile
         {
@@ -125,6 +119,17 @@ namespace Gum
                 else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
                 {
                     _fileCommands.LoadProject(GeneralSettingsFile.LastProject);
+
+                    if(GumProjectSave == null)
+                    {
+                        // we tried loading the last file, it didn't load. If it doesn't exist, let's remove it from the last project file:
+                        if(!System.IO.File.Exists(GeneralSettingsFile.LastProject))
+                        {
+                            GeneralSettingsFile.LastProject = string.Empty;
+
+                            GeneralSettingsFile.Save();
+                        }
+                    }
                 }
                 else
                 {
@@ -144,12 +149,12 @@ namespace Gum
 
         public void CreateNewProject()
         {
-            mGumProjectSave = new GumProjectSave();
-            ObjectFinder.Self.GumProjectSave = mGumProjectSave;
+            _gumProjectSave = new GumProjectSave();
+            ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
-            StandardElementsManager.Self.PopulateProjectWithDefaultStandards(mGumProjectSave);
+            StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_gumProjectSave);
 
-            PluginManager.Self.ProjectLoad(mGumProjectSave);
+            PluginManager.Self.ProjectLoad(_gumProjectSave);
         }
 
         public bool LoadProject()
@@ -184,7 +189,7 @@ namespace Gum
         {
             GumLoadResult result;
 
-            mGumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
+            _gumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
 
             string errors = result.ErrorMessage;
 
@@ -208,18 +213,18 @@ namespace Gum
                 mHaveErrorsOccurredLoadingProject = false;
             }
 
-            ObjectFinder.Self.GumProjectSave = mGumProjectSave;
+            ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
             WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
 
-            if (mGumProjectSave != null)
+            if (_gumProjectSave != null)
             {
                 bool wasModified = false;
                 ObjectFinder.Self.EnableCache();
                 {
 
-                    wasModified = mGumProjectSave.Initialize();
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(mGumProjectSave);
+                    wasModified = _gumProjectSave.Initialize();
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(_gumProjectSave);
                     RecreateMissingStandardElements();
 
                     if (RecreateMissingDefinedByBaseObjects())
@@ -227,40 +232,40 @@ namespace Gum
                         wasModified = true;
                     }
 
-                    if (mGumProjectSave.AddNewStandardElementTypes())
+                    if (_gumProjectSave.AddNewStandardElementTypes())
                     {
                         wasModified = true;
                     }
-                    if (FixSlashesInNames(mGumProjectSave))
+                    if (FixSlashesInNames(_gumProjectSave))
                     {
                         wasModified = true;
                     }
-                    if (RemoveSpacesInVariables(mGumProjectSave))
+                    if (RemoveSpacesInVariables(_gumProjectSave))
                     {
                         wasModified = true;
                     }
-                    if (RemoveDuplicateVariables(mGumProjectSave))
+                    if (RemoveDuplicateVariables(_gumProjectSave))
                     {
                         wasModified = true;
                     }
 
-                    mGumProjectSave.FixStandardVariables();
+                    _gumProjectSave.FixStandardVariables();
                 }
                 ObjectFinder.Self.DisableCache();
 
                 FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis().FullPath;
-                mGumProjectSave.RemoveDuplicateVariables();
+                _gumProjectSave.RemoveDuplicateVariables();
 
 
-                GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
+                GraphicalUiElement.ShowLineRectangles = _gumProjectSave.ShowOutlines;
 
                 CopyLinkedComponents();
 
-                if (FixRecursiveAssignments(mGumProjectSave))
+                if (FixRecursiveAssignments(_gumProjectSave))
                 {
                     wasModified = true;
                 }
-                PluginManager.Self.ProjectLoad(mGumProjectSave);
+                PluginManager.Self.ProjectLoad(_gumProjectSave);
 
                 StandardElementsManagerGumTool.Self.RefreshStateVariablesThroughPlugins();
 
@@ -283,7 +288,7 @@ namespace Gum
             _selectedState.SelectedStateSave = null;
 
 
-            if (mGumProjectSave != null)
+            if (_gumProjectSave != null)
             {
                 _fileCommands.LoadLocalizationFile();
             }
@@ -403,7 +408,7 @@ namespace Gum
 
         private void CopyLinkedComponents()
         {
-            var gumDirectory = new FilePath(mGumProjectSave.FullFileName).GetDirectoryContainingThis();
+            var gumDirectory = new FilePath(_gumProjectSave.FullFileName).GetDirectoryContainingThis();
 
             void CopyReference(ElementReference reference)
             {
@@ -424,17 +429,17 @@ namespace Gum
                 }
             }
 
-            foreach (var reference in mGumProjectSave.ScreenReferences)
+            foreach (var reference in _gumProjectSave.ScreenReferences)
             {
                 CopyReference(reference);
             }
 
-            foreach (var reference in mGumProjectSave.ComponentReferences)
+            foreach (var reference in _gumProjectSave.ComponentReferences)
             {
                 CopyReference(reference);
             }
 
-            foreach (var reference in mGumProjectSave.StandardElementReferences)
+            foreach (var reference in _gumProjectSave.StandardElementReferences)
             {
                 CopyReference(reference);
             }
@@ -603,7 +608,7 @@ namespace Gum
         private void RecreateMissingStandardElements()
         {
             List<StandardElementSave> missingElements = new List<StandardElementSave>();
-            foreach (var element in mGumProjectSave.StandardElements)
+            foreach (var element in _gumProjectSave.StandardElements)
             {
                 if (element.IsSourceFileMissing)
                 {
@@ -619,14 +624,14 @@ namespace Gum
 
                 if (result == DialogResult.OK)
                 {
-                    mGumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
-                    mGumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
+                    _gumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
+                    _gumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
 
-                    var newElement = StandardElementsManager.Self.AddStandardElementSaveInstance(mGumProjectSave, element.Name);
+                    var newElement = StandardElementsManager.Self.AddStandardElementSaveInstance(_gumProjectSave, element.Name);
 
-                    string gumProjectDirectory = FileManager.GetDirectory(mGumProjectSave.FullFileName);
+                    string gumProjectDirectory = FileManager.GetDirectory(_gumProjectSave.FullFileName);
 
-                    mGumProjectSave.SaveStandardElements(gumProjectDirectory);
+                    _gumProjectSave.SaveStandardElements(gumProjectDirectory);
                 }
             }
         }
@@ -635,7 +640,7 @@ namespace Gum
         {
             var wasAnythingAdded = false;
 
-            foreach (var component in mGumProjectSave.Components)
+            foreach (var component in _gumProjectSave.Components)
             {
                 List<InstanceSave> necessaryInstances = new List<InstanceSave>();
                 FillWithNecessaryInstances(component, necessaryInstances);
