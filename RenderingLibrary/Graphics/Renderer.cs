@@ -536,50 +536,18 @@ public class Renderer : IRenderer
 
             var oldX = renderable.GetAbsoluteLeft();
             var oldY = renderable.GetAbsoluteTop();
-            var oldWidth = renderable.Width;
-            var oldHeight = renderable.Height;
 
             var cameraLeft = Camera.AbsoluteLeft;
-            var cameraRight = Camera.AbsoluteRight;
             var cameraTop = Camera.AbsoluteTop;
-            var cameraBottom = Camera.AbsoluteBottom;
-            var oldCameraZoom = Camera.Zoom;
-
-            float extraToAddX = 0;
-            float extraToAddY = 0;
-            float extraToSubtractWidth = 0;
-            float extraToSubtractHeight = 0;
-
-            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
-            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
-
-            if(cameraLeft > renderable.X)
-            {
-                extraToAddX = cameraLeft - renderable.X;
-            }
-            if(cameraTop > renderable.Y)
-            {
-                extraToAddY = cameraTop - renderable.Y;
-            }
-
-            if(cameraRight < oldX + oldWidth)
-            {
-                extraToSubtractWidth = oldX + oldWidth - cameraRight;
-            }
-            if(cameraBottom < oldY + oldHeight)
-            {
-                extraToSubtractHeight = oldY + oldHeight - cameraBottom;
-            }
-
-                //renderable.X -= extraToAddX;
-            renderable.Width += extraToAddX;
-            renderable.Height += extraToAddY;
 
             Camera.ClientWidth = (int)renderTarget.Width;
             Camera.ClientHeight = (int)renderTarget.Height;
 
-            Camera.X = oldX + extraToAddX;
-            Camera.Y = oldY + extraToAddY;
+            var left = System.Math.Max(cameraLeft, oldX);
+            var top = System.Math.Max(cameraTop, oldY);
+
+            Camera.X = left;
+            Camera.Y = top;
             if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
             {
                 Camera.X += (renderTarget.Width / 2.0f)/Camera.Zoom;
@@ -608,11 +576,6 @@ public class Renderer : IRenderer
             //gumBatch.Draw(renderable);
             //systemManagers.Renderer.Draw(renderable);
             Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
-
-            //renderable.X = oldX;
-            //renderable.Y = oldY;
-            renderable.Width = oldWidth;
-            renderable.Height = oldHeight;
 
             gumBatch.End();
 
