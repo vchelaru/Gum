@@ -7,6 +7,7 @@ using System.Threading;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace RenderingLibrary.Graphics.Fonts;
 
