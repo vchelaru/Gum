@@ -28,3 +28,6 @@ Tests/CodeGen_MonoGameForms_FullCodegen/Content/EventExport/gum_events.json
 Tests/CodeGen_Maui_FullCodegen/Content/GumProject/EventExport/gum_events.json
 Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject/Content/GumProject/EventExport/gum_events.json
 Tests/CodeGen_MonoGameForms_FullCodegen/Content/EventExport/gum_events.json
+/Tests/CodeGen_MonoGameForms_ByReference/.config
+/Tests/CodeGen_MonoGameForms_ByReference/.vscode
+Tests/CodeGen_MonoGameForms_ByReference/app.manifest

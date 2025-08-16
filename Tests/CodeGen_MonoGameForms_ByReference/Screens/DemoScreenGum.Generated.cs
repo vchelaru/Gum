@@ -130,6 +130,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public Label LabelInstance1 { get; protected set; }
     // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
     public Spaced_Component Spaced_Component_Instance { get; protected set; }
+    public _123Component _123Instance { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)
     {
@@ -203,6 +204,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         WindowStandardInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<WindowStandard>(this.Visual,"WindowStandardInstance");
         LabelInstance1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance1");
         Spaced_Component_Instance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced Component Instance");
+        _123Instance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<_123Component>(this.Visual,"123Instance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

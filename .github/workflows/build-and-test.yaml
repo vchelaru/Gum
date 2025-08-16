@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
       # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos 
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +41,21 @@ jobs:
         run: |
           dotnet restore "AllLibraries.sln"
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
+
+      - name: Build Generated Code Projects (Windows Only)
+        if: runner.os == 'Windows'
+        run: |
+          dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln"
+          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
+
+          dotnet restore "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln"
+          dotnet build "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
+
+          dotnet restore "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln"
+          dotnet build "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
+
+          dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln"
+          dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity minimal -p:WarningLevel=0
 
       - name: MonoGameGum.Tests
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"

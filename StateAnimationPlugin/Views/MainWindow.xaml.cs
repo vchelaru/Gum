@@ -56,6 +56,8 @@ namespace StateAnimationPlugin.Views
         #endregion
 
         private readonly ISelectedState _selectedState;
+        private readonly INameVerifier _nameVerifier;
+        private readonly NameValidator _nameValidator;
 
         public event EventHandler AddStateKeyframeClicked;
         public event Action<AnimatedKeyframeViewModel> AnimationKeyframeAdded;
@@ -70,6 +72,8 @@ namespace StateAnimationPlugin.Views
 
             DataContextChanged += HandleDataContext;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+            _nameValidator = new NameValidator(_nameVerifier);
         }
 
         private void HandleDataContext(object sender, DependencyPropertyChangedEventArgs e)
@@ -169,7 +173,7 @@ namespace StateAnimationPlugin.Views
                 if(dialogResult == System.Windows.Forms.DialogResult.OK)
                 {
                     string whyInvalid;
-                    if (!NameValidator.IsAnimationNameValid(tiw.Result, this.ViewModel.Animations, out whyInvalid))
+                    if (!_nameValidator.IsAnimationNameValid(tiw.Result, this.ViewModel.Animations, out whyInvalid))
                     {
                         MessageBox.Show(whyInvalid);
                     }

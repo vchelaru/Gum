@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36301.6 d17.14
+VisualStudioVersion = 17.14.36301.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGenProject", "CodeGenProject.csproj", "{81650413-39B1-4054-9436-6291FDBCD5F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum", "..\..\..\MonoGameGum\MonoGameGum.csproj", "{D91811EA-45D0-889C-C856-EAB3AE7FFFAF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum", "..\..\MonoGameGum\MonoGameGum.csproj", "{E522B326-1D55-2117-AEDC-74710ED477CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{81650413-39B1-4054-9436-6291FDBCD5F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81650413-39B1-4054-9436-6291FDBCD5F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81650413-39B1-4054-9436-6291FDBCD5F3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D91811EA-45D0-889C-C856-EAB3AE7FFFAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D91811EA-45D0-889C-C856-EAB3AE7FFFAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D91811EA-45D0-889C-C856-EAB3AE7FFFAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D91811EA-45D0-889C-C856-EAB3AE7FFFAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E522B326-1D55-2117-AEDC-74710ED477CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E522B326-1D55-2117-AEDC-74710ED477CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E522B326-1D55-2117-AEDC-74710ED477CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E522B326-1D55-2117-AEDC-74710ED477CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

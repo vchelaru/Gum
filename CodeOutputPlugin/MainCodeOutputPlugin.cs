@@ -85,8 +85,8 @@ public class MainCodeOutputPlugin : PluginBase
 
         // The methos in CodeGenerator need to be changed to not be static then we can get rid
         // of this:
-        CodeGenerator.LocalizationManager = _localizationManager;
         CodeGenerator.NameVerifier = _nameVerifier;
+        CodeGenerator.LocalizationManager = _localizationManager;
     }
 
     private void HanndleRequestCodeGeneration(RequestCodeGenerationMessage message)
