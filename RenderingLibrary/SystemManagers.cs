@@ -243,6 +243,17 @@ namespace RenderingLibrary
             ShapeManager.Managers = this;
             TextManager.Managers = this;
 
+#if USE_GUMCOMMON
+            //Initialized GraphicalUiElement.CanvasWidth and CanvasHeight
+            //from the current GraphicsDevice viewport even when
+            //SystemManagers is not fully instantiated,
+            //ensuring component previews receive valid dimensions for render targets
+            if(graphicsDevice != null)
+            {
+                GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
+                GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
+            }
+#endif
             if(fullInstantiation)
             {
 #if USE_GUMCOMMON
@@ -257,8 +268,8 @@ namespace RenderingLibrary
                 LoadEmbeddedFont("Font18Arial_Italic");
                 LoadEmbeddedFont("Font18Arial_Italic_Bold");
 
-                GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
-                GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
+                //GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
+                //GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
                 GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
                 GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
                 GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
