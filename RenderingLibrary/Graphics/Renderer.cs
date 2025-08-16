@@ -511,6 +511,8 @@ public class Renderer : IRenderer
 
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
+
+
         Texture oldRenderTarget = null;
 
         // RenderTargetCount isn't supported in raw XNA or KNI
@@ -541,37 +543,35 @@ public class Renderer : IRenderer
             var cameraRight = Camera.AbsoluteRight;
             var cameraTop = Camera.AbsoluteTop;
             var cameraBottom = Camera.AbsoluteBottom;
-            //var oldCameraZoom = Camera.Zoom;
+            var oldCameraZoom = Camera.Zoom;
 
             float extraToAddX = 0;
             float extraToAddY = 0;
-            // float extraToSubtractWidth = 0;
-            // float extraToSubtractHeight = 0;
-            //
-            // var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
-            // var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
+            float extraToSubtractWidth = 0;
+            float extraToSubtractHeight = 0;
 
-            if(cameraLeft > oldX)
+            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
+            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
+
+            if(cameraLeft > renderable.X)
             {
-                extraToAddX = cameraLeft - oldX;
+                extraToAddX = cameraLeft - renderable.X;
             }
-            if(cameraTop > oldY)
+            if(cameraTop > renderable.Y)
             {
-                extraToAddY = cameraTop - oldY;
+                extraToAddY = cameraTop - renderable.Y;
             }
 
             if(cameraRight < oldX + oldWidth)
             {
-                // no need to do anything, the render target has already been clipped
-                //extraToSubtractWidth = oldX + oldWidth - cameraRight;
+                extraToSubtractWidth = oldX + oldWidth - cameraRight;
             }
             if(cameraBottom < oldY + oldHeight)
             {
-                // no need to do anything, the render target has already been clipped
-                // extraToSubtractHeight = oldY + oldHeight - cameraBottom;
+                extraToSubtractHeight = oldY + oldHeight - cameraBottom;
             }
 
-            //renderable.X -= extraToAddX;
+                //renderable.X -= extraToAddX;
             renderable.Width += extraToAddX;
             renderable.Height += extraToAddY;
 
@@ -929,31 +929,7 @@ class RenderTargetService
 
         var width = Math.MathFunctions.RoundToInt((right - left)* camera.Zoom);
         var height = Math.MathFunctions.RoundToInt((bottom - top)* camera.Zoom);
-        
-        if(width <= 0 || height <= 0)
-        {
-            // In some situations such as component previews, the layout may not
-            // yet be updated when this method is first called. Try to force a
-            // layout update so a valid size can be obtained before giving up.
-            if(renderable is GraphicalUiElement gue)
-            {
-                gue.UpdateLayout();
 
-                left = renderable.GetAbsoluteLeft();
-                right = renderable.GetAbsoluteRight();
-                top = renderable.GetAbsoluteTop();
-                bottom = renderable.GetAbsoluteBottom();
-
-                left = System.Math.Max(camera.AbsoluteLeft, left);
-                right = System.Math.Min(camera.AbsoluteRight, right);
-                top = System.Math.Max(camera.AbsoluteTop, top);
-                bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
-
-                width = Math.MathFunctions.RoundToInt((right - left) * camera.Zoom);
-                height = Math.MathFunctions.RoundToInt((bottom - top) * camera.Zoom);
-            }
-        }
-        
         if(width <= 0 || height <= 0)
         {
             return null;
