@@ -43,6 +43,7 @@ file static class ServiceCollectionExtensions
             static (isp, type) => isp.AddTransient(type)
         );
         services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
+        services.AddTransient<PeriodicUiTimer>();
         
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
