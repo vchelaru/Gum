@@ -4,6 +4,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>1591</NoWarn>
+		<Nullable>enable</Nullable>
 
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
