@@ -260,6 +260,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>LabelContainer</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Spaced Component</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
