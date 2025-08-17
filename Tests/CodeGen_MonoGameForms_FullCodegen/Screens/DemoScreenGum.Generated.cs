@@ -102,6 +102,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     public Label LabelInstance1 { get; protected set; }
     // Could not find instance DeletedComponentInstance Gum type.Check if it is an instance of a deleted Gum component.
     public Spaced_Component Spaced_Component_Instance { get; protected set; }
+    public _123Component _123Instance { get; protected set; }
 
     public DemoScreenGum(InteractiveGue visual) : base(visual)
     {
@@ -289,6 +290,8 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         LabelInstance1.Name = "LabelInstance1";
         Spaced_Component_Instance = new CodeGen_MonoGameForms_FullCodegen.Components.Spaced_Component();
         Spaced_Component_Instance.Name = "Spaced Component Instance";
+        _123Instance = new CodeGen_MonoGameForms_FullCodegen.Components._123Component();
+        _123Instance.Name = "123Instance";
     }
     protected virtual void AssignParents()
     {
@@ -353,6 +356,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         this.AddChild(WindowStandardInstance);
         WindowStandardInstance.AddChild(LabelInstance1);
         this.AddChild(Spaced_Component_Instance);
+        this.AddChild(_123Instance);
     }
     private void ApplyDefaultVariables()
     {
@@ -687,6 +691,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         this.LabelInstance1.Visual.Y = 22f;
         this.LabelInstance1.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.LabelInstance1.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+
 
 
 

@@ -41,6 +41,8 @@ public class ElementAnimationsViewModel : ViewModel
     BitmapFrame mStopBitmap;
 
     private readonly ISelectedState _selectedState;
+    private readonly INameVerifier _nameVerifier;
+    private readonly NameValidator _nameValidator;
 
     #endregion
 
@@ -211,7 +213,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     #region Methods
 
-    public ElementAnimationsViewModel()
+    public ElementAnimationsViewModel(INameVerifier nameVerifier)
     {
         CurrentGameSpeed = "100%";
 
@@ -228,12 +230,14 @@ public class ElementAnimationsViewModel : ViewModel
         mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = nameVerifier;
+        _nameValidator = new NameValidator(_nameVerifier);
     }
 
-    public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
+    public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element, INameVerifier nameVerifier)
     {
         
-        ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
+        ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel(nameVerifier);
 
         toReturn.BackingData = save;
 
@@ -324,7 +328,7 @@ public class ElementAnimationsViewModel : ViewModel
         if (dialogResult == System.Windows.Forms.DialogResult.OK)
         {
             string whyInvalid;
-            if (!NameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
+            if (!_nameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
             {
                 MessageBox.Show(whyInvalid);
             }

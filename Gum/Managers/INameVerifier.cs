@@ -26,7 +26,10 @@ public interface INameVerifier
 
     bool IsComponentNameAlreadyUsed(string name);
 
-    bool IsCSharpReservedKeyword(string word);
-    
+    bool IsValidCSharpName(string name, out string whyNotValid, out CommonValidationError commonValidationError);
+
+
     bool IsNameValidAndroidFile(string name, out string whyNotValid);
+
+    bool IsNameValidCommon(string name, out string whyNotValid, out CommonValidationError commonValidationError);
 }

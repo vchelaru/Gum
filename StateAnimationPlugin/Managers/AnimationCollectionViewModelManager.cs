@@ -19,11 +19,13 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
 {
     AnimationFilePathService _animationFilePathService;
     private readonly ISelectedState _selectedState;
+    private readonly INameVerifier _nameVerifier;
 
     public AnimationCollectionViewModelManager()
     {
         _animationFilePathService = new AnimationFilePathService();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
     }
 
     public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
@@ -39,11 +41,11 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
             ElementAnimationsViewModel toReturn;
             if (model != null)
             {
-                toReturn = ElementAnimationsViewModel.FromSave(model, element);
+                toReturn = ElementAnimationsViewModel.FromSave(model, element, _nameVerifier);
             }
             else
             {
-                toReturn = new ElementAnimationsViewModel();
+                toReturn = new ElementAnimationsViewModel(_nameVerifier);
 
             }
 

@@ -374,8 +374,13 @@ public class CodeGenerator
         return element == null ? null : GetClassNameForType(element, visualApi, context, isFullyQualified);
     }
     
-    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
+    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false) =>
+        GetClassNameForType(container, visualApi, context, out _, isFullyQualified);
+    
+    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, out bool isPrefixed, bool isFullyQualified = false)
     {
+        isPrefixed = false;
+        
         string? className = null;
         var specialHandledCase = false;
 
@@ -424,21 +429,22 @@ public class CodeGenerator
             }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = $"{strippedType}{suffix}";
-
+            className = ToCSharpName($"{strippedType}{suffix}", out isPrefixed);
         }
 
-        if(NameVerifier.IsCSharpReservedKeyword(className))
-        {
-            className = "@" + className;
-        }
+        className = ToCSharpName(className);
 
         if(isFullyQualified && container is ElementSave elementSave)
         {
-            className = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings) + "." + className;
+            var prefixNamespace = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings);
+            // If we don't have a namespace specified for the project, this can be empty
+            if(!string.IsNullOrWhiteSpace(prefixNamespace))
+            {
+                className = prefixNamespace + "." + className;
+            }
         }
 
-        return ToCSharpName(className);
+        return className;
     }
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
@@ -3543,7 +3549,7 @@ public class CodeGenerator
 
     #endregion
 
-    private static void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
+    private void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
     {
         var element = context.Element;
         if (element is ScreenSave)
@@ -5041,19 +5047,33 @@ public class CodeGenerator
 
         return isRightType;
     }
+
+    internal static string ToCSharpName(string name) => ToCSharpName(name, out _);
     
-    internal static string ToCSharpName(string value)
+    internal static string ToCSharpName(string name, out bool isPrefixed)
     {
-        if (value.Length > 0 && char.IsDigit(value[0]))
+        isPrefixed = false;
+        
+        if (!NameVerifier.IsValidCSharpName(name, out string whyNotValid, out CommonValidationError validationError))
         {
-            value = "_" + value;
-        }
-        else if (NameVerifier.IsCSharpReservedKeyword(value))
-        {
-            value = "@" + value;
+            if (validationError == CommonValidationError.InvalidStartingCharacterForCSharp)
+            {
+                name = "_" + name;
+                isPrefixed = true;
+            }
+            else if (validationError == CommonValidationError.ReservedCSharpKeyword)
+            {
+                name = "@" + name;
+                isPrefixed = true;
+            }
+            else
+            {
+                throw new NotImplementedException("Reason why name is invalid C# name is unhandled.\n" +
+                                                  $"Reason: {whyNotValid}");
+            }
         }
         
-        return value.Replace(" ", "_");
+        return name.Replace(" ", "_");
     }
 
     #endregion
