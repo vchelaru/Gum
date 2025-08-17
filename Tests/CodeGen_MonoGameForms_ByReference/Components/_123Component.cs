@@ -7,9 +7,9 @@ using RenderingLibrary.Graphics;
 
 using System.Linq;
 
-namespace CodeGen_MonoGameForms_FullCodegen.Components
+namespace CodeGenProject.Components
 {
-    partial class LabelContainer
+    partial class _123Component
     {
         partial void CustomInitialize()
         {

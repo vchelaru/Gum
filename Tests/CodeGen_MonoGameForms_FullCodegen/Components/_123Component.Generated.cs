@@ -1,9 +1,8 @@
-//Code for LabelContainer (Container)
+//Code for 123Component (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
-using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -14,7 +13,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
-partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
+partial class _123Component : MonoGameGum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
@@ -22,56 +21,53 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
         var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("LabelContainer");
+            var element = ObjectFinder.Self.GetElementSave("123Component");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
-            if(createForms) visual.FormsControlAsObject = new LabelContainer(visual);
+            if(createForms) visual.FormsControlAsObject = new _123Component(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(LabelContainer)] = template;
-        ElementSaveExtensions.RegisterGueInstantiation("LabelContainer", () => 
+        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(_123Component)] = template;
+        ElementSaveExtensions.RegisterGueInstantiation("123Component", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
             return gue;
         });
     }
-    public enum Category1
+    public enum _123Category
     {
-        SetTextState,
+        _123State,
     }
 
-    private Category1? _category1State;
-    public Category1? Category1State
+    private _123Category? __123CategoryState;
+    public _123Category? _123CategoryState
     {
-        get => _category1State;
+        get => __123CategoryState;
         set
         {
-            _category1State = value;
+            __123CategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {
                 switch (value)
                 {
-                    case Category1.SetTextState:
-                        this.LabelInstance.Text = @"Set by state";
+                    case _123Category._123State:
                         break;
                 }
             }
         }
     }
-    public Label LabelInstance { get; protected set; }
 
-    public string Text
+    public bool _123Variable
     {
-        get => LabelInstance.Text;
-        set => LabelInstance.Text = value;
+        get;
+        set;
     }
-
-    public LabelContainer(InteractiveGue visual) : base(visual)
+    public _123Component(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
         CustomInitialize();
     }
-    public LabelContainer() : base(new ContainerRuntime())
+    public _123Component() : base(new ContainerRuntime())
     {
 
 
@@ -84,17 +80,13 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
     protected virtual void InitializeInstances()
     {
         base.ReactToVisualChanged();
-        LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
-        LabelInstance.Name = "LabelInstance";
     }
     protected virtual void AssignParents()
     {
-        this.AddChild(LabelInstance);
     }
     private void ApplyDefaultVariables()
     {
-        this.LabelInstance.Text = @"Hi there";
-
+        this._123Variable = true;
     }
     partial void CustomInitialize();
 }

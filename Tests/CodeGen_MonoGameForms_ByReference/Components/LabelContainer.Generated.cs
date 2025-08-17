@@ -36,7 +36,7 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
     }
     public enum Category1
     {
-        SetTextState,
+        SetState1,
     }
 
     Category1? _category1State;

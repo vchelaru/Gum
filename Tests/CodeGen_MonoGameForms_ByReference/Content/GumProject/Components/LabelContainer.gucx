@@ -12,7 +12,7 @@
     <Variable>
       <Type>string</Type>
       <Name>LabelInstance.Text</Name>
-      <Value xsi:type="xsd:string">Custom Text</Value>
+      <Value xsi:type="xsd:string">Set</Value>
       <ExposedAsName>Text</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -27,11 +27,11 @@
   <Category>
     <Name>Category1</Name>
     <State>
-      <Name>SetTextState</Name>
+      <Name>SetState1</Name>
       <Variable>
         <Type>string</Type>
         <Name>LabelInstance.Text</Name>
-        <Value xsi:type="xsd:string">Set by state</Value>
+        <Value xsi:type="xsd:string">In state</Value>
         <ExposedAsName>Text</ExposedAsName>
         <SetsValue>true</SetsValue>
       </Variable>
