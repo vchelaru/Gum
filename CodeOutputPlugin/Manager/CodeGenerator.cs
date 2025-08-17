@@ -3271,6 +3271,12 @@ public class CodeGenerator
                     // remove "@" because we'll have an underscore
                     categoryFieldName = categoryFieldName.Substring(1);
                 }
+                if(enumDeclarator.StartsWith("_"))
+                {
+                    // The enum name already has an underscore, so we have to prefix another underscore.
+                    // Otherwise the property and the field name will both have the same name.
+                    categoryFieldName = "_" + categoryFieldName;
+                }
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"private {enumDeclarator} _{categoryFieldName}State;");
 
 
