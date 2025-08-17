@@ -12,5 +12,5 @@ By default this value is null, which means the NineSlice automatically dedicates
 
 If the Custom Frame Texture Coordinate Width value is changed, then the source texture applies a fixed pixel size to the borders. For example, using the image above, the frame can be changed to 3 so that only the black and white pixels are part of the border.
 
-<figure><img src="../../../.gitbook/assets/image (24).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/16_06 03 33.png" alt=""><figcaption><p>NineSlice with an explicitly-set 3 pixel border width</p></figcaption></figure>
 

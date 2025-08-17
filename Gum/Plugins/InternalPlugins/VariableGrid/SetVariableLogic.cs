@@ -585,8 +585,18 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-
-                stateSave.SetValue($"{instancePrefix}AnimationFrames", new List<string>());
+                // August 16, 2025
+                // Why do we set this
+                // value? It adds a variable
+                // with a null type, and it's
+                // not needed for .achx animations.
+                // Were we previously trying to reset
+                // this value if it was explicitly set?
+                // I'm going to remove it but leave this
+                // comment here to see if removing this causes
+                // any problems.
+                // For reference: https://github.com/vchelaru/Gum/issues/1289
+                //stateSave.SetValue($"{instancePrefix}AnimationFrames", new List<string>());
             }
         }
 
