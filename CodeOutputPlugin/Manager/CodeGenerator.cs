@@ -733,9 +733,15 @@ public class CodeGenerator
                     var element = ObjectFinder.Self.GetElementSave(foundInstance);
                     if (element is not StandardElementSave)
                     {
-                        if (isState == false || isStateOnVisual)
+                        // We need to check if the variable should be on .Visual:
+                        // It is on visual only if the instance 
+                        var setDirect = GetIfShouldSetDirectlyOnInstance(exposedVariable, context.Element, context);
+                        if(!setDirect)
                         {
-                            sourceObjectName += ".Visual";
+                            if (isState == false || isStateOnVisual)
+                            {
+                                sourceObjectName += ".Visual";
+                            }
                         }
                     }
                 }
@@ -3711,55 +3717,7 @@ public class CodeGenerator
             {
                 var variableName = GetGumVariableName(variable, context);
 
-                var forceSetDirectlyOnInstance = false;
-
-                ElementSave? instanceElement = null;
-
-                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && context.Instance != null)
-                {
-                    // if the variable is an exposed variable on the instance, then we don't want to do a .Visual., because the
-                    // exposed variable lives on the main generated object.
-                    instanceElement = ObjectFinder.Self.GetElementSave(context.Instance);
-
-                    var defaultState = instanceElement?.DefaultState;
-
-                    var matchingExposedVariable = defaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == variableName);
-
-                    if (matchingExposedVariable != null)
-                    {
-                        forceSetDirectlyOnInstance = true;
-                    }
-                }
-                if (!forceSetDirectlyOnInstance && variable.IsState(container) && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-                {
-                    // If it's a state set on an instance, set it directly on the instance and not on 
-                    forceSetDirectlyOnInstance = true;
-                }
-
-                if(!forceSetDirectlyOnInstance && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-                {
-                    // this could be a variable like assigning "Text" on a label. Since this label inherits directly from the standard Text type, then the
-                    // value Text exists right on it. This is a little dangerous because it means users could assign variables that don't exist on Label. To
-                    // fix that, we would either have to add those variables to the generated Label type in code gen, or we suppress these variables from being
-                    // assigned in Gum.
-                    // This is a tricky situation, but either way we should support setting Text:
-                    instanceElement = instanceElement ?? ObjectFinder.Self.GetElementSave(context.Instance);
-
-                    string? formsType = null;
-
-                    GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
-
-                    // special case for now, need to handle this in a more generalized manner:
-                    if(formsType == BehaviorGumFormsTypes["LabelBehavior"])
-                    {
-                        switch(variableName)
-                        {
-                            case "Text":
-                                forceSetDirectlyOnInstance = true;
-                                break;
-                        }
-                    }
-                }
+                bool forceSetDirectlyOnInstance = GetIfShouldSetDirectlyOnInstance(variable, container, context);
 
                 if (forceSetDirectlyOnInstance)
                 {
@@ -3786,6 +3744,63 @@ public class CodeGenerator
             }
 
         }
+    }
+
+    private static bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    {
+        var variableName = GetGumVariableName(variable, context);
+
+        var forceSetDirectlyOnInstance = false;
+
+        ElementSave? instanceElement = null;
+
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && context.Instance != null)
+        {
+            // if the variable is an exposed variable on the instance, then we don't want to do a .Visual., because the
+            // exposed variable lives on the main generated object.
+            instanceElement = ObjectFinder.Self.GetElementSave(context.Instance);
+
+            var defaultState = instanceElement?.DefaultState;
+
+            var matchingExposedVariable = defaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == variableName);
+
+            if (matchingExposedVariable != null)
+            {
+                forceSetDirectlyOnInstance = true;
+            }
+        }
+        if (!forceSetDirectlyOnInstance && variable.IsState(container) && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            // If it's a state set on an instance, set it directly on the instance and not on 
+            forceSetDirectlyOnInstance = true;
+        }
+
+        if (!forceSetDirectlyOnInstance && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            // this could be a variable like assigning "Text" on a label. Since this label inherits directly from the standard Text type, then the
+            // value Text exists right on it. This is a little dangerous because it means users could assign variables that don't exist on Label. To
+            // fix that, we would either have to add those variables to the generated Label type in code gen, or we suppress these variables from being
+            // assigned in Gum.
+            // This is a tricky situation, but either way we should support setting Text:
+            instanceElement = instanceElement ?? ObjectFinder.Self.GetElementSave(context.Instance);
+
+            string? formsType = null;
+
+            GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+
+            // special case for now, need to handle this in a more generalized manner:
+            if (formsType == BehaviorGumFormsTypes["LabelBehavior"])
+            {
+                switch (variableName)
+                {
+                    case "Text":
+                        forceSetDirectlyOnInstance = true;
+                        break;
+                }
+            }
+        }
+
+        return forceSetDirectlyOnInstance;
     }
 
     private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
