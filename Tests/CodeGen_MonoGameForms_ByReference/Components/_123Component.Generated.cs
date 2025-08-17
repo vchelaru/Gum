@@ -1,4 +1,4 @@
-//Code for 123Component
+//Code for 123Component (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,7 +13,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components;
-partial class _123Component : 
+partial class _123Component : MonoGameGum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
