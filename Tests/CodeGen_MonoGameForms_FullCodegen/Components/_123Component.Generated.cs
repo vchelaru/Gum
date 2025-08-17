@@ -38,13 +38,13 @@ partial class _123Component : MonoGameGum.Forms.Controls.FrameworkElement
         _123State,
     }
 
-    private _123Category? _123CategoryState;
+    private _123Category? __123CategoryState;
     public _123Category? _123CategoryState
     {
-        get => _123CategoryState;
+        get => __123CategoryState;
         set
         {
-            _123CategoryState = value;
+            __123CategoryState = value;
             var appliedDynamically = false;
             if(!appliedDynamically)
             {

@@ -415,6 +415,7 @@ public class MainCodeOutputPlugin : PluginBase
         switch(propertyName)
         {
             case nameof(viewModel.WhichElementsToGenerate):
+            case nameof(viewModel.IsSelectedOnlyGenerating):
                 // do nothing
                 break;
             case nameof(viewModel.InheritanceLocation):
