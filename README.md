@@ -28,8 +28,14 @@ https://docs.flatredball.com/gum/
 
 ![Alt](https://repobeats.axiom.co/api/embed/43574f096866fcf9b5addde4589447d1b532ade4.svg "Repobeats analytics image")
 
+### Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=vchelaru/gum&type=Date)](https://www.star-history.com/#vchelaru/gum&Date)
+
 ### Star Velocity
+
 [![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
+
 
 ## Need Help?
 
