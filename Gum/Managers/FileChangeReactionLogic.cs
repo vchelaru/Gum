@@ -6,6 +6,9 @@ using System.Linq;
 using Gum.Commands;
 using ToolsUtilities;
 using Gum.Services;
+using System.Collections.Generic;
+using System;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Managers
 {
@@ -117,9 +120,50 @@ namespace Gum.Managers
                     .ToList()
                     ;
 
+                // prevents duplication 
+                var hashSet = referencedFiles.ToHashSet();
+
+                foreach (var innerFile in hashSet)
+                {
+                    FillWithRecursiveReferences(innerFile, referencedFiles);
+                }
+
                 if(referencedFiles.Contains(file))
                 {
                     Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                }
+            }
+        }
+
+        private void FillWithRecursiveReferences(FilePath innerFile, List<FilePath> referencedFiles)
+        {
+            var extension = innerFile.Extension;
+            if(extension == "fnt")
+            {
+                try
+                {
+                    var contents = FileManager.FromFileText(innerFile.Standardized);
+
+                    var font = new BitmapFont.ParsedFontFile(contents);
+
+                    var pages = font.Pages;
+
+                    var fontDirectory = innerFile.GetDirectoryContainingThis();
+
+                    foreach(var page in pages)
+                    {
+                        var pageFile = fontDirectory + page.File;
+                        var filePath = new FilePath(pageFile);
+                        if(!referencedFiles.Contains(filePath))
+                        {
+                            referencedFiles.Add(filePath);
+                            FillWithRecursiveReferences(filePath, referencedFiles);
+                        }
+                    }
+                }
+                catch
+                {
+                    // bad file, do anything?
                 }
             }
         }
