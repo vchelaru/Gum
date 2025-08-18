@@ -374,8 +374,13 @@ public class CodeGenerator
         return element == null ? null : GetClassNameForType(element, visualApi, context, isFullyQualified);
     }
     
-    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
+    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false) =>
+        GetClassNameForType(container, visualApi, context, out _, isFullyQualified);
+    
+    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, out bool isPrefixed, bool isFullyQualified = false)
     {
+        isPrefixed = false;
+        
         string? className = null;
         var specialHandledCase = false;
 
@@ -424,21 +429,22 @@ public class CodeGenerator
             }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = $"{strippedType}{suffix}";
-
+            className = ToCSharpName($"{strippedType}{suffix}", out isPrefixed);
         }
 
-        if(NameVerifier.IsCSharpReservedKeyword(className))
-        {
-            className = "@" + className;
-        }
+        className = ToCSharpName(className);
 
         if(isFullyQualified && container is ElementSave elementSave)
         {
-            className = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings) + "." + className;
+            var prefixNamespace = GetElementNamespace(elementSave, context.ElementSettings, context.CodeOutputProjectSettings);
+            // If we don't have a namespace specified for the project, this can be empty
+            if(!string.IsNullOrWhiteSpace(prefixNamespace))
+            {
+                className = prefixNamespace + "." + className;
+            }
         }
 
-        return ToCSharpName(className);
+        return className;
     }
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
@@ -733,9 +739,15 @@ public class CodeGenerator
                     var element = ObjectFinder.Self.GetElementSave(foundInstance);
                     if (element is not StandardElementSave)
                     {
-                        if (isState == false || isStateOnVisual)
+                        // We need to check if the variable should be on .Visual:
+                        // It is on visual only if the instance 
+                        var setDirect = GetIfShouldSetDirectlyOnInstance(exposedVariable, context.Element, context);
+                        if(!setDirect)
                         {
-                            sourceObjectName += ".Visual";
+                            if (isState == false || isStateOnVisual)
+                            {
+                                sourceObjectName += ".Visual";
+                            }
                         }
                     }
                 }
@@ -3259,6 +3271,12 @@ public class CodeGenerator
                     // remove "@" because we'll have an underscore
                     categoryFieldName = categoryFieldName.Substring(1);
                 }
+                if(enumDeclarator.StartsWith("_"))
+                {
+                    // The enum name already has an underscore, so we have to prefix another underscore.
+                    // Otherwise the property and the field name will both have the same name.
+                    categoryFieldName = "_" + categoryFieldName;
+                }
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"private {enumDeclarator} _{categoryFieldName}State;");
 
 
@@ -3537,7 +3555,7 @@ public class CodeGenerator
 
     #endregion
 
-    private static void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
+    private void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
     {
         var element = context.Element;
         if (element is ScreenSave)
@@ -3711,55 +3729,7 @@ public class CodeGenerator
             {
                 var variableName = GetGumVariableName(variable, context);
 
-                var forceSetDirectlyOnInstance = false;
-
-                ElementSave? instanceElement = null;
-
-                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && context.Instance != null)
-                {
-                    // if the variable is an exposed variable on the instance, then we don't want to do a .Visual., because the
-                    // exposed variable lives on the main generated object.
-                    instanceElement = ObjectFinder.Self.GetElementSave(context.Instance);
-
-                    var defaultState = instanceElement?.DefaultState;
-
-                    var matchingExposedVariable = defaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == variableName);
-
-                    if (matchingExposedVariable != null)
-                    {
-                        forceSetDirectlyOnInstance = true;
-                    }
-                }
-                if (!forceSetDirectlyOnInstance && variable.IsState(container) && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-                {
-                    // If it's a state set on an instance, set it directly on the instance and not on 
-                    forceSetDirectlyOnInstance = true;
-                }
-
-                if(!forceSetDirectlyOnInstance && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-                {
-                    // this could be a variable like assigning "Text" on a label. Since this label inherits directly from the standard Text type, then the
-                    // value Text exists right on it. This is a little dangerous because it means users could assign variables that don't exist on Label. To
-                    // fix that, we would either have to add those variables to the generated Label type in code gen, or we suppress these variables from being
-                    // assigned in Gum.
-                    // This is a tricky situation, but either way we should support setting Text:
-                    instanceElement = instanceElement ?? ObjectFinder.Self.GetElementSave(context.Instance);
-
-                    string? formsType = null;
-
-                    GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
-
-                    // special case for now, need to handle this in a more generalized manner:
-                    if(formsType == BehaviorGumFormsTypes["LabelBehavior"])
-                    {
-                        switch(variableName)
-                        {
-                            case "Text":
-                                forceSetDirectlyOnInstance = true;
-                                break;
-                        }
-                    }
-                }
+                bool forceSetDirectlyOnInstance = GetIfShouldSetDirectlyOnInstance(variable, container, context);
 
                 if (forceSetDirectlyOnInstance)
                 {
@@ -3786,6 +3756,63 @@ public class CodeGenerator
             }
 
         }
+    }
+
+    private static bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    {
+        var variableName = GetGumVariableName(variable, context);
+
+        var forceSetDirectlyOnInstance = false;
+
+        ElementSave? instanceElement = null;
+
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && context.Instance != null)
+        {
+            // if the variable is an exposed variable on the instance, then we don't want to do a .Visual., because the
+            // exposed variable lives on the main generated object.
+            instanceElement = ObjectFinder.Self.GetElementSave(context.Instance);
+
+            var defaultState = instanceElement?.DefaultState;
+
+            var matchingExposedVariable = defaultState?.Variables.FirstOrDefault(item => item.ExposedAsName == variableName);
+
+            if (matchingExposedVariable != null)
+            {
+                forceSetDirectlyOnInstance = true;
+            }
+        }
+        if (!forceSetDirectlyOnInstance && variable.IsState(container) && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            // If it's a state set on an instance, set it directly on the instance and not on 
+            forceSetDirectlyOnInstance = true;
+        }
+
+        if (!forceSetDirectlyOnInstance && context.Instance != null && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            // this could be a variable like assigning "Text" on a label. Since this label inherits directly from the standard Text type, then the
+            // value Text exists right on it. This is a little dangerous because it means users could assign variables that don't exist on Label. To
+            // fix that, we would either have to add those variables to the generated Label type in code gen, or we suppress these variables from being
+            // assigned in Gum.
+            // This is a tricky situation, but either way we should support setting Text:
+            instanceElement = instanceElement ?? ObjectFinder.Self.GetElementSave(context.Instance);
+
+            string? formsType = null;
+
+            GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+
+            // special case for now, need to handle this in a more generalized manner:
+            if (formsType == BehaviorGumFormsTypes["LabelBehavior"])
+            {
+                switch (variableName)
+                {
+                    case "Text":
+                        forceSetDirectlyOnInstance = true;
+                        break;
+                }
+            }
+        }
+
+        return forceSetDirectlyOnInstance;
     }
 
     private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
@@ -4392,7 +4419,7 @@ public class CodeGenerator
 
             FillWithNonParentVariableAssignments(context);
 
-            TryGenerateApplyLocalizationForInstance(context, context.StringBuilder, instance);
+            TryGenerateApplyLocalizationForInstance(context, context.StringBuilder);
 
             var instanceApi = GetVisualApiForInstance(instance, context.Element);
             var screenOrComponent = context.Element is ScreenSave
@@ -4712,8 +4739,13 @@ public class CodeGenerator
     public static string StringIdPrefix = "T_";
     public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
 
-    private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
+    private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder)
     {
+        var instance = context.Instance;
+        if(instance == null)
+        {
+            throw new InvalidOperationException("Instance cannot be null in TryGenerateApplyLocalizationForInstance");
+        }
         var component = ObjectFinder.Self.GetComponent(instance);
 
         if (component != null)
@@ -4722,7 +4754,7 @@ public class CodeGenerator
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
-                stringBuilder.AppendLine(context.Tabs + $"{ToCSharpName(context.Instance.Name)}.ApplyLocalization();");
+                stringBuilder.AppendLine(context.Tabs + $"{ToCSharpName(instance.Name)}.ApplyLocalization();");
 
             }
         }
@@ -4782,7 +4814,7 @@ public class CodeGenerator
             {
                 context.Instance = instance;
 
-                TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
+                TryGenerateApplyLocalizationForInstance(context, stringBuilder);
             }
 
 
@@ -5021,19 +5053,33 @@ public class CodeGenerator
 
         return isRightType;
     }
+
+    internal static string ToCSharpName(string name) => ToCSharpName(name, out _);
     
-    internal static string ToCSharpName(string value)
+    internal static string ToCSharpName(string name, out bool isPrefixed)
     {
-        if (value.Length > 0 && char.IsDigit(value[0]))
+        isPrefixed = false;
+        
+        if (!NameVerifier.IsValidCSharpName(name, out string whyNotValid, out CommonValidationError validationError))
         {
-            value = "_" + value;
-        }
-        else if (NameVerifier.IsCSharpReservedKeyword(value))
-        {
-            value = "@" + value;
+            if (validationError == CommonValidationError.InvalidStartingCharacterForCSharp)
+            {
+                name = "_" + name;
+                isPrefixed = true;
+            }
+            else if (validationError == CommonValidationError.ReservedCSharpKeyword)
+            {
+                name = "@" + name;
+                isPrefixed = true;
+            }
+            else
+            {
+                throw new NotImplementedException("Reason why name is invalid C# name is unhandled.\n" +
+                                                  $"Reason: {whyNotValid}");
+            }
         }
         
-        return value.Replace(" ", "_");
+        return name.Replace(" ", "_");
     }
 
     #endregion

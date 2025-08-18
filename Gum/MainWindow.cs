@@ -44,7 +44,6 @@ namespace Gum
 
         private readonly IGuiCommands _guiCommands;
         
-        private System.Windows.Forms.Timer FileWatchTimer;
 
         MainPanelControl mainPanelControl;
 
@@ -52,7 +51,8 @@ namespace Gum
 
         public MainWindow(MainPanelControl mainPanelControl,
             MenuStripManager menuStripManager,
-            IMessenger messenger
+            IMessenger messenger,
+            PeriodicUiTimer periodicUiTimer
             )
         {
 #if DEBUG
@@ -109,7 +109,8 @@ namespace Gum
 
             PluginManager.Self.XnaInitialized();
 
-            InitializeFileWatchTimer();
+            periodicUiTimer.Tick += HandleFileWatchTimer;
+            periodicUiTimer.Start(TimeSpan.FromSeconds(2));
         }
         
         private void AddMainPanelControl(MainPanelControl mainPanelControl)
@@ -133,15 +134,7 @@ namespace Gum
             }
         }
 
-        private void InitializeFileWatchTimer()
-        {
-            this.FileWatchTimer = new Timer(this.components);
-            this.FileWatchTimer.Enabled = true;
-            this.FileWatchTimer.Interval = 1000;
-            this.FileWatchTimer.Tick += new System.EventHandler(HandleFileWatchTimer);
-        }
-
-        private void HandleFileWatchTimer(object sender, EventArgs e)
+        private void HandleFileWatchTimer()
         {
             var gumProject = ProjectState.Self.GumProjectSave;
             if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))

@@ -52,21 +52,21 @@ namespace Gum.PropertyGridHelpers
             _undoManager = Locator.GetRequiredService<IUndoManager>();
         }
 
-        private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
+        private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
         {
             // search terms: display properties, display variables, show variables, variable display, variable displayer
             List<InstanceSavePropertyDescriptor> propertyList = new List<InstanceSavePropertyDescriptor>();
 
             if (instanceSave != null && stateSave != null)
             {
-                FillPropertyList(propertyList, instanceSave);
+                FillPropertyList(propertyList, instanceSave, instanceOwner);
 
             }
-            else if (elementSave != null && stateSave != null)
+            else if (instanceOwner != null && stateSave != null)
             {
-                StateSave defaultState = GetRecursiveStateFor(elementSave);
+                StateSave defaultState = GetRecursiveStateFor(instanceOwner);
 
-                FillPropertyList(propertyList, elementSave, null, defaultState);
+                FillPropertyList(propertyList, instanceOwner, null, defaultState);
 
 
             }
@@ -74,7 +74,7 @@ namespace Gum.PropertyGridHelpers
             return propertyList;
         }
 
-        private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
+        private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, ElementSave instanceOwner,
             InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             var currentState = _selectedState.SelectedStateSave;
@@ -84,10 +84,12 @@ namespace Gum.PropertyGridHelpers
                 isDefault = false;
             }
 
-            bool isCustomType = (elementSave is StandardElementSave) == false;
+            var effectiveElementSave = instanceSave == null ? instanceOwner : instanceSave.GetBaseElementSave();
+
+            bool isCustomType = (effectiveElementSave is StandardElementSave) == false;
             if (isCustomType || instanceSave != null)
             {
-                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave, isReadOnly: isDefault == false);
+                AddNameAndBaseTypeProperties(pdc, instanceOwner, instanceSave, isReadOnly: isDefault == false);
             }
 
             if (instanceSave != null)
@@ -95,7 +97,7 @@ namespace Gum.PropertyGridHelpers
                 mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
             }
 
-            if (elementSave is ComponentSave && instanceSave == null)
+            if (effectiveElementSave is ComponentSave && instanceSave == null)
             {
                 var defaultChildContainerProperty = mHelper.AddProperty(pdc, nameof(ComponentSave.DefaultChildContainer), typeof(string));
                 defaultChildContainerProperty.IsReadOnly = !isDefault;
@@ -108,18 +110,18 @@ namespace Gum.PropertyGridHelpers
                 variableListName = instanceSave.Name + "." + variableListName;
             }
 
-            Dictionary<string, string> variablesSetThroughReference = GetVariablesSetThroughReferences(elementSave, currentState, variableListName);
+            Dictionary<string, string> variablesSetThroughReference = GetVariablesSetThroughReferences(effectiveElementSave, currentState, variableListName);
 
 
             // if component
-            if (instanceSave == null && elementSave as ComponentSave != null)
+            if (instanceSave == null && effectiveElementSave as ComponentSave != null)
             {
                 var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Component");
                 var variables = defaultElementState.Variables;
                 foreach (var item in variables)
                 {
                     // Don't add states here, because they're handled below from this object's Default:
-                    if (item.IsState(elementSave) == false)
+                    if (item.IsState(effectiveElementSave) == false)
                     {
                         string variableName = item.Name;
                         var isReadonly = false;
@@ -130,7 +132,7 @@ namespace Gum.PropertyGridHelpers
                             isReadonly = true;
                             subtext = variablesSetThroughReference[variableName];
                         }
-                        var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext, pdc);
+                        var property = GetPropertyDescriptor(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, subtext, pdc);
 
                         if(property != null)
                         {
@@ -141,7 +143,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
             // else if screen
-            else if (instanceSave == null && elementSave as ScreenSave != null)
+            else if (instanceSave == null && effectiveElementSave as ScreenSave != null)
             {
                 var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
                 var variables = defaultElementState.Variables;
@@ -158,7 +160,7 @@ namespace Gum.PropertyGridHelpers
                         isReadonly = true;
                         subtext = variablesSetThroughReference[variableName];
                     }
-                    var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext, pdc);
+                    var property = GetPropertyDescriptor(effectiveElementSave, instanceSave, amountToDisplay, item, isReadonly, subtext, pdc);
 
                     if (property != null)
                     {
@@ -177,7 +179,6 @@ namespace Gum.PropertyGridHelpers
             Dictionary<string, string> exposedVariables = new Dictionary<string, string>();
             if (instanceSave != null)
             {
-                var instanceOwner = instanceSave.ParentContainer;
                 if (instanceOwner != null)
                 {
                     foreach (var variable in instanceOwner.DefaultState.Variables)
@@ -228,8 +229,8 @@ namespace Gum.PropertyGridHelpers
 
                 var shouldSkip = false;
 
-                if(currentState != elementSave.DefaultState &&
-                    defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory category))
+                if(currentState != effectiveElementSave.DefaultState &&
+                    defaultVariable.IsState(effectiveElementSave, out ElementSave categoryContainer, out StateSaveCategory category))
                 {
                     if(category?.States.Contains(currentState) == true)
                     {
@@ -239,7 +240,7 @@ namespace Gum.PropertyGridHelpers
 
                 if(!shouldSkip)
                 {
-                    var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext, pdc);
+                    var property = GetPropertyDescriptor(effectiveElementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext, pdc);
                     if(property != null)
                     {
                         property.IsAssignedByReference = isSetByReference;
@@ -356,14 +357,14 @@ namespace Gum.PropertyGridHelpers
         }
 
 
-        public void GetCategories(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+        public void GetCategories(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
         {
-            var properties = GetProperties(element, instance, stateSave);
+            var properties = GetProperties(instanceOwner, instance, stateSave);
 
             StateSave defaultState;
             if(instance == null)
             {
-                defaultState = GetRecursiveStateFor(element);
+                defaultState = GetRecursiveStateFor(instanceOwner);
             }
             else
             {
@@ -374,7 +375,7 @@ namespace Gum.PropertyGridHelpers
 
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
-                var srim = ToStateReferencingInstanceMember(element, instance, stateSave, stateSaveCategory, propertyDescriptor);
+                var srim = ToStateReferencingInstanceMember(instanceOwner, instance, stateSave, stateSaveCategory, propertyDescriptor);
 
                 if(srim == null)
                 {
@@ -399,7 +400,7 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableListSave variableList = defaultState.VariableLists[i];
 
-                bool shouldInclude = GetIfShouldInclude(variableList, element, instance)
+                bool shouldInclude = GetIfShouldInclude(variableList, instanceOwner, instance)
                     && !variableList.IsHiddenInPropertyGrid;
 
                 if (shouldInclude)
@@ -420,12 +421,12 @@ namespace Gum.PropertyGridHelpers
                     if (instance != null)
                     {
                         srim =
-                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element, _undoManager);
+                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, instanceOwner, _undoManager);
                     }
                     else
                     {
                         srim =
-                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element, _undoManager);
+                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, instanceOwner, _undoManager);
                     }
 
                     // moved to internal
@@ -451,7 +452,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave element, InstanceSave instance, 
+        private StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave instanceOwner, InstanceSave instance, 
             StateSave stateSave, StateSaveCategory stateSaveCategory, InstanceSavePropertyDescriptor propertyDescriptor)
         {
             StateReferencingInstanceMember srim;
@@ -459,7 +460,7 @@ namespace Gum.PropertyGridHelpers
             // early continue
             var browsableAttribute = propertyDescriptor.Attributes?.FirstOrDefault(item => item is BrowsableAttribute);
 
-            var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute).Browsable == false;
+            var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute)?.Browsable == false;
             if (isMarkedAsNotBrowsable)
             {
                 return null;
@@ -475,7 +476,7 @@ namespace Gum.PropertyGridHelpers
                 variableName = propertyDescriptor.Name;
             }
 
-            srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, element, _undoManager);
+            srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, instanceOwner, _undoManager);
 
             // moved to internal
             //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
@@ -558,7 +559,7 @@ namespace Gum.PropertyGridHelpers
             return stateToAddTo;
         }
 
-        private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, InstanceSave instanceSave)
+        private void FillPropertyList(List<InstanceSavePropertyDescriptor> properties, InstanceSave instanceSave, ElementSave instanceOwner)
         {
             ElementSave instanceBaseType;
             StateSave defaultState;
@@ -566,24 +567,42 @@ namespace Gum.PropertyGridHelpers
 
             if(instanceBaseType != null)
             {
-                FillPropertyList(pdc, instanceBaseType, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
+                FillPropertyList(properties, instanceOwner, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
+            }
+            else
+            {
+                // We have an instance that has been selected that does not have a base type.
+                // This can happen if the instance references a component type that doesn't exist.
+                // We still want to let the user make edits to this object to fix the problem:
+                var currentState = _selectedState.SelectedStateSave;
+                bool isDefault = currentState == _selectedState.SelectedElement.DefaultState;
+                if (instanceSave?.DefinedByBase == true)
+                {
+                    isDefault = false;
+                }
+
+                if (instanceSave != null)
+                {
+                    AddNameAndBaseTypeProperties(properties, instanceOwner, instanceSave, isReadOnly: isDefault == false);
+
+                }
             }
         }
 
-        private static void GetDefaultState(InstanceSave instanceSave, out ElementSave elementSave, out StateSave defaultState)
+        private static void GetDefaultState(InstanceSave instanceSave, out ElementSave instanceBaseType, out StateSave defaultState)
         {
-            elementSave = instanceSave.GetBaseElementSave();
-            if (elementSave != null)
+            instanceBaseType = instanceSave.GetBaseElementSave();
+            if (instanceBaseType != null)
             {
-                if (elementSave is StandardElementSave)
+                if (instanceBaseType is StandardElementSave)
                 {
                     // if we use the standard elements manager, we don't get any custom categories, so we need to add those:
-                    defaultState = StandardElementsManager.Self.GetDefaultStateFor(elementSave.Name).Clone();
-                    foreach (var category in elementSave.Categories)
+                    defaultState = StandardElementsManager.Self.GetDefaultStateFor(instanceBaseType.Name).Clone();
+                    foreach (var category in instanceBaseType.Categories)
                     {
                         var expectedName = category.Name + "State";
 
-                        var variable = elementSave.GetVariableFromThisOrBase(expectedName);
+                        var variable = instanceBaseType.GetVariableFromThisOrBase(expectedName);
                         if (variable != null)
                         {
                             defaultState.Variables.Add(variable);
@@ -592,7 +611,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 else
                 {
-                    defaultState = GetRecursiveStateFor(elementSave);
+                    defaultState = GetRecursiveStateFor(instanceBaseType);
                 }
             }
             else
@@ -695,7 +714,7 @@ namespace Gum.PropertyGridHelpers
         }
 
 
-        private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance, bool isReadOnly)
+        private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave? instanceOwner, InstanceSave instance, bool isReadOnly)
         {
             var nameProperty = mHelper.AddProperty(
                 pdc,
@@ -706,24 +725,23 @@ namespace Gum.PropertyGridHelpers
             nameProperty.IsReadOnly = isReadOnly;
 
 
-            var baseTypeConverter = new AvailableBaseTypeConverter(elementSave, instance);
 
-            // create a fake variable here to see if it's excluded:
 
 
             var isExcluded = false;
 
-            if(elementSave != null)
+            if(instanceOwner != null)
             {
                 RecursiveVariableFinder rfv = null;
                 if (instance != null)
                 {
-                    rfv = new RecursiveVariableFinder(instance, elementSave);
+                    rfv = new RecursiveVariableFinder(instance, instanceOwner);
                 }
                 else
                 {
-                    rfv = new RecursiveVariableFinder(elementSave.DefaultState);
+                    rfv = new RecursiveVariableFinder(instanceOwner.DefaultState);
                 }
+                // create a fake variable here to see if it's excluded:
                 var fakeBaseTypeVariable = new VariableSave
                 {
                     Name = "BaseType",
@@ -736,6 +754,8 @@ namespace Gum.PropertyGridHelpers
 
             if (!isExcluded)
             {
+
+                var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance);
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
                 var baseTypeProperty = mHelper.AddProperty(pdc,
                     "BaseType", typeof(string), baseTypeConverter);

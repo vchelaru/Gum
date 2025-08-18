@@ -2281,5 +2281,10 @@
     <BaseType>Spaced Component</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
+  <Instance>
+    <Name>123Instance</Name>
+    <BaseType>123Component</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
   <Behaviors />
 </ScreenSave>

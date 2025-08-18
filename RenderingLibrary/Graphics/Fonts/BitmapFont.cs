@@ -1276,7 +1276,7 @@ public class BitmapFont : IDisposable
 
     #region Internal Font Pattern Parsing classes
 
-    private class ParsedFontLine
+    public class ParsedFontLine
     {
         public string Tag { get; }
         public Dictionary<string, int> NumericAttributes { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -1370,7 +1370,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    private class ParsedFontFile
+    public class ParsedFontFile
     {
         public FontFileInfoLine Info { get; private set; }
         public FontFileCommonLine Common { get; private set; }
@@ -1536,7 +1536,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    private class FontFileInfoLine
+    public class FontFileInfoLine
     {
         public int Outline { get; set; }
         public int Size { get; set; }
@@ -1563,7 +1563,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    private class FontFileCommonLine
+    public class FontFileCommonLine
     {
         public int LineHeight { get; set; }
         public int Base { get; set; }
@@ -1584,7 +1584,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    private class FontFileCharLine
+    public class FontFileCharLine
     {
         public int Id { get; set; }
         public int X { get; set; }
@@ -1633,7 +1633,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    private class FontFileKerningLine
+    public class FontFileKerningLine
     {
         public int First { get; set; }
         public int Second { get; set; }
@@ -1654,7 +1654,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    private class FontFilePage
+    public class FontFilePage
     {
         public int Id { get; set; }
         public string File {  get; set; }

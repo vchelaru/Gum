@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using Gum.DataTypes;
+using Gum.Managers;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
@@ -8,6 +10,7 @@ namespace Gum.PropertyGridHelpers.Converters
     {
         ElementSave elementViewing;
         InstanceSave instance;
+        private StandardValuesCollection standardValues;
 
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
         {
@@ -19,24 +22,34 @@ namespace Gum.PropertyGridHelpers.Converters
             return true;
         }
 
-        public AvailableBaseTypeConverter(ElementSave element, InstanceSave instance) : base()
+        public AvailableBaseTypeConverter(ElementSave instanceOwner, InstanceSave instance) : base()
         {
-            this.elementViewing = element;
+            this.elementViewing = instanceOwner;
             this.instance = instance;
+
+            CacheStandardValuesCollection();
+
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        private void CacheStandardValuesCollection()
         {
             List<string> values = new List<string>();
 
             var gumProject = ProjectManager.Self.GumProjectSave;
 
-            if (elementViewing is ScreenSave)
+            ElementSave? effectiveElement = elementViewing;
+            if (instance != null)
+            {
+                effectiveElement = ObjectFinder.Self.GetElementSave(instance);
+            }
+
+
+            if (effectiveElement is ScreenSave && instance == null)
             {
                 values.Add("");
-                foreach(ScreenSave screenSave in gumProject.Screens)
+                foreach (ScreenSave screenSave in gumProject.Screens)
                 {
-                    if(elementViewing.IsOfType(screenSave.Name) == false)
+                    if (effectiveElement.IsOfType(screenSave.Name) == false)
                     {
                         values.Add(screenSave.Name);
                     }
@@ -44,14 +57,10 @@ namespace Gum.PropertyGridHelpers.Converters
             }
             else
             {
-                // We used to use this enum, but why not just use the standard elements becuase those 
-                // can be modified by plugins:
-                //values.AddRange(Enum.GetNames(typeof(StandardElementTypes)));
-                foreach(var standard in gumProject.StandardElements)
+                foreach (var standard in gumProject.StandardElements)
                 {
                     // Component is a special base type but we don't actually want to inherit from component.
-                    // The closest match would actually be "Container" so let's use that...
-                    if(standard.Name != "Component")
+                    if (standard.Name != "Component")
                     {
                         values.Add(standard.Name);
                     }
@@ -60,9 +69,9 @@ namespace Gum.PropertyGridHelpers.Converters
                 foreach (ComponentSave componentSave in gumProject.Components)
                 {
                     //var shouldShow = element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType;
-                    var shouldShow = elementViewing == null || elementViewing.Name != componentSave.Name || elementViewing.Name == instance?.BaseType;
+                    var shouldShow = effectiveElement == null || effectiveElement.Name != componentSave.Name || effectiveElement.Name == instance?.BaseType;
 
-                    if(shouldShow)
+                    if (shouldShow)
                     {
                         values.Add(componentSave.Name);
                     }
@@ -70,8 +79,10 @@ namespace Gum.PropertyGridHelpers.Converters
 
             }
 
-            return new StandardValuesCollection(values);
+            standardValues = new StandardValuesCollection(values);
         }
+
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) => standardValues;
 
     }
 }

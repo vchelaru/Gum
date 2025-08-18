@@ -240,8 +240,8 @@ namespace Gum.PropertyGridHelpers
 
         #endregion
 
-        public event Action<string> SetToDefault;
 
+        #region Constructor/Initialization
 
         public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd,
             StateSave stateSave,
@@ -313,6 +313,14 @@ namespace Gum.PropertyGridHelpers
             if (elementSave != null)
             {
                 standardVariable = _objectFinder.GetRootVariable(mVariableName, elementSave);
+            }
+
+            if(RootVariableName == "BaseType" && instanceSave != null && ObjectFinder.Self.GetElementSave(instanceSave) == null)
+            {
+                // special case - if it's a base type and we have an instance,
+                // and if that instance references an invalid type, let's make
+                // this editable so the user can see their current value:
+                this.PropertiesToSetOnDisplayer["IsEditable"] = true;
             }
 
             // todo - this needs to go to the standard elements manager
@@ -395,17 +403,6 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer, InstanceSavePropertyDescriptor ispd)
-        {
-            SupportsMakeDefault = this.mVariableName != "Name" && !ispd.IsAssignedByReference;
-
-            TryAddExposeVariableMenuOptions(instanceSave);
-
-            TryAddCopyVariableReferenceMenuOptions();
-
-            _editVariablesService.TryAddEditVariableOptions(this, VariableSave, stateListCategoryContainer);
-        }
-
         private void HandleUiCreated(System.Windows.Controls.UserControl obj)
         {
             if (this.RootVariableName == "VariableReferences")
@@ -424,6 +421,20 @@ namespace Gum.PropertyGridHelpers
                 }
             }
         }
+
+        #endregion
+
+        private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer, InstanceSavePropertyDescriptor ispd)
+        {
+            SupportsMakeDefault = this.mVariableName != "Name" && !ispd.IsAssignedByReference;
+
+            TryAddExposeVariableMenuOptions(instanceSave);
+
+            TryAddCopyVariableReferenceMenuOptions();
+
+            _editVariablesService.TryAddEditVariableOptions(this, VariableSave, stateListCategoryContainer);
+        }
+
 
         private void HandleGotoDefinition(StringListTextBoxDisplay asTextBox)
         {
@@ -726,40 +737,6 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        #endregion
-
-        private VariableSave GetVariableDefinedInThisOrBase(VariableSave existingVariable)
-        {
-            VariableSave variableDefinedInThisOrBase = null;
-
-            if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
-            {
-                // need to set the exposed name on the variable, but only if it is defined in this component or in
-                // a base component:
-
-                variableDefinedInThisOrBase = _selectedState.SelectedStateSave.GetVariableSave(Name);
-                if (variableDefinedInThisOrBase == null && _selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
-                {
-                    variableDefinedInThisOrBase = _selectedState.SelectedElement.DefaultState.GetVariableSave(Name);
-                }
-
-                if (variableDefinedInThisOrBase == null)
-                {
-                    var allBase = _objectFinder.GetBaseElements(_selectedState.SelectedElement);
-                    foreach (var baseElement in allBase)
-                    {
-                        variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
-                        if (variableDefinedInThisOrBase != null)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return variableDefinedInThisOrBase;
-        }
-
         private bool CanSetValue(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
         {
             if (this.RootVariableName == "Points")
@@ -775,6 +752,10 @@ namespace Gum.PropertyGridHelpers
             return true;
         }
 
+        #endregion
+
+        #region Set to default
+        public event Action<string> SetToDefault;
         private void HandleSetToDefault(string obj)
         {
             string variableName = Name;
@@ -951,6 +932,40 @@ namespace Gum.PropertyGridHelpers
             NotifyVariableLogic(gumElementOrInstanceSaveAsObject, SetPropertyCommitType.Full, trySave: true);
         }
 
+        #endregion
+
+        private VariableSave GetVariableDefinedInThisOrBase(VariableSave existingVariable)
+        {
+            VariableSave variableDefinedInThisOrBase = null;
+
+            if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
+            {
+                // need to set the exposed name on the variable, but only if it is defined in this component or in
+                // a base component:
+
+                variableDefinedInThisOrBase = _selectedState.SelectedStateSave.GetVariableSave(Name);
+                if (variableDefinedInThisOrBase == null && _selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
+                {
+                    variableDefinedInThisOrBase = _selectedState.SelectedElement.DefaultState.GetVariableSave(Name);
+                }
+
+                if (variableDefinedInThisOrBase == null)
+                {
+                    var allBase = _objectFinder.GetBaseElements(_selectedState.SelectedElement);
+                    foreach (var baseElement in allBase)
+                    {
+                        variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
+                        if (variableDefinedInThisOrBase != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return variableDefinedInThisOrBase;
+        }
+
         public GeneralResponse NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, SetPropertyCommitType commitType, bool trySave = true)
         {
             GeneralResponse response = GeneralResponse.SuccessfulResponse;
@@ -1042,7 +1057,6 @@ namespace Gum.PropertyGridHelpers
                 return GetTypeFromVariableRecursively();
             }
         }
-
 
 #if GUM
 
