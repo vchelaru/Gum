@@ -1373,7 +1373,7 @@ namespace Gum.Managers
 
     public static class InstanceExtensionMethods
     {
-        public static ElementSave GetBaseElementSave(this InstanceSave instanceSave)
+        public static ElementSave? GetBaseElementSave(this InstanceSave instanceSave)
         {
             if (string.IsNullOrEmpty(instanceSave.BaseType))
             {
