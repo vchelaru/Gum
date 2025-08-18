@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using ToolsUtilities;
 using BlendState = Gum.BlendState;
@@ -104,13 +105,21 @@ public class BitmapFont : IDisposable
 
     public BitmapFont(string fontFile)
     {
-        string fontContents = FileManager.FromFileText(fontFile);
+        Encoding encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+        string fontContents = ContainsAscii(fontFile) ? FileManager.FromFileText(fontFile, encoding) : FileManager.FromFileText(fontFile);
+
         mFontFile = FileManager.Standardize(fontFile, preserveCase:true);
 
         _ParsedFontFile = new ParsedFontFile(fontContents);
         ReloadTextures(fontFile, fontContents);
 
         SetFontPattern();
+    }
+
+    private bool ContainsAscii(string s)
+    {
+        //TODO : Here is a simple check for ASCII characters.
+        return s.All(ch => ch >= 32 && ch <= 126);
     }
 
     private void ReloadTextures(string fontFile, string fontContents)
