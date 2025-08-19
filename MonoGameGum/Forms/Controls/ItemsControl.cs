@@ -184,10 +184,20 @@ public class ItemsControl : ScrollViewer
 
     protected virtual FrameworkElement CreateNewItemFrameworkElement(object o)
     {
-        var label = new Label();
-        label.Text = o?.ToString();
-        label.BindingContext = o;
-        return label;
+        if(FrameworkElementTemplate != null)
+        {
+            var frameworkElement = FrameworkElementTemplate.CreateContent();
+            frameworkElement.BindingContext = o;
+            return frameworkElement;
+        }
+        else
+        {
+
+            var label = new Label();
+            label.Text = o?.ToString() ?? string.Empty;
+            label.BindingContext = o;
+            return label;
+        }
     }
 
     protected virtual InteractiveGue CreateNewVisual(object vm)
@@ -318,12 +328,35 @@ public class ItemsControl : ScrollViewer
 
                     foreach (var item in e.NewItems)
                     {
-                        var newItem = item as FrameworkElement ?? CreateNewItemFrameworkElement(item);
+                        GraphicalUiElement? newVisual = null;
+                        if (item is FrameworkElement existingItemFrameworkElement)
+                        {
+                            newVisual = existingItemFrameworkElement.Visual;
+                        }
+                        else if(item is GraphicalUiElement existingItemGue)
+                        {
+                            newVisual = existingItemGue;
+                        }
+                        else if(this.VisualTemplate != null)
+                        {
+                            // August 19, 2025
+                            // Not sure if this
+                            // should set createFormsInternally
+                            // to true. ItemsControls probably want
+                            // this true, but ListBoxes probably don't
+                            // since they want to force a ListBoxItem. For
+                            // now let's make it false, and revisit later.
+                            newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
+                        }
+                        else
+                        {
+                            newVisual = CreateNewItemFrameworkElement(item).Visual;
 
-                        InnerPanel?.Children.Insert(index, newItem.Visual);
+                        }
 
+                        InnerPanel?.Children.Insert(index, newVisual);
 
-                        newItem.Visual.Parent = InnerPanel;
+                        newVisual.Parent = InnerPanel;
                         // handled by the panel being updated:
                         //HandleCollectionNewItemCreated(newItem, index);
 

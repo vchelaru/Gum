@@ -351,7 +351,7 @@ public class FrameworkElement : INotifyPropertyChanged
     InteractiveGue visual;
     public InteractiveGue Visual
     {
-        get { return visual; }
+        get => visual;
         set
         {
 #if DEBUG

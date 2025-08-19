@@ -199,6 +199,7 @@ public class GumService
 
 
         Root.AddToManagers(SystemManagers);
+        Root.UpdateLayout();
 
         GumProjectSave? gumProject = null;
 
