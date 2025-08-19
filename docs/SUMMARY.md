@@ -266,6 +266,7 @@
       * [MenuItem](code/monogame/gum-forms/controls/menuitem.md)
       * [PasswordBox](code/monogame/gum-forms/controls/passwordbox.md)
       * [RadioButton](code/monogame/gum-forms/controls/radiobutton.md)
+      * [ScrollBar](code/monogame/gum-forms/controls/scrollbar.md)
       * [ScrollViewer](code/monogame/gum-forms/controls/scrollviewer/README.md)
         * [MakeSizedToChildren](code/monogame/gum-forms/controls/scrollviewer/makesizedtochildren.md)
         * [VerticalScrollBarValue](code/monogame/gum-forms/controls/scrollviewer/verticalscrollbarvalue.md)

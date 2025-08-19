@@ -55,7 +55,7 @@ addButton.Click += (_, _) =>
 
 <figure><img src="../../../../.gitbook/assets/19_06 21 40.gif" alt=""><figcaption><p>Items added through binding</p></figcaption></figure>
 
-The visual template can be modified to support any visual. For example, we can add Button instances by using the ButtonVisual type as the template, as shown in the following code:
+The `FrameworkElementTemplate` template can be modified to support creating custom FrameworkElement types as shown in the following code block:
 
 <pre class="language-csharp"><code class="lang-csharp">public class ExampleViewModel : ViewModel
 {
@@ -96,3 +96,120 @@ addButton.Click += (_, _) =>
 </code></pre>
 
 <figure><img src="../../../../.gitbook/assets/19_06 55 10.gif" alt=""><figcaption></figcaption></figure>
+
+Each item created through the `FrameworkElementTemplate` is bound to a corresponding item in the Items collection. This means that each `FrameworkElement` can be further customized through its own binding.
+
+For example, we can create a top-level view model which contains a collection of weapons. Each weapon is displayed with a custom button.
+
+The following code shows the two view models:
+
+```csharp
+// This is the top-level ViewModel for the example.
+public class TopLevelViewModel : ViewModel
+{
+    public ObservableCollection<WeaponViewModel> Weapons
+    {
+        get;
+        private set;
+    } = new ObservableCollection<WeaponViewModel>();
+}
+
+// This is the view model representing a single weapon.
+// Each instance of WeaponViewModel results in an item
+// added to the ItemsControl.
+public class WeaponViewModel : ViewModel
+{
+    public string WeaponName
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+    public string WeaponDetails
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+}
+```
+
+Each `WeaponViewModel` instance is displayed with a new Button instance called `ButtonWithSubtext` as shown in the following code block:
+
+```csharp
+// A special button which includes text and subtext
+public class ButtonWithSubtext : Button
+{
+    public ButtonWithSubtext()
+    {
+        // Existing properties can be bound...
+        this.SetBinding(
+            nameof(this.Text),
+            nameof(WeaponViewModel.WeaponName));
+
+        Visual.Dock(Gum.Wireframe.Dock.FillHorizontally);
+
+        var mainText = ((ButtonVisual)Visual).TextInstance;
+        mainText.Dock(Gum.Wireframe.Dock.Top);
+
+        // ... or new visuals with their own bound properties
+        // can also be added
+        var subText = new TextRuntime();
+        subText.Color = new Color(220,220,200);
+        this.AddChild(subText);
+        subText.Dock(Gum.Wireframe.Dock.Top);
+        subText.Y = 20;
+        subText.SetBinding(
+            nameof(subText.Text),
+            nameof(WeaponViewModel.WeaponDetails));
+    }
+}
+```
+
+Finally, these view models and custom button can be used to display weapons in an `ItemsControl` as shown in the following code block:
+
+```csharp
+var viewModel = new TopLevelViewModel();
+
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Anchor.Center);
+
+itemsControl = new ItemsControl();
+stackPanel.AddChild(itemsControl);
+//itemsControl.Height = 70;
+itemsControl.Width = 250;
+itemsControl.BindingContext = viewModel;
+itemsControl.SetBinding(
+    nameof(itemsControl.Items),
+    nameof(viewModel.Weapons));
+
+itemsControl.FrameworkElementTemplate = 
+    new Gum.Forms.FrameworkElementTemplate(typeof(ButtonWithSubtext));
+
+
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Sword",
+    WeaponDetails = "A sharp blade used for cutting."
+});
+
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Bow",
+    WeaponDetails = "A ranged weapon that shoots arrows."
+});
+
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Staff",
+    WeaponDetails = "A magical staff used for casting spells."
+});
+
+viewModel.Weapons.Add(new WeaponViewModel
+{
+    WeaponName = "Dagger",
+    WeaponDetails = "A small, sharp blade used for stabbing."
+});
+```
+
+<figure><img src="../../../../.gitbook/assets/19_08 26 46.gif" alt=""><figcaption><p>ItemsControl displaying weapons using a customized Button</p></figcaption></figure>
+
