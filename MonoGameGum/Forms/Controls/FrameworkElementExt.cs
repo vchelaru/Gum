@@ -17,6 +17,12 @@ namespace MonoGameGum.Forms.Controls;
 #if !FRB
 using Gum.Forms.Data;
 namespace Gum.Forms.Controls;
+#endif
+
+#if MONOGAME
+
+using Microsoft.Xna.Framework;
+using MonoGameGum.GueDeriving;
 
 #endif
 
@@ -67,6 +73,27 @@ public static class FrameworkElementExt
         element.Visual.Parent = null;
         element.Visual.RemoveFromManagers();
     }
+
+    // Vic says: I started adding this but I don't like the implementation because
+    // if it's added to something like a StackPanel, it adjusts the size of the StackPanel
+    // and it shifts the stacking of all other children. To solve this, the implementation below
+    // adds to the popup root. This is problematic because the coloredRectangle only updates its position
+    // when it is first added, and it doesn't continually update. This means users may get confused if they
+    // call this before making some other UI changes.
+    //public static void AddDebugOverlay(this FrameworkElement element, Color? color = null)
+    //{
+    //    color = color ?? Color.Pink;
+        
+
+    //    var coloredRectangle = new ColoredRectangleRuntime();
+    //    coloredRectangle.Width = element.Visual.GetAbsoluteWidth();
+    //    coloredRectangle.Height = element.Visual.GetAbsoluteHeight();
+    //    coloredRectangle.X = element.Visual.AbsoluteLeft;
+    //    coloredRectangle.Y = element.Visual.AbsoluteTop;
+    //    coloredRectangle.Color = color.Value;
+    //    coloredRectangle.Alpha = 128;
+    //    FrameworkElement.PopupRoot.AddChild(coloredRectangle);
+    //}
 
 #if RAYLIB
     public static void AddChild(this GraphicalUiElement element, FrameworkElement child)

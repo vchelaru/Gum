@@ -13,6 +13,21 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class ListBoxTests : BaseTestClass
 {
+
+    [Fact]
+    public void Items_ShoudAddListBoxItem_WhenAdding()
+    {
+        ListBox listBox = new ();
+        listBox.Items.Add(1);
+        listBox.ListBoxItems.Count.ShouldBe(1);
+        (listBox.ListBoxItems[0] is ListBoxItem).ShouldBeTrue();
+
+        listBox.InnerPanel.Children.Count.ShouldBe(1);
+        (listBox.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
+        (listBox.InnerPanel.Children[0] as InteractiveGue).FormsControlAsObject
+            .ShouldBeOfType<ListBoxItem>();
+    }
+
     [Fact]
     public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
     {
