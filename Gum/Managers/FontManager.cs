@@ -416,11 +416,13 @@ public class FontManager
 
         int numberWide, numberTall;
 
-        var effectiveFontSize = fontSize + System.Math.Max(spacingHorizontal, spacingVertical);
+        var effectiveFontSize = fontSize + System.Math.Max(spacingHorizontal, spacingVertical) +
+            bmfcSave.OutlineThickness*2;
         if (isBold)
         {
             effectiveFontSize += (int)(fontSize * 0.08);
         }
+        
 
         EstimateBlocksNeeded(out numberWide, out numberTall, effectiveFontSize);
 
@@ -450,7 +452,10 @@ public class FontManager
         {
             numberOf256Blocks = 4;
         }
-        else if (effectiveFontSize < 63)
+        // Comic with an outline at 61 is too big for 5 blocks
+        //else if (effectiveFontSize < 63)
+        else if (effectiveFontSize < 61)
+
         {
             numberOf256Blocks = 5;
         }

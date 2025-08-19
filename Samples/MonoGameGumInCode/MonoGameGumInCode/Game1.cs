@@ -38,9 +38,9 @@ namespace MonoGameGumInCode
 
             // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
             //CreateFormsScreen();
-            CreateStandardsScreen();
+            //CreateStandardsScreen();
             //CreateMixedLayout();
-            //CreateTextLayout();
+            CreateTextLayout();
             //CreateInvisibleLayout();
 
             base.Initialize();
@@ -97,9 +97,14 @@ namespace MonoGameGumInCode
 
         private void CreateTextLayout()
         {
+            //ColoredRectangleRuntime farBackground = new ColoredRectangleRuntime();
+            //farBackground.Color = Color.LightGray;
+            //farBackground.Dock(Dock.Fill);
+            //farBackground.AddToRoot();
+
             var container = new ContainerRuntime();
-            container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             // Give it 2 pixels on each side so text doesn't bump up against the edge of the screen
             container.X = 2;
             container.Y = 2;
@@ -117,6 +122,52 @@ namespace MonoGameGumInCode
             withOutline.Text = "I am text that has an outline.";
             (withOutline.Component as RenderingLibrary.Graphics.Text).RenderBoundary = true;
             container.Children.Add(withOutline);
+
+            CreateCustomOutlineText(container, Color.Red);
+            CreateCustomOutlineText(container, Color.DarkGreen);
+            CreateCustomOutlineText(container, Color.Blue);
+        }
+
+        private static void CreateCustomOutlineText(ContainerRuntime container, Color color)
+        {
+            var renderTargetContainer = new ContainerRuntime();
+            renderTargetContainer.IsRenderTarget = true;
+            renderTargetContainer.Dock(Dock.SizeToChildren);
+            container.AddChild(renderTargetContainer);
+
+            var blendText = new TextRuntime();
+            blendText.UseCustomFont = true;
+            blendText.FontScale = 1;
+            blendText.CustomFontFile =
+                "OutlinedFont/Font52Comic_Sans_MS_o4.fnt";
+            blendText.Text = "Hello";
+            blendText.BlendState = Gum.BlendState.NonPremultiplied.ToXNA();
+            renderTargetContainer.Children.Add(blendText);
+
+            var overlay = new ColoredRectangleRuntime();
+            overlay.Color = color;
+            var blend = Gum.BlendState.MinAlpha.Clone();
+            blend.ColorSourceBlend = Gum.Blend.One;
+            blend.ColorDestinationBlend = Gum.Blend.Zero;
+            blend.ColorBlendFunction = Gum.BlendFunction.Add;
+            overlay.BlendState = blend.ToXNA();
+
+            overlay.Dock(Dock.Fill);
+            renderTargetContainer.AddChild(overlay);
+
+
+            var whiteOverlayText = new TextRuntime();
+            whiteOverlayText.UseCustomFont = true;
+            whiteOverlayText.FontScale = 1;
+            whiteOverlayText.CustomFontFile =
+                "OutlinedFont/Font52Comic_Sans_MS_o4.fnt";
+            var topBlend = Gum.BlendState.NonPremultiplied.Clone();
+            topBlend.ColorSourceBlend = Gum.Blend.One;
+            topBlend.ColorDestinationBlend = Gum.Blend.InverseSourceColor;
+            topBlend.ColorBlendFunction = Gum.BlendFunction.Add;
+            whiteOverlayText.BlendState = topBlend.ToXNA();
+            whiteOverlayText.Text = "Hello";
+            renderTargetContainer.AddChild(whiteOverlayText);
         }
 
         private void CreateMixedLayout()

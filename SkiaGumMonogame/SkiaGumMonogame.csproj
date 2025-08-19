@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<NoWarn>1591</NoWarn>
+		<Nullable>enable</Nullable>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
@@ -38,6 +39,7 @@
 		<Compile Remove="..\SkiaGum\GraphicalUiElement.cs" />
 		<Compile Remove="..\SkiaGum\Graphics\HorizontalAlignment.cs" />
 		<Compile Remove="..\SkiaGum\Graphics\VerticalAlignment.cs" />
+		<Compile Remove="..\SkiaGum\GueDeriving\BindableGraphicalUiElement.cs" />
 		<Compile Remove="..\SkiaGum\Managers\ObjectFinder.cs" />
 		<Compile Remove="..\SkiaGum\Managers\StandardElementsManager.cs" />
 	</ItemGroup>

@@ -112,7 +112,6 @@ namespace Gum
             NonPremultiplied = new BlendState("BlendState.NonPremultiplied", Blend.SourceAlpha, Blend.InverseSourceAlpha);
             Opaque = new BlendState("BlendState.Opaque", Blend.One, Blend.Zero);
 
-
             {
 
                 // Vic 2/6/2025, pulled from 12/19/2020
@@ -131,6 +130,9 @@ namespace Gum
                 // need to multiply the destination color by the inverse source alpha, so that if alpha is 0, we preserve the color, otherwise we
                 // darken it to premult
                 SubtractAlpha = new BlendState();
+                // ResultColor = (SourceColor * Blend.ColorSourceBlend) {ColorBlendFunction} (DestinationColor * Blend.ColorDestBlend)
+                // which is...
+                // ResultColor = (SourceColor * 0) + (DestinationColor * 1)
                 SubtractAlpha.ColorSourceBlend = Blend.Zero;
                 SubtractAlpha.ColorBlendFunction = BlendFunction.Add;
                 SubtractAlpha.ColorDestinationBlend = Blend.One;
@@ -206,12 +208,24 @@ namespace Gum
         public BlendState()
         {
             // not sure what to do here...
+            BlendFactor = Color.White;
+            ColorWriteChannels = ColorWriteChannels.All;
+            ColorWriteChannels1 = ColorWriteChannels.All;
+            ColorWriteChannels2 = ColorWriteChannels.All;
+            ColorWriteChannels3 = ColorWriteChannels.All;
+
         }
 
 
 
-        private BlendState(string name, Blend sourceBlend, Blend destinationBlend)
+        public BlendState(string name, Blend sourceBlend, Blend destinationBlend)
         {
+            BlendFactor = Color.White;
+            ColorWriteChannels = ColorWriteChannels.All;
+            ColorWriteChannels1 = ColorWriteChannels.All;
+            ColorWriteChannels2 = ColorWriteChannels.All;
+            ColorWriteChannels3 = ColorWriteChannels.All;
+
             Name = name;
             ColorSourceBlend = sourceBlend;
             AlphaSourceBlend = sourceBlend;
@@ -219,9 +233,10 @@ namespace Gum
             AlphaDestinationBlend = destinationBlend;
             //_defaultStateObject = true;
         }
+        public void SomeFunction() { }
 
-
-
+        public BlendState Clone() =>
+            (BlendState)this.MemberwiseClone();
 
         public override string ToString() => Name;
     }
