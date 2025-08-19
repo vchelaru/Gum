@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -26,12 +27,12 @@ public class TextRuntime : InteractiveGue
     }
 
     // Shouldn't this be an XNA blend state?
-    public Gum.BlendState BlendState
+    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
     {
-        get => ContainedText.BlendState;
+        get => ContainedText.BlendState.ToXNA();
         set
         {
-            ContainedText.BlendState = value;
+            ContainedText.BlendState = value.ToGum();
             NotifyPropertyChanged();
             NotifyPropertyChanged(nameof(Blend));
         }
@@ -45,7 +46,7 @@ public class TextRuntime : InteractiveGue
         }
         set
         {
-            BlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(value);
+            BlendState = value.ToBlendState().ToXNA();
             // NotifyPropertyChanged handled by BlendState:
         }
     }
