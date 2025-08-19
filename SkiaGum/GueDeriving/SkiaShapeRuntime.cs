@@ -13,7 +13,7 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     #region Solid colors
 
-    public int Alpha
+    public new int Alpha
     {
         get => ContainedRenderable.Alpha;
         set => ContainedRenderable.Alpha = value;

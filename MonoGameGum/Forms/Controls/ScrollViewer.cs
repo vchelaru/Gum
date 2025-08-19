@@ -580,19 +580,13 @@ public class ScrollViewer :
         {
             return;
         }
-        verticalScrollBar.Minimum = 0;
-        verticalScrollBar.ViewportSize = clipContainer.GetAbsoluteHeight();
 
+        // Set the values here:
+        SetVerticalSrollBarValuesFromVisuals();
+
+        // Record the inner panel height before (possibly) changing the
+        // scroll bar height...
         var innerPanelHeight = innerPanel.GetAbsoluteHeight();
-        var clipContainerHeight = clipContainer.GetAbsoluteHeight();
-        var maxValue = innerPanelHeight - clipContainerHeight;
-
-        maxValue = System.Math.Max(0, maxValue);
-
-        verticalScrollBar.Maximum = maxValue;
-
-        // We now expose the SmallChange and LargeChange properties so that the user can set them
-        // We don't want to overwrite them here anymore...
 
         switch (verticalScrollBarVisibility)
         {
@@ -603,7 +597,10 @@ public class ScrollViewer :
                 verticalScrollBar.IsVisible = true;
                 break;
             case ScrollBarVisibility.Auto:
-                verticalScrollBar.IsVisible = innerPanelHeight > clipContainerHeight;
+                {
+                    var clipContainerHeight = clipContainer.GetAbsoluteHeight();
+                    verticalScrollBar.IsVisible = innerPanelHeight > clipContainerHeight;
+                }
                 break;
         }
 
@@ -616,6 +613,28 @@ public class ScrollViewer :
 
 
         Visual.SetProperty(category, state);
+
+        // now that we've set the visibility state, let's see if the height has changed
+        var didHeightChange = innerPanel.GetAbsoluteHeight() != innerPanelHeight;
+        if(didHeightChange)
+        {
+            // It changed, which can adjust the scroll bar height so let's adjust it again
+            SetVerticalSrollBarValuesFromVisuals();
+        }
+
+        void SetVerticalSrollBarValuesFromVisuals()
+        {
+            verticalScrollBar.Minimum = 0;
+            verticalScrollBar.ViewportSize = clipContainer.GetAbsoluteHeight();
+
+            var innerPanelHeight = innerPanel.GetAbsoluteHeight();
+            var clipContainerHeight = clipContainer.GetAbsoluteHeight();
+            var maxValue = innerPanelHeight - clipContainerHeight;
+
+            maxValue = System.Math.Max(0, maxValue);
+
+            verticalScrollBar.Maximum = maxValue;
+        }
     }
 
     public override void UpdateState()

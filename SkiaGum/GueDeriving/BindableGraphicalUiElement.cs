@@ -116,11 +116,11 @@ namespace SkiaGum.GueDeriving
 
         #region Events
 
-        Func<Task> clickedAsync;
+        Func<Task>? clickedAsync;
         /// <summary>
         /// Occurs when the user releases the cursor on this, whether this was initially the pushed element or not.
         /// </summary>
-        public Func<Task> ClickedAsync
+        public Func<Task>? ClickedAsync
         {
             get => clickedAsync;
             set
@@ -134,8 +134,8 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        Func<float, float, Task> pushedAsync;
-        public Func<float, float, Task> PushedAsync
+        Func<float, float, Task>? pushedAsync;
+        public Func<float, float, Task>? PushedAsync
         {
             get => pushedAsync;
             set
@@ -150,8 +150,8 @@ namespace SkiaGum.GueDeriving
         }
 
 
-        Func<float, float, Task> dragAsync;
-        public Func<float, float, Task> DragAsync
+        Func<float, float, Task>? dragAsync;
+        public Func<float, float, Task>? DragAsync
         {
             get => dragAsync;
             set
@@ -165,8 +165,8 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        Func<Task> dragOff;
-        public Func<Task> DragOff
+        Func<Task>? dragOff;
+        public Func<Task>? DragOff
         {
             get => dragOff;
             set
@@ -180,8 +180,8 @@ namespace SkiaGum.GueDeriving
             }
         }
 
-        Func<Task> releasedIfPushed;
-        public Func<Task> ReleasedIfPushed
+        Func<Task>? releasedIfPushed;
+        public Func<Task>? ReleasedIfPushed
         {
             get => releasedIfPushed;
             set

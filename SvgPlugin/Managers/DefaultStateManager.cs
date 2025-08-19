@@ -21,12 +21,12 @@ namespace SkiaPlugin.Managers
     {
         #region Fields/Properties
 
-        static StateSave arcState;
-        static StateSave canvasState;
-        static StateSave svgState;
-        static StateSave filledCircleState;
-        static StateSave roundedRectangleState;
-        static StateSave lottieAnimationState;
+        static StateSave? arcState;
+        static StateSave? canvasState;
+        static StateSave? svgState;
+        static StateSave? filledCircleState;
+        static StateSave? roundedRectangleState;
+        static StateSave? lottieAnimationState;
 
         #endregion
 

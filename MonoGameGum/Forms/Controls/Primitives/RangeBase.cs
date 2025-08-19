@@ -95,9 +95,12 @@ public abstract class RangeBase :
         set
         {
             var oldValue = maximum;
-            maximum = value;
+            if(value != oldValue)
+            {
+                maximum = value;
 
-            OnMaximumChanged(oldValue, maximum);
+                OnMaximumChanged(oldValue, maximum);
+            }
         }
     }
 
