@@ -19,6 +19,7 @@ using Gum.Undo;
 using Gum.Logic;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
 using Gum.Services.Dialogs;
+using Gum.ViewModels;
 using GumRuntime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,7 +53,8 @@ namespace Gum
         public MainWindow(MainPanelControl mainPanelControl,
             MenuStripManager menuStripManager,
             IMessenger messenger,
-            PeriodicUiTimer periodicUiTimer
+            PeriodicUiTimer periodicUiTimer,
+            MainWindowViewModel mainWindowViewModel
             )
         {
 #if DEBUG
@@ -62,6 +64,14 @@ namespace Gum
                 System.Diagnostics.SourceLevels.Critical;
 #endif
             messenger.RegisterAll(this);
+            mainWindowViewModel.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName is nameof(MainWindowViewModel.Title) &&
+                    s is MainWindowViewModel vm)
+                {
+                    Text = vm.Title;
+                }
+            };
             
             InitializeComponent();
 
@@ -84,7 +94,7 @@ namespace Gum
             // bah we have to do this before initializing all plugins because we need the menu strip to exist:
             this.Controls.Add(MainMenuStrip = menuStripManager.CreateMenuStrip());
 
-            PluginManager.Self.Initialize(this);
+            PluginManager.Self.Initialize();
 
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState =
