@@ -270,6 +270,7 @@
       * [ScrollViewer](code/monogame/gum-forms/controls/scrollviewer/README.md)
         * [MakeSizedToChildren](code/monogame/gum-forms/controls/scrollviewer/makesizedtochildren.md)
         * [VerticalScrollBarValue](code/monogame/gum-forms/controls/scrollviewer/verticalscrollbarvalue.md)
+        * [VerticalScrollBarVisibility](code/monogame/gum-forms/controls/scrollviewer/verticalscrollbarvisibility.md)
       * [StackPanel](code/monogame/gum-forms/controls/stackpanel.md)
       * [Slider](code/monogame/gum-forms/controls/slider.md)
       * [Splitter](code/monogame/gum-forms/controls/splitter.md)
