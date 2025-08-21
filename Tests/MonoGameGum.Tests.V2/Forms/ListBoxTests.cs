@@ -15,4 +15,11 @@ public class ListBoxTests
         listBox.Visual.ShouldNotBeNull();
         (listBox.Visual is Gum.Forms.DefaultVisuals.ListBoxVisual).ShouldBeTrue();
     }
+
+    [Fact]
+    public void ListBoxVisual_ShouldCreateListBoxForms()
+    {
+        var visual = new Gum.Forms.DefaultVisuals.ListBoxVisual();
+        visual.FormsControl.ShouldNotBeNull();
+    }
 }
