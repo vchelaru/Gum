@@ -103,22 +103,23 @@ public class FormsUtilities
 
 
 
-                TryAdd(typeof(Button), typeof(Gum.Forms.DefaultVisuals.ButtonVisual));
-                TryAdd(typeof(CheckBox), typeof(Gum.Forms.DefaultVisuals.CheckBoxVisual));
-                TryAdd(typeof(ComboBox), typeof(Gum.Forms.DefaultVisuals.ComboBoxVisual));
-                TryAdd(typeof(Label), typeof(Gum.Forms.DefaultVisuals.LabelVisual));
-                TryAdd(typeof(ListBox), typeof(Gum.Forms.DefaultVisuals.ListBoxVisual));
-                TryAdd(typeof(ListBoxItem), typeof(Gum.Forms.DefaultVisuals.ListBoxItemVisual));
-                TryAdd(typeof(Menu), typeof(Gum.Forms.DefaultVisuals.MenuVisual));
-                TryAdd(typeof(MenuItem), typeof(Gum.Forms.DefaultVisuals.MenuItemVisual));
-                TryAdd(typeof(PasswordBox), typeof(Gum.Forms.DefaultVisuals.PasswordBoxVisual));
-                TryAdd(typeof(RadioButton), typeof(Gum.Forms.DefaultVisuals.RadioButtonVisual));
-                TryAdd(typeof(ScrollBar), typeof(Gum.Forms.DefaultVisuals.ScrollBarVisual));
-                TryAdd(typeof(ScrollViewer), typeof(Gum.Forms.DefaultVisuals.ScrollViewerVisual));
-                TryAdd(typeof(TextBox), typeof(Gum.Forms.DefaultVisuals.TextBoxVisual));
-                TryAdd(typeof(Slider), typeof(Gum.Forms.DefaultVisuals.SliderVisual));
-                TryAdd(typeof(Splitter), typeof(Gum.Forms.DefaultVisuals.SplitterVisual));
-                TryAdd(typeof(Window), typeof(Gum.Forms.DefaultVisuals.WindowVisual));
+                TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
+                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.ItemsControlVisual));
+                TryAdd(typeof(Label), typeof(DefaultVisuals.LabelVisual));
+                TryAdd(typeof(ListBox), typeof(DefaultVisuals.ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.ListBoxItemVisual));
+                TryAdd(typeof(Menu), typeof(DefaultVisuals.MenuVisual));
+                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.MenuItemVisual));
+                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.PasswordBoxVisual));
+                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.RadioButtonVisual));
+                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.ScrollViewerVisual));
+                TryAdd(typeof(TextBox), typeof(DefaultVisuals.TextBoxVisual));
+                TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
+                TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
+                TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
 
                 break;
             default:
