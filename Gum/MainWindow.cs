@@ -44,83 +44,49 @@ namespace Gum
         #region Fields/Properties
 
         private readonly IGuiCommands _guiCommands;
-        
-
-        MainPanelControl mainPanelControl;
 
         #endregion
 
         public MainWindow(MainPanelControl mainPanelControl,
+            MainWindowViewModel mainWindowViewModel,
             MenuStripManager menuStripManager,
-            IMessenger messenger,
-            PeriodicUiTimer periodicUiTimer,
-            MainWindowViewModel mainWindowViewModel
+            IGuiCommands guiCommands,
+            IMessenger messenger
             )
         {
-#if DEBUG
-        // This suppresses annoying, useless output from WPF, as explained here:
-        http://weblogs.asp.net/akjoshi/resolving-un-harmful-binding-errors-in-wpf
-            System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
-                System.Diagnostics.SourceLevels.Critical;
-#endif
+            _guiCommands = guiCommands;
+            
             messenger.RegisterAll(this);
             mainWindowViewModel.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName is nameof(MainWindowViewModel.Title) &&
-                    s is MainWindowViewModel vm)
+                if (s is not MainWindowViewModel vm)
                 {
-                    Text = vm.Title;
+                    return;
+                }
+
+                switch (e.PropertyName)
+                {
+                    case nameof(MainWindowViewModel.Title):
+                        Text = vm.Title;
+                        break;
+                    case nameof(MainWindowViewModel.Bounds) when vm.Bounds is { } bounds:
+                        Bounds = bounds;
+                        break;
+                    case nameof(MainWindowViewModel.WindowState) when vm.WindowState is { } windowState:
+                        WindowState = windowState;
+                        break;
                 }
             };
             
             InitializeComponent();
-
+            
             AddMainPanelControl(mainPanelControl);
-
+            this.Controls.Add(MainMenuStrip = menuStripManager.CreateMenuStrip());
+            
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
-            
-            TypeManager.Self.Initialize();
-
-            // This has to happen before plugins are loaded since they may depend on settings...
-            ProjectManager.Self.LoadSettings();
-            
-            ElementTreeViewManager.Self.Initialize();
-
-            // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
-            // Is htere a way to move this to a plugin?
-            PropertyGridManager.Self.InitializeEarly();
-
-            // bah we have to do this before initializing all plugins because we need the menu strip to exist:
-            this.Controls.Add(MainMenuStrip = menuStripManager.CreateMenuStrip());
-
-            PluginManager.Self.Initialize();
-
-            StandardElementsManager.Self.Initialize();
-            StandardElementsManager.Self.CustomGetDefaultState =
-                PluginManager.Self.GetDefaultStateFor;
-
-            ElementSaveExtensions.VariableChangedThroughReference +=
-                Gum.Plugins.PluginManager.Self.VariableSet;
-
-
-            StandardElementsManagerGumTool.Self.Initialize();
-
-            VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
-
-
-            // ProjectManager.Initialize used to happen here, but I 
-            // moved it down to the Load event for MainWindow because
-            // ProjectManager.Initialize may load a project, and if it
-            // does, then we need to make sure that the wireframe controls
-            // are set up properly before that happens.
-            
-            WireframeObjectManager.Self.Initialize();
-
-            PluginManager.Self.XnaInitialized();
-
-            periodicUiTimer.Tick += HandleFileWatchTimer;
-            periodicUiTimer.Start(TimeSpan.FromSeconds(2));
+            this.Load += (_, _) => mainWindowViewModel.LoadWindowSettings();
+            this.FormClosed += (_, _) => mainWindowViewModel.SaveWindowSettings(Bounds, WindowState);
         }
         
         private void AddMainPanelControl(MainPanelControl mainPanelControl)
@@ -134,9 +100,8 @@ namespace Gum
 
         private void HandleKeyDown(object sender, KeyEventArgs args)
         {
-            if (args.KeyCode == Keys.F
-                 && (args.Modifiers & Keys.Control) == Keys.Control
-                )
+            if (args.KeyCode == Keys.F && 
+                (args.Modifiers & Keys.Control) == Keys.Control)
             {
                 _guiCommands.FocusSearch();
                 args.Handled = true;
@@ -144,52 +109,11 @@ namespace Gum
             }
         }
 
-        private void HandleFileWatchTimer()
-        {
-            var gumProject = ProjectState.Self.GumProjectSave;
-            if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
-            {
-                FileWatchManager.Self.Flush();
-            }
-        }
-
-        private async void MainWindow_Load(object sender, EventArgs e)
-        {
-            await ProjectManager.Self.Initialize();
-
-            if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
-            {
-                var settings = ProjectManager.Self.GeneralSettingsFile;
-
-                // Apply the window position and size settings only if a large enough portion of the
-                // window would end up on the screen.
-                var workingArea = Screen.GetWorkingArea(settings.MainWindowBounds);
-                var intersection = Rectangle.Intersect(settings.MainWindowBounds, workingArea);
-                if (intersection.Width > 100 && intersection.Height > 100)
-                {
-                    DesktopBounds = settings.MainWindowBounds;
-                    WindowState = settings.MainWindowState;
-                }
-            }
-            else
-            {
-                Close();
-            }
-        }
-
-        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            var settings = ProjectManager.Self.GeneralSettingsFile;
-
-            settings.MainWindowBounds = DesktopBounds;
-            settings.MainWindowState = WindowState;
-
-            settings.Save();
-        }
-
         void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message)
         {
             Close();
         }
     }
+    
+    public record CloseMainWindowMessage;
 }
