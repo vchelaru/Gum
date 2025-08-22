@@ -113,6 +113,7 @@
     * [Text Overflow Vertical Mode](gum-tool/gum-elements/text/text-overflow-vertical-mode.md)
     * [Use Custom Font](gum-tool/gum-elements/text/use-custom-font.md)
     * [Use Font Smoothing](gum-tool/gum-elements/text/use-font-smoothing.md)
+    * [Wrapping](gum-tool/gum-elements/text/wrapping.md)
 * [Project Tab](gum-tool/project-tab.md)
 * [Code Tab](gum-tool/code-tab/README.md)
   * [Runtime Generation Details](gum-tool/code-tab/runtime-generation-details.md)
