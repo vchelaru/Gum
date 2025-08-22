@@ -80,9 +80,9 @@ namespace Gum
             
             InitializeComponent();
             
-            this.Controls.Add(menuStripManager.CreateMenuStrip());
             AddMainPanelControl(mainPanelControl);
-
+            this.Controls.Add(MainMenuStrip = menuStripManager.CreateMenuStrip());
+            
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
             this.Load += (_, _) => mainWindowViewModel.LoadWindowSettings();
