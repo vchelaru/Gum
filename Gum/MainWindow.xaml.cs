@@ -43,7 +43,8 @@ public partial class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         MainWindowViewModel mainWindowViewModel,
         MenuStripManager menuStripManager,
         IGuiCommands guiCommands,
-        IMessenger messenger
+        IMessenger messenger,
+        HotkeyManager hotkeyManager
         )
     {
         DataContext = mainWindowViewModel;
@@ -53,21 +54,11 @@ public partial class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         
         InitializeComponent();
         this.WinformsMenuHost.Child = menuStripManager.CreateMenuStrip();
-        
-        this.PreviewKeyDown += HandleKeyDown;
+
+        this.PreviewKeyDown += (_,e) => hotkeyManager.PreviewKeyDownAppWide(e);
         this.Loaded += (_, _) => mainWindowViewModel.LoadWindowSettings();
         this.Closed += (_, _) => mainWindowViewModel.SaveWindowSettings();
         this.Background = SystemColors.ControlBrush;
-    }
-
-    private void HandleKeyDown(object sender, KeyEventArgs args)
-    {
-        if (args.Key == Key.F && 
-            Keyboard.Modifiers == ModifierKeys.Control)
-        {
-            _guiCommands.FocusSearch();
-            args.Handled = true;
-        }
     }
 
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message)

@@ -43,18 +43,9 @@ public partial class MainPanelControl : UserControl
     
     bool isHidden;
     
-    private HotkeyManager _hotkeyManager { get; }
     public MainPanelControl()
     {
         InitializeComponent();
-
-        _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
-        this.KeyDown += HandleKeyDown;
-    }
-
-    private void HandleKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        _hotkeyManager.HandleKeyDownAppWide(e);
     }
     
     private void HideTools()
