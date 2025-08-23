@@ -73,6 +73,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<EditCommands>();
+        services.AddSingleton<VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<ProjectCommands>();

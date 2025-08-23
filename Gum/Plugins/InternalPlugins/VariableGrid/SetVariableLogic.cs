@@ -38,6 +38,7 @@ namespace Gum.PropertyGridHelpers
         private readonly IUndoManager _undoManager;
         private readonly WireframeCommands _wireframeCommands;
         private readonly IGuiCommands _guiCommands;
+        private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
         public SetVariableLogic(ISelectedState selectedState, 
             INameVerifier nameVerifier, 
@@ -49,7 +50,8 @@ namespace Gum.PropertyGridHelpers
             IGuiCommands guiCommands,
             FontManager fontManager,
             IFileCommands fileCommands,
-            CircularReferenceManager circularReferenceManager)
+            CircularReferenceManager circularReferenceManager,
+            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
         {
             _selectedState = selectedState;
             _nameVerifier = nameVerifier;
@@ -62,6 +64,7 @@ namespace Gum.PropertyGridHelpers
             _fontManager = fontManager;
             _fileCommands = fileCommands;
             _circularReferenceManager = circularReferenceManager;
+            _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         }
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -149,7 +152,7 @@ namespace Gum.PropertyGridHelpers
 
                     _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, stateSave, qualifiedName, trySave);
 
-                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName, parentElement,
+                    _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
                         // This code used to not specify the category, so it defaulted to the selected category.
                         // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
                         // serach for the owner category of the state?

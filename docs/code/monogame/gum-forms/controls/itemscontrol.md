@@ -8,6 +8,8 @@
 ItemsControl is similar to ListBox, but it is more general since it does not support selection. When items are added to the Items property the ItemsControl does not create a control which inherits from ListBoxItem. Similarly, its VisualTemplate does not need to be a type which supports a ListBoxItem.
 {% endhint %}
 
+ItemsControl inherits from ScrollViewer. For more information about inherited proerties, see the [ScrollViewer](scrollviewer/) page.
+
 ## Code Example: Adding to Items Property
 
 If an object is added to the `Items` property then the `ItemsControl` creates a view to represent this. By default this is a `Label` instance, but it can be customized through the `VisualTemplate` property.
