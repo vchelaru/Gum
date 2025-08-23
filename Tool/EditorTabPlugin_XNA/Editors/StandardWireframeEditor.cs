@@ -47,6 +47,7 @@ public class StandardWireframeEditor : WireframeEditor
     bool mHasGrabbed = false;
     private readonly IElementCommands _elementCommands;
     private readonly SelectionManager _selectionManager;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public InputLibrary.Cursor Cursor
     {
@@ -79,7 +80,8 @@ public class StandardWireframeEditor : WireframeEditor
         Color textColor, 
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
         : base(
               hotkeyManager, 
               selectionManager,
@@ -87,6 +89,7 @@ public class StandardWireframeEditor : WireframeEditor
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _selectionManager = selectionManager;
+        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
 
         mResizeHandles = new ResizeHandles(layer, lineColor);
         mResizeHandles.ShowOrigin = true;
@@ -287,7 +290,7 @@ public class StandardWireframeEditor : WireframeEditor
             _selectedState.SelectedStateSave.SetValue(nameWithInstance, rotationValueDegrees - parentRotation, 
                 _selectedState.SelectedInstance, "float");
 
-            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
                 _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
             _guiCommands.RefreshVariableValues();

@@ -1,24 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using RenderingLibrary.Math.Geometry;
-using Gum.ToolStates;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
+﻿using Gum.DataTypes;
 using Gum.Input;
-using Gum.DataTypes;
-using System.Windows.Forms;
-using WinCursor = System.Windows.Forms.Cursor;
-using System.Runtime.InteropServices;
-using Gum.Undo;
-using Gum.Wireframe.Editors;
-using Color = System.Drawing.Color;
-using Matrix = System.Numerics.Matrix4x4;
-using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using System.Security.RightsManagement;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using Gum.Undo;
+using Gum.Wireframe.Editors;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
+using RenderingLibrary.Math.Geometry;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.RightsManagement;
+using System.Windows.Forms;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
+using WinCursor = System.Windows.Forms.Cursor;
 
 namespace Gum.Wireframe;
 
@@ -77,6 +78,7 @@ public class SelectionManager
     private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public bool IsOverBody
     {
@@ -191,13 +193,15 @@ public class SelectionManager
         IUndoManager undoManager, 
         EditingManager editingManager, 
         IDialogService dialogService,
-        HotkeyManager hotkeyManager)
+        HotkeyManager hotkeyManager,
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
         _undoManager = undoManager;
         _dialogService = dialogService;
         _hotkeyManager = hotkeyManager;
+        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
     }
 
     public void Initialize(LayerService layerService)
@@ -664,7 +668,8 @@ public class SelectionManager
                         lineColor, textColor, 
                         _hotkeyManager,
                         this,
-                        _selectedState);
+                        _selectedState,
+                        _variableInCategoryPropagationLogic);
                 }
             }
         }
