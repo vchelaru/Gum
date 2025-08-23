@@ -90,6 +90,10 @@ public class ProjectCommands
 
         if(removed)
         {
+            if(_selectedState.SelectedElements.Contains(element))
+            {
+                _selectedState.SelectedElement = null;
+            }
             Plugins.PluginManager.Self.ElementDelete(element);
             _fileCommands.TryAutoSaveProject();
         }

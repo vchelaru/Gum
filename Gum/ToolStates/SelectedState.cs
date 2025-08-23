@@ -341,6 +341,7 @@ public class SelectedState : ISelectedState
     private void HandleSelectedInstances(List<InstanceSave> value)
     {
         var instancesBefore = snapshot.SelectedInstances.ToList();
+        var elementBefore = snapshot.SelectedElement;
 
         var newInstance = value?.FirstOrDefault();
 
@@ -351,7 +352,12 @@ public class SelectedState : ISelectedState
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(newInstance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(newInstance);
 
-            snapshot.SelectedElement = elementAfter;
+            if(elementAfter != elementBefore)
+            {
+
+                snapshot.SelectedElement = elementAfter;
+            }
+
             snapshot.SelectedBehavior = behaviorAfter;
 
             snapshot.SelectedBehaviorReference = null;
@@ -366,7 +372,7 @@ public class SelectedState : ISelectedState
 
         UpdateToSelectedInstances(value);
 
-        ElementSave element = null;
+        ElementSave? element = null;
 
         if (newInstance != null)
         {
@@ -380,11 +386,12 @@ public class SelectedState : ISelectedState
             if(newInstance == null)
             {
                 // If we forcefully set null instances, let's forcefully select the current element or behavior:
-                if(SelectedElement != null)
+                if(SelectedElement != null || elementBefore != null)
                 {
                     PluginManager.Self.ElementSelected(SelectedElement);
                 }
-                else if(SelectedBehavior != null)
+
+                if(SelectedBehavior != null)
                 {
                     PluginManager.Self.BehaviorSelected(SelectedBehavior);
                 }
@@ -439,7 +446,9 @@ public class SelectedState : ISelectedState
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
 
-            ProjectVerifier.Self.AssertIsPartOfProject(parent);
+            // It's okay if the parent isn't part of the project, we could have deleted the entire component and instance
+            // through the top level menu, which would mean the parent is no longer here:
+            //ProjectVerifier.Self.AssertIsPartOfProject(parent);
 
             if (elementAfter != null || behaviorAfter != null)
             {
