@@ -11,7 +11,7 @@ public class UiSettingsService : ViewModel, IUiSettingsService
     public UiSettingsService(IMessenger messenger)
     {
         Messenger = messenger;
-        Scale = 1;
+        SetWithoutNotifying((double)1, nameof(Scale));
     }
 
     private const double _minScale = 0.7;

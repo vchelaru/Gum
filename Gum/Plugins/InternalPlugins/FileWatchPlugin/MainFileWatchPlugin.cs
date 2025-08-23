@@ -18,7 +18,7 @@ public class MainFileWatchPlugin : InternalPlugin
 {
     #region Fields/Properties
 
-    System.Timers.Timer refreshDisplayTimer;
+    PeriodicUiTimer refreshDisplayTimer;
 
     FileWatchViewModel viewModel;
 
@@ -26,7 +26,6 @@ public class MainFileWatchPlugin : InternalPlugin
     System.Windows.Forms.ToolStripMenuItem showFileWatchMenuItem;
     private FileWatchManager _fileWatchManager;
     private FileWatchLogic _fileWatchLogic;
-    private IDispatcher _dispatcher;
 
     #endregion
 
@@ -39,7 +38,6 @@ public class MainFileWatchPlugin : InternalPlugin
 
         _fileWatchManager = FileWatchManager.Self;
         _fileWatchLogic = FileWatchLogic.Self;
-        _dispatcher = Locator.GetRequiredService<IDispatcher>();
 
         pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();
@@ -52,9 +50,9 @@ public class MainFileWatchPlugin : InternalPlugin
         showFileWatchMenuItem.Click += HandleShowFileWatch;
 
         const int millisecondsTimerFrequency = 200;
-        refreshDisplayTimer = new System.Timers.Timer(millisecondsTimerFrequency);
-        refreshDisplayTimer.Elapsed += HandleRefreshDisplayTimerElapsed;
-        refreshDisplayTimer.Start();
+        refreshDisplayTimer = Locator.GetRequiredService<PeriodicUiTimer>();
+        refreshDisplayTimer.Tick += HandleRefreshDisplayTimerElapsed;
+        refreshDisplayTimer.Start(TimeSpan.FromMilliseconds(millisecondsTimerFrequency));
 
         AssignEvents();
     }
@@ -68,20 +66,20 @@ public class MainFileWatchPlugin : InternalPlugin
 
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
     {
-        if(element== null) 
+        if (element == null)
         {
             return;
         }
 
         var fullVariableName = variableName;
-        if(instance != null)
+        if (instance != null)
         {
             fullVariableName = instance.Name + "." + variableName;
         }
 
         var rootVarible = ObjectFinder.Self.GetRootVariable(fullVariableName, element);
 
-        if(rootVarible?.IsFile == true)
+        if (rootVarible?.IsFile == true)
         {
             // need to update the file paths
             _fileWatchLogic.RefreshRootDirectory();
@@ -95,7 +93,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
     private void HandleProjectLoad(GumProjectSave save)
     {
-        if(save.FullFileName == null)
+        if (save.FullFileName == null)
         {
             _fileWatchLogic.HandleProjectUnloaded();
         }
@@ -120,80 +118,77 @@ public class MainFileWatchPlugin : InternalPlugin
         pluginTab.IsVisible = !pluginTab.IsVisible;
     }
 
-    private void HandleRefreshDisplayTimerElapsed(object sender, ElapsedEventArgs e)
+    private void HandleRefreshDisplayTimerElapsed()
     {
-        _dispatcher.Invoke(() =>
+        if (_fileWatchManager.CurrentFilePathWatching == null)
         {
-            if(_fileWatchManager.CurrentFilePathWatching == null)
+            return;
+        }
+
+        string filePathsWatchingText = "";
+
+        if (_fileWatchManager.Enabled)
+        {
+            filePathsWatchingText = $"File path watching ({_fileWatchManager.CurrentFilePathWatching}):";
+
+            viewModel.WatchFolderInformation = filePathsWatchingText;
+        }
+        else
+        {
+            viewModel.WatchFolderInformation = "File watching is disabled";
+        }
+
+        viewModel.NumberOfFilesToFlush = _fileWatchManager.ChangedFilesWaitingForFlush.Count.ToString();
+
+        if (_fileWatchManager.TimeToNextFlush.TotalSeconds <= 0)
+        {
+            viewModel.TimeToNextFlush = "Waiting for file change";
+        }
+        else
+        {
+            viewModel.TimeToNextFlush = "File flush in: " + ToTimeString(_fileWatchManager.TimeToNextFlush);
+        }
+
+        const int maxOfFilesToShow = 15;
+
+        try
+        {
+            var filesToDisplay = _fileWatchManager.ChangedFilesWaitingForFlush.Take(maxOfFilesToShow).ToArray();
+
+            string nextFilesInfo = string.Empty;
+
+            if (filesToDisplay.Length > 0)
             {
-                return;
+                nextFilesInfo += "Next files to flush:\n";
             }
 
-            string filePathsWatchingText = "";
-            
-            if(_fileWatchManager.Enabled)
+            foreach (var item in filesToDisplay)
             {
-                filePathsWatchingText = $"File path watching ({_fileWatchManager.CurrentFilePathWatching}):";
-
-                viewModel.WatchFolderInformation = filePathsWatchingText;
+                nextFilesInfo += item.FullPath + "\n";
             }
-            else
+            viewModel.NextFilesToFlush = nextFilesInfo;
+
+
+            viewModel.IgnoredFilesInformation = string.Empty;
+            var now = DateTime.Now;
+            var activeIgnores = _fileWatchManager.TimedChangesToIgnore.Where(item => item.Value > now).ToArray();
+            if (activeIgnores.Length > 0)
             {
-                viewModel.WatchFolderInformation = "File watching is disabled";
-            }
+                viewModel.IgnoredFilesInformation += $"Ignoring {activeIgnores.Length} files:\n";
 
-            viewModel.NumberOfFilesToFlush = _fileWatchManager.ChangedFilesWaitingForFlush.Count.ToString();
-
-            if (_fileWatchManager.TimeToNextFlush.TotalSeconds <= 0)
-            {
-                viewModel.TimeToNextFlush = "Waiting for file change";
-            }
-            else
-            {
-                viewModel.TimeToNextFlush = "File flush in: " + ToTimeString(_fileWatchManager.TimeToNextFlush);
-            }
-
-            const int maxOfFilesToShow = 15;
-
-            try
-            {
-                var filesToDisplay = _fileWatchManager.ChangedFilesWaitingForFlush.Take(maxOfFilesToShow).ToArray();
-
-                string nextFilesInfo = string.Empty;
-
-                if(filesToDisplay.Length > 0)
+                foreach (var kvp in activeIgnores)
                 {
-                    nextFilesInfo += "Next files to flush:\n";
+                    var timeSpan = kvp.Value - now;
+                    viewModel.IgnoredFilesInformation += $"{kvp.Key.FullPath} - Ignored for {ToTimeString(timeSpan)}\n";
                 }
-
-                foreach(var item in filesToDisplay)
-                {
-                    nextFilesInfo += item.FullPath + "\n";
-                }
-                viewModel.NextFilesToFlush = nextFilesInfo;
-
-
-                viewModel.IgnoredFilesInformation = string.Empty;
-                var now = DateTime.Now;
-                var activeIgnores = _fileWatchManager.TimedChangesToIgnore.Where(item => item.Value > now).ToArray();
-                if (activeIgnores.Length > 0)
-                {
-                    viewModel.IgnoredFilesInformation += $"Ignoring {activeIgnores.Length} files:\n";
-
-                    foreach(var kvp in activeIgnores)
-                    {
-                        var timeSpan = kvp.Value - now;
-                        viewModel.IgnoredFilesInformation += $"{kvp.Key.FullPath} - Ignored for {ToTimeString(timeSpan)}\n";
-                    }
-                }
-
-
             }
-            catch
-            {
-                // This can happen if there's a file that changes right when this happens. no biggie, we'll get it next time....
-            }
-        });
+
+
+        }
+        catch
+        {
+            // This can happen if there's a file that changes right when this happens. no biggie, we'll get it next time....
+        }
     }
 
     string ToTimeString(TimeSpan timeSpan)

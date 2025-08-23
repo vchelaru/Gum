@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Gum.Services;
 
 namespace Gum.Controls;
 
@@ -40,21 +41,11 @@ public partial class MainPanelControl : UserControl
 
     GridLength splitterLength;
     
-    private readonly HotkeyManager _hotkeyManager;
-    
     bool isHidden;
-    public MainPanelControl(MainPanelViewModel viewModel, HotkeyManager hotkeyManager)
+    
+    public MainPanelControl()
     {
         InitializeComponent();
-        DataContext = viewModel;
-        SetBinding(IsToolsVisibleProperty, new Binding(nameof(viewModel.IsToolsVisible)));
-        _hotkeyManager = hotkeyManager;
-        this.KeyDown += HandleKeyDown;
-    }
-
-    private void HandleKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        _hotkeyManager.HandleKeyDownAppWide(e);
     }
     
     private void HideTools()

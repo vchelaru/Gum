@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,13 +15,10 @@ public interface IDialogService
 
 internal class DialogService : IDialogService
 {
-    private readonly IMainWindowHandleProvider _handleProvider;
     private readonly IServiceProvider _serviceProvider;
     
-    public DialogService(IMainWindowHandleProvider mainWindowHandleProvider,
-        IServiceProvider serviceProvider)
+    public DialogService(IServiceProvider serviceProvider)
     {
-        _handleProvider = mainWindowHandleProvider;
         _serviceProvider = serviceProvider;
     }
     
@@ -57,14 +55,12 @@ internal class DialogService : IDialogService
 
     private DialogWindow CreateDialogWindow(DialogViewModel dialogViewModel)
     {
-        DialogWindow window = new() { DataContext = dialogViewModel };
-        
-        // this lets wpf center the new window on the winforms window
-        _ = new WindowInteropHelper(window)
+        DialogWindow window = new()
         {
-            Owner = _handleProvider.MainWindowHandle
+            DataContext = dialogViewModel, 
+            Owner = Application.Current.MainWindow,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
-
         
         return window;
     }

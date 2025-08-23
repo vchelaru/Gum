@@ -2132,8 +2132,6 @@ public partial class ElementTreeViewManager
                     searchTextBox.Text = null;
                 }
             }
-
-            _hotkeyManager.HandleKeyDownAppWide(args);
         };
 
         grid.Children.Add(searchTextBox);
