@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.VariableGrid;
 using Gum.PropertyGridHelpers;
+using Gum.Services;
 using System.Collections.Generic;
 using System.Linq;
 using WpfDataUi.DataTypes;
@@ -13,6 +14,10 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
     {
         public static void DisplayMembersForCategoryInElement(InstanceSave instance, List<MemberCategory> categories, StateSaveCategory stateCategory)
         {
+            // todo - inject this 
+            var _variableInCategoryPropagationLogic = 
+                Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+
             categories.Clear();
 
             List<string> commonMembers = new List<string>();
@@ -57,7 +62,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
                     instanceMember.CustomGetEvent += (member) => commonMember;
                     instanceMember.CustomSetEvent += (not, used) =>
                     {
-                        VariableInCategoryPropagationLogic.Self
+                        _variableInCategoryPropagationLogic
                             .AskRemoveVariableFromAllStatesInCategory(commonMember, stateCategory);
                     };
 

@@ -26,14 +26,19 @@ namespace Gum.ToolCommands
         private readonly ISelectedState _selectedState;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
+        private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
         #endregion
 
-        public ElementCommands(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands)
+        public ElementCommands(ISelectedState selectedState, 
+            IGuiCommands guiCommands, 
+            IFileCommands fileCommands,
+            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
         {
             _selectedState = selectedState;
             _guiCommands = guiCommands;
             _fileCommands = fileCommands;
+            _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         }
 
         #region Instance
@@ -167,7 +172,7 @@ namespace Gum.ToolCommands
             {
                 foreach (var variable in otherState.Variables)
                 {
-                    VariableInCategoryPropagationLogic.Self
+                    _variableInCategoryPropagationLogic
                         .PropagateVariablesInCategory(variable.Name, elementSave, category);
                 }
             }
@@ -407,7 +412,7 @@ namespace Gum.ToolCommands
 
                 WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
+                _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
                     _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
 
@@ -439,7 +444,7 @@ namespace Gum.ToolCommands
             var ipso = WireframeObjectManager.Self.GetRepresentation(elementSave);
             ipso.SetProperty(baseVariableName, newValue);
 
-            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(baseVariableName,
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(baseVariableName,
                 elementSave,
                 _selectedState.SelectedStateCategorySave);
 

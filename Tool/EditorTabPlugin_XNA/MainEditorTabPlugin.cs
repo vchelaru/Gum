@@ -115,6 +115,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private LayerService _layerService;
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     #endregion
 
@@ -126,10 +127,19 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
+        _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
         HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
-        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager, dialogService, hotkeyManager);
+        _selectionManager = new SelectionManager(
+            _selectedState, 
+            undoManager, 
+            _editingManager, 
+            dialogService, 
+            hotkeyManager,
+            _variableInCategoryPropagationLogic);
+
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();

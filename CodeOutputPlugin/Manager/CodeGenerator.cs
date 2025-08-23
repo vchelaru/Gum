@@ -3881,7 +3881,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, null, null, codeOutputProjectSettings);
     }
 
-    private static string? VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeOutputProjectSettings settings)
+    private static string? VariableValueToGumCode(object value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeOutputProjectSettings settings)
     {
         if (value is float asFloat)
         {
@@ -4210,7 +4210,7 @@ public class CodeGenerator
 
                         stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
                         stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
-                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {ToCSharpName(context.Instance.Name)};");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {ToCSharpName(contextInstance.Name)};");
                         stringBuilder.AppendLine($"{tabs}{ToCSharpName(parentInstance.Name)}.{tabItemsProperty}.Add(tabItem);");
                         tabs = tabs.Substring(4);
                         stringBuilder.AppendLine($"{tabs}}}");
@@ -4218,11 +4218,11 @@ public class CodeGenerator
                     }
                     else if (hasContent)
                     {
-                        return $"{standardizedParentName}.Content = {ToCSharpName(context.Instance.Name)};";
+                        return $"{standardizedParentName}.Content = {ToCSharpName(contextInstance.Name)};";
                     }
                     else
                     {
-                        return $"{standardizedParentName}.Children.Add({ToCSharpName(context.Instance.Name)});";
+                        return $"{standardizedParentName}.Children.Add({ToCSharpName(contextInstance.Name)});";
                     }
                 }
 
@@ -4572,12 +4572,12 @@ public class CodeGenerator
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                return $"{owner}.AddChild({ToCSharpName(context.Instance.Name)});";
+                return $"{owner}.AddChild({ToCSharpName(instance.Name)});";
 
             }
             else
             {
-                return $"{owner}.Children.Add({ToCSharpName(context.Instance.Name)});";
+                return $"{owner}.Children.Add({ToCSharpName(instance.Name)});";
             }
         }
         #endregion

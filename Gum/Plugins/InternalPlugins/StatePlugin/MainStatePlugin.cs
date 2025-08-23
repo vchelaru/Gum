@@ -36,9 +36,10 @@ public class MainStatePlugin : InternalPlugin
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
     private readonly ObjectFinder _objectFinder;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     #endregion
-    
+
     #region Initialize
 
     public MainStatePlugin()
@@ -50,6 +51,7 @@ public class MainStatePlugin : InternalPlugin
         _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, elementCommands, editCommands, dialogService, _guiCommands, _fileCommands);
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _objectFinder = ObjectFinder.Self;
+        _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
     }
 
     public override void StartUp()
@@ -233,7 +235,7 @@ public class MainStatePlugin : InternalPlugin
     {
         foreach (var variable in currentState.Variables)
         {
-            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
                 _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
         }
     }
