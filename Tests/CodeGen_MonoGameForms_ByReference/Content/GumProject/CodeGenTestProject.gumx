@@ -25,6 +25,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
   <ScreenReference>
+    <Name>GameScreenHud</Name>
+    <ElementType>Screen</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ScreenReference>
+  <ScreenReference>
     <Name>Spaced Screen</Name>
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
