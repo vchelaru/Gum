@@ -9,6 +9,7 @@ using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Management.Instrumentation;
 using System.Reflection;
 using System.Threading;
@@ -73,46 +74,29 @@ public class FontManager
 
     public async Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false)
     {
+        var elements = project.AllElements;
+
+        await GenerateMissingFontsFor(project, elements, forceRecreate);
+
+    }
+
+    /// <summary>
+    /// Creates all fonts referenced by the argument element. Fonts are created if they do not exist, or if
+    /// forceRecreate is true.
+    /// </summary>
+    /// <param name="project">The Gum project</param>
+    /// <param name="elements">The elements that shoud have their fonts created.</param>
+    /// <param name="forceRecreate">If true, fonts are created even if they are already on disk.</param>
+    /// <returns>An awaitable task</returns>
+    private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements, bool forceRecreate)
+    {
         var fontRanges = project.FontRanges;
         var spacingHorizontal = project.FontSpacingHorizontal;
         var spacingVertical = project.FontSpacingVertical;
 
-
         Dictionary<string, BmfcSave> bitmapFonts = new Dictionary<string, BmfcSave>();
 
-        foreach (var element in project.StandardElements)
-        {
-            foreach(var state in element.AllStates)
-            {
-                BmfcSave? bmfcSave = TryGetBmfcSaveFor(null, state, fontRanges, spacingHorizontal, spacingVertical, forcedValues:null);
-
-                if(bmfcSave != null)
-                {
-                    bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
-                }    
-                // standard elements don't have instances
-            }
-        }
-        foreach (var element in project.Components)
-        {
-            foreach (var state in element.AllStates)
-            {
-                BmfcSave? bmfcSave = TryGetBmfcSaveFor(null, state, fontRanges, spacingHorizontal, spacingVertical, forcedValues: null);
-                if (bmfcSave != null)
-                {
-                    bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
-                }
-                foreach (var instance in element.Instances)
-                {
-                    BmfcSave? bmfcSaveInner = TryGetBmfcSaveFor(instance, state, fontRanges, spacingHorizontal, spacingVertical, forcedValues: null);
-                    if(bmfcSaveInner != null)
-                    {
-                        bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
-                    }
-                }
-            }
-        }
-        foreach(var element in project.Screens)
+        foreach (var element in elements)
         {
             foreach (var state in element.AllStates)
             {
@@ -145,19 +129,12 @@ public class FontManager
 
         var window = _guiCommands.ShowSpinner();
 
-        // Vic says 
-        // Parallel.ForEach was used here to attept to speed up
-        // font creation. However, doing this either makes the font
-        // creation the same speed, or even slower. I have no idea why
-        // I'm leaing this comment here and maybe someone else can help
-        // solve this issue.
-
         var parallelOptions = new ParallelOptions();
         parallelOptions.MaxDegreeOfParallelism = 16;
 
         List<Task> tasks = new List<Task>();
 
-        if(bitmapFonts.Count > 0)
+        if (bitmapFonts.Count > 0)
         {
             var assembly = GetType().Assembly;
 
@@ -170,7 +147,7 @@ public class FontManager
 
             System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
 
-            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner:false, createTask:true));
+            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true));
 
         }
 
@@ -180,11 +157,10 @@ public class FontManager
 
         var end = DateTime.Now;
         var time = end - start;
-        if(bitmapFonts.Count > 0)
+        if (bitmapFonts.Count > 0)
         {
             _guiCommands.PrintOutput($"Created {countCreated} font files(s) in {time.TotalSeconds} seconds");
         }
-
     }
 
     internal void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject, StateSave stateSave, StateSave forcedValues)
@@ -209,6 +185,15 @@ public class FontManager
                 // don't create a task, so that the function does not continue
                 // until the font is recreated.
                 createTask:false);
+        }
+
+        var container = stateSave.ParentContainer;
+
+        if(container != null)
+        {
+            var references = ObjectFinder.Self.GetElementsReferencingRecursively(container);
+
+            _=GenerateMissingFontsFor(gumProject, references, false);
         }
     }
 
