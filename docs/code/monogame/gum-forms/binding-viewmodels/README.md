@@ -266,7 +266,9 @@ partial class GameScreenHud
         set
         {
             var textInstance = HealthLabel.GetVisual<TextRuntime>();
-            textInstance.Color = value ? Microsoft.Xna.Framework.Color.Red : Microsoft.Xna.Framework.Color.White;
+            textInstance.Color = value 
+                ? Microsoft.Xna.Framework.Color.Red 
+                : Microsoft.Xna.Framework.Color.White;
         }
     }
 
