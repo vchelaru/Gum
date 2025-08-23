@@ -655,10 +655,7 @@ namespace Gum.PropertyGridHelpers
             MultiButtonMessageBox mbmb = new
                 MultiButtonMessageBox();
 
-            mbmb.StartPosition = FormStartPosition.Manual;
-
-            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
-                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+            mbmb.StartPosition = FormStartPosition.CenterParent;
 
             mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
             mbmb.AddButton("Reference the file in its current location", DialogResult.OK);

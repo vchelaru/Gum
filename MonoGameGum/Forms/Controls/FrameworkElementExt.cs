@@ -22,7 +22,6 @@ namespace Gum.Forms.Controls;
 #if MONOGAME
 
 using Microsoft.Xna.Framework;
-using MonoGameGum.GueDeriving;
 
 #endif
 

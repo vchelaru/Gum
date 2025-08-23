@@ -15,4 +15,11 @@ public class ScrollViewerTests
         scrollViewer.Visual.ShouldNotBeNull();
         (scrollViewer.Visual is Gum.Forms.DefaultVisuals.ScrollViewerVisual).ShouldBeTrue();
     }
+
+    [Fact]
+    public void ScrollViewerVisual_ShouldCreateScrollViewerForms()
+    {
+        var visual = new Gum.Forms.DefaultVisuals.ScrollViewerVisual();
+        visual.FormsControl.ShouldNotBeNull();
+    }
 }

@@ -1,18 +1,14 @@
 ﻿using System;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
+using Gum.Services;
+using Gum.ViewModels;
 
 namespace Gum.Gui.Plugins
 {
     [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
     public class MainWindowPlugin : PluginBase
     {
-        public MainWindow MainWindow
-        {
-            get;
-            set;
-        }
-
         public override string FriendlyName
         {
             get
@@ -37,15 +33,17 @@ namespace Gum.Gui.Plugins
 
         void OnProjectLoad(DataTypes.GumProjectSave obj)
         {
+            MainWindowViewModel vm = Locator.GetRequiredService<MainWindowViewModel>();
+            
             if (obj != null && !string.IsNullOrEmpty(obj.FullFileName))
             {
                 string fileName = obj.FullFileName;
 
-                MainWindow.Text = "Gum: " + fileName;
+                vm.Title = "Gum: " + fileName;
             }
             else
             {
-                MainWindow.Text = "Gum";
+                vm.Title = "Gum";
             }
         }
 

@@ -762,10 +762,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
 
             MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.Manual;
-
-            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
-                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+            mbmb.StartPosition = FormStartPosition.CenterParent;
 
             mbmb.MessageText = "What do you want to do with the file " + fileName;
 
@@ -819,10 +816,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
 
             MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.Manual;
-
-            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
-                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+            mbmb.StartPosition = FormStartPosition.CenterParent;
 
             mbmb.MessageText = "What do you want to do with the file " + fileName;
 

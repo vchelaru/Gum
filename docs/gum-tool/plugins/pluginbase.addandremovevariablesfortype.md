@@ -11,10 +11,10 @@ The following code can be used to add a variable to the Sprite standard element.
 First the event must be added in the StartUp method:
 
 ```
-  public override void StartUp()
-  {
-      this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
-  }
+public override void StartUp()
+{
+    this.AddAndRemoveVariablesForType += HandleAddAndRemoveVariablesForType;
+}
 ```
 
 The HandleAddAndRemoveVariablesForType method handles the event being raised and adds the necessary variables. Note that in this case we are only handling variables for the Sprite type, but the same method could be used for all types:
