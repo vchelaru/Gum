@@ -21,6 +21,9 @@ public class TextBox : TextBoxBase
 
     protected override string DisplayedText => Text;
 
+    /// <summary>
+    /// Gets and sets the displayed Text. If the text exceeds MaxLength, it will be truncated.
+    /// </summary>
     public string Text
     {
         get => coreTextObject.RawText;
@@ -83,14 +86,24 @@ public class TextBox : TextBoxBase
 
     #region Events
 
+    /// <summary>
+    /// Event raised when the Text property changes.
+    /// </summary>
     public event EventHandler TextChanged;
 
     #endregion
 
     #region Initialize Methods
 
+    /// <summary>
+    /// Creates a new TextBox instance using the default visual.
+    /// </summary>
     public TextBox() : base() { }
 
+    /// <summary>
+    /// Creates a new TextBox instance using the specified visual.
+    /// </summary>
+    /// <param name="visual"></param>
     public TextBox(InteractiveGue visual) : base(visual) { }
 
 
@@ -193,6 +206,10 @@ public class TextBox : TextBoxBase
         }
     }
 
+    /// <summary>
+    /// Performs logic to handle backspace. This includes deleting individual letters, deleting selection, or deleting the previous word if ctrl is down.
+    /// </summary>
+    /// <param name="isCtrlDown">Whether the ctrl key is held. If true, the entire word is deleted rather than a single character.</param>
     public override void HandleBackspace(bool isCtrlDown = false)
     {
         //if (IsFocused && caretIndex > 0 && Text != null)
@@ -287,6 +304,9 @@ public class TextBox : TextBoxBase
         }
     }
 
+    /// <summary>
+    /// Deletes the selected text, updates the caret position, and sets the SelectionLength to 0.
+    /// </summary>
     public void DeleteSelection()
     {
         var lengthToRemove = selectionLength;
@@ -301,6 +321,9 @@ public class TextBox : TextBoxBase
 
     #endregion
 
+    /// <summary>
+    /// Sets the SelectionStart to 0 and the SelectionLength to the length of the text, if any.
+    /// </summary>
     public override void SelectAll()
     {
         if (this.Text != null)
