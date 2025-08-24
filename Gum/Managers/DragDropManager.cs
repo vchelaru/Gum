@@ -54,6 +54,7 @@ public class DragDropManager
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly CopyPasteLogic _copyPasteLogic;
 
     #endregion
 
@@ -75,7 +76,8 @@ public class DragDropManager
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        SetVariableLogic setVariableLogic)
+        SetVariableLogic setVariableLogic, 
+        CopyPasteLogic copyPasteLogic)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -86,6 +88,7 @@ public class DragDropManager
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
+        _copyPasteLogic = copyPasteLogic;
     }
 
     #region Drag+drop File (from windows explorer)
@@ -472,7 +475,7 @@ public class DragDropManager
                     draggedAsInstanceSave.ParentContainer?.DefaultState.Clone() ?? new StateSave()
                 };
                     
-                CopyPasteLogic.Self.PasteInstanceSaves(instances,
+                _copyPasteLogic.PasteInstanceSaves(instances,
                     stateWithVariablesForOriginalInstance,
                     targetElementSave, targetInstanceSave);
             }
