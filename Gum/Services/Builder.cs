@@ -15,11 +15,13 @@ using System.Linq;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Linq.Expressions;
+using System.Windows;
 using System.Windows.Threading;
 using Gum.Mvvm;
 using Gum.Services.Dialogs;
 using Gum.Plugins;
 using Gum.ViewModels;
+using Expression = System.Linq.Expressions.Expression;
 
 namespace Gum.Services;
 
@@ -71,13 +73,13 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<EditCommands>();
+        services.AddSingleton<VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<ProjectCommands>();
 
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
         
-        services.AddSingleton<MainPanelControl>();
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelViewModel>());
         services.AddSingleton<MainWindow>();
@@ -86,14 +88,13 @@ file static class ServiceCollectionExtensions
         // other
         services.AddDialogs();
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
-        services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Dispatcher.CurrentDispatcher));
+        services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Application.Current.Dispatcher));
         services.AddSingleton<IUiSettingsService, UiSettingsService>();
 
     }
     
     private static IServiceCollection AddDialogs(this IServiceCollection services)
     {
-        services.AddSingleton<IMainWindowHandleProvider, MainFormWindowHandleProvider>();
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
         services.AddSingleton<IDialogService, DialogService>();
 

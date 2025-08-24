@@ -23,7 +23,7 @@ namespace Gum.DataTypes
         /// The ElementSave which contains this instance.
         /// </summary>
         [XmlIgnore]
-        public ElementSave ParentContainer
+        public ElementSave? ParentContainer
         {
             get;
             set;

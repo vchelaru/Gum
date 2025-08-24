@@ -11,7 +11,7 @@ using Gum.Commands;
 
 namespace Gum.PropertyGridHelpers
 {
-    public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic>
+    public class VariableInCategoryPropagationLogic
     {
         private readonly IUndoManager _undoManager;
         private readonly IGuiCommands _guiCommands;

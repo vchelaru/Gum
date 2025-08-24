@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
 using Gum.Logic;
@@ -9,9 +9,11 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Windows.Forms;
+using System.Windows.Input;
 using Gum.Dialogs;
 using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 
 namespace Gum.Managers;
 
@@ -213,47 +215,16 @@ public class HotkeyManager
     #region App Wide Keys
 
 
-    public void HandleKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
+    public void PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
     {
-        HandleKeyDownAppWide(ConvertToFormsKeyEventArgs(e));
-    }
-
-    private System.Windows.Forms.KeyEventArgs ConvertToFormsKeyEventArgs(System.Windows.Input.KeyEventArgs e)
-    {
-        // Convert WPF Key to WinForms Keys
-        var winFormsKey = (System.Windows.Forms.Keys)System.Windows.Input.KeyInterop.VirtualKeyFromKey(e.Key);
-
-        // Convert WPF modifiers to WinForms modifiers
-        var modifiers = ConvertModifiers(System.Windows.Input.Keyboard.Modifiers);
-
-        // Combine the key and modifiers to form the KeyData
-        var keyData = winFormsKey | modifiers;
-
-        // Return the WinForms KeyEventArgs
-        return new System.Windows.Forms.KeyEventArgs(keyData);
-    }
-
-    private System.Windows.Forms.Keys ConvertModifiers(System.Windows.Input.ModifierKeys wpfModifiers)
-    {
-        var winFormsModifiers = System.Windows.Forms.Keys.None;
-
-        if (wpfModifiers.HasFlag(System.Windows.Input.ModifierKeys.Control))
-            winFormsModifiers |= System.Windows.Forms.Keys.Control;
-        if (wpfModifiers.HasFlag(System.Windows.Input.ModifierKeys.Alt))
-            winFormsModifiers |= System.Windows.Forms.Keys.Alt;
-        if (wpfModifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift))
-            winFormsModifiers |= System.Windows.Forms.Keys.Shift;
-
-        return winFormsModifiers;
-    }
-
-
-    public void HandleKeyDownAppWide(KeyEventArgs e)
-    {
-        // Don't try to process any keys if they've already been handled
-        if (e.Handled)
+        if (e.Key == Key.F && 
+            Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            _guiCommands.FocusSearch();
+            e.Handled = true;
             return;
-
+        }
+        
         int direction = 
             ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
             ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
@@ -266,7 +237,8 @@ public class HotkeyManager
             e.Handled = true;
         }
     }
-
+    
+    
     #endregion
 
 
@@ -279,7 +251,6 @@ public class HotkeyManager
         HandleReorder(e);
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
-        HandleKeyDownAppWide(e);
         HandleRename(e);
     }
 

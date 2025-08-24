@@ -101,6 +101,8 @@ class TreeNodeWrapper : ITreeNode
     }
 
     public void Expand() => Node.Expand();
+
+    public override string ToString() => Node.Text;
 }
 
 #endregion
@@ -187,7 +189,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    public ITreeNode SelectedNode
+    public ITreeNode? SelectedNode
     {
         get
         {
@@ -2130,8 +2132,6 @@ public partial class ElementTreeViewManager
                     searchTextBox.Text = null;
                 }
             }
-
-            _hotkeyManager.HandleKeyDownAppWide(args);
         };
 
         grid.Children.Add(searchTextBox);

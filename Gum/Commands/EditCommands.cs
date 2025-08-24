@@ -34,6 +34,7 @@ public class EditCommands
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly ProjectCommands _projectCommands;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
@@ -41,7 +42,9 @@ public class EditCommands
         IUndoManager undoManager,
         IDialogService dialogService,
         IFileCommands fileCommands,
-        ProjectCommands projectCommands)
+        ProjectCommands projectCommands,
+        IGuiCommands guiCommands,
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -50,7 +53,10 @@ public class EditCommands
         _dialogService = dialogService;
         _fileCommands = fileCommands;
         _projectCommands = projectCommands;
+        _guiCommands = guiCommands;
+        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
     }
+
     #region State
 
     public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
@@ -168,7 +174,7 @@ public class EditCommands
                 message += "\n" + behaviorNeedingState.Name;
             }
 
-            MessageBox.Show(message);
+            _dialogService.ShowMessage(message);
             return;
         }
 
@@ -189,7 +195,7 @@ public class EditCommands
         {
             foreach (var variable in stateToMove.Variables)
             {
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
                     element, _selectedState.SelectedStateCategorySave);
             }
 
@@ -199,7 +205,7 @@ public class EditCommands
             {
                 foreach (var variable in firstState.Variables)
                 {
-                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                    _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
                         element, _selectedState.SelectedStateCategorySave);
                 }
             }

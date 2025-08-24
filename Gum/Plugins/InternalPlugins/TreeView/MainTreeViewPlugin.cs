@@ -150,6 +150,10 @@ internal class MainTreeViewPlugin : InternalPlugin
         {
             _elementTreeViewManager.Select(save);
         }
+        else if(save == null && _elementTreeViewManager.SelectedNode?.Tag is ElementSave)
+        {
+            _elementTreeViewManager.SelectedNode = null;
+        }
     }
 
     private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave element, DataTypes.InstanceSave instance)
