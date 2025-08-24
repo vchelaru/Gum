@@ -12,6 +12,7 @@ using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using Gum.Undo;
 
 namespace Gum.Logic;
 
@@ -45,7 +46,7 @@ public class CopiedData
 
 #endregion
 
-public class CopyPasteLogic : Singleton<CopyPasteLogic>
+public class CopyPasteLogic
 {
     #region Fields/Properties
 
@@ -55,7 +56,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly ProjectCommands _projectCommands;
-    
+    private readonly IUndoManager _undoManager;
+
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
     CopyType mCopyType;
@@ -72,14 +74,23 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     #endregion
 
-    public CopyPasteLogic()
+    public CopyPasteLogic(ISelectedState selectedState,
+        IElementCommands elementCommands,
+        IDialogService dialogService,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        ProjectCommands projectCommands,
+        IUndoManager undoManager
+        )
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _projectCommands = Locator.GetRequiredService<ProjectCommands>();
+        _selectedState = selectedState;
+        _elementCommands = elementCommands;
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _projectCommands = projectCommands;
+        _undoManager = undoManager;
+
     }
 
     #region Copy
@@ -124,7 +135,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     private void StoreCopiedInstances()
     {
-        if (_selectedState.SelectedInstance != null)
+        if (_selectedState.SelectedInstances.Any())
         {
             var element = _selectedState.SelectedElement;
 
@@ -257,27 +268,32 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     public void OnPaste(CopyType copyType, TopOrRecursive topOrRecursive = TopOrRecursive.Recursive)
     {
-        // To make sure we didn't copy one type and paste another
-        if (mCopyType == copyType)
+        ////////////////////Early Out
+        if(mCopyType != copyType)
         {
-            if (mCopyType == CopyType.InstanceOrElement)
-            {
-                if (CopiedData.CopiedElement != null)
-                {
-                    PasteCopiedElement();
+            return;
+        }
 
-                }
-                // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
-                // that use the copied InstanceSave.
-                else if (CopiedData.CopiedInstancesRecursive.Count != 0)
-                {
-                    PasteCopiedInstanceSaves(topOrRecursive);
-                }
-            }
-            else if (mCopyType == CopyType.State && CopiedData.CopiedStates?.Count > 0)
+        using var undoLock = _undoManager.RequestLock();
+
+        // To make sure we didn't copy one type and paste another
+        if (mCopyType == CopyType.InstanceOrElement)
+        {
+            if (CopiedData.CopiedElement != null)
             {
-                PastedCopiedState();
+                PasteCopiedElement();
+
             }
+            // We need to both duplicate the InstanceSave, but we also need to duplicate all of the variables
+            // that use the copied InstanceSave.
+            else if (CopiedData.CopiedInstancesRecursive.Count != 0)
+            {
+                PasteCopiedInstanceSaves(topOrRecursive);
+            }
+        }
+        else if (mCopyType == CopyType.State && CopiedData.CopiedStates?.Count > 0)
+        {
+            PastedCopiedState();
         }
 
     }

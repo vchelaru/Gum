@@ -200,9 +200,10 @@ public class HotkeyManager
         IDialogService dialogService,
         IFileCommands fileCommands,
         SetVariableLogic setVariableLogic,
-        IUiSettingsService uiSettingsService)
+        IUiSettingsService uiSettingsService,
+        CopyPasteLogic copyPasteLogic)
     {
-        _copyPasteLogic = CopyPasteLogic.Self;
+        _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
         _selectedState = selectedState;
         _elementCommands = elementCommands;

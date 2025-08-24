@@ -285,7 +285,8 @@ public partial class ElementTreeViewManager
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
-        
+        _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
+
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
 
@@ -519,7 +520,6 @@ public partial class ElementTreeViewManager
     public void Initialize()
     {
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
-        _copyPasteLogic = CopyPasteLogic.Self;
 
         CreateObjectTreeView();
 
