@@ -147,6 +147,41 @@ public class ItemsControl : ScrollViewer
 
     public event EventHandler<NotifyCollectionChangedEventArgs> ItemsCollectionChanged;
 
+    public Orientation? Orientation
+    {
+        get
+        {
+            if(InnerPanel?.ChildrenLayout == Managers.ChildrenLayout.TopToBottomStack)
+            {
+                return Gum.Forms.Controls.Orientation.Vertical;
+            }
+            else if(InnerPanel?.ChildrenLayout == Managers.ChildrenLayout.LeftToRightStack)
+            {
+                return Gum.Forms.Controls.Orientation.Horizontal;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        set
+        {
+            if(value.HasValue && InnerPanel != null)
+            {
+                if(value == Gum.Forms.Controls.Orientation.Horizontal)
+                {
+                    InnerPanel.ChildrenLayout =
+                        global::Gum.Managers.ChildrenLayout.LeftToRightStack;
+                }
+                else
+                {
+                    InnerPanel.ChildrenLayout =
+                        global::Gum.Managers.ChildrenLayout.TopToBottomStack;
+                }
+            }
+        }
+    }
+
     #endregion
 
     #region Events
