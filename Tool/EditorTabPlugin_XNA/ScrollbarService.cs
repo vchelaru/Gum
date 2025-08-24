@@ -32,10 +32,10 @@ public class ScrollbarService
             ipso = WireframeObjectManager.Self.GetRepresentation(obj);
         }
 
-        float minX = 0;
+        float minX = -ProjectManager.Self.GumProjectSave.DefaultCanvasWidth/2;
         float maxX = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
 
-        float minY = 0;
+        float minY = -ProjectManager.Self.GumProjectSave.DefaultCanvasHeight / 2;
         float maxY = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
 
 

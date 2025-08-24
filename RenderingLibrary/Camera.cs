@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
 using Matrix = System.Numerics.Matrix4x4;
+using System;
 
 namespace RenderingLibrary
 {
@@ -156,6 +157,7 @@ namespace RenderingLibrary
             set;
         }
 
+
         public CameraCenterOnScreen CameraCenterOnScreen
         {
             get;
@@ -221,11 +223,10 @@ namespace RenderingLibrary
             // Vic says - I don't know exactly why this code is needed. I don't understand it 
             // well enough to address it now, but I need to make this compile so I'm going to
             // refactor out the Renderer usage.
-            if (RendererSettings.UsingEffect && forRendering)
+            if (RendererSettings.UsingEffect)
             {
                 return
                     Matrix.CreateTranslation(new Vector3(-x, -y, 0)) *
-                    Matrix.CreateTranslation(new Vector3(0, 0, 0))*
                     Matrix.CreateScale(new Vector3(zoom, zoom, 1))
                    ;
             }

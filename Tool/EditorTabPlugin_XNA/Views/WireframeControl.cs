@@ -100,7 +100,7 @@ public class WireframeControl : GraphicsDeviceControl
     void OnKeyDown(object sender, KeyEventArgs e)
     {
         _hotkeyManager.HandleKeyDownWireframe(e);
-        CameraController.Self.HandleKeyPress(e);
+        _cameraController.HandleKeyPress(e);
 
     }
 
@@ -150,11 +150,11 @@ public class WireframeControl : GraphicsDeviceControl
 
             Renderer.TextureFilter = TextureFilter.Point;
 
-
+            _cameraController = new CameraController();
 
             LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-            CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height, hotkeyManager);
-            CameraController.Self.CameraChanged += () => CameraChanged?.Invoke();
+            _cameraController.Initialize(Camera, mWireframeEditControl, Width, Height, hotkeyManager);
+            _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
             InputLibrary.Cursor.Self.Initialize(this);
 
@@ -166,12 +166,19 @@ public class WireframeControl : GraphicsDeviceControl
             mCanvasBounds.Color = ScreenBoundsColor;
 
 
+            var camera = SystemManagers.Default.Renderer.Camera;
 
-            AfterXnaInitialize += HandleAfterXnaIntiailize;
+            // August 24, 2025 - I don't understand why, but if I set
+            // CameraCenterOnScreen to Center, then it behaves as if it's
+            // top-left. If I set it to TopLeft, then it behaves as if it's
+            // centered. This is the opposite of what I would expect, but
+            // for now I'm going to do this and get it done.
+            camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
             KeyDown += OnKeyDown;
-            MouseDown += CameraController.Self.HandleMouseDown;
-            MouseMove += CameraController.Self.HandleMouseMove;
-            MouseWheel += CameraController.Self.HandleMouseWheel;
+            MouseDown += _cameraController.HandleMouseDown;
+            MouseMove += _cameraController.HandleMouseMove;
+            MouseWheel += _cameraController.HandleMouseWheel;
 
             MouseEnter += (not, used) =>
             {
@@ -198,34 +205,6 @@ public class WireframeControl : GraphicsDeviceControl
         }
     }
 
-
-
-    private void HandleAfterXnaIntiailize(object sender, EventArgs e)
-    {
-        // Create the Texture2D here
-        ImageData imageData = new ImageData(2, 2, null);
-
-        Microsoft.Xna.Framework.Color opaqueColor = Microsoft.Xna.Framework.Color.White;
-        Microsoft.Xna.Framework.Color transparent = new Microsoft.Xna.Framework.Color(0, 0, 0, 0);
-
-        for (int y = 0; y < 2; y++)
-        {
-            for (int x = 0; x < 2; x++)
-            {
-                bool isDark = ((x + y) % 2 == 0);
-                if (isDark)
-                {
-                    imageData.SetPixel(x, y, transparent);
-
-                }
-                else
-                {
-                    imageData.SetPixel(x, y, opaqueColor);
-                }
-            }
-        }
-
-    }
 
     public void ShareLayerReferences(LayerService layerService)
     {
@@ -263,6 +242,7 @@ public class WireframeControl : GraphicsDeviceControl
 
 
     bool isInActivity = false;
+    private CameraController _cameraController;
 
     void Activity()
     {
