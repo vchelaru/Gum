@@ -139,7 +139,7 @@ public class SpriteRenderer
             var projection = Microsoft.Xna.Framework.Matrix.CreateOrthographic(width, -height, -1, 1);
             var view = GetZoomAndMatrix(layer, camera);
 
-            if (Renderer.ApplyCameraZoomOnWorldTranslation ||
+            if (camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft || 
                 layer.LayerCameraSettings?.IsInScreenSpace == true)
             {
                 view *= Microsoft.Xna.Framework.Matrix.CreateTranslation(-camera.ClientWidth / 2.0f, -camera.ClientHeight / 2.0f, 0);
@@ -192,8 +192,9 @@ public class SpriteRenderer
 
             basicEffect.View =  GetZoomAndMatrix(layer, camera);
 
-            if(Renderer.ApplyCameraZoomOnWorldTranslation || 
-                layer.LayerCameraSettings?.IsInScreenSpace == true)
+            var shouldOffset = camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft ||
+                layer.LayerCameraSettings?.IsInScreenSpace == true;
+            if(shouldOffset)
             {
                 basicEffect.View *= Microsoft.Xna.Framework.Matrix.CreateTranslation(-camera.ClientWidth / 2.0f, -camera.ClientHeight / 2.0f, 0);
             }
