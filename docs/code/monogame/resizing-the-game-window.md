@@ -1,38 +1,86 @@
-# Resizing the Game Window
+# Resolution and Resizing the Game Window
 
-### Introduction
+## Introduction
 
-If your game includes support for resizing the game window, you may need to write additional code to handle the new width and height. This page discusses the options you have for handling resizing. When a game is resized, the typical response is to adjust GraphicalUiElement.CanvasWidth and GraphicalUiElement.CanvasHeight, but you may also want to zoom your UI depending on the needs of your game.
+Gum provides a number of ways to react to game resolution changes. This page discusses how to react to resolution changes.
 
-### Setting Initial Size
+## Default Behavior
 
-Desktop projects can set their initial size in the Game constructor as shown in the following code:
+By default Gum uses `GraphicsDevice.Viewport` to set its internal resolution. This value can be assigned in the Game's constructor by assigning `_graphics.PreferredBackBufferWidth` and `_graphics.PreferredBackBufferWidth`. Most likely your game is already doing this to set the initial Window size. The following shows an example game with Gum.
 
 ```csharp
-public GumFormsSampleGame()
+public class Game1 : Game
 {
-    _graphics = new GraphicsDeviceManager(this);
-    Content.RootDirectory = "Content";
-    IsMouseVisible = true;
+    GraphicsDeviceManager _graphics;
 
-    // This sets the initial size:
-    _graphics.PreferredBackBufferWidth = 1024;
-    _graphics.PreferredBackBufferHeight = 768;
+    GumService GumUi => GumService.Default;
 
-    _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
-#if (ANDROID || iOS)
-    graphics.IsFullScreen = true;
-#endif
-}
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    
+        // This sets the initial size:
+        // If not explicitly set, then size values
+        // default to 800x480 on desktop platforms
+        _graphics.PreferredBackBufferWidth = 800;
+        _graphics.PreferredBackBufferHeight = 600;
+    }
+
+    protected override void Initialize()
+    {
+        // Internally this will initialize using the viewport values
+        GumUi.Initialize(this, DefaultVisualsVersion.V2);
+        ...
 ```
 
-### Default Behavior
+Keep in mind that the `Preferred` properties are not guaranteed, and MonoGame can choose to use these values internally. For example, if MonoGame runs on a Mac with UI scaling, then the actual resolution may not match the preferred values. This can be handled by subscribing to the `ClientSizeChanged` event in the constructor, as shown in the following code:
+
+<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
+{
+    GraphicsDeviceManager _graphics;
+
+    GumService GumUi => GumService.Default;
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    
+<strong>        Window.ClientSizeChanged += OnClientSizeChanged;
+</strong>    
+        // This sets the initial size:
+        // If not explicitly set, then size values
+        // default to 800x480 on desktop platforms
+        _graphics.PreferredBackBufferWidth = 800;
+        _graphics.PreferredBackBufferHeight = 600;
+    }
+
+<strong>    private void OnClientSizeChanged(object sender, EventArgs e)
+</strong><strong>    {
+</strong><strong>        // Updating the canvas width and height when client size changes.
+</strong><strong>        GraphicalUiElement.CanvasWidth = GraphicsDevice.PresentationParameters.BackBufferWidth;
+</strong><strong>        GraphicalUiElement.CanvasHeight = GraphicsDevice.PresentationParameters.BackBufferHeight;
+</strong><strong>    }
+</strong>
+    protected override void Initialize()
+    {
+        // Internally this will initialize using the viewport values
+        GumUi.Initialize(this, DefaultVisualsVersion.V2);
+        ...
+</code></pre>
+
+Of course, this assumes that you would like the Gum canvas to occupy the entirety of the game window.
+
+## Default Resize Behavior
 
 By default resizing your Game does not adjust Gum. The following animation shows how Gum behaves by default. Note that the objects in the following animation are properly docked to the corners and center as indicated by the displayed text:
 
 <figure><img src="../../.gitbook/assets/20_06 44 11.gif" alt=""><figcaption></figcaption></figure>
 
-### Handling Resizing with No Zoom
+## Handling Resizing with No Zoom
 
 This section discusses how react to the window resizing by adjusting the GraphicalUiElement sizes and performing a layout. The Screen contains a Container which is sized to the entire screen with a small border around the edges. The Container has a ColoredRectangle which fills the entire Container. Each Text object is docked as indicated by its displayed string.
 
@@ -63,7 +111,7 @@ The following code shows how to handle a resize:
 
 <figure><img src="../../.gitbook/assets/20_07 01 46.gif" alt=""><figcaption><p>Resizing the window resulting in Gum layout updates</p></figcaption></figure>
 
-### Handling Resizing with Zoom
+## Handling Resizing with Zoom
 
 You may want to zoom your game rather than provide more visible space to the user when resizing. In this case you need to decide whether to use width or height when deciding how much to zoom your game. For this example we will use height since some users may have monitors with differing aspect ratios.
 
@@ -101,6 +149,6 @@ private void HandleClientSizeChanged(object sender, EventArgs e)
 
 <figure><img src="../../.gitbook/assets/20_07 03 01.gif" alt=""><figcaption><p>Gum responding to resizes by zooming and adjusting canvas sizes</p></figcaption></figure>
 
-### FrameworkElement PopupRoot and ModalRoot
+## FrameworkElement PopupRoot and ModalRoot
 
 The FrameworkElement object has two InteractiveGues: PopupRoot and ModalRoot. These are typically created automatically by FormsUtilities but can be assigned manually. In either case, the size of these two containers is automatically managed by FormsUtilities in its Update call so you do not need to update these manually.

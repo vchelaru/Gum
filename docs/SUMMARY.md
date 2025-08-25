@@ -289,7 +289,7 @@
     * [Troubleshooting](code/monogame/gum-forms/troubleshooting.md)
   * [File Loading](code/monogame/file-loading.md)
   * [Profiling](code/monogame/profiling.md)
-  * [Resizing the Game Window](code/monogame/resizing-the-game-window.md)
+  * [Resolution and Resizing the Game Window](code/monogame/resizing-the-game-window.md)
   * [Known Issues](code/monogame/known-issues.md)
   * [Samples](code/monogame/samples/README.md)
     * [MonoGameGumFormsSample](code/monogame/samples/monogamegumformssample.md)

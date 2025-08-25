@@ -110,12 +110,15 @@ namespace Gum.Wireframe
             if(width != null)
             {
                 displayedAreaWidth = width.Value;
+                minimumX = -width.Value / 2;
             }
 
             if(height != null)
             {
                 displayedAreaHeight = height.Value;
+                minimumY = -height.Value / 2;
             }
+
 
             UpdateScrollBars();
 
@@ -148,7 +151,7 @@ namespace Gum.Wireframe
 
                 var visibleAreaHeight = xnaControl.Height / camera.Zoom;
                 mVerticalScrollBar.Minimum = minimumY;
-                mVerticalScrollBar.Maximum = (int)(effectiveAreaHeight + visibleAreaHeight);
+                mVerticalScrollBar.Maximum = minimumY + (int)(effectiveAreaHeight + visibleAreaHeight);
                 mVerticalScrollBar.LargeChange = (int)visibleAreaHeight;
 
                 var visibleAreaWidth = xnaControl.Width / camera.Zoom;
@@ -159,7 +162,7 @@ namespace Gum.Wireframe
 
                 // The total amount that the scrollbar can cover. This is the width of the area plus the screen width since we can scroll until the edges 
                 // are at the middle, meaning we can see half a screen width on either side 
-                mHorizontalScrollBar.Maximum = (int)(effectiveAreaWidth + visibleAreaWidth);
+                mHorizontalScrollBar.Maximum = minimumX + (int)(effectiveAreaWidth + visibleAreaWidth);
                 mHorizontalScrollBar.LargeChange = (int)visibleAreaWidth; // the amount of visible area. It's called LargeChange but it really means how much the scrollbar can see 
             }
         }

@@ -239,6 +239,10 @@ public abstract class TextBoxBase :
 
     public bool IsCaretVisibleWhenReadOnly { get; set; }
 
+    /// <summary>
+    /// Whether pressing the tab key inserts a tab character. If true, then
+    /// tab characters can be inserted.
+    /// </summary>
     public bool AcceptsTab { get; set; } = false;
 
     public override bool IsTabNavigationEnabled => AcceptsTab == false;

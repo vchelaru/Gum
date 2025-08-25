@@ -213,6 +213,43 @@ wrappedTextBox.AcceptsReturn = true;
 
 <figure><img src="../../../../.gitbook/assets/14_06 12 55.gif" alt=""><figcaption><p>Manually adding newlines by pressing the return (enter) key</p></figcaption></figure>
 
+## Enter Key Behavior
+
+The enter key behavior can be customized for TextBoxes. By default the enter key only applies the Text property to a bound view model. The enter key can also insert multiple lines, but this is usually accompanied with a larger TextBox.
+
+### Enter and Binding
+
+The  `TextBox.Text` property can be bound to a ViewModel's property. By default this property is updated immediately when text changes but the `UpdateSourceTrigger` can be set to `UpdateSourceTrigger.LostFocus`.
+
+In this situation, the enter key also applies binding even if the TextBox has not lost focus.
+
+```csharp
+var label = new Label();
+label.SetBinding(nameof(label.Text), nameof(TextViewModel.Text));
+mainPanel.AddChild(label);
+
+var textBox = new TextBox();
+textBox.Width = 500;
+var binding = new Binding(nameof(TextViewModel.Text))
+{
+    UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+};
+
+textBox.SetBinding(nameof(textBox.Text), binding);
+mainPanel.AddChild(textBox);
+
+```
+
+<figure><img src="../../../../.gitbook/assets/24_07 50 58.gif" alt=""><figcaption><p>Pressing enter applies binding</p></figcaption></figure>
+
+## Tab Key Behavior
+
+The tab key behavior is controlled by the `AccetsTab` property. This value is false by default.
+
+If this value is false, pressing the Tab key does not insert a tab `'\t'` character.&#x20;
+
+If this value is true, pressing the Tab key inserts a tab `'\t'` character.  Note that if this value is true, then tabbing to the next control by pressing tab is disabled. In other words, the TextBox keeps keeps focus after the tab key is pressed.
+
 ## Extended Character Sets and Keyboards
 
 The TextBox supports entering characters respecting the current keyboard language settings. This includes typing characters with accents, pasting text, and entering alt codes ([https://www.alt-codes.net/](https://www.alt-codes.net/) ).

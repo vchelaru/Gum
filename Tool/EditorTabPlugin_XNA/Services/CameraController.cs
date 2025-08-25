@@ -7,7 +7,7 @@ using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services
 {
-    public class CameraController : Singleton<CameraController>
+    public class CameraController
     {
         Camera Camera
         {
@@ -27,8 +27,8 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Services
             Camera = camera;
             mWireframeEditControl = wireframeEditControl;
 
-            Renderer.Self.Camera.X = defaultWidth / 2 - 30;
-            Renderer.Self.Camera.Y = defaultHeight / 2 - 30;
+            Renderer.Self.Camera.X = - 30;
+            Renderer.Self.Camera.Y = - 30;
         }
 
         internal void HandleMouseWheel(object sender, MouseEventArgs e)

@@ -1,4 +1,5 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Managers;
 using Gum.Wireframe;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -55,5 +56,18 @@ public class ItemsControlTests : BaseTestClass
         (child is InteractiveGue).ShouldBeTrue();
         Button? button = ((InteractiveGue)child).FormsControlAsObject as Button;
         button.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ItemsControl_Orientation_ShouldSetInnerPanelChildrenLayout()
+    {
+        var itemsControl = new ItemsControl();
+        var innerPanel = itemsControl.GetVisual("InnerPanelInstance");
+
+        itemsControl.Orientation = Orientation.Horizontal;
+        innerPanel.ChildrenLayout.ShouldBe(ChildrenLayout.LeftToRightStack);
+
+        itemsControl.Orientation = Orientation.Vertical;
+        innerPanel.ChildrenLayout.ShouldBe(ChildrenLayout.TopToBottomStack);
     }
 }
