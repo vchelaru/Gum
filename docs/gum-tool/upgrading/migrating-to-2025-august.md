@@ -28,6 +28,24 @@ For other platforms you need to build Gum from source
 
 See below for breaking changes and updates.
 
+## SliderVisual.NineSliceInstance Renamed to TrackBackground
+
+This property was renamed to clearly indicate the usage of this NineSliceRuntime. The previous name was vague and caused confusion.
+
+Change code from:
+
+```csharp
+var sliderVisual = (SliderVisual)MySlider.Visual;
+var trackBackground = sliderVisual.NineSliceInstance;
+```
+
+to:
+
+```csharp
+var sliderVisual = (SliderVisual)MySlider.Visual;
+var trackBackground = sliderVisual.TrackBackground;
+```
+
 ## Upgrading Gum.MonoGame to .NET 8
 
 The MonoGame runtime library for Gum has been upgraded from .NET 6 to .NET 8. Most projects will not be affected by this change since MonoGame 3.8.3 already requires game projects to be .NET 8 or newer. If your project is using an earlier version of MonoGame, such as MonoGame 3.8.1, then it may still be targeting .NET 6.0. You can upgrade your project to .NET 8 and it will still work with the older MonoGame version.
