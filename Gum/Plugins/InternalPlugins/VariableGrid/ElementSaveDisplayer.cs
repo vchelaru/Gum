@@ -674,6 +674,11 @@ namespace Gum.PropertyGridHelpers
                     category = "States and Visibility";
                 }
 
+                if(defaultVariable.Type == null)
+                {
+                    throw new Exception($"Could not find type for {defaultVariable}");
+                }
+
                 //Type type = typeof(string);
                 Type type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
 
