@@ -675,9 +675,20 @@ namespace Gum.PropertyGridHelpers
                 }
 
                 //Type type = typeof(string);
-                Type type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
+                Type type;
+                
+                if(!string.IsNullOrEmpty(defaultVariable.Type))
+                {
+                    type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
+                }
+                else
+                {
+                    var rootVariable = ObjectFinder.Self.GetRootVariable(defaultVariable.Name, elementSave);
 
-                string name = defaultVariable.Name;
+                    type = Gum.Reflection.TypeManager.Self.GetTypeFromString(rootVariable.Type);
+                }
+
+                    string name = defaultVariable.Name;
 
                 if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
                 {

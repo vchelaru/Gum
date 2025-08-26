@@ -151,13 +151,13 @@ public class ItemsControl : ScrollViewer
     {
         get
         {
-            if(InnerPanel?.ChildrenLayout == Managers.ChildrenLayout.TopToBottomStack)
+            if(InnerPanel?.ChildrenLayout == global::Gum.Managers.ChildrenLayout.TopToBottomStack)
             {
-                return Gum.Forms.Controls.Orientation.Vertical;
+                return Controls.Orientation.Vertical;
             }
-            else if(InnerPanel?.ChildrenLayout == Managers.ChildrenLayout.LeftToRightStack)
+            else if(InnerPanel?.ChildrenLayout == global::Gum.Managers.ChildrenLayout.LeftToRightStack)
             {
-                return Gum.Forms.Controls.Orientation.Horizontal;
+                return Controls.Orientation.Horizontal;
             }
             else
             {
@@ -168,7 +168,7 @@ public class ItemsControl : ScrollViewer
         {
             if(value.HasValue && InnerPanel != null)
             {
-                if(value == Gum.Forms.Controls.Orientation.Horizontal)
+                if(value == Controls.Orientation.Horizontal)
                 {
                     InnerPanel.ChildrenLayout =
                         global::Gum.Managers.ChildrenLayout.LeftToRightStack;
