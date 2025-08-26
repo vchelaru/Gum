@@ -28,6 +28,10 @@ For other platforms you need to build Gum from source
 
 See below for breaking changes and updates.
 
+## TextRuntime Now Uses XNA BlendState Rather Than Gum BlendState
+
+This matches the syntax for other runtime types, making all runtimes consistent.
+
 ## SliderVisual.NineSliceInstance Renamed to TrackBackground
 
 This property was renamed to clearly indicate the usage of this NineSliceRuntime. The previous name was vague and caused confusion.
