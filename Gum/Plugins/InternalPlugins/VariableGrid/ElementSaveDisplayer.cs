@@ -674,15 +674,21 @@ namespace Gum.PropertyGridHelpers
                     category = "States and Visibility";
                 }
 
-                if(defaultVariable.Type == null)
+                //Type type = typeof(string);
+                Type type;
+                
+                if(!string.IsNullOrEmpty(defaultVariable.Type))
                 {
-                    throw new Exception($"Could not find type for {defaultVariable}");
+                    type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
+                }
+                else
+                {
+                    var rootVariable = ObjectFinder.Self.GetRootVariable(defaultVariable.Name, elementSave);
+
+                    type = Gum.Reflection.TypeManager.Self.GetTypeFromString(rootVariable.Type);
                 }
 
-                //Type type = typeof(string);
-                Type type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
-
-                string name = defaultVariable.Name;
+                    string name = defaultVariable.Name;
 
                 if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
                 {
