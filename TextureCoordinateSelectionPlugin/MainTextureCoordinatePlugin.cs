@@ -3,6 +3,7 @@ using Gum;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
 using Gum.ToolStates;
@@ -19,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TextureCoordinateSelectionPlugin.Logic;
 
 namespace TextureCoordinateSelectionPlugin;
 
@@ -29,6 +31,7 @@ public class MainTextureCoordinatePlugin : PluginBase
 
     PluginTab textureCoordinatePluginTab;
     ISelectedState _selectedState;
+    ControlLogic _controlLogic;
 
     public override string FriendlyName
     {
@@ -48,6 +51,7 @@ public class MainTextureCoordinatePlugin : PluginBase
     public MainTextureCoordinatePlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _controlLogic = new ControlLogic();
     }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -62,10 +66,16 @@ public class MainTextureCoordinatePlugin : PluginBase
 
     public override void StartUp()
     {
-        textureCoordinatePluginTab = Logic.ControlLogic.Self.CreateControl();
+        textureCoordinatePluginTab = _controlLogic.CreateControl();
         textureCoordinatePluginTab.Hide();
+        textureCoordinatePluginTab.GotFocus += HandleTabShown;
 
         AssignEvents();
+    }
+
+    private void HandleTabShown()
+    {
+        _controlLogic.CenterCameraOnSelection();
     }
 
     private void AssignEvents()
@@ -119,13 +129,15 @@ public class MainTextureCoordinatePlugin : PluginBase
     private void HandleTreeNodeSelected(TreeNode treeNode)
     {
         RefreshControl();
+
+        _controlLogic.CenterCameraOnSelection();
     }
 
     private void RefreshControl()
     {
         Texture2D textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
 
-        Logic.ControlLogic.Self.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
+        _controlLogic.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
     }
 
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
@@ -135,7 +147,7 @@ public class MainTextureCoordinatePlugin : PluginBase
         if(shouldRefresh)
         {
             RefreshControl();
-            Logic.ControlLogic.Self.RefreshSelector(Logic.RefreshType.Force);
+            _controlLogic.RefreshSelector(Logic.RefreshType.Force);
         }
     }
 
