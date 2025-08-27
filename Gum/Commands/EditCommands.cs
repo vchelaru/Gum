@@ -536,13 +536,13 @@ public class EditCommands
             }
         }
     }
-
+    
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
     {
         return
-            from sibling in parent.GetSiblingsIncludingThis()
-            where sibling.GetParentInstance() == parent
-            let children = new[] { sibling }.Concat(GetChildInstancesRecursively(sibling))
+            from instance in parent.ParentContainer.Instances
+            where instance.GetParentInstance() == parent
+            let children = new[] { instance }.Concat(GetChildInstancesRecursively(instance))
             from child in children 
             select child;
     }
