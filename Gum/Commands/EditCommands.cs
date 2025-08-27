@@ -19,6 +19,7 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using GumDataTypes.Variables;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
@@ -453,8 +454,12 @@ public class EditCommands
     public void ShowCreateComponentFromInstancesDialog()
     {
         var element = _selectedState.SelectedElement;
-        var instances = _selectedState.SelectedInstances.ToList();
-        if (instances == null || instances.Count == 0 || element == null)
+        var instances = _selectedState.SelectedInstances.Concat(
+            from selectedInstance in _selectedState.SelectedInstances
+            from child in GetChildInstancesRecursively(selectedInstance)
+            select child);
+        
+        if (instances == null || instances.Count() == 0 || element == null)
         {
             MessageBox.Show("You must first save the project before adding a new component");
         }
@@ -533,6 +538,16 @@ public class EditCommands
                 }
             }
         }
+    }
+
+    private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
+    {
+        return
+            from sibling in parent.GetSiblingsIncludingThis()
+            where sibling.GetParentInstance() == parent
+            let children = new[] { sibling }.Concat(GetChildInstancesRecursively(sibling))
+            from child in children 
+            select child;
     }
 
     public void DisplayReferencesTo(ElementSave element)
