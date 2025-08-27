@@ -15,11 +15,8 @@ using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Controls;
 using System.Windows.Forms;
-using Gum.Services;
 using Gum.Services.Dialogs;
-using GumDataTypes.Variables;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
@@ -462,80 +459,80 @@ public class EditCommands
         if (instances == null || instances.Count() == 0 || element == null)
         {
             MessageBox.Show("You must first save the project before adding a new component");
+            return;
         }
-        else if (instances is List<InstanceSave>)
+        
+        CreateComponentWindow createComponentWindow = new CreateComponentWindow();
+
+        FilePath filePath = element.Name;
+        var nameWithoutPath = filePath.FileNameNoPath;
+
+        createComponentWindow.Result = $"{nameWithoutPath}Component";
+        //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
+
+        Nullable<bool> result = createComponentWindow.ShowDialog();
+
+        if (result == true)
         {
-            CreateComponentWindow createComponentWindow = new CreateComponentWindow();
+            string name = createComponentWindow.Result;
+            //bool replace = tiwcw.Checked
 
-            FilePath filePath = element.Name;
-            var nameWithoutPath = filePath.FileNameNoPath;
+            string whyNotValid;
+            _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
 
-            createComponentWindow.Result = $"{nameWithoutPath}Component";
-            //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
-
-            Nullable<bool> result = createComponentWindow.ShowDialog();
-
-            if (result == true)
+            if (string.IsNullOrEmpty(whyNotValid))
             {
-                string name = createComponentWindow.Result;
-                //bool replace = tiwcw.Checked
-
-                string whyNotValid;
-                _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
-
-                if (string.IsNullOrEmpty(whyNotValid))
+                ComponentSave componentSave = new ComponentSave();
+                componentSave.BaseType = "Container";
+                string folder = null;
+                if (!string.IsNullOrEmpty(folder))
                 {
-                    ComponentSave componentSave = new ComponentSave();
-                    componentSave.BaseType = "Container";
-                    string folder = null;
-                    if (!string.IsNullOrEmpty(folder))
-                    {
-                        folder += "/";
-                    }
-                    componentSave.Name = folder + name;
-
-                    StateSave defaultState;
-
-                    // Clone instances
-                    foreach (var instance in instances)
-                    {
-                        // Clone will fail if we are cloning an InstanceSave
-                        // in a behavior because its type is BehaviorInstanceSave.
-                        // Therefore, we will just manually create a copy:
-                        //var instanceSave = instance.Clone();
-                        //var instanceSave = instance.Clone();
-                        var instanceSave = new InstanceSave();
-                        instanceSave.Name = instance.Name;
-                        instanceSave.BaseType = instance.BaseType;
-                        instanceSave.DefinedByBase = instance.DefinedByBase;
-                        instanceSave.Locked = instance.Locked;
-                        instanceSave.ParentContainer = componentSave;
-
-                        componentSave.Instances.Add(instanceSave);
-                    }
-
-                    // Clone states
-                    foreach (var state in element.States)
-                    {
-                        if (element.DefaultState == state)
-                        {
-                            defaultState = state.Clone();
-
-                            componentSave.Initialize(defaultState);
-                            continue;
-                        }
-                        componentSave.States.Add(state.Clone());
-                    }
-
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-                    _projectCommands.AddComponent(componentSave);
-
+                    folder += "/";
                 }
-                else
+
+                componentSave.Name = folder + name;
+
+                StateSave defaultState;
+
+                // Clone instances
+                foreach (var instance in instances)
                 {
-                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
-                    ShowCreateComponentFromInstancesDialog();
+                    // Clone will fail if we are cloning an InstanceSave
+                    // in a behavior because its type is BehaviorInstanceSave.
+                    // Therefore, we will just manually create a copy:
+                    //var instanceSave = instance.Clone();
+                    //var instanceSave = instance.Clone();
+                    var instanceSave = new InstanceSave();
+                    instanceSave.Name = instance.Name;
+                    instanceSave.BaseType = instance.BaseType;
+                    instanceSave.DefinedByBase = instance.DefinedByBase;
+                    instanceSave.Locked = instance.Locked;
+                    instanceSave.ParentContainer = componentSave;
+
+                    componentSave.Instances.Add(instanceSave);
                 }
+
+                // Clone states
+                foreach (var state in element.States)
+                {
+                    if (element.DefaultState == state)
+                    {
+                        defaultState = state.Clone();
+
+                        componentSave.Initialize(defaultState);
+                        continue;
+                    }
+
+                    componentSave.States.Add(state.Clone());
+                }
+
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+                _projectCommands.AddComponent(componentSave);
+            }
+            else
+            {
+                MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                ShowCreateComponentFromInstancesDialog();
             }
         }
     }
