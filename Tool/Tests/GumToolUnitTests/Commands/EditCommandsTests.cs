@@ -68,7 +68,7 @@ public class EditCommandsTests
             new Mock<IFileCommands>().Object,
             _projectCommands.Object,
             new Mock<IGuiCommands>().Object,
-            new Mock<VariableInCategoryPropagationLogic>().Object
+            new Mock<IVariableInCategoryPropagationLogic>().Object
         );
     }
 

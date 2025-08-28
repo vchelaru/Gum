@@ -33,7 +33,7 @@ public class EditCommands
     private readonly IDialogService _dialogService;
     private readonly IWindowDialogService _windowDialogService;
     private readonly IProjectCommands _projectCommands;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
@@ -44,7 +44,7 @@ public class EditCommands
         IFileCommands fileCommands,
         IProjectCommands projectCommands,
         IGuiCommands guiCommands,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
