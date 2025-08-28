@@ -77,7 +77,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
-        services.AddSingleton<ProjectCommands>();
+        services.AddSingleton<IProjectCommands, ProjectCommands>();
 
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
         
@@ -98,6 +98,7 @@ file static class ServiceCollectionExtensions
     {
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<IWindowDialogService, WindowDialogService>();
 
         return services;
     }
