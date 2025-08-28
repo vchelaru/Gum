@@ -15,20 +15,20 @@ public interface IVariableInCategoryPropagationLogic
     void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate);
     void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory);
 }
-
 public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagationLogic
 {
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
 
-    public VariableInCategoryPropagationLogic()
+    public VariableInCategoryPropagationLogic(IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands)
     {
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
-
     public void PropagateVariablesInCategory(string memberName, ElementSave element,
         StateSaveCategory categoryToPropagate)
     {
@@ -45,7 +45,6 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         {
             defaultVariable = defaultState.GetVariableRecursive(memberName);
         }
-
         var defaultVariableList = defaultState.GetVariableListSave(memberName);
         if (defaultVariableList == null && defaultVariable == null)
         {
@@ -71,10 +70,8 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
                     variableContainer = ObjectFinder.Self.GetElementSave(nos);
                 }
             }
-
             StateSaveCategory category;
             var isState = defaultVariable.IsState(variableContainer, out _, out category);
-
             if (isState)
             {
                 // we're going to assign a value on the variable, but we don't want to modify the original one so, 
@@ -90,13 +87,11 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
                 }
             }
         }
-
         // variable lists cannot be states, so no need to do anything here:
         if (defaultVariableList != null && defaultVariableList.ValueAsIList == null)
         {
             // do nothing...
         }
-
         var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
 
         foreach (var state in categoryToPropagate.States)
