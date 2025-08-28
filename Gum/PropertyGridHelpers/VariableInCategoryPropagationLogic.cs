@@ -3,188 +3,192 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
-using Gum.ToolStates;
 using Gum.Undo;
 using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
 
-namespace Gum.PropertyGridHelpers
+namespace Gum.PropertyGridHelpers;
+
+public interface IVariableInCategoryPropagationLogic
 {
-    public class VariableInCategoryPropagationLogic
+    void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate);
+    void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory);
+}
+
+public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagationLogic
+{
+    private readonly IUndoManager _undoManager;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+
+    public VariableInCategoryPropagationLogic()
     {
-        private readonly IUndoManager _undoManager;
-        private readonly IGuiCommands _guiCommands;
-        private readonly IFileCommands _fileCommands;
-        
-        public VariableInCategoryPropagationLogic()
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+    }
+
+    public void PropagateVariablesInCategory(string memberName, ElementSave element,
+        StateSaveCategory categoryToPropagate)
+    {
+        /////////////////////Early Out//////////////////////////
+        if (categoryToPropagate == null)
         {
-            _undoManager = Locator.GetRequiredService<IUndoManager>();
-            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-            _fileCommands = Locator.GetRequiredService<IFileCommands>();
+            return;
         }
-        public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
+        ///////////////////End Early Out////////////////////////
+
+        var defaultState = element.DefaultState;
+        var defaultVariable = defaultState.GetVariableSave(memberName);
+        if (defaultVariable == null)
         {
-            /////////////////////Early Out//////////////////////////
-            if (categoryToPropagate == null)
+            defaultVariable = defaultState.GetVariableRecursive(memberName);
+        }
+
+        var defaultVariableList = defaultState.GetVariableListSave(memberName);
+        if (defaultVariableList == null && defaultVariable == null)
+        {
+            defaultVariableList = defaultState.GetVariableListRecursive(memberName);
+        }
+
+        // If the user is setting a variable that is a categorized state, the
+        // default may be null. If so, then we need to select the first value
+        // as the default so that values are always set:
+        if (defaultVariable != null && defaultVariable.Value == null)
+        {
+            var variableContainer = element;
+
+
+            var sourceObjectName = VariableSave.GetSourceObject(memberName);
+
+            if (!string.IsNullOrEmpty(sourceObjectName))
             {
-                return;
-            }
-            ///////////////////End Early Out////////////////////////
+                var nos = variableContainer.GetInstance(sourceObjectName);
 
-            var defaultState = element.DefaultState;
-            var defaultVariable = defaultState.GetVariableSave(memberName);
-            if (defaultVariable == null)
-            {
-                defaultVariable = defaultState.GetVariableRecursive(memberName);
-            }
-            var defaultVariableList = defaultState.GetVariableListSave(memberName);
-            if(defaultVariableList == null && defaultVariable == null)
-            {
-                defaultVariableList = defaultState.GetVariableListRecursive(memberName);
-            }
-
-            // If the user is setting a variable that is a categorized state, the
-            // default may be null. If so, then we need to select the first value
-            // as the default so that values are always set:
-            if(defaultVariable != null && defaultVariable.Value == null)
-            {
-                var variableContainer = element;
-
-
-                var sourceObjectName = VariableSave.GetSourceObject(memberName);
-
-                if(!string.IsNullOrEmpty(sourceObjectName))
+                if (nos != null)
                 {
-                    var nos = variableContainer.GetInstance(sourceObjectName);
+                    variableContainer = ObjectFinder.Self.GetElementSave(nos);
+                }
+            }
 
-                    if(nos != null)
+            StateSaveCategory category;
+            var isState = defaultVariable.IsState(variableContainer, out _, out category);
+
+            if (isState)
+            {
+                // we're going to assign a value on the variable, but we don't want to modify the original one so, 
+                // let's clone it:
+                defaultVariable = defaultVariable.Clone();
+                if (category != null)
+                {
+                    defaultVariable.Value = category.States.FirstOrDefault()?.Name;
+                }
+                else
+                {
+                    defaultVariable.Value = variableContainer.DefaultState?.Name;
+                }
+            }
+        }
+
+        // variable lists cannot be states, so no need to do anything here:
+        if (defaultVariableList != null && defaultVariableList.ValueAsIList == null)
+        {
+            // do nothing...
+        }
+
+        var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
+
+        foreach (var state in categoryToPropagate.States)
+        {
+            if (defaultVariable != null)
+            {
+                var existingVariable = state.GetVariableSave(memberName);
+                if (existingVariable == null)
+                {
+                    if (defaultVariable != null)
                     {
-                        variableContainer = ObjectFinder.Self.GetElementSave(nos);
+                        VariableSave newVariable = defaultVariable.Clone();
+                        newVariable.Value = defaultValue;
+                        newVariable.SetsValue = true;
+                        newVariable.Name = memberName;
+
+                        state.Variables.Add(newVariable);
+
+                        _guiCommands.PrintOutput(
+                            $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
                     }
                 }
-
-                StateSaveCategory category;
-                var isState = defaultVariable.IsState(variableContainer, out _, out category);
-
-                if(isState)
+                else if (existingVariable.SetsValue == false)
                 {
-                    // we're going to assign a value on the variable, but we don't want to modify the original one so, 
-                    // let's clone it:
-                    defaultVariable = defaultVariable.Clone();
-                    if(category != null)
+                    existingVariable.SetsValue = true;
+                }
+            }
+            else if (defaultVariableList != null)
+            {
+                var existingVariableList = state.GetVariableListSave(memberName);
+                if (existingVariableList == null)
+                {
+                    if (defaultVariableList != null)
                     {
-                        defaultVariable.Value = category.States.FirstOrDefault()?.Name;
+                        var newVariableList = defaultVariableList.Clone();
+                        // handled by clone:
+                        //newVariableList.ValueAsIList = defaultVariableList.ValueAsIList;
+                        newVariableList.Name = memberName;
+                        state.VariableLists.Add(newVariableList);
+                        _guiCommands.PrintOutput(
+                            $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
+                    }
+                }
+            }
+        }
+    }
+
+
+    public void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory)
+    {
+        string message =
+            $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following states will be impacted:\n";
+
+        foreach (var state in stateCategory.States)
+        {
+            message += $"\n{state.Name}";
+        }
+
+        var result = MessageBox.Show(message, "Remove Variables?", MessageBoxButtons.YesNo);
+
+        if (result == DialogResult.Yes)
+        {
+            using (_undoManager.RequestLock())
+            {
+                foreach (var state in stateCategory.States)
+                {
+                    var foundVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
+
+                    if (foundVariable != null)
+                    {
+                        state.Variables.Remove(foundVariable);
                     }
                     else
                     {
-                        defaultVariable.Value = variableContainer.DefaultState?.Name;
-
-                    }
-
-                }
-            }
-            // variable lists cannot be states, so no need to do anything here:
-            if(defaultVariableList != null && defaultVariableList.ValueAsIList == null)
-            {
-                // do nothing...
-            }
-
-            var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
-
-            foreach (var state in categoryToPropagate.States)
-            {
-
-                if(defaultVariable != null)
-                {
-                    var existingVariable = state.GetVariableSave(memberName);
-                    if (existingVariable == null)
-                    {
-                        if(defaultVariable != null)
+                        // it's probably a list:
+                        var foundVariableList = state.VariableLists.FirstOrDefault(item => item.Name == variableName);
+                        if (foundVariableList != null)
                         {
-                            VariableSave newVariable = defaultVariable.Clone();
-                            newVariable.Value = defaultValue;
-                            newVariable.SetsValue = true;
-                            newVariable.Name = memberName;
-
-                            state.Variables.Add(newVariable);
-
-                            _guiCommands.PrintOutput(
-                                $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
-                        }
-                    }
-                    else if (existingVariable.SetsValue == false)
-                    {
-                        existingVariable.SetsValue = true;
-                    }
-                }
-                else if(defaultVariableList != null)
-                {
-                    var existingVariableList = state.GetVariableListSave(memberName);
-                    if(existingVariableList == null)
-                    {
-                        if(defaultVariableList != null)
-                        {
-                            var newVariableList = defaultVariableList.Clone();
-                            // handled by clone:
-                            //newVariableList.ValueAsIList = defaultVariableList.ValueAsIList;
-                            newVariableList.Name = memberName;
-                            state.VariableLists.Add(newVariableList);
-                            _guiCommands.PrintOutput(
-                                $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
+                            state.VariableLists.Remove(foundVariableList);
                         }
                     }
                 }
+
+                // save everything
+                _fileCommands.TryAutoSaveCurrentElement();
+                _guiCommands.RefreshStateTreeView();
+                // no selection has changed, but we want to force refresh here because we know
+                // we really need a refresh - something was removed.
+                _guiCommands.RefreshVariables(force: true);
+
+                PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
             }
         }
-
-
-        public void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory)
-        {
-            string message =
-                $"Are you sure you want to remove {variableName} from all states in {stateCategory.Name}? The following states will be impacted:\n";
-
-            foreach (var state in stateCategory.States)
-            {
-                message += $"\n{state.Name}";
-            }
-
-            var result = MessageBox.Show(message, "Remove Variables?", MessageBoxButtons.YesNo);
-
-            if (result == DialogResult.Yes)
-            {
-                using(_undoManager.RequestLock())
-                {
-                    foreach (var state in stateCategory.States)
-                    {
-                        var foundVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
-
-                        if (foundVariable != null)
-                        {
-                            state.Variables.Remove(foundVariable);
-                        }
-                        else
-                        {
-                            // it's probably a list:
-                            var foundVariableList = state.VariableLists.FirstOrDefault(item => item.Name == variableName);
-                            if(foundVariableList != null)
-                            {
-                                state.VariableLists.Remove(foundVariableList);
-                            }
-                        }
-                    }
-
-                    // save everything
-                    _fileCommands.TryAutoSaveCurrentElement();
-                    _guiCommands.RefreshStateTreeView();
-                    // no selection has changed, but we want to force refresh here because we know
-                    // we really need a refresh - something was removed.
-                    _guiCommands.RefreshVariables(force:true);
-
-                    PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
-                }
-            }
-        }
-
     }
 }
