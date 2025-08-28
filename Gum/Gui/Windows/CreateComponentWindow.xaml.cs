@@ -17,18 +17,19 @@ using System.Windows.Shapes;
 
 namespace Gum.Gui.Windows
 {
-    public partial class CreateComponentWindow : System.Windows.Window
+    public partial class CreateComponentWindow : Window
     {
         private readonly INameVerifier _nameVerifier;
+        
         public string Result
         {
             get => componentName.Text;
             set => componentName.Text = value;
         }
 
-        public CreateComponentWindow()
+        public CreateComponentWindow(INameVerifier nameVerifier)
         {
-            _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+            _nameVerifier = nameVerifier;
             InitializeComponent();
         }
 

@@ -469,9 +469,10 @@ public class EditCommands
         var nameWithoutPath = filePath.FileNameNoPath;
 
         //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
-        
-        var createComponentWindow = new CreateComponentWindow { Result = $"{nameWithoutPath}Component" };
-        bool? result = _windowDialogService.ShowDialog(createComponentWindow);
+
+        var createComponentWindow = _windowDialogService.CreateWindow<CreateComponentWindow>();
+        createComponentWindow.Result = $"{nameWithoutPath}Component";
+        bool? result = createComponentWindow.ShowDialog();
 
         if (result == true)
         {
