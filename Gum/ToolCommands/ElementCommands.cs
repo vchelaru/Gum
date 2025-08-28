@@ -26,14 +26,14 @@ namespace Gum.ToolCommands
         private readonly ISelectedState _selectedState;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
-        private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+        private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
         #endregion
 
         public ElementCommands(ISelectedState selectedState, 
             IGuiCommands guiCommands, 
             IFileCommands fileCommands,
-            IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
         {
             _selectedState = selectedState;
             _guiCommands = guiCommands;

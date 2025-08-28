@@ -418,8 +418,6 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
             mKeyboard.Initialize(this);
 
             mCameraPanningLogic = new CameraPanningLogic(this, mManagers, mCursor, mKeyboard);
-            var camera = mManagers.Renderer.Camera;
-            camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
             mCameraPanningLogic.Panning += HandlePanning;
 
 
@@ -588,12 +586,12 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
                 if ((isTallerThanCamera && isAbove) || (!isTallerThanCamera && isBelow))
                 {
                     // Move Camera so Sprite is on bottom
-                    Camera.Y = mCurrentTextureSprite.Y + mCurrentTexture.Height / Camera.Zoom;
+                    Camera.Y = mCurrentTextureSprite.Y + mCurrentTexture.Height - (Camera.ClientHeight / 2.0f - pixelBorder) / Camera.Zoom;
                 }
                 else
                 {
                     // Move Camera so Sprite is on top
-                    Camera.Y = mCurrentTextureSprite.Y / Camera.Zoom;
+                    Camera.Y = mCurrentTextureSprite.Y + (Camera.ClientHeight / 2.0f - pixelBorder) / Camera.Zoom;
                 }
             }
 
@@ -603,11 +601,11 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
                 if ((isWiderThanCamera && isLeft) || (!isWiderThanCamera && isRight))
                 {
-                    Camera.X = mCurrentTextureSprite.X + mCurrentTexture.Width / Camera.Zoom;
+                    Camera.X = mCurrentTextureSprite.X + mCurrentTexture.Width - (Camera.ClientWidth / 2.0f - pixelBorder) / Camera.Zoom;
                 }
                 else
                 {
-                    Camera.X = mCurrentTextureSprite.X / Camera.Zoom;
+                    Camera.X = mCurrentTextureSprite.X + (Camera.ClientWidth / 2.0f - pixelBorder) / Camera.Zoom;
                 }
             }
         }

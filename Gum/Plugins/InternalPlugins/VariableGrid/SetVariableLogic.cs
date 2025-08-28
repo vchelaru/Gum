@@ -38,7 +38,7 @@ namespace Gum.PropertyGridHelpers
         private readonly IUndoManager _undoManager;
         private readonly WireframeCommands _wireframeCommands;
         private readonly IGuiCommands _guiCommands;
-        private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+        private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
         public SetVariableLogic(ISelectedState selectedState, 
             INameVerifier nameVerifier, 
@@ -51,7 +51,7 @@ namespace Gum.PropertyGridHelpers
             FontManager fontManager,
             IFileCommands fileCommands,
             CircularReferenceManager circularReferenceManager,
-            IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
         {
             _selectedState = selectedState;
             _nameVerifier = nameVerifier;
@@ -858,10 +858,10 @@ namespace Gum.PropertyGridHelpers
 
                                 if (size != null && instance != null)
                                 {
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0, "int");
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0, "int");
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width, "int");
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height, "int");
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height);
 
                                     _wireframeCommands.Refresh();
                                 }

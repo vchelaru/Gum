@@ -78,7 +78,7 @@ public class SelectionManager
     private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
-    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public bool IsOverBody
     {
@@ -194,7 +194,7 @@ public class SelectionManager
         EditingManager editingManager, 
         IDialogService dialogService,
         HotkeyManager hotkeyManager,
-        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;

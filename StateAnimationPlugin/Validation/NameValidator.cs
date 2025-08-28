@@ -31,7 +31,7 @@ public class NameValidator
             whyNotValid = "Animation names cannot have spaces";
             return false;
         }
-        if (!_nameVerifier.IsNameValidCommon(animationName, out whyNotValid, out _))
+        if (_nameVerifier.IsNameValidCommon(animationName, out whyNotValid, out _))
         {
             return false;
         }

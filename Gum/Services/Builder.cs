@@ -74,10 +74,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<EditCommands>();
-        services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
+        services.AddSingleton<VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
-        services.AddSingleton<IProjectCommands, ProjectCommands>();
+        services.AddSingleton<ProjectCommands>();
 
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
         
@@ -98,7 +98,6 @@ file static class ServiceCollectionExtensions
     {
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
         services.AddSingleton<IDialogService, DialogService>();
-        services.AddSingleton<IWindowDialogService, WindowDialogService>();
 
         return services;
     }

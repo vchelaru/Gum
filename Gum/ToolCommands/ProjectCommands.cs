@@ -15,7 +15,7 @@ using Gum.Services;
 
 namespace Gum.ToolCommands;
 
-public class ProjectCommands : IProjectCommands
+public class ProjectCommands
 {
     #region Fields
 
@@ -69,7 +69,7 @@ public class ProjectCommands : IProjectCommands
 
     #region Element (Screen/Component/Standard)
 
-    public void RemoveElement(ElementSave element)
+    internal void RemoveElement(ElementSave element)
     {
         GumProjectSave gps = ProjectManager.Self.GumProjectSave;
         string name = element.Name;

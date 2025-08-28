@@ -28,7 +28,7 @@ namespace Gum.Managers
         private readonly EditCommands _editCommands;
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
-        private readonly IProjectCommands _projectCommands;
+        private readonly ProjectCommands _projectCommands;
 
         private MenuStrip _menuStrip;
 
@@ -62,7 +62,7 @@ namespace Gum.Managers
             EditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
-            IProjectCommands projectCommands,
+            ProjectCommands projectCommands,
             IMessenger messenger)
         {
             _guiCommands = guiCommands;

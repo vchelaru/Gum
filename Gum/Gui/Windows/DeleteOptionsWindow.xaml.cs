@@ -10,7 +10,7 @@ namespace Gum.Gui.Windows
     /// <summary>
     /// Interaction logic for DeleteOptionsWindow.xaml
     /// </summary>
-    public partial class DeleteOptionsWindow : Window
+    public partial class DeleteOptionsWindow : System.Windows.Window
     {
         /// <summary>
         /// The stack panel for plugins to add additional controls for options like

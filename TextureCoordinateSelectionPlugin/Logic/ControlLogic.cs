@@ -1,6 +1,5 @@
 ﻿using FlatRedBall.SpecializedXnaControls;
 using Gum;
-using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
@@ -11,13 +10,11 @@ using Gum.Undo;
 using Gum.Wireframe;
 using InputLibrary;
 using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
-using System.Threading.Tasks;
-using System.Windows.Threading;
+using Gum.Commands;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -34,7 +31,7 @@ public enum RefreshType
 
 #endregion
 
-public class ControlLogic
+public class ControlLogic : Singleton<ControlLogic>
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
@@ -67,8 +64,6 @@ public class ControlLogic
     /// </summary>
     bool shouldRefreshAccordingToVariableSets = true;
     MainControl mainControl;
-
-    SystemManagers SystemManagers => mainControl.InnerControl.SystemManagers;
 
     Texture2D CurrentTexture
     {
@@ -587,26 +582,5 @@ public class ControlLogic
         {
             control.DesiredSelectorCount = 0;
         }
-    }
-
-    public async void CenterCameraOnSelection()
-    {
-        var camera = SystemManagers.Renderer.Camera;
-
-        // For Vic K:
-        // I could not figure
-        // out how to get the control
-        // to be fully laid out here. I
-        // had to put a delay of 100 ms and
-        // all works, but this feels dirty. I've
-        // tried looking at the control's ActualWidth 
-        // and ActualHeight, but that still returned 0
-        // uless I had the delay.
-        await Task.Delay(100);
-        mainControl.UpdateLayout();
-        var selector = mainControl.InnerControl.RectangleSelector;
-        camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
-        camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
-
     }
 }

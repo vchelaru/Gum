@@ -23,7 +23,7 @@ namespace Gum.Managers
 {
     public class DeleteLogic : Singleton<DeleteLogic>
     {
-        private readonly IProjectCommands _projectCommands;
+        private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
         private readonly IElementCommands _elementCommands;
         private readonly IUndoManager _undoManager;
@@ -33,7 +33,7 @@ namespace Gum.Managers
 
         public DeleteLogic()
         {
-            _projectCommands = Locator.GetRequiredService<IProjectCommands>();
+            _projectCommands = Locator.GetRequiredService<ProjectCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<IUndoManager>();
             _elementCommands = Locator.GetRequiredService<IElementCommands>();

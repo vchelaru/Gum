@@ -17,13 +17,13 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly IProjectCommands _projectCommands;
+    private readonly ProjectCommands _projectCommands;
 
     public AddScreenDialogViewModel(INameVerifier nameVerifier, 
         ISelectedState selectedState, 
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IProjectCommands projectCommands)
+        ProjectCommands projectCommands)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;

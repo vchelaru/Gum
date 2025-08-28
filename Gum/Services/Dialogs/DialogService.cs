@@ -59,8 +59,7 @@ internal class DialogService : IDialogService
         {
             DataContext = dialogViewModel, 
             Owner = Application.Current.MainWindow,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            MaxHeight = Application.Current.MainWindow!.ActualHeight
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
         
         return window;

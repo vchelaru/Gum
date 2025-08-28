@@ -16,7 +16,7 @@ To upgrade the Gum tool to the latest version (2025 July):
 
 ## Upgrading Runtime
 
-Upgrade your Gum NuGet packages to version 2025.8.26.1. For more information, see the NuGet packages for your particular platform:
+Upgrade your Gum NuGet packages to version 2025.8.3.3. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
@@ -27,32 +27,6 @@ Upgrade your Gum NuGet packages to version 2025.8.26.1. For more information, se
 For other platforms you need to build Gum from source
 
 See below for breaking changes and updates.
-
-## TextRuntime Now Uses XNA BlendState Rather Than Gum BlendState
-
-This matches the syntax for other runtime types, making all runtimes consistent.
-
-## SliderVisual.NineSliceInstance Renamed to TrackBackground
-
-This property was renamed to clearly indicate the usage of this NineSliceRuntime. The previous name was vague and caused confusion.
-
-Change code from:
-
-```csharp
-var sliderVisual = (SliderVisual)MySlider.Visual;
-var trackBackground = sliderVisual.NineSliceInstance;
-```
-
-to:
-
-```csharp
-var sliderVisual = (SliderVisual)MySlider.Visual;
-var trackBackground = sliderVisual.TrackBackground;
-```
-
-## Upgrading Gum.MonoGame to .NET 8
-
-The MonoGame runtime library for Gum has been upgraded from .NET 6 to .NET 8. Most projects will not be affected by this change since MonoGame 3.8.3 already requires game projects to be .NET 8 or newer. If your project is using an earlier version of MonoGame, such as MonoGame 3.8.1, then it may still be targeting .NET 6.0. You can upgrade your project to .NET 8 and it will still work with the older MonoGame version.
 
 ## Removal of MonoGameGum.Forms Namespace
 

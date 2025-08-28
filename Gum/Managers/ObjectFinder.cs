@@ -124,27 +124,24 @@ namespace Gum.Managers
 
                 // Although it's not valid, we want to prevent a dupe from breaking the plugin, so we
                 // need to do ContainsKey checks
-                if(gumProject != null)
+
+                foreach (var screen in gumProject.Screens)
                 {
-                    foreach (var screen in gumProject.Screens)
-                    {
-                        var name = screen.Name;
-                        cachedDictionary[name] = screen;
-                    }
-
-                    foreach(var component in gumProject.Components)
-                    {
-                        var name = component.Name;
-                        cachedDictionary[name] = component;
-                    }
-
-                    foreach (var standard in gumProject.StandardElements)
-                    {
-                        var name = standard.Name;
-                        cachedDictionary[name] = standard;
-                    }
+                    var name = screen.Name;
+                    cachedDictionary[name] = screen;
                 }
 
+                foreach(var component in gumProject.Components)
+                {
+                    var name = component.Name;
+                    cachedDictionary[name] = component;
+                }
+
+                foreach (var standard in gumProject.StandardElements)
+                {
+                    var name = standard.Name;
+                    cachedDictionary[name] = standard;
+                }
             }
         }
 

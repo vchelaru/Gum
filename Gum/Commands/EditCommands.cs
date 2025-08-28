@@ -31,27 +31,24 @@ public class EditCommands
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
-    private readonly IWindowDialogService _windowDialogService;
-    private readonly IProjectCommands _projectCommands;
-    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly ProjectCommands _projectCommands;
+    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
         IRenameLogic renameLogic,
         IUndoManager undoManager,
         IDialogService dialogService,
-        IWindowDialogService windowDialogService,
         IFileCommands fileCommands,
-        IProjectCommands projectCommands,
+        ProjectCommands projectCommands,
         IGuiCommands guiCommands,
-        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
         _undoManager = undoManager;
         _dialogService = dialogService;
-        _windowDialogService = windowDialogService;
         _fileCommands = fileCommands;
         _projectCommands = projectCommands;
         _guiCommands = guiCommands;
@@ -461,18 +458,19 @@ public class EditCommands
         
         if (instances == null || instances.Count() == 0 || element == null)
         {
-            _windowDialogService.ShowMessage("You must first save the project before adding a new component");
+            MessageBox.Show("You must first save the project before adding a new component");
             return;
         }
         
+        CreateComponentWindow createComponentWindow = new CreateComponentWindow();
+
         FilePath filePath = element.Name;
         var nameWithoutPath = filePath.FileNameNoPath;
 
+        createComponentWindow.Result = $"{nameWithoutPath}Component";
         //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
 
-        var createComponentWindow = _windowDialogService.CreateWindow<CreateComponentWindow>();
-        createComponentWindow.Result = $"{nameWithoutPath}Component";
-        bool? result = createComponentWindow.ShowDialog();
+        Nullable<bool> result = createComponentWindow.ShowDialog();
 
         if (result == true)
         {
@@ -533,7 +531,7 @@ public class EditCommands
             }
             else
             {
-                _windowDialogService.ShowMessage($"Invalid name for new component: {whyNotValid}");
+                MessageBox.Show($"Invalid name for new component: {whyNotValid}");
                 ShowCreateComponentFromInstancesDialog();
             }
         }

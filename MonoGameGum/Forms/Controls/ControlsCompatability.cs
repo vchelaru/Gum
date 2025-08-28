@@ -168,48 +168,48 @@ namespace MonoGameGum.Forms
 
 namespace MonoGameGum.Forms.Controls
 {
-    [Obsolete("Use Gum.Forms.Controls.Button instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Button : Gum.Forms.Controls.Button
     {
         public Button() : base() { }
         public Button(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.CheckBox instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class CheckBox : Gum.Forms.Controls.CheckBox
     {
         public CheckBox() : base() { }
         public CheckBox(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ComboBox instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class  ComboBox : Gum.Forms.Controls.ComboBox
     {
         public ComboBox() : base() { }
         public ComboBox(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.DragDropReorderMode instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public enum DragDropReorderMode
     {
         NoReorder,
         Immediate
     }
 
-    [Obsolete("Use Gum.Forms.Controls.FrameworkElement instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class FrameworkElement : Gum.Forms.Controls.FrameworkElement
     {
         public FrameworkElement() : base() { }
         public FrameworkElement(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Image instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Image : Gum.Forms.Controls.Image
     {
         public Image() : base() { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ItemsControl instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ItemsControl : Gum.Forms.Controls.ItemsControl
     {
         public new ScrollBarVisibility VerticalScrollBarVisibility
@@ -222,7 +222,7 @@ namespace MonoGameGum.Forms.Controls
         public ItemsControl(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.KeyCombo instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public struct KeyCombo
     {
         public Keys PushedKey { get; set; }
@@ -254,14 +254,14 @@ namespace MonoGameGum.Forms.Controls
         }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Label instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Label : Gum.Forms.Controls.Label
     {
         public Label() : base() { }
         public Label(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ListBox instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ListBox : Gum.Forms.Controls.ListBox
     {
         public new ScrollBarVisibility VerticalScrollBarVisibility
@@ -286,42 +286,42 @@ namespace MonoGameGum.Forms.Controls
             base.ScrollIndexIntoView(itemIndex, (Gum.Forms.Controls.ScrollIntoViewStyle)(int)scrollIntoViewStyle);
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ListBoxItem instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ListBoxItem : Gum.Forms.Controls.ListBoxItem
     {
         public ListBoxItem() : base() { }
         public ListBoxItem(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Menu instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Menu : Gum.Forms.Controls.Menu
     {
         public Menu() : base() { }
         public Menu(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.MenuItem instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class MenuItem : Gum.Forms.Controls.MenuItem
     {
         public MenuItem() : base() { }
         public MenuItem(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Orientation instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public enum Orientation
     {
         Horizontal = 0,
         Vertical = 1
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Panel instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Panel : Gum.Forms.Controls.Panel
     {
         public Panel() : base() { }
         public Panel(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.PasswordBox instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class PasswordBox : Gum.Forms.Controls.PasswordBox
     {
         public new TextWrapping TextWrapping
@@ -334,28 +334,28 @@ namespace MonoGameGum.Forms.Controls
         public PasswordBox(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.RadioButton instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class RadioButton : Gum.Forms.Controls.RadioButton
     {
         public RadioButton() : base() {}
         public RadioButton(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ResizeBehavior instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public enum ResizeBehavior
     {
         Rows,
         Columns
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ScrollBar instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ScrollBar : Gum.Forms.Controls.ScrollBar
     { 
         public ScrollBar() : base() { }
         public ScrollBar(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ScrollBarVisibility instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public enum ScrollBarVisibility
     {
         /// <summary>
@@ -372,7 +372,7 @@ namespace MonoGameGum.Forms.Controls
         Visible = 3
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ScrollIntoViewStyle instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public enum ScrollIntoViewStyle
     {
         BringIntoView,
@@ -382,7 +382,7 @@ namespace MonoGameGum.Forms.Controls
         Bottom
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ScrollViewer instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ScrollViewer :Gum.Forms.Controls.ScrollViewer
     {
         public new ScrollBarVisibility VerticalScrollBarVisibility
@@ -395,14 +395,14 @@ namespace MonoGameGum.Forms.Controls
         public ScrollViewer(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Slider instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Slider : Gum.Forms.Controls.Slider
     {
         public Slider() : base() { }
         public Slider(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.Splitter instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Splitter : Gum.Forms.Controls.Splitter
     {
         public new ResizeBehavior? ResizeBehavior
@@ -426,7 +426,7 @@ namespace MonoGameGum.Forms.Controls
         public Splitter(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.StackPanel instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class StackPanel : Gum.Forms.Controls.StackPanel
     {
         public new Orientation Orientation
@@ -439,7 +439,7 @@ namespace MonoGameGum.Forms.Controls
         public StackPanel(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.TextBoxBase instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public abstract class TextBoxBase : Gum.Forms.Controls.TextBoxBase
     {
         public new TextWrapping TextWrapping
@@ -452,7 +452,7 @@ namespace MonoGameGum.Forms.Controls
         public TextBoxBase(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.TextBox instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class TextBox : Gum.Forms.Controls.TextBox
     {
         public new TextWrapping TextWrapping
@@ -465,7 +465,7 @@ namespace MonoGameGum.Forms.Controls
         public TextBox(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.TextCompositionEventArgs instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class TextCompositionEventArgs : RoutedEventArgs
     {
         /// <summary>
@@ -475,20 +475,20 @@ namespace MonoGameGum.Forms.Controls
         public TextCompositionEventArgs(string text) { Text = text; }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.ToggleButton instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ToggleButton : Gum.Forms.Controls.ToggleButton
     {
         public ToggleButton() : base() { }
         public ToggleButton(InteractiveGue visual) : base(visual) { }
     }
-    [Obsolete("Use Gum.Forms.Controls.UserControl instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class UserControl : Gum.Forms.Controls.UserControl
     {
         public UserControl() : base() { }
         public UserControl(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use Gum.Forms.Controls.FrameworkElementExt instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public static class FrameworkElementExt
     {
         public static void SetBinding(this FrameworkElement element, string uiProperty, LambdaExpression propertyExpression) =>
@@ -542,14 +542,14 @@ namespace MonoGameGum.Forms.Controls
 
 namespace MonoGameGum.Forms.Data
 {
-    [Obsolete("Use the version this class in Gum.Forms.Data instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class Binding : Gum.Forms.Data.Binding
     {
 
         public Binding(LambdaExpression propertyExpression) : base(propertyExpression) { }
     }
 
-    [Obsolete("Use the version this class in Gum.Forms.Data instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public static class BindingOperations
     {
         public static BindingExpressionBase? GetBindingExpression(Controls.FrameworkElement element, string uiPropertyName)
@@ -562,14 +562,14 @@ namespace MonoGameGum.Forms.Data
 
 namespace MonoGameGum.Forms.Controls.Primitives
 {
-    [Obsolete("Use the version this class in Gum.Forms.Primitives instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public class ButtonBase : Gum.Forms.Controls.Primitives.ButtonBase
     { 
         public ButtonBase() : base() { }
         public ButtonBase(InteractiveGue visual) : base(visual) { }
     }
 
-    [Obsolete("Use the version this class in Gum.Forms.RangeBase instead")]
+    [Obsolete("Use the version this class in Gum.Forms instead")]
     public abstract class RangeBase : Gum.Forms.Controls.Primitives.RangeBase
     {
         public RangeBase() : base() { }

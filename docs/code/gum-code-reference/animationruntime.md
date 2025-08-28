@@ -20,13 +20,14 @@ Animations defined in the Gum tool can be loaded at runtime. To load and play an
 
 The following code shows how to load the first screen in a Gum project and how to play its animation.
 
-<pre class="language-csharp"><code class="lang-csharp">GraphicalUiElement screenRuntime;
+```csharp
+GraphicalUiElement screenRuntime;
 
 protected override void Initialize()
 {
     GumUI.Initialize(this, "GumProject/GumProject.gumx");
-<strong>    GumUI.LoadAnimations();
-</strong>
+    GumUI.LoadAnimations();
+
     var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
     screenRuntime = screen.ToGraphicalUiElement();
     screenRuntime.AddToRoot();
@@ -38,10 +39,10 @@ protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
 
-<strong>    var animation = screenRuntime.Animations[0];
-</strong><strong>    animation.ApplyAtTimeTo(gameTime.TotalGameTime.TotalSeconds, screenRuntime);
-</strong>
+    var animation = screenRuntime.Animations[0];
+    animation.ApplyAtTimeTo(gameTime.TotalGameTime.TotalSeconds, screenRuntime);
+
     base.Update(gameTime);
 }
 
-</code></pre>
+```
