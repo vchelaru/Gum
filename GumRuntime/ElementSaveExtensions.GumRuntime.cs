@@ -59,8 +59,12 @@ namespace GumRuntime
             if (elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave));
-
             }
+            if(elementSave.Name == null)
+            {
+                throw new InvalidOperationException("The argument ElementSave must have a name");
+            }
+
 #endif
             GraphicalUiElement toReturn = null;
 
@@ -582,10 +586,16 @@ namespace GumRuntime
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, ISystemManagers systemManagers)
         {
+#if DEBUG
             if(elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave), "elementSave parameter is required");
             }
+            if(elementSave.DefaultState == null)
+            {
+                throw new ArgumentException($"The element {elementSave} must have a DefaultState set.");
+            }
+#endif
             // We need to set categories and states first since those are used below;
             toReturn.AddStatesAndCategoriesRecursivelyToGue(elementSave);
 

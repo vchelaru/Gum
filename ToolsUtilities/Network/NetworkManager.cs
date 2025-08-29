@@ -24,7 +24,7 @@ namespace ToolsUtilitiesStandard.Network
         }
 
         public async Task<ToolsUtilities.GeneralResponse> DownloadWithProgress(HttpClient _httpClient, string url,
-            FilePath destination, Action<long?, long> progressChanged, CancellationToken cancellationToken = default)
+            FilePath destination, Action<long?, long>? progressChanged, CancellationToken cancellationToken = default)
         {
             var generalResponse = ToolsUtilities.GeneralResponse.SuccessfulResponse;
 

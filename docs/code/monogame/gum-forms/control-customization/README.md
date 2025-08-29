@@ -253,3 +253,18 @@ button.UpdateState();
 ```
 
 <figure><img src="../../../../.gitbook/assets/14_18 24 56.gif" alt=""><figcaption></figcaption></figure>
+
+Alternatively, you may want to use a sprite sheet texture (texure that has multiple individual parts). In this case, you can customize the coordinates by using custom texture address, as shown in the following code:
+
+```csharp
+background.Texture = YourLoadedTexture;
+// This tells the NineSlice to use the assigned texture coordiantes
+background.TextureAddress = Gum.Managers.TextureAddress.Custom;
+// This is in pixels
+background.TextureLeft = 438;
+background.TextureTop = 231;
+background.TextureWidth = 41;
+background.TextureHeight = 42;
+```
+
+For more information on working with NineSliceRuntime (the background type), see the [NineSliceRuntime page](../../../gum-code-reference/ninesliceruntime.md).
