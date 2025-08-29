@@ -605,8 +605,11 @@ public class ControlLogic
         await Task.Delay(100);
         mainControl.UpdateLayout();
         var selector = mainControl.InnerControl.RectangleSelector;
-        camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
-        camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
+        if(selector != null)
+        {
+            camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
+            camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
+        }
 
     }
 }
