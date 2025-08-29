@@ -467,7 +467,7 @@ public class EditCommands
 
                     return _nameVerifier.IsElementNameValid(userString, null, null, out string whyNotValid)
                         ? null
-                        : $"Invalid name for new component: {whyNotValid}";
+                        : whyNotValid;
                 }
             }
         );
