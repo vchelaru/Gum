@@ -61,8 +61,9 @@ namespace SkiaPlugin.Managers
 
                 StandardElementsManager.AddEventVariables(svgState);
 
+#if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(svgState);
-
+#endif
             }
             return svgState;
         }
@@ -90,7 +91,9 @@ namespace SkiaPlugin.Managers
 
                 StandardElementsManager.AddEventVariables(canvasState);
 
+#if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(canvasState);
+#endif
             }
 
             return canvasState;
@@ -122,7 +125,9 @@ namespace SkiaPlugin.Managers
 
                 StandardElementsManager.AddEventVariables(lottieAnimationState);
 
+#if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(lottieAnimationState);
+#endif
             }
             return lottieAnimationState;
         }
@@ -156,7 +161,9 @@ namespace SkiaPlugin.Managers
                 AddVariableReferenceList(filledCircleState);
                 StandardElementsManager.AddEventVariables(filledCircleState);
 
+#if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(filledCircleState);
+#endif
             }
 
             return filledCircleState;
@@ -195,7 +202,9 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddClipsChildren(roundedRectangleState);
                 StandardElementsManager.AddEventVariables(roundedRectangleState);
 
+#if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(roundedRectangleState);
+#endif
             }
 
             return roundedRectangleState;
@@ -242,7 +251,9 @@ namespace SkiaPlugin.Managers
 
                 AddGradientVariables(arcState);
                 AddVariableReferenceList(arcState);
+#if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(arcState);
+#endif
             }
 
             return arcState;
