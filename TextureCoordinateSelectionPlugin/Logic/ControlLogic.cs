@@ -14,7 +14,9 @@ using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Gum.Commands;
+using RenderingLibrary;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -586,7 +588,7 @@ public class ControlLogic : Singleton<ControlLogic>
 
     public async void CenterCameraOnSelection()
     {
-        var camera = SystemManagers.Renderer.Camera;
+        var camera = SystemManagers.Default.Renderer.Camera;
 
         // For Vic K:
         // I could not figure

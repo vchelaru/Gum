@@ -454,12 +454,15 @@ public class EditCommands
             from child in GetChildInstancesRecursively(selectedInstance)
             select child).ToList();
 
+        FilePath filePath = element.Name;
+        string strippedName = filePath.FileNameNoPath;
+        
         string result = _dialogService.GetUserString(
             title: "Create Component from selection",
             message: "Name of the new component:",
             options: new GetUserStringOptions
             {
-                InitialValue = ((FilePath)element.Name).FileNameNoPath + "Component",
+                InitialValue = strippedName + "Component",
                 Validator = userString =>
                 {
                     if (!ObjectFinder.Self.IsProjectSaved())
@@ -471,7 +474,7 @@ public class EditCommands
                 }
             }
         );
-        if (result == null) return;
+        if (result != null) return;
 
         var component = new ComponentSave { BaseType = "Container", Name = result };
 
@@ -516,7 +519,7 @@ public class EditCommands
         return
             from instance in parent.ParentContainer.Instances
             where instance.GetParentInstance() == parent
-            let children = new[] { instance }.Concat(GetChildInstancesRecursively(instance))
+            let children = GetChildInstancesRecursively(instance)
             from child in children
             select child;
     }

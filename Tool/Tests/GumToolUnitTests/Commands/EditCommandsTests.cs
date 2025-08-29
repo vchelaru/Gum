@@ -46,10 +46,17 @@ public class EditCommandsTests
 
         var parentInstance = new InstanceSave { Name = "ParentInstance" };
         var childInstance = new InstanceSave { Name = "ChildInstance" };
-        component.DefaultState.SetValue("ChildInstance.Parent", "ParentInstance", "string");
         component.Instances = [parentInstance, childInstance];
+        component.DefaultState.SetValue("ChildInstance.Parent", "ParentInstance", "string");
 
         component.Instances.ForEach(ins => ins.ParentContainer = component);
+
+        _selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(component);
+        _selectedState
+            .Setup(x => x.SelectedInstances)
+            .Returns(component.Instances);
     }
 
     private Mock<INameVerifier> SetupNameVerifierMock()
