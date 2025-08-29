@@ -77,7 +77,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
-        services.AddSingleton<ProjectCommands>();
+        services.AddSingleton<IProjectCommands, ProjectCommands>();
 
         services.AddSingleton<IMessenger, WeakReferenceMessenger>();
         
