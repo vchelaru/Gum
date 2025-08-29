@@ -1,6 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.StateAnimation.Runtime;
+using Gum.Wireframe;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -120,6 +122,46 @@ public class AnimationRuntimeTests
         }
 
         didThrow.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ComponentAnimation_ShouldContainAnimations()
+    {
+        var component = new ComponentSave();
+        component.Name = "AnimatedComponent";
+        component.States.Add(new StateSave()
+        {
+            ParentContainer = component,
+            Name = "Default"
+        });
+
+        var project = new GumProjectSave();
+        project.ElementAnimations = new()
+        {
+            new Gum.StateAnimation.SaveClasses.ElementAnimationsSave
+            {
+                Animations = new ()
+                {
+                    new Gum.StateAnimation.SaveClasses.AnimationSave
+                    {
+                        Name = "TestAnim"
+                    }
+                },
+                ElementName = "AnimatedComponent"
+            }
+        };
+        ObjectFinder.Self.GumProjectSave = project;
+
+        var runtime = component.ToGraphicalUiElement();
+
+
+        runtime.Animations.ShouldNotBeNull();
+        runtime.Animations.Count.ShouldBe(1);
+
+        var animation = runtime.Animations[0];
+        runtime.PlayAnimation(animation);
+        runtime.PlayAnimation("TestAnim");
+
     }
 }
 

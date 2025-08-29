@@ -5773,6 +5773,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         foreach (var state in list)
         {
+#if DEBUG
+            if(state.Name == null)
+            {
+                throw new ArgumentException("One of the states being added has a null name - be sure to set the name of all states");
+            }
+#endif
             // Right now this doesn't support inheritance
             // Need to investigate this....at some point:
             mStates[state.Name] = state;
@@ -6532,7 +6538,7 @@ public static class GraphicalUiElementExtensions
     /// </summary>
     /// <param name="graphicalUiElement">The GraphicalUiElement on which to play the animation.</param>
     /// <param name="index">The index of the animation to play.</param>
-    public static void PlayAnimation(GraphicalUiElement graphicalUiElement, int index)
+    public static void PlayAnimation(this GraphicalUiElement graphicalUiElement, int index)
     {
         var animation = graphicalUiElement.GetAnimation(index);
         if(animation == null)
