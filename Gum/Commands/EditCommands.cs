@@ -31,7 +31,7 @@ public class EditCommands
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
-    private readonly ProjectCommands _projectCommands;
+    private readonly IProjectCommands _projectCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public EditCommands(ISelectedState selectedState,
@@ -40,7 +40,7 @@ public class EditCommands
         IUndoManager undoManager,
         IDialogService dialogService,
         IFileCommands fileCommands,
-        ProjectCommands projectCommands,
+        IProjectCommands projectCommands,
         IGuiCommands guiCommands,
         VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
