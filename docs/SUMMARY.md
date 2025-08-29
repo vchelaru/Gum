@@ -186,6 +186,7 @@
   * [InstanceMember](code/gum-code-reference/instancemember.md)
   * [InstanceSave](code/gum-code-reference/instancesave.md)
   * [InteractiveGue](code/gum-code-reference/interactivegue/README.md)
+    * [AddNextPushAction](code/gum-code-reference/interactivegue/addnextpushaction.md)
     * [Click](code/gum-code-reference/interactivegue/click.md)
     * [CurrentInputReceiver](code/gum-code-reference/interactivegue/currentinputreceiver.md)
     * [Push](code/gum-code-reference/interactivegue/push.md)
