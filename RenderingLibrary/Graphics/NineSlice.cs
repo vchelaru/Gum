@@ -430,6 +430,16 @@ public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimata
         set;
     }
 
+    float _borderScale = 1;
+    public float BorderScale 
+    {
+        get => _borderScale;
+        set
+        {
+            _borderScale = value;
+
+        }
+    }
 
     #endregion
 
@@ -612,41 +622,51 @@ public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimata
 
         if (usesMulti == false)
         {
-            float fullWidth = mFullOutsideWidth * 2 + mFullInsideWidth;
-            if (Width >= fullWidth)
-            {
-                desiredMiddleWidth = Width - mSprites[(int)NineSliceSections.TopLeft].Width - mSprites[(int)NineSliceSections.TopRight].Width;
+            // single source file for each part of the NineSlice:
+            var fullBorderWidth = mFullOutsideWidth * 2 * _borderScale;
 
-                mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
-                    mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth;
-            }
-            else if (Width >= mFullOutsideWidth * 2)
+            if (Width >= fullBorderWidth)
             {
-                desiredMiddleWidth = this.Width - mFullOutsideWidth * 2;
+                desiredMiddleWidth = this.Width - fullBorderWidth;
 
-                mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
-                     mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth;
+                mSprites[(int)NineSliceSections.TopLeft].Width = 
+                    mSprites[(int)NineSliceSections.TopRight].Width = 
+                    mSprites[(int)NineSliceSections.Left].Width = 
+                    mSprites[(int)NineSliceSections.Right].Width =
+                    mSprites[(int)NineSliceSections.BottomLeft].Width = 
+                    mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth*_borderScale;
             }
             else
             {
                 desiredMiddleWidth = 0;
-                mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.TopRight].Width = 
-                    mSprites[(int)NineSliceSections.Left].Width = mSprites[(int)NineSliceSections.Right].Width =
-                    mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
+                mSprites[(int)NineSliceSections.TopLeft].Width = 
+                    mSprites[(int)NineSliceSections.TopRight].Width = 
+                    mSprites[(int)NineSliceSections.Left].Width = 
+                    mSprites[(int)NineSliceSections.Right].Width =
+                    mSprites[(int)NineSliceSections.BottomLeft].Width = 
+                    mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
             }
 
-            float fullHeight = mFullOutsideHeight * 2 + mFullInsideHeight;
-            if (Height >= fullHeight)
+            float fullBorderHeight = mFullOutsideHeight * 2 * _borderScale;
+            if (Height >= fullBorderHeight)
             {
-                desiredMiddleHeight = this.Height - mSprites[(int)NineSliceSections.TopLeft].Height - mSprites[(int)NineSliceSections.TopRight].Height;
-            }
-            else if (Height >= mFullOutsideHeight * 2)
-            {
-                desiredMiddleHeight = this.Height - mFullOutsideHeight * 2;
+                desiredMiddleHeight = this.Height - fullBorderHeight;
+                mSprites[(int)NineSliceSections.TopLeft].Height = 
+                    mSprites[(int)NineSliceSections.Top].Height =
+                    mSprites[(int)NineSliceSections.TopRight].Height =
+                    mSprites[(int)NineSliceSections.BottomLeft].Height =
+                    mSprites[(int)NineSliceSections.Bottom].Height =
+                    mSprites[(int)NineSliceSections.BottomRight].Height = mFullOutsideHeight * _borderScale;
             }
             else
             {
                 desiredMiddleHeight = 0;
+                mSprites[(int)NineSliceSections.TopLeft].Height =
+                    mSprites[(int)NineSliceSections.Top].Height =
+                    mSprites[(int)NineSliceSections.TopRight].Height =
+                    mSprites[(int)NineSliceSections.BottomLeft].Height =
+                    mSprites[(int)NineSliceSections.Bottom].Height =
+                    mSprites[(int)NineSliceSections.BottomRight].Height = Height/2.0f;
             }
         }
         else
@@ -797,46 +817,6 @@ public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimata
                 bottomCoordinate - bottomHeight,
                 outsideWidth,
                 bottomHeight);
-        }
-
-        //top
-        var tempRect = mSprites[(int) NineSliceSections.Top].SourceRectangle;
-        
-        if (tempRect.HasValue)
-        {
-            mSprites[(int)NineSliceSections.Top].Height = tempRect.Value.Height;
-            mSprites[(int)NineSliceSections.TopLeft].Height = mSprites[(int)NineSliceSections.Top].Height;
-            mSprites[(int)NineSliceSections.TopRight].Height = mSprites[(int)NineSliceSections.Top].Height;
-        }
-
-        //bottom
-        tempRect = mSprites[(int)NineSliceSections.Bottom].SourceRectangle;
-        
-        if (tempRect.HasValue)
-        {
-            mSprites[(int)NineSliceSections.Bottom].Height = tempRect.Value.Height;
-            mSprites[(int)NineSliceSections.BottomRight].Height = mSprites[(int)NineSliceSections.Bottom].Height;
-            mSprites[(int)NineSliceSections.BottomLeft].Height = mSprites[(int)NineSliceSections.Bottom].Height;
-        }
-
-        //left
-        tempRect = mSprites[(int)NineSliceSections.Left].SourceRectangle;
-        
-        if (tempRect.HasValue)
-        {
-            mSprites[(int)NineSliceSections.Left].Width = tempRect.Value.Width;
-            mSprites[(int)NineSliceSections.TopLeft].Width = mSprites[(int)NineSliceSections.Left].Width;
-            mSprites[(int)NineSliceSections.BottomLeft].Width = mSprites[(int)NineSliceSections.Left].Width;
-        }
-
-        //right
-        tempRect = mSprites[(int)NineSliceSections.Right].SourceRectangle;
-
-        if (tempRect.HasValue)
-        {
-            mSprites[(int)NineSliceSections.Right].Width = tempRect.Value.Width;
-            mSprites[(int)NineSliceSections.TopRight].Width = mSprites[(int)NineSliceSections.Right].Width;
-            mSprites[(int)NineSliceSections.BottomRight].Width = mSprites[(int)NineSliceSections.Right].Width;
         }
     }
 

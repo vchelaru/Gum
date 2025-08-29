@@ -132,6 +132,8 @@ namespace MonoGameGum.GueDeriving
 
         #endregion
 
+        #region Animation
+
         public bool Animate
         {
             get => ContainedNineSlice.Animate;
@@ -159,6 +161,14 @@ namespace MonoGameGum.GueDeriving
                 }
             }
         }
+
+        public float? CustomFrameTextureCoordinateWidth
+        {
+            get => ContainedNineSlice.CustomFrameTextureCoordinateWidth;
+            set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
+        }
+
+        #endregion
 
         #region Source File / Texture
 
@@ -192,10 +202,10 @@ namespace MonoGameGum.GueDeriving
 
         #endregion
 
-        public float? CustomFrameTextureCoordinateWidth
+        public float BorderScale
         {
-            get => ContainedNineSlice.CustomFrameTextureCoordinateWidth;
-            set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
+            get => ContainedNineSlice.BorderScale;
+            set => ContainedNineSlice.BorderScale = value;
         }
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
