@@ -34,7 +34,7 @@ public class EditCommands
     private readonly ProjectCommands _projectCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
-    public EditCommands(ISelectedState selectedState, 
+    public EditCommands(ISelectedState selectedState,
         INameVerifier nameVerifier,
         IRenameLogic renameLogic,
         IUndoManager undoManager,
@@ -78,7 +78,6 @@ public class EditCommands
             }
 
             deleteResponse.Message = message;
-
         }
 
         if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
@@ -106,7 +105,8 @@ public class EditCommands
         }
         else
         {
-            var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
+            var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?",
+                "Delete state?", MessageBoxButtons.YesNo);
 
             if (response == DialogResult.Yes)
             {
@@ -161,6 +161,7 @@ public class EditCommands
         {
             return;
         }
+
         var behaviorsNeedingState = GetBehaviorsNeedingState(stateToMove);
         if (behaviorsNeedingState.Count > 0)
         {
@@ -177,8 +178,6 @@ public class EditCommands
         }
 
         //////////////////End Early Out /////////////////////
-
-
 
 
         oldCategory.States.Remove(stateToMove);
@@ -214,14 +213,12 @@ public class EditCommands
         if (stateContainer is BehaviorSave behavior)
         {
             _fileCommands.TryAutoSaveBehavior(behavior);
-
         }
         else if (stateContainer is ElementSave asElement)
         {
             _fileCommands.TryAutoSaveElement(asElement);
         }
     }
-
 
     #endregion
 
@@ -238,7 +235,6 @@ public class EditCommands
         using var undoLock = _undoManager.RequestLock();
         _renameLogic.AskToRenameStateCategory(category, elementSave);
     }
-
 
     #endregion
 
@@ -270,7 +266,8 @@ public class EditCommands
 
             if (elementCategory != null)
             {
-                var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
+                var allBehaviorsNeedingCategory =
+                    DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
 
                 foreach (var behavior in allBehaviorsNeedingCategory)
                 {
@@ -326,7 +323,8 @@ public class EditCommands
                 behavior.Name = name;
 
                 ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-                ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+                ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) =>
+                    first.Name.CompareTo(second.Name));
                 ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
                 ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
@@ -431,6 +429,7 @@ public class EditCommands
                     {
                         folder += "/";
                     }
+
                     newComponent.Name = folder + name;
                     newComponent.Initialize(null);
                     StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
@@ -445,7 +444,6 @@ public class EditCommands
                 }
             }
         }
-
     }
 
     public void ShowCreateComponentFromInstancesDialog()
@@ -454,102 +452,77 @@ public class EditCommands
         var instances = _selectedState.SelectedInstances.Concat(
             from selectedInstance in _selectedState.SelectedInstances
             from child in GetChildInstancesRecursively(selectedInstance)
-            select child);
-        
-        if (instances == null || instances.Count() == 0 || element == null)
-        {
-            MessageBox.Show("You must first save the project before adding a new component");
-            return;
-        }
-        
-        CreateComponentWindow createComponentWindow = new CreateComponentWindow();
+            select child).ToList();
 
-        FilePath filePath = element.Name;
-        var nameWithoutPath = filePath.FileNameNoPath;
-
-        createComponentWindow.Result = $"{nameWithoutPath}Component";
-        //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
-
-        Nullable<bool> result = createComponentWindow.ShowDialog();
-
-        if (result == true)
-        {
-            string name = createComponentWindow.Result;
-            //bool replace = tiwcw.Checked
-
-            string whyNotValid;
-            _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
-
-            if (string.IsNullOrEmpty(whyNotValid))
+        string result = _dialogService.GetUserString(
+            title: "Create Component from selection",
+            message: "Name of the new component:",
+            options: new GetUserStringOptions
             {
-                ComponentSave componentSave = new ComponentSave();
-                componentSave.BaseType = "Container";
-                string folder = null;
-                if (!string.IsNullOrEmpty(folder))
+                InitialValue = ((FilePath)element.Name).FileNameNoPath + "Component",
+                Validator = userString =>
                 {
-                    folder += "/";
+                    if (!ObjectFinder.Self.IsProjectSaved())
+                        return "You must first save a project before adding a Component";
+
+                    return _nameVerifier.IsElementNameValid(userString, null, null, out string whyNotValid)
+                        ? null
+                        : $"Invalid name for new component: {whyNotValid}";
                 }
-
-                componentSave.Name = folder + name;
-
-                StateSave defaultState;
-
-                // Clone instances
-                foreach (var instance in instances)
-                {
-                    // Clone will fail if we are cloning an InstanceSave
-                    // in a behavior because its type is BehaviorInstanceSave.
-                    // Therefore, we will just manually create a copy:
-                    //var instanceSave = instance.Clone();
-                    //var instanceSave = instance.Clone();
-                    var instanceSave = new InstanceSave();
-                    instanceSave.Name = instance.Name;
-                    instanceSave.BaseType = instance.BaseType;
-                    instanceSave.DefinedByBase = instance.DefinedByBase;
-                    instanceSave.Locked = instance.Locked;
-                    instanceSave.ParentContainer = componentSave;
-
-                    componentSave.Instances.Add(instanceSave);
-                }
-
-                // Clone states
-                foreach (var state in element.States)
-                {
-                    if (element.DefaultState == state)
-                    {
-                        defaultState = state.Clone();
-
-                        componentSave.Initialize(defaultState);
-                        continue;
-                    }
-
-                    componentSave.States.Add(state.Clone());
-                }
-
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-                _projectCommands.AddComponent(componentSave);
             }
-            else
+        );
+        if (result == null) return;
+
+        var component = new ComponentSave { BaseType = "Container", Name = result };
+
+        // Clone instances
+        foreach (var instance in instances)
+        {
+            // Clone will fail if we are cloning an InstanceSave
+            // in a behavior because its type is BehaviorInstanceSave.
+            // Therefore, we will just manually create a copy:
+            var copy = new InstanceSave
             {
-                MessageBox.Show($"Invalid name for new component: {whyNotValid}");
-                ShowCreateComponentFromInstancesDialog();
-            }
+                Name = instance.Name,
+                BaseType = instance.BaseType,
+                DefinedByBase = instance.DefinedByBase,
+                Locked = instance.Locked,
+                ParentContainer = component
+            };
+            
+            component.Instances.Add(copy);
         }
+
+        // Clone states
+        foreach (var state in element.States)
+        {
+            if (state == element.DefaultState)
+            {
+                StateSave defaultState = state.Clone();
+
+                component.Initialize(defaultState);
+                continue;
+            }
+
+            component.States.Add(state.Clone());
+        }
+
+        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(component);
+        _projectCommands.AddComponent(component);
     }
-    
+
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
     {
         return
             from instance in parent.ParentContainer.Instances
             where instance.GetParentInstance() == parent
             let children = new[] { instance }.Concat(GetChildInstancesRecursively(instance))
-            from child in children 
+            from child in children
             select child;
     }
 
     public void DisplayReferencesTo(ElementSave element)
     {
-
         var references = ObjectFinder.Self.GetElementReferencesToThis(element);
 
         if (references.Count > 0)
@@ -590,6 +563,7 @@ public class EditCommands
                         foundElement = ObjectFinder.Self.GumProjectSave.Components
                             .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
                     }
+
                     if (foundElement != null)
                     {
                         // what's the instance?
@@ -627,9 +601,9 @@ public class EditCommands
             {
                 lbmb.Items.Add(reference);
             }
+
             lbmb.HideCancelNoDialog();
             lbmb.Show();
-
         }
         else
         {
