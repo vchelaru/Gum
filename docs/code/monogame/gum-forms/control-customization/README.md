@@ -254,7 +254,7 @@ button.UpdateState();
 
 <figure><img src="../../../../.gitbook/assets/14_18 24 56.gif" alt=""><figcaption></figcaption></figure>
 
-Alternatively, you may want to use a sprite sheet texture (texure that has multiple individual parts). In this case, you can customize the coordinates by using custom texture address, as shown in the following code:
+Alternatively, you may want to use a sprite sheet texture (texture that has multiple individual parts). In this case, you can customize the coordinates by using custom texture address, as shown in the following code:
 
 ```csharp
 background.Texture = YourLoadedTexture;
