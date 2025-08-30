@@ -521,11 +521,11 @@ public class EditCommands
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
     {
         return
-            from instance in parent.ParentContainer.Instances
-            where instance.GetParentInstance() == parent
-            let children = GetChildInstancesRecursively(instance)
-            from child in children
-            select child;
+            from child in parent.ParentContainer.Instances
+            where child.GetParentInstance() == parent
+            let subChildren = GetChildInstancesRecursively(child)
+            from subChild in subChildren.Concat([child])
+            select subChild;
     }
     
     public void DisplayReferencesTo(ElementSave element)
