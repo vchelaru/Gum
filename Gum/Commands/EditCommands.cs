@@ -30,6 +30,7 @@ public class EditCommands
     private readonly INameVerifier _nameVerifier;
     private readonly IRenameLogic _renameLogic;
     private readonly IUndoManager _undoManager;
+    private readonly IElementCommands _elementCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
@@ -41,6 +42,7 @@ public class EditCommands
         IRenameLogic renameLogic,
         IUndoManager undoManager,
         IDialogService dialogService,
+        IElementCommands elementCommands,
         IFileCommands fileCommands,
         IProjectCommands projectCommands,
         IGuiCommands guiCommands,
@@ -51,6 +53,7 @@ public class EditCommands
         _renameLogic = renameLogic;
         _undoManager = undoManager;
         _dialogService = dialogService;
+        _elementCommands = elementCommands;
         _fileCommands = fileCommands;
         _projectCommands = projectCommands;
         _guiCommands = guiCommands;
@@ -452,15 +455,28 @@ public class EditCommands
 
     public void ExtractComponent()
     {
+        var instance = _selectedState.SelectedInstance;
+        var parentInstance = instance.GetParentInstance();
         
+        ComponentSave extractedComponent = CreateComponentFromSelection("Extract Component", "Name of the extracted component");
+
+        _selectedState.SelectedInstance = instance;
+        DeleteSelection();
+
+        ElementSave elementToAddTo = instance.ParentContainer;
+        
+        // Copied from DragDropManager (lines 367–370 & 306). We might want to extract it to a public method
+        string name = FileManager.RemovePath(extractedComponent.Name) + "Instance";
+        var existingNames = elementToAddTo.Instances.Select(i => i.Name);
+        StringFunctions.MakeStringUnique(name, existingNames);
+
+        _elementCommands.AddInstance(elementToAddTo, name, extractedComponent.Name, parentInstance?.Name);
     }
     
-    public void ShowCreateComponentFromInstancesDialog()
-    {
-        CreateComponentFromSelection("Create Component from selection", "Name of the new component:");
-    }
+    public void ShowCreateComponentFromInstancesDialog() =>
+        CreateComponentFromSelection("Create Component from selected", "Name of the new component:");
 
-    private void CreateComponentFromSelection(string dialogTitle, string dialogMessage)
+    private ComponentSave? CreateComponentFromSelection(string dialogTitle, string dialogMessage)
     {
         var element = _selectedState.SelectedElement;
         var instances = _selectedState.SelectedInstances.Concat(
@@ -493,7 +509,7 @@ public class EditCommands
                 }
             }
         );
-        if (componentName == null) return;
+        if (componentName == null) return null;
 
         var component = new ComponentSave();
         _projectCommands.PrepareNewComponentSave(component, componentName);
@@ -540,6 +556,7 @@ public class EditCommands
         }
 
         _projectCommands.AddComponent(component);
+        return component;
     }
     
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
