@@ -450,7 +450,17 @@ public class EditCommands
 
     }
 
+    public void ExtractComponent()
+    {
+        
+    }
+    
     public void ShowCreateComponentFromInstancesDialog()
+    {
+        CreateComponentFromSelection("Create Component from selection", "Name of the new component:");
+    }
+
+    private void CreateComponentFromSelection(string dialogTitle, string dialogMessage)
     {
         var element = _selectedState.SelectedElement;
         var instances = _selectedState.SelectedInstances.Concat(
@@ -460,13 +470,18 @@ public class EditCommands
 
         FilePath containerName = element.Name;
         string containerStrippedName = containerName.FileNameNoPath;
+
+        bool moreThanOneInstanceSelected = _selectedState.SelectedInstances.Count() > 1;
         
         string? componentName = _dialogService.GetUserString(
-            title: "Create Component from selection",
-            message: "Name of the new component:",
+            title: dialogTitle,
+            message: dialogMessage,
             options: new GetUserStringOptions
             {
-                InitialValue = containerStrippedName + "Component",
+                InitialValue = moreThanOneInstanceSelected
+                    ? containerStrippedName + "Component"
+                    : _selectedState.SelectedInstance.Name,
+                
                 Validator = value =>
                 {
                     if (!ObjectFinder.Self.IsProjectSaved())
@@ -484,20 +499,31 @@ public class EditCommands
         _projectCommands.PrepareNewComponentSave(component, componentName);
 
         // Clone instances
-        foreach (var instance in instances)
+        if (moreThanOneInstanceSelected)
         {
-            // Clone will fail if we are cloning an InstanceSave
-            // in a behavior because its type is BehaviorInstanceSave.
-            // Therefore, we will just manually create a copy:
-            var instanceSave = new InstanceSave
+            foreach (var instance in instances)
             {
-                Name = instance.Name,
-                BaseType = instance.BaseType,
-                DefinedByBase = instance.DefinedByBase,
-                Locked = instance.Locked,
-                ParentContainer = component
-            };
-            component.Instances.Add(instanceSave);
+                // Clone will fail if we are cloning an InstanceSave
+                // in a behavior because its type is BehaviorInstanceSave.
+                // Therefore, we will just manually create a copy:
+                var instanceSave = new InstanceSave
+                {
+                    Name = instance.Name,
+                    BaseType = instance.BaseType,
+                    DefinedByBase = instance.DefinedByBase,
+                    Locked = instance.Locked,
+                    ParentContainer = component
+                };
+            
+                component.Instances.Add(instanceSave);
+            }
+        }
+        else
+        {
+            var instance = _selectedState.SelectedInstance;
+
+            component.Name = instance.Name;
+            component.BaseType = instance.BaseType;
         }
 
         // Clone states
@@ -512,10 +538,10 @@ public class EditCommands
             }
             component.States.Add(state.Clone());
         }
-        
+
         _projectCommands.AddComponent(component);
     }
-
+    
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
     {
         return

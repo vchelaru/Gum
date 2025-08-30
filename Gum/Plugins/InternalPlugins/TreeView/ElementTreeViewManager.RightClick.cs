@@ -24,9 +24,7 @@ public partial class ElementTreeViewManager
 {
 
     #region Fields
-
-
-
+    
     ToolStripMenuItem mAddScreen;
     ToolStripMenuItem mImportScreen;
 
@@ -37,12 +35,16 @@ public partial class ElementTreeViewManager
     ToolStripMenuItem mAddParentInstance;
     ToolStripMenuItem mSaveObject;
     ToolStripMenuItem mGoToDefinition;
-    ToolStripMenuItem mCreateComponent;
+    ToolStripMenuItem mCreateComponentFromThis;
+    ToolStripMenuItem mCreateComponentFromSelection;
+    ToolStripMenuItem mExtractComponent;
+    
     ToolStripMenuItem mDeleteObject;
 
     ToolStripMenuItem mAddFolder;
 
     ToolStripMenuItem duplicateElement;
+    
     #endregion
 
 
@@ -84,9 +86,17 @@ public partial class ElementTreeViewManager
         mGoToDefinition.Text = "Go to definition";
         mGoToDefinition.Click += OnGoToDefinitionClick;
 
-        mCreateComponent = new ToolStripMenuItem();
-        mCreateComponent.Text = "Create Component";
-        mCreateComponent.Click += CreateComponentClick;
+        mCreateComponentFromThis = new ToolStripMenuItem();
+        mCreateComponentFromThis.Text = "Create Component from this";
+        mCreateComponentFromThis.Click += CreateComponentFromSelectedClick;
+        
+        mCreateComponentFromSelection = new ToolStripMenuItem();
+        mCreateComponentFromSelection.Text = "Create Component from selection";
+        mCreateComponentFromSelection.Click += CreateComponentFromSelectedClick;
+
+        mExtractComponent = new ToolStripMenuItem();
+        mExtractComponent.Text = "Extract Component";
+        mExtractComponent.Click += ExtractComponentClick;
 
         mAddFolder = new ToolStripMenuItem();
         mAddFolder.Text = "Add Folder";
@@ -100,7 +110,6 @@ public partial class ElementTreeViewManager
         duplicateElement.Text = "To Be Replaced...";
         duplicateElement.Click += HandleDuplicateElementClick;
     }
-
 
 
     void HandleDeleteObjectClick(object sender, EventArgs e)
@@ -126,13 +135,21 @@ public partial class ElementTreeViewManager
             _selectedState.SelectedElement = element;
         }
     }
-
-    void CreateComponentClick(object sender, EventArgs e)
+    
+    void CreateComponentFromSelectedClick(object sender, EventArgs e)
     {
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
         {
             _editCommands.ShowCreateComponentFromInstancesDialog();
+        }
+    }
+    
+    void ExtractComponentClick(object sender, EventArgs e)
+    {
+        if (_selectedState.SelectedScreen != null || _selectedState.SelectedComponent != null)
+        {
+            _editCommands.ExtractComponent();
         }
     }
 
@@ -275,7 +292,16 @@ public partial class ElementTreeViewManager
                 {
                     mMenuStrip.Items.Add("-");
 
-                    mMenuStrip.Items.Add(mCreateComponent);
+                    int instanceCount = _selectedState.SelectedInstances.Count();
+                    if (instanceCount == 1)
+                    {
+                        mMenuStrip.Items.Add(mCreateComponentFromThis);
+                        mMenuStrip.Items.Add(mExtractComponent);
+                    }
+                    else if (instanceCount > 1)
+                    {
+                        mMenuStrip.Items.Add(mCreateComponentFromSelection);
+                    }
                 }
 
                 mMenuStrip.Items.Add("-");
