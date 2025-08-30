@@ -453,7 +453,10 @@ public class EditCommands
     public void ShowCreateComponentFromInstancesDialog()
     {
         var element = _selectedState.SelectedElement;
-        var instances = _selectedState.SelectedInstances.ToList();
+        var instances = _selectedState.SelectedInstances.Concat(
+            from selectedInstance in _selectedState.SelectedInstances
+            from child in GetChildInstancesRecursively(selectedInstance)
+            select child);
 
         FilePath containerName = element.Name;
         string containerStrippedName = containerName.FileNameNoPath;
@@ -515,6 +518,16 @@ public class EditCommands
         _projectCommands.AddComponent(component);
     }
 
+    private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
+    {
+        return
+            from instance in parent.ParentContainer.Instances
+            where instance.GetParentInstance() == parent
+            let children = GetChildInstancesRecursively(instance)
+            from child in children
+            select child;
+    }
+    
     public void DisplayReferencesTo(ElementSave element)
     {
 
