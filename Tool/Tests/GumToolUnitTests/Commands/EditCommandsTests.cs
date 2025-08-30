@@ -87,8 +87,7 @@ public class EditCommandsTests
         _editCommands.ShowCreateComponentFromInstancesDialog();
         
         _projectCommands.Verify(
-            // commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp.Instances))),
-            commands => commands.AddComponent(It.IsAny<ComponentSave>()),
+            commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp.Instances))),
             Times.Once
         );
     }
