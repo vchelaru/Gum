@@ -454,85 +454,65 @@ public class EditCommands
     {
         var element = _selectedState.SelectedElement;
         var instances = _selectedState.SelectedInstances.ToList();
-        if (instances == null || instances.Count == 0 || element == null)
-        {
-            MessageBox.Show("You must first save the project before adding a new component");
-        }
-        else if (instances is List<InstanceSave>)
-        {
-            CreateComponentWindow createComponentWindow = new CreateComponentWindow();
 
-            FilePath filePath = element.Name;
-            var nameWithoutPath = filePath.FileNameNoPath;
-
-            createComponentWindow.Result = $"{nameWithoutPath}Component";
-            //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
-
-            Nullable<bool> result = createComponentWindow.ShowDialog();
-
-            if (result == true)
+        FilePath containerName = element.Name;
+        string containerStrippedName = containerName.FileNameNoPath;
+        
+        string? componentName = _dialogService.GetUserString(
+            title: "Create Component from selection",
+            message: "Name of the new component:",
+            options: new GetUserStringOptions
             {
-                string name = createComponentWindow.Result;
-                //bool replace = tiwcw.Checked
-
-                string whyNotValid;
-                _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
-
-                if (string.IsNullOrEmpty(whyNotValid))
+                InitialValue = containerStrippedName + "Component",
+                Validator = value =>
                 {
-                    ComponentSave componentSave = new ComponentSave();
-                    componentSave.BaseType = "Container";
-                    string folder = null;
-                    if (!string.IsNullOrEmpty(folder))
-                    {
-                        folder += "/";
-                    }
-                    componentSave.Name = folder + name;
+                    if (!ObjectFinder.Self.IsProjectSaved())
+                        return "You must first save the project before adding a new component";
 
-                    StateSave defaultState;
-
-                    // Clone instances
-                    foreach (var instance in instances)
-                    {
-                        // Clone will fail if we are cloning an InstanceSave
-                        // in a behavior because its type is BehaviorInstanceSave.
-                        // Therefore, we will just manually create a copy:
-                        //var instanceSave = instance.Clone();
-                        //var instanceSave = instance.Clone();
-                        var instanceSave = new InstanceSave();
-                        instanceSave.Name = instance.Name;
-                        instanceSave.BaseType = instance.BaseType;
-                        instanceSave.DefinedByBase = instance.DefinedByBase;
-                        instanceSave.Locked = instance.Locked;
-                        instanceSave.ParentContainer = componentSave;
-
-                        componentSave.Instances.Add(instanceSave);
-                    }
-
-                    // Clone states
-                    foreach (var state in element.States)
-                    {
-                        if (element.DefaultState == state)
-                        {
-                            defaultState = state.Clone();
-
-                            componentSave.Initialize(defaultState);
-                            continue;
-                        }
-                        componentSave.States.Add(state.Clone());
-                    }
-
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-                    _projectCommands.AddComponent(componentSave);
-
-                }
-                else
-                {
-                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
-                    ShowCreateComponentFromInstancesDialog();
+                    return _nameVerifier.IsElementNameValid(value, null, null, out string whyNotValid)
+                        ? null
+                        : whyNotValid;
                 }
             }
+        );
+        if (componentName == null) return;
+
+        var component = new ComponentSave();
+        _projectCommands.PrepareNewComponentSave(component, componentName);
+
+        // Clone instances
+        foreach (var instance in instances)
+        {
+            // Clone will fail if we are cloning an InstanceSave
+            // in a behavior because its type is BehaviorInstanceSave.
+            // Therefore, we will just manually create a copy:
+            //var instanceSave = instance.Clone();
+            //var instanceSave = instance.Clone();
+            var instanceSave = new InstanceSave
+            {
+                Name = instance.Name,
+                BaseType = instance.BaseType,
+                DefinedByBase = instance.DefinedByBase,
+                Locked = instance.Locked,
+                ParentContainer = component
+            };
+            component.Instances.Add(instanceSave);
         }
+
+        // Clone states
+        foreach (var state in element.States)
+        {
+            if (element.DefaultState == state)
+            {
+                StateSave defaultState = state.Clone();
+
+                component.Initialize(defaultState);
+                continue;
+            }
+            component.States.Add(state.Clone());
+        }
+        
+        _projectCommands.AddComponent(component);
     }
 
     public void DisplayReferencesTo(ElementSave element)
