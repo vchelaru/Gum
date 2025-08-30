@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,26 @@ namespace MonoGameGum.Tests.Runtimes;
 public class TextRuntimeTests
 {
     [Fact]
-    public void TextRuntime_ShouldWrap_WithFixedWidth()
+    public void AbsoluteWidth_ShouldNotIncludeNewlines()
+    {
+        TextRuntime textRuntime = new();
+
+        var character = textRuntime.BitmapFont.Characters['\n'];
+        character.XAdvance = 10;
+
+        textRuntime.Text = "Hello";
+
+        var widthBefore = textRuntime.GetAbsoluteWidth();
+
+        textRuntime.Text = "Hello\na";
+
+        var widthAfter = textRuntime.GetAbsoluteWidth();
+
+        widthBefore.ShouldBe(widthAfter, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldWrap_WithFixedWidth()
     {
         Text.IsMidWordLineBreakEnabled = false;
 
@@ -31,8 +51,9 @@ public class TextRuntimeTests
         innerText.WrappedText[1].ShouldNotStartWith("This is a");
     }
 
+
     [Fact]
-    public void TextRuntime_ShouldNotBreakWords_IfBreakWordsWithNoWhitespaceIsFalse()
+    public void WrappedText_ShouldNotBreakWords_IfBreakWordsWithNoWhitespaceIsFalse()
     {
         Text.IsMidWordLineBreakEnabled = false;
         TextRuntime textRuntime = new();
@@ -47,7 +68,7 @@ public class TextRuntimeTests
     }
 
     [Fact]
-    public void TextRuntime_ShouldWrap_IfOnlyLettersExist()
+    public void WrappedText_ShouldWrap_IfOnlyLettersExist()
     {
         Text text = new();
         Text.IsMidWordLineBreakEnabled = true;
@@ -69,7 +90,7 @@ public class TextRuntimeTests
     //Zero-width spaces - HTML &zwj; or Unicode characters specifically for this purpose
 
     [Fact]
-    public void TextRuntime_ShouldWrapMidWord_WithMultipleLines()
+    public void WrappedText_ShouldWrapMidWord_WithMultipleLines()
     {
         // bypassing TextRuntime to test this directly:
         var text = new Text();
@@ -86,7 +107,7 @@ public class TextRuntimeTests
     }
 
     [Fact]
-    public void TextRuntime_ShouldWrapMidWord_WithMultipleWords()
+    public void WrappedText_ShouldWrapMidWord_WithMultipleWords()
     {
         // bypassing TextRuntime to test this directly:
         var text = new Text();
@@ -103,7 +124,7 @@ public class TextRuntimeTests
     }
 
     [Fact]
-    public void TextRuntime_ShouldWrapMidWord_IfWidthMatchesLetterWidthExactly()
+    public void WrappedText_ShouldWrapMidWord_IfWidthMatchesLetterWidthExactly()
     {
         // each letter is 10 wide, so let's set a width that is a multiple of that:
         Text text = new();

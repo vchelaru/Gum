@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>GeneralScreen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceComponentInstance.NineSliceInstanceTextureHeight</Name>
+      <Value xsi:type="xsd:int">973</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceComponentInstance.NineSliceInstanceTextureLeft</Name>
+      <Value xsi:type="xsd:int">18</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceComponentInstance.NineSliceInstanceTextureTop</Name>
+      <Value xsi:type="xsd:int">30</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceComponentInstance.NineSliceInstanceTextureWidth</Name>
+      <Value xsi:type="xsd:int">984</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>SpriteComponentInstance.SpriteInstanceTextureHeight</Name>
+      <Value xsi:type="xsd:int">70</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>SpriteComponentInstance.SpriteInstanceTextureLeft</Name>
+      <Value xsi:type="xsd:int">28</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>SpriteComponentInstance.SpriteInstanceTextureTop</Name>
+      <Value xsi:type="xsd:int">15</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>SpriteComponentInstance.SpriteInstanceTextureWidth</Name>
+      <Value xsi:type="xsd:int">116</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>SpriteComponentInstance</Name>
+    <BaseType>SpriteComponent</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>NineSliceComponentInstance</Name>
+    <BaseType>NineSliceComponent</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>

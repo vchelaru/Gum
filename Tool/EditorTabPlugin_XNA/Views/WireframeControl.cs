@@ -167,12 +167,6 @@ public class WireframeControl : GraphicsDeviceControl
 
 
             var camera = SystemManagers.Default.Renderer.Camera;
-
-            // August 24, 2025 - I don't understand why, but if I set
-            // CameraCenterOnScreen to Center, then it behaves as if it's
-            // top-left. If I set it to TopLeft, then it behaves as if it's
-            // centered. This is the opposite of what I would expect, but
-            // for now I'm going to do this and get it done.
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
             KeyDown += OnKeyDown;

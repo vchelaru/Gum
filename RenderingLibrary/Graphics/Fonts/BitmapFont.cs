@@ -1187,14 +1187,26 @@ public class BitmapFont : IDisposable
                     Texture != null) 
                     || (isLast && char.IsWhiteSpace(character)))
                 {
-                    //toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
-                    toReturn += (characterInfo.PixelRight - characterInfo.PixelLeft) + characterInfo.XOffsetInPixels;
+                    if (character == '\n')
+                    {
+                        // do nothing
+                    }
+                    else
+                    {
+                        toReturn += (characterInfo.PixelRight - characterInfo.PixelLeft) + characterInfo.XOffsetInPixels;
+                    }
                 }
                 else
                 {
-                    // moving off of this function, and just usign XAdvance directly
-                    //toReturn += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
-                    toReturn += characterInfo.XAdvance;
+                    // ignore the on newlines, otherwise trailing newlines make text wider which is weird:
+                    if(character == '\n')
+                    {
+                        // do nothing
+                    }
+                    else
+                    {
+                        toReturn += characterInfo.XAdvance;
+                    }
                 }
             }
         }

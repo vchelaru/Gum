@@ -858,10 +858,10 @@ namespace Gum.PropertyGridHelpers
 
                                 if (size != null && instance != null)
                                 {
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0, "int");
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0, "int");
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width, "int");
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height, "int");
 
                                     _wireframeCommands.Refresh();
                                 }

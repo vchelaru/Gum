@@ -20,14 +20,13 @@ Animations defined in the Gum tool can be loaded at runtime. To load and play an
 
 The following code shows how to load the first screen in a Gum project and how to play its animation.
 
-```csharp
-GraphicalUiElement screenRuntime;
+<pre class="language-csharp"><code class="lang-csharp">GraphicalUiElement screenRuntime;
 
 protected override void Initialize()
 {
     GumUI.Initialize(this, "GumProject/GumProject.gumx");
-    GumUI.LoadAnimations();
-
+<strong>    GumUI.LoadAnimations();
+</strong>
     var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
     screenRuntime = screen.ToGraphicalUiElement();
     screenRuntime.AddToRoot();
@@ -39,10 +38,44 @@ protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
 
-    var animation = screenRuntime.Animations[0];
-    animation.ApplyAtTimeTo(gameTime.TotalGameTime.TotalSeconds, screenRuntime);
+    if(someCondition)
+    {
+<strong>        var animation = screenRuntime.Animations[0];
+</strong><strong>        // This sets the current animation which plays automatically
+</strong><strong>        screenRuntime.PlayAnimation(animation);
+</strong>    }
 
     base.Update(gameTime);
 }
+</code></pre>
 
-```
+Alternatively, you can explicitly apply an animation to a runtime object at a given time. This gives you more control over how animations play.
+
+<pre class="language-csharp"><code class="lang-csharp">GraphicalUiElement screenRuntime;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this, "GumProject/GumProject.gumx");
+<strong>    GumUI.LoadAnimations();
+</strong>
+    var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
+    screenRuntime = screen.ToGraphicalUiElement();
+    screenRuntime.AddToRoot();
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+<strong>    var animation = screenRuntime.Animations[0];
+</strong><strong>    animation.ApplyAtTimeTo(gameTime.TotalGameTime.TotalSeconds, screenRuntime);
+</strong>
+    base.Update(gameTime);
+}
+
+</code></pre>
+
+
+
