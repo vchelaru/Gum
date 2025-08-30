@@ -11,7 +11,13 @@ using Gum.Commands;
 
 namespace Gum.PropertyGridHelpers
 {
-    public class VariableInCategoryPropagationLogic
+    public interface IVariableInCategoryPropagationLogic
+    {
+        void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate);
+        void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory);
+    }
+
+    internal class VariableInCategoryPropagationLogic : IVariableInCategoryPropagationLogic
     {
         private readonly IUndoManager _undoManager;
         private readonly IGuiCommands _guiCommands;

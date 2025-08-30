@@ -23,7 +23,7 @@ namespace Gum.Managers
 {
     public class DeleteLogic : Singleton<DeleteLogic>
     {
-        private readonly ProjectCommands _projectCommands;
+        private readonly IProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
         private readonly IElementCommands _elementCommands;
         private readonly IUndoManager _undoManager;
