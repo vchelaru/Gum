@@ -115,7 +115,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private LayerService _layerService;
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     #endregion
 
@@ -127,7 +127,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
-        _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+        _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();

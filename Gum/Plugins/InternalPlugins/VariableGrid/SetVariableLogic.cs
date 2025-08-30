@@ -38,7 +38,7 @@ namespace Gum.PropertyGridHelpers
         private readonly IUndoManager _undoManager;
         private readonly WireframeCommands _wireframeCommands;
         private readonly IGuiCommands _guiCommands;
-        private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+        private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
         public SetVariableLogic(ISelectedState selectedState, 
             INameVerifier nameVerifier, 
@@ -51,7 +51,7 @@ namespace Gum.PropertyGridHelpers
             FontManager fontManager,
             IFileCommands fileCommands,
             CircularReferenceManager circularReferenceManager,
-            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+            IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
         {
             _selectedState = selectedState;
             _nameVerifier = nameVerifier;

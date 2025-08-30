@@ -14,11 +14,11 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
 
     private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
-    private readonly ProjectCommands _projectCommands;
+    private readonly IProjectCommands _projectCommands;
 
     public AddComponentDialogViewModel(INameVerifier nameVerifier, 
         ISelectedState selectedState, 
-        ProjectCommands projectCommands)
+        IProjectCommands projectCommands)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;

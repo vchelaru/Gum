@@ -16,7 +16,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
         {
             // todo - inject this 
             var _variableInCategoryPropagationLogic = 
-                Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+                Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
 
             categories.Clear();
 
