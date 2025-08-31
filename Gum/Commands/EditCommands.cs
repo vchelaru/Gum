@@ -456,7 +456,7 @@ public class EditCommands
         var instances = _selectedState.SelectedInstances.Concat(
             from selectedInstance in _selectedState.SelectedInstances
             from child in GetChildInstancesRecursively(selectedInstance)
-            select child);
+            select child).ToArray();
 
         FilePath containerName = element.Name;
         string containerStrippedName = containerName.FileNameNoPath;
@@ -489,8 +489,6 @@ public class EditCommands
             // Clone will fail if we are cloning an InstanceSave
             // in a behavior because its type is BehaviorInstanceSave.
             // Therefore, we will just manually create a copy:
-            //var instanceSave = instance.Clone();
-            //var instanceSave = instance.Clone();
             var instanceSave = new InstanceSave
             {
                 Name = instance.Name,
@@ -521,11 +519,11 @@ public class EditCommands
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
     {
         return
-            (from child in parent.ParentContainer.Instances
-             where child.GetParentInstance() == parent
-             let subChildren = GetChildInstancesRecursively(child)
-             from subChild in subChildren.Concat([child])
-             select subChild).Distinct();
+            from child in parent.ParentContainer.Instances
+            where child.GetParentInstance() == parent
+            let subChildren = GetChildInstancesRecursively(child)
+            from subChild in subChildren
+            select subChild;
     }
     
     public void DisplayReferencesTo(ElementSave element)
