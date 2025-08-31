@@ -7,18 +7,21 @@
       <Type>HorizontalAlignment</Type>
       <Name>LabelInstance.HorizontalAlignment</Name>
       <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceHorizontalAlignment</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int?</Type>
       <Name>LabelInstance.MaxLettersToShow</Name>
       <Value xsi:type="xsd:int">55</Value>
+      <ExposedAsName>LabelInstanceMaxLettersToShow</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int?</Type>
       <Name>LabelInstance.MaxNumberOfLines</Name>
       <Value xsi:type="xsd:int">3</Value>
+      <ExposedAsName>LabelInstanceMaxNumberOfLines</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -31,18 +34,21 @@
       <Type>TextOverflowHorizontalMode</Type>
       <Name>LabelInstance.TextOverflowHorizontalMode</Name>
       <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceTextOverflowHorizontalMode</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>TextOverflowVerticalMode</Type>
       <Name>LabelInstance.TextOverflowVerticalMode</Name>
       <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceTextOverflowVerticalMode</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
       <Name>LabelInstance.VerticalAlignment</Name>
       <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceVerticalAlignment</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
   </State>

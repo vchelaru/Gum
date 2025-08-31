@@ -765,6 +765,7 @@ public class CodeGenerator
                 }
 
                 string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
+                string? sourceObjectCast = null;
                 if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
                     // only if the object is not a standard element
@@ -781,6 +782,7 @@ public class CodeGenerator
                                 sourceObjectName += ".Visual";
                             }
                         }
+                        sourceObjectCast = GetVisualCast(exposedVariable, context.Element, context);
                     }
                 }
 
@@ -805,7 +807,14 @@ public class CodeGenerator
 
                 if (hasGetter)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
+                    if(sourceObjectCast != null)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectName}).{rootVariable?.Name};");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
+                    }
                 }
 
 
@@ -823,7 +832,14 @@ public class CodeGenerator
                     }
                     else
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                        if(sourceObjectCast != null)
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectName}).{rootVariable?.Name} = value;");
+                        }
+                        else
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                        }
                     }
                 }
 
@@ -3766,14 +3782,23 @@ public class CodeGenerator
 
                 bool forceSetDirectlyOnInstance = GetIfShouldSetDirectlyOnInstance(variable, container, context);
 
+                var leftSideCast = GetVisualCast(variable, container, context);
+
                 if (forceSetDirectlyOnInstance)
                 {
                     return $"this.{ToCSharpName(context.Instance.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
+                    if(leftSideCast != null)
+                    {
+                        return $"(({leftSideCast}){context.CodePrefixNoTabs}).{variableName} = {VariableValueToGumCodeValue(variable, context)};";
 
-                    return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    }
+                    else
+                    {
+                        return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    }
                 }
             }
 
@@ -3791,6 +3816,25 @@ public class CodeGenerator
             }
 
         }
+    }
+
+    private string? GetVisualCast(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    {
+        var variableName = GetGumVariableName(variable, context);
+        string? toReturn = null;
+
+        switch (variableName)
+        {
+            case "HorizontalAlignment":
+            case "MaxLettersToShow":
+            case "MaxNumberOfLines":
+            case "TextOverflowHorizontalMode":
+            case "VerticalAlignment":
+                toReturn = "TextRuntime";
+                break;
+        }
+
+        return toReturn;
     }
 
     private bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
@@ -3840,7 +3884,6 @@ public class CodeGenerator
             {
                 switch (variableName)
                 {
-                    case "HorizontalAlignment":
                     case "Text":
                         forceSetDirectlyOnInstance = true;
                         break;

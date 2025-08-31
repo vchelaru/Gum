@@ -40,6 +40,42 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
     }
     public Label LabelInstance { get; protected set; }
 
+    public HorizontalAlignment LabelInstanceHorizontalAlignment
+    {
+        get => ((TextRuntime) LabelInstance.Visual).HorizontalAlignment;
+        set => ((TextRuntime)LabelInstance.Visual).HorizontalAlignment = value;
+    }
+
+    public int? LabelInstanceMaxLettersToShow
+    {
+        get => ((TextRuntime) LabelInstance.Visual).MaxLettersToShow;
+        set => ((TextRuntime)LabelInstance.Visual).MaxLettersToShow = value;
+    }
+
+    public int? LabelInstanceMaxNumberOfLines
+    {
+        get => ((TextRuntime) LabelInstance.Visual).MaxNumberOfLines;
+        set => ((TextRuntime)LabelInstance.Visual).MaxNumberOfLines = value;
+    }
+
+    public TextOverflowHorizontalMode LabelInstanceTextOverflowHorizontalMode
+    {
+        get => ((TextRuntime) LabelInstance.Visual).TextOverflowHorizontalMode;
+        set => ((TextRuntime)LabelInstance.Visual).TextOverflowHorizontalMode = value;
+    }
+
+    public TextOverflowVerticalMode LabelInstanceTextOverflowVerticalMode
+    {
+        get => LabelInstance.Visual.TextOverflowVerticalMode;
+        set => LabelInstance.Visual.TextOverflowVerticalMode = value;
+    }
+
+    public VerticalAlignment LabelInstanceVerticalAlignment
+    {
+        get => ((TextRuntime) LabelInstance.Visual).VerticalAlignment;
+        set => ((TextRuntime)LabelInstance.Visual).VerticalAlignment = value;
+    }
+
     public GeneralScreen(InteractiveGue visual) : base(visual)
     {
         InitializeInstances();
@@ -67,13 +103,13 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
     }
     private void ApplyDefaultVariables()
     {
-        this.LabelInstance.Visual.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-        this.LabelInstance.Visual.MaxLettersToShow = 55;
-        this.LabelInstance.Visual.MaxNumberOfLines = 3;
+        ((TextRuntime)this.LabelInstance.Visual).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        ((TextRuntime)this.LabelInstance.Visual).MaxLettersToShow = 55;
+        ((TextRuntime)this.LabelInstance.Visual).MaxNumberOfLines = 3;
         this.LabelInstance.Text = @"Hello1234";
-        this.LabelInstance.Visual.TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
+        ((TextRuntime)this.LabelInstance.Visual).TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
         this.LabelInstance.Visual.TextOverflowVerticalMode = global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine;
-        this.LabelInstance.Visual.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.LabelInstance.Visual).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
 
     }
     partial void CustomInitialize();
