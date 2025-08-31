@@ -79,7 +79,7 @@ public class EditCommandsTests
             .Returns(component);
         _selectedState
             .Setup(x => x.SelectedInstances)
-            .Returns(component.Instances);
+            .Returns([parentInstance]);
     }
     
     private bool VerifyInstancesMatch(ElementSave container)

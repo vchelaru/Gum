@@ -489,8 +489,6 @@ public class EditCommands
             // Clone will fail if we are cloning an InstanceSave
             // in a behavior because its type is BehaviorInstanceSave.
             // Therefore, we will just manually create a copy:
-            //var instanceSave = instance.Clone();
-            //var instanceSave = instance.Clone();
             var instanceSave = new InstanceSave
             {
                 Name = instance.Name,
@@ -521,11 +519,11 @@ public class EditCommands
     private IEnumerable<InstanceSave> GetChildInstancesRecursively(InstanceSave parent)
     {
         return
-            (from child in parent.ParentContainer.Instances
-             where child.GetParentInstance() == parent
-             let subChildren = GetChildInstancesRecursively(child)
-             from subChild in subChildren.Concat([child])
-             select subChild).Distinct();
+            from child in parent.ParentContainer.Instances
+            where child.GetParentInstance() == parent
+            let subChildren = GetChildInstancesRecursively(child)
+            from childOrSubChild in subChildren.Concat([child])
+            select childOrSubChild;
     }
     
     public void DisplayReferencesTo(ElementSave element)
