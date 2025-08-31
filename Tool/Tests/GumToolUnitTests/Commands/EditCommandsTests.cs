@@ -14,29 +14,47 @@ namespace GumToolUnitTests.Commands;
 public class EditCommandsTests
 {
     private readonly Mock<ISelectedState> _selectedState = new();
+    private readonly Mock<INameVerifier> _nameVerifier = new();
+    private readonly Mock<IDialogService> _dialogService = new();
     private readonly Mock<IProjectCommands> _projectCommands = new();
     
     private readonly EditCommands _editCommands;
 
     public EditCommandsTests()
     {
-        SetupSelectedStateMock();
-        var nameVerifier = SetupNameVerifierMock();
-        var dialogService = SetupDialogServiceMock();
-        
         _editCommands = new EditCommands(
             _selectedState.Object,
-            nameVerifier.Object,
+            _nameVerifier.Object,
             new Mock<IRenameLogic>().Object,
             new Mock<IUndoManager>().Object,
-            dialogService.Object,
+            _dialogService.Object,
             new Mock<IFileCommands>().Object,
             _projectCommands.Object,
             new Mock<IGuiCommands>().Object,
             new Mock<IVariableInCategoryPropagationLogic>().Object
         );
     }
-
+    
+    [Fact]
+    public void ShowCreateComponentFromInstancesDialog_ShouldIncludeChildren()
+    {
+        string dummy;
+        _nameVerifier
+            .Setup(x => x.IsElementNameValid(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ElementSave>(), out dummy))
+            .Returns(true);
+        _dialogService
+            .Setup(x => x.GetUserString(It.IsAny<string>(), "Create Component from selection", It.IsAny<GetUserStringOptions>()))
+            .Returns("ComponentName");
+        SetupSelectedStateMock();
+        
+        _editCommands.ShowCreateComponentFromInstancesDialog();
+        
+        _projectCommands.Verify(
+            commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp.Instances))),
+            Times.Once
+        );
+    }
+    
     private void SetupSelectedStateMock()
     {
         var component = new ComponentSave { Name = "TestComponent" };
@@ -59,40 +77,8 @@ public class EditCommandsTests
             .Setup(x => x.SelectedInstances)
             .Returns(component.Instances);
     }
-
-    private static Mock<INameVerifier> SetupNameVerifierMock()
-    {
-        var mock = new Mock<INameVerifier>();
-        string dummy;
-        mock
-            .Setup(x => x.IsElementNameValid(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ElementSave>(), out dummy))
-            .Returns(true);
-
-        return mock;
-    }
-
-    private static Mock<IDialogService> SetupDialogServiceMock()
-    {
-        var mock = new Mock<IDialogService>();
-        mock
-            .Setup(x => x.GetUserString(It.IsAny<string>(), "Create Component from selection", It.IsAny<GetUserStringOptions>()))
-            .Returns("ComponentName");
-
-        return mock;
-    }
     
-    [Fact]
-    public void ShowCreateComponentFromInstancesDialog_ShouldIncludeChildren()
-    {
-        _editCommands.ShowCreateComponentFromInstancesDialog();
-        
-        _projectCommands.Verify(
-            commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp.Instances))),
-            Times.Once
-        );
-    }
-    
-    private static bool VerifyInstancesMatch(IList<InstanceSave> instances)
+    private bool VerifyInstancesMatch(IList<InstanceSave> instances)
     {
         if (instances is not { Count: 2 }) return false;
         var parentInstance = instances.FirstOrDefault(i => i.Name == "ParentInstance");
