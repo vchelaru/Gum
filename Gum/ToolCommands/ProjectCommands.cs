@@ -18,8 +18,7 @@ namespace Gum.ToolCommands;
 internal class ProjectCommands : IProjectCommands
 {
     #region Fields
-
-    static IProjectCommands mSelf;
+    
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
