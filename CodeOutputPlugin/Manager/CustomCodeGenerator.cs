@@ -10,9 +10,17 @@ namespace CodeOutputPlugin.Manager
 {
     public class CustomCodeGenerator
     {
-        public static string GetCustomCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+        public CustomCodeGenerator(CodeGenerator codeGenerator)
         {
+            _codeGenerator = codeGenerator;
+        }
 
+        private CodeGenerator _codeGenerator;
+
+        public string GetCustomCodeForElement(ElementSave element, 
+            CodeOutputElementSettings elementSettings, 
+            CodeOutputProjectSettings projectSettings)
+        {
             var stringBuilder = new StringBuilder();
             int tabCount = 0;
 
@@ -72,9 +80,9 @@ namespace CodeOutputPlugin.Manager
             return stringBuilder.ToString();
         }
 
-        public static string GetClassHeader(ElementSave element, CodeOutputProjectSettings projectSettings)
+        public string GetClassHeader(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
-            var visualApi = CodeGenerator.GetVisualApiForElement(element);
+            var visualApi = _codeGenerator.GetVisualApiForElement(element);
             string inheritance = "";
             
             

@@ -3,8 +3,7 @@ using GumRuntime;
 using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
-using CodeGenProject.Components;
-using CodeGenProject.Components.Controls;
+using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -14,7 +13,7 @@ using RenderingLibrary.Graphics;
 
 using System.Linq;
 
-namespace CodeGenProject.Screens;
+namespace CodeGen_MonoGameForms_FullCodegen.Screens;
 partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
@@ -39,27 +38,43 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
             return gue;
         });
     }
-    public SpriteComponent SpriteComponentInstance { get; protected set; }
-    public NineSliceComponent NineSliceComponentInstance { get; protected set; }
     public Label LabelInstance { get; protected set; }
 
     public GeneralScreen(InteractiveGue visual) : base(visual)
     {
-    }
-    public GeneralScreen()
-    {
-
-
-
-    }
-    protected override void ReactToVisualChanged()
-    {
-        base.ReactToVisualChanged();
-        SpriteComponentInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<SpriteComponent>(this.Visual,"SpriteComponentInstance");
-        NineSliceComponentInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<NineSliceComponent>(this.Visual,"NineSliceComponentInstance");
-        LabelInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
+        InitializeInstances();
         CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    public GeneralScreen() : base(new ContainerRuntime())
+    {
+
+
+        InitializeInstances();
+
+        ApplyDefaultVariables();
+        AssignParents();
+        CustomInitialize();
+    }
+    protected virtual void InitializeInstances()
+    {
+        base.ReactToVisualChanged();
+        LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
+        LabelInstance.Name = "LabelInstance";
+    }
+    protected virtual void AssignParents()
+    {
+        this.AddChild(LabelInstance);
+    }
+    private void ApplyDefaultVariables()
+    {
+        this.LabelInstance.Visual.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        this.LabelInstance.Visual.MaxLettersToShow = 55;
+        this.LabelInstance.Visual.MaxNumberOfLines = 3;
+        this.LabelInstance.Text = @"Hello1234";
+        this.LabelInstance.Visual.TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
+        this.LabelInstance.Visual.TextOverflowVerticalMode = global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine;
+        this.LabelInstance.Visual.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+
+    }
     partial void CustomInitialize();
 }

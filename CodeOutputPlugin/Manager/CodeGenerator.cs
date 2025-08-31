@@ -201,8 +201,40 @@ public struct CodeGenerationContext
         }
     }
 
-    public VisualApi VisualApi => CodeGenerator.GetVisualApiForElement(Element);
+    public VisualApi VisualApi => GetVisualApiForElement(Element);
 
+    VisualApi GetVisualApiForElement(ElementSave element)
+    {
+        VisualApi visualApi;
+        //if(element is ScreenSave)
+        //{
+        // screens are always XamarinForms
+        //visualApi = VisualApi.XamarinForms;
+        // Update August 23, 2022
+        // No, the code gen may be 
+        // be used for entirely Skia
+        // pages such as PDF generation.
+        // Therefore, we should always look
+        // to the IsXamarinFormsControl value:
+        //visualApi = VisualApi.XamarinForms;
+        //}
+        //else
+        {
+            var defaultState = element.DefaultState;
+            var rvf = new RecursiveVariableFinder(defaultState);
+            var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+            else
+            {
+                visualApi = VisualApi.Gum;
+            }
+        }
+        return visualApi;
+
+    }
 }
 
 #endregion
@@ -590,7 +622,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithExposedVariables(CodeGenerationContext context)
+    private void FillWithExposedVariables(CodeGenerationContext context)
     {
         var exposedVariables = context.Element.DefaultState.Variables
             .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
@@ -604,7 +636,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
+    private void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
     {
         var container = context.Element;
         var stringBuilder = context.StringBuilder;
@@ -3169,7 +3201,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithStateProperties(CodeGenerationContext context)
+    private void FillWithStateProperties(CodeGenerationContext context)
     {
         var isXamarinForms = GetVisualApiForElement(context.Element) == VisualApi.XamarinForms;
         var containerClassName = GetClassNameForType(context.Element, GetVisualApiForElement(context.Element), context);
@@ -4985,7 +5017,7 @@ public class CodeGenerator
     }
 
 
-    public static VisualApi GetVisualApiForElement(ElementSave element)
+    public VisualApi GetVisualApiForElement(ElementSave element)
     {
         VisualApi visualApi;
         //if(element is ScreenSave)
