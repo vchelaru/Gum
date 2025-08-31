@@ -22,11 +22,13 @@ internal class VariableInCategoryPropagationLogic : IVariableInCategoryPropagati
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
 
-    public VariableInCategoryPropagationLogic()
+    public VariableInCategoryPropagationLogic(IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands)
     {
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
