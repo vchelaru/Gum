@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.PropertyGridHelpers;
@@ -50,7 +51,7 @@ public class EditCommandsTests
         _editCommands.ShowCreateComponentFromInstancesDialog();
         
         _projectCommands.Verify(
-            commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp.Instances))),
+            commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp))),
             Times.Once
         );
     }
@@ -58,7 +59,7 @@ public class EditCommandsTests
     private void SetupSelectedStateMock()
     {
         var component = new ComponentSave { Name = "TestComponent" };
-        component.States.Add(new Gum.DataTypes.Variables.StateSave
+        component.States.Add(new StateSave
         {
             Name = "Default"
         });
@@ -67,6 +68,9 @@ public class EditCommandsTests
         var childInstance = new InstanceSave { Name = "ChildInstance" };
         component.Instances = [parentInstance, childInstance];
         component.DefaultState.SetValue("ChildInstance.Parent", "ParentInstance", "string");
+
+        component.DefaultState.SetValue("ParentInstance.X", 3f, "float");
+        component.DefaultState.SetValue("ChildInstance.Y", 5f, "float");
 
         component.Instances.ForEach(ins => ins.ParentContainer = component);
 
@@ -78,13 +82,16 @@ public class EditCommandsTests
             .Returns(component.Instances);
     }
     
-    private bool VerifyInstancesMatch(IList<InstanceSave> instances)
+    private bool VerifyInstancesMatch(ElementSave container)
     {
-        if (instances is not { Count: 2 }) return false;
-        var parentInstance = instances.FirstOrDefault(i => i.Name == "ParentInstance");
-        var childInstance = instances.FirstOrDefault(i => i.Name == "ChildInstance" &&
-                                                          i.GetParentInstance() == parentInstance);
+        if (container.Instances is not { Count: 2 }) return false;
+        var parentInstance = container.Instances.FirstOrDefault(ins => ins.Name == "ParentInstance");
+        var childInstance = container.Instances.FirstOrDefault(ins => ins.Name == "ChildInstance"
+                                                                   && ins.GetParentInstance() == parentInstance);
 
-        return parentInstance != null && childInstance != null;
+        if (parentInstance == null || childInstance == null) return false;
+
+        return (float)container.DefaultState.GetValue("ParentInstance.X") == 3f 
+            && (float)container.DefaultState.GetValue("ChildInstance.Y") == 5f;
     }
 }
