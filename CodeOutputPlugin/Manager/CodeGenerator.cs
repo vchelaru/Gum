@@ -2523,7 +2523,7 @@ public class CodeGenerator
 
     #region Parent
 
-    private static void FillWithParentAssignments(CodeGenerationContext context)
+    private void FillWithParentAssignments(CodeGenerationContext context)
     {
         var instance = context.Instance;
 
@@ -2658,7 +2658,7 @@ public class CodeGenerator
         #endregion
     }
 
-    private static void GenerateAddToParentsMethod(CodeGenerationContext context)
+    private void GenerateAddToParentsMethod(CodeGenerationContext context)
     {
         var isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
 
@@ -2691,7 +2691,7 @@ public class CodeGenerator
 
     #region Constructors
 
-    private static void GenerateConstructors(CodeGenerationContext context)
+    private void GenerateConstructors(CodeGenerationContext context)
     {
         var element = context.Element;
         var visualApi = context.VisualApi;
@@ -3158,7 +3158,7 @@ public class CodeGenerator
 
     #region States
 
-    public static string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
+    public string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var stringBuilder = new StringBuilder();
 
@@ -3214,7 +3214,7 @@ public class CodeGenerator
         }
     }
 
-    private static int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, bool isXamarinForms, string containerClassName, StateSaveCategory category)
+    private int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, bool isXamarinForms, string containerClassName, StateSaveCategory category)
     {
         // If it's Xamarin Forms we want to have the states be bindable
 
@@ -3482,7 +3482,7 @@ public class CodeGenerator
         }
     }
 
-    private static void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
+    private void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
     {
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "switch (value)");
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "{");
@@ -3505,7 +3505,7 @@ public class CodeGenerator
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
     }
 
-    private static void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+    private void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
     {
 #if DEBUG
         if (context.CodeOutputProjectSettings == null)
@@ -3587,6 +3587,7 @@ public class CodeGenerator
 
     #endregion
 
+    #region Gum Save Objets - generate Component or Screen instance
     private void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
     {
         var element = context.Element;
@@ -3613,7 +3614,9 @@ public class CodeGenerator
         }
     }
 
-    public static string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
+    #endregion
+
+    public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var stringBuilder = new StringBuilder();
 
@@ -3637,7 +3640,7 @@ public class CodeGenerator
 
     #region Variable Assignments
 
-    private static void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
+    private void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
     {
         var element = context.Element;
 
@@ -3716,7 +3719,7 @@ public class CodeGenerator
 
     }
 
-    private static void FillWithNonParentVariableAssignments(CodeGenerationContext context)
+    private void FillWithNonParentVariableAssignments(CodeGenerationContext context)
     {
         #region Get variables to consider
 
@@ -3747,7 +3750,7 @@ public class CodeGenerator
     /// <summary>
     /// Returns a no-tabbed line of code for the argument variable
     /// </summary>
-    private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
+    private string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
     {
         if (visualApi == VisualApi.Gum)
         {
@@ -3790,7 +3793,7 @@ public class CodeGenerator
         }
     }
 
-    private static bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    private bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
     {
         var variableName = GetGumVariableName(variable, context);
 
@@ -3837,6 +3840,7 @@ public class CodeGenerator
             {
                 switch (variableName)
                 {
+                    case "HorizontalAlignment":
                     case "Text":
                         forceSetDirectlyOnInstance = true;
                         break;
@@ -4341,7 +4345,7 @@ public class CodeGenerator
         return null;
     }
     
-    private static void FillWithVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder, List<VariableSave> variablesToAssignValues)
+    private void FillWithVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder, List<VariableSave> variablesToAssignValues)
     {
         var container = context.Element;
         var instance = context.Instance;
@@ -4421,7 +4425,7 @@ public class CodeGenerator
         return null;
     }
 
-    private static void GenerateApplyDefaultVariables(CodeGenerationContext context)
+    private void GenerateApplyDefaultVariables(CodeGenerationContext context)
     {
         var line = "private void ApplyDefaultVariables()";
         context.StringBuilder.AppendLine(context.Tabs + line);

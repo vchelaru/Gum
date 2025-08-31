@@ -355,7 +355,7 @@ public class MainCodeOutputPlugin : PluginBase
 
                         if (instance != null)
                         {
-                            string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
+                            string code = _codeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
                             viewModel.Code = code;
                         }
                         else if(selectedElement != null && selectedElement is not StandardElementSave)
@@ -370,7 +370,7 @@ public class MainCodeOutputPlugin : PluginBase
 
                         if (state != null && selectedElement != null)
                         {
-                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
+                            string gumCode = _codeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
                             viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
                         }
                         break;
