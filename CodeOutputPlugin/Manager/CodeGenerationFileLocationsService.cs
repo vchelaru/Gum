@@ -13,8 +13,9 @@ namespace CodeOutputPlugin.Manager;
 
 internal class CodeGenerationFileLocationsService
 {
+
     public FilePath GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-    CodeOutputProjectSettings codeOutputProjectSettings, string? forcedElementName = null, VisualApi? visualApi = null)
+    CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
     {
         string generatedFileName = elementSettings.GeneratedFileName;
 
@@ -27,7 +28,7 @@ internal class CodeGenerationFileLocationsService
         {
             var elementName = selectedElement?.Name;
 
-            var effectiveVisualApi = visualApi ?? CodeGenerator.GetVisualApiForElement(selectedElement);
+            var effectiveVisualApi = visualApi;
 
             if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
             {
@@ -63,9 +64,9 @@ internal class CodeGenerationFileLocationsService
     }
 
     public FilePath GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, string forcedElementName = null, VisualApi? visualApi = null)
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string forcedElementName = null )
     {
-        var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, forcedElementName, visualApi);
+        var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, visualApi, forcedElementName);
         if (generatedFileName == null)
         {
             return null;

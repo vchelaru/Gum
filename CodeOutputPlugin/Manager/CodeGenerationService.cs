@@ -17,13 +17,16 @@ namespace CodeOutputPlugin.Manager;
 internal class CodeGenerationService
 {
     private readonly CodeGenerator _codeGenerator;
+    private readonly CustomCodeGenerator _customCodeGenerator;
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
 
-    public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator, IDialogService dialogService)
+    public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator, IDialogService dialogService,
+        CustomCodeGenerator customCodeGenerator)
     {
         _codeGenerator = codeGenerator;
+        _customCodeGenerator = customCodeGenerator;
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
         _guiCommands = guiCommands;
         _dialogService = dialogService;
@@ -33,7 +36,8 @@ internal class CodeGenerationService
     public void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
         bool checkForMissing = true)
     {
-        var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings);
+        var visualApi = _codeGenerator.GetVisualApiForElement(selectedElement);
+        var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(selectedElement, elementSettings,  codeOutputProjectSettings, visualApi);
 
         ////////////////////////////////////////Early Out/////////////////////////////
         string errorMessage = string.Empty;
@@ -75,7 +79,7 @@ internal class CodeGenerationService
                     else
                     {
                         var settings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(item);
-                        var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings);
+                        var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings, visualApi);
                         return generatedFileName.Exists() == false;
                     }
                 })
@@ -173,7 +177,7 @@ internal class CodeGenerationService
                     {
                         System.IO.Directory.CreateDirectory(directory);
                     }
-                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+                    var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
                     System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
                 }
             }
