@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>GeneralScreen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>LabelInstance.HorizontalAlignment</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceHorizontalAlignment</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int?</Type>
+      <Name>LabelInstance.MaxLettersToShow</Name>
+      <Value xsi:type="xsd:int">55</Value>
+      <ExposedAsName>LabelInstanceMaxLettersToShow</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int?</Type>
+      <Name>LabelInstance.MaxNumberOfLines</Name>
+      <Value xsi:type="xsd:int">3</Value>
+      <ExposedAsName>LabelInstanceMaxNumberOfLines</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>LabelInstance.Text</Name>
+      <Value xsi:type="xsd:string">Hello1234</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>TextOverflowHorizontalMode</Type>
+      <Name>LabelInstance.TextOverflowHorizontalMode</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceTextOverflowHorizontalMode</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>TextOverflowVerticalMode</Type>
+      <Name>LabelInstance.TextOverflowVerticalMode</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceTextOverflowVerticalMode</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>LabelInstance.VerticalAlignment</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>LabelInstanceVerticalAlignment</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>LabelInstance</Name>
+    <BaseType>Controls/Label</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>
