@@ -1,97 +1,73 @@
 using Gum.Commands;
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
-using Gum.Logic;
 using Gum.Managers;
-using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
-using Gum.Undo;
 using Moq;
+using Moq.AutoMock;
+using Shouldly;
 
 namespace GumToolUnitTests.Commands;
 
 public class EditCommandsTests
 {
-    private readonly Mock<ISelectedState> _selectedState = new();
-    private readonly Mock<INameVerifier> _nameVerifier = new();
-    private readonly Mock<IDialogService> _dialogService = new();
-    private readonly Mock<IProjectCommands> _projectCommands = new();
-    
-    private readonly EditCommands _editCommands;
+    private readonly AutoMocker _mocker;
+    private readonly EditCommands _sut;
 
     public EditCommandsTests()
     {
-        _editCommands = new EditCommands(
-            _selectedState.Object,
-            _nameVerifier.Object,
-            new Mock<IRenameLogic>().Object,
-            new Mock<IUndoManager>().Object,
-            _dialogService.Object,
-            new Mock<IFileCommands>().Object,
-            _projectCommands.Object,
-            new Mock<IGuiCommands>().Object,
-            new Mock<IVariableInCategoryPropagationLogic>().Object
-        );
+        _mocker = new AutoMocker();
+        _sut = _mocker.CreateInstance<EditCommands>();
     }
     
     [Fact]
     public void ShowCreateComponentFromInstancesDialog_ShouldIncludeChildren()
     {
-        string dummy;
-        _nameVerifier
-            .Setup(x => x.IsElementNameValid(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ElementSave>(), out dummy))
-            .Returns(true);
-        _dialogService
-            .Setup(x => x.GetUserString(It.IsAny<string>(), "Create Component from selection", It.IsAny<GetUserStringOptions>()))
-            .Returns("ComponentName");
-        SetupSelectedStateMock();
-        
-        _editCommands.ShowCreateComponentFromInstancesDialog();
-        
-        _projectCommands.Verify(
-            commands => commands.AddComponent(It.Is<ComponentSave>(comp => VerifyInstancesMatch(comp))),
-            Times.Once
-        );
-    }
-    
-    private void SetupSelectedStateMock()
-    {
-        var component = new ComponentSave { Name = "TestComponent" };
-        component.States.Add(new StateSave
+        InstanceSave parentInstance = new() { Name = "ParentInstance" };
+        InstanceSave childInstance = new() { Name = "ChildInstance" };
+        ComponentSave component = new()
         {
-            Name = "Default"
-        });
-
-        var parentInstance = new InstanceSave { Name = "ParentInstance" };
-        var childInstance = new InstanceSave { Name = "ChildInstance" };
-        component.Instances = [parentInstance, childInstance];
+            Name = "TestComponent", 
+            States = [new() { Name = "Default" }], 
+            Instances = [parentInstance, childInstance]
+        };
+        component.Instances.ForEach(ins => ins.ParentContainer = component);
         component.DefaultState.SetValue("ChildInstance.Parent", "ParentInstance", "string");
-
         component.DefaultState.SetValue("ParentInstance.X", 3f, "float");
         component.DefaultState.SetValue("ChildInstance.Y", 5f, "float");
+        
+        _mocker.SetupWithAny<IDialogService, string>(nameof(IDialogService.GetUserString))
+            .Returns("NewComponentName");
+        _mocker.Setup<ISelectedState, ElementSave>(s => s.SelectedElement!).Returns(component);
+        _mocker.Setup<ISelectedState, IEnumerable<InstanceSave>>(s => s.SelectedInstances).Returns([parentInstance]);
 
-        component.Instances.ForEach(ins => ins.ParentContainer = component);
+        Mock<IProjectCommands> projectCommands = _mocker.GetMock<IProjectCommands>();
 
-        _selectedState
-            .Setup(x => x.SelectedElement)
-            .Returns(component);
-        _selectedState
-            .Setup(x => x.SelectedInstances)
-            .Returns(component.Instances);
-    }
-    
-    private bool VerifyInstancesMatch(ElementSave container)
-    {
-        if (container.Instances is not { Count: 2 }) return false;
-        var parentInstance = container.Instances.FirstOrDefault(ins => ins.Name == "ParentInstance");
-        var childInstance = container.Instances.FirstOrDefault(ins => ins.Name == "ChildInstance"
-                                                                   && ins.GetParentInstance() == parentInstance);
+        ComponentSave? result = null;
+        projectCommands
+            .Setup(pc => pc.AddComponent(It.IsAny<ComponentSave>()))
+            .Callback<ComponentSave>(c => result = c)
+            .Verifiable(Times.Once);
 
-        if (parentInstance == null || childInstance == null) return false;
+        // Act
+        _sut.ShowCreateComponentFromInstancesDialog();
 
-        return (float)container.DefaultState.GetValue("ParentInstance.X") == 3f 
-            && (float)container.DefaultState.GetValue("ChildInstance.Y") == 5f;
+        // Assert
+        projectCommands.Verify();
+
+        result.ShouldNotBeNull();
+        result.Instances.Count.ShouldBe(2);
+
+        InstanceSave parent = result.Instances.Single(x => x.Name == parentInstance.Name);
+        InstanceSave child = result.Instances.Single(x => x.Name == childInstance.Name);
+
+        parent.ShouldNotBeNull();
+        child.ShouldNotBeNull();
+
+        child.GetParentInstance().ShouldBe(parent);
+        
+        result.DefaultState.GetValue($"{parent.Name}.X").ShouldBe(3f);
+        result.DefaultState.GetValue($"{child.Name}.Y").ShouldBe(5f);
     }
 }
