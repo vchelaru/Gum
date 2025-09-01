@@ -12,12 +12,18 @@ namespace GumToolUnitTests.Commands;
 
 public class EditCommandsTests
 {
+    private readonly AutoMocker _mocker;
+    private readonly EditCommands _sut;
+
+    public EditCommandsTests()
+    {
+        _mocker = new AutoMocker();
+        _sut = _mocker.CreateInstance<EditCommands>();
+    }
+    
     [Fact]
     public void ShowCreateComponentFromInstancesDialog_ShouldIncludeChildren()
     {
-        // Arrange
-        AutoMocker mocker = new();
-
         InstanceSave parentInstance = new() { Name = "ParentInstance" };
         InstanceSave childInstance = new() { Name = "ChildInstance" };
         ComponentSave component = new()
@@ -31,12 +37,12 @@ public class EditCommandsTests
         component.DefaultState.SetValue("ParentInstance.X", 3f, "float");
         component.DefaultState.SetValue("ChildInstance.Y", 5f, "float");
         
-        mocker.SetupWithAny<IDialogService, string>(nameof(IDialogService.GetUserString))
+        _mocker.SetupWithAny<IDialogService, string>(nameof(IDialogService.GetUserString))
             .Returns("NewComponentName");
-        mocker.Setup<ISelectedState, ElementSave>(s => s.SelectedElement!).Returns(component);
-        mocker.Setup<ISelectedState, IEnumerable<InstanceSave>>(s => s.SelectedInstances).Returns([parentInstance]);
+        _mocker.Setup<ISelectedState, ElementSave>(s => s.SelectedElement!).Returns(component);
+        _mocker.Setup<ISelectedState, IEnumerable<InstanceSave>>(s => s.SelectedInstances).Returns([parentInstance]);
 
-        Mock<IProjectCommands> projectCommands = mocker.GetMock<IProjectCommands>();
+        Mock<IProjectCommands> projectCommands = _mocker.GetMock<IProjectCommands>();
 
         ComponentSave? result = null;
         projectCommands
@@ -44,10 +50,8 @@ public class EditCommandsTests
             .Callback<ComponentSave>(c => result = c)
             .Verifiable(Times.Once);
 
-        EditCommands sut = mocker.CreateInstance<EditCommands>();
-
         // Act
-        sut.ShowCreateComponentFromInstancesDialog();
+        _sut.ShowCreateComponentFromInstancesDialog();
 
         // Assert
         projectCommands.Verify();
@@ -62,6 +66,7 @@ public class EditCommandsTests
         child.ShouldNotBeNull();
 
         child.GetParentInstance().ShouldBe(parent);
+        
         result.DefaultState.GetValue($"{parent.Name}.X").ShouldBe(3f);
         result.DefaultState.GetValue($"{child.Name}.Y").ShouldBe(5f);
     }
