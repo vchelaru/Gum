@@ -33,7 +33,7 @@ namespace Gum.Managers
 
         public DeleteLogic()
         {
-            _projectCommands = Locator.GetRequiredService<ProjectCommands>();
+            _projectCommands = Locator.GetRequiredService<IProjectCommands>();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<IUndoManager>();
             _elementCommands = Locator.GetRequiredService<IElementCommands>();
