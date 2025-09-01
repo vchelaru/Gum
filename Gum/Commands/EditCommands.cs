@@ -456,7 +456,7 @@ public class EditCommands
         var instances = _selectedState.SelectedInstances.Concat(
             from selectedInstance in _selectedState.SelectedInstances
             from child in GetChildInstancesRecursively(selectedInstance)
-            select child);
+            select child).Distinct();
 
         FilePath containerName = element.Name;
         string containerStrippedName = containerName.FileNameNoPath;
