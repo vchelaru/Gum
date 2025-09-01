@@ -24,23 +24,17 @@ public class EditCommandsTests
     [Fact]
     public void ShowCreateComponentFromInstancesDialog_ShouldIncludeChildren()
     {
-        InstanceSave parentInstance = new() { Name = "ParentInstance" };
-        InstanceSave childInstance = new() { Name = "ChildInstance" };
-        ComponentSave component = new()
-        {
-            Name = "TestComponent", 
-            States = [new() { Name = "Default" }], 
-            Instances = [parentInstance, childInstance]
-        };
-        component.Instances.ForEach(ins => ins.ParentContainer = component);
-        component.DefaultState.SetValue("ChildInstance.Parent", "ParentInstance", "string");
-        component.DefaultState.SetValue("ParentInstance.X", 3f, "float");
-        component.DefaultState.SetValue("ChildInstance.Y", 5f, "float");
+        // ----- Arrange
+
+        var (parentInstance, childInstance) = CreateDefaultInstances(out ComponentSave component);
         
-        _mocker.SetupWithAny<IDialogService, string>(nameof(IDialogService.GetUserString))
+        _mocker
+            .SetupWithAny<IDialogService, string>(nameof(IDialogService.GetUserString))
             .Returns("NewComponentName");
-        _mocker.Setup<ISelectedState, ElementSave>(s => s.SelectedElement!).Returns(component);
-        _mocker.Setup<ISelectedState, IEnumerable<InstanceSave>>(s => s.SelectedInstances).Returns([parentInstance]);
+        _mocker
+            .Setup<ISelectedState, ElementSave>(s => s.SelectedElement!).Returns(component);
+        _mocker
+            .Setup<ISelectedState, IEnumerable<InstanceSave>>(s => s.SelectedInstances).Returns([parentInstance]);
 
         Mock<IProjectCommands> projectCommands = _mocker.GetMock<IProjectCommands>();
 
@@ -50,10 +44,12 @@ public class EditCommandsTests
             .Callback<ComponentSave>(c => result = c)
             .Verifiable(Times.Once);
 
-        // Act
+        // ----- Act
+        
         _sut.ShowCreateComponentFromInstancesDialog();
 
-        // Assert
+        // ----- Assert
+        
         projectCommands.Verify();
 
         result.ShouldNotBeNull();
@@ -69,5 +65,24 @@ public class EditCommandsTests
         
         result.DefaultState.GetValue($"{parent.Name}.X").ShouldBe(3f);
         result.DefaultState.GetValue($"{child.Name}.Y").ShouldBe(5f);
+    }
+    
+    private (InstanceSave parent, InstanceSave child) CreateDefaultInstances(out ComponentSave container)
+    {
+        InstanceSave parentInstance = new() { Name = "ParentInstance" };
+        InstanceSave childInstance = new() { Name = "ChildInstance" };
+        ComponentSave component = new()
+        {
+            Name = "TestComponent", 
+            States = [new() { Name = "Default" }], 
+            Instances = [parentInstance, childInstance]
+        };
+        component.Instances.ForEach(ins => ins.ParentContainer = component);
+        component.DefaultState.SetValue("ChildInstance.Parent", "ParentInstance", "string");
+        component.DefaultState.SetValue("ParentInstance.X", 3f, "float");
+        component.DefaultState.SetValue("ChildInstance.Y", 5f, "float");
+
+        container = component;
+        return (parentInstance, childInstance);
     }
 }
