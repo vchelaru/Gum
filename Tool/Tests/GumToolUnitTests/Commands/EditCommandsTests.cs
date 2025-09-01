@@ -58,6 +58,9 @@ public class EditCommandsTests
         InstanceSave parent = result.Instances.Single(x => x.Name == parentInstance.Name);
         InstanceSave child = result.Instances.Single(x => x.Name == childInstance.Name);
 
+        parent.ShouldNotBeNull();
+        child.ShouldNotBeNull();
+
         child.GetParentInstance().ShouldBe(parent);
         result.DefaultState.GetValue($"{parent.Name}.X").ShouldBe(3f);
         result.DefaultState.GetValue($"{child.Name}.Y").ShouldBe(5f);
