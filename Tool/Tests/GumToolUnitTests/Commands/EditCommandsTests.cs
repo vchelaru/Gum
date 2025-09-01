@@ -7,6 +7,7 @@ using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using System.ComponentModel;
 
 namespace GumToolUnitTests.Commands;
 
@@ -20,7 +21,41 @@ public class EditCommandsTests
         _mocker = new AutoMocker();
         _sut = _mocker.CreateInstance<EditCommands>();
     }
-    
+
+
+    [Fact]
+    public void ShowCreateComponentFromInstancesDialog_ShouldCreateComponentNoChildren_ForSingleInstance()
+    {
+        InstanceSave instance = new() { Name = "instance" };
+
+        ComponentSave component = new()
+        {
+            Name = "TestComponent",
+            States = [new() { Name = "Default" }],
+            Instances = [instance]
+        };
+
+        instance.ParentContainer = component;
+
+        _mocker.Setup<ISelectedState, ElementSave>(s => s.SelectedElement!).Returns(component);
+        _mocker.Setup<ISelectedState, IEnumerable<InstanceSave>>(s => s.SelectedInstances).Returns([instance]);
+        _mocker.SetupWithAny<IDialogService, string>(nameof(IDialogService.GetUserString))
+            .Returns("NewComponentName");
+
+        Mock<IProjectCommands> projectCommands = _mocker.GetMock<IProjectCommands>();
+
+
+        ComponentSave? createdComponent = null;
+        projectCommands
+            .Setup(pc => pc.AddComponent(It.IsAny<ComponentSave>()))
+            .Callback<ComponentSave>(c => createdComponent = c)
+            .Verifiable(Times.Once);
+
+        _sut.ShowCreateComponentFromInstancesDialog();
+
+        createdComponent.Instances.Count.ShouldBe(0);
+    }
+
     [Fact]
     public void ShowCreateComponentFromInstancesDialog_ShouldIncludeChildren()
     {
@@ -59,15 +94,16 @@ public class EditCommandsTests
         result.ShouldNotBeNull();
         result.Instances.Count.ShouldBe(2);
 
-        InstanceSave parent = result.Instances.Single(x => x.Name == parentInstance.Name);
+        result.Instances.Count.ShouldBe(1);
         InstanceSave child = result.Instances.Single(x => x.Name == childInstance.Name);
 
-        parent.ShouldNotBeNull();
         child.ShouldNotBeNull();
 
-        child.GetParentInstance().ShouldBe(parent);
+        child.GetParentInstance().ShouldBe(null);
+
+        result.DefaultState.GetValue("X").ShouldBe(3f);
         
-        result.DefaultState.GetValue($"{parent.Name}.X").ShouldBe(3f);
         result.DefaultState.GetValue($"{child.Name}.Y").ShouldBe(5f);
     }
+
 }
