@@ -22,54 +22,26 @@ namespace Gum.Managers;
 public class FontManager 
 {
     private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
 
-    public FontManager(IGuiCommands guiCommands)
+    public FontManager(IGuiCommands guiCommands, 
+        IFileCommands fileCommands)
     {
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     public string AbsoluteFontCacheFolder
     {
         get
         {
-            return FileManager.RelativeDirectory + "FontCache/";
+            return _fileCommands.ProjectDirectory + "FontCache/";
         }
     }
 
-    //public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false, 
-    //    bool isBold = false)
-    //{
-    //    string fileName = AbsoluteFontCacheFolder + 
-    //        FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic, isBold));
-
-    //    if (FileManager.FileExists(fileName))
-    //    {
-    //        try
-    //        {
-
-    //            BitmapFont bitmapFont = (BitmapFont)LoaderManager.Self.GetDisposable(fileName);
-    //            if (bitmapFont == null)
-    //            {
-    //                bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
-    //                LoaderManager.Self.AddDisposable(fileName, bitmapFont);
-    //            }
-
-    //            return bitmapFont;
-    //        }
-    //        catch
-    //        {
-    //            return null;
-    //        }
-    //    }
-    //    else
-    //    {
-    //        return null;
-    //    }
-    //}
-
     public void DeleteFontCacheFolder()
     {
-        FileManager.DeleteDirectory(AbsoluteFontCacheFolder);
+        _fileCommands.DeleteDirectory(AbsoluteFontCacheFolder);
     }
 
     public async Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false)
@@ -243,9 +215,14 @@ public class FontManager
     {
 
         var fntFileName = bmfcSave.FontCacheFileName;
-        FilePath desiredFntFile = FileManager.RelativeDirectory + fntFileName;
+        FilePath desiredFntFile = _fileCommands.ProjectDirectory + fntFileName;
 
         var didCreate = false;
+
+        if(_fileCommands.ProjectDirectory == null)
+        {
+            return false;
+        }
 
         if (!desiredFntFile.Exists() || force)
         {
@@ -254,7 +231,10 @@ public class FontManager
             {
                 spinner = _guiCommands.ShowSpinner();
             }
-            string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fntFileName) + ".bmfc";
+
+
+            FilePath filePathTemporary = (_fileCommands.ProjectDirectory! + fntFileName);
+            string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
             System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
             var fileWatchManager = FileWatchManager.Self;
@@ -284,7 +264,7 @@ public class FontManager
 
 
             info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
-                " -o \"" + FileManager.RelativeDirectory + fntFileName + "\"";
+                " -o \"" + _fileCommands.ProjectDirectory.FullPath + fntFileName + "\"";
 
             info.UseShellExecute = true;
 
@@ -327,7 +307,9 @@ public class FontManager
         {
             string resourceName = BmFontExeNoPath;
 
-            string mainExecutablePath = FileManager.GetDirectory(Assembly.GetExecutingAssembly().Location);
+            FilePath assemblyLocation = Assembly.GetExecutingAssembly().Location;
+
+            string mainExecutablePath = assemblyLocation.GetDirectoryContainingThis().FullPath;
 
 
             string bmFontExeLocation = System.IO.Path.Combine(mainExecutablePath, "Libraries\\bmfont.exe");
@@ -336,15 +318,15 @@ public class FontManager
         }
     }
 
-    private static void TrySaveBmFontExe(Assembly assemblyContainingBitmapFontGenerator)
+    private void TrySaveBmFontExe(Assembly assemblyContainingBitmapFontGenerator)
     {
-        var bmFontExeLocation = BmFontExeLocation;
-        if (!FileManager.FileExists(bmFontExeLocation))
+        FilePath bmFontExeLocation = BmFontExeLocation;
+        if (!bmFontExeLocation.Exists())
         {
-            FileManager.SaveEmbeddedResource(
+            _fileCommands.SaveEmbeddedResource(
                 assemblyContainingBitmapFontGenerator,
                 BmFontExeNoPath,
-                bmFontExeLocation);
+                bmFontExeLocation.FullPath);
 
         }
     }

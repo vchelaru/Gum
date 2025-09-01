@@ -514,7 +514,7 @@ public class BmfcSave
     }
 
     // todo - this needs to move to Gum Tool and not GumCommon!!
-    [Obsolete("This should be moved to the Gum Tool, not the common library. Do not call this, it will go away in future versions of Guml")]
+    [Obsolete("This should be moved to the Gum Tool, not the common library. Do not call this, it will go away in future versions of Guml", error:true)]
     public async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(string fileName, Assembly assemblyContainingBitmapFontGenerator,
         bool force = false, 
         bool forceMonoSpacedNumber = false)
