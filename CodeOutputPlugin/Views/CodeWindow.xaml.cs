@@ -424,6 +424,7 @@ public partial class CodeWindow : UserControl
                 }
                 CodeOutputSettingsPropertyChanged?.Invoke(this, null);
             }
+            RefreshDetailText();
         };
 
         member.CustomGetEvent += (owner) =>
@@ -443,6 +444,23 @@ public partial class CodeWindow : UserControl
             FullyInCode,
             ReferenceGum
         };
+
+        RefreshDetailText();
+
+        void RefreshDetailText()
+        {
+            string detailText = string.Empty;
+
+            if (CodeOutputProjectSettings?.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                if (CodeOutputProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    detailText = "Full code generation in MonoGame + Forms is considered experimental";
+                }
+            }
+
+            member.DetailText = detailText;
+        }
 
         return member;
     }
