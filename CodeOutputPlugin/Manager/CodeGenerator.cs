@@ -964,7 +964,10 @@ public class CodeGenerator
         context.TabCount++;
         context.Instance = null;
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms &&
+            // if it is fully instantiated in code, then it already has its 
+            // visual assigned by this point. Instead, we should call RefreshInternalVisualReferences
+            isFullyInstantiatingInCode == false)
         {
             context.StringBuilder.AppendLine(context.Tabs + "base.ReactToVisualChanged();");
         }
@@ -1029,6 +1032,13 @@ public class CodeGenerator
                 }
             }
             context.Instance = null;
+        }
+
+        if(isFullyInstantiatingInCode && !isDerived)
+        {
+            //RefreshInternalVisualReferences
+            context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
+
         }
 
         if (!isFullyInstantiatingInCode)
