@@ -430,5 +430,4 @@ public class GraphicalUiElementTests
         gue.Name.ShouldMatch(name2);
         gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
     }
-
 }
