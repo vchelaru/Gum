@@ -406,7 +406,7 @@ public class GraphicalUiElementTests
         gue.Name.ShouldMatch(name2);
         gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
 
-        // Inner obj is now null with no name, name should match to previous name
+        // Inner obj is new obj with no name, name should match to previous name
         gue.SetContainedObject(new InvisibleRenderable());
         gue.Name.ShouldMatch(name2);
         gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
