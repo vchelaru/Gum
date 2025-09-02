@@ -788,7 +788,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
                 var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>("SourceFile");
 
-                _selectedState.SelectedStateSave.SetValue("SourceFile", fileName);
+                _selectedState.SelectedStateSave.SetValue("SourceFile", fileName, "string");
                 _selectedState.SelectedInstance = null;
                 _setVariableLogic.PropertyValueChanged(
                     "SourceFile", 

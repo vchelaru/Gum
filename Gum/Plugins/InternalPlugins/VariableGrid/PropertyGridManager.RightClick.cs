@@ -26,13 +26,13 @@ namespace Gum.Managers
             if (_selectedState.SelectedInstance != null)
             {
                 _selectedState.SelectedStateSave.SetValue(
-                    _selectedState.SelectedInstance.Name + ".SourceFile", text);
+                    _selectedState.SelectedInstance.Name + ".SourceFile", text, "string");
 
             }
             else
             {
                 _selectedState.SelectedStateSave.SetValue(
-                    "SourceFile", text);
+                    "SourceFile", text, "string");
 
             }
 

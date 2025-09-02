@@ -345,6 +345,7 @@ namespace Gum.PropertyGridHelpers
                         var value = rfv.GetValueByBottomName(variableName);
                         if (value != null)
                         {
+                            // these are temporary states, so the type does not need to be set
                             forcedValues.SetValue(variableName, value);
                         }
                     }
@@ -583,7 +584,7 @@ namespace Gum.PropertyGridHelpers
 
                     if (!cancel && filePath.Extension == "achx")
                     {
-                        stateSave.SetValue($"{instancePrefix}TextureAddress", Gum.Managers.TextureAddress.Custom);
+                        stateSave.SetValue($"{instancePrefix}TextureAddress", Gum.Managers.TextureAddress.Custom, "TextureAddress");
                         _guiCommands.RefreshVariables(force: true);
                     }
                 }
