@@ -206,9 +206,23 @@ public class FontManager
 
     private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
     {
-        EstimateNeededDimensions(bmfcSave);
-        var didCreate = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
-        return didCreate;
+        AssignEstimatedNeededSizeOn(bmfcSave);
+
+        var response = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
+
+        if(response.Succeeded == false)
+        {
+            if(!string.IsNullOrEmpty(response.Message))
+            {
+                _guiCommands.PrintOutput("Error creating font: " + response.Message);
+            }
+            else
+            {
+                _guiCommands.PrintOutput("Error creating font. Unknown error.");
+            }
+        }
+
+        return response;
     }
 
     async Task<GeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
@@ -380,7 +394,7 @@ public class FontManager
 
 
 
-    private void EstimateNeededDimensions(BmfcSave bmfcSave)
+    private void AssignEstimatedNeededSizeOn(BmfcSave bmfcSave)
     {
         int spacingHorizontal = bmfcSave.SpacingHorizontal;
         int spacingVertical = bmfcSave.SpacingVertical;
