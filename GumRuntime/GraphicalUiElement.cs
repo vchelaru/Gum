@@ -1593,10 +1593,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (mContainedObjectAsIpso != null)
         {
             mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
-        }
 
-        if (mContainedObjectAsIpso != null)
-        {
             mContainedObjectAsIpso.Name ??= name;
             name = mContainedObjectAsIpso.Name;
         }
