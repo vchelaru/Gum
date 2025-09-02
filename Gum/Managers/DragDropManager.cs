@@ -797,8 +797,8 @@ public class DragDropManager
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 
 
-        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
-        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet, "float");
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet, "float");
     }
 
     #endregion

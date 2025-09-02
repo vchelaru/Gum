@@ -690,7 +690,11 @@ namespace Gum.PropertyGridHelpers
                     {
                         variableDefinedInThisOrBase = GetVariableDefinedInThisOrBase(existingVariable);
                     }
-                    string variableType = existingVariable?.Type ?? elementSave?.GetVariableListFromThisOrBase(Name)?.Type;
+                    string variableType = existingVariable?.Type ?? elementSave?.GetVariableFromThisOrBase(Name)?.Type;
+                    if(string.IsNullOrEmpty(variableType))
+                    {
+                        variableType = this.PropertyType?.Name;
+                    }
                     // ...set variable after getting it from base, or else we'd get the variable we just set...
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
                     if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && variableDefinedInThisOrBase != null)
@@ -710,7 +714,9 @@ namespace Gum.PropertyGridHelpers
             }
             else
             {
-                mStateSave.SetValue(mVariableName, newValue);
+                string? variableType = elementSave?.GetVariableListFromThisOrBase(Name)?.Type;
+
+                mStateSave.SetValue(mVariableName, newValue, variableType);
             }
         }
 
