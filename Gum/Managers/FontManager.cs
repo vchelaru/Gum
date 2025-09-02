@@ -169,7 +169,7 @@ public class FontManager
         }
     }
 
-    private static BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
+    private BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
     {
         string prefix = "";
         if (instance != null)
@@ -204,104 +204,110 @@ public class FontManager
         return bmfcSave;
     }
 
-    private async Task<bool> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
+    private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
     {
         EstimateNeededDimensions(bmfcSave);
         var didCreate = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
         return didCreate;
     }
 
-    async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
+    async Task<GeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
     {
 
         var fntFileName = bmfcSave.FontCacheFileName;
         FilePath desiredFntFile = _fileCommands.ProjectDirectory + fntFileName;
 
-        var didCreate = false;
+        var toReturn = GeneralResponse.UnsuccessfulWith("Unknown error");
 
         if(_fileCommands.ProjectDirectory == null)
         {
-            return false;
+            return GeneralResponse.UnsuccessfulWith("Project directory is null");
         }
 
-        if (!desiredFntFile.Exists() || force)
+        Window? spinner = null;
+
+        try
         {
-            Window? spinner = null;
-            if(showSpinner)
+            if (!desiredFntFile.Exists() || force)
             {
-                spinner = _guiCommands.ShowSpinner();
-            }
+                if (showSpinner)
+                {
+                    spinner = _guiCommands.ShowSpinner();
+                }
 
 
-            FilePath filePathTemporary = (_fileCommands.ProjectDirectory! + fntFileName);
-            string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
-            System.Console.WriteLine("Saving: " + bmfcFileToSave);
+                FilePath filePathTemporary = (_fileCommands.ProjectDirectory! + fntFileName);
+                string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
+                System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
-            var fileWatchManager = FileWatchManager.Self;
+                var fileWatchManager = FileWatchManager.Self;
 
-            // arbitrary wait time
-            fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
-            fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
+                // arbitrary wait time
+                fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
+                fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
 
-            var pngFileNameBase = desiredFntFile.RemoveExtension();
+                var pngFileNameBase = desiredFntFile.RemoveExtension();
 
-            // we don't know how many files will be produced, so we just have to guess. For now, let's do 10, that should cover most cases:
-            for (int i = 0; i < 10; i++)
-            {
-                var pngWithNumber = $"{pngFileNameBase}_{i}.png";
-                fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
-            }
+                // we don't know how many files will be produced, so we just have to guess. For now, let's do 10, that should cover most cases:
+                for (int i = 0; i < 10; i++)
+                {
+                    var pngWithNumber = $"{pngFileNameBase}_{i}.png";
+                    fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
+                }
 
-            bmfcSave.Save(bmfcFileToSave);
-
-
-
-            // Now call the executable
-            ProcessStartInfo info = new ProcessStartInfo();
-            info.FileName = BmFontExeLocation;
+                bmfcSave.Save(bmfcFileToSave);
 
 
 
-
-            info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
-                " -o \"" + _fileCommands.ProjectDirectory.FullPath + fntFileName + "\"";
-
-            info.UseShellExecute = true;
-
-            //info.UseShellExecute = false;
-            //info.RedirectStandardError = true;
-            //info.RedirectStandardInput = true;
-            //info.RedirectStandardOutput = true;
-            //info.CreateNoWindow = true;
-
-            var filenameAndArgs = $"{info.FileName} {info.Arguments}";
-            System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
-            _guiCommands.PrintOutput(filenameAndArgs);
+                // Now call the executable
+                ProcessStartInfo info = new ProcessStartInfo();
+                info.FileName = BmFontExeLocation;
 
 
-            Process process = Process.Start(info);
-            if(createTask)
-            {
-                await WaitForExitAsync(process);
-            }
-            else
-            {
-                process.WaitForExit();
-            }
-            didCreate = true;
 
-            if(spinner != null)
-            {
-                spinner.Hide();
+
+                info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
+                    " -o \"" + _fileCommands.ProjectDirectory.FullPath + fntFileName + "\"";
+
+                info.UseShellExecute = true;
+
+                //info.UseShellExecute = false;
+                //info.RedirectStandardError = true;
+                //info.RedirectStandardInput = true;
+                //info.RedirectStandardOutput = true;
+                //info.CreateNoWindow = true;
+
+                var filenameAndArgs = $"{info.FileName} {info.Arguments}";
+                System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
+                _guiCommands.PrintOutput(filenameAndArgs);
+
+
+                Process process = Process.Start(info);
+                if (createTask)
+                {
+                    await WaitForExitAsync(process);
+                }
+                else
+                {
+                    process.WaitForExit();
+                }
+
+                toReturn.Succeeded = true;
+                toReturn.Message = string.Empty;
+
             }
         }
+        finally
+        {
+            spinner?.Hide();
+        }
 
-        return didCreate;
+        return toReturn;
     }
 
-    static string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
+    string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
 
-    static string BmFontExeLocation
+    string BmFontExeLocation
     {
         get
         {
@@ -331,7 +337,7 @@ public class FontManager
         }
     }
 
-    static async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
+    async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
     {
         var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -374,7 +380,7 @@ public class FontManager
 
 
 
-    private static void EstimateNeededDimensions(BmfcSave bmfcSave)
+    private void EstimateNeededDimensions(BmfcSave bmfcSave)
     {
         int spacingHorizontal = bmfcSave.SpacingHorizontal;
         int spacingVertical = bmfcSave.SpacingVertical;
@@ -397,7 +403,7 @@ public class FontManager
         bmfcSave.OutputHeight = numberTall * 256;
     }
 
-    private static void EstimateBlocksNeeded(out int numberWide, out int numberTall, int effectiveFontSize)
+    private void EstimateBlocksNeeded(out int numberWide, out int numberTall, int effectiveFontSize)
     {
         // todo - eventually this should look at the output and adjust in response. For now, we'll just estimate
         // based on the font size
