@@ -386,4 +386,27 @@ public class GraphicalUiElementTests
         list[0].ShouldBeOfType<SpriteRuntime>();
         list[1].ShouldBeOfType<SpriteRuntime>();
     }
+
+    [Fact]
+    public void SetRenderable_NameMatches()
+    {
+        string name = "name1";
+        string name2 = "name2";
+
+        var gue = new GraphicalUiElement(new InvisibleRenderable() { Name = name });
+
+        gue.Name.ShouldNotBeNull();
+        gue.Name.ShouldMatch(name);
+
+        gue.SetContainedObject(new InvisibleRenderable() { Name = name2 });
+        gue.Name.ShouldMatch(name2);
+
+        var gue2 = new GraphicalUiElement();
+        gue2.Name.ShouldBeNull();
+        gue2.SetContainedObject(new InvisibleRenderable() { Name = name2 });
+        gue2.Name.ShouldMatch(name2);
+        gue2.SetContainedObject(new InvisibleRenderable() { Name = name });
+        gue2.Name.ShouldMatch(name);
+    }
+
 }
