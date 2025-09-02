@@ -55,7 +55,7 @@ public class CopyPasteLogic
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly ProjectCommands _projectCommands;
+    private readonly IProjectCommands _projectCommands;
     private readonly IUndoManager _undoManager;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
@@ -79,7 +79,7 @@ public class CopyPasteLogic
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ProjectCommands projectCommands,
+        IProjectCommands projectCommands,
         IUndoManager undoManager
         )
     {
