@@ -22,54 +22,26 @@ namespace Gum.Managers;
 public class FontManager 
 {
     private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
 
-    public FontManager(IGuiCommands guiCommands)
+    public FontManager(IGuiCommands guiCommands, 
+        IFileCommands fileCommands)
     {
         _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
     }
 
     public string AbsoluteFontCacheFolder
     {
         get
         {
-            return FileManager.RelativeDirectory + "FontCache/";
+            return _fileCommands.ProjectDirectory + "FontCache/";
         }
     }
 
-    //public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false, 
-    //    bool isBold = false)
-    //{
-    //    string fileName = AbsoluteFontCacheFolder + 
-    //        FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic, isBold));
-
-    //    if (FileManager.FileExists(fileName))
-    //    {
-    //        try
-    //        {
-
-    //            BitmapFont bitmapFont = (BitmapFont)LoaderManager.Self.GetDisposable(fileName);
-    //            if (bitmapFont == null)
-    //            {
-    //                bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
-    //                LoaderManager.Self.AddDisposable(fileName, bitmapFont);
-    //            }
-
-    //            return bitmapFont;
-    //        }
-    //        catch
-    //        {
-    //            return null;
-    //        }
-    //    }
-    //    else
-    //    {
-    //        return null;
-    //    }
-    //}
-
     public void DeleteFontCacheFolder()
     {
-        FileManager.DeleteDirectory(AbsoluteFontCacheFolder);
+        _fileCommands.DeleteDirectory(AbsoluteFontCacheFolder);
     }
 
     public async Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false)
@@ -197,7 +169,7 @@ public class FontManager
         }
     }
 
-    private static BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
+    private BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
     {
         string prefix = "";
         if (instance != null)
@@ -232,102 +204,132 @@ public class FontManager
         return bmfcSave;
     }
 
-    private async Task<bool> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
+    private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
     {
-        EstimateNeededDimensions(bmfcSave);
-        var didCreate = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
-        return didCreate;
-    }
+        AssignEstimatedNeededSizeOn(bmfcSave);
 
-    async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
-    {
+        var response = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
 
-        var fntFileName = bmfcSave.FontCacheFileName;
-        FilePath desiredFntFile = FileManager.RelativeDirectory + fntFileName;
-
-        var didCreate = false;
-
-        if (!desiredFntFile.Exists() || force)
+        if(response.Succeeded == false)
         {
-            Window? spinner = null;
-            if(showSpinner)
+            if(!string.IsNullOrEmpty(response.Message))
             {
-                spinner = _guiCommands.ShowSpinner();
-            }
-            string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fntFileName) + ".bmfc";
-            System.Console.WriteLine("Saving: " + bmfcFileToSave);
-
-            var fileWatchManager = FileWatchManager.Self;
-
-            // arbitrary wait time
-            fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
-            fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
-
-            var pngFileNameBase = desiredFntFile.RemoveExtension();
-
-            // we don't know how many files will be produced, so we just have to guess. For now, let's do 10, that should cover most cases:
-            for (int i = 0; i < 10; i++)
-            {
-                var pngWithNumber = $"{pngFileNameBase}_{i}.png";
-                fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
-            }
-
-            bmfcSave.Save(bmfcFileToSave);
-
-
-
-            // Now call the executable
-            ProcessStartInfo info = new ProcessStartInfo();
-            info.FileName = BmFontExeLocation;
-
-
-
-
-            info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
-                " -o \"" + FileManager.RelativeDirectory + fntFileName + "\"";
-
-            info.UseShellExecute = true;
-
-            //info.UseShellExecute = false;
-            //info.RedirectStandardError = true;
-            //info.RedirectStandardInput = true;
-            //info.RedirectStandardOutput = true;
-            //info.CreateNoWindow = true;
-
-            var filenameAndArgs = $"{info.FileName} {info.Arguments}";
-            System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
-            _guiCommands.PrintOutput(filenameAndArgs);
-
-
-            Process process = Process.Start(info);
-            if(createTask)
-            {
-                await WaitForExitAsync(process);
+                _guiCommands.PrintOutput("Error creating font: " + response.Message);
             }
             else
             {
-                process.WaitForExit();
-            }
-            didCreate = true;
-
-            if(spinner != null)
-            {
-                spinner.Hide();
+                _guiCommands.PrintOutput("Error creating font. Unknown error.");
             }
         }
 
-        return didCreate;
+        return response;
     }
 
-    static string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
+    async Task<GeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
+    {
 
-    static string BmFontExeLocation
+        var fntFileName = bmfcSave.FontCacheFileName;
+        FilePath desiredFntFile = _fileCommands.ProjectDirectory + fntFileName;
+
+        var toReturn = GeneralResponse.UnsuccessfulWith("Unknown error");
+
+        if(_fileCommands.ProjectDirectory == null)
+        {
+            return GeneralResponse.UnsuccessfulWith("Project directory is null");
+        }
+
+        Window? spinner = null;
+
+        try
+        {
+            if (!desiredFntFile.Exists() || force)
+            {
+                if (showSpinner)
+                {
+                    spinner = _guiCommands.ShowSpinner();
+                }
+
+
+                FilePath filePathTemporary = (_fileCommands.ProjectDirectory! + fntFileName);
+                string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
+                System.Console.WriteLine("Saving: " + bmfcFileToSave);
+
+                var fileWatchManager = FileWatchManager.Self;
+
+                // arbitrary wait time
+                fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
+                fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
+
+                var pngFileNameBase = desiredFntFile.RemoveExtension();
+
+                // we don't know how many files will be produced, so we just have to guess. For now, let's do 10, that should cover most cases:
+                for (int i = 0; i < 10; i++)
+                {
+                    var pngWithNumber = $"{pngFileNameBase}_{i}.png";
+                    fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
+                }
+
+                bmfcSave.Save(bmfcFileToSave);
+
+
+
+                // Now call the executable
+                ProcessStartInfo info = new ProcessStartInfo();
+                info.FileName = BmFontExeLocation;
+
+
+
+
+                info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
+                    " -o \"" + _fileCommands.ProjectDirectory.FullPath + fntFileName + "\"";
+
+                info.UseShellExecute = true;
+
+                //info.UseShellExecute = false;
+                //info.RedirectStandardError = true;
+                //info.RedirectStandardInput = true;
+                //info.RedirectStandardOutput = true;
+                //info.CreateNoWindow = true;
+
+                var filenameAndArgs = $"{info.FileName} {info.Arguments}";
+                System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
+                _guiCommands.PrintOutput(filenameAndArgs);
+
+
+                Process process = Process.Start(info);
+                if (createTask)
+                {
+                    await WaitForExitAsync(process);
+                }
+                else
+                {
+                    process.WaitForExit();
+                }
+
+                toReturn.Succeeded = true;
+                toReturn.Message = string.Empty;
+
+            }
+        }
+        finally
+        {
+            spinner?.Hide();
+        }
+
+        return toReturn;
+    }
+
+    string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
+
+    string BmFontExeLocation
     {
         get
         {
             string resourceName = BmFontExeNoPath;
 
-            string mainExecutablePath = FileManager.GetDirectory(Assembly.GetExecutingAssembly().Location);
+            FilePath assemblyLocation = Assembly.GetExecutingAssembly().Location;
+
+            string mainExecutablePath = assemblyLocation.GetDirectoryContainingThis().FullPath;
 
 
             string bmFontExeLocation = System.IO.Path.Combine(mainExecutablePath, "Libraries\\bmfont.exe");
@@ -336,20 +338,20 @@ public class FontManager
         }
     }
 
-    private static void TrySaveBmFontExe(Assembly assemblyContainingBitmapFontGenerator)
+    private void TrySaveBmFontExe(Assembly assemblyContainingBitmapFontGenerator)
     {
-        var bmFontExeLocation = BmFontExeLocation;
-        if (!FileManager.FileExists(bmFontExeLocation))
+        FilePath bmFontExeLocation = BmFontExeLocation;
+        if (!bmFontExeLocation.Exists())
         {
-            FileManager.SaveEmbeddedResource(
+            _fileCommands.SaveEmbeddedResource(
                 assemblyContainingBitmapFontGenerator,
                 BmFontExeNoPath,
-                bmFontExeLocation);
+                bmFontExeLocation.FullPath);
 
         }
     }
 
-    static async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
+    async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
     {
         var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -392,7 +394,7 @@ public class FontManager
 
 
 
-    private static void EstimateNeededDimensions(BmfcSave bmfcSave)
+    private void AssignEstimatedNeededSizeOn(BmfcSave bmfcSave)
     {
         int spacingHorizontal = bmfcSave.SpacingHorizontal;
         int spacingVertical = bmfcSave.SpacingVertical;
@@ -415,7 +417,7 @@ public class FontManager
         bmfcSave.OutputHeight = numberTall * 256;
     }
 
-    private static void EstimateBlocksNeeded(out int numberWide, out int numberTall, int effectiveFontSize)
+    private void EstimateBlocksNeeded(out int numberWide, out int numberTall, int effectiveFontSize)
     {
         // todo - eventually this should look at the output and adjust in response. For now, we'll just estimate
         // based on the font size
