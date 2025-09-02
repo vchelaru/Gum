@@ -1581,14 +1581,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             throw new ArgumentException("The argument containedObject cannot be 'this'");
         }
 
-
         if (mContainedObjectAsIpso != null)
         {
             mContainedObjectAsIpso.Children.CollectionChanged -= HandleCollectionChanged;
-            if (string.IsNullOrEmpty(this.Name) && !string.IsNullOrEmpty(mContainedObjectAsIpso.Name))
-            {
-                Name = mContainedObjectAsIpso.Name;
-            }
         }
 
         mContainedObjectAsIpso = containedObject as IRenderableIpso;
@@ -1598,6 +1593,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (mContainedObjectAsIpso != null)
         {
             mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
+
+            mContainedObjectAsIpso.Name ??= name;
+            name = mContainedObjectAsIpso.Name;
         }
 
         // in case this had been changed before the Text was assigned, or in case the text
