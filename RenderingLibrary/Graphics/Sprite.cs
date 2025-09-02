@@ -50,11 +50,11 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         get => mAnimationChains;
         set => mAnimationChains = value;
     }
-    public AnimationChain CurrentChain
+    public AnimationChain? CurrentChain
     {
         get
         {
-            if (mCurrentChainIndex != -1 && mAnimationChains.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
+            if (mCurrentChainIndex != -1 && mAnimationChains?.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
             {
                 return mAnimationChains[mCurrentChainIndex];
             }
@@ -375,7 +375,19 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
                 Rectangle? sourceRectangle = EffectiveRectangle;
                 Texture2D texture = Texture;
 
+                var oldX = this.X;
+                var oldY = this.Y;
+
+                if (this.CurrentFrameIndex < CurrentChain?.Count)
+                {
+                    this.X += CurrentChain[this.CurrentFrameIndex].RelativeX;
+                    this.Y -= CurrentChain[this.CurrentFrameIndex].RelativeX;
+                }
+
                 Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
+
+                this.X = oldX;
+                this.Y = oldY;
             }
         }
     }
