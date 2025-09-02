@@ -381,7 +381,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
                 if (this.CurrentFrameIndex < CurrentChain?.Count)
                 {
                     this.X += CurrentChain[this.CurrentFrameIndex].RelativeX;
-                    this.Y -= CurrentChain[this.CurrentFrameIndex].RelativeX;
+                    this.Y -= CurrentChain[this.CurrentFrameIndex].RelativeY;
                 }
 
                 Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
