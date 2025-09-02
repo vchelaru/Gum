@@ -393,20 +393,42 @@ public class GraphicalUiElementTests
         string name = "name1";
         string name2 = "name2";
 
+        // Initial inner obj set with name
         var gue = new GraphicalUiElement(new InvisibleRenderable() { Name = name });
 
+        // Names should match
         gue.Name.ShouldNotBeNull();
         gue.Name.ShouldMatch(name);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
 
+        // Name changed, should match
         gue.SetContainedObject(new InvisibleRenderable() { Name = name2 });
         gue.Name.ShouldMatch(name2);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
 
-        var gue2 = new GraphicalUiElement();
-        gue2.Name.ShouldBeNull();
-        gue2.SetContainedObject(new InvisibleRenderable() { Name = name2 });
-        gue2.Name.ShouldMatch(name2);
-        gue2.SetContainedObject(new InvisibleRenderable() { Name = name });
-        gue2.Name.ShouldMatch(name);
+        // Inner obj is now null with no name, name should match to previous name
+        gue.SetContainedObject(new InvisibleRenderable());
+        gue.Name.ShouldMatch(name2);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+
+        // RESTART: No inner obj set
+        gue = new GraphicalUiElement();
+        gue.Name.ShouldBeNull();
+
+        // Inner obj set, but still null name
+        gue.SetContainedObject(new InvisibleRenderable());
+        gue.Name.ShouldBeNull();
+        ((InvisibleRenderable)gue.RenderableComponent).Name.ShouldBeNull();
+
+        // Change outer obj, inner obj should match
+        gue.Name = name;
+        gue.Name.ShouldMatch(name);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+
+        // Change inner obj with new name, should match inner obj
+        gue.SetContainedObject(new InvisibleRenderable() { Name = name2 });
+        gue.Name.ShouldMatch(name2);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
     }
 
 }
