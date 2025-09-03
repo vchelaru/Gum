@@ -889,7 +889,10 @@ public static class StateSaveExtensionMethods
         variableSave.SetsValue = true;
 
         variableSave.Value = value;
-
+        if(!string.IsNullOrEmpty(variableType))
+        {
+            variableSave.Type = variableType;
+        }
         return variableSave;
     }
 
