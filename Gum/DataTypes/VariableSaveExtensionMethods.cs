@@ -181,6 +181,7 @@ namespace Gum.DataTypes
                 case "float":
                 case "float?":
                 case "bool":
+                case "Boolean":
                 case "bool?":
                 case "decimal":
                 case "double":
