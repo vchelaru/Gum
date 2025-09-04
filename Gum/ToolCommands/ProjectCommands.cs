@@ -15,11 +15,10 @@ using Gum.Services;
 
 namespace Gum.ToolCommands;
 
-public class ProjectCommands
+internal class ProjectCommands : IProjectCommands
 {
     #region Fields
-
-    static ProjectCommands mSelf;
+    
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
@@ -69,7 +68,7 @@ public class ProjectCommands
 
     #region Element (Screen/Component/Standard)
 
-    internal void RemoveElement(ElementSave element)
+    public void RemoveElement(ElementSave element)
     {
         GumProjectSave gps = ProjectManager.Self.GumProjectSave;
         string name = element.Name;
