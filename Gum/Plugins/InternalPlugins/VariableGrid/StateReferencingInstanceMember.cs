@@ -693,7 +693,9 @@ namespace Gum.PropertyGridHelpers
                     string variableType = existingVariable?.Type ?? elementSave?.GetVariableFromThisOrBase(Name)?.Type;
                     if(string.IsNullOrEmpty(variableType))
                     {
-                        variableType = this.PropertyType?.Name;
+                        //variableType = this.PropertyType?.Name;
+                        var rootVariable = ObjectFinder.Self.GetRootVariable(this.Name, elementSave);
+                        variableType = rootVariable?.Type;
                     }
                     // ...set variable after getting it from base, or else we'd get the variable we just set...
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
