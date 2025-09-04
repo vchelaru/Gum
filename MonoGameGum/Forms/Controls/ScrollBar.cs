@@ -56,7 +56,20 @@ public class ScrollBar : RangeBase
     float MinThumbPosition => 0;
     float MaxThumbPosition => Track.GetAbsoluteHeight() - thumb.ActualHeight;
 
-    public override Orientation Orientation => Orientation.Vertical;
+
+    public override Orientation Orientation 
+    { 
+        get => base.Orientation; 
+        set
+        {
+            if(value != Orientation)
+            {
+                base.Orientation = value;
+
+                UpdateOrientationState();
+            }
+        }
+    }
 
     #endregion
 
@@ -326,4 +339,21 @@ public class ScrollBar : RangeBase
     }
 
 #endregion
+
+    private void UpdateOrientationState()
+    {
+        var categoryName = "OrientationCategory";
+
+        string state = string.Empty;
+        if(Orientation == Orientation.Horizontal)
+        {
+            state = "Horizontal";
+        }
+        else
+        {
+            state = "Vertical";
+        }
+
+            Visual.SetProperty(categoryName + "State", state);
+    }
 }

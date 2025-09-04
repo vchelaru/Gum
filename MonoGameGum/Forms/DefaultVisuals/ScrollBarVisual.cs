@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.DataTypes.Variables;
+using Gum.DataTypes;
+
+
 
 
 #if RAYLIB
@@ -140,7 +144,38 @@ public class ScrollBarVisual : InteractiveGue
         ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         ThumbContainer.AddChild(ThumbInstance);
 
-        if(tryCreateFormsObject)
+        var category = new StateSaveCategory();
+        category.Name = "OrientationCategory";
+        this.AddCategory(category);
+
+        void AddVariable(StateSave state, string name, object value)
+        {
+            state.Variables.Add(new VariableSave
+            {
+                Name = name,
+                Value = value
+            });
+        }
+
+        var horizontalState = new StateSave();
+        category.States.Add(horizontalState);
+        horizontalState.Name = "Horizontal";
+        AddVariable(horizontalState, 
+            nameof(this.Height), 24);
+        AddVariable(horizontalState, 
+            nameof(this.HeightUnits), DimensionUnitType.Absolute);
+
+        var verticalState = new StateSave();
+        category.States.Add(verticalState);
+        verticalState.Name = "Vertical";
+        AddVariable(verticalState,
+            nameof(this.Width), 24);
+        AddVariable(verticalState,
+            nameof(this.WidthUnits), DimensionUnitType.Absolute);
+
+        // todo - need to also set all of the values for the buttons here
+
+        if (tryCreateFormsObject)
         {
             this.FormsControlAsObject = new ScrollBar(this);
         }
