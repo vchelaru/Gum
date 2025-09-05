@@ -22,6 +22,7 @@ using System.Globalization;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -42,6 +43,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly IDialogService _dialogService;
     private readonly NameValidator _nameValidator;
 
     #endregion
@@ -213,7 +215,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     #region Methods
 
-    public ElementAnimationsViewModel(INameVerifier nameVerifier)
+    public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService)
     {
         CurrentGameSpeed = "100%";
 
@@ -232,22 +234,18 @@ public class ElementAnimationsViewModel : ViewModel
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = nameVerifier;
         _nameValidator = new NameValidator(_nameVerifier);
+        _dialogService = dialogService;
     }
 
-    public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element, INameVerifier nameVerifier)
+    public void LoadFromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
     {
-        
-        ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel(nameVerifier);
-
-        toReturn.BackingData = save;
+        BackingData = save;
 
         foreach (var animation in save.Animations)
         {
             var vm = AnimationViewModel.FromSave(animation, element);
-            toReturn.Animations.Add(vm);
+            Animations.Add(vm);
         }
-
-        return toReturn;
     }
 
     public ElementAnimationsSave ToSave()
@@ -330,7 +328,7 @@ public class ElementAnimationsViewModel : ViewModel
             string whyInvalid;
             if (!_nameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
             {
-                MessageBox.Show(whyInvalid);
+                _dialogService.ShowMessage(whyInvalid);
             }
             else
             {
@@ -371,7 +369,7 @@ public class ElementAnimationsViewModel : ViewModel
 
             if(errorMessage != null)
             {
-                MessageBox.Show(errorMessage);
+                _dialogService.ShowMessage(errorMessage);
             }
             else if(SelectedAnimation.Length != 0)
             {
@@ -388,9 +386,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
-        var result = MessageBox.Show("Delete animation " + SelectedAnimation.Name + "?", "Delete?", MessageBoxButton.YesNo);
-
-        if(result == MessageBoxResult.Yes)
+        if(_dialogService.ShowYesNoMessage("Delete animation " + SelectedAnimation.Name + "?", "Delete?"))
         {
             Animations.Remove(SelectedAnimation);
         }

@@ -8,6 +8,7 @@ using Gum.Undo;
 using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
+using Gum.Services.Dialogs;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -16,15 +17,19 @@ public class VariableInCategoryPropagationLogic
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    
+    private readonly IDialogService _dialogService;
+
     public VariableInCategoryPropagationLogic(IUndoManager undoManager,
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IDialogService dialogService)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _dialogService = dialogService;
     }
+
     public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
     {
         /////////////////////Early Out//////////////////////////
@@ -151,9 +156,7 @@ public class VariableInCategoryPropagationLogic
             message += $"\n{state.Name}";
         }
 
-        var result = MessageBox.Show(message, "Remove Variables?", MessageBoxButtons.YesNo);
-
-        if (result == DialogResult.Yes)
+        if (_dialogService.ShowYesNoMessage(message, "Remove Variables?"))
         {
             using(_undoManager.RequestLock())
             {

@@ -108,9 +108,7 @@ public class EditCommands
         }
         else
         {
-            var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
-
-            if (response == DialogResult.Yes)
+            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
             {
                 DeleteLogic.Self.Remove(stateSave);
             }
@@ -131,7 +129,7 @@ public class EditCommands
                 message += "\n" + behavior.Name;
             }
 
-            MessageBox.Show(message);
+            _dialogService.ShowMessage(message);
         }
         else
         {
@@ -302,7 +300,7 @@ public class EditCommands
     {
         if (GumState.Self.ProjectState.NeedsToSaveProject)
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
 
@@ -320,7 +318,7 @@ public class EditCommands
 
             if (!string.IsNullOrEmpty(whyNotValid))
             {
-                MessageBox.Show(whyNotValid);
+                _dialogService.ShowMessage(whyNotValid);
             }
             else
             {
@@ -352,11 +350,11 @@ public class EditCommands
 
         if (element == null)
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
         }
         else if (element is StandardElementSave)
         {
-            MessageBox.Show("Standard Elements cannot be duplicated");
+            _dialogService.ShowMessage("Standard Elements cannot be duplicated");
         }
         else if (element is ScreenSave)
         {
@@ -398,7 +396,7 @@ public class EditCommands
                 }
                 else
                 {
-                    MessageBox.Show($"Invalid name for new screen: {whyNotValid}");
+                    _dialogService.ShowMessage($"Invalid name for new screen: {whyNotValid}");
                 }
             }
         }
@@ -443,7 +441,7 @@ public class EditCommands
                 }
                 else
                 {
-                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                    _dialogService.ShowMessage($"Invalid name for new component: {whyNotValid}");
                 }
             }
         }
@@ -456,7 +454,7 @@ public class EditCommands
         var instances = _selectedState.SelectedInstances.ToList();
         if (instances == null || instances.Count == 0 || element == null)
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
         }
         else if (instances is List<InstanceSave>)
         {
@@ -528,7 +526,7 @@ public class EditCommands
                 }
                 else
                 {
-                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                    _dialogService.ShowMessage($"Invalid name for new component: {whyNotValid}");
                     ShowCreateComponentFromInstancesDialog();
                 }
             }

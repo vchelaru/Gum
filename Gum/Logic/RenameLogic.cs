@@ -133,7 +133,7 @@ public class RenameLogic : IRenameLogic
                 message += "\n" + behavior.Name;
             }
 
-            MessageBox.Show(message);
+            _dialogService.ShowMessage(message);
         }
         else
         {
@@ -351,7 +351,7 @@ public class RenameLogic : IRenameLogic
         }
         catch (Exception e)
         {
-            MessageBox.Show("Error renaming instance container " + instanceContainer.ToString() + "\n\n" + e.ToString());
+            _dialogService.ShowMessage("Error renaming instance container " + instanceContainer.ToString() + "\n\n" + e.ToString());
             toReturn.Succeeded = false;
         }
         finally
@@ -572,9 +572,8 @@ public class RenameLogic : IRenameLogic
             string message = $"Are you sure you want to {moveOrRename} {oldName}?\n\n" +
                 "This will change the file name for " + oldName + " which may break " +
                 "external references to this object.";
-            var result = MessageBox.Show(message, "Rename Object and File?", MessageBoxButtons.YesNo);
 
-            shouldContinue = result == DialogResult.Yes;
+            shouldContinue = _dialogService.ShowYesNoMessage(message, "Rename Object and File?");
         }
 
         return shouldContinue;
@@ -587,7 +586,7 @@ public class RenameLogic : IRenameLogic
         {
             if (_nameVerifier.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
             {
-                MessageBox.Show(whyNot);
+                _dialogService.ShowMessage(whyNot);
                 shouldContinue = false;
             }
         }
@@ -605,7 +604,7 @@ public class RenameLogic : IRenameLogic
 
             if (_nameVerifier.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
             {
-                MessageBox.Show(whyNot);
+                _dialogService.ShowMessage(whyNot);
                 shouldContinue = false;
             }
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 using Gum.Plugins;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 
 namespace Gum.Gui.Forms
@@ -50,17 +52,16 @@ namespace Gum.Gui.Forms
 
                 if (shouldBeEnabled && !container.IsEnabled)
                 {
-                    DialogResult result = System.Windows.Forms.DialogResult.Yes;
+                    bool result = true;
 
                     if (!string.IsNullOrEmpty(container.FailureDetails))
                     {
-                        result = MessageBox.Show("The plugin " + container.Name + " has crashed so " +
+                        result = Locator.GetRequiredService<IDialogService>().ShowYesNoMessage("The plugin " + container.Name + " has crashed so " +
                             " it was disabled.  Are you sure you want to re-enable it?",
-                            "Re-enable crashed plugin?",
-                            MessageBoxButtons.YesNo);
+                            "Re-enable crashed plugin?");
                     }
 
-                    if (result == System.Windows.Forms.DialogResult.Yes)
+                    if (result)
                     {
 
                         container.IsEnabled = true;

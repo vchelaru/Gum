@@ -811,7 +811,7 @@ public class SelectionManager
         }
         catch (Exception e)
         {
-            MessageBox.Show("Error in PushAndDoubleClickSelectionActivity: " + e.ToString());
+            _dialogService.ShowMessage("Error in PushAndDoubleClickSelectionActivity: " + e.ToString());
             throw e;
         }
 

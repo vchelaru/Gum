@@ -20,6 +20,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
+using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Undo;
 
@@ -39,6 +40,7 @@ namespace Gum.PropertyGridHelpers
         private readonly WireframeCommands _wireframeCommands;
         private readonly IGuiCommands _guiCommands;
         private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+        private readonly IDialogService _dialogService;
 
         public SetVariableLogic(ISelectedState selectedState, 
             INameVerifier nameVerifier, 
@@ -51,7 +53,8 @@ namespace Gum.PropertyGridHelpers
             FontManager fontManager,
             IFileCommands fileCommands,
             CircularReferenceManager circularReferenceManager,
-            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+            VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+            IDialogService dialogService)
         {
             _selectedState = selectedState;
             _nameVerifier = nameVerifier;
@@ -65,6 +68,7 @@ namespace Gum.PropertyGridHelpers
             _fileCommands = fileCommands;
             _circularReferenceManager = circularReferenceManager;
             _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
+            _dialogService = dialogService;
         }
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -265,7 +269,7 @@ namespace Gum.PropertyGridHelpers
 
                     if(_circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
                     {
-                        MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
+                        _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
                         //stateSave.SetValue("BaseType", oldValue, instance);
                         instance.BaseType = (string)oldValue;
                         _guiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
@@ -534,7 +538,7 @@ namespace Gum.PropertyGridHelpers
 
             if (!string.IsNullOrEmpty(errorMessage))
             {
-                MessageBox.Show(errorMessage);
+                _dialogService.ShowMessage(errorMessage);
 
                 variable.Value = oldValue;
             }
@@ -711,7 +715,7 @@ namespace Gum.PropertyGridHelpers
             return shouldCopy;
         }
 
-        private static void PerformCopy(VariableSave variable, string value)
+        private void PerformCopy(VariableSave variable, string value)
         {
             string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
             string targetAbsoluteFile = directory + FileManager.RemovePath(value);
@@ -732,7 +736,7 @@ namespace Gum.PropertyGridHelpers
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error copying file:\n" + e.ToString());
+                _dialogService.ShowMessage("Error copying file:\n" + e.ToString());
             }
 
         }
@@ -761,7 +765,7 @@ namespace Gum.PropertyGridHelpers
                     if (childrenInstances.Contains(newParent))
                     {
                         // uh oh, circular referenced detected, don't allow it!
-                        MessageBox.Show("This parent assignment would produce a circular reference, which is not allowed.");
+                        _dialogService.ShowMessage("This parent assignment would produce a circular reference, which is not allowed.");
                         variable.Value = oldValue;
                         isValidAssignment = false;
                     }

@@ -755,13 +755,6 @@ namespace CommonFormsAndControls
             return treeNode;
         }
 
-        private void HandleException(Exception ex)
-        {
-            // Perform some error handling here.
-            // We don't want to bubble errors to the CLR. 
-            MessageBox.Show(ex.Message);
-        }
-
         private void ReactToClickedNode( TreeNode node )
 		{
 #if !DEBUG

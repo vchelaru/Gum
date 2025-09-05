@@ -82,7 +82,7 @@ public class DeleteObjectPlugin : InternalPlugin
                     }
                     catch
                     {
-                        System.Windows.Forms.MessageBox.Show("Could not delete the file\n" + fileName);
+                        _dialogService.ShowMessage("Could not delete the file\n" + fileName);
                     }
                 }
             }

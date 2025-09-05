@@ -17,6 +17,7 @@ using System.Numerics;
 using Gum.Commands;
 using Gum.Managers;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -25,6 +26,7 @@ namespace Gum.Plugins.BaseClasses
         protected readonly IGuiCommands _guiCommands;
         protected readonly IFileCommands _fileCommands;
         protected readonly ITabManager _tabManager;
+        protected readonly IDialogService _dialogService;
         private readonly MenuStripManager _menuStripManager;
         
         #region Events
@@ -224,6 +226,7 @@ namespace Gum.Plugins.BaseClasses
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _tabManager = Locator.GetRequiredService<ITabManager>();
             _menuStripManager = Locator.GetRequiredService<MenuStripManager>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
         public abstract void StartUp();
