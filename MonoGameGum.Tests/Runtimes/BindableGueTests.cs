@@ -27,12 +27,39 @@ public class BindableGueTests
         testViewModel.IntPropertyOnVm.ShouldBe(5);
     }
 
+    [Fact(Skip = "For Vic K - we need to fix this!")]
+    public async Task SetBinding_NestedProperties_ShouldUpdate()
+    {
+        BindableGueDerived sut = new();
+        ParentViewModel viewModel = new();
+        sut.BindingContext = viewModel;
+        sut.SetBinding(nameof(sut.IntPropertyOnGue), "TestViewModel.IntPropertyOnVm");
+
+        viewModel.TestViewModel.IntPropertyOnVm = 1234;
+
+        sut.IntPropertyOnGue.ShouldBe(1234);
+    }
+
     class TestViewModel : ViewModel
     {
         public int IntPropertyOnVm
         {
             get => Get<int>();
             set => Set(value);
+        }
+    }
+
+    class ParentViewModel : ViewModel
+    {
+        public TestViewModel TestViewModel
+        {
+            get => Get<TestViewModel>();
+            set => Set(value);
+        }
+
+        public ParentViewModel()
+        {
+            TestViewModel = new TestViewModel();
         }
     }
 
