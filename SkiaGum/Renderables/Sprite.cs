@@ -8,12 +8,30 @@ namespace SkiaGum.Renderables;
 
 public class Sprite : RenderableBase, IAspectRatio, ITextureCoordinate
 {
-    public SKBitmap Texture { get; set; }
+    public SKBitmap Texture 
+    { 
+        get => _texture;
+        set
+        {
+            _texture = value;
+            if(value != null)
+            {
+                Image = SKImage.FromBitmap(value);
+            }
+            else
+            {
+                Image = null;
+            }
+        }
+    }
+
+    public SKImage Image { get; set; }
 
     public float? TextureWidth => Texture?.Width;
     public float? TextureHeight => Texture?.Height;
 
     public Rectangle? SourceRectangle;
+    private SKBitmap _texture;
 
     public Rectangle? EffectiveRectangle => SourceRectangle;
 
@@ -39,7 +57,7 @@ public class Sprite : RenderableBase, IAspectRatio, ITextureCoordinate
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         ////////////Early Out/////////////
-        if (Texture == null)
+        if (Texture == null && Image == null)
         {
             return;
         }
@@ -98,20 +116,42 @@ public class Sprite : RenderableBase, IAspectRatio, ITextureCoordinate
                         top, 
                         right, 
                         bottom);
-                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
+
+                    if(Image != null)
+                    {
+                        canvas.DrawImage(Image, sourceRectangle, boundingRect, paint);
+                    }
+                    else
+                    {
+                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
+                    }
+
                 }
 
             }
             else
             {
-
-                canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
+                if(Image != null)
+                {
+                    canvas.DrawImage(Image, sourceRectangle, boundingRect, paint);
+                }
+                else
+                {
+                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
+                }
             }
 
         }
         else
         {
-            canvas.DrawBitmap(Texture, boundingRect, paint);
+            if (Image != null)
+            {
+                canvas.DrawImage(Image, boundingRect, paint);
+            }
+            else
+            {
+                canvas.DrawBitmap(Texture, boundingRect, paint);
+            }
         }
 
         if (applyRotation)

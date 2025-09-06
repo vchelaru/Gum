@@ -2,6 +2,7 @@
 using Gum.Wireframe;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using System;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace SkiaGum.GueDeriving;
@@ -45,6 +46,12 @@ public class SpriteRuntime : BindableGue
     {
         get => ContainedSprite.Texture;
         set => ContainedSprite.Texture = value;
+    }
+
+    public SKImage Image
+    {
+        get => ContainedSprite.Image;
+        set => ContainedSprite.Image = value;
     }
 
     public SpriteRuntime(bool fullInstantiaton = true)
