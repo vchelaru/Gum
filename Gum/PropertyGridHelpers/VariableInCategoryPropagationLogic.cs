@@ -45,6 +45,10 @@ public class VariableInCategoryPropagationLogic
         {
             defaultVariable = defaultState.GetVariableRecursive(memberName);
         }
+        if(defaultVariable == null)
+        {
+            defaultVariable = ObjectFinder.Self.GetRootVariable(memberName, element);
+        }
         var defaultVariableList = defaultState.GetVariableListSave(memberName);
         if(defaultVariableList == null && defaultVariable == null)
         {
@@ -98,6 +102,11 @@ public class VariableInCategoryPropagationLogic
         }
 
         var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
+
+        if(defaultValue == null)
+        {
+            defaultValue = element.DefaultState.GetValueRecursive(memberName);
+        }
 
         foreach (var state in categoryToPropagate.States)
         {
