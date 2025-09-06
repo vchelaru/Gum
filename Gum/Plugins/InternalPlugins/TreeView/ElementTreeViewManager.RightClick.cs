@@ -191,7 +191,7 @@ public partial class ElementTreeViewManager
                 }
                 catch (Exception exc)
                 {
-                    MessageBox.Show("Could not open location:\n\n" + exc.ToString());
+                    _dialogService.ShowMessage("Could not open location:\n\n" + exc.ToString());
                 }
             }
             else
@@ -226,18 +226,18 @@ public partial class ElementTreeViewManager
 
                 if (files != null && files.Length > 0)
                 {
-                    MessageBox.Show("Cannot delete this folder, it currently contains " + files.Length + " files.");
+                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + files.Length + " files.");
                 }
                 else if (directories != null && directories.Length > 0)
                 {
-                    MessageBox.Show("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
+                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
                 }
 
                 else
                 {
-                    DialogResult result = MessageBox.Show("Delete folder " + treeNode.Text + "?", "Delete", MessageBoxButtons.YesNo);
+                    bool result = _dialogService.ShowYesNoMessage("Delete folder " + treeNode.Text + "?", "Delete");
 
-                    if (result == DialogResult.Yes)
+                    if (result)
                     {
                         try
                         {
@@ -247,7 +247,7 @@ public partial class ElementTreeViewManager
                         catch(Exception exception)
                         {
                             _guiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
-                            MessageBox.Show("Could not delete folder\nSee the output tab for more info");
+                            _dialogService.ShowMessage("Could not delete folder\nSee the output tab for more info");
                         }
                     }
                 }
@@ -516,7 +516,7 @@ public partial class ElementTreeViewManager
         ////////////////Early Out/////////////////////////
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
         //////////////End Early Out////////////////////////

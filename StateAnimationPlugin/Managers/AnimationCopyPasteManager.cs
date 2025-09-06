@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
@@ -33,7 +35,7 @@ namespace StateAnimationPlugin.Managers
 
                 if(!string.IsNullOrEmpty(whyCantPaste))
                 {
-                    MessageBox.Show(whyCantPaste);
+                    Locator.GetRequiredService<IDialogService>().ShowMessage(whyCantPaste);
                 }
                 else
                 {

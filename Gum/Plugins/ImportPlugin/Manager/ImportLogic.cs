@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
@@ -19,14 +20,15 @@ public static class ImportLogic
     private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
     private static readonly IGuiCommands _guiCommands = Locator.GetRequiredService<IGuiCommands>();
     private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
-    
+    private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
+
     #region Screen
 
     internal static void ShowImportScreenUi()
     {
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
         {
-            MessageBox.Show("You must first save the project before adding a new screen");
+            _dialogService.ShowMessage("You must first save the project before adding a new screen");
 
             return;
         }
@@ -52,10 +54,10 @@ public static class ImportLogic
 
         if (FileManager.IsRelativeTo(fileName.FullPath, desiredDirectory) == false)
         {
-            var copyResult = MessageBox.Show("The file must be in the Gum project's Screens folder.  " +
-                "Would you like to copy the file?.", "Copy?", MessageBoxButtons.YesNo);
+            var copyResult = _dialogService.ShowYesNoMessage("The file must be in the Gum project's Screens folder.  " +
+                "Would you like to copy the file?.", "Copy?");
 
-            shouldAdd = copyResult == DialogResult.Yes;
+            shouldAdd = copyResult;
 
             try
             {
@@ -67,7 +69,7 @@ public static class ImportLogic
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error copying the file: " + ex.ToString());
+                _dialogService.ShowMessage("Error copying the file: " + ex.ToString());
             }
         }
 
@@ -142,7 +144,7 @@ public static class ImportLogic
     {
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
 
@@ -178,10 +180,10 @@ public static class ImportLogic
         {
             string fileNameWithoutPath = FileManager.RemovePath(filePath.FullPath);
 
-            var copyResult = MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
-                "Would you like to copy the file?", "Copy?", MessageBoxButtons.YesNo);
+            var copyResult = _dialogService.ShowYesNoMessage("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
+                "Would you like to copy the file?", "Copy?");
 
-            shouldAdd = copyResult == DialogResult.Yes;
+            shouldAdd = copyResult;
 
             if (shouldAdd)
             {
@@ -274,7 +276,7 @@ public static class ImportLogic
     {
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
 
@@ -308,10 +310,10 @@ public static class ImportLogic
         {
             string fileNameWithoutPath = filePath.FileNameNoPath;
 
-            var copyResult = MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Behaviors folder. " +
-                "Would you like to copy the file?", "Copy?", MessageBoxButtons.YesNo);
+            var copyResult = _dialogService.ShowYesNoMessage("The file " + fileNameWithoutPath + " must be in the Gum project's Behaviors folder. " +
+                "Would you like to copy the file?", "Copy?");
 
-            shouldAdd = copyResult == DialogResult.Yes;
+            shouldAdd = copyResult;
 
             if (shouldAdd)
             {

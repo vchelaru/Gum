@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers;
@@ -13,6 +15,7 @@ namespace StateAnimationPlugin.Managers;
 internal class ElementDeleteService
 {
     private readonly AnimationFilePathService _animationFilePathService;
+    private readonly IDialogService _dialogService;
     private CheckBox deleteAnimationFileCheckbox;
 
     public ElementDeleteService(AnimationFilePathService animationFilePathService)
@@ -21,6 +24,7 @@ internal class ElementDeleteService
         deleteAnimationFileCheckbox = new CheckBox();
         deleteAnimationFileCheckbox.IsChecked = true;
         deleteAnimationFileCheckbox.Width = 220;
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     internal void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)
@@ -60,7 +64,7 @@ internal class ElementDeleteService
                     }
                     catch
                     {
-                        System.Windows.Forms.MessageBox.Show("Could not delete the file\n" + fileName);
+                        _dialogService.ShowMessage("Could not delete the file\n" + fileName);
                     }
                 }
             }

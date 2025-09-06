@@ -230,7 +230,7 @@ namespace Gum.Managers
                             message += "\n" + element.ToString();
                         }
                     }
-                    MessageBox.Show(message);
+                    _dialogService.ShowMessage(message);
                 }
 
             };
@@ -255,7 +255,7 @@ namespace Gum.Managers
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
-                    MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+                    _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
                 }
                 else
                 {
@@ -270,7 +270,7 @@ namespace Gum.Managers
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion, "About");
+            this.aboutToolStripMenuItem.Click += (not, used) => _dialogService.ShowMessage("Gum version " + Application.ProductVersion, "About");
 
             string documentationLink = "https://docs.flatredball.com/gum";
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
@@ -318,7 +318,7 @@ namespace Gum.Managers
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
-                    MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+                    _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
                 }
                 else
                 {
