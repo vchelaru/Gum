@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net8.0-ios</TargetFrameworks>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- Gum UI tool is still .NET 4 and doesn't use this so let's disable it-->
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
@@ -73,7 +74,6 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
-		<Compile Include="..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
