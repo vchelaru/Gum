@@ -971,7 +971,7 @@ namespace RenderingLibrary.Graphics
             mNeedsBitmapFontRefresh = true;
         }
 
-        private float MeasureString(string whatToMeasure)
+        internal float MeasureString(string whatToMeasure)
         {
             if (this.BitmapFont != null)
             {
