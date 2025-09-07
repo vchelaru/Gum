@@ -1635,7 +1635,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public virtual GraphicalUiElement Clone()
     {
-        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
         IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable)?.Clone() as IRenderable;
 
@@ -1648,6 +1647,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             clonedRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
         }
+
+        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
         newClone.SetContainedObject(clonedRenderable);
         newClone.mWhatContainsThis = null;
