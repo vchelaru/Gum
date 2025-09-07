@@ -19,8 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace RenderingLibrary.Graphics;
 
-public class NineSlice : IRenderableIpso, 
-    IVisible, ITextureCoordinate, IAnimatable, ICloneable
+public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimatable
 {
     #region Fields
 
@@ -1143,12 +1142,6 @@ public class NineSlice : IRenderableIpso,
                 break;
             }
         }
-    }
-
-
-    object ICloneable.Clone()
-    {
-        return Clone();
     }
 
     #endregion

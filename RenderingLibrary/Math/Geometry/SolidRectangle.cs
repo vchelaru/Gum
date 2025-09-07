@@ -10,7 +10,7 @@ using System;
 
 namespace RenderingLibrary.Graphics;
 
-public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
+public class SolidRectangle : IRenderableIpso, IVisible
 {
     #region Fields
     
@@ -289,10 +289,5 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
         newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
 
         return newInstance;
-    }
-
-    object ICloneable.Clone()
-    {
-        return Clone();
     }
 }

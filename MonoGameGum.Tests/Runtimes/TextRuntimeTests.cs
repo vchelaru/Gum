@@ -140,11 +140,4 @@ public class TextRuntimeTests
         text.WrappedText[3].ShouldNotBeEmpty("jkl");
     }
 
-    [Fact]
-    public void Clone_ShouldCreateClonedText()
-    {
-        Text sut = new();
-        var clone = sut.Clone();
-        clone.ShouldNotBeNull();
-    }
 }
