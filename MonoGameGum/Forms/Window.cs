@@ -67,7 +67,21 @@ public class Window :
             }
         }
     }
-    public ResizeMode ResizeMode { get; set; } = ResizeMode.CanResize;
+
+    ResizeMode _resizeMode = ResizeMode.CanResize;
+    public ResizeMode ResizeMode
+    {
+        get => _resizeMode;
+        set
+        {
+            if (value != _resizeMode)
+            {
+                _resizeMode = value;
+
+            }
+            ResizeModeChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
 
     GraphicalUiElement innerPanel;
@@ -99,26 +113,29 @@ public class Window :
         get => _children;
     }
 
+    public event EventHandler? ResizeModeChanged;
+
     #region Initialize Methods
 
     public Window() : base()
+    {
+        InitializeInternal();
+    }
+    public Window(InteractiveGue visual) : base(visual)
+    {
+        InitializeInternal();
+    }
+
+    private void InitializeInternal()
     {
         if(Visual != null)
         {
             // this allows the window to consume cursor events:
             this.Visual.Click += (_,_) => { };
         }
+        ResizeMode = ResizeMode.CanResize;
     }
 
-
-    public Window(InteractiveGue visual) : base(visual)
-    {
-        if (Visual != null)
-        {
-            // this allows the window to consume cursor events:
-            this.Visual.Click += (_, _) => { };
-        }
-    }
 
     protected override void ReactToVisualChanged()
     {
