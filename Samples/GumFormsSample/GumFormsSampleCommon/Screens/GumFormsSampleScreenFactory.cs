@@ -13,12 +13,12 @@ namespace GumFormsSample.Screens
 
         private readonly Dictionary<int, Func<BindableGue>> _screenCreators = new()
         {
-            { 0, () => new DemoScreenGumRuntime() },
-            { 1, () => new FrameworkElementExampleScreen() },
-            { 2, () => new FormsCustomizationScreen() },
-            { 3, () => new ComplexListBoxItemScreen() },
-            { 4, () => new ListBoxBindingScreen() },
-            { 5, () => new TestScreenRuntime() }
+            { 1, () => new DemoScreenGumRuntime() },
+            { 2, () => new FrameworkElementExampleScreen() },
+            { 3, () => new FormsCustomizationScreen() },
+            { 4, () => new ComplexListBoxItemScreen() },
+            { 5, () => new ListBoxBindingScreen() },
+            { 6, () => new TestScreenRuntime() }
         };
 
         public BindableGue CreateScreen(int screenNumber)
