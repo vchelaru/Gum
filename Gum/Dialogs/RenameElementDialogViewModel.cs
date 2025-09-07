@@ -1,23 +1,28 @@
-﻿using System.IO;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
+using System.IO;
 
 namespace Gum.Dialogs;
 
 public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
 {
     private readonly SetVariableLogic _setVariableLogic;
-    
+    private readonly INameVerifier _nameVerifier;
+
     public override string? Title => "Rename Element";
     public override string Message => "Enter new name:";
     
     public ElementSave? ElementSave { get => Get<ElementSave?>(); set => Set(value); }
 
-    public RenameElementDialogViewModel(SetVariableLogic setVariableLogic)
+    public RenameElementDialogViewModel(SetVariableLogic setVariableLogic,
+        INameVerifier nameVerifier)
     {
         _setVariableLogic = setVariableLogic;
+        _nameVerifier = nameVerifier;
         PreSelect = true;
+
         PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(ElementSave))
@@ -61,5 +66,19 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
             trySave: true);
         
         base.OnAffirmative();
+    }
+
+    protected override string? Validate(string? value)
+    {
+        var folderName = Prefix ?? string.Empty;
+
+        _nameVerifier.IsElementNameValid(this.Value, folderName, ElementSave, out string whyNotValid);
+
+        if(!string.IsNullOrEmpty(whyNotValid))
+                    {
+            return whyNotValid;
+        }
+
+        return base.Validate(value);
     }
 }

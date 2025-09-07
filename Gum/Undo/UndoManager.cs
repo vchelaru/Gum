@@ -239,34 +239,44 @@ public class UndoManager : IUndoManager
 
             if (undoSnapshot != null)
             {
-                var history = mUndos[_selectedState.SelectedElement];
-
-                var isAtEndOfStack = history.UndoIndex == history.Actions.Count - 1;
-                if (!isAtEndOfStack)
+                if(mUndos.ContainsKey(_selectedState.SelectedElement))
                 {
-                    // If we're not at the end of the stack, then we need to remove all the items after the current index
-                    while (history.Actions.Count > history.UndoIndex + 1)
+                    var history = mUndos[_selectedState.SelectedElement];
+
+                    var isAtEndOfStack = history.UndoIndex == history.Actions.Count - 1;
+                    if (!isAtEndOfStack)
                     {
-                        history.Actions.RemoveAt(history.Actions.Count - 1);
+                        // If we're not at the end of the stack, then we need to remove all the items after the current index
+                        while (history.Actions.Count > history.UndoIndex + 1)
+                        {
+                            history.Actions.RemoveAt(history.Actions.Count - 1);
+                        }
                     }
+
+                    var action = new HistoryAction { UndoState = undoSnapshot };
+
+                    history.Actions.Add(action);
+                    history.UndoIndex = history.Actions.Count - 1;
+
+                    var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+
+                    if(redoSnapshot != null)
+                    {
+                        action.RedoState = redoSnapshot;
+                    }
+
+
+                    RecordState();
+
+                    InvokeUndosChanged(UndoOperation.HistoryAppended);
                 }
-
-                var action = new HistoryAction { UndoState = undoSnapshot };
-
-                history.Actions.Add(action);
-                history.UndoIndex = history.Actions.Count - 1;
-
-                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
-
-                if(redoSnapshot != null)
+                else
                 {
-                    action.RedoState = redoSnapshot;
+                    // This can happen when copy/pasting a new element and selecting it, so let's record the state
+                    // so future work an be undone
+                    RecordState();
+
                 }
-
-
-                RecordState();
-
-                InvokeUndosChanged(UndoOperation.HistoryAppended);
             }
         }
 
