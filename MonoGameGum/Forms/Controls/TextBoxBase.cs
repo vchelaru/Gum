@@ -406,6 +406,14 @@ public abstract class TextBoxBase :
 
     private void HandlePush(object sender, EventArgs args)
     {
+        // September 7, 2025
+        // When pushing on a TextBox,
+        // the selection can begin. Since
+        // the TextBox selection is changing,
+        // the TextBox should immediately receive
+        // focus.
+        InteractiveGue.CurrentInputReceiver = this;
+
         if (MainCursor.PrimaryDoublePush)
         {
             indexPushed = null;
@@ -423,12 +431,6 @@ public abstract class TextBoxBase :
     private void HandleClick(object sender, EventArgs args)
     {
         InteractiveGue.CurrentInputReceiver = this;
-
-        if (this.LosesFocusWhenClickedOff)
-        {
-            InteractiveGue.AddNextPushAction(TryLoseFocusFromPush);
-        }
-
     }
 
     private void TryLoseFocusFromPush()
@@ -440,18 +442,23 @@ public abstract class TextBoxBase :
             cursor.WindowOver == this.Visual ||
             (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
 
-        if (clickedOnThisOrChild == false && IsFocused)
+        if (clickedOnThisOrChild == false && IsFocused && cursor.WindowPushed != this.Visual)
         {
             this.IsFocused = false;
         }
     }
 
-    private void HandleClickOff()
+    private void HandlePushOff()
     {
-        if (MainCursor.WindowOver != Visual && timeFocused != InteractiveGue.CurrentGameTime &&
+        if (MainCursor.WindowOver != Visual && 
+            timeFocused != InteractiveGue.CurrentGameTime &&
             LosesFocusWhenClickedOff)
         {
             IsFocused = false;
+        }
+        else
+        {
+            InteractiveGue.AddNextPushAction(HandlePushOff);
         }
     }
 
@@ -1211,7 +1218,7 @@ public abstract class TextBoxBase :
 
         if (isFocused)
         {
-            InteractiveGue.AddNextClickAction(HandleClickOff);
+            InteractiveGue.AddNextPushAction(HandlePushOff);
 
             if (InteractiveGue.CurrentInputReceiver != this)
             {
