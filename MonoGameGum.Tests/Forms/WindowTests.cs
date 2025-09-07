@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using Gum.Forms.DefaultVisuals;
 
 namespace MonoGameGum.Tests.Forms;
 public class WindowTests : BaseTestClass
