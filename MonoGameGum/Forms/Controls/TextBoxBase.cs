@@ -91,10 +91,13 @@ public abstract class TextBoxBase :
         get => caretIndex; 
         set
         {
-            if(value != caretIndex)
+            bool valueChanged = value != caretIndex;
+
+            caretIndex = value;
+            UpdateCaretPositionFromCaretIndex();
+
+            if (valueChanged)
             {
-                caretIndex = value;
-                UpdateCaretPositionFromCaretIndex();
                 OffsetTextToKeepCaretInView();
                 PushValueToViewModel();
                 CaretIndexChanged?.Invoke(this, EventArgs.Empty);
@@ -359,6 +362,10 @@ public abstract class TextBoxBase :
             case "Text":
                 OnTextChanged(this.coreTextObject.RawText);
                 break;
+            case "HorizontalAlignment":
+                UpdateCaretPositionFromCaretIndex();
+                UpdateToSelection();
+                break;
         }
     }
 
@@ -546,13 +553,15 @@ public abstract class TextBoxBase :
 
             if (lineOn < coreTextObject.WrappedText.Count)
             {
-                int indexInThisLine = GetIndex(cursorOffset, coreTextObject.WrappedText[lineOn]);
+                string lineText = coreTextObject.WrappedText[lineOn];
+                cursorOffset -= GetLineXOffsetForHorizontalAlignment(lineText);
+                int indexInThisLine = GetIndex(cursorOffset, lineText);
 
                 var isOnLastLine = lineOn == coreTextObject.WrappedText.Count - 1;
                 if(!isOnLastLine && 
-                    indexInThisLine == coreTextObject.WrappedText[lineOn].Length &&
+                    indexInThisLine == lineText.Length &&
                     indexInThisLine > 0 &&
-                    char.IsWhiteSpace( coreTextObject.WrappedText[lineOn][indexInThisLine-1]))
+                    char.IsWhiteSpace(lineText[indexInThisLine-1]))
                 {
                     index = indexInThisLine - 1;
                 }
@@ -1524,12 +1533,25 @@ public abstract class TextBoxBase :
         if (this.coreTextObject.BitmapFont != null)
         {
             var measure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-            return measure + this.textComponent.X;
+            return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
         else
         {
-            return caretComponent.X = 0;
+            return caretComponent.X = GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
+    }
+
+    public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)
+    {
+        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
+            return 0;
+
+        float measuredLineWidth = coreTextObject.MeasureString(stringToMeasure);
+        float textComponentWidth = textComponent.GetAbsoluteWidth();
+        float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
+        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
+            gapBetweenTextAndEdge /= 2.0f;
+        return gapBetweenTextAndEdge;
     }
 
     float CoreTextObjectHeight =>
