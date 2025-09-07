@@ -516,8 +516,8 @@ public class SpriteRenderer
 
                 if(flipVerticalHorizontal)
                 {
-                    scale.X = roundedHeight / sourceWidth;
-                    scale.Y = roundedWidth / sourceHeight;
+                    scale.X = roundedHeight / sourceHeight;
+                    scale.Y = roundedWidth / sourceWidth;
                 }
                 else
                 {
