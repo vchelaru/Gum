@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net8.0-ios</TargetFrameworks>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- Gum UI tool is still .NET 4 and doesn't use this so let's disable it-->
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
