@@ -522,8 +522,6 @@ public class SpriteRenderer
                 {
                     scale.X = roundedWidth / sourceWidth;
                     scale.Y = roundedHeight / sourceHeight;
-
-                    }
                 }
             }
 
