@@ -424,23 +424,25 @@ public class EditCommands
         }
         else if (instances is List<InstanceSave>)
         {
-            CreateComponentWindow createComponentWindow = new CreateComponentWindow();
-
             FilePath filePath = element.Name;
             var nameWithoutPath = filePath.FileNameNoPath;
 
-            createComponentWindow.Result = $"{nameWithoutPath}Component";
+            string message = "Name of the new component";
+            string title = "Create a component";
+
+            GetUserStringOptions options = new()
+            {
+                InitialValue = $"{nameWithoutPath}Component",
+                Validator = x => _nameVerifier.IsComponentNameAlreadyUsed(x) ? "A component with this name already exists!" : null
+            };
             //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
 
-            Nullable<bool> result = createComponentWindow.ShowDialog();
-
-            if (result == true)
+            if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                string name = createComponentWindow.Result;
                 //bool replace = tiwcw.Checked
 
                 string whyNotValid;
-                _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
+                _nameVerifier.IsElementNameValid(name, "", null, out whyNotValid);
 
                 if (string.IsNullOrEmpty(whyNotValid))
                 {
