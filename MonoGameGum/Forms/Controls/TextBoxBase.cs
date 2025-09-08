@@ -379,7 +379,7 @@ public abstract class TextBoxBase :
         if (selectionInstance != null)
         {
             // We need to do an if-check to support older FRB games that don't have this
-            if (GraphicalUiElement.CloneRenderableFunction != null)
+            if (GraphicalUiElement.CloneRenderableFunction != null || selectionInstance?.RenderableComponent is ICloneable)
             { 
                 selectionTemplate = selectionInstance.Clone();
             }
