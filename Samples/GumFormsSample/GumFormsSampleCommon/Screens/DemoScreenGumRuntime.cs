@@ -70,8 +70,9 @@ partial class DemoScreenGumRuntime
         var gamepad = FormsUtilities.Gamepads[0];
         //if(gamepad.IsConnected)
         {
-            FrameworkElement.GamePadsForUiControl.Add(gamepad);
-            DetectResolutionsButton.FormsControl.IsFocused = true;
+            // uncomment this to give it focus
+            //FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            //DetectResolutionsButton.FormsControl.IsFocused = true;
         }
 
 
@@ -90,16 +91,19 @@ partial class DemoScreenGumRuntime
         //var menuItem = new MenuItem
 
         var menuItemElement = ObjectFinder.Self.GetElementSave("Controls/MenuItem");
-        var newMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers:false));
+        var newMenuItem = 
+            ((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers:false)).FormsControlAsObject as MenuItem;
         newMenuItem.Header = "New";
         FileMenuItem.Items.Add(newMenuItem);
 
-        var saveMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false));
+        var saveMenuItem = 
+            ((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false)).FormsControlAsObject as MenuItem;
         saveMenuItem.Header = "Save";
         FileMenuItem.Items.Add(saveMenuItem);
 
 
-        var exitMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false));
+        var exitMenuItem = 
+            ((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false)).FormsControlAsObject as MenuItem;
         exitMenuItem.Header = "Exit";
         FileMenuItem.Items.Add(exitMenuItem);
 
