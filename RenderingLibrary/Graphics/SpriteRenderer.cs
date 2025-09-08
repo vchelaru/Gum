@@ -509,32 +509,19 @@ public class SpriteRenderer
                 }
                 else // size snapping
                 {
-                    if (rotation == 0)
-                    {
-                        roundedWidth = MathFunctions.RoundToInt(worldWidth * CurrentZoom) / CurrentZoom;
-                        roundedHeight = MathFunctions.RoundToInt(worldHeight * CurrentZoom) / CurrentZoom;
-                    }
-                    else
-                    {
-                        // If rotated, don't attempt to snap
-                        roundedWidth = worldWidth;
-                        roundedHeight = worldHeight;
-                    }
+                    roundedWidth = MathFunctions.RoundToInt(worldWidth * CurrentZoom) / CurrentZoom;
+                    roundedHeight = MathFunctions.RoundToInt(worldHeight * CurrentZoom) / CurrentZoom;
                 }
 
-                if(rotation == 0)
+                if(flipVerticalHorizontal)
                 {
-                    if(flipVerticalHorizontal)
-                    {
-                        scale.X = roundedHeight / sourceWidth;
-                        scale.Y = roundedWidth / sourceHeight;
-                    }
-                    else
-                    {
-                        scale.X = roundedWidth / sourceWidth;
-                        scale.Y = roundedHeight / sourceHeight;
-
-                    }
+                    scale.X = roundedHeight / sourceHeight;
+                    scale.Y = roundedWidth / sourceWidth;
+                }
+                else
+                {
+                    scale.X = roundedWidth / sourceWidth;
+                    scale.Y = roundedHeight / sourceHeight;
                 }
             }
 
