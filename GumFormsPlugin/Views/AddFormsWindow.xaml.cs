@@ -13,32 +13,20 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Gum.Services.Dialogs;
 
 namespace GumFormsPlugin.Views
 {
     /// <summary>
     /// Interaction logic for AddFormsWindow.xaml
     /// </summary>
-    public partial class AddFormsWindow : Window
+    [Dialog(typeof(AddFormsViewModel))]
+    public partial class AddFormsWindow : UserControl
     {
-        AddFormsViewModel ViewModel => DataContext as AddFormsViewModel;
-        public AddFormsWindow(AddFormsViewModel addFormsViewModel)
+        public AddFormsWindow()
         {
             InitializeComponent();
-
-            DataContext = addFormsViewModel;
         }
 
-        private void OkButtonClicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel.DoIt();
-            this.DialogResult = true;
-
-        }
-
-        private void CancelButtonClicked(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = false;
-        }
     }
 }

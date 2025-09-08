@@ -90,10 +90,7 @@ internal class MainGumFormsPlugin : PluginBase
         #endregion
 
         var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands);
-
-        var view = new AddFormsWindow(viewModel);
-        view.ShowDialog();
-
+        _dialogService.Show(viewModel);
     }
 
 }
