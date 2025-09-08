@@ -171,19 +171,28 @@ public abstract class TextBoxBaseVisual : InteractiveGue
             });
         }
 
-        void AddTextBoxCategoryState(StateSave state, Color backgroundColor, Color textInstanceColor, bool isFocusedVisible, Color placeholderTextColor)
+        void AddTextBoxCategoryState(StateSave state, Color backgroundColor, Color textInstanceColor, bool isFocusedVisible, 
+            Color placeholderTextColor, Color selectionColor)
         {
             TextboxCategory.States.Add(state);
             AddVariable(state, "Background.Color", backgroundColor);
             AddVariable(state, "TextInstance.Color", textInstanceColor);
             AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
             AddVariable(state, "PlaceholderTextInstance.Color", placeholderTextColor);
+            AddVariable(state, "SelectionInstance.Color", selectionColor);
         }
 
-        AddTextBoxCategoryState(States.Enabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, false, Styling.ActiveStyle.Colors.Gray);
-        AddTextBoxCategoryState(States.Disabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, false, Styling.ActiveStyle.Colors.Gray);
-        AddTextBoxCategoryState(States.Highlighted, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.White, false, Styling.ActiveStyle.Colors.DarkGray);
-        AddTextBoxCategoryState(States.Focused, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, true, Styling.ActiveStyle.Colors.Gray);
+        AddTextBoxCategoryState(States.Enabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, false, 
+            Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray);
+
+        AddTextBoxCategoryState(States.Disabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, false, 
+            Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray);
+
+        AddTextBoxCategoryState(States.Highlighted, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.White, false, 
+            Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray);
+
+        AddTextBoxCategoryState(States.Focused, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, true, 
+            Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Accent);
 
         LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         LineModeCategory.Name = "LineModeCategory";

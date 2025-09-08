@@ -77,7 +77,6 @@ public class WindowVisual : InteractiveGue
         BorderTopLeftInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);
         BorderTopLeftInstance.Width = BorderSize;
         BorderTopLeftInstance.Height = BorderSize;
-        BorderTopLeftInstance.CustomCursor = Cursors.SizeNWSE;
         this.AddChild(BorderTopLeftInstance);
 
         BorderTopRightInstance = new Panel();
@@ -85,7 +84,6 @@ public class WindowVisual : InteractiveGue
         BorderTopRightInstance.Anchor(Gum.Wireframe.Anchor.TopRight);
         BorderTopRightInstance.Width = BorderSize;
         BorderTopRightInstance.Height = BorderSize;
-        BorderTopRightInstance.CustomCursor = Cursors.SizeNESW;
         this.AddChild(BorderTopRightInstance);
 
         BorderBottomLeftInstance = new Panel();
@@ -93,7 +91,6 @@ public class WindowVisual : InteractiveGue
         BorderBottomLeftInstance.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         BorderBottomLeftInstance.Width = BorderSize;
         BorderBottomLeftInstance.Height = BorderSize;
-        BorderBottomLeftInstance.CustomCursor = Cursors.SizeNESW;
         this.AddChild(BorderBottomLeftInstance);
 
         BorderBottomRightInstance = new Panel();
@@ -101,7 +98,6 @@ public class WindowVisual : InteractiveGue
         BorderBottomRightInstance.Anchor(Gum.Wireframe.Anchor.BottomRight);
         BorderBottomRightInstance.Width = BorderSize;
         BorderBottomRightInstance.Height = BorderSize;
-        BorderBottomRightInstance.CustomCursor = Cursors.SizeNWSE;
         this.AddChild(BorderBottomRightInstance);
 
         BorderTopInstance = new Panel();
@@ -109,7 +105,6 @@ public class WindowVisual : InteractiveGue
         BorderTopInstance.Dock(Gum.Wireframe.Dock.Top);
         BorderTopInstance.Height = BorderSize;
         BorderTopInstance.Width = -BorderSize * 2;
-        BorderTopInstance.CustomCursor = Cursors.SizeNS;
         this.AddChild(BorderTopInstance);
 
         BorderBottomInstance = new Panel();
@@ -117,7 +112,6 @@ public class WindowVisual : InteractiveGue
         BorderBottomInstance.Dock(Gum.Wireframe.Dock.Bottom);
         BorderBottomInstance.Height = BorderSize;
         BorderBottomInstance.Width = -BorderSize * 2;
-        BorderBottomInstance.CustomCursor = Cursors.SizeNS;
         this.AddChild(BorderBottomInstance);
 
         BorderLeftInstance = new Panel();
@@ -125,7 +119,6 @@ public class WindowVisual : InteractiveGue
         BorderLeftInstance.Dock(Gum.Wireframe.Dock.Left);
         BorderLeftInstance.Width = BorderSize;
         BorderLeftInstance.Height = -BorderSize * 2;
-        BorderLeftInstance.CustomCursor = Cursors.SizeWE;
         this.AddChild(BorderLeftInstance);
 
         BorderRightInstance = new Panel();
@@ -133,13 +126,63 @@ public class WindowVisual : InteractiveGue
         BorderRightInstance.Dock(Gum.Wireframe.Dock.Right);
         BorderRightInstance.Width = BorderSize;
         BorderRightInstance.Height = -BorderSize * 2;
-        BorderRightInstance.CustomCursor = Cursors.SizeWE;
+        SetCustomCursorForResizing();
+
         this.AddChild(BorderRightInstance);
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new Window(this);
         }
+    }
+
+
+    public override object FormsControlAsObject 
+    { 
+        get => base.FormsControlAsObject;
+        set
+        {
+            var oldWindow = base.FormsControlAsObject as Window;
+            if(oldWindow != null)
+            {
+                oldWindow.ResizeModeChanged -= HandleResizeModeChanged;
+            }
+            base.FormsControlAsObject = value;
+            if(value is Window window)
+            {
+                window.ResizeModeChanged += HandleResizeModeChanged;
+            }
+        }
+    }
+
+    private void HandleResizeModeChanged(object? sender, EventArgs e)
+    {
+        if(FormsControl?.ResizeMode == ResizeMode.NoResize)
+        {
+            BorderTopLeftInstance.CustomCursor = null;
+            BorderTopRightInstance.CustomCursor = null;
+            BorderBottomLeftInstance.CustomCursor = null;
+            BorderBottomRightInstance.CustomCursor = null;
+            BorderTopInstance.CustomCursor = null;
+            BorderBottomInstance.CustomCursor = null;
+            BorderLeftInstance.CustomCursor = null;
+            BorderRightInstance.CustomCursor = null;
+        }
+        else
+        {
+            SetCustomCursorForResizing();
+        }
+    }
+    private void SetCustomCursorForResizing()
+    {
+        BorderTopLeftInstance.CustomCursor = Cursors.SizeNWSE;
+        BorderTopRightInstance.CustomCursor = Cursors.SizeNESW;
+        BorderBottomLeftInstance.CustomCursor = Cursors.SizeNESW;
+        BorderBottomRightInstance.CustomCursor = Cursors.SizeNWSE;
+        BorderTopInstance.CustomCursor = Cursors.SizeNS;
+        BorderBottomInstance.CustomCursor = Cursors.SizeNS;
+        BorderLeftInstance.CustomCursor = Cursors.SizeWE;
+        BorderRightInstance.CustomCursor = Cursors.SizeWE;
     }
 
     public Window FormsControl => FormsControlAsObject as Window;

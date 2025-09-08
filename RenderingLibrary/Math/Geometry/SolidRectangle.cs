@@ -5,11 +5,12 @@ using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using System;
 
 
 namespace RenderingLibrary.Graphics;
 
-public class SolidRectangle : IRenderableIpso, IVisible
+public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
 {
     #region Fields
     
@@ -288,5 +289,10 @@ public class SolidRectangle : IRenderableIpso, IVisible
         newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
 
         return newInstance;
+    }
+
+    object ICloneable.Clone()
+    {
+        return Clone();
     }
 }
