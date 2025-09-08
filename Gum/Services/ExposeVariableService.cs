@@ -73,87 +73,83 @@ internal class ExposeVariableService : IExposeVariableService
             return OptionallyAttemptedGeneralResponse<VariableSave>.SuccessfulWithoutAttempt;
         }
 
-        var tiw = new TextInputWindow();
-        tiw.Message = "Enter variable name:";
-        tiw.Title = "Expose variable";
+        string message = "Enter variable name:";
+        string title = "Expose variable";
         // We want to use the name without the dots.
         // So something like TextInstance.Text would be
         // TextInstanceText
         var fullVariableName = instanceSave.Name + "." + rootVariableName;
-        tiw.Result = fullVariableName.Replace(".", "").Replace(" ", "");
 
-        DialogResult result = tiw.ShowDialog();
+        GetUserStringOptions options = new()
+        {
+            InitialValue = fullVariableName.Replace(".", "").Replace(" ", ""),
+            Validator = v =>
+                _nameVerifier.IsVariableNameValid(v, _selectedState.SelectedElement, variableSave, out string whyNot)
+                    ? null
+                    : whyNot
+        };
 
         var toReturn = new OptionallyAttemptedGeneralResponse<VariableSave>();
         toReturn.DidAttempt = true;
         toReturn.Succeeded = false;
 
-        if (result == DialogResult.OK)
+        if (_dialogService.GetUserString(message, title, options) is { } result)
         {
-            string whyNot;
-            if (!_nameVerifier.IsVariableNameValid(tiw.Result, _selectedState.SelectedElement, variableSave, out whyNot))
+
+            var elementSave = _selectedState.SelectedElement;
+            // if there is an inactive variable,
+            // we should get rid of it:
+            var existingVariable = _selectedState.SelectedElement.GetVariableFromThisOrBase(result);
+
+            // there's a variable but we shouldn't consider it
+            // unless it's "Active" - inactive variables may be
+            // leftovers from a type change
+
+            using var undoLocl = _undoManager.RequestLock();
+            if (existingVariable != null)
             {
-                toReturn.Message = whyNot;
-                _dialogService.ShowMessage(whyNot);
-
-            }
-            else
-            {
-                var elementSave = _selectedState.SelectedElement;
-                // if there is an inactive variable,
-                // we should get rid of it:
-                var existingVariable = _selectedState.SelectedElement.GetVariableFromThisOrBase(tiw.Result);
-
-                // there's a variable but we shouldn't consider it
-                // unless it's "Active" - inactive variables may be
-                // leftovers from a type change
-
-                using var undoLocl = _undoManager.RequestLock();
-                if (existingVariable != null)
+                var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
+                if (isActive == false)
                 {
-                    var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
-                    if (isActive == false)
+                    // gotta remove the variable:
+                    if (elementSave.DefaultState.Variables.Contains(existingVariable))
                     {
-                        // gotta remove the variable:
-                        if (elementSave.DefaultState.Variables.Contains(existingVariable))
-                        {
-                            // We may need to worry about inheritance...eventually
-                            elementSave.DefaultState.Variables.Remove(existingVariable);
-                        }
+                        // We may need to worry about inheritance...eventually
+                        elementSave.DefaultState.Variables.Remove(existingVariable);
                     }
-
                 }
 
-                if(variableSave == null)
+            }
+
+            if(variableSave == null)
+            {
+                StateSave stateToExposeOn = _selectedState.SelectedElement.DefaultState;
+
+                var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
+
+                if(variableInDefault == null)
                 {
-                    StateSave stateToExposeOn = _selectedState.SelectedElement.DefaultState;
-
-                    var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
-
-                    if(variableInDefault == null)
-                    {
-                        throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
-                    }
-
-                    string variableType = variableInDefault.Type;
-                    stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
-
-                    variableSave = stateToExposeOn.GetVariableSave(fullVariableName);
-
-                    // Not sure if we need this, but setting SetsValue to false matches the old behavior when
-                    // this code used to be part of validation
-                    variableSave.SetsValue = false;
+                    throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
                 }
 
-                variableSave.ExposedAsName = tiw.Result;
+                string variableType = variableInDefault.Type;
+                stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
 
-                PluginManager.Self.VariableAdd(elementSave, tiw.Result);
+                variableSave = stateToExposeOn.GetVariableSave(fullVariableName);
 
-                _fileCommands.TryAutoSaveCurrentElement();
-                _guiCommands.RefreshVariables(force: true);
-                toReturn.Data = variableSave;
-                toReturn.Succeeded = true;
+                // Not sure if we need this, but setting SetsValue to false matches the old behavior when
+                // this code used to be part of validation
+                variableSave.SetsValue = false;
             }
+
+            variableSave.ExposedAsName = result;
+
+            PluginManager.Self.VariableAdd(elementSave, result);
+
+            _fileCommands.TryAutoSaveCurrentElement();
+            _guiCommands.RefreshVariables(force: true);
+            toReturn.Data = variableSave;
+            toReturn.Succeeded = true;
         }
         return toReturn;
     }

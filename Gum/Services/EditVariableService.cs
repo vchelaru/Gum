@@ -128,10 +128,8 @@ public class EditVariableService : IEditVariableService
 
     private void ShowEditExposedUi(VariableSave variable, IStateContainer container)
     {
-        var tiw = new CustomizableTextInputWindow();
-        tiw.Message = "Enter desired exposed variable name.";
-        tiw.Width = 600;
-        tiw.Title = "Edit Variable Name";
+        string message = "Enter desired exposed variable name.";
+        string title = "Edit Variable Name";
 
 
 
@@ -140,14 +138,14 @@ public class EditVariableService : IEditVariableService
 
         if(!string.IsNullOrEmpty(changesDetails))
         {
-            tiw.Message += "\n\n" + changesDetails;
+            message += "\n\n" + changesDetails;
         }
 
-        tiw.Result = variable.ExposedAsName;
+        GetUserStringOptions options = new() { InitialValue = variable.ExposedAsName };
 
-        if (tiw.ShowDialog() == true)
+        if (_dialogService.GetUserString(message, title, options) is { } result)
         {
-            RenameExposedVariable(variable, tiw.Result, container, changes);
+            RenameExposedVariable(variable, result, container, changes);
         }
     }
 

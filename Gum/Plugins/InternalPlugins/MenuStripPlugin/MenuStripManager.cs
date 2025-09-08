@@ -208,16 +208,14 @@ namespace Gum.Managers
             this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
             this.findFileReferencesToolStripMenuItem.Click += (not, used) =>
             {
-                CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();
-                tiw.Message = "Enter entire or partial file name:";
-                tiw.Title = "Find file references";
-                var dialogResult = tiw.ShowDialog();
+                string message = "Enter entire or partial file name:";
+                string title = "Find file references";
 
-                if (dialogResult == System.Windows.Forms.DialogResult.OK)
+                if (_dialogService.GetUserString(message, title) is { } result)
                 {
-                    var elements = ObjectFinder.Self.GetElementsReferencing(tiw.Result);
+                    var elements = ObjectFinder.Self.GetElementsReferencing(result);
 
-                    string message = "File referenced by:";
+                    message = "File referenced by:";
 
                     if (elements.Count == 0)
                     {
