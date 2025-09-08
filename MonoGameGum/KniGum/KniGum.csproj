@@ -102,6 +102,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="..\..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<EmbeddedResource Include="..\Content\Font18Arial.fnt" />
 		<EmbeddedResource Include="..\Content\Font18Arial_0.png" />
 		<EmbeddedResource Include="..\Content\Font18Arial_Bold.fnt" />
