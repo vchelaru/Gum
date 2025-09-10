@@ -11,7 +11,6 @@ using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
-using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
 using System.IO;
