@@ -50,6 +50,10 @@ nameMember.CustomSetPropertyEvent += (assignedInstance, args) =>
     if (DoesNameAlreadyExist(newName))
     {
         // Show some form of validation like a popup
+        
+        // by marking this as cancelled, the view dispaying the property
+        // will not perform additional processing of the assignment:
+        args.IsAssignmentCancelled = true;
     }
     else
     {
