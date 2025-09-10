@@ -9,7 +9,7 @@ DataGrid.Instance = someObject;
 // and this category contains one InstanceMember for each reflected property
 ```
 
-Properties which have the `System.ComponentModel.CategoryAttribute` will be categorized according to the category assigned. Otherwise, properties will be put in the Uncategorized category.
+Properties which have the `System.ComponentModel.CategoryAttribute` are categorized according to the category assigned. Otherwise, properties are put in the Uncategorized category.
 
 ### Manually Selecting Properties
 
@@ -30,3 +30,4 @@ category.Members.Add(new InstanceMember("Y", viewModel));
 category.Members.Add(new InstanceMember("Z", viewModel));
 
 ```
+
