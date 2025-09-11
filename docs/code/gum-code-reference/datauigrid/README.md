@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The DataUiGrid is similar to Winforms PropertyGrid - a reflection-based UI object which can be used to display the properties on objects in real-time. It is used for the properties on Gum objects, but is written to be general purpose to be used in any applications.
+The DataUiGrid is similar to Winforms PropertyGrid - a reflection-based UI object which can be used to display the properties on objects in real-time. Additionally, it can display properties using explicit get and set methods rather than reflection. It is used for the properties on Gum objects, but is written to be general purpose to be used in any applications.
 
 It is included in the WpfDataUi.dll file which is part of Gum, so this library can be pulled out and used in any other application.
 
@@ -60,7 +60,7 @@ MemoryStream memoryStream = new MemoryStream();
 this.DataGrid.Instance = memoryStream;
 ```
 
-This will produce a grid which looks like this:
+This produces a grid which looks like this:
 
 ![](../../../.gitbook/assets/WpfDataUiGrid.png)
 
