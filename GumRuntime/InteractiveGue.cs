@@ -169,10 +169,16 @@ public partial class InteractiveGue : BindableGue
     #region Events 
 
     /// <summary>
-    /// Event which is raised whenever this is clicked by a cursor. A click occurs
+    /// Event raised whenever this is clicked by a cursor. A click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
     public event EventHandler Click;
+
+    /// <summary>
+    /// Event raised whenever this is double-clicked by a cursor. A double-click occurs
+    /// when the cursor is over this and the left mouse button is clicked twice in rapid succession.
+    /// </summary>
+    public event EventHandler DoubleClick;
 
     /// <summary>
     /// Event which is raised whenever this is right-clicked by a cursor. A right-click occurs
@@ -370,6 +376,7 @@ public partial class InteractiveGue : BindableGue
                 ||
                 asInteractive?.Push != null ||
                 asInteractive?.Click != null ||
+                asInteractive?.DoubleClick != null ||
                 asInteractive?.RightClick != null ||
 
                 asInteractive?.RollOn != null ||
@@ -445,6 +452,11 @@ public partial class InteractiveGue : BindableGue
                                     // I don't know if we have access to the underlying hardware here...
                                     var args = new InputEventArgs() { InputDevice = cursor };
                                     asInteractive.Click(asInteractive, args);
+                                }
+                                if(asInteractive.DoubleClick != null && cursor.PrimaryDoubleClick)
+                                {
+                                    var args = new InputEventArgs() { InputDevice = cursor };
+                                    asInteractive.DoubleClick(asInteractive, args);
                                 }
                                 //if (cursor.PrimaryClickNoSlide && ClickNoSlide != null)
                                 //{
