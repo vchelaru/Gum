@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.ImportPlugin.Views
 {
@@ -30,7 +32,7 @@ namespace Gum.Plugins.ImportPlugin.Views
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show("Select a file or click the Browse button");
+                Locator.GetRequiredService<IDialogService>().ShowMessage("Select a file or click the Browse button");
             }
         }
 

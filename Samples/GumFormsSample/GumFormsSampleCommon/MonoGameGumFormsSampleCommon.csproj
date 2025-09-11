@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <EnableDefaultItems>true</EnableDefaultItems>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ProjectGuid>{7C9C5729-78E4-4C13-BBB2-05C25443A980}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>

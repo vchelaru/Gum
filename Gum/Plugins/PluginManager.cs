@@ -24,6 +24,7 @@ using RenderingLibrary;
 using System.Numerics;
 using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Services.Dialogs;
 using Gum.Undo;
 
 namespace Gum.Plugins
@@ -62,6 +63,7 @@ namespace Gum.Plugins
 
         private readonly IGuiCommands _guiCommands;
         private readonly IMessenger _messenger;
+        private readonly IDialogService _dialogService;
 
         public static string PluginFolder
         {
@@ -180,7 +182,7 @@ namespace Gum.Plugins
                     catch (Exception e)
                     {
 #if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+                        _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
 #endif
                         container.Fail(e, "Failed in " + methodName);
                     }
@@ -255,7 +257,7 @@ namespace Gum.Plugins
                     catch (Exception e)
                     {
 #if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+                        _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
 #endif
                         container.Fail(e, "Failed in " + TryHandleDelete);
                     }
@@ -519,7 +521,7 @@ namespace Gum.Plugins
                     catch (Exception e)
                     {
 #if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+                        _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
 #endif
                         container.Fail(e, $"Failed in {nameof(GetDeleteStateResponse)}");
                     }
@@ -558,7 +560,7 @@ namespace Gum.Plugins
                     catch (Exception e)
                     {
 #if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+                        _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
 #endif
                         container.Fail(e, $"Failed in {nameof(GetDeleteStateCategoryResponse)}");
                     }
@@ -655,6 +657,7 @@ namespace Gum.Plugins
         {
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _messenger = Locator.GetRequiredService<IMessenger>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
 
             _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
         }
@@ -786,7 +789,7 @@ namespace Gum.Plugins
                         error += "\n Inner Exception:\n" + e.InnerException.Message;
                     }
                 }
-                MessageBox.Show(error);
+                _dialogService.ShowMessage(error);
 
                 instance.Plugins = new List<PluginBase>();
 
@@ -883,7 +886,7 @@ namespace Gum.Plugins
                 catch (Exception e)
                 {
 #if DEBUG
-                    MessageBox.Show("Plugin failed to start up:\n\n" + e.ToString());
+                    Locator.GetRequiredService<IDialogService>().ShowMessage("Plugin failed to start up:\n\n" + e.ToString());
 #endif
                     pluginContainer.Fail(e, "Plugin failed in StartUp");
                 }

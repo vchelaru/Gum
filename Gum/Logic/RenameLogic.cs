@@ -133,36 +133,33 @@ public class RenameLogic : IRenameLogic
                 message += "\n" + behavior.Name;
             }
 
-            MessageBox.Show(message);
+            _dialogService.ShowMessage(message);
         }
         else
         {
-            CustomizableTextInputWindow tiw = new();
-            tiw.Message = "Enter new category name";
-            tiw.Title = "New Category";
-            tiw.Width = 600;
+            string message = "Enter new category name";
+            string title = "New Category";
 
-            tiw.Result = category.Name;
+            GetUserStringOptions options = new() { InitialValue = category.Name };
             string oldName = category.Name;
             var changes = GetVariableChangesForCategoryRename(elementSave, category, oldName);
 
             if (changes.Count > 0)
             {
-                tiw.Message += "\n\nThe following variables will be affected:";
+                message += "\n\nThe following variables will be affected:";
                 foreach (var change in changes)
                 {
                     var containerDisplay = change.Container is ElementSave changeElementSave
                         ? changeElementSave.Name
                         : change.Container.ToString();
 
-                    tiw.Message += $"\n  {change.Variable.Name} in {containerDisplay}";
+                    message += $"\n  {change.Variable.Name} in {containerDisplay}";
                 }
             }
 
 
-            if (tiw.ShowDialog() is true)
+            if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
-                string newName = tiw.Result;
                 RenameCategory(elementSave, category, oldName, newName, changes);
             }
         }
@@ -351,7 +348,7 @@ public class RenameLogic : IRenameLogic
         }
         catch (Exception e)
         {
-            MessageBox.Show("Error renaming instance container " + instanceContainer.ToString() + "\n\n" + e.ToString());
+            _dialogService.ShowMessage("Error renaming instance container " + instanceContainer.ToString() + "\n\n" + e.ToString());
             toReturn.Succeeded = false;
         }
         finally
@@ -572,9 +569,8 @@ public class RenameLogic : IRenameLogic
             string message = $"Are you sure you want to {moveOrRename} {oldName}?\n\n" +
                 "This will change the file name for " + oldName + " which may break " +
                 "external references to this object.";
-            var result = MessageBox.Show(message, "Rename Object and File?", MessageBoxButtons.YesNo);
 
-            shouldContinue = result == DialogResult.Yes;
+            shouldContinue = _dialogService.ShowYesNoMessage(message, "Rename Object and File?");
         }
 
         return shouldContinue;
@@ -587,7 +583,7 @@ public class RenameLogic : IRenameLogic
         {
             if (_nameVerifier.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
             {
-                MessageBox.Show(whyNot);
+                _dialogService.ShowMessage(whyNot);
                 shouldContinue = false;
             }
         }
@@ -605,7 +601,7 @@ public class RenameLogic : IRenameLogic
 
             if (_nameVerifier.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
             {
-                MessageBox.Show(whyNot);
+                _dialogService.ShowMessage(whyNot);
                 shouldContinue = false;
             }
         }

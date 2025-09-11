@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
@@ -99,6 +99,10 @@
 		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.AssemblyInfo.cs" />
 		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.GlobalUsings.g.cs" />
 		<Compile Remove="..\FnaGum\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="..\..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -139,7 +139,7 @@ public class FileCommands : IFileCommands
         }
         else
         {
-            MessageBox.Show("Cannot save project because of earlier errors");
+            _dialogService.ShowMessage("Cannot save project because of earlier errors");
         }
     }
 
@@ -152,7 +152,7 @@ public class FileCommands : IFileCommands
     {
         if (elementSave.IsSourceFileMissing)
         {
-            MessageBox.Show("Cannot save " + elementSave + " because its source file is missing");
+            _dialogService.ShowMessage("Cannot save " + elementSave + " because its source file is missing");
         }
         else
         {
@@ -214,7 +214,7 @@ public class FileCommands : IFileCommands
 
                     if (succeeded == false)
                     {
-                        MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                         succeeded = false;
                     }
                 }
@@ -268,7 +268,7 @@ public class FileCommands : IFileCommands
     {
         if (behavior.IsSourceFileMissing)
         {
-            MessageBox.Show("Cannot save " + behavior + " because its source file is missing");
+            _dialogService.ShowMessage("Cannot save " + behavior + " because its source file is missing");
         }
         else
         {
@@ -326,7 +326,7 @@ public class FileCommands : IFileCommands
 
                     if (succeeded == false)
                     {
-                        MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                         succeeded = false;
                     }
                 }

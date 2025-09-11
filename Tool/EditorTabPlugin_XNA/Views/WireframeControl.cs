@@ -21,6 +21,8 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Security.Policy;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.Wireframe;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
@@ -195,7 +197,7 @@ public class WireframeControl : GraphicsDeviceControl
         }
         catch (Exception exception)
         {
-            MessageBox.Show("Error initializing the wireframe control\n\n" + exception);
+            Locator.GetRequiredService<IDialogService>().ShowMessage("Error initializing the wireframe control\n\n" + exception);
         }
     }
 
@@ -293,7 +295,7 @@ public class WireframeControl : GraphicsDeviceControl
 #if DEBUG
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                Locator.GetRequiredService<IDialogService>().ShowMessage(e.ToString());
             }
 #endif
         }

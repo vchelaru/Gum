@@ -22,6 +22,11 @@ namespace WpfDataUi.DataTypes
     {
         public SetPropertyCommitType CommitType { get; set; }
         public object Value { get; set; }
+        /// <summary>
+        /// Can be assigned to mark that assignment was cancelled. This can be used
+        /// by views to react to a cancelled assignment, such as by preventing futher 
+        /// processing of a value.
+        /// </summary>
         public bool IsAssignmentCancelled { get; set; }
     }
 

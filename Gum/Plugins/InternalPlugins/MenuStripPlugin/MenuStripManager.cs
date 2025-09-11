@@ -208,16 +208,14 @@ namespace Gum.Managers
             this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
             this.findFileReferencesToolStripMenuItem.Click += (not, used) =>
             {
-                CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();
-                tiw.Message = "Enter entire or partial file name:";
-                tiw.Title = "Find file references";
-                var dialogResult = tiw.ShowDialog();
+                string message = "Enter entire or partial file name:";
+                string title = "Find file references";
 
-                if (dialogResult == System.Windows.Forms.DialogResult.OK)
+                if (_dialogService.GetUserString(message, title) is { } result)
                 {
-                    var elements = ObjectFinder.Self.GetElementsReferencing(tiw.Result);
+                    var elements = ObjectFinder.Self.GetElementsReferencing(result);
 
-                    string message = "File referenced by:";
+                    message = "File referenced by:";
 
                     if (elements.Count == 0)
                     {
@@ -230,7 +228,7 @@ namespace Gum.Managers
                             message += "\n" + element.ToString();
                         }
                     }
-                    MessageBox.Show(message);
+                    _dialogService.ShowMessage(message);
                 }
 
             };
@@ -255,7 +253,7 @@ namespace Gum.Managers
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
-                    MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+                    _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
                 }
                 else
                 {
@@ -270,7 +268,7 @@ namespace Gum.Managers
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion, "About");
+            this.aboutToolStripMenuItem.Click += (not, used) => _dialogService.ShowMessage("Gum version " + Application.ProductVersion, "About");
 
             string documentationLink = "https://docs.flatredball.com/gum";
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
@@ -318,7 +316,7 @@ namespace Gum.Managers
             {
                 if (ObjectFinder.Self.GumProjectSave == null)
                 {
-                    MessageBox.Show("There is no project loaded.  Either load a project or create a new project before saving");
+                    _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
                 }
                 else
                 {

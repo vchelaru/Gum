@@ -22,6 +22,7 @@ using System.Globalization;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -42,6 +43,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly IDialogService _dialogService;
     private readonly NameValidator _nameValidator;
 
     #endregion
@@ -213,7 +215,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     #region Methods
 
-    public ElementAnimationsViewModel(INameVerifier nameVerifier)
+    public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService)
     {
         CurrentGameSpeed = "100%";
 
@@ -232,22 +234,18 @@ public class ElementAnimationsViewModel : ViewModel
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = nameVerifier;
         _nameValidator = new NameValidator(_nameVerifier);
+        _dialogService = dialogService;
     }
 
-    public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element, INameVerifier nameVerifier)
+    public void LoadFromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
     {
-        
-        ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel(nameVerifier);
-
-        toReturn.BackingData = save;
+        BackingData = save;
 
         foreach (var animation in save.Animations)
         {
             var vm = AnimationViewModel.FromSave(animation, element);
-            toReturn.Animations.Add(vm);
+            Animations.Add(vm);
         }
-
-        return toReturn;
     }
 
     public ElementAnimationsSave ToSave()
@@ -319,61 +317,42 @@ public class ElementAnimationsViewModel : ViewModel
 
     private void HandleRenameAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
-        TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Enter new animation name:";
-        tiw.Result = SelectedAnimation.Name;
+        string message = "Enter new animation name:";
 
-        var dialogResult = tiw.ShowDialog();
-
-        if (dialogResult == System.Windows.Forms.DialogResult.OK)
+        GetUserStringOptions options = new()
         {
-            string whyInvalid;
-            if (!_nameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
-            {
-                MessageBox.Show(whyInvalid);
-            }
-            else
-            {
-                var oldAnimationName = SelectedAnimation.Name;
-                SelectedAnimation.Name = tiw.Result;
+            InitialValue = SelectedAnimation.Name,
+            Validator = v =>
+                _nameValidator.IsAnimationNameValid(v, Animations, out string whyInvalid) ? null : whyInvalid,
+        };
 
-                StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
-                    SelectedAnimation, 
-                    oldAnimationName, Animations, Element);   
-            }
+        if (_dialogService.GetUserString(message, null, options) is { } result)
+        {
+            var oldAnimationName = SelectedAnimation.Name;
+            SelectedAnimation.Name = result;
+
+            StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+                SelectedAnimation, 
+                oldAnimationName, Animations, Element);
         }
     }
 
     private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
     {
-        TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Set desired animation length (in seconds):";
-        tiw.Result = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture);
-
-        var dialogResult = tiw.ShowDialog();
-
-        if (dialogResult == System.Windows.Forms.DialogResult.OK)
+        string message = "Set desired animation length (in seconds):";
+        GetUserStringOptions options = new()
         {
-            float value = 0;
+            InitialValue = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture),
+            Validator = v =>
+                float.TryParse(v, out float value) && value > 0
+                    ? null
+                    : "Please enter a valid number greater than 0"
+        };
 
-            var didParse = float.TryParse(tiw.Result, out value);
-
-            string errorMessage = null;
-
-            if(!didParse)
-            {
-                errorMessage = "Please enter a valid number";
-            }
-            if(errorMessage == null && value < 0)
-            {
-                errorMessage = "Value must be greater than 0";
-            }
-
-            if(errorMessage != null)
-            {
-                MessageBox.Show(errorMessage);
-            }
-            else if(SelectedAnimation.Length != 0)
+        if (_dialogService.GetUserString(message, null, options) is { } result)
+        {
+            float value = float.Parse(result);
+            if(SelectedAnimation.Length != 0)
             {
                 var multiplier = value / SelectedAnimation.Length;
 
@@ -388,9 +367,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
-        var result = MessageBox.Show("Delete animation " + SelectedAnimation.Name + "?", "Delete?", MessageBoxButton.YesNo);
-
-        if(result == MessageBoxResult.Yes)
+        if(_dialogService.ShowYesNoMessage("Delete animation " + SelectedAnimation.Name + "?", "Delete?"))
         {
             Animations.Remove(SelectedAnimation);
         }

@@ -59,7 +59,7 @@ namespace Gum.Managers
 
     public interface IObjectFinder
     {
-        GumProjectSave GumProjectSave { get; }
+        GumProjectSave? GumProjectSave { get; }
         ElementSave? GetElementSave(InstanceSave instance);
         ElementSave? GetElementSave(string elementName);
         List<ElementSave> GetBaseElements(ElementSave elementSave);
@@ -89,7 +89,7 @@ namespace Gum.Managers
             }
         }
 
-        public GumProjectSave GumProjectSave
+        public GumProjectSave? GumProjectSave
         {
             get;
             set;
