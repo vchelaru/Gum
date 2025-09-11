@@ -480,7 +480,7 @@ public partial class ElementTreeViewManager
 
     private void HandleViewReferences(object sender, EventArgs e)
     {
-        _editCommands.DisplayReferencesTo(_selectedState.SelectedElement);
+        _dialogService.Show<DisplayReferencesDialog>(vm => vm.ElementSave = _selectedState.SelectedElement);
     }
 
     private void HandleRenameFolder(object sender, EventArgs e)
