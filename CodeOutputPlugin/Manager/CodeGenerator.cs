@@ -1034,7 +1034,7 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(isFullyInstantiatingInCode && !isDerived)
+        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.Skia)
         {
             //RefreshInternalVisualReferences
             context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
