@@ -109,7 +109,7 @@ namespace Gum.Wireframe
             }
 
             _distanceText.Y -= _distanceText.EffectiveHeight / 2.0f;
-            _distanceText.Width = 0;
+            _distanceText.Width = null;
             _distanceText.Height = 0;
 
             var xAbsolute = Math.Abs(startAbsolute.X - endAbsolute.X);
