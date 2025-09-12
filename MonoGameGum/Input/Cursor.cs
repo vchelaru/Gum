@@ -63,8 +63,17 @@ public class Cursor : ICursor
         private set;
     } = InputDevice.Mouse;
 
+    /// <summary>
+    /// The cursor's Y position in screen space (pixels from left of the window).
+    /// This is measured in screen pixels, and does not consider camera zoom.
+    /// For zoom, see <see cref="XRespectingGumZoomAndBounds"/>.
+    /// </summary>
     public int X { get; private set; }
 
+    /// <summary>
+    /// Returns the cursor's horizontal position considering camera zoom and the graphics device viewport bounds.
+    /// </summary>
+    /// <returns>The cursor's position</returns>
     public float XRespectingGumZoomAndBounds()
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
@@ -72,8 +81,17 @@ public class Cursor : ICursor
         return (X / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Left;
     }
 
+    /// <summary>
+    /// The cursor's Y position in screen space (pixels from top of the window).
+    /// This is measured in screen pixels, and does not consider camera zoom.
+    /// For zoom, see <see cref="YRespectingGumZoomAndBounds"/>.
+    /// </summary>
     public int Y { get; private set; }
 
+    /// <summary>
+    /// Returns the cursor's vertical position considering the camera zoom and the graphics device viewport bounds.
+    /// </summary>
+    /// <returns>The cursor's position</returns>
     public float YRespectingGumZoomAndBounds()
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;

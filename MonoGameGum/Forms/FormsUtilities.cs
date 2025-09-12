@@ -265,6 +265,7 @@ public class FormsUtilities
         UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
         innerList.Clear();
 
+        var didModalsProcessInput = false;
         if (FrameworkElement.ModalRoot.Children.Count > 0)
         {
 #if DEBUG
@@ -288,18 +289,19 @@ public class FormsUtilities
             for(int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
             {
                 var item = FrameworkElement.ModalRoot.Children[i];
-                if (item is GraphicalUiElement itemAsGue)
+
+                if (item.Visible && item is GraphicalUiElement itemAsGue)
                 {
+                    didModalsProcessInput = true;
                     innerList.Add(itemAsGue);
                     // only the top-most element receives input
                     break;
                 }
             }
         }
-        else
+        
+        if(!didModalsProcessInput)
         {
-
-
             if(roots != null)
             {
                 innerList.AddRange(roots);
