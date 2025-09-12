@@ -161,15 +161,60 @@ public class ScrollBarVisual : InteractiveGue
         category.States.Add(horizontalState);
         horizontalState.Name = "Horizontal";
         AddVariable(horizontalState, 
-            nameof(this.Height), 24);
+            nameof(this.Height), 24f);
         AddVariable(horizontalState, 
             nameof(this.HeightUnits), DimensionUnitType.Absolute);
+        AddVariable(horizontalState, nameof(this.Width), 
+            128f);
+        AddVariable(horizontalState, nameof(this.WidthUnits), 
+            DimensionUnitType.Absolute);
+
+        AddVariable(horizontalState,
+            "UpButtonIcon.Rotation", 180f);
+        AddVariable(horizontalState,
+            "UpButtonIcon.X", 0f);
+        AddVariable(horizontalState,
+            "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromSmall);
+
+        AddVariable(horizontalState,
+            "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(horizontalState,
+            "UpButtonInstance.YOrigin", global::RenderingLibrary.Graphics.VerticalAlignment.Center);
+        AddVariable(horizontalState, 
+            "UpButtonInstance.Width", 24f);
+        AddVariable(horizontalState,
+            "UpButtonInstance.WidthUnits", DimensionUnitType.Absolute);
+
+        AddVariable(horizontalState,
+            "ThumbContainer.Height", 0f);
+        AddVariable(horizontalState,
+            "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(horizontalState,
+            "ThumbContainer.Width", -48f);
+        AddVariable(horizontalState,
+            "ThumbContainer.WidthUnits", DimensionUnitType.RelativeToParent);
+
+        AddVariable(horizontalState,
+            "ThumbInstance.Height", 0f);
+        AddVariable(horizontalState,
+            "ThumbInstance.HeightUnits", DimensionUnitType.RelativeToParent);
+
+        AddVariable(horizontalState,
+            "DownButtonIcon.Rotation", 0f);
+        AddVariable(horizontalState,
+            "DownButtonInstance.XUnits", GeneralUnitType.PixelsFromLarge);
+        AddVariable(horizontalState,
+            "DownButtonInstance.XOrigin", HorizontalAlignment.Right);
+        AddVariable(horizontalState,
+            "DownButtonInstance.Width", 24f);
+        AddVariable(horizontalState,
+            "DownButtonInstance.WidthUnits", DimensionUnitType.Absolute);
 
         var verticalState = new StateSave();
         category.States.Add(verticalState);
         verticalState.Name = "Vertical";
         AddVariable(verticalState,
-            nameof(this.Width), 24);
+            nameof(this.Width), 24f);
         AddVariable(verticalState,
             nameof(this.WidthUnits), DimensionUnitType.Absolute);
 
