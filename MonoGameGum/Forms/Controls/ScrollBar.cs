@@ -88,8 +88,14 @@ public class ScrollBar : RangeBase
         base.Orientation = Orientation.Vertical;
     }
 
+    bool hasAssignedOrientation = false;
     protected override void ReactToVisualChanged()
     {
+        if(!hasAssignedOrientation)
+        {
+            // default it!
+            Orientation = Orientation.Vertical;
+        }
         RefreshInternalVisualReferences();
 
         base.ReactToVisualChanged();
