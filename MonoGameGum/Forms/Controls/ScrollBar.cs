@@ -427,6 +427,10 @@ public class ScrollBar : RangeBase
             state = "Vertical";
         }
 
-            Visual.SetProperty(categoryName + "State", state);
+        Visual.SetProperty(categoryName + "State", state);
+
+
+        UpdateThumbSize();
+        UpdateThumbPositionAccordingToValue();
     }
 }

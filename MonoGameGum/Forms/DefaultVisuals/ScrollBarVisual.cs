@@ -171,15 +171,17 @@ public class ScrollBarVisual : InteractiveGue
 
         AddVariable(horizontalState,
             "UpButtonIcon.Rotation", 180f);
-        AddVariable(horizontalState,
-            "UpButtonIcon.X", 0f);
+
         AddVariable(horizontalState,
             "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromSmall);
-
         AddVariable(horizontalState,
             "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
         AddVariable(horizontalState,
-            "UpButtonInstance.YOrigin", global::RenderingLibrary.Graphics.VerticalAlignment.Center);
+            "UpButtonInstance.XOrigin",
+            HorizontalAlignment.Left);
+        AddVariable(horizontalState,
+            "UpButtonInstance.YOrigin", 
+            global::RenderingLibrary.Graphics.VerticalAlignment.Center);
         AddVariable(horizontalState, 
             "UpButtonInstance.Width", 24f);
         AddVariable(horizontalState,
@@ -198,6 +200,12 @@ public class ScrollBarVisual : InteractiveGue
             "ThumbInstance.Height", 0f);
         AddVariable(horizontalState,
             "ThumbInstance.HeightUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(horizontalState,
+            "ThumbInstance.Y", 0f);
+        AddVariable(horizontalState,
+            "ThumbInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(horizontalState,
+            "ThumbInstance.YOrigin", VerticalAlignment.Center);
 
         AddVariable(horizontalState,
             "DownButtonIcon.Rotation", 0f);
@@ -214,11 +222,62 @@ public class ScrollBarVisual : InteractiveGue
         category.States.Add(verticalState);
         verticalState.Name = "Vertical";
         AddVariable(verticalState,
+            nameof(this.Height), 128f);
+        AddVariable(verticalState,
+            nameof(this.HeightUnits), DimensionUnitType.Absolute);
+        AddVariable(verticalState,
             nameof(this.Width), 24f);
         AddVariable(verticalState,
             nameof(this.WidthUnits), DimensionUnitType.Absolute);
 
-        // todo - need to also set all of the values for the buttons here
+        AddVariable(verticalState,
+            "UpButtonIcon.Rotation", 90f);
+
+        AddVariable(verticalState,
+            "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(verticalState,
+            "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromSmall);
+        AddVariable(verticalState,
+            "UpButtonInstance.XOrigin", 
+            global::RenderingLibrary.Graphics.VerticalAlignment.Center);
+        AddVariable(verticalState,
+            "UpButtonInstance.YOrigin", 
+            global::RenderingLibrary.Graphics.VerticalAlignment.Top);
+        AddVariable(verticalState,
+            "UpButtonInstance.Height", 24f);
+        AddVariable(verticalState,
+            "UpButtonInstance.HeightUnits", DimensionUnitType.Absolute);
+
+        AddVariable(verticalState,
+            "ThumbContainer.Height", -48f);
+        AddVariable(verticalState,
+            "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(verticalState,
+            "ThumbContainer.Width", 0f);
+        AddVariable(verticalState,
+            "ThumbContainer.WidthtUnits", DimensionUnitType.RelativeToParent);
+
+        AddVariable(verticalState,
+            "ThumbInstance.Width", 0f);
+        AddVariable(verticalState,
+            "ThumbInstance.WidthUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(verticalState,
+            "ThumbInstance.X", 0f);
+        AddVariable(verticalState,
+            "ThumbInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(verticalState,
+            "ThumbInstance.XOrigin", VerticalAlignment.Center);
+
+        AddVariable(verticalState,
+            "DownButtonIcon.Rotation", -90f);
+        AddVariable(verticalState,
+            "DownButtonInstance.YUnits", GeneralUnitType.PixelsFromLarge);
+        AddVariable(verticalState,
+            "DownButtonInstance.YOrigin", HorizontalAlignment.Right);
+        AddVariable(verticalState,
+            "DownButtonInstance.Height", 24f);
+        AddVariable(verticalState,
+            "DownButtonInstance.HeightUnits", DimensionUnitType.Absolute);
 
         if (tryCreateFormsObject)
         {
