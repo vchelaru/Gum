@@ -8,6 +8,7 @@ using Gum.Undo;
 using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
+using Gum.Services.Dialogs;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -16,15 +17,19 @@ public class VariableInCategoryPropagationLogic
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    
+    private readonly IDialogService _dialogService;
+
     public VariableInCategoryPropagationLogic(IUndoManager undoManager,
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IDialogService dialogService)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _dialogService = dialogService;
     }
+
     public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
     {
         /////////////////////Early Out//////////////////////////
@@ -39,6 +44,10 @@ public class VariableInCategoryPropagationLogic
         if (defaultVariable == null)
         {
             defaultVariable = defaultState.GetVariableRecursive(memberName);
+        }
+        if(defaultVariable == null)
+        {
+            defaultVariable = ObjectFinder.Self.GetRootVariable(memberName, element);
         }
         var defaultVariableList = defaultState.GetVariableListSave(memberName);
         if(defaultVariableList == null && defaultVariable == null)
@@ -66,8 +75,13 @@ public class VariableInCategoryPropagationLogic
                 }
             }
 
-            StateSaveCategory category;
-            var isState = defaultVariable.IsState(variableContainer, out _, out category);
+            StateSaveCategory category = null;
+            var isState = false;
+            
+            if(variableContainer != null)
+            {
+                isState = defaultVariable.IsState(variableContainer, out _, out category);
+            }
 
             if(isState)
             {
@@ -93,6 +107,11 @@ public class VariableInCategoryPropagationLogic
         }
 
         var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
+
+        if(defaultValue == null)
+        {
+            defaultValue = element.DefaultState.GetValueRecursive(memberName);
+        }
 
         foreach (var state in categoryToPropagate.States)
         {
@@ -151,9 +170,7 @@ public class VariableInCategoryPropagationLogic
             message += $"\n{state.Name}";
         }
 
-        var result = MessageBox.Show(message, "Remove Variables?", MessageBoxButtons.YesNo);
-
-        if (result == DialogResult.Yes)
+        if (_dialogService.ShowYesNoMessage(message, "Remove Variables?"))
         {
             using(_undoManager.RequestLock())
             {

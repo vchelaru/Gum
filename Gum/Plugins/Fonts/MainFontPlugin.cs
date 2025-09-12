@@ -70,7 +70,7 @@ public class MainFontPlugin : InternalPlugin
         }
         catch
         {
-            System.Windows.Forms.MessageBox.Show("Error deleting font cache:\n" + e.ToString());
+            _dialogService.ShowMessage("Error deleting font cache:\n" + e.ToString());
         }
     }
 

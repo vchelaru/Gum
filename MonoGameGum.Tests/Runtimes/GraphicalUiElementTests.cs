@@ -386,4 +386,48 @@ public class GraphicalUiElementTests
         list[0].ShouldBeOfType<SpriteRuntime>();
         list[1].ShouldBeOfType<SpriteRuntime>();
     }
+
+    [Fact]
+    public void SetRenderable_NameMatches()
+    {
+        string name = "name1";
+        string name2 = "name2";
+
+        // Initial inner obj set with name
+        var gue = new GraphicalUiElement(new InvisibleRenderable() { Name = name });
+
+        // Names should match
+        gue.Name.ShouldNotBeNull();
+        gue.Name.ShouldMatch(name);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+
+        // Name changed, should match
+        gue.SetContainedObject(new InvisibleRenderable() { Name = name2 });
+        gue.Name.ShouldMatch(name2);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+
+        // Inner obj is new obj with no name, name should match to previous name
+        gue.SetContainedObject(new InvisibleRenderable());
+        gue.Name.ShouldMatch(name2);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+
+        // RESTART: No inner obj set
+        gue = new GraphicalUiElement();
+        gue.Name.ShouldBeNull();
+
+        // Inner obj set, but still null name
+        gue.SetContainedObject(new InvisibleRenderable());
+        gue.Name.ShouldBeNull();
+        ((InvisibleRenderable)gue.RenderableComponent).Name.ShouldBeNull();
+
+        // Change outer obj, inner obj should match
+        gue.Name = name;
+        gue.Name.ShouldMatch(name);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+
+        // Change inner obj with new name, should match inner obj
+        gue.SetContainedObject(new InvisibleRenderable() { Name = name2 });
+        gue.Name.ShouldMatch(name2);
+        gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
+    }
 }

@@ -55,7 +55,7 @@ namespace GumFormsSample
             if(InteractiveGue.CurrentInputReceiver == null)
             {
                 int keyResult = _inputService.Update();
-                if (keyResult >= 0 && keyResult <= 5)
+                if (keyResult >= 0 && keyResult <= 6)
                 {
                     if (_currentScreen != null)
                     {

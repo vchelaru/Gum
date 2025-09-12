@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views;
@@ -93,13 +93,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
             viewModel.RefreshFilteredItems();
 
-            var window = new LoadRecentWindow();
-
-            window.DataContext = viewModel;
-
-            var result = window.ShowDialog();
-
-            if (result == true)
+            if (_dialogService.Show(viewModel))
             {
                 var fileToLoad = viewModel.SelectedItem.FullPath;
 

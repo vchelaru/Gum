@@ -1,5 +1,4 @@
-﻿<Window
-    ResizeMode="NoResize"
+<Window
     SizeToContent="WidthAndHeight"
     Title="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl}"
     WindowStartupLocation="CenterOwner"
@@ -18,12 +17,12 @@
                     <ControlTemplate TargetType="{x:Type local:Dialog}">
                         <Grid Margin="8">
                             <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <ScrollViewer
                                 Grid.Row="0"
-                                HorizontalScrollBarVisibility="Disabled"
+                                PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
                                 VerticalScrollBarVisibility="Auto">
                                 <ContentPresenter x:Name="DialogPresenter" />
                             </ScrollViewer>

@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -10,6 +11,12 @@ using ToolsUtilities;
 namespace Gum.Commands;
 public interface IFileCommands
 {
+    FilePath? ProjectDirectory { get; }
+
+    void DeleteDirectory(FilePath filePath);
+
+    void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName);
+
     void TryAutoSaveCurrentObject();
 
     void TryAutoSaveCurrentElement();

@@ -144,5 +144,23 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
 
         font.MeasureString("     ").ShouldBe(40 + 5 + 1);
     }
+
+    [Fact]
+    public void MeasureString_ShouldIgnoreTrailingNewlines()
+    {
+
+        BitmapFont font = new BitmapFont((Texture2D)null, basicBMFontFileData);
+
+        var character = font.Characters['\n'];
+        character.XAdvance = 10;
+        character.XOffsetInPixels = 10;
+        character.PixelLeft = 0;
+        character.PixelRight = 10;
+
+        var withoutNewline = font.MeasureString("a");
+        var withNewline = font.MeasureString("a\n");
+
+        withoutNewline.ShouldBe(withNewline, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
+    }
 }
 

@@ -180,11 +180,11 @@ public class DragDropManager
         }
         else if(draggedAsElementSave is ScreenSave && targetTag is BehaviorSave)
         {
-            MessageBox.Show("Screens cannot be added as required instances in behaviors");
+            _dialogService.ShowMessage("Screens cannot be added as required instances in behaviors");
         }
         else
         {
-            MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
+            _dialogService.ShowMessage("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
         }
     }
 
@@ -192,7 +192,7 @@ public class DragDropManager
     {
         if(draggedAsElementSave is StandardElementSave)
         {
-            MessageBox.Show("Cannot move standard elements to different folders");
+            _dialogService.ShowMessage("Cannot move standard elements to different folders");
             handled = true;
         }
         else
@@ -250,7 +250,7 @@ public class DragDropManager
 
         if (!string.IsNullOrEmpty(errorMessage))
         {
-            MessageBox.Show(errorMessage);
+            _dialogService.ShowMessage(errorMessage);
         }
         else
         {
@@ -286,7 +286,7 @@ public class DragDropManager
 
         if (!string.IsNullOrEmpty(errorMessage))
         {
-            MessageBox.Show(errorMessage);
+            _dialogService.ShowMessage(errorMessage);
         }
         else
         {
@@ -797,8 +797,8 @@ public class DragDropManager
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 
 
-        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
-        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet, "float");
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet, "float");
     }
 
     #endregion

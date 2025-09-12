@@ -1,16 +1,17 @@
-﻿using System;
-using Gum.ToolStates;
-using Gum.Managers;
-using Gum.Wireframe;
-using Gum.DataTypes;
-using System.Windows.Forms;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
-using Gum.Undo;
-using Gum.Plugins;
-using ToolsUtilities;
 using Gum.Logic.FileWatch;
+using Gum.Managers;
+using Gum.Plugins;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using Gum.Undo;
+using Gum.Wireframe;
+using System;
+using System.Reflection;
+using System.Windows.Forms;
+using ToolsUtilities;
 
 namespace Gum.Commands;
 
@@ -21,6 +22,7 @@ public class FileCommands : IFileCommands
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
+
 
     public FileCommands(ISelectedState selectedState, 
         Lazy<IUndoManager> undoManager, 
@@ -38,6 +40,15 @@ public class FileCommands : IFileCommands
     /// <summary>
     /// Saves the current Behavior or Element
     /// </summary>
+
+    public FilePath? ProjectDirectory => FileManager.RelativeDirectory;
+
+    public void DeleteDirectory(FilePath directory) => 
+        FileManager.DeleteDirectory(directory.FullPath);
+
+    public void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName) =>
+                FileManager.SaveEmbeddedResource(assembly, resourceName, targetFileName);
+
     public void TryAutoSaveCurrentObject()
     {
         if(_selectedState.SelectedBehavior != null)
@@ -128,7 +139,7 @@ public class FileCommands : IFileCommands
         }
         else
         {
-            MessageBox.Show("Cannot save project because of earlier errors");
+            _dialogService.ShowMessage("Cannot save project because of earlier errors");
         }
     }
 
@@ -141,7 +152,7 @@ public class FileCommands : IFileCommands
     {
         if (elementSave.IsSourceFileMissing)
         {
-            MessageBox.Show("Cannot save " + elementSave + " because its source file is missing");
+            _dialogService.ShowMessage("Cannot save " + elementSave + " because its source file is missing");
         }
         else
         {
@@ -203,7 +214,7 @@ public class FileCommands : IFileCommands
 
                     if (succeeded == false)
                     {
-                        MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                         succeeded = false;
                     }
                 }
@@ -257,7 +268,7 @@ public class FileCommands : IFileCommands
     {
         if (behavior.IsSourceFileMissing)
         {
-            MessageBox.Show("Cannot save " + behavior + " because its source file is missing");
+            _dialogService.ShowMessage("Cannot save " + behavior + " because its source file is missing");
         }
         else
         {
@@ -315,7 +326,7 @@ public class FileCommands : IFileCommands
 
                     if (succeeded == false)
                     {
-                        MessageBox.Show("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
                         succeeded = false;
                     }
                 }

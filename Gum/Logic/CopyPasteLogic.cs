@@ -488,7 +488,7 @@ public class CopyPasteLogic
                     {
                         if (sourceElement != null && sourceElement.States.Count != 1)
                         {
-                            MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
+                            _dialogService.ShowMessage("Only the default state variables will be copied since the source and target elements differ.");
                         }
 
                         targetState = targetElement.DefaultState;

@@ -14,6 +14,7 @@ using Gum.Undo;
 using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -108,9 +109,7 @@ public class EditCommands
         }
         else
         {
-            var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
-
-            if (response == DialogResult.Yes)
+            if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
             {
                 DeleteLogic.Self.Remove(stateSave);
             }
@@ -131,22 +130,19 @@ public class EditCommands
                 message += "\n" + behavior.Name;
             }
 
-            MessageBox.Show(message);
+            _dialogService.ShowMessage(message);
         }
         else
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new state name";
-            tiw.Title = "Rename state";
-            tiw.Result = _selectedState.SelectedStateSave.Name;
-            var result = tiw.ShowDialog();
-
-            if (result == DialogResult.OK)
+            string message = "Enter new state name";
+            string title = "Rename state";
+            GetUserStringOptions options = new(){InitialValue = _selectedState.SelectedStateSave.Name};
+            if (_dialogService.GetUserString(message, title, options) is { } result)
             {
                 var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
                 using var undoLock = _undoManager.RequestLock();
-                _renameLogic.RenameState(stateSave, category, tiw.Result);
+                _renameLogic.RenameState(stateSave, category, result);
             }
         }
     }
@@ -302,43 +298,33 @@ public class EditCommands
     {
         if (GumState.Self.ProjectState.NeedsToSaveProject)
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
 
-        TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Enter new behavior name:";
-        tiw.Title = "Add behavior";
-
-        if (tiw.ShowDialog() == DialogResult.OK)
+        string message = "Enter new behavior name:";
+        string title = "Add behavior";
+        GetUserStringOptions options = new()
         {
-            string name = tiw.Result;
+            Validator = x => _nameVerifier.IsBehaviorNameValid(x, null, out string whyNotValid) ? null : whyNotValid
+        };
 
-            string whyNotValid;
+        if (_dialogService.GetUserString(message, title, options) is { } name)
+        {
+            var behavior = new BehaviorSave();
+            behavior.Name = name;
 
-            _nameVerifier.IsBehaviorNameValid(name, null, out whyNotValid);
+            ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
+            ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
+            ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            if (!string.IsNullOrEmpty(whyNotValid))
-            {
-                MessageBox.Show(whyNotValid);
-            }
-            else
-            {
-                var behavior = new BehaviorSave();
-                behavior.Name = name;
+            PluginManager.Self.BehaviorCreated(behavior);
 
-                ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-                ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-                ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
-                ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            _selectedState.SelectedBehavior = behavior;
 
-                PluginManager.Self.BehaviorCreated(behavior);
-
-                _selectedState.SelectedBehavior = behavior;
-
-                _fileCommands.TryAutoSaveProject();
-                _fileCommands.TryAutoSaveBehavior(behavior);
-            }
+            _fileCommands.TryAutoSaveProject();
+            _fileCommands.TryAutoSaveBehavior(behavior);
         }
     }
 
@@ -352,61 +338,44 @@ public class EditCommands
 
         if (element == null)
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
         }
         else if (element is StandardElementSave)
         {
-            MessageBox.Show("Standard Elements cannot be duplicated");
+            _dialogService.ShowMessage("Standard Elements cannot be duplicated");
         }
         else if (element is ScreenSave)
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new Screen name:";
-            tiw.Title = "Duplicate Screen";
+            string message = "Enter new Screen name:";
+            string title = "Duplicate Screen";
+
+            GetUserStringOptions options = new()
+            {
+                InitialValue = element.Name + "Copy",
+                Validator = n =>
+                    _nameVerifier.IsElementNameValid(n, null, null, out string whyNotValid)
+                        ? null
+                        : whyNotValid
+            };
 
             // todo - handle folders... do we support folders?
 
-            tiw.Result = element.Name + "Copy";
-
-            if (tiw.ShowDialog() == DialogResult.OK)
+            if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                string name = tiw.Result;
+                var newScreen = (element as ScreenSave).Clone();
+                newScreen.Name = name;
+                newScreen.Initialize(null);
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
 
-                string whyNotValid;
+                _projectCommands.AddScreen(newScreen);
 
-                string strippedName = tiw.Result;
-                string prefix = null;
-                if (tiw.Result.Contains("/"))
-                {
-                    var indexOfSlash = tiw.Result.LastIndexOf("/");
-                    strippedName = tiw.Result.Substring(indexOfSlash + 1);
-                    prefix = tiw.Result.Substring(0, indexOfSlash + 1);
-                }
-
-                _nameVerifier.IsElementNameValid(strippedName, null, null, out whyNotValid);
-
-                if (string.IsNullOrEmpty(whyNotValid))
-                {
-                    var newScreen = (element as ScreenSave).Clone();
-                    newScreen.Name = prefix + strippedName;
-                    newScreen.Initialize(null);
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
-
-                    _projectCommands.AddScreen(newScreen);
-
-                    PluginManager.Self.ElementDuplicate(element, newScreen);
-                }
-                else
-                {
-                    MessageBox.Show($"Invalid name for new screen: {whyNotValid}");
-                }
+                PluginManager.Self.ElementDuplicate(element, newScreen);
             }
         }
         else if (element is ComponentSave)
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new Component name:";
-            tiw.Title = "Duplicate Component";
+            string message = "Enter new Component name:";
+            string title = "Duplicate Component";
 
             FilePath filePath = element.Name;
             var nameWithoutPath = filePath.FileNameNoPath;
@@ -417,34 +386,29 @@ public class EditCommands
                 folder = element.Name.Substring(0, element.Name.LastIndexOf('/'));
             }
 
-            tiw.Result = nameWithoutPath + "Copy";
-
-            if (tiw.ShowDialog() == DialogResult.OK)
+            GetUserStringOptions options = new()
             {
-                string name = tiw.Result;
+                InitialValue = nameWithoutPath + "Copy",
+                Validator = n =>
+                    _nameVerifier.IsElementNameValid(n, folder, null, out string whyNotValid)
+                        ? null
+                        : whyNotValid
+            };
 
-                string whyNotValid;
-                _nameVerifier.IsElementNameValid(tiw.Result, folder, null, out whyNotValid);
-
-                if (string.IsNullOrEmpty(whyNotValid))
+            if (_dialogService.GetUserString(message, title, options) is { } name)
+            {
+                var newComponent = (element as ComponentSave).Clone();
+                if (!string.IsNullOrEmpty(folder))
                 {
-                    var newComponent = (element as ComponentSave).Clone();
-                    if (!string.IsNullOrEmpty(folder))
-                    {
-                        folder += "/";
-                    }
-                    newComponent.Name = folder + name;
-                    newComponent.Initialize(null);
-                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
-
-                    _projectCommands.AddComponent(newComponent);
-
-                    PluginManager.Self.ElementDuplicate(element, newComponent);
+                    folder += "/";
                 }
-                else
-                {
-                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
-                }
+                newComponent.Name = folder + name;
+                newComponent.Initialize(null);
+                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
+
+                _projectCommands.AddComponent(newComponent);
+
+                PluginManager.Self.ElementDuplicate(element, newComponent);
             }
         }
 
@@ -456,27 +420,29 @@ public class EditCommands
         var instances = _selectedState.SelectedInstances.ToList();
         if (instances == null || instances.Count == 0 || element == null)
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
         }
         else if (instances is List<InstanceSave>)
         {
-            CreateComponentWindow createComponentWindow = new CreateComponentWindow();
-
             FilePath filePath = element.Name;
             var nameWithoutPath = filePath.FileNameNoPath;
 
-            createComponentWindow.Result = $"{nameWithoutPath}Component";
+            string message = "Name of the new component";
+            string title = "Create a component";
+
+            GetUserStringOptions options = new()
+            {
+                InitialValue = $"{nameWithoutPath}Component",
+                Validator = x => _nameVerifier.IsComponentNameAlreadyUsed(x) ? "A component with this name already exists!" : null
+            };
             //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
 
-            Nullable<bool> result = createComponentWindow.ShowDialog();
-
-            if (result == true)
+            if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                string name = createComponentWindow.Result;
                 //bool replace = tiwcw.Checked
 
                 string whyNotValid;
-                _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
+                _nameVerifier.IsElementNameValid(name, "", null, out whyNotValid);
 
                 if (string.IsNullOrEmpty(whyNotValid))
                 {
@@ -528,100 +494,10 @@ public class EditCommands
                 }
                 else
                 {
-                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                    _dialogService.ShowMessage($"Invalid name for new component: {whyNotValid}");
                     ShowCreateComponentFromInstancesDialog();
                 }
             }
-        }
-    }
-
-    public void DisplayReferencesTo(ElementSave element)
-    {
-
-        var references = ObjectFinder.Self.GetElementReferencesToThis(element);
-
-        if (references.Count > 0)
-        {
-            //var stringBuilder = new StringBuilder();
-            //stringBuilder.AppendLine($"The following objects reference {element}");
-            //foreach(var reference in references)
-            //{
-            //    stringBuilder.AppendLine(reference.ToString());
-            //}
-
-            //_dialogService.ShowMessage(stringBuilder.ToString());
-
-            ListBoxMessageBox lbmb = new ListBoxMessageBox();
-            lbmb.RequiresSelection = true;
-            lbmb.Message = $"The following objects reference {element}";
-            lbmb.Title = "References";
-            lbmb.ItemSelected += (not, used) =>
-            {
-                var reference = lbmb.SelectedItem as TypedElementReference;
-
-                var selectedItem = reference.ReferencingObject;
-
-                if (selectedItem is InstanceSave instance)
-                {
-                    _selectedState.SelectedInstance = instance;
-                }
-                else if (selectedItem is ElementSave selectedElement)
-                {
-                    _selectedState.SelectedElement = selectedElement;
-                }
-                else if (selectedItem is VariableSave variable)
-                {
-                    ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
-                        .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
-                    if (foundElement == null)
-                    {
-                        foundElement = ObjectFinder.Self.GumProjectSave.Components
-                            .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
-                    }
-                    if (foundElement != null)
-                    {
-                        // what's the instance?
-                        var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
-
-                        if (instanceWithVariable != null)
-                        {
-                            _selectedState.SelectedInstance = instanceWithVariable;
-                        }
-                    }
-                }
-                else if (selectedItem is VariableListSave variableListSave)
-                {
-                    var foundElement = reference.OwnerOfReferencingObject;
-
-                    if (foundElement != null)
-                    {
-                        if (string.IsNullOrEmpty(variableListSave.SourceObject))
-                        {
-                            _selectedState.SelectedElement = foundElement;
-                        }
-                        else
-                        {
-                            var instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
-
-                            if (instanceWithVariable != null)
-                            {
-                                _selectedState.SelectedInstance = instanceWithVariable;
-                            }
-                        }
-                    }
-                }
-            };
-            foreach (var reference in references)
-            {
-                lbmb.Items.Add(reference);
-            }
-            lbmb.HideCancelNoDialog();
-            lbmb.Show();
-
-        }
-        else
-        {
-            _dialogService.ShowMessage($"{element} is not referenced by any other Screen/Component");
         }
     }
 

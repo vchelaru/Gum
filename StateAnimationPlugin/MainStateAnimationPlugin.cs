@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Managers;
+using Gum.Services.Dialogs;
 
 
 namespace StateAnimationPlugin;
@@ -35,6 +36,7 @@ public class MainStateAnimationPlugin : PluginBase
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
     #region Fields
     private readonly DuplicateService _duplicateService;
@@ -75,6 +77,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        _animationVmFactory = () => new ElementAnimationsViewModel(_nameVerifier, _dialogService);
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
@@ -281,7 +284,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         // forces a refresh:
-        _viewModel = new ElementAnimationsViewModel(_nameVerifier);
+        _viewModel = new ElementAnimationsViewModel(_nameVerifier, _dialogService);
 
         RefreshViewModel();
     }
@@ -304,7 +307,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (!string.IsNullOrEmpty(whyIsntValid))
         {
-            System.Windows.MessageBox.Show(whyIsntValid);
+            _dialogService.ShowMessage(whyIsntValid);
 
         }
         else
@@ -479,7 +482,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (_viewModel == null)
         {
-            _viewModel = new ElementAnimationsViewModel(_nameVerifier);
+            _viewModel = new(_nameVerifier, _dialogService);
         }
     }
 
@@ -593,9 +596,7 @@ public class MainStateAnimationPlugin : PluginBase
                 message += animation.Name;
             }
 
-            var result = System.Windows.MessageBox.Show(message, "Delete state?", MessageBoxButton.YesNo);
-
-            if (result != MessageBoxResult.Yes)
+            if (!_dialogService.ShowYesNoMessage(message, "Delete state?"))
             {
                 response.ShouldDelete = false;
                 response.Message = null;
@@ -630,9 +631,7 @@ public class MainStateAnimationPlugin : PluginBase
                 message += animation.Name;
             }
 
-            var result = System.Windows.MessageBox.Show(message, "Delete category?", MessageBoxButton.YesNo);
-
-            if (result != MessageBoxResult.Yes)
+            if (!_dialogService.ShowYesNoMessage(message, "Delete category?"))
             {
                 response.ShouldDelete = false;
                 response.Message = null;

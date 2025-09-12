@@ -1581,14 +1581,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             throw new ArgumentException("The argument containedObject cannot be 'this'");
         }
 
-
         if (mContainedObjectAsIpso != null)
         {
             mContainedObjectAsIpso.Children.CollectionChanged -= HandleCollectionChanged;
-            if (string.IsNullOrEmpty(this.Name) && !string.IsNullOrEmpty(mContainedObjectAsIpso.Name))
-            {
-                Name = mContainedObjectAsIpso.Name;
-            }
         }
 
         mContainedObjectAsIpso = containedObject as IRenderableIpso;
@@ -1598,6 +1593,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (mContainedObjectAsIpso != null)
         {
             mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
+
+            mContainedObjectAsIpso.Name ??= name;
+            name = mContainedObjectAsIpso.Name;
         }
 
         // in case this had been changed before the Text was assigned, or in case the text
@@ -1637,7 +1635,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public virtual GraphicalUiElement Clone()
     {
-        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
         IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable)?.Clone() as IRenderable;
 
@@ -1650,6 +1647,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             clonedRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
         }
+
+        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
         newClone.SetContainedObject(clonedRenderable);
         newClone.mWhatContainsThis = null;
@@ -5773,6 +5772,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         foreach (var state in list)
         {
+#if DEBUG
+            if(state.Name == null)
+            {
+                throw new ArgumentException("One of the states being added has a null name - be sure to set the name of all states");
+            }
+#endif
             // Right now this doesn't support inheritance
             // Need to investigate this....at some point:
             mStates[state.Name] = state;
@@ -6532,7 +6537,7 @@ public static class GraphicalUiElementExtensions
     /// </summary>
     /// <param name="graphicalUiElement">The GraphicalUiElement on which to play the animation.</param>
     /// <param name="index">The index of the animation to play.</param>
-    public static void PlayAnimation(GraphicalUiElement graphicalUiElement, int index)
+    public static void PlayAnimation(this GraphicalUiElement graphicalUiElement, int index)
     {
         var animation = graphicalUiElement.GetAnimation(index);
         if(animation == null)

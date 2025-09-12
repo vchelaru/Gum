@@ -12,7 +12,7 @@ public interface INameVerifier
 {
     bool IsFolderNameValid(string folderName, out string whyNotValid);
 
-    bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid);
+    bool IsElementNameValid(string? componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid);
 
     bool IsCategoryNameValid(string name, IStateContainer categoryContainer, out string whyNotValid);
 

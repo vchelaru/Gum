@@ -20,6 +20,49 @@ public class NameVerifierTests
         _nameVerifier = new NameVerifier();
     }
 
+    #region ElementSave
+
+    [Fact]
+    public void IsElementNameValid_ShouldReturnTrue_ForValidComponentName()
+    {
+        var isValid = _nameVerifier.IsElementNameValid("ValidComponent", null, null, out string whyNotValid);
+        isValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsElementNameValid_ShouldReturnFalse_ForEmptyName()
+    {
+        var isValid = _nameVerifier.IsElementNameValid("", null, null, out string whyNotValid);
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("Empty names are not valid");
+    }
+
+    [Fact]
+    public void IsElementNameValid_ShouldReturnFalse_ForWhitespaceName()
+    {
+        var isValid = _nameVerifier.IsElementNameValid("   ", null, null, out string whyNotValid);
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("Empty names are not valid");
+    }
+
+    [Fact]
+    public void IsElementNameValid_ShouldReturnFalse_ForMatchingNameInFolder()
+    {
+        GumProjectSave project = new();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        project.Components.Add(new ComponentSave
+        {
+            Name = "Folder/ElementName"
+        });
+
+        var isValid = _nameVerifier.IsElementNameValid("ElementName", "Folder", null, out string whyNotValid);
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("There is a component named Folder/ElementName so this name can't be used.");
+    }
+
+    #endregion
+
     #region Variables
 
     [Fact]

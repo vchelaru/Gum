@@ -1,24 +1,16 @@
 ﻿using Gum.ToolStates;
-using Gum;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Gum.Plugins.ImportPlugin.Manager;
 using ToolsUtilities;
-using Gum.Mvvm;
 using GumFormsPlugin.Services;
 using Gum.Managers;
-using System.Reflection.Metadata.Ecma335;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
-using Newtonsoft.Json;
 
 namespace GumFormsPlugin.ViewModels;
 
-public class AddFormsViewModel : ViewModel
+public class AddFormsViewModel : DialogViewModel
 {
     #region Fields/Properties
 
@@ -41,7 +33,7 @@ public class AddFormsViewModel : ViewModel
         _fileCommands = fileCommands;
     }
 
-    public void DoIt()
+    protected override void OnAffirmative()
     {
         var sourceDestinations = _formsFileService.GetSourceDestinations(IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
@@ -65,6 +57,7 @@ public class AddFormsViewModel : ViewModel
                 _dialogService.ShowMessage("You must Save, then close/reopen the project.");
             }
         }
+        base.OnAffirmative();
     }
 
 

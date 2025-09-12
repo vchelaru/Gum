@@ -15,7 +15,7 @@ using RenderingLibrary.Math;
 namespace RenderingLibrary.Graphics;
 
 
-public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable
+public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
 {
     #region Fields
 
@@ -50,11 +50,11 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         get => mAnimationChains;
         set => mAnimationChains = value;
     }
-    public AnimationChain CurrentChain
+    public AnimationChain? CurrentChain
     {
         get
         {
-            if (mCurrentChainIndex != -1 && mAnimationChains.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
+            if (mCurrentChainIndex != -1 && mAnimationChains?.Count > 0 && mCurrentChainIndex < mAnimationChains.Count)
             {
                 return mAnimationChains[mCurrentChainIndex];
             }
@@ -210,7 +210,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         }
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -232,7 +232,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
 
     bool IRenderableIpso.IsRenderTarget => false;
 
-    public Texture2D Texture
+    public Texture2D? Texture
     {
         get { return mTexture; }
         set
@@ -327,7 +327,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
 
     #region Methods
 
-    public Sprite(Texture2D texture)
+    public Sprite(Texture2D? texture)
     {
         this.Visible = true;
         // why do we set this? It should be null so that 
@@ -375,7 +375,19 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
                 Rectangle? sourceRectangle = EffectiveRectangle;
                 Texture2D texture = Texture;
 
+                var oldX = this.X;
+                var oldY = this.Y;
+
+                if (this.CurrentFrameIndex < CurrentChain?.Count)
+                {
+                    this.X += CurrentChain[this.CurrentFrameIndex].RelativeX;
+                    this.Y -= CurrentChain[this.CurrentFrameIndex].RelativeY;
+                }
+
                 Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
+
+                this.X = oldX;
+                this.Y = oldY;
             }
         }
     }
@@ -1000,4 +1012,17 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     #endregion
 
 
+    public Sprite Clone()
+    {
+        var newInstance = (Sprite)this.MemberwiseClone();
+        newInstance.mParent = null;
+        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+
+        return newInstance;
+    }
+
+    object ICloneable.Clone()
+    {
+        return Clone();
+    }
 }

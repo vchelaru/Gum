@@ -195,7 +195,7 @@ namespace Gum
 
             if (!string.IsNullOrEmpty(errors))
             {
-                MessageBox.Show("Errors loading " + fileName + "\n\n" + errors);
+                _dialogService.ShowMessage("Errors loading " + fileName + "\n\n" + errors);
 
                 // If the file doesn't exist, that's okay we will let the user still work - it's not like they can overwrite a file that doesn't exist
                 // But if it does exist, we want to be careful and not allow overwriting because they could be wiping out good data
@@ -619,10 +619,10 @@ namespace Gum
 
             foreach (var element in missingElements)
             {
-                var result = MessageBox.Show(
-                    "The following standard is missing: " + element.Name + "  Recreate it?", "Recreate " + element.Name + "?", MessageBoxButtons.OKCancel);
+                var result = _dialogService.ShowYesNoMessage(
+                    "The following standard is missing: " + element.Name + "  Recreate it?", "Recreate " + element.Name + "?");
 
-                if (result == DialogResult.OK)
+                if (result)
                 {
                     _gumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
                     _gumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
@@ -682,7 +682,7 @@ namespace Gum
 
             if (mHaveErrorsOccurredLoadingProject)
             {
-                MessageBox.Show("Can't save project because errors occurred when the project was last loaded");
+                _dialogService.ShowMessage("Can't save project because errors occurred when the project was last loaded");
             }
             else
             {
@@ -750,7 +750,7 @@ namespace Gum
                         }
                         else
                         {
-                            MessageBox.Show($"Error trying to save the project, but backup was saved at \n\n{tempFileName}\n\n Additional information:\n\n" + exception.ToString());
+                            _dialogService.ShowMessage($"Error trying to save the project, but backup was saved at \n\n{tempFileName}\n\n Additional information:\n\n" + exception.ToString());
                         }
                     }
 

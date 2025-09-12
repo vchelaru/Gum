@@ -49,7 +49,8 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly IGuiCommands _guiCommands;
     private readonly CodeGenerator _codeGenerator;
     private readonly IDialogService _dialogService;
-    
+    private readonly ParentSetLogic _parentSetLogic;
+
     PluginTab pluginTab;
 
     // Not sure why this is null..., so getting it from the builder instead
@@ -75,9 +76,12 @@ public class MainCodeOutputPlugin : PluginBase
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService);
-        _renameService = new RenameService(_codeGenerationService);
+        var customCodeGenerator = new CustomCodeGenerator(_codeGenerator);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator);
+        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator);
         _messenger = Locator.GetRequiredService<IMessenger>();
+
+        _parentSetLogic = new ParentSetLogic(_codeGenerator);
 
         _messenger.Register<RequestCodeGenerationMessage>(
             this, 
@@ -111,7 +115,7 @@ public class MainCodeOutputPlugin : PluginBase
         this.InstanceReordered += HandleInstanceReordered;
 
         this.ElementSelected += HandleElementSelected;
-        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings);
+        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element));
         this.ElementAdd += HandleElementAdd;
         this.ElementDelete += HandleElementDeleted;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
@@ -144,17 +148,17 @@ public class MainCodeOutputPlugin : PluginBase
     {
         var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
+        var visualApi = _codeGenerator.GetVisualApiForElement(element);
+
         // If it's deleted, ask the user if they also want to delete generated code files
-        var generatedFile = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
-        var customCodeFile = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+        var generatedFile = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
+        var customCodeFile = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi: visualApi);
 
         if(generatedFile?.Exists() == true || customCodeFile?.Exists() == true)
         {
             var message = $"Would you like to delete the generated and custom code files for {element}?";
 
-            var result = System.Windows.MessageBox.Show(message, "Delete Code?", System.Windows.MessageBoxButton.YesNo);
-
-            if(result == System.Windows.MessageBoxResult.Yes)
+            if(_dialogService.ShowYesNoMessage(message, "Delete Code?"))
             {
                 if(generatedFile?.Exists() == true)
                 {
@@ -236,7 +240,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
     {
-        ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+        _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
         _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
@@ -267,7 +271,7 @@ public class MainCodeOutputPlugin : PluginBase
     private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
     private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
     {
-        ParentSetLogic.HandleNewCreatedInstance(element, instance, codeOutputProjectSettings);
+        _parentSetLogic.HandleNewCreatedInstance(element, instance, codeOutputProjectSettings);
 
         HandleRefreshAndExport();
     }
@@ -349,7 +353,7 @@ public class MainCodeOutputPlugin : PluginBase
 
                         if (instance != null)
                         {
-                            string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
+                            string code = _codeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
                             viewModel.Code = code;
                         }
                         else if(selectedElement != null && selectedElement is not StandardElementSave)
@@ -364,7 +368,7 @@ public class MainCodeOutputPlugin : PluginBase
 
                         if (state != null && selectedElement != null)
                         {
-                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
+                            string gumCode = _codeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
                             viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
                         }
                         break;

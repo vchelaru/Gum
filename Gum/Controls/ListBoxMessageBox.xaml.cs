@@ -127,7 +127,10 @@ namespace StateAnimationPlugin.Views
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            if (IsDialog)
+            {
+                this.DialogResult = false;
+            }
             this.Close();
         }
 

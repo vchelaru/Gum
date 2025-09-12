@@ -8,7 +8,7 @@ The Cursor abstracts mouse and touch screen input, so it can be used regardless 
 
 ## Accessing Cursor
 
-Most runtimes create a Cursor internally.&#x20;
+Most runtimes create a Cursor internally.
 
 The cursor can be accessed through GumService.
 
@@ -57,7 +57,7 @@ The WindowOver property can be used to identify problems with items not receivin
 protected override void Update(GameTime)
 {
     GumUI.Update(gameTime);
-    var cursor = GumIO.Cursor;
+    var cursor = GumUI.Cursor;
     System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
     base.Update(gameTime);
 }

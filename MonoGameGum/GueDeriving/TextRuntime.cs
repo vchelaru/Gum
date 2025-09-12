@@ -92,7 +92,11 @@ public class TextRuntime : InteractiveGue
     public HorizontalAlignment HorizontalAlignment
     {
         get => ContainedText.HorizontalAlignment;
-        set => ContainedText.HorizontalAlignment = value;
+        set
+        {
+            ContainedText.HorizontalAlignment = value;
+            NotifyPropertyChanged();
+        }
     }
 
     public VerticalAlignment VerticalAlignment

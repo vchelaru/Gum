@@ -4,6 +4,7 @@ using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using CodeGenProject.Components;
+using CodeGenProject.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -40,6 +41,7 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
     }
     public SpriteComponent SpriteComponentInstance { get; protected set; }
     public NineSliceComponent NineSliceComponentInstance { get; protected set; }
+    public Label LabelInstance { get; protected set; }
 
     public GeneralScreen(InteractiveGue visual) : base(visual)
     {
@@ -55,6 +57,7 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
         base.ReactToVisualChanged();
         SpriteComponentInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<SpriteComponent>(this.Visual,"SpriteComponentInstance");
         NineSliceComponentInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<NineSliceComponent>(this.Visual,"NineSliceComponentInstance");
+        LabelInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

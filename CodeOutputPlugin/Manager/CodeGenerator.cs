@@ -201,8 +201,40 @@ public struct CodeGenerationContext
         }
     }
 
-    public VisualApi VisualApi => CodeGenerator.GetVisualApiForElement(Element);
+    public VisualApi VisualApi => GetVisualApiForElement(Element);
 
+    VisualApi GetVisualApiForElement(ElementSave element)
+    {
+        VisualApi visualApi;
+        //if(element is ScreenSave)
+        //{
+        // screens are always XamarinForms
+        //visualApi = VisualApi.XamarinForms;
+        // Update August 23, 2022
+        // No, the code gen may be 
+        // be used for entirely Skia
+        // pages such as PDF generation.
+        // Therefore, we should always look
+        // to the IsXamarinFormsControl value:
+        //visualApi = VisualApi.XamarinForms;
+        //}
+        //else
+        {
+            var defaultState = element.DefaultState;
+            var rvf = new RecursiveVariableFinder(defaultState);
+            var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+            else
+            {
+                visualApi = VisualApi.Gum;
+            }
+        }
+        return visualApi;
+
+    }
 }
 
 #endregion
@@ -590,7 +622,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithExposedVariables(CodeGenerationContext context)
+    private void FillWithExposedVariables(CodeGenerationContext context)
     {
         var exposedVariables = context.Element.DefaultState.Variables
             .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
@@ -604,7 +636,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
+    private void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
     {
         var container = context.Element;
         var stringBuilder = context.StringBuilder;
@@ -733,6 +765,7 @@ public class CodeGenerator
                 }
 
                 string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
+                string? sourceObjectCast = null;
                 if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
                     // only if the object is not a standard element
@@ -749,6 +782,7 @@ public class CodeGenerator
                                 sourceObjectName += ".Visual";
                             }
                         }
+                        sourceObjectCast = GetVisualCast(exposedVariable, context.Element, context);
                     }
                 }
 
@@ -773,7 +807,14 @@ public class CodeGenerator
 
                 if (hasGetter)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
+                    if(sourceObjectCast != null)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectName}).{rootVariable?.Name};");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
+                    }
                 }
 
 
@@ -791,7 +832,14 @@ public class CodeGenerator
                     }
                     else
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                        if(sourceObjectCast != null)
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectName}).{rootVariable?.Name} = value;");
+                        }
+                        else
+                        {
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                        }
                     }
                 }
 
@@ -916,7 +964,10 @@ public class CodeGenerator
         context.TabCount++;
         context.Instance = null;
 
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms &&
+            // if it is fully instantiated in code, then it already has its 
+            // visual assigned by this point. Instead, we should call RefreshInternalVisualReferences
+            isFullyInstantiatingInCode == false)
         {
             context.StringBuilder.AppendLine(context.Tabs + "base.ReactToVisualChanged();");
         }
@@ -981,6 +1032,13 @@ public class CodeGenerator
                 }
             }
             context.Instance = null;
+        }
+
+        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.Skia)
+        {
+            //RefreshInternalVisualReferences
+            context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
+
         }
 
         if (!isFullyInstantiatingInCode)
@@ -2491,7 +2549,7 @@ public class CodeGenerator
 
     #region Parent
 
-    private static void FillWithParentAssignments(CodeGenerationContext context)
+    private void FillWithParentAssignments(CodeGenerationContext context)
     {
         var instance = context.Instance;
 
@@ -2626,7 +2684,7 @@ public class CodeGenerator
         #endregion
     }
 
-    private static void GenerateAddToParentsMethod(CodeGenerationContext context)
+    private void GenerateAddToParentsMethod(CodeGenerationContext context)
     {
         var isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
 
@@ -2659,7 +2717,7 @@ public class CodeGenerator
 
     #region Constructors
 
-    private static void GenerateConstructors(CodeGenerationContext context)
+    private void GenerateConstructors(CodeGenerationContext context)
     {
         var element = context.Element;
         var visualApi = context.VisualApi;
@@ -3126,7 +3184,7 @@ public class CodeGenerator
 
     #region States
 
-    public static string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
+    public string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var stringBuilder = new StringBuilder();
 
@@ -3169,7 +3227,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithStateProperties(CodeGenerationContext context)
+    private void FillWithStateProperties(CodeGenerationContext context)
     {
         var isXamarinForms = GetVisualApiForElement(context.Element) == VisualApi.XamarinForms;
         var containerClassName = GetClassNameForType(context.Element, GetVisualApiForElement(context.Element), context);
@@ -3182,7 +3240,7 @@ public class CodeGenerator
         }
     }
 
-    private static int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, bool isXamarinForms, string containerClassName, StateSaveCategory category)
+    private int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, bool isXamarinForms, string containerClassName, StateSaveCategory category)
     {
         // If it's Xamarin Forms we want to have the states be bindable
 
@@ -3450,7 +3508,7 @@ public class CodeGenerator
         }
     }
 
-    private static void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
+    private void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
     {
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "switch (value)");
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "{");
@@ -3473,7 +3531,7 @@ public class CodeGenerator
         stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
     }
 
-    private static void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+    private void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
     {
 #if DEBUG
         if (context.CodeOutputProjectSettings == null)
@@ -3555,6 +3613,7 @@ public class CodeGenerator
 
     #endregion
 
+    #region Gum Save Objets - generate Component or Screen instance
     private void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
     {
         var element = context.Element;
@@ -3581,7 +3640,9 @@ public class CodeGenerator
         }
     }
 
-    public static string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
+    #endregion
+
+    public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var stringBuilder = new StringBuilder();
 
@@ -3605,7 +3666,7 @@ public class CodeGenerator
 
     #region Variable Assignments
 
-    private static void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
+    private void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
     {
         var element = context.Element;
 
@@ -3684,7 +3745,7 @@ public class CodeGenerator
 
     }
 
-    private static void FillWithNonParentVariableAssignments(CodeGenerationContext context)
+    private void FillWithNonParentVariableAssignments(CodeGenerationContext context)
     {
         #region Get variables to consider
 
@@ -3715,7 +3776,7 @@ public class CodeGenerator
     /// <summary>
     /// Returns a no-tabbed line of code for the argument variable
     /// </summary>
-    private static string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
+    private string GetCodeLine(VariableSave variable, ElementSave container, VisualApi visualApi, StateSave state, CodeGenerationContext context)
     {
         if (visualApi == VisualApi.Gum)
         {
@@ -3731,14 +3792,23 @@ public class CodeGenerator
 
                 bool forceSetDirectlyOnInstance = GetIfShouldSetDirectlyOnInstance(variable, container, context);
 
+                var leftSideCast = GetVisualCast(variable, container, context);
+
                 if (forceSetDirectlyOnInstance)
                 {
                     return $"this.{ToCSharpName(context.Instance.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
+                    if(leftSideCast != null)
+                    {
+                        return $"(({leftSideCast}){context.CodePrefixNoTabs}).{variableName} = {VariableValueToGumCodeValue(variable, context)};";
 
-                    return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    }
+                    else
+                    {
+                        return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    }
                 }
             }
 
@@ -3758,7 +3828,26 @@ public class CodeGenerator
         }
     }
 
-    private static bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    private string? GetVisualCast(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    {
+        var variableName = GetGumVariableName(variable, context);
+        string? toReturn = null;
+
+        switch (variableName)
+        {
+            case "HorizontalAlignment":
+            case "MaxLettersToShow":
+            case "MaxNumberOfLines":
+            case "TextOverflowHorizontalMode":
+            case "VerticalAlignment":
+                toReturn = "TextRuntime";
+                break;
+        }
+
+        return toReturn;
+    }
+
+    private bool GetIfShouldSetDirectlyOnInstance(VariableSave variable, ElementSave container, CodeGenerationContext context)
     {
         var variableName = GetGumVariableName(variable, context);
 
@@ -4309,7 +4398,7 @@ public class CodeGenerator
         return null;
     }
     
-    private static void FillWithVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder, List<VariableSave> variablesToAssignValues)
+    private void FillWithVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder, List<VariableSave> variablesToAssignValues)
     {
         var container = context.Element;
         var instance = context.Instance;
@@ -4389,7 +4478,7 @@ public class CodeGenerator
         return null;
     }
 
-    private static void GenerateApplyDefaultVariables(CodeGenerationContext context)
+    private void GenerateApplyDefaultVariables(CodeGenerationContext context)
     {
         var line = "private void ApplyDefaultVariables()";
         context.StringBuilder.AppendLine(context.Tabs + line);
@@ -4985,7 +5074,7 @@ public class CodeGenerator
     }
 
 
-    public static VisualApi GetVisualApiForElement(ElementSave element)
+    public VisualApi GetVisualApiForElement(ElementSave element)
     {
         VisualApi visualApi;
         //if(element is ScreenSave)
