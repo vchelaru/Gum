@@ -22,7 +22,7 @@ button.Y = -200;
 button.Click += (not, used) =>
 {
     popupPanel.IsVisible = true;
-    InteractiveGue.AddNextClickAction(() =>
+    InteractiveGue.AddNextPushAction(() =>
     {
         popupPanel.IsVisible = false;
     });
