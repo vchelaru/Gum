@@ -17,6 +17,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
 
 namespace Gum.Managers;
 
@@ -498,17 +499,17 @@ public partial class ElementTreeViewManager
 
     private void HandleImportBehavior(object sender, EventArgs args)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportBehaviorUi();
+        _dialogService.Show<ImportBehaviorDialog>();
     }
 
     public void ImportScreenClick(object sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportScreenUi();
+        _dialogService.Show<ImportScreenDialog>();
     }
 
     public void ImportComponentsClick(object sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportComponentUi();
+        _dialogService.Show<ImportComponentDialog>();
     }
 
     private void HandleAddLinkedComponentClick(object sender, EventArgs e)
