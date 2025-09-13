@@ -253,7 +253,12 @@ public class Cursor : ICursor
         get; set;
     }
 
-    internal void Activity(float gameTime)
+    void ICursor.Activity(double currentGameTimeTotalSeconds)
+    {
+        Activity((float)currentGameTimeTotalSeconds);
+    }
+
+    internal void Activity(double gameTime)
     {
         mLastFrameMouseState = _mouseState;
         _lastFrameTouchCollection = _touchCollection;
