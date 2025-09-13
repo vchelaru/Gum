@@ -290,7 +290,12 @@ public class GumService
     {
         GameTime = gameTime;
         Gum.Forms.FormsUtilities.Update(game, gameTime, root);
-        this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
+        // SystemManagers.Activity (as of Sept 13, 2025) only 
+        // performs Sprite animation internally. This is not a 
+        // critical system, but unit tests cannot initialize a SystemManagers
+        // because these require a graphics device. Therefore, we can tolerate
+        // a null SystemManagers to simplify unit tests.
+        this.SystemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
         root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
     }
 

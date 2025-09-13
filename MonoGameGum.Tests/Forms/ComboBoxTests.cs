@@ -1,11 +1,14 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
+using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultVisuals;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
+using Moq;
 using RenderingLibrary.Graphics;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,18 +22,45 @@ public  class ComboBoxTests : BaseTestClass
     [Fact]
     public void Visual_Assignment_ShouldSetVisualCorrectly()
     {
-        var comboBox = new Gum.Forms.Controls.ComboBox();
+        ComboBox comboBox = new ();
 
         comboBox.Visual = new CGComboBox(tryCreateFormsObject:false);
+    }
 
+    [Fact]
+    public void Clicking_ShouldOpenComboBox_IfInBounds()
+    {
+        ComboBox comboBox = new ComboBox();
+
+        comboBox.AddToRoot();
+
+        comboBox.IsDropDownOpen.ShouldBe(false);
+
+        Mock<ICursor> cursor = new();
+        // combo boxes open on a push
+        cursor.Setup(x => x.PrimaryPush).Returns(true);
+        cursor.Setup(x => x.WindowPushed).Returns(comboBox.Visual);
+        cursor.Setup(x => x.WindowOver).Returns(comboBox.Visual);
+        Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        comboBox.IsDropDownOpen.ShouldBe(true);
+
+        // Set it up so it's inside the window, but outside the bounds of the combo box
+        cursor.Setup(x => x.X).Returns((int)(GraphicalUiElement.CanvasWidth-1));
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(GraphicalUiElement.CanvasWidth - 1));
+        cursor.Setup(x => x.WindowOver).Returns((InteractiveGue?)null);
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        comboBox.IsDropDownOpen.ShouldBe(false);
 
     }
 
 
-
     public class CGComboBox : InteractiveGue
     {
-        public DefaultListBoxRuntime ListBoxInstance;
+        public MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime ListBoxInstance;
         public RectangleRuntime FocusedIndicator { get; private set; }
 
         public CGComboBox(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -43,7 +73,7 @@ public  class ComboBoxTests : BaseTestClass
                 var TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
 
-                ListBoxInstance = new DefaultListBoxRuntime(tryCreateFormsObject: false);
+                ListBoxInstance = new MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime(tryCreateFormsObject: false);
                 ListBoxInstance.Name = "ListBoxInstance";
 
 
@@ -113,8 +143,3 @@ public  class ComboBoxTests : BaseTestClass
 
     }
 }
-
-
-
-
-

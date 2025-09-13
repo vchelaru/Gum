@@ -17,6 +17,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
 
 namespace Gum.Managers;
 
@@ -498,17 +499,37 @@ public partial class ElementTreeViewManager
 
     private void HandleImportBehavior(object sender, EventArgs args)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportBehaviorUi();
+        if (GuardProjectSaved("before importing behaviors"))
+        {
+            _dialogService.Show<ImportBehaviorDialog>();
+        }
     }
 
     public void ImportScreenClick(object sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportScreenUi();
+        if (GuardProjectSaved("before importing screens"))
+        {
+            _dialogService.Show<ImportScreenDialog>();
+        }
     }
 
     public void ImportComponentsClick(object sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportComponentUi();
+        if (GuardProjectSaved("before importing components"))
+        {
+            _dialogService.Show<ImportComponentDialog>();
+        }
+    }
+
+    private bool GuardProjectSaved(string? reason = null)
+    {
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        {
+            _dialogService.ShowMessage("You must first save the project");
+            return false;
+        }
+
+        return true;
     }
 
     private void HandleAddLinkedComponentClick(object sender, EventArgs e)
