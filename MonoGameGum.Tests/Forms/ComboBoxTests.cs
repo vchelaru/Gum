@@ -19,7 +19,7 @@ public  class ComboBoxTests : BaseTestClass
     [Fact]
     public void Visual_Assignment_ShouldSetVisualCorrectly()
     {
-        var comboBox = new MonoGameGum.Forms.Controls.ComboBox();
+        var comboBox = new Gum.Forms.Controls.ComboBox();
 
         comboBox.Visual = new CGComboBox(tryCreateFormsObject:false);
 
