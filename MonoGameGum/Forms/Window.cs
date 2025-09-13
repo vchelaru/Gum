@@ -300,25 +300,41 @@ public class Window :
         if (rightGrabbedInOffset != null)
         {
             var desiredRight = cursorX + rightGrabbedInOffset.Value;
+             
             var difference = desiredRight - Visual.AbsoluteRight;
 
+            
             switch (Visual.XOrigin)
             {
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
                     Visual.Width += difference;
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
-                    Visual.X += difference / 2f;
-                    Visual.Width += difference;
+                    {
+                        var widthBefore = Visual.GetAbsoluteWidth();
+                        Visual.Width += difference;
+                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        Visual.X += addedWidth / 2f;
+                    }
+
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Right:
-                    Visual.X += difference;
-                    Visual.Width += difference;
+                    {
+                        var widthBefore = Visual.GetAbsoluteWidth();
+                        Visual.Width += difference;
+                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        Visual.X += addedWidth;
+                    }
                     break;
+            }
+            if(Visual.MinWidth != null)
+            {
+                Visual.Width = Math.Max(Visual.MinWidth.Value, Visual.Width);
             }
         }
         if (bottomGrabbedInOffset != null)
         {
+            // todo - finish here
             var desiredBottom = cursorY + bottomGrabbedInOffset.Value;
             var difference = desiredBottom - Visual.AbsoluteBottom;
 

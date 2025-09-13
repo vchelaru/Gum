@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using SkiaGum.Renderables;
+using SkiaSharp;
 
 namespace SkiaGum.GueDeriving;
 
@@ -10,13 +11,19 @@ public class LineGridRuntime: SkiaShapeRuntime
 
     public ushort CellWidth
     {
-        get { return mContainedLineGrid.CellWidth; }
-        set { mContainedLineGrid.CellWidth = value; }
+        get => mContainedLineGrid.CellWidth;
+        set => mContainedLineGrid.CellWidth = value; 
     }
     public ushort CellHeight
     {
-        get { return mContainedLineGrid.CellHeight; }
-        set { mContainedLineGrid.CellHeight = value; }
+        get => mContainedLineGrid.CellHeight; 
+        set => mContainedLineGrid.CellHeight = value; 
+    }
+
+    public SKColor Color
+    {
+        get => ContainedLineGrid.Color;
+        set => ContainedLineGrid.Color = value;
     }
 
     public void LineGridCell(double pX, double pY, out int colX, out int colY)

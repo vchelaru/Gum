@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MonoGameGum.Input;
 
-namespace MonoGameGum.Tests;
+namespace MonoGameGum.IntegrationTests;
 public class BaseTestClass : IDisposable
 {
     public virtual void Dispose()
