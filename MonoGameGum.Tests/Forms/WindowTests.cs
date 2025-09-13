@@ -99,7 +99,6 @@ public class WindowTests : BaseTestClass
     [Fact]
     public void Dragging_ShouldNotMoveWindow_IfOutsideOfChild()
     {
-
         Mock<ICursor> cursor = new();
 
         Panel parentPanel = new Panel();
@@ -125,5 +124,39 @@ public class WindowTests : BaseTestClass
         titleBar.TryCallDragging();
 
         sut.X.ShouldBe(0, "because the cursor was moved it too far out");
+    }
+
+    [Fact]
+    public void Resizing_ShouldNotShrinkOrShift_BeyondMinimumWidth_LeftSide()
+    {
+        Mock<ICursor> cursor = new();
+        FormsUtilities.SetCursor(cursor.Object);
+
+        Window sut = new();
+        sut.AddToRoot();
+        sut.Visual.Width = 20;
+        sut.Visual.MinWidth = 20;
+
+        InteractiveGue left =
+            (InteractiveGue)sut.Visual.GetChildByNameRecursively("BorderLeftInstance");
+
+        cursor.SetupProperty(x => x.WindowPushed);
+        cursor.SetupProperty(x => x.WindowOver);
+
+        cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        cursor.Setup(x => x.X).Returns(3);
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(3);
+        cursor.Setup(x => x.Y).Returns(30);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(30);
+
+        cursor.Setup(x => x.PrimaryPush);
+
+        left.TryCallPush();
+
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(300);
+
+
+        left.TryCallDragging();
     }
 }
