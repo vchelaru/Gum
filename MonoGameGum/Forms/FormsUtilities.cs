@@ -17,6 +17,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 
 
 
@@ -46,9 +47,15 @@ public enum DefaultVisualsVersion
 
 public class FormsUtilities
 {
-    static Cursor cursor;
+    static ICursor cursor;
 
-    public static Cursor Cursor => cursor;
+    public static Cursor Cursor => cursor as Cursor;
+
+    public static void SetCursor(ICursor cursor)
+    {
+        FormsUtilities.cursor = cursor;
+        FrameworkElement.MainCursor = cursor;
+    }
 
     static Keyboard keyboard;
 

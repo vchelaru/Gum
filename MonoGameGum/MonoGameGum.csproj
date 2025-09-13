@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net8.0-ios</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0-ios</TargetFrameworks>
 		<!-- Gum UI tool is still .NET 4 and doesn't use this so let's disable it-->
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
