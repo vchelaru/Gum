@@ -308,69 +308,36 @@ public class MainStateAnimationPlugin : PluginBase
         if (!string.IsNullOrEmpty(whyIsntValid))
         {
             _dialogService.ShowMessage(whyIsntValid);
-
+            return;
         }
-        else
+
+        AddStateKeyframeDialog dialog = new()
         {
-            ListBoxMessageBox lbmb = new ListBoxMessageBox();
-            lbmb.RequiresSelection = true;
-            lbmb.Message = "Select a state";
-            lbmb.Title = "Add a state";
+            ElementSave = _selectedState.SelectedElement
+        };
 
-            var element = _selectedState.SelectedElement;
+        _dialogService.Show(dialog);
 
-            foreach (var state in element.States)
+        if (dialog.Result is { } newVm)
+        {
+            if (_viewModel.SelectedAnimation.SelectedKeyframe != null)
             {
-                lbmb.Items.Add(state.Name);
+                // put this after the current animation
+                newVm.Time = _viewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+            }
+            else if (_viewModel.SelectedAnimation.Keyframes.Count != 0)
+            {
+                newVm.Time = _viewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            foreach (var category in element.Categories)
-            {
-                foreach (var state in category.States)
-                {
-                    lbmb.Items.Add(category.Name + "/" + state.Name);
-                }
-            }
+            _viewModel.SelectedAnimation.Keyframes.BubbleSort();
 
-
-            var dialogResult = lbmb.ShowDialog();
-
-            if (dialogResult.HasValue && dialogResult.Value)
-            {
-                var item = lbmb.SelectedItem;
-
-                var newVm = new AnimatedKeyframeViewModel();
-
-
-                newVm.StateName = (string)item;
-                // User just selected the state, so it better be valid!
-                newVm.HasValidState = true;
-                newVm.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
-                newVm.Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
-
-
-                if (_viewModel.SelectedAnimation.SelectedKeyframe != null)
-                {
-                    // put this after the current animation
-                    newVm.Time = _viewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
-                }
-                else if (_viewModel.SelectedAnimation.Keyframes.Count != 0)
-                {
-                    newVm.Time = _viewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
-                }
-
-
-                _viewModel.SelectedAnimation.Keyframes.BubbleSort();
-
-                _viewModel.SelectedAnimation.Keyframes.Add(newVm);
-                // Call this *before* setting SelectedKeyframe so the available
-                // states are assigned. Otherwise
-                // StateName will be nulled out.
-                HandleAnimationKeyrameAdded(newVm);
-                _viewModel.SelectedAnimation.SelectedKeyframe = newVm;
-
-
-            }
+            _viewModel.SelectedAnimation.Keyframes.Add(newVm);
+            // Call this *before* setting SelectedKeyframe so the available
+            // states are assigned. Otherwise
+            // StateName will be nulled out.
+            HandleAnimationKeyrameAdded(newVm);
+            _viewModel.SelectedAnimation.SelectedKeyframe = newVm;
         }
     }
 
