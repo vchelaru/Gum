@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace MonoGameGum.Tests.MonoGameGum;
+namespace MonoGameGum.IntegrationTests.MonoGameGum;
 
 public class GumServiceUnitTests : BaseTestClass
 {
