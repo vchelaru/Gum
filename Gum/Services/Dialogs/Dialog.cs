@@ -40,7 +40,19 @@ public class Dialog : ContentControl
     {
         obj.SetValue(ActionsProperty, value);
     }
-    
+
+    public static readonly DependencyProperty AuxiliaryActionsProperty = DependencyProperty.RegisterAttached(
+        "AuxiliaryActions", typeof(object), typeof(Dialog), new PropertyMetadata(default(object?)));
+
+    public static void SetAuxiliaryActions(DependencyObject element, object? value)
+    {
+        element.SetValue(AuxiliaryActionsProperty, value);
+    }
+    public static object? GetAuxiliaryActions(DependencyObject element)
+    {
+        return (object?) element.GetValue(AuxiliaryActionsProperty);
+    }
+
     public Dialog()
     {
         ContentTemplateSelector = new DialogTemplateSelector();
@@ -56,6 +68,7 @@ public class Dialog : ContentControl
             {
                 Bind(DialogTitleProperty);
                 Bind(ActionsProperty);
+                Bind(AuxiliaryActionsProperty);
             }
 
             void Bind(DependencyProperty source)

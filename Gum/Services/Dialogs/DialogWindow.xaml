@@ -1,14 +1,15 @@
 <Window
-    SizeToContent="WidthAndHeight"
-    Title="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl}"
-    WindowStartupLocation="CenterOwner"
-    mc:Ignorable="d"
     x:Class="Gum.Services.Dialogs.DialogWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Services.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    Title="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl}"
+    ResizeMode="NoResize"
+    SizeToContent="WidthAndHeight"
+    WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d">
     <Window.Resources>
         <Style TargetType="{x:Type local:Dialog}">
             <Setter Property="Content" Value="{Binding}" />
@@ -17,8 +18,8 @@
                     <ControlTemplate TargetType="{x:Type local:Dialog}">
                         <Grid Margin="8">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <ScrollViewer
                                 Grid.Row="0"
@@ -27,43 +28,66 @@
                                 <ContentPresenter x:Name="DialogPresenter" />
                             </ScrollViewer>
                             <ContentPresenter
-                                Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:Dialog.Actions)}"
+                                x:Name="ActionsPresenter"
                                 Grid.Row="1"
                                 Margin="0,16,0,0"
-                                x:Name="ActionsPresenter" />
+                                Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:Dialog.Actions)}" />
                         </Grid>
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="local:Dialog.Actions" Value="{x:Null}">
-                                <Setter Property="Content" TargetName="ActionsPresenter" Value="{Binding}" />
-                                <Setter Property="ContentTemplate" TargetName="ActionsPresenter">
+                                <Setter TargetName="ActionsPresenter" Property="Content" Value="{Binding}" />
+                                <Setter TargetName="ActionsPresenter" Property="ContentTemplate">
                                     <Setter.Value>
                                         <DataTemplate DataType="{x:Type local:DialogViewModel}">
-                                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                                <Button
-                                                    Command="{Binding AffirmativeCommand}"
-                                                    Content="{Binding AffirmativeText}"
-                                                    IsDefault="True"
-                                                    Margin="5,0,0,0"
-                                                    MinWidth="64"
-                                                    Padding="16,4" />
-                                                <Button
-                                                    Command="{Binding NegativeCommand}"
-                                                    Content="{Binding NegativeText}"
-                                                    Margin="5,0,0,0"
-                                                    MinWidth="64"
-                                                    Padding="16,4">
-                                                    <Button.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Left"
+                                                    Content="{Binding Path=(local:Dialog.AuxiliaryActions), RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Dialog}}}">
+                                                    <ContentPresenter.Resources>
                                                         <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding NegativeText}" Value="{x:Null}">
-                                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
+                                                            <Setter Property="Margin" Value="0,0,5,0" />
+                                                            <Setter Property="Padding" Value="16,4" />
+                                                            <Setter Property="MinWidth" Value="64" />
                                                         </Style>
-                                                    </Button.Style>
-                                                </Button>
-                                            </StackPanel>
+                                                    </ContentPresenter.Resources>
+                                                </ContentPresenter>
+                                                <StackPanel
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Orientation="Horizontal">
+                                                    <Button
+                                                        MinWidth="64"
+                                                        Margin="5,0,0,0"
+                                                        Padding="16,4"
+                                                        Command="{Binding AffirmativeCommand}"
+                                                        Content="{Binding AffirmativeText}"
+                                                        IsDefault="True" />
+                                                    <Button
+                                                        MinWidth="64"
+                                                        Margin="5,0,0,0"
+                                                        Padding="16,4"
+                                                        Command="{Binding NegativeCommand}"
+                                                        Content="{Binding NegativeText}">
+                                                        <Button.Style>
+                                                            <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding NegativeText}" Value="{x:Null}">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+
                                         </DataTemplate>
                                     </Setter.Value>
                                 </Setter>
