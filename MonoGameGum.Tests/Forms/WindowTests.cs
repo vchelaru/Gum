@@ -159,7 +159,6 @@ public class WindowTests : BaseTestClass
         sut.Width.ShouldBe(20);
     }
 
-     duplicate this test for bottom
     [Fact]
     public void Resizing_ShouldNotShrinkOrShift_BeyondMinimumWidth_RightSide()
     {
@@ -226,6 +225,42 @@ public class WindowTests : BaseTestClass
         sut.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom;
         top.TryCallDragging();
         sut.Y.ShouldBe(20);
+        sut.Height.ShouldBe(20);
+    }
+
+    [Fact]
+    public void Resizing_ShouldNotShrinkOrShift_BeyondMinimumHeight_BottomSide()
+    {
+        Mock<ICursor> cursor = CreateMockCursor();
+
+        Window sut = new();
+        sut.AddToRoot();
+
+        InteractiveGue bottom =
+            (InteractiveGue)sut.Visual.GetChildByNameRecursively("BorderBottomInstance");
+
+        sut.Visual.Height = 20;
+        sut.Visual.MinHeight = 20;
+        sut.Y = 100;
+
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(119);
+
+        bottom.TryCallPush();
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(0);
+        bottom.TryCallDragging();
+        sut.Y.ShouldBe(100);
+        sut.Height.ShouldBe(20);
+
+        sut.Y = 110;
+        sut.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+        bottom.TryCallDragging();
+        sut.Y.ShouldBe(110);
+        sut.Height.ShouldBe(20);
+
+        sut.Y = 120;
+        sut.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom;
+        bottom.TryCallDragging();
+        sut.Y.ShouldBe(120);
         sut.Height.ShouldBe(20);
     }
 

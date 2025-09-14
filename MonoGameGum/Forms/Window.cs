@@ -309,7 +309,7 @@ public class Window :
                         var heightBefore = Visual.GetAbsoluteHeight();
                         Visual.Height -= difference;
                         var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
-                        Visual.Y += addedHeight / 2f;
+                        Visual.Y -= addedHeight / 2f;
                     }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
@@ -357,7 +357,6 @@ public class Window :
         }
         if (bottomGrabbedInOffset != null)
         {
-            // todo - finish here
             var desiredBottom = cursorY + bottomGrabbedInOffset.Value;
             var difference = desiredBottom - Visual.AbsoluteBottom;
 
@@ -367,13 +366,26 @@ public class Window :
                     Visual.Height += difference;
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
-                    Visual.Y = Visual.Y + difference / 2f;
-                    Visual.Height += difference;
+                    {
+                        var heightBefore = Visual.GetAbsoluteHeight();
+                        Visual.Height += difference;
+                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        Visual.Y += addedHeight / 2f;
+
+                    }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
-                    Visual.Y += difference;
-                    Visual.Height += difference;
+                    {
+                        var heightBefore = Visual.GetAbsoluteHeight();
+                        Visual.Height += difference;
+                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        Visual.Y += addedHeight;
+                    }
                     break;
+            }
+            if(Visual.MinHeight != null)
+            {
+                Visual.Height = Math.Max(Visual.MinHeight.Value, Visual.Height);
             }
         }
 
