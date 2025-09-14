@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 namespace MonoGameGum.Tests;
 public class TestAssemblyInitialize : TestAssemblyInitializeBase
 {
-    public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink)
+    public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink, Gum.Forms.DefaultVisualsVersion.V1)
     {
     }
 }

@@ -26,16 +26,17 @@ namespace MonoGameGum.TestsCommon;
 
 public class TestAssemblyInitializeBase : XunitTestFramework
 {
-    public TestAssemblyInitializeBase(IMessageSink messageSink) : base(messageSink)
+    public TestAssemblyInitializeBase(IMessageSink messageSink, Gum.Forms.DefaultVisualsVersion visualVersion) : base(messageSink)
     {
         SystemManagers.Default = new();
         SystemManagers.Default.Renderer = new Renderer();
         SystemManagers.Default.Renderer.AddLayer(new Layer());
+        ISystemManagers.Default = SystemManagers.Default;
 
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
-        Gum.Forms.FormsUtilities.InitializeDefaults(defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.V2);
+        Gum.Forms.FormsUtilities.InitializeDefaults(defaultVisualsVersion: visualVersion);
         CreateStubbedFonts();
 
         InitializeGumService();

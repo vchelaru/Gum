@@ -26,7 +26,7 @@ namespace MonoGameGum.Tests.V2;
 
 public sealed class TestAssemblyInitialize : TestAssemblyInitializeBase
 {
-    public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink)
+    public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink, Gum.Forms.DefaultVisualsVersion.V2)
     {
     }
 }
