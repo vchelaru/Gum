@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
-using MonoGameGum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using Moq;
@@ -24,7 +24,7 @@ public class ButtonTests : BaseTestClass
 
         button.Visual.ShouldNotBeNull();
 
-        button.Visual.ShouldBeOfType<DefaultButtonRuntime>();
+        button.Visual.ShouldBeOfType<MonoGameGum.Forms.DefaultVisuals.DefaultButtonRuntime>();
     }
 
     [Fact]
