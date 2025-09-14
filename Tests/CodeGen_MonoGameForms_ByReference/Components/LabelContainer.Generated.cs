@@ -64,6 +64,7 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
     public Label LabelInstance { get; protected set; }
+    public ColoredRectangleRuntime NonLabelShouldAppearAfterLabel { get; protected set; }
 
     public string Text
     {
@@ -84,6 +85,7 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
     {
         base.ReactToVisualChanged();
         LabelInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
+        NonLabelShouldAppearAfterLabel = this.Visual?.GetGraphicalUiElementByName("NonLabelShouldAppearAfterLabel") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
