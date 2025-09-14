@@ -357,6 +357,7 @@ public class Window :
         }
         if (bottomGrabbedInOffset != null)
         {
+            // todo - finish here
             var desiredBottom = cursorY + bottomGrabbedInOffset.Value;
             var difference = desiredBottom - Visual.AbsoluteBottom;
 
