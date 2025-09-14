@@ -6,6 +6,12 @@ namespace RenderingLibrary.Content;
 
 public class LoaderManager
 {
+    public enum ExistingContentBehavior
+    {
+        ThrowException,
+        Replace
+    }
+
     #region Fields
 
     static LoaderManager mSelf;
@@ -99,16 +105,23 @@ public class LoaderManager
         }
     }
 
-    public void AddDisposable(string name, IDisposable disposable)
+    public void AddDisposable(string name, IDisposable disposable, ExistingContentBehavior existingContentBehavior = ExistingContentBehavior.ThrowException)
     {
 #if DEBUG
-        if(mCachedDisposables.ContainsKey(name))
+        if(mCachedDisposables.ContainsKey(name) && existingContentBehavior == ExistingContentBehavior.ThrowException)
         {
             throw new ArgumentException(
                 $"The cached disposable already contains an entry for {name}:{mCachedDisposables[name]}");
         }
 #endif
-        mCachedDisposables.Add(name, disposable);
+        if(existingContentBehavior == ExistingContentBehavior.ThrowException)
+        {
+            mCachedDisposables.Add(name, disposable);
+        }
+        else
+        {
+            mCachedDisposables[name] = disposable;
+        }
     }
 
     public void DisposeAndClear()

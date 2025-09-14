@@ -326,7 +326,9 @@ namespace RenderingLibrary
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
             // qualify for Android:
-            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont);
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont, 
+                // This allows unit tests, and can avoid confusiong errors
+                LoaderManager.ExistingContentBehavior.Replace);
 
             return bitmapFont;
         }
