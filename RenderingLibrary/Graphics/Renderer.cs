@@ -255,8 +255,6 @@ public class Renderer : IRenderer
 
     }
 
-    #region Methods
-
     public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
     {
         renderTargetService = new RenderTargetService();
@@ -306,6 +304,8 @@ public class Renderer : IRenderer
         }
     }
 
+    #region Add/Remove Layers
+
     public Layer AddLayer()
     {
         Layer layer = new Layer();
@@ -314,6 +314,10 @@ public class Renderer : IRenderer
     }
 
     public void AddLayer(Layer layer) => _layers.Add(layer);
+
+    public void InsertLayer(int index, Layer layer) => _layers.Insert(index, layer);
+
+    public void RemoveLayer(Layer layer) => _layers.Remove(layer);
 
 
     //public void AddLayer(SortableLayer sortableLayer, Layer masterLayer)
@@ -325,6 +329,8 @@ public class Renderer : IRenderer
 
     //    masterLayer.Add(sortableLayer);
     //}
+
+    #endregion
 
     public void Draw(SystemManagers managers)
     {
@@ -818,11 +824,6 @@ public class Renderer : IRenderer
     //    RemoveRenderable(sortableLayer);
     //}
 
-    public void RemoveLayer(Layer layer)
-    {
-        _layers.Remove(layer);
-    }
-
     public void ClearPerformanceRecordingVariables()
     {
         spriteRenderer.ClearPerformanceRecordingVariables();
@@ -838,7 +839,6 @@ public class Renderer : IRenderer
 
     }
 
-    #endregion
 
 }
 
