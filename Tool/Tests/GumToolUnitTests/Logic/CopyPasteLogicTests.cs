@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Logic;
-public class CopyPasteLogicTests
+public class CopyPasteLogicTests : BaseTestClass
 {
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly AutoMocker mocker;

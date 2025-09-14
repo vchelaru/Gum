@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
-public class UndoManagerTests
+public class UndoManagerTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IRenameLogic> _renameLogic;

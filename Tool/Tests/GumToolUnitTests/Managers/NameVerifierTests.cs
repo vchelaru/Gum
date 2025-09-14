@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
-public class NameVerifierTests
+public class NameVerifierTests : BaseTestClass
 {
     private readonly NameVerifier _nameVerifier;
 

@@ -9,9 +9,9 @@ using TextCopy;
 
 namespace Gum.Clipboard;
 
-internal class ClipboardImplementation
+public class ClipboardImplementation
 {
-    internal static string GetText()
+    public static string GetText()
     {
 #if IOS
         return string.Empty;
@@ -20,7 +20,7 @@ internal class ClipboardImplementation
 #endif
     }
 
-    internal static void PushStringToClipboard(string text)
+    public static void PushStringToClipboard(string text)
     {
 #if IOS
         // todo - do we care to fix this?

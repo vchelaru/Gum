@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Services;
-public class CircularReferenceManagerTests
+public class CircularReferenceManagerTests : BaseTestClass
 {
     private readonly IFixture _fixture;
 
