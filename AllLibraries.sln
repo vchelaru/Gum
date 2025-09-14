@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11010.61 d18.0
+VisualStudioVersion = 18.0.11010.61
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "GumCommon\GumCommon.csproj", "{C1AFB9E5-6076-4637-BC7D-A6555DA4770E}"
 EndProject
@@ -28,6 +28,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests.V2", "Tests\MonoGameGum.Tests.V2\MonoGameGum.Tests.V2.csproj", "{B7D2E29A-F296-4605-98A7-B05009A1A7CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.IntegrationTests", "Tests\MonoGameGum.IntegrationTests\MonoGameGum.IntegrationTests.csproj", "{2F966462-A7FB-4D99-AE43-4597A145C809}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.TestsCommon", "Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj", "{96A05A7C-90CA-437F-ACFA-8C8193DD2791}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +127,14 @@ Global
 		{2F966462-A7FB-4D99-AE43-4597A145C809}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2F966462-A7FB-4D99-AE43-4597A145C809}.Release|x86.ActiveCfg = Release|Any CPU
 		{2F966462-A7FB-4D99-AE43-4597A145C809}.Release|x86.Build.0 = Release|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Debug|x86.Build.0 = Debug|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|x86.ActiveCfg = Release|Any CPU
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -134,6 +144,7 @@ Global
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{B7D2E29A-F296-4605-98A7-B05009A1A7CE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2F966462-A7FB-4D99-AE43-4597A145C809} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{96A05A7C-90CA-437F-ACFA-8C8193DD2791} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}

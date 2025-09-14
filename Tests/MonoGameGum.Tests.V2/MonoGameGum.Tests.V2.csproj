@@ -23,6 +23,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
