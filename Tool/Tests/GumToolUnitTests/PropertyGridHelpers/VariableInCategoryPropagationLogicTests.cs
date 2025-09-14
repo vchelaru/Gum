@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.PropertyGridHelpers;
-public class VariableInCategoryPropagationLogicTests
+public class VariableInCategoryPropagationLogicTests : BaseTestClass
 {
     private readonly AutoMocker mocker;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
