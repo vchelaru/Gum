@@ -201,6 +201,13 @@ public class GumService
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
 
+        var mainLayer = SystemManagers.Renderer.MainLayer;
+        mainLayer.Remove(Root.RenderableComponent as IRenderableIpso);
+        mainLayer.Insert(0, Root.RenderableComponent as IRenderableIpso);
+
+        // make sure the Root is the first in the list:
+
+
         GumProjectSave? gumProject = null;
 
         if (!string.IsNullOrEmpty(gumProjectFile))
