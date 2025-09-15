@@ -121,7 +121,6 @@ public class ScrollViewerVisual : InteractiveGue
                 VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromSmall;
                 VerticalScrollBarInstance.Height = -24;
                 VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                VerticalScrollBarInstance.VisibleChanged += HandleScrollBarVisibilityChanged;
                 ScrollAndClipContainer.AddChild(VerticalScrollBarInstance);
 
                 HorizontalScrollBarInstance = new ScrollBarVisual();
@@ -133,7 +132,6 @@ public class ScrollViewerVisual : InteractiveGue
                 HorizontalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromLarge;
                 HorizontalScrollBarInstance.Width = -24;
                 HorizontalScrollBarInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                HorizontalScrollBarInstance.VisibleChanged += HandleScrollBarVisibilityChanged;
                 ScrollAndClipContainer.AddChild(HorizontalScrollBarInstance);
 
 
@@ -176,6 +174,25 @@ public class ScrollViewerVisual : InteractiveGue
             }
 
         }
+
+        CreateStates();
+
+        if (tryCreateFormsObject)
+        {
+            this.FormsControlAsObject = new ScrollViewer(this);
+            RefreshMarginsFromScrollBarVisibility();
+        }
+    }
+
+    private void CreateStates()
+    {
+        CreateScrollViewerCategory();
+
+        CreateScrollBarVisibilityCategory();
+    }
+
+    private void CreateScrollViewerCategory()
+    {
         ScrollViewerCategory = new StateSaveCategory();
         ScrollViewerCategory.Name = ScrollViewer.ScrollViewerCategoryName;
         this.AddCategory(ScrollViewerCategory);
@@ -198,15 +215,50 @@ public class ScrollViewerVisual : InteractiveGue
         States = new ScrollViewerCategoryStates();
         AddState(States.Enabled, false);
         AddState(States.Focused, true);
-
-        if (tryCreateFormsObject)
-        {
-            this.FormsControlAsObject = new ScrollViewer(this);
-            HandleScrollBarVisibilityChanged(this, EventArgs.Empty);
-        }
     }
 
-    private void HandleScrollBarVisibilityChanged(object? sender, EventArgs e)
+    private void CreateScrollBarVisibilityCategory()
+    {
+        var category = new StateSaveCategory();
+        category.Name = ScrollViewer.ScrollBarVisibilityCategoryName;
+
+        StateSave state;
+
+        state = new StateSave
+        {
+            Name = "VerticalScrollVisible"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+
+        state = new StateSave
+        {
+            Name = "HorizontalScrollVisible"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+        state = new StateSave
+        {
+            Name = "BothScrollVisible"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+        state = new StateSave
+        {
+            Name = "NoScrollBar"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+
+        this.AddCategory(category);
+
+    }
+
+    private void RefreshMarginsFromScrollBarVisibility()
     {
         if (VerticalScrollBarInstance.Parent == ScrollAndClipContainer)
         {

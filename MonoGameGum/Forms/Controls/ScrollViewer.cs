@@ -76,6 +76,7 @@ public class ScrollViewer :
     public const string HorizontalScrollBarInstanceName = "HorizontalScrollBarInstance";
 
     public const string ScrollViewerCategoryName = "ScrollViewerCategory";
+    public const string ScrollBarVisibilityCategoryName = "ScrollBarVisibility";
 
 #if FRB
     public bool TakingInput => throw new NotImplementedException();
@@ -699,7 +700,7 @@ public class ScrollViewer :
     // handled internally and this can be made private.
     public void UpdateVerticalScrollBarValues()
     {
-        if(verticalScrollBar == null)
+        if (verticalScrollBar == null)
         {
             return;
         }
@@ -726,18 +727,11 @@ public class ScrollViewer :
                 }
                 break;
         }
-
-        string state = verticalScrollBar.IsVisible ?
-            "VerticalScrollVisible" :
-            "NoScrollBar";
-
-        const string category = "ScrollBarVisibilityState";
-
-        Visual.SetProperty(category, state);
+        SetScrollBarState();
 
         // now that we've set the visibility state, let's see if the height has changed
         var didHeightChange = innerPanel.GetAbsoluteHeight() != innerPanelHeight;
-        if(didHeightChange)
+        if (didHeightChange)
         {
             // It changed, which can adjust the scroll bar height so let's adjust it again
             SetVerticalSrollBarValuesFromVisuals();
@@ -756,6 +750,22 @@ public class ScrollViewer :
 
             verticalScrollBar.Maximum = maxValue;
         }
+    }
+
+    private void SetScrollBarState()
+    {
+        var isVerticalVisible = verticalScrollBar?.IsVisible == true;
+        var isHorizontalVisible = horizontalScrollBar?.IsVisible == true;
+
+        string state = 
+            isVerticalVisible && isHorizontalVisible ? "BothScrollVisible"
+            : isVerticalVisible ? "VerticalScrollVisible"
+            : isHorizontalVisible ? "HorizontalScrollVisible"
+            : "NoScrollBar";
+
+        const string category = "ScrollBarVisibilityState";
+
+        Visual.SetProperty(category, state);
     }
 
     private void UpdateHorizontalScrollBarValues()
@@ -785,12 +795,9 @@ public class ScrollViewer :
                 }
                 break;
         }
-        string state = horizontalScrollBar.IsVisible ?
-            "HorizontalScrollVisible" :
-            "NoScrollBar";
-        const string category = "HorizontalScrollBarVisibilityState";
 
-        Visual.SetProperty(category, state);
+        SetScrollBarState();
+
 
         // now that we've set the visibility state, let's see if the width has changed
         var didWidthChange = innerPanel.GetAbsoluteWidth() != innerPanelWidth;
