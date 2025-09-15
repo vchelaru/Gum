@@ -763,7 +763,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
             : stringToUse = mRawText.Replace("\r\n", "\n");
         
 
-        float wrappingWidth = mWidth / mFontScale ?? float.PositiveInfinity; 
+        float wrappingWidth = System.Math.Max(0, mWidth / mFontScale ?? float.PositiveInfinity); 
 
         // This allocates like crazy but we're
         // on the PC and prob won't be calling this
