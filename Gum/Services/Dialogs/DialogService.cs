@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
-using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 
 namespace Gum.Services.Dialogs;
 
@@ -11,6 +13,7 @@ public interface IDialogService
     public bool Show<T>(T dialogViewModel) where T : DialogViewModel;
     bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel;
     string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null);
+    List<string>? OpenFile(OpenFileDialogOptions? options = null);
 }
 
 internal class DialogService : IDialogService
@@ -110,6 +113,22 @@ internal class DialogService : IDialogService
         
         return affirmative ? vm.Value : null;
     }
+
+    public List<string>? OpenFile(OpenFileDialogOptions? options = null)
+    {
+        options ??= new OpenFileDialogOptions();
+        
+        OpenFileDialog openFileDialog = new()
+        {
+            Multiselect = options.Multiselect,
+            Filter = options.Filter ?? "All Files (*.*)|*.*",
+            Title = options.Title ?? "Open File",
+            InitialDirectory = options.InitialDirectory ?? string.Empty,
+        };
+
+        return openFileDialog.ShowDialog() is true ? openFileDialog.FileNames.ToList() : null;
+    }
+
 }
 
 public static class IDialogServiceExt

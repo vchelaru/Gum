@@ -17,6 +17,7 @@ using ToolsUtilities;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using Microsoft.Xna.Framework;
 
 [assembly: Xunit.TestFramework("MonoGameGum.Tests.TestAssemblyInitialize", "MonoGameGum.Tests")]
 // Gum uses some statics internally. Although parallel execution is nice,
@@ -32,6 +33,7 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
         SystemManagers.Default.Renderer.AddLayer(new Layer());
         ISystemManagers.Default = SystemManagers.Default;
 
+
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
@@ -44,16 +46,20 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
 
         GraphicalUiElement.CanvasWidth = 800;
         GraphicalUiElement.CanvasHeight = 600;
+
+        Renderer.Self.Camera.ClientWidth = 800;
+        Renderer.Self.Camera.ClientHeight = 600;
     }
 
     private void InitializeGumService()
     {
-
         GumService.Default.Root.Dock(Dock.Fill);
         GumService.Default.Root.Name = "Main Root";
         GumService.Default.Root.HasEvents = false;
 
         GumService.Default.Root.AddToManagers(SystemManagers.Default);
+
+        //GumService.Default.SystemManagers = SystemManagers.Default;
     }
 
     private static void CreateStubbedFonts()

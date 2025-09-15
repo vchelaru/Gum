@@ -1,4 +1,7 @@
-﻿using Gum.Forms.Controls;
+﻿using Gum.Forms;
+using Gum.Forms.Controls;
+using Gum.Wireframe;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -34,5 +37,69 @@ public class MenuItemTests
 
         // no exception should be thrown
         menuItem.IsSelected = true;
+    }
+
+    [Fact]
+    public void ClickMenuItem_ShouldRaiseClickEvent()
+    {
+        Menu menu = new();
+        menu.AddToRoot();
+        menu.Name = "Menu";
+
+        MenuItem topItem = new();
+        menu.Items.Add(topItem);
+        topItem.Header = "Top Item";
+        topItem.Name = "Top Item";
+
+        var wasTopClicked = false;
+        topItem.Clicked += (not, used) =>
+        {
+            wasTopClicked = true;
+        };
+        var wasSubClicked = false;
+
+        MenuItem subItem = new();
+        subItem.Header = "Sub Item ";
+        // make it big to force it:
+        subItem.Name = "Sub Item";
+        subItem.Width = 100;
+        subItem.Height = 100;
+        topItem.Items.Add(subItem);
+        subItem.Clicked += (not, used) =>
+        {
+            wasSubClicked = true;
+        };
+
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.PrimaryClick).Returns(true);
+        FormsUtilities.SetCursor(cursor.Object);
+        cursor.SetupProperty(x => x.WindowOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+        cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        GumService.Default.Root.UpdateLayout();
+
+        cursor.Setup(x => x.X).Returns((int)(topItem.Visual.AbsoluteLeft + 1));
+        cursor.Setup(x => x.Y).Returns((int)(topItem.Visual.AbsoluteTop + 1));
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(topItem.Visual.AbsoluteLeft + 1));
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns((int)(topItem.Visual.AbsoluteTop + 1));
+
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        wasTopClicked.ShouldBeTrue();
+
+        cursor.Setup(x => x.X).Returns((int)(subItem.Visual.AbsoluteLeft + 1));
+        cursor.Setup(x => x.Y).Returns((int)(subItem.Visual.AbsoluteTop + 1));
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(subItem.Visual.AbsoluteLeft + 1));
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns((int)(subItem.Visual.AbsoluteTop + 1));
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+
+        wasSubClicked.ShouldBeTrue();
+
     }
 }

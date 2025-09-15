@@ -2,15 +2,15 @@
     x:Class="StateAnimationPlugin.Views.AddStateKeyFrameDialogView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:Gum.Behaviors;assembly=Gum"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:Gum.Services.Dialogs;assembly=Gum"
     xmlns:local="clr-namespace:StateAnimationPlugin.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="clr-namespace:StateAnimationPlugin.ViewModels"
+    Width="350"
     d:DataContext="{d:DesignInstance Type={x:Type viewmodels:AddStateKeyframeDialog},
                                      IsDesignTimeCreatable=False}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
     dialogs:Dialog.DialogTitle="Add State Keyframe"
     mc:Ignorable="d">
     <Grid>
@@ -22,6 +22,7 @@
         <TextBlock Margin="0,0,0,8" Text="Select a state" />
         <ListBox
             Grid.Row="1"
+            behaviors:ListBoxDoubleClick.Command="{Binding AffirmativeCommand}"
             ItemsSource="{Binding States}"
             SelectedItem="{Binding SelectedState}" />
     </Grid>

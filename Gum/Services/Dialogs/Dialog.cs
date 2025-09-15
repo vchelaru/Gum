@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Xceed.Wpf.AvalonDock.Controls;
+using Xceed.Wpf.Toolkit.Core.Utilities;
 
 namespace Gum.Services.Dialogs;
 
@@ -40,7 +41,19 @@ public class Dialog : ContentControl
     {
         obj.SetValue(ActionsProperty, value);
     }
-    
+
+    public static readonly DependencyProperty AuxiliaryActionsProperty = DependencyProperty.RegisterAttached(
+        "AuxiliaryActions", typeof(object), typeof(Dialog), new PropertyMetadata(default(object?)));
+
+    public static void SetAuxiliaryActions(DependencyObject element, object? value)
+    {
+        element.SetValue(AuxiliaryActionsProperty, value);
+    }
+    public static object? GetAuxiliaryActions(DependencyObject element)
+    {
+        return (object?) element.GetValue(AuxiliaryActionsProperty);
+    }
+
     public Dialog()
     {
         ContentTemplateSelector = new DialogTemplateSelector();
@@ -56,6 +69,7 @@ public class Dialog : ContentControl
             {
                 Bind(DialogTitleProperty);
                 Bind(ActionsProperty);
+                Bind(AuxiliaryActionsProperty);
             }
 
             void Bind(DependencyProperty source)
@@ -66,9 +80,16 @@ public class Dialog : ContentControl
                     Source = userControl,
                 });
             }
+
+            if (VisualTreeHelperEx.FindAncestorByType<DialogWindow>(this) is { } window)
+            {
+                window.SizeToContent = SizeToContent.Manual;
+                userControl.Width = double.NaN;
+                userControl.Height = double.NaN;
+            }
         }, DispatcherPriority.Loaded);
     }
-    
+
     private class DialogTemplateSelector : DataTemplateSelector
     {
         private static IDialogViewResolver DialogViewResolver { get; } = Locator.GetRequiredService<IDialogViewResolver>();
