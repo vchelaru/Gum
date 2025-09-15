@@ -325,6 +325,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
+                VisibleChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }
@@ -1496,6 +1497,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public event EventHandler SizeChanged;
     public event EventHandler PositionChanged;
+    public event EventHandler VisibleChanged;
     public event EventHandler<ParentChangedEventArgs> ParentChanged;
 
     public class ParentChangedEventArgs

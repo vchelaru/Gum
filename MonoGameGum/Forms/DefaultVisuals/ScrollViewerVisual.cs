@@ -22,6 +22,7 @@ public class ScrollViewerVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
     public ScrollBarVisual VerticalScrollBarInstance { get; private set; }
+    public ScrollBarVisual HorizontalScrollBarInstance { get; private set; }
     public ContainerRuntime InnerPanelInstance { get; private set; }
     public ContainerRuntime ClipContainerInstance { get; private set; }
     public ContainerRuntime ScrollAndClipContainer { get; private set; }
@@ -116,20 +117,32 @@ public class ScrollViewerVisual : InteractiveGue
                 VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
                 VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
                 VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-                VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                VerticalScrollBarInstance.Height = 0;
+                VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+                VerticalScrollBarInstance.Height = -24;
                 VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ScrollAndClipContainer.AddChild(VerticalScrollBarInstance);
+
+                HorizontalScrollBarInstance = new ScrollBarVisual();
+                HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
+                HorizontalScrollBarInstance.FormsControl.Orientation = Orientation.Horizontal;
+                HorizontalScrollBarInstance.XOrigin = HorizontalAlignment.Left;
+                HorizontalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+                HorizontalScrollBarInstance.YOrigin = VerticalAlignment.Bottom;
+                HorizontalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromLarge;
+                HorizontalScrollBarInstance.Width = -24;
+                HorizontalScrollBarInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ScrollAndClipContainer.AddChild(HorizontalScrollBarInstance);
+
 
                 // ClipContainerContainer uses a ratio to fill available space,
                 // and the clip container is inside of that and adds its own margins
                 ClipContainerContainer = new ContainerRuntime();
                 ClipContainerContainer.Name = "ClipContainerContainer";
-                ClipContainerContainer.Height = 0f;
+                ClipContainerContainer.Height = -24f;
                 ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                ClipContainerContainer.Width = 1;
-                ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
+                ClipContainerContainer.Width = -24;
+                ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ScrollAndClipContainer.AddChild(ClipContainerContainer);
 
                 {
@@ -157,9 +170,29 @@ public class ScrollViewerVisual : InteractiveGue
                         ClipContainerInstance.AddChild(InnerPanelInstance);
                     }
                 }
+
             }
 
         }
+
+        CreateStates();
+
+        if (tryCreateFormsObject)
+        {
+            this.FormsControlAsObject = new ScrollViewer(this);
+            RefreshMarginsFromScrollBarVisibility();
+        }
+    }
+
+    private void CreateStates()
+    {
+        CreateScrollViewerCategory();
+
+        CreateScrollBarVisibilityCategory();
+    }
+
+    private void CreateScrollViewerCategory()
+    {
         ScrollViewerCategory = new StateSaveCategory();
         ScrollViewerCategory.Name = ScrollViewer.ScrollViewerCategoryName;
         this.AddCategory(ScrollViewerCategory);
@@ -182,10 +215,78 @@ public class ScrollViewerVisual : InteractiveGue
         States = new ScrollViewerCategoryStates();
         AddState(States.Enabled, false);
         AddState(States.Focused, true);
+    }
 
-        if (tryCreateFormsObject)
+    private void CreateScrollBarVisibilityCategory()
+    {
+        var category = new StateSaveCategory();
+        category.Name = ScrollViewer.ScrollBarVisibilityCategoryName;
+
+        StateSave state;
+
+        state = new StateSave
         {
-            this.FormsControlAsObject = new ScrollViewer(this);
+            Name = "VerticalScrollVisible"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+
+        state = new StateSave
+        {
+            Name = "HorizontalScrollVisible"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+        state = new StateSave
+        {
+            Name = "BothScrollVisible"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+        state = new StateSave
+        {
+            Name = "NoScrollBar"
+        };
+        state.Apply = RefreshMarginsFromScrollBarVisibility;
+        category.States.Add(state);
+
+
+        this.AddCategory(category);
+
+    }
+
+    private void RefreshMarginsFromScrollBarVisibility()
+    {
+        if (VerticalScrollBarInstance.Parent == ScrollAndClipContainer)
+        {
+            float margin = 0;
+            // Check the parent to verify that the user hasn't removed the ScrollBar
+            if (VerticalScrollBarInstance.Visible)
+            {
+                margin = VerticalScrollBarInstance.GetAbsoluteWidth();
+            }
+            ClipContainerContainer.Width = -margin;
+            if(HorizontalScrollBarInstance != null)
+            {
+                HorizontalScrollBarInstance.Width = -margin;
+            }
+        }
+
+        if (HorizontalScrollBarInstance.Parent == ScrollAndClipContainer)
+        {
+            float margin = 0;
+            if (HorizontalScrollBarInstance.Visible)
+            {
+                margin = HorizontalScrollBarInstance.GetAbsoluteHeight();
+            }
+            ClipContainerContainer.Height = -margin;
+            if(VerticalScrollBarInstance != null)
+            {
+                VerticalScrollBarInstance.Height = -margin;
+            }
         }
     }
 
