@@ -337,7 +337,7 @@ public class ScrollViewer :
 
         if (horizontalScrollBarVisual != null)
         {
-            if(horizontalScrollBarVisual.FormsControlAsObject == null)
+            if (horizontalScrollBarVisual.FormsControlAsObject == null)
             {
                 horizontalScrollBar = new ScrollBar(horizontalScrollBarVisual);
             }
@@ -346,6 +346,7 @@ public class ScrollViewer :
                 horizontalScrollBar = horizontalScrollBarVisual.FormsControlAsObject as ScrollBar;
             }
 
+            horizontalScrollBar.Orientation = Orientation.Horizontal;
             horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
 
             horizontalScrollBar.SmallChange = 10;

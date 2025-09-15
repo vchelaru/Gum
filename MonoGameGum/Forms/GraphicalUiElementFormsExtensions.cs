@@ -51,7 +51,7 @@ public static class GraphicalUiElementFormsExtensions
 
         if (formsControlAsObject == null)
         {
-            throw new ArgumentException("The GraphicalUiElement with the name " + name + " does not have a FormsControlAsObject");
+            throw new ArgumentException("The GraphicalUiElement with the name " + name + " does not have a FormsControlAsObject. In other words, this is just a visual, not a Forms control.");
         }
 #endif
         var frameworkElement = formsControlAsObject as FrameworkElementType;

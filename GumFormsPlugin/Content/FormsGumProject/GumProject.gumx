@@ -4,6 +4,7 @@
   <FontRanges>32-126,160-255</FontRanges>
   <FontSpacingVertical>1</FontSpacingVertical>
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
+  <UseFontCharacterFile>false</UseFontCharacterFile>
   <Version>1</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
