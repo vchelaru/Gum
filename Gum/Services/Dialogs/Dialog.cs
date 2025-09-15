@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using Xceed.Wpf.AvalonDock.Controls;
+using Xceed.Wpf.Toolkit.Core.Utilities;
 
 namespace Gum.Services.Dialogs;
 
@@ -79,9 +80,16 @@ public class Dialog : ContentControl
                     Source = userControl,
                 });
             }
+
+            if (VisualTreeHelperEx.FindAncestorByType<DialogWindow>(this) is { } window)
+            {
+                window.SizeToContent = SizeToContent.Manual;
+                userControl.Width = double.NaN;
+                userControl.Height = double.NaN;
+            }
         }, DispatcherPriority.Loaded);
     }
-    
+
     private class DialogTemplateSelector : DataTemplateSelector
     {
         private static IDialogViewResolver DialogViewResolver { get; } = Locator.GetRequiredService<IDialogViewResolver>();

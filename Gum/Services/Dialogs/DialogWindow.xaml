@@ -6,7 +6,7 @@
     xmlns:local="clr-namespace:Gum.Services.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl}"
-    ResizeMode="NoResize"
+    ResizeMode="CanResize"
     SizeToContent="WidthAndHeight"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
