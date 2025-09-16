@@ -301,8 +301,8 @@ public class ScrollBar : RangeBase
         }
         else
         {
-            thumb.Visual.XUnits = Converters.GeneralUnitType.PixelsFromSmall;
-            thumb.Visual.WidthUnits = DataTypes.DimensionUnitType.Absolute;
+            thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
             thumb.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
 
