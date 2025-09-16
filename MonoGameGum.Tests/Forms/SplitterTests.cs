@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
+
 public class SplitterTests : BaseTestClass
 {
     StackPanel _parentPanel;
@@ -171,7 +172,67 @@ public class SplitterTests : BaseTestClass
 
         _firstPanel.Height.ShouldBe(0);
         _secondPanel.Height.ShouldBe(20);
+    }
 
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldNotResize_PastMinHeight()
+    {
+        SetupVerticalStack();
+
+        _firstPanel.Height = 10;
+        _firstPanel.Visual.MinHeight = 5;
+        _secondPanel.Height = 10;
+        _secondPanel.Visual.MinHeight = 5;
+
+        _splitter.ApplyResizeChangeInPixels(20);
+
+        _firstPanel.Height.ShouldBe(15);
+        _secondPanel.Height.ShouldBe(5);
+
+        _splitter.ApplyResizeChangeInPixels(-30);
+
+
+        _firstPanel.Height.ShouldBe(5);
+        _secondPanel.Height.ShouldBe(15);
+    }
+
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldNotResize_PastWidth0()
+    {
+        SetupHorizontalStack();
+
+        _firstPanel.Width = 10;
+        _secondPanel.Width = 10;
+
+        _splitter.ApplyResizeChangeInPixels(20);
+
+        _firstPanel.Width.ShouldBe(20);
+        _secondPanel.Width.ShouldBe(0);
+
+        _splitter.ApplyResizeChangeInPixels(-30);
+
+        _firstPanel.Width.ShouldBe(0);
+        _secondPanel.Width.ShouldBe(20);
+    }
+
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldNotResize_PastHeight0_IfPercentageOfParent()
+    {
+        SetupVerticalStack();
+
+        _firstPanel.Height = 40;
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
+
+        _secondPanel.Height = 40;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
+
+        _parentPanel.Height = 100;
+        _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        _splitter.ApplyResizeChangeInPixels(60);
+
+        _firstPanel.Height.ShouldBe(80);
+        _secondPanel.Height.ShouldBe(0);
     }
 
     [Fact]
@@ -180,7 +241,7 @@ public class SplitterTests : BaseTestClass
         GumProjectSave gumProject = new GumProjectSave();
         var splitterComponent = new ComponentSave();
         // give it a default state:
-        splitterComponent.States.Add(new Gum.DataTypes.Variables.StateSave() { Name="Default" });
+        splitterComponent.States.Add(new Gum.DataTypes.Variables.StateSave() { Name = "Default" });
         gumProject.Components.Add(splitterComponent);
         splitterComponent.Name = "TestSplitterComponent";
         splitterComponent.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
@@ -210,5 +271,24 @@ public class SplitterTests : BaseTestClass
         _parentPanel.AddChild(_secondPanel);
     }
 
+    void SetupHorizontalStack()
+    {
+        _parentPanel = new();
+        _parentPanel.Orientation = Orientation.Horizontal;
 
+        _firstPanel = new Panel();
+        _parentPanel.AddChild(_firstPanel);
+        _firstPanel.Height = 40;
+        _firstPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
+
+        _splitter = new Splitter();
+        _splitter.Dock(Gum.Wireframe.Dock.FillVertically);
+        _parentPanel.AddChild(_splitter);
+
+        _secondPanel = new Panel();
+        _parentPanel.AddChild(_secondPanel);
+        _secondPanel.Height = 40;
+        _secondPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
+
+    }
 }
