@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.PropertyGridHelpers;
-public class SetVariableLogicTests
+public class SetVariableLogicTests : BaseTestClass
 {
     private readonly AutoMocker mocker;
 

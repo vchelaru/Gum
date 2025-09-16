@@ -1,5 +1,7 @@
-﻿using Gum.Forms.Controls;
+﻿using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Wireframe;
+using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -107,4 +109,68 @@ public class InteractiveGueTests : BaseTestClass
     }
 
     // todo - repeat the tests above for ModalRoot and PopupRoot
+    [Fact]
+    public void AddNextClickAction_ShouldNotBeRaised_OnSameFrameAdded()
+    {
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.PrimaryClick).Returns(true);
+        FormsUtilities.SetCursor(cursor.Object);
+
+        var button = new Button();
+        button.AddToRoot();
+        bool didClickRun = false;
+        button.Click += (_, _) =>
+        {
+            didClickRun = true;
+            InteractiveGue.AddNextClickAction(() =>
+            {
+                throw new Exception();
+            });
+        };
+
+        cursor.Setup(x => x.WindowPushed).Returns(button.Visual);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        didClickRun.ShouldBe(true);
+    }
+
+    [Fact]
+    public void AddNextPushAction_ShouldRegisterWindowOver_ForFrame()
+    {
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.PrimaryClick).Returns(true);
+        FormsUtilities.SetCursor(cursor.Object);
+        cursor.SetupProperty(x => x.WindowOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+        cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        Button button = new ();
+        button.AddToRoot();
+
+        bool didRunPush = false;
+
+        button.Push += (_, _) =>
+        {
+            didRunPush = true;
+            InteractiveGue.AddNextPushAction(HandleNextPush);
+        };
+
+        void HandleNextPush()
+        {
+            if(cursor.Object.WindowOver != button.Visual)
+            {
+                throw new Exception("WindowOver was not set correctly");
+            }
+        }
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        didRunPush.ShouldBe(true);
+
+        cursor.Object.WindowOver = null;
+        cursor.Object.WindowPushed = null;
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+    }
 }

@@ -1,12 +1,13 @@
-﻿<Window x:Class="Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views.LoadRecentWindow"
+<UserControl x:Class="Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views.LoadRecentWindow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views"
-             
+             xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+             xmlns:behaviors="clr-namespace:Gum.Behaviors"
              mc:Ignorable="d" 
-             Title="Recent Gum Projects" Height="450" Width="660">
+             dialogs:Dialog.DialogTitle="Recent Gum Projects">
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -26,7 +27,7 @@
         <ListBox x:Name="ListBox" Grid.Row="1" Margin="0,5,0,0" 
                  ItemsSource="{Binding FilteredItems}" 
                  SelectedItem="{Binding SelectedItem}"
-                 MouseDoubleClick="ListBox_MouseDoubleClick">
+                 behaviors:ListBoxDoubleClick.Command="{Binding AffirmativeCommand}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <local:RecentFileItem></local:RecentFileItem>
@@ -34,9 +35,5 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
-            <Button Click="LoadButton_Click">Load</Button>
-            <Button Click="CancelButton_Click" Margin="5,0,0,0">Cancel</Button>
-        </StackPanel>
     </Grid>
-</Window>
+</UserControl>

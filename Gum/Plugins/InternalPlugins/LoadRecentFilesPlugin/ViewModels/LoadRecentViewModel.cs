@@ -1,14 +1,15 @@
-﻿using Gum.Mvvm;
+using Gum.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
 {
-    internal class LoadRecentViewModel : ViewModel //, ISearchBarViewModel
+    internal class LoadRecentViewModel : DialogViewModel //, ISearchBarViewModel
     {
         public List<RecentItemViewModel> AllItems
         {
@@ -37,6 +38,9 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
             set => Set(value);
         }
 
+        [DependsOn(nameof(SelectedItem))]
+        public override bool CanExecuteAffirmative() => SelectedItem is not null;
+
         [DependsOn(nameof(SearchBoxText))]
         public Visibility SearchButtonVisibility => (!string.IsNullOrEmpty(SearchBoxText)).ToVisibility();
 
@@ -52,6 +56,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
 
         public LoadRecentViewModel()
         {
+            AffirmativeText = "Load";
             this.PropertyChanged += HandlePropertyChanged;
         }
 
@@ -59,6 +64,9 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
         {
             switch (e.PropertyName)
             {
+                case nameof(CanExecuteAffirmative):
+                    AffirmativeCommand.NotifyCanExecuteChanged();
+                    break;
                 case nameof(SearchBoxText):
                     RefreshFilteredItems();
                     break;

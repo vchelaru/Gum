@@ -1,0 +1,34 @@
+﻿<UserControl
+    x:Class="Gum.Views.DisplayReferencesDialogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Gum.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Dialogs"
+    xmlns:dialogs2="clr-namespace:Gum.Services.Dialogs"
+    xmlns:local="clr-namespace:Gum.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type={x:Type dialogs:DisplayReferencesDialog},
+                                     IsDesignTimeCreatable=False}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    dialogs2:Dialog.DialogTitle="{Binding Title}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{Binding Message}" />
+        <ListBox
+            Grid.Row="1"
+            Margin="0,8,0,0"
+            ItemsSource="{Binding References}"
+            SelectedItem="{Binding SelectedReference}"
+            Visibility="{Binding References.Count, Converter={StaticResource CountToVisibilityConverter}, ConverterParameter=0}" />
+    </Grid>
+</UserControl>

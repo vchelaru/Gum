@@ -11,7 +11,6 @@ using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
-using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -498,96 +497,6 @@ public class EditCommands
                     ShowCreateComponentFromInstancesDialog();
                 }
             }
-        }
-    }
-
-    public void DisplayReferencesTo(ElementSave element)
-    {
-
-        var references = ObjectFinder.Self.GetElementReferencesToThis(element);
-
-        if (references.Count > 0)
-        {
-            //var stringBuilder = new StringBuilder();
-            //stringBuilder.AppendLine($"The following objects reference {element}");
-            //foreach(var reference in references)
-            //{
-            //    stringBuilder.AppendLine(reference.ToString());
-            //}
-
-            //_dialogService.ShowMessage(stringBuilder.ToString());
-
-            ListBoxMessageBox lbmb = new ListBoxMessageBox();
-            lbmb.RequiresSelection = true;
-            lbmb.Message = $"The following objects reference {element}";
-            lbmb.Title = "References";
-            lbmb.ItemSelected += (not, used) =>
-            {
-                var reference = lbmb.SelectedItem as TypedElementReference;
-
-                var selectedItem = reference.ReferencingObject;
-
-                if (selectedItem is InstanceSave instance)
-                {
-                    _selectedState.SelectedInstance = instance;
-                }
-                else if (selectedItem is ElementSave selectedElement)
-                {
-                    _selectedState.SelectedElement = selectedElement;
-                }
-                else if (selectedItem is VariableSave variable)
-                {
-                    ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
-                        .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
-                    if (foundElement == null)
-                    {
-                        foundElement = ObjectFinder.Self.GumProjectSave.Components
-                            .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
-                    }
-                    if (foundElement != null)
-                    {
-                        // what's the instance?
-                        var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
-
-                        if (instanceWithVariable != null)
-                        {
-                            _selectedState.SelectedInstance = instanceWithVariable;
-                        }
-                    }
-                }
-                else if (selectedItem is VariableListSave variableListSave)
-                {
-                    var foundElement = reference.OwnerOfReferencingObject;
-
-                    if (foundElement != null)
-                    {
-                        if (string.IsNullOrEmpty(variableListSave.SourceObject))
-                        {
-                            _selectedState.SelectedElement = foundElement;
-                        }
-                        else
-                        {
-                            var instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
-
-                            if (instanceWithVariable != null)
-                            {
-                                _selectedState.SelectedInstance = instanceWithVariable;
-                            }
-                        }
-                    }
-                }
-            };
-            foreach (var reference in references)
-            {
-                lbmb.Items.Add(reference);
-            }
-            lbmb.HideCancelNoDialog();
-            lbmb.Show();
-
-        }
-        else
-        {
-            _dialogService.ShowMessage($"{element} is not referenced by any other Screen/Component");
         }
     }
 
