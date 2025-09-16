@@ -151,13 +151,13 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue
         }
     }
 
-    public string CurrentChainName
+    public string? CurrentChainName
     {
         get => ContainedSprite.CurrentChainName;
         set => ContainedSprite.CurrentChainName = value;
     }
 
-    public AnimationChainList AnimationChains
+    public AnimationChainList? AnimationChains
     {
         get => ContainedSprite.AnimationChains;
         set

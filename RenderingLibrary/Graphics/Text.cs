@@ -1153,12 +1153,14 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
                 if (fontToUse.Texture == null)
                 {
-                    spriteRenderer.Draw(Sprite.InvalidTexture,
-                        new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
-                        sourceRectangle,
-                        Color.White,
-                        this);
-
+                    if (Sprite.InvalidTexture != null)
+                    {
+                        spriteRenderer.Draw(Sprite.InvalidTexture,
+                            new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
+                            sourceRectangle,
+                            Color.White,
+                            this);
+                    }
                 }
                 else
                 {

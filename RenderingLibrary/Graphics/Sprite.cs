@@ -20,8 +20,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     #region Fields
 
 
-    static Texture2D mInvalidTexture;
-    public static Texture2D InvalidTexture
+    static Texture2D? mInvalidTexture;
+    public static Texture2D? InvalidTexture
     {
         get { return mInvalidTexture; }
         set {  mInvalidTexture = value; }
@@ -44,8 +44,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         set => mTimeIntoAnimation = value;
     }
 
-    AnimationChainList mAnimationChains;
-    public AnimationChainList AnimationChains
+    AnimationChainList? mAnimationChains;
+    public AnimationChainList? AnimationChains
     {
         get => mAnimationChains;
         set => mAnimationChains = value;
@@ -64,8 +64,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     }
     bool mJustCycled;
 
-    string desiredCurrentChainName;
-    public string CurrentChainName
+    string? desiredCurrentChainName;
+    public string? CurrentChainName
     {
         get => CurrentChain?.Name;
         set
@@ -81,9 +81,6 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     }
 
     Vector2 Position;
-    IRenderableIpso mParent;
-
-    ObservableCollection<IRenderableIpso> mChildren;
 
     public Color Color = Color.White;
 
@@ -210,6 +207,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         }
     }
 
+    IRenderableIpso mParent;
     public IRenderableIpso? Parent
     {
         get { return mParent; }
@@ -246,6 +244,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
 
     // October 30, 2024
     // Vic asks - is this even used?
+    // @VIC Read your comment above sir
     public IAnimation Animation
     {
         get;
@@ -260,6 +259,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         set;
     }
 
+    ObservableCollection<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -668,7 +668,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
             renderer = managers.Renderer;
         }
 
-        Texture2D textureToUse = texture;
+        Texture2D? textureToUse = texture;
 
         if (textureToUse == null)
         {
@@ -771,16 +771,19 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
             }
 #endif
 
-            spriteRenderer.Draw(textureToUse,
-                new Vector2(leftAbsolute, topAbsolute),
-                sourceRectangle,
-                modifiedColor,
-                -rotationInRadians,
-                origin,
-                scale,
-                effects,
-                0,
-                objectCausingRendering, renderer);
+            if (textureToUse != null)
+            {
+                spriteRenderer.Draw(textureToUse,
+                    new Vector2(leftAbsolute, topAbsolute),
+                    sourceRectangle,
+                    modifiedColor,
+                    -rotationInRadians,
+                    origin,
+                    scale,
+                    effects,
+                    0,
+                    objectCausingRendering, renderer);
+            }
         }
         else
         {

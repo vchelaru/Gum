@@ -306,7 +306,7 @@ public class CustomSetPropertyOnRenderable
                 else
                 {
 
-                    Microsoft.Xna.Framework.Graphics.Texture2D texture =
+                    Microsoft.Xna.Framework.Graphics.Texture2D? texture =
                         Sprite.InvalidTexture;
 
                     try
@@ -400,10 +400,6 @@ public class CustomSetPropertyOnRenderable
             graphicalUiElement.UpdateTextureValuesFrom(sprite);
             graphicalUiElement.UpdateLayout();
             handled = true;
-        }
-        if (!handled)
-        {
-            int m = 3;
         }
 
         return handled;
