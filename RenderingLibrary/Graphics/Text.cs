@@ -136,7 +136,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     BitmapFont mBitmapFont;
     Texture2D mTextureToRender;
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
     ObservableCollection<IRenderableIpso> mChildren;
 
@@ -473,7 +473,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         set;
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
