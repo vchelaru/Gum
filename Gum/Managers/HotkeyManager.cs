@@ -1,18 +1,19 @@
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Gum.Dialogs;
-using Gum.PropertyGridHelpers;
-using Gum.Services.Dialogs;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 
 namespace Gum.Managers;
@@ -233,8 +234,7 @@ public class HotkeyManager
         
         if (direction != 0)
         {
-            double step = _uiSettingsService.Scale < 1 ? 0.1 : 0.25;
-            _uiSettingsService.Scale += direction > 0 ? step : -step;
+            _uiSettingsService.BaseFontSize += direction;
             e.Handled = true;
         }
     }
