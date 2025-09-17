@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.33516.290
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11012.119 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XnaAndWinforms", "XnaAndWinforms\XnaAndWinforms.csproj", "{C39A973C-66D6-4A6C-82B5-AE0042F210F8}"
 EndProject
@@ -52,6 +52,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EditorTabPlugin_XNA", "Tool\EditorTabPlugin_XNA\EditorTabPlugin_XNA.csproj", "{F4A5BB2F-1650-4099-9FFE-1C4A416D4438}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumToolUnitTests", "Tool\Tests\GumToolUnitTests\GumToolUnitTests.csproj", "{951A5743-C515-41A8-B0D9-A5B3F37B927D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumIcons", "GumIcons\GumIcons.csproj", "{13DEDEBD-4E54-42A7-A20F-425D38C8AC31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +133,10 @@ Global
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13DEDEBD-4E54-42A7-A20F-425D38C8AC31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13DEDEBD-4E54-42A7-A20F-425D38C8AC31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13DEDEBD-4E54-42A7-A20F-425D38C8AC31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13DEDEBD-4E54-42A7-A20F-425D38C8AC31}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,6 +163,7 @@ Global
 		{3E451941-5A67-42CD-931E-5DB8C0666178} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{F4A5BB2F-1650-4099-9FFE-1C4A416D4438} = {3E451941-5A67-42CD-931E-5DB8C0666178}
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D} = {E9BDDA50-D0CD-4172-959F-66E2C1DFEB50}
+		{13DEDEBD-4E54-42A7-A20F-425D38C8AC31} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}

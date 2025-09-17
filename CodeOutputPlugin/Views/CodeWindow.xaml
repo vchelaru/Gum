@@ -1,96 +1,163 @@
-﻿<UserControl
+<UserControl
     x:Class="CodeOutputPlugin.Views.CodeWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
+    xmlns:converters="clr-namespace:Gum.Converters;assembly=Gum"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CodeOutputPlugin.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:themes="clr-namespace:Gum.Themes;assembly=Gum"
+    xmlns:viewModels="clr-namespace:CodeOutputPlugin.ViewModels"
+    xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+    d:DataContext="{d:DesignInstance Type={x:Type viewModels:CodeWindowViewModel},
+                                     IsDesignTimeCreatable=False}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <themes:DesignOnlyDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
-        <Grid Visibility="{Binding GenerateCodeUiVisibility}">
+        <Grid IsSharedSizeScope="True" Visibility="{Binding GenerateCodeUiVisibility}">
 
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Grid Grid.Row="1">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
-                    <ColumnDefinition Width="5" />
+                    <ColumnDefinition Width="0" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="2">
 
-                        <GroupBox Header="Preview">
+                <Border BorderBrush="{DynamicResource Frb.Brushes.Contrast01}" BorderThickness="0,0,1,1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" SharedSizeGroup="HeaderBar" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock
+                            Margin="4,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Text="Preview" />
+                        <Border
+                            Margin="0,0,2,0"
+                            HorizontalAlignment="Right"
+                            BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+                            BorderThickness="0"
+                            CornerRadius="2">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedObjectSelected}">Selected Object</RadioButton>
-                                <RadioButton
-                                    Margin="16,0,0,0"
-                                    VerticalContentAlignment="Center"
-                                    IsChecked="{Binding IsSelectedStateSelected}">
-                                    Selected State
-                                </RadioButton>
+                                <ToggleButton
+                                    Content="{wpf:FluentIcon Icon=Cube}"
+                                    IsChecked="{Binding IsSelectedObjectSelected}"
+                                    ToolTip="Selected Object" />
+                                <ToggleButton
+                                    Content="{wpf:FluentIcon Icon=Database}"
+                                    IsChecked="{Binding IsSelectedStateSelected}"
+                                    ToolTip="Selected State" />
                             </StackPanel>
-                        </GroupBox>
 
+                        </Border>
+                        <TextBox
+                            x:Name="TextBoxInstance"
+                            Grid.Row="1"
+                            VerticalContentAlignment="Top"
+                            FontFamily="Consolas"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Style="{StaticResource Frb.Styles.Textbox.Readonly}"
+                            Text="{Binding Code}" />
                     </Grid>
-                    <TextBox
-                        x:Name="TextBoxInstance"
-                        Grid.Row="3"
-                        FontFamily="Consolas"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto"
-                        Text="{Binding Code}" />
-                </Grid>
-                <GridSplitter
-                    Grid.Column="1"
-                    Width="5"
-                    HorizontalAlignment="Stretch" />
-                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <StackPanel x:Name="AutoAndManualButtonStack">
-                            <Label>Choose a code generation option below:</Label>
+                </Border>
+
+                <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
+                <Border
+                    Grid.Column="2"
+                    BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+                    BorderThickness="0,0,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" SharedSizeGroup="HeaderBar" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Button
+                            x:Name="GenerateButton"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch"
+                            Click="HandleGenerateCodeClicked"
+                            Content="Generate"
+                            Visibility="{Binding CanGenerateCode, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                        <TextBlock
+                            Margin="4,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Text="Generate">
+                            <TextBlock.Style>
+                                <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Visibility, ElementName=GenerateButton}" Value="Collapsed">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            Visibility="{Binding NeedsSetup, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Button
-                                x:Name="AutoSetupCodeGenerationButton"
-                                MinHeight="36"
-                                Click="HandleAutoSetupClicked">
-                                Auto Setup Code Generation
-                            </Button>
-                            <Button MinHeight="36" Click="HandleManualSetupClicked">Manually Setup Code Generation</Button>
-
+                                Margin="0,0,8,0"
+                                Click="HandleManualSetupClicked"
+                                Content="Manual" />
+                            <Button Click="HandleAutoSetupClicked" Content="Auto" />
                         </StackPanel>
-                        <StackPanel x:Name="FullGenerationUiStack">
 
-                            <GroupBox>
-                                <StackPanel Margin="5">
-
-                                    <Button x:Name="GenerateCodeButton" Click="HandleGenerateCodeClicked">Generate Code</Button>
-                                    <StackPanel Margin="0,5,0,0" Orientation="Horizontal">
-                                        <RadioButton x:Name="RadioButtonSelectedObject" IsChecked="{Binding IsSelectedOnlyGenerating}">This element only</RadioButton>
-                                        <RadioButton
-                                            x:Name="RadioButtonSelectedState"
-                                            Margin="16,0,0,0"
-                                            IsChecked="{Binding IsAllInProjectGenerating}">
-                                            All elements in project
-                                        </RadioButton>
-                                    </StackPanel>
-                                </StackPanel>
-                            </GroupBox>
-                            <WpfDataUi:DataUiGrid Name="DataGrid" />
-                            <!--  Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)  -->
-                            <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal"
+                            Visibility="{Binding NeedsSetup, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                            <ToggleButton IsChecked="{Binding IsSelectedOnlyGenerating}" ToolTip="This element only">
+                                <wpf:FluentIcon Icon="Cube" />
+                            </ToggleButton>
+                            <ToggleButton
+                                VerticalAlignment="Stretch"
+                                Content="{wpf:FluentIcon Icon=CubeMultiple,
+                                                         IconVariant=Filled}"
+                                IsChecked="{Binding IsAllInProjectGenerating}"
+                                ToolTip="All elements in project" />
                         </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
+
+                        <ScrollViewer
+                            Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            VerticalScrollBarVisibility="Auto">
+                            <StackPanel Visibility="{Binding NeedsSetup, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                <WpfDataUi:DataUiGrid Name="DataGrid" />
+
+
+                                <!--  Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)  -->
+                                <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                </Border>
+
             </Grid>
         </Grid>
         <StackPanel Visibility="{Binding ShowNoGenerationAvailableUiVisibility}">

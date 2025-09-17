@@ -4,8 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Converters="clr-namespace:Gum.Plugins.InternalPlugins.VariableGrid.Converters"
     xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
+    xmlns:controls="clr-namespace:WpfDataUi.Controls;assembly=WpfDataUi"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:variableGrid="clr-namespace:Gum.Plugins.VariableGrid"
+    xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+    d:DataContext="{d:DesignInstance d:Type={x:Type variableGrid:MainControlViewModel},
+                                     IsDesignTimeCreatable=False}"
     d:DesignHeight="200"
     d:DesignWidth="300"
     mc:Ignorable="d">
@@ -20,21 +25,20 @@
         </Grid.RowDefinitions>
 
         <Label
-            Background="{Binding StateBackground}"
+            Background="{DynamicResource Frb.Brushes.Primary.Transparent}"
             Content="{Binding StateInformation}"
             Visibility="{Binding HasStateInformation}" />
         <Label
             Grid.Row="1"
             Content="{Binding ErrorInformation}"
+            Foreground="{DynamicResource Frb.Brushes.Error}"
             Visibility="{Binding HasErrors}" />
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <WpfDataUi:DataUiGrid
-                Name="DataGrid"
-                Visibility="{Binding ShowVariableGrid}" />
+            <WpfDataUi:DataUiGrid Name="DataGrid" Visibility="{Binding ShowVariableGrid}" />
             <Grid Visibility="{Binding ShowBehaviorUi}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -59,10 +63,13 @@
             </Grid>
             <Button
                 Grid.Row="1"
+                Margin="0,2,0,0"
+                BorderThickness="1"
                 Click="HandleAddVariableClicked"
-                Visibility="{Binding AddVariableButtonVisibility}">
-                Add Variable
-            </Button>
+                Content="{wpf:FluentIcon Icon=Add}"
+                Style="{StaticResource IconButton}"
+                ToolTip="Add Variable"
+                Visibility="{Binding AddVariableButtonVisibility}" />
         </Grid>
     </Grid>
 </UserControl>

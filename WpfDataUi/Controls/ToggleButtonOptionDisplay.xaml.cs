@@ -16,6 +16,9 @@ namespace WpfDataUi.Controls
     /// </summary>
     public partial class ToggleButtonOptionDisplay : UserControl, IDataUi
     {
+        public const string ContentTemplateKey = "ToggleButtonOptionDisplayOptionContentTemplate";
+        public const string GumIconTemplateKey = "ToggleButtonOptionDisplayOptionContentTemplateGumIcon";
+
         #region Internal Classes
 
         public class Option
@@ -25,6 +28,8 @@ namespace WpfDataUi.Controls
 
             public BitmapImage Image { get; set; }
             // todo: image
+            public string? IconName { get; set; }
+            public string? GumIconName { get; set; }
         }
 
         #endregion
@@ -129,16 +134,36 @@ namespace WpfDataUi.Controls
             ButtonWrapPanel.Children.Clear();
             toggleButtons.Clear();
 
+            DataTemplate? dataTemplate =
+                (TryFindResource(ContentTemplateKey) ??
+                 Application.Current.TryFindResource(ContentTemplateKey)) as DataTemplate;
+
+            DataTemplate? gumIconTemplate = (TryFindResource(GumIconTemplateKey) ??
+                 Application.Current.TryFindResource(GumIconTemplateKey)) as DataTemplate;
+
             foreach (var option in options)
             {
-                var toggleButton = new ToggleButton();
+                var toggleButton = new ToggleButton()
+                {
+                    DataContext = option
+                };
 
                 if (mUnmodifiedBrush == null)
                 {
                     mUnmodifiedBrush = toggleButton.Background;
                 }
 
-                if (option.Image != null)
+                if (gumIconTemplate is not null && option.GumIconName is not null)
+                {
+                    toggleButton.ContentTemplate = gumIconTemplate;
+                    toggleButton.Content = option;
+                }
+                else if (dataTemplate is not null && option.IconName is not null)
+                {
+                    toggleButton.ContentTemplate = dataTemplate;
+                    toggleButton.Content = option;
+                }
+                else if (option.Image != null)
                 {
                     //var stackPanel = new StackPanel();
 
@@ -150,13 +175,14 @@ namespace WpfDataUi.Controls
                     //stackPanel.Children.Add(label);
 
                     //toggleButton.Content = image;
-                    var image = new Image();
+                    var image = new Image()
+                    {
+                        
+                    };
 
                     image.Source = option.Image;
                     toggleButton.Content = image;
 
-                    toggleButton.Width = 35;
-                    toggleButton.Height = 35;
                 }
                 else
                 {
@@ -237,6 +263,10 @@ namespace WpfDataUi.Controls
         {
             foreach (var button in toggleButtons)
             {
+                if (button.Template is not null)
+                {
+                    break;
+                }
                 button.Background = DesiredBackgroundBrush;
                 const double smallSize = 30;
                 // 35 vs 30 is hard to tell when default, so let's

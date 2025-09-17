@@ -350,9 +350,9 @@ public class WireframeControl : GraphicsDeviceControl
             }
             else
             {
-                backgroundColor.R = 150;
-                backgroundColor.G = 150;
-                backgroundColor.B = 150;
+                backgroundColor.R = 75;
+                backgroundColor.G = 75;
+                backgroundColor.B = 75;
             }
             GraphicsDevice.Clear(backgroundColor);
 

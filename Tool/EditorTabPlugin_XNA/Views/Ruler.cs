@@ -328,7 +328,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             mOffsetSprite.Name = "Ruler offset sprite";
 
             mRectangle = new SolidRectangle();
-            mRectangle.Color = Color.Yellow;
+            mRectangle.Color = Color.Empty;
             ShapeManager.Add(mRectangle, _layerService.RulerLayer);
 
             ReactToRulerSides();
@@ -357,7 +357,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 
         private void CreateRulerLines()
         {
-            CreateRulerLine(0, 10, Color.Black);
+            CreateRulerLine(0, 10, Color.LightGray);
 
             for (int i = 1; i < 100; i++)
             {
@@ -373,7 +373,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
                     length = 5;
                 }
 
-                CreateRulerLine(y, length, Color.DarkRed);
+                CreateRulerLine(y, length, Color.LightGray);
             }
             for (int i = 1; i < 100; i++)
             {
@@ -389,7 +389,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
                     length = 5;
                 }
 
-                CreateRulerLine(y, length, Color.DarkGreen);
+                CreateRulerLine(y, length, Color.LightGray);
             }
         }
 
@@ -756,15 +756,15 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             {
                 if (i < countOnEachSide)
                 {
-                    mRulerLines[i].Color = Color.DarkGreen;
+                    mRulerLines[i].Color = Color.LightGray;
                 }
                 else if (i == countOnEachSide)
                 {
-                    mRulerLines[i].Color = Color.Black;
+                    mRulerLines[i].Color = Color.LightGray;
                 }
                 else
                 {
-                    mRulerLines[i].Color = Color.DarkRed;
+                    mRulerLines[i].Color = Color.LightGray;
                 }
             }
 

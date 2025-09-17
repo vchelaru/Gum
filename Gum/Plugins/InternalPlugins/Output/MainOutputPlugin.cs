@@ -1,6 +1,9 @@
 ﻿using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Controls;
 
 namespace Gum.Plugins.Output
 {
@@ -15,19 +18,25 @@ namespace Gum.Plugins.Output
 
         private void InitializeOutputTextBox()
         {
-            var outputTextBox = new System.Windows.Forms.RichTextBox();
+            var outputTextBox = new TextBox();
 
             // 
             // OutputTextBox
             // 
-            outputTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            outputTextBox.Location = new System.Drawing.Point(3, 3);
+            outputTextBox.HorizontalAlignment = HorizontalAlignment.Stretch;
+            outputTextBox.VerticalAlignment = VerticalAlignment.Stretch;
+            outputTextBox.VerticalContentAlignment = VerticalAlignment.Top;
+            outputTextBox.IsReadOnly = true;
             outputTextBox.Name = "OutputTextBox";
-            outputTextBox.Size = new System.Drawing.Size(526, 78);
             outputTextBox.TabIndex = 0;
+            outputTextBox.Margin = new Thickness(4);
             outputTextBox.Text = "";
+            outputTextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            outputTextBox.TextWrapping = TextWrapping.Wrap;
+            outputTextBox.Style = Application.Current.TryFindResource("Frb.Styles.Textbox.Readonly") as Style;
 
-            _tabManager.AddControl(outputTextBox, "Output", TabLocation.RightBottom);
+            PluginTab tab = _tabManager.AddControl(outputTextBox, "Output", TabLocation.RightBottom);
+            tab.GotFocus += () => outputTextBox.ScrollToEnd();
             OutputManager.Self.Initialize(outputTextBox);
         }
     }

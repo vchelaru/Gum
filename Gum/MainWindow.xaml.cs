@@ -1,21 +1,12 @@
 using System;
-using System.ComponentModel;
-using System.Drawing;
 using System.Windows;
 using Gum.Managers;
-using Gum.ToolStates;
-using Gum.Plugins;
-using Gum.Reflection;
-using Gum.Wireframe;
-using Gum.PropertyGridHelpers;
-using System.Windows.Forms.Integration;
-using System.Windows.Input;
-using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
-using Gum.Controls;
+using Gum.Dialogs;
+using Gum.Services;
 using Gum.ViewModels;
-using SystemColors = System.Windows.SystemColors;
+using RoutedEventArgs = System.Windows.RoutedEventArgs;
 
 namespace Gum;
 #region TabLocation Enum
@@ -58,13 +49,29 @@ public partial class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         this.PreviewKeyDown += (_,e) => hotkeyManager.PreviewKeyDownAppWide(e);
         this.Loaded += (_, _) => mainWindowViewModel.LoadWindowSettings();
         this.Closed += (_, _) => mainWindowViewModel.SaveWindowSettings();
-        this.Background = SystemColors.ControlBrush;
+        //this.Background = SystemColors.ControlBrush;
     }
 
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message)
     {
         Close();
     }
+
+    private void OnMinimizeButtonClick(object sender, RoutedEventArgs e)
+    {
+        this.WindowState = WindowState.Minimized;
+    }
+
+    private void OnMaximizeButtonClick(object sender, RoutedEventArgs e)
+    {
+        this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+
+    private void OnCloseButtonClick(object sender, RoutedEventArgs e)
+    {
+        Locator.GetRequiredService<IMessenger>().Send(new CloseMainWindowMessage());
+    }
 }
 
 public record CloseMainWindowMessage;
+public record ThemeChangedMessage(ThemeMode Mode);

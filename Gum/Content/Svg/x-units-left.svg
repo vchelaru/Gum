@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <path d="M54,45H0v54h54v-54ZM42.09,89.43l-30.19-17.43,30.19-17.43v34.86Z"/>
+      <rect x="51" y="139" width="8" height="5"/>
+      <rect x="68" y="139" width="8" height="5"/>
+      <rect x="34" y="139" width="8" height="5"/>
+      <rect x="85" y="139" width="8" height="5"/>
+      <rect x="119" y="139" width="8" height="5"/>
+      <rect x="102" y="139" width="8" height="5"/>
+      <rect x="17" y="139" width="8" height="5"/>
+      <rect x="51" width="8" height="5"/>
+      <rect x="68" width="8" height="5"/>
+      <rect x="34" width="8" height="5"/>
+      <rect x="85" width="8" height="5"/>
+      <rect x="119" width="8" height="5"/>
+      <rect x="102" width="8" height="5"/>
+      <rect x="17" width="8" height="5"/>
+      <rect y="34" width="5" height="8"/>
+      <rect y="119" width="5" height="8"/>
+      <polygon points="5 136 0 136 0 144 8 144 8 139 5 139 5 136"/>
+      <rect y="102" width="5" height="8"/>
+      <rect y="17" width="5" height="8"/>
+      <polygon points="5 5 8 5 8 0 0 0 0 8 5 8 5 5"/>
+      <rect x="139" y="51" width="5" height="8"/>
+      <rect x="139" y="68" width="5" height="8"/>
+      <rect x="139" y="34" width="5" height="8"/>
+      <rect x="139" y="85" width="5" height="8"/>
+      <rect x="139" y="119" width="5" height="8"/>
+      <polygon points="139 139 136 139 136 144 144 144 144 136 139 136 139 139"/>
+      <rect x="139" y="102" width="5" height="8"/>
+      <rect x="139" y="17" width="5" height="8"/>
+      <polygon points="136 0 136 5 139 5 139 8 144 8 144 0 136 0"/>
+    </g>
+  </g>
+</svg>

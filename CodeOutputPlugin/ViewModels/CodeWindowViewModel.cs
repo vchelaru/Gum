@@ -39,6 +39,18 @@ public class CodeWindowViewModel : ViewModel
 {
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
+
+    public bool CanGenerateCode
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
+    public bool NeedsSetup
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
     
     public WhatToView WhatToView
     {

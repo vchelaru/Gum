@@ -1,29 +1,43 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CommonFormsAndControls;
-using System.Windows.Forms;
+using CommunityToolkit.Mvvm.Messaging;
+using FlatRedBall.Glue.Themes;
+using Gum.Commands;
 using Gum.DataTypes;
-using Gum.ToolStates;
-using Gum.DataTypes.Variables;
-using System.IO;
-using ToolsUtilities;
-using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
-using Gum.Plugins;
-using System.ComponentModel;
-using Grid = System.Windows.Controls.Grid;
+using Gum.DataTypes.Variables;
+using Gum.Dialogs;
+using Gum.Logic;
 using Gum.Mvvm;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
-using Gum.Logic;
-using System.Drawing;
-using Gum.Commands;
-using Gum.Dialogs;
-using WpfInput = System.Windows.Input;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using Gum.Wireframe;
+using MaterialDesignThemes.Wpf;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Media;
+using ToolsUtilities;
+using Application = System.Windows.Application;
+using Binding = System.Windows.Data.Binding;
+using Color = System.Drawing.Color;
 using Cursors = System.Windows.Forms.Cursors;
+using DragDropEffects = System.Windows.Forms.DragDropEffects;
+using DragEventArgs = System.Windows.Forms.DragEventArgs;
+using Grid = System.Windows.Controls.Grid;
+using MessageBox = System.Windows.Forms.MessageBox;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
+using SystemColors = System.Drawing.SystemColors;
+using WpfInput = System.Windows.Input;
 
 namespace Gum.Managers;
 
@@ -107,7 +121,7 @@ class TreeNodeWrapper : ITreeNode
 
 #endregion
 
-public partial class ElementTreeViewManager
+public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, IRecipient<ApplicationStartupMessage>
 {
     #region Fields
 
@@ -263,6 +277,7 @@ public partial class ElementTreeViewManager
 
     private DragDropManager _dragDropManager;
     private CopyPasteLogic _copyPasteLogic;
+    private readonly IMessenger _messenger;
 
     public bool HasMouseOver
     {
@@ -286,6 +301,8 @@ public partial class ElementTreeViewManager
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
         _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+        _messenger.RegisterAll(this);
 
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
@@ -532,6 +549,7 @@ public partial class ElementTreeViewManager
         //var panel = new Panel();
 
         var grid = new Grid();
+        grid.Margin = new Thickness(4);
         grid.RowDefinitions.Add(
             new System.Windows.Controls.RowDefinition() 
             { Height = System.Windows.GridLength.Auto });
@@ -547,7 +565,10 @@ public partial class ElementTreeViewManager
         ObjectTreeView.Dock = DockStyle.Fill;
         //panel.Controls.Add(ObjectTreeView);
         TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+        TreeViewHost.Background = System.Windows.Media.Brushes.Transparent;
         TreeViewHost.Child = ObjectTreeView;
+        TreeViewHost.Margin = new Thickness(0,4,0,0);
+        
         Grid.SetRow(TreeViewHost, 2);
         grid.Children.Add(TreeViewHost);
 
@@ -557,6 +578,21 @@ public partial class ElementTreeViewManager
         grid.Children.Add(searchBarUi);
 
         var checkBoxUi = CreateSearchCheckBoxUi();
+        checkBoxUi.Visibility = Visibility.Collapsed;
+        checkBoxUi.Focusable = false;
+        checkBoxUi.Margin = new Thickness(0, 2, 0, 0);
+        searchBarUi.IsKeyboardFocusedChanged += (s, e) =>
+        {
+            if (e.NewValue is true)
+            {
+                checkBoxUi.Visibility = Visibility.Visible;
+            }
+            else if (!checkBoxUi.IsFocused)
+            {
+                checkBoxUi.Visibility = Visibility.Collapsed;
+            }
+        };
+        
         Grid.SetRow(checkBoxUi, 1);
         grid.Children.Add(checkBoxUi);
 
@@ -581,6 +617,7 @@ public partial class ElementTreeViewManager
         this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip();
         this.mMenuStrip.Name = "ElementMenuStrip";
         this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
+        this.mMenuStrip.Renderer = GetCurrentThemeRenderer();
         this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
     }
 
@@ -607,15 +644,25 @@ public partial class ElementTreeViewManager
         this.ObjectTreeView.KeyPress += this.ObjectTreeView_KeyPress;
         this.ObjectTreeView.PreviewKeyDown += this.ObjectTreeView_PreviewKeyDown;
         this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
+        this.ObjectTreeView.BackColor =
+            Application.Current.TryFindResource("Frb.Colors.SurfaceO1") is System.Windows.Media.Color color
+                ? System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B)
+                : System.Drawing.SystemColors.Window;
+
+
         this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
         this.ObjectTreeView.FontChanged += (sender, _) =>
         {
-            if (sender is MultiSelectTreeView { Font.Size: var fontSize})
+            if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
             {
                 const float defaultFontSize = 8.25f;
                 UpdateTreeviewIconScale(fontSize/defaultFontSize);
+                mMenuStrip.Renderer = GetCurrentThemeRenderer(fontSize);
+                mMenuStrip.Font = font;
             }
         };
+        this.ObjectTreeView.BorderStyle = BorderStyle.None;
+
         ObjectTreeView.DragDrop += HandleDragDropEvent;
 
         ObjectTreeView.ItemDrag += (sender, e) =>
@@ -648,6 +695,45 @@ public partial class ElementTreeViewManager
                 System.Windows.Forms.Cursor.Current = AddCursor;
             }
         };
+    }
+
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        if (System.Windows.Application.Current is { } current &&
+            current.TryFindResource("Frb.Brushes.Foreground") is SolidColorBrush{ Color: var fg }  &&
+            current.TryFindResource("Frb.Surface01") is SolidColorBrush { Color: var field })
+        {
+            Color foregroundColor = Color.FromArgb(fg.A, fg.R, fg.G, fg.B);
+            Color fieldColor = Color.FromArgb(field.A, field.R, field.G, field.B);
+            this.ObjectTreeView.ForeColor = mMenuStrip.ForeColor = foregroundColor;
+            this.ObjectTreeView.BackColor = mMenuStrip.BackColor = fieldColor;
+            this.mMenuStrip.Renderer = GetCurrentThemeRenderer(this.ObjectTreeView.Font.Size);
+        }
+
+    }
+
+    private FrbMenuStripRenderer? GetCurrentThemeRenderer(float? fontSize = null)
+    {
+        if (System.Windows.Application.Current is { } app &&
+            app.TryFindResource("Frb.Colors.Surface01") is System.Windows.Media.Color bgColor &&
+            app.TryFindResource("Frb.Colors.Foreground") is System.Windows.Media.Color fgColor &&
+            app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color primaryColor)
+        {
+            System.Drawing.Color bg = System.Drawing.Color.FromArgb(bgColor.A, bgColor.R, bgColor.G, bgColor.B);
+            System.Drawing.Color fg = System.Drawing.Color.FromArgb(fgColor.A, fgColor.R, fgColor.G, fgColor.B);
+            System.Drawing.Color primary = System.Drawing.Color.FromArgb(primaryColor.A, primaryColor.R, primaryColor.G, primaryColor.B);
+
+            Font font = new("Verdana", fontSize ?? (float)8.25, System.Drawing.FontStyle.Regular);
+            //_menuStrip.ForeColor = fg;
+            //_menuStrip.BackColor = bg;
+            //_menuStrip.Font = font;
+
+            return new(bg, fg, primary, font);
+        }
+
+
+
+        return null;
     }
 
     private ImageList CloneImageList(ImageList original)
@@ -766,8 +852,8 @@ public partial class ElementTreeViewManager
                     // restore previous colors
                     if (mLastHoveredNode != null)
                     {
-                        mLastHoveredNode.BackColor = treeview.BackColor;
-                        mLastHoveredNode.ForeColor = treeview.ForeColor;
+                        mLastHoveredNode.BackColor = Color.Empty;
+                        mLastHoveredNode.ForeColor = Color.Empty;
                     }
 
                     // apply highlight colors
@@ -827,8 +913,8 @@ public partial class ElementTreeViewManager
         // Make sure that we reset the Hovered items colors at the end of the drag
         if (mLastHoveredNode != null)
         {
-            mLastHoveredNode.BackColor = ObjectTreeView.BackColor;
-            mLastHoveredNode.ForeColor = ObjectTreeView.ForeColor;
+            mLastHoveredNode.BackColor = Color.Empty;
+            mLastHoveredNode.ForeColor = Color.Empty;
             mLastHoveredNode = null;
             hoverStartTime = null;
         }
@@ -2075,16 +2161,12 @@ public partial class ElementTreeViewManager
         FlatList.FlatList.Items.Add(vm);
     }
 
-    private Grid CreateSearchBoxUi()
+    private System.Windows.Controls.TextBox CreateSearchBoxUi()
     {
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
-            { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
-        { Width = System.Windows.GridLength.Auto});
-
-
         searchTextBox = new System.Windows.Controls.TextBox();
+        searchTextBox.SetValue(TextFieldAssist.HasClearButtonProperty, true);
+        searchTextBox.SetValue(HintAssist.HintProperty, "Search...");
+        searchTextBox.SetValue(HintAssist.IsFloatingProperty, false);
         searchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
         searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
         searchTextBox.KeyDown += (sender, args) =>
@@ -2134,18 +2216,7 @@ public partial class ElementTreeViewManager
             }
         };
 
-        grid.Children.Add(searchTextBox);
-
-        var xButton = new System.Windows.Controls.Button();
-        xButton.Content = " X "; // Spaces to force some padding automatically based on font size of space
-        xButton.Click += (not, used) => searchTextBox.Text = null;
-        xButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-        grid.Children.Add(xButton);
-
-        Grid.SetColumn(searchTextBox, 0);
-        Grid.SetColumn(xButton, 1);
-
-        return grid;
+        return searchTextBox;
     }
 
     private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
@@ -2154,7 +2225,7 @@ public partial class ElementTreeViewManager
         deepSearchCheckBox.IsChecked = false;
         deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
         deepSearchCheckBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-        deepSearchCheckBox.Content = "Search variables";
+        deepSearchCheckBox.Content = "Include Variables";
         deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
 
         return deepSearchCheckBox;
@@ -2218,6 +2289,13 @@ public partial class ElementTreeViewManager
         }
 
         PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+    }
+
+    void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)
+    {
+        ObjectTreeView.BackColor = Application.Current.TryFindResource("Frb.Colors.Surface01") is System.Windows.Media.Color c
+            ? Color.FromArgb(c.A, c.R, c.G, c.B)
+            : Color.Transparent;
     }
 }
 
