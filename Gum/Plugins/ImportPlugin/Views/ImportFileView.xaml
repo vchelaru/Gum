@@ -43,10 +43,10 @@
             x:Name="ListBoxInstance"
             Grid.Row="1"
             Margin="5,0,5,5"
+            behaviors:ListBoxDoubleClick.Command="{Binding AffirmativeCommand}"
             behaviors:SelectedItemsBehavior.SelectedItems="{Binding SelectedFiles}"
             ItemsSource="{Binding FilteredFiles}"
-            SelectionMode="Extended" 
-            behaviors:ListBoxDoubleClick.Command="{Binding AffirmativeCommand}"/>
+            SelectionMode="Extended" />
         <TextBlock
             Grid.Row="2"
             Margin="5,0,5,5"
