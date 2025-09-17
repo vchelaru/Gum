@@ -1,38 +1,79 @@
-﻿<UserControl x:Class="Gum.Plugins.AlignmentButtons.AlignmentControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d">
-    <GroupBox Header="Dock" VerticalAlignment="Top">
+﻿<UserControl
+    x:Class="Gum.Plugins.AlignmentButtons.AlignmentControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <GroupBox VerticalAlignment="Top" Header="Dock">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="TopButton" Click="TopButton_Click" Grid.Row="0" Grid.Column="1" Margin="3">
-                <Image Source="/Gum;component/Content/Icons/Sizing/TopSide.png" Height="32" Width="32"/>
+            <Button
+                x:Name="TopButton"
+                Grid.Row="0"
+                Grid.Column="1"
+                Margin="3"
+                Click="TopButton_Click">
+                <Image
+                    Width="32"
+                    Height="32"
+                    Source="/Gum;component/Content/Icons/Sizing/TopSide.png" />
             </Button>
-            <Button x:Name="LeftButton" Click="LeftButton_Click" Grid.Row="1" Grid.Column="0" Margin="3">
-                <Image Source="/Gum;component/Content/Icons/Sizing/LeftSide.png" Height="32" Width="32"/>
+            <Button
+                x:Name="LeftButton"
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="3"
+                Click="LeftButton_Click">
+                <Image
+                    Width="32"
+                    Height="32"
+                    Source="/Gum;component/Content/Icons/Sizing/LeftSide.png" />
             </Button>
-            <Button x:Name="FillButton" Click="FillButton_Click" Grid.Row="1" Grid.Column="1" Margin="3">
-                <Image Source="/Gum;component/Content/Icons/Sizing/Fill.png" Height="32" Width="32"/>
+            <Button
+                x:Name="FillButton"
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="3"
+                Click="FillButton_Click">
+                <Image
+                    Width="32"
+                    Height="32"
+                    Source="/Gum;component/Content/Icons/Sizing/Fill.png" />
             </Button>
-            <Button x:Name="RightButton" Click="RightButton_Click" Grid.Row="1" Grid.Column="2" Margin="3">
-                <Image Source="/Gum;component/Content/Icons/Sizing/RightSide.png" Height="32" Width="32"/>
+            <Button
+                x:Name="RightButton"
+                Grid.Row="1"
+                Grid.Column="2"
+                Margin="3"
+                Click="RightButton_Click">
+                <Image
+                    Width="32"
+                    Height="32"
+                    Source="/Gum;component/Content/Icons/Sizing/RightSide.png" />
             </Button>
-            <Button x:Name="BottomButton" Click="BottomButton_Click" Grid.Row="2" Grid.Column="1" Margin="3">
-                <Image Source="/Gum;component/Content/Icons/Sizing/BottomSide.png" Height="32" Width="32"/>
+            <Button
+                x:Name="BottomButton"
+                Grid.Row="2"
+                Grid.Column="1"
+                Margin="3"
+                Click="BottomButton_Click">
+                <Image
+                    Width="32"
+                    Height="32"
+                    Source="/Gum;component/Content/Icons/Sizing/BottomSide.png" />
             </Button>
-        
+
         </Grid>
     </GroupBox>
 </UserControl>

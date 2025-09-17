@@ -1,42 +1,41 @@
-﻿<UserControl x:Class="WpfDataUi.Controls.CheckBoxDisplay"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:conv="clr-namespace:WpfDataUi.Converters"
-             xmlns:local="clr-namespace:WpfDataUi.Controls"
-             mc:Ignorable="d" 
-             d:DesignWidth="300">
+﻿<UserControl
+    x:Class="WpfDataUi.Controls.CheckBoxDisplay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:conv="clr-namespace:WpfDataUi.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WpfDataUi.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
     <UserControl.Resources>
         <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
     </UserControl.Resources>
     <StackPanel x:Name="StackPanel">
 
         <Grid x:Name="TopRowGrid">
-            <CheckBox x:Name="CheckBox" VerticalAlignment="Center" 
-                      VerticalContentAlignment="Center"
-                      Margin="4,4" 
-                      Checked="CheckBoxChanged" Unchecked="CheckBoxChanged"
-
-                      Content="Property Label:"
-                      >
+            <CheckBox
+                x:Name="CheckBox"
+                Margin="4,4"
+                VerticalAlignment="Center"
+                VerticalContentAlignment="Center"
+                Checked="CheckBoxChanged"
+                Content="Property Label:"
+                Unchecked="CheckBoxChanged">
                 <CheckBox.ContextMenu>
-                    <ContextMenu>
-                    </ContextMenu>
+                    <ContextMenu />
                 </CheckBox.ContextMenu>
 
             </CheckBox>
         </Grid>
-        <TextBlock x:Name="HintTextBlock" 
-                    Padding="8,0,0,0" Grid.Row="1" 
-                    TextWrapping="Wrap"
-                    Margin="0,0,-4,0"
-                    MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
-                    FontSize="{Binding Path=FontSize,
-                        RelativeSource={RelativeSource AncestorType={x:Type local:CheckBoxDisplay}},
-                        Converter={StaticResource AddDoubleConverter},
-                        ConverterParameter=-2}"
-                   >
+        <TextBlock
+            x:Name="HintTextBlock"
+            Grid.Row="1"
+            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+            Margin="0,0,-4,0"
+            Padding="8,0,0,0"
+            FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:CheckBoxDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
+            TextWrapping="Wrap">
             This is a property description.
         </TextBlock>
     </StackPanel>

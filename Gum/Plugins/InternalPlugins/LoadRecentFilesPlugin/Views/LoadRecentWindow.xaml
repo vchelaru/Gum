@@ -1,36 +1,40 @@
-<UserControl x:Class="Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views.LoadRecentWindow"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views"
-             xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
-             xmlns:behaviors="clr-namespace:Gum.Behaviors"
-             mc:Ignorable="d" 
-             dialogs:Dialog.DialogTitle="Recent Gum Projects">
+﻿<UserControl
+    x:Class="Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views.LoadRecentWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:Gum.Behaviors"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+    xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    dialogs:Dialog.DialogTitle="Recent Gum Projects"
+    mc:Ignorable="d">
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition ></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--<TextBox Text="{Binding FilterText}"></TextBox>-->
 
-        <!--<controls:SearchBar Grid.Row="0" x:Name="SearchBar" 
-                            ClearSearchButtonClicked="SearchBar_ClearSearchButtonClicked" 
+        <!--<controls:SearchBar Grid.Row="0" x:Name="SearchBar"
+                            ClearSearchButtonClicked="SearchBar_ClearSearchButtonClicked"
                             ArrowKeyPushed="SearchBar_ArrowKeyPushed"
                             EnterPressed="SearchBar_EnterPressed"
                             EscapePressed="SearchBar_EscapePressed"
                             ></controls:SearchBar>-->
 
-        <ListBox x:Name="ListBox" Grid.Row="1" Margin="0,5,0,0" 
-                 ItemsSource="{Binding FilteredItems}" 
-                 SelectedItem="{Binding SelectedItem}"
-                 behaviors:ListBoxDoubleClick.Command="{Binding AffirmativeCommand}">
+        <ListBox
+            x:Name="ListBox"
+            Grid.Row="1"
+            Margin="0,5,0,0"
+            behaviors:ListBoxDoubleClick.Command="{Binding AffirmativeCommand}"
+            ItemsSource="{Binding FilteredItems}"
+            SelectedItem="{Binding SelectedItem}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <local:RecentFileItem></local:RecentFileItem>
+                    <local:RecentFileItem />
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

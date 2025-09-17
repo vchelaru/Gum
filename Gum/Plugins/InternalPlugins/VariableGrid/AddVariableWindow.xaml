@@ -1,39 +1,46 @@
-﻿<UserControl x:Class="Gum.Plugins.VariableGrid.AddVariableWindow"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Gum.Plugins.VariableGrid"
-             xmlns:viewModels="clr-namespace:Gum.Plugins.InternalPlugins.VariableGrid.ViewModels"
-             xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
-             mc:Ignorable="d"
-             dialogs:Dialog.DialogTitle="{Binding Title}"
-             Width="450" 
-             Height="Auto"
-             d:DataContext="{d:DesignInstance Type={x:Type viewModels:AddVariableViewModel}, IsDesignTimeCreatable=False}">
+﻿<UserControl
+    x:Class="Gum.Plugins.VariableGrid.AddVariableWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+    xmlns:local="clr-namespace:Gum.Plugins.VariableGrid"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="clr-namespace:Gum.Plugins.InternalPlugins.VariableGrid.ViewModels"
+    Width="450"
+    Height="Auto"
+    d:DataContext="{d:DesignInstance Type={x:Type viewModels:AddVariableViewModel},
+                                     IsDesignTimeCreatable=False}"
+    dialogs:Dialog.DialogTitle="{Binding Title}"
+    mc:Ignorable="d">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <StackPanel>
             <Label>Type:</Label>
-            <ListBox 
-                     MinHeight="150"
-                     ItemsSource="{Binding AvailableTypes}"
-                     SelectedItem="{Binding SelectedItem}"
-                     IsEnabled="{Binding IsTypeChangeUiEnabled}"
-                >
-            </ListBox>
-            <TextBlock TextWrapping="Wrap" Text="{Binding TypeChangeMessage}"/>
+            <ListBox
+                MinHeight="150"
+                IsEnabled="{Binding IsTypeChangeUiEnabled}"
+                ItemsSource="{Binding AvailableTypes}"
+                SelectedItem="{Binding SelectedItem}" />
+            <TextBlock Text="{Binding TypeChangeMessage}" TextWrapping="Wrap" />
         </StackPanel>
-        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,5,0,0">
-            <Label Margin="0,0,0, -3">Name:</Label>
-            <TextBox x:Name="TextBox"  
-                     Text="{Binding EnteredName, UpdateSourceTrigger=PropertyChanged}" 
-                     HorizontalAlignment="Stretch"/>
-            <TextBlock TextWrapping="Wrap" x:Name="DetailLabel" Text="{Binding DetailText}"/>
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,5,0,0"
+            Orientation="Vertical">
+            <Label Margin="0,0,0,-3">Name:</Label>
+            <TextBox
+                x:Name="TextBox"
+                HorizontalAlignment="Stretch"
+                Text="{Binding EnteredName, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                x:Name="DetailLabel"
+                Text="{Binding DetailText}"
+                TextWrapping="Wrap" />
 
         </StackPanel>
     </Grid>
