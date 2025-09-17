@@ -11,6 +11,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<Nullable>enable</Nullable>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<OutputPath>bin\Debug\</OutputPath>
@@ -289,7 +290,9 @@
 		<None Update="Content\Icons\WidthUnits\AbsoluteWidthMulitpliedByFontScale.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<Content Include="GumIcon.ico" />
+		<Content Include="GumIcon.ico">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Include="Libraries\TargaImage.dll" />
 		<Content Include="Libraries\TargaImage.xml" />
 		<None Update="Content\InvalidTexture.png">
@@ -315,6 +318,10 @@
 		</PackageReference>
 
 			<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+
+			<PackageReference Include="FluentIcons.Wpf">
+			  <Version>1.1.308</Version>
+			</PackageReference>
 		
 		<PackageReference Include="Microsoft.AppCenter.Analytics">
 			<Version>4.2.0</Version>
@@ -359,8 +366,10 @@
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
 		<PackageReference Include="System.Resources.Extensions" Version="9.0.5" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="objNetFramework\**" />
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />

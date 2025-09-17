@@ -1,14 +1,20 @@
-<Window
+﻿<Window
     x:Class="Gum.Services.Dialogs.DialogWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Services.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Root"
     Title="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl}"
+    AllowsTransparency="True"
+    Background="Transparent"
     ResizeMode="CanResize"
     SizeToContent="WidthAndHeight"
+    SnapsToDevicePixels="True"
+    UseLayoutRounding="True"
     WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
     mc:Ignorable="d">
     <Window.Resources>
         <Style TargetType="{x:Type local:Dialog}">
@@ -16,23 +22,30 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type local:Dialog}">
-                        <Grid Margin="8">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <ScrollViewer
-                                Grid.Row="0"
-                                PreviewMouseWheel="ScrollViewer_PreviewMouseWheel"
-                                VerticalScrollBarVisibility="Auto">
-                                <ContentPresenter x:Name="DialogPresenter" />
-                            </ScrollViewer>
-                            <ContentPresenter
-                                x:Name="ActionsPresenter"
-                                Grid.Row="1"
-                                Margin="0,16,0,0"
-                                Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:Dialog.Actions)}" />
-                        </Grid>
+                        <Border Padding="12">
+                            <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ScrollViewer
+                                    Grid.Row="0"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    VerticalContentAlignment="Stretch"
+                                    HorizontalScrollBarVisibility="Disabled"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <Grid>
+                                        <ContentPresenter x:Name="DialogPresenter" />
+                                    </Grid>
+                                </ScrollViewer>
+                                <ContentPresenter
+                                    x:Name="ActionsPresenter"
+                                    Grid.Row="1"
+                                    Margin="0,16,0,0"
+                                    Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:Dialog.Actions)}" />
+                            </Grid>
+                        </Border>
 
                         <ControlTemplate.Triggers>
                             <Trigger Property="local:Dialog.Actions" Value="{x:Null}">
@@ -99,5 +112,40 @@
         </Style>
     </Window.Resources>
 
-    <local:Dialog x:Name="DialogImpl" />
+
+    <Border
+        Background="{DynamicResource Frb.Surface01}"
+        BorderBrush="{StaticResource Frb.Brushes.Border}"
+        BorderThickness="1"
+        CornerRadius="8"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+        <Border>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="24" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Text="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl, FallbackValue=Gum}" />
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Separator Background="{DynamicResource Frb.Brushes.Contrast01}" />
+                    <Border Grid.Row="1">
+                        <local:Dialog x:Name="DialogImpl" />
+                    </Border>
+                </Grid>
+
+            </Grid>
+        </Border>
+
+    </Border>
+
 </Window>

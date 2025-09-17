@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+
+    <!-- Pack as a dotnet tool; "dotnet gumicons" works because of "dotnet-" prefix -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-gumicons</ToolCommandName>
+
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <OutputType>Exe</OutputType>
+    <Version>1.0.0</Version>
+    <Authors>YourName</Authors>
+    <Description>Convert SVGs to a XAML ResourceDictionary for WPF icons.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Use the latest SharpVectors.Wpf available in your feed -->
+    <PackageReference Include="SharpVectors.Wpf" Version="1.8.4" />
+  </ItemGroup>
+</Project>

@@ -22,6 +22,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Drawing;
 using System.Linq;
 using System.Management.Instrumentation;
 using System.Numerics;
@@ -39,7 +40,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
 [Export(typeof(PluginBase))]
-internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChangedMessage>
+internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
 {
     #region Fields/Properties
 
@@ -441,11 +442,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeObjectManager.RefreshAll(true);
     }
 
-    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
+    void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         // Uncommenting this makes the area for teh combo box properly grow, but it
         // kills the wireframe view. Not sure why....
-        _wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Scale);
+        //_wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Size);
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
@@ -980,5 +981,12 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeEditControl.TabIndex = 1;
         _defaultWireframeEditControlHeight = _wireframeEditControl.Height;
 
+    }
+
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        //gumEditorPanel.BackColor = System.Windows.Application.Current.TryFindResource("Frb.Surface01") is System.Windows.Media.Color c
+        //    ? Color.FromArgb(c.A, c.R, c.G, c.B)
+        //    : Color.Transparent;
     }
 }

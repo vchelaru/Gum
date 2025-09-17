@@ -1,23 +1,24 @@
 using System;
-using System.Timers;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace CommonFormsAndControls
 {
-    public class MultiSelectTreeView : TreeView, IEnumerable<TreeNode>
+    public partial class MultiSelectTreeView : TreeView, IEnumerable<TreeNode>
     {
         #region Fields
 
-		private Dictionary<TreeNode, Color> mOriginalColors;
-		private System.Timers.Timer mSearchTimer;
-		private string mSearchString;
-		private char mFirstSearchChar;
-		private char mLastSearchChar;
-		private const double TIMERVALUE = 750;
-		bool mNewKeyMatchesFirstKey;
-		private TreeNode mSelectedNode;
+        private Dictionary<TreeNode, Color> mOriginalColors;
+        private System.Timers.Timer mSearchTimer;
+        private string mSearchString;
+        private char mFirstSearchChar;
+        private char mLastSearchChar;
+        private const double TIMERVALUE = 750;
+        bool mNewKeyMatchesFirstKey;
+        private TreeNode mSelectedNode;
         private bool mSelectedNodeChanged = false;
         private List<TreeNode> mSelectedNodes = null;
         private ImageList ElementTreeImages;
@@ -28,37 +29,31 @@ namespace CommonFormsAndControls
 
         #region Properties
 
-        public bool AlwaysHaveOneNodeSelected
-        {
-            get;
-            set;
-        }
+        public bool AlwaysHaveOneNodeSelected { get; set; }
 
         public List<TreeNode> SelectedNodes
-		{
-			get
-			{
-				return mSelectedNodes;
-			}
-			set
-			{
-				ClearSelectedNodes();
-				if( value != null )
-				{
-					foreach (TreeNode node in value)
-					{
-						SetNodeSelected(node, true);
-					}
-					OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
-				}
-			}
-		}
+        {
+            get { return mSelectedNodes; }
+            set
+            {
+                ClearSelectedNodes();
+                if (value != null)
+                {
+                    foreach (TreeNode node in value)
+                    {
+                        SetNodeSelected(node, true);
+                    }
 
-		// Note we use the new keyword to Hide the native treeview's SelectedNode property.
-		public new TreeNode SelectedNode
-		{
-			get
-            { 
+                    OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
+                }
+            }
+        }
+
+        // Note we use the new keyword to Hide the native treeview's SelectedNode property.
+        public new TreeNode SelectedNode
+        {
+            get
+            {
                 // March 1, 2012
                 // This caches off
                 // mSelectedNode because
@@ -86,30 +81,26 @@ namespace CommonFormsAndControls
                     return mSelectedNode;
                 }
             }
-			set
-			{
+            set
+            {
                 // Don't do anything if it's the same selection
                 if (value == mSelectedNode)
                 {
                     return;
                 }
 
-				ClearSelectedNodes();
-				if (value != null)
-				{
-					ReactToClickedNode(value);
+                ClearSelectedNodes();
+                if (value != null)
+                {
+                    ReactToClickedNode(value);
 
                     // ReactToClickedNode has event raising already, so this results in the event being raised twice:
-					//OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
-				}
-			}
+                    //OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
+                }
+            }
         }
 
-        public MultiSelectBehavior MultiSelectBehavior
-        {
-            get;
-            set;
-        }
+        public MultiSelectBehavior MultiSelectBehavior { get; set; }
 
         #endregion
 
@@ -177,16 +168,19 @@ namespace CommonFormsAndControls
                     int rightBound = node.Bounds.Right + 10; // Give a little extra room
                     if (e.Location.X > leftBound && e.Location.X < rightBound)
                     {
-                        if (mSelectedNodes.Contains(node) && e.Button == MouseButtons.Right && ModifierKeys != Keys.None)
+                        if (mSelectedNodes.Contains(node) && e.Button == MouseButtons.Right &&
+                            ModifierKeys != Keys.None)
                         {
                         }
-                        else if ((ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) && (mSelectedNodes.Contains(node)))
+                        else if ((ModifierKeys == Keys.None &&
+                                  MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                                 (mSelectedNodes.Contains(node)))
                         {
                             // Potential Drag Operation
                             // Let Mouse Up do select
                         }
-                        else if(IsSelectingOnPush || ModifierKeys == Keys.Shift || ModifierKeys == Keys.Control || 
-                            e.Button == MouseButtons.Right)
+                        else if (IsSelectingOnPush || ModifierKeys == Keys.Shift || ModifierKeys == Keys.Control ||
+                                 e.Button == MouseButtons.Right)
                         {
                             // For gum we want to prevent selection on a push. Should be on a click
                             ReactToClickedNode(node);
@@ -202,11 +196,11 @@ namespace CommonFormsAndControls
 
                 mSelectedNodeChanged = previousSelectedNode != mSelectedNode;
 
-                if(!mSelectedNodeChanged)
+                if (!mSelectedNodeChanged)
                 {
                     // If multiples are selected but no keys are held down, then we're going to deselect
                     // back down to 1.
-                    if(mSelectedNodes.Count > 1 && ModifierKeys == Keys.None)
+                    if (mSelectedNodes.Count > 1 && ModifierKeys == Keys.None)
                     {
                         mSelectedNodeChanged = true;
                     }
@@ -237,7 +231,8 @@ namespace CommonFormsAndControls
                 TreeNode node = this.GetNodeAt(e.Location);
                 if (node != null)
                 {
-                    var shouldSelect = (ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                    var shouldSelect =
+                        (ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
                         ((mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node)) || IsSelectingOnPush == false) &&
                         e.Button != MouseButtons.Right;
 
@@ -258,16 +253,17 @@ namespace CommonFormsAndControls
                         }
                     }
 
-                    if ((mSelectedNodeChanged || IsSelectingOnPush == false ) && AfterClickSelect != null)
+                    if ((mSelectedNodeChanged || IsSelectingOnPush == false) && AfterClickSelect != null)
                     {
                         AfterClickSelect(this, new TreeViewEventArgs(node));
                     }
                 }
 
                 // Not sure why the drag drop events are not raised automatically, trying to do so manually...
-                if(nodeOnDragStart != null)
+                if (nodeOnDragStart != null)
                 {
-                    DragEventArgs dragEventArgs = new DragEventArgs(null, 0, Cursor.Position.X, Cursor.Position.Y, DragDropEffects.All, DragDropEffects.All);
+                    DragEventArgs dragEventArgs = new DragEventArgs(null, 0, Cursor.Position.X, Cursor.Position.Y,
+                        DragDropEffects.All, DragDropEffects.All);
 
                     this.OnDragDrop(dragEventArgs);
                 }
@@ -355,10 +351,11 @@ namespace CommonFormsAndControls
                 //    firstNode.EnsureVisible();
                 //}
                 // should we ensure all?
-                foreach(var node in mSelectedNodes)
+                foreach (var node in mSelectedNodes)
                 {
                     node.EnsureVisible();
                 }
+
                 base.OnAfterSelect(e);
                 base.SelectedNode = null;
             }
@@ -399,6 +396,7 @@ namespace CommonFormsAndControls
                     {
                         return;
                     }
+
                     return;
                 }
 
@@ -560,6 +558,7 @@ namespace CommonFormsAndControls
                             {
                                 ndLast = ndLast.LastNode;
                             }
+
                             SelectSingleNode(ndLast);
                         }
                     }
@@ -574,6 +573,7 @@ namespace CommonFormsAndControls
                         ndCurrent = ndCurrent.PrevVisibleNode;
                         nCount--;
                     }
+
                     SelectSingleNode(ndCurrent);
                 }
                 else if (e.KeyCode == Keys.PageDown)
@@ -586,11 +586,13 @@ namespace CommonFormsAndControls
                         ndCurrent = ndCurrent.NextVisibleNode;
                         nCount--;
                     }
+
                     SelectSingleNode(ndCurrent);
                 }
                 else
                 {
                 }
+
                 base.OnKeyDown(e);
             }
 #if !DEBUG
@@ -613,27 +615,29 @@ namespace CommonFormsAndControls
         #region Constructor
 
         public MultiSelectTreeView()
-		{
+        {
             InitializeComponent();
-			mSelectedNodes = new List<TreeNode>();
-			mOriginalColors = new Dictionary<TreeNode, Color>();
-			// Create a timer
-			mSearchTimer = new System.Timers.Timer(TIMERVALUE);
+            mSelectedNodes = new List<TreeNode>();
+            mOriginalColors = new Dictionary<TreeNode, Color>();
+            // Create a timer
+            mSearchTimer = new System.Timers.Timer(TIMERVALUE);
 
-			mSearchTimer.AutoReset = false;
-	
-			// Hook up the Elapsed event for the timer.
-			mSearchTimer.Elapsed += new ElapsedEventHandler(TimerElapsed);
+            mSearchTimer.AutoReset = false;
 
-			mSearchString = "";
-			mFirstSearchChar = '\0';
-			mLastSearchChar = '\0';
-			//  assume the next key they are going to hit is the same as the first
-			mNewKeyMatchesFirstKey = true;
+            // Hook up the Elapsed event for the timer.
+            mSearchTimer.Elapsed += new ElapsedEventHandler(TimerElapsed);
+
+            mSearchString = "";
+            mFirstSearchChar = '\0';
+            mLastSearchChar = '\0';
+            //  assume the next key they are going to hit is the same as the first
+            mNewKeyMatchesFirstKey = true;
 
 
-				
-			base.SelectedNode = null;
+
+            base.SelectedNode = null;
+
+            SetupForExpanders();
         }
 
         #endregion
@@ -644,7 +648,7 @@ namespace CommonFormsAndControls
         {
             if (mSelectedNodes.Remove(node))
             {
-                node.BackColor = this.BackColor;
+                node.BackColor = Color.Empty;
                 node.ForeColor = mOriginalColors[node];
                 mOriginalColors.Remove(node);
             }
@@ -673,46 +677,98 @@ namespace CommonFormsAndControls
 
         #endregion
 
-		// Vic says - The short of it is this code stops flickering.
-		// Here's the long of it:  This class inherits from the MultiSelectTreeView
-		// class.  The base class doesn't support multiple selection of objects, so we
-		// have to implement our own selection logic for multiple selection by changing
-		// the color of TreeNodes when they are selected.  Unfortunately, changing the color
-		// of tree nodes causes the window to update, which makes the displayed text flicker.
-		// Well, the following code fixes it thanks to some really smart dude who posted here:
-		// http://www.codeguru.com/forum/archive/index.php/t-182326.html
-		private const int WM_ERASEBKGND = 0x0014;
-		protected override void WndProc(ref Message m)
-		{
-			if (m.Msg == WM_ERASEBKGND)
-			{
-				m.Result = IntPtr.Zero;
-				return;
-			}
-			base.WndProc(ref m);
-		}
+        // Vic says - The short of it is this code stops flickering.
+        // Here's the long of it:  This class inherits from the MultiSelectTreeView
+        // class.  The base class doesn't support multiple selection of objects, so we
+        // have to implement our own selection logic for multiple selection by changing
+        // the color of TreeNodes when they are selected.  Unfortunately, changing the color
+        // of tree nodes causes the window to update, which makes the displayed text flicker.
+        // Well, the following code fixes it thanks to some really smart dude who posted here:
+        // http://www.codeguru.com/forum/archive/index.php/t-182326.html
+        private const int WM_ERASEBKGND = 0x0014;
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_ERASEBKGND)
+            {
+                m.Result = IntPtr.Zero;
+                return;
+            }
+
+            const int WM_PAINT = 0x000F;
+            const int WM_LBUTTONDOWN = 0x0201;
+            const int WM_LBUTTONUP = 0x0202;
+            const int WM_LBUTTONDBLCLK = 0x0203;
+
+            switch (m.Msg)
+            {
+                case WM_LBUTTONDOWN:
+                {
+                    var pt = new Point((short)(m.LParam.ToInt32() & 0xFFFF),
+                        (short)((m.LParam.ToInt32() >> 16) & 0xFFFF));
+                    var node = GetNodeAt(pt);
+                    if (node != null && node.Nodes.Count > 0)
+                    {
+                        var r = GetGlyphRectInIndent(node);
+                        if (r.Contains(pt))
+                        {
+                            // Toggle once and swallow the rest of the click sequence for this press.
+                            node.Toggle();
+                            _swallowSequence = true;
+                            _lastGlyphRect = r;
+                            return; // don't call base -> prevents selection/natives from acting
+                        }
+                    }
+                    _swallowSequence = false; // normal click elsewhere
+                    break;
+                }
+
+                case WM_LBUTTONDBLCLK:
+                case WM_LBUTTONUP:
+                {
+                    if (_swallowSequence)
+                    {
+                        // Eat dblclk and the matching mouse-up so nothing else toggles.
+                        // Reset on the mouse-up that completes the sequence.
+                        if (m.Msg == WM_LBUTTONUP) _swallowSequence = false;
+                        return;
+                    }
+                    break;
+                }
+            }
+            
+
+            base.WndProc(ref m);
+
+            if (m.Msg == WM_PAINT)
+            {
+                using var g = Graphics.FromHwnd(Handle);
+                DrawChevrons(g);
+            }
+        }
 
         #region Private Methods
 
-		private void ClearSelectedNodes()
-		{
-			foreach (TreeNode node in mSelectedNodes)
-			{
-				node.BackColor = this.BackColor;
-				node.ForeColor = mOriginalColors[node];
-			}
+        private void ClearSelectedNodes()
+        {
+            foreach (TreeNode node in mSelectedNodes)
+            {
+                node.BackColor = Color.Empty;
+                node.ForeColor = mOriginalColors[node];
+            }
 
-			mSelectedNodes.Clear();
-			mOriginalColors.Clear();
-			mSelectedNode = null;
-		}
+            mSelectedNodes.Clear();
+            mOriginalColors.Clear();
+            mSelectedNode = null;
+        }
 
         private bool FindAndSelectNode(TreeNode node)
         {
-            if(node == null)
+            if (node == null)
             {
                 throw new ArgumentNullException(nameof(node));
             }
+
             while ((node.NextVisibleNode != null))
             {
                 node = node.NextVisibleNode;
@@ -723,9 +779,10 @@ namespace CommonFormsAndControls
                     return true;
                 }
             }
+
             return false;
         }
-        
+
         protected static TreeNode GetNextTreeNodeCrawling(TreeNode treeNode)
         {
             const int maxNumberOfTries = 10;
@@ -752,6 +809,7 @@ namespace CommonFormsAndControls
                     numberTriedSoFar++;
                 }
             }
+
             return treeNode;
         }
 
@@ -762,8 +820,8 @@ namespace CommonFormsAndControls
             MessageBox.Show(ex.Message);
         }
 
-        private void ReactToClickedNode( TreeNode node )
-		{
+        private void ReactToClickedNode(TreeNode node)
+        {
 #if !DEBUG
             try
 #endif
@@ -779,6 +837,7 @@ namespace CommonFormsAndControls
                         {
                             Deselect(SelectedNodes[i]);
                         }
+
                         mSelectedNode = null;
                     }
                     else
@@ -786,7 +845,8 @@ namespace CommonFormsAndControls
                         shouldRaiseEvents = false;
                     }
                 }
-                else if (mSelectedNode == null || ModifierKeys == Keys.Control || MultiSelectBehavior == MultiSelectBehavior.RegularClick)
+                else if (mSelectedNode == null || ModifierKeys == Keys.Control ||
+                         MultiSelectBehavior == MultiSelectBehavior.RegularClick)
                 {
                     // Ctrl+Click selects an unselected node, or unselects a selected node.
                     bool bIsSelected = mSelectedNodes.Contains(node);
@@ -927,20 +987,20 @@ namespace CommonFormsAndControls
 
 			}
 #endif
-		}
+        }
 
-		private void SelectSingleNode(TreeNode node)
-		{
-			if (node == null)
-				return;
+        private void SelectSingleNode(TreeNode node)
+        {
+            if (node == null)
+                return;
 
-			ClearSelectedNodes();
-			SetNodeSelected(node, true);
-			node.EnsureVisible();
-		}
+            ClearSelectedNodes();
+            SetNodeSelected(node, true);
+            node.EnsureVisible();
+        }
 
-		private void SetNodeSelected(TreeNode node, bool selected)
-		{
+        private void SetNodeSelected(TreeNode node, bool selected)
+        {
             if (node == null)
                 return;
 
@@ -948,7 +1008,7 @@ namespace CommonFormsAndControls
                 AddNodeToSelected(node);
             else
                 Deselect(node);
-		}
+        }
 
 
         public void UpdateForeColorFor(TreeNode treeNode, ref Color color)
@@ -960,11 +1020,11 @@ namespace CommonFormsAndControls
             }
         }
 
-		private void TimerElapsed(object source, ElapsedEventArgs e)
-		{
-			mSearchString = "";
-			mNewKeyMatchesFirstKey = true;
-		}
+        private void TimerElapsed(object source, ElapsedEventArgs e)
+        {
+            mSearchString = "";
+            mNewKeyMatchesFirstKey = true;
+        }
 
         #endregion
 
@@ -1016,13 +1076,15 @@ namespace CommonFormsAndControls
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
+            System.ComponentModel.ComponentResourceManager resources =
+                new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
             this.ElementTreeImages = new System.Windows.Forms.ImageList();
             this.SuspendLayout();
             // 
             // ElementTreeImages
             // 
-            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
+            this.ElementTreeImages.ImageStream =
+                ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
             this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
             this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
             this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
@@ -1086,5 +1148,161 @@ namespace CommonFormsAndControls
         CtrlDown,
         RegularClick
     }
-}
 
+    public partial class MultiSelectTreeView
+    {
+        public Color ChevronColor { get; set; } = Color.Empty; // empty -> follows ForeColor
+        public float ChevronThickness { get; set; } = 2.0f;    // DIP
+        public int ChevronBoxSize { get; set; } = 14;       // DIP
+        public int ButtonInset { get; set; } = 3;        // left padding inside indent slot
+
+        private bool _swallowSequence;
+        private Rectangle _lastGlyphRect;
+        const int WM_PAINT = 0x000F;
+        const int TVS_HASBUTTONS = 0x0001;
+
+        // REMOVE native +/- buttons, keep everything else native.
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+                cp.Style &= ~TVS_HASBUTTONS;
+                return cp;
+            }
+        }
+
+        private void SetupForExpanders()
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            AfterExpand += (_, __) => Invalidate();
+            AfterCollapse += (_, __) => Invalidate();
+            ForeColorChanged += (_, __) => Invalidate();
+        }
+
+        private void DrawChevrons(Graphics g)
+        {
+            using var scope = new SmoothingScope(g);
+
+            var color = ChevronColor.IsEmpty ? ForeColor : ChevronColor;
+            float thickness = DpiScale(ChevronThickness);
+
+            using var pen = new Pen(color, thickness)
+            {
+                StartCap = LineCap.Round,
+                EndCap = LineCap.Round,
+                LineJoin = LineJoin.Round
+            };
+
+            for (TreeNode n = TopNode; n != null; n = n.NextVisibleNode)
+            {
+                if (n.Nodes.Count == 0) continue;
+
+                var box = GetGlyphRectInIndent(n);
+                if (box.Width <= 0) continue;
+
+                // Clear just the chevron slot, not beyond it.
+                using (var bg = new SolidBrush(BackColor))
+                    g.FillRectangle(bg, box);
+
+                if (n.IsExpanded) DrawChevronDown(g, pen, box);
+                else DrawChevronRight(g, pen, box);
+            }
+        }
+
+        // Place the chevron inside the classic "button slot":
+        // client-left + (node.Level * Indent) [+ a small inset], centered vertically.
+        private Rectangle GetGlyphRectInIndent(TreeNode node)
+        {
+            if (node.Bounds == Rectangle.Empty) return Rectangle.Empty;
+
+            int size = (int)Math.Round(DpiScale(ChevronBoxSize));
+            int levelLeft = DisplayRectangle.Left + (node.Level * Indent);
+
+            // Center chevron inside the first indent "cell"
+            int cellWidth = Math.Max(Indent, size);
+            int x = levelLeft + (cellWidth - size) / 2; // no extra inset; keeps it safely left
+            int y = node.Bounds.Top + (node.Bounds.Height - size) / 2;
+            var box = new Rectangle(x, y, size, size);
+
+            // Compute the left edge of the image/text area to avoid overlap.
+            int spacing = (int)Math.Round(DpiScale(3));
+            int imageW = (ImageList != null && (node.ImageIndex >= 0 || !string.IsNullOrEmpty(node.ImageKey)))
+                ? ImageList.ImageSize.Width + spacing : 0;
+            int stateW = (StateImageList != null && node.StateImageIndex >= 0)
+                ? StateImageList.ImageSize.Width + spacing : 0;
+
+            int imageAreaLeft = node.Bounds.Left - imageW - stateW - spacing;
+
+            // If our box would touch the image area, nudge it left.
+            if (box.Right > imageAreaLeft)
+                box.X = Math.Max(DisplayRectangle.Left, imageAreaLeft - box.Width);
+
+            return box;
+        }
+
+        private static void DrawChevronRight(Graphics g, Pen pen, Rectangle r)
+        {
+            // Fit to a centered square to avoid horizontal stretch.
+            int s = Math.Min(r.Width, r.Height);
+            var x0 = r.Left + (r.Width - s) / 2;
+            var y0 = r.Top + (r.Height - s) / 2;
+
+            // Visual margins inside the square (tweak 0.28f/0.35f to taste).
+            float mx = s * 0.40f; // horizontal inset
+            float my = s * 0.28f; // vertical inset
+
+            // Slimmer pen for nicer look.
+            using var p = (Pen)pen.Clone();
+            p.Width = Math.Max(1f, Math.Min(pen.Width, s / 9f)); // ~11% of box size max
+
+            // Points for ">" (shorter span to avoid a wide look)
+            float leftX = x0 + mx;
+            float midX = x0 + s - mx;         // a bit short of the right edge
+            float midY = y0 + s * 0.50f;
+            float upY = y0 + my;
+            float downY = y0 + s - my;
+
+            g.DrawLine(p, leftX, upY, midX, midY);
+            g.DrawLine(p, leftX, downY, midX, midY);
+        }
+
+        private static void DrawChevronDown(Graphics g, Pen pen, Rectangle r)
+        {
+            // Fit to a centered square to keep proportions.
+            int s = Math.Min(r.Width, r.Height);
+            var x0 = r.Left + (r.Width - s) / 2;
+            var y0 = r.Top + (r.Height - s) / 2;
+
+            float mx = s * 0.28f; // horizontal inset
+            float my = s * 0.40f; // vertical inset
+
+            using var p = (Pen)pen.Clone();
+            p.Width = Math.Max(1f, Math.Min(pen.Width, s / 9f));
+
+            float midX = x0 + s * 0.50f;
+            float topY = y0 + my;
+            float botY = y0 + s - my;
+            float leftX = x0 + mx;
+            float rightX = x0 + s - mx;
+
+            g.DrawLine(p, leftX, topY, midX, botY);
+            g.DrawLine(p, rightX, topY, midX, botY);
+        }
+
+        private float DpiScale(float value)
+        {
+            using var g = CreateGraphics();
+            return value * (g.DpiX / 96f);
+        }
+
+        private sealed class SmoothingScope : IDisposable
+        {
+            private readonly Graphics g;
+            private readonly SmoothingMode prev;
+            public SmoothingScope(Graphics g) { this.g = g; prev = g.SmoothingMode; g.SmoothingMode = SmoothingMode.AntiAlias; }
+            public void Dispose() => g.SmoothingMode = prev;
+        }
+    }
+
+}

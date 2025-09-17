@@ -92,11 +92,9 @@ public partial class CodeWindow : UserControl
         elementCategory.Members.Add(CreateFileLocationMember());
         elementCategory.Members.Add(CreateGenerateLocalizeMethod());
 
-        var isGenerateCodeButtonVisible =
+        ViewModel.CanGenerateCode =
             (CodeOutputElementSettings?.GenerationBehavior == GenerationBehavior.GenerateManually ||
              CodeOutputElementSettings?.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange);
-
-        GenerateCodeButton.Visibility = isGenerateCodeButtonVisible.ToVisibility();
 
         DataGrid.Categories.Add(elementCategory);
     }
@@ -198,13 +196,10 @@ public partial class CodeWindow : UserControl
         //    // let's see if we have a csproj:
         var csproj = ViewModel.GetCsprojDirectoryAboveGumx();
 
-        var areSetupButtonsVisible =
+        ViewModel.NeedsSetup =
             csproj != null &&
             string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot) &&
             !HasClickedManualSetup;
-
-        this.AutoAndManualButtonStack.Visibility = areSetupButtonsVisible.ToVisibility();
-        this.FullGenerationUiStack.Visibility = (!areSetupButtonsVisible).ToVisibility();
 
         return member;
     }

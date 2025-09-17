@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
@@ -55,13 +56,13 @@ namespace Gum
 
             await host.StartAsync().ConfigureAwait(true);
 
-            App app = new()
-            {
-                MainWindow = host.Services.GetRequiredService<MainWindow>()
-            };
+            App app = new();
+            app.InitializeComponent();
+            app.Startup += (_, _) =>
+                host.Services.GetRequiredService<IMessenger>().Send<ApplicationStartupMessage>();
+            app.MainWindow = host.Services.GetRequiredService<MainWindow>();
             app.MainWindow.Visibility = Visibility.Visible;
-
-
+                
             await Initialize(host.Services).ConfigureAwait(true);
 
             if (CommandLineManager.Self.ShouldExitImmediately)
@@ -134,4 +135,6 @@ namespace Gum
         public const int Success = 0;
         public const int UnexpectedFailure = 1;
     }
+
+    public record ApplicationStartupMessage;
 }
