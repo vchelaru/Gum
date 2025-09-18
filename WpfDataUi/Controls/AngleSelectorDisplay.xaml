@@ -1,22 +1,22 @@
 ﻿<UserControl
+    mc:Ignorable="d"
     x:Class="WpfDataUi.Controls.AngleSelectorDisplay"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="clr-namespace:WpfDataUi.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:decorators="clr-namespace:WpfDataUiCore.Decorators"
+    xmlns:decorators="clr-namespace:WpfDataUi.Decorators"
     xmlns:local="clr-namespace:WpfDataUi.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
     </UserControl.Resources>
     <StackPanel>
 
         <Grid
-            x:Name="TopRowGrid"
             DragOver="Grid_DragOver_1"
-            PreviewMouseUp="TopRowGrid_PreviewMouseUp">
+            PreviewMouseUp="TopRowGrid_PreviewMouseUp"
+            x:Name="TopRowGrid">
             <Grid.ContextMenu>
                 <ContextMenu />
             </Grid.ContextMenu>
@@ -32,36 +32,35 @@
             </Grid.RowDefinitions>
 
             <Label
-                x:Name="Label"
                 Grid.Column="0"
-                VerticalAlignment="Center">
+                VerticalAlignment="Center"
+                x:Name="Label">
                 TitleText
             </Label>
             <Canvas
-                x:Name="CanvasInstance"
                 Grid.Column="1"
-                Width="40"
                 Height="40"
-                Margin="6">
+                Margin="6"
+                Width="40"
+                x:Name="CanvasInstance">
                 <Ellipse
-                    x:Name="EllipseInstance"
                     Grid.Column="0"
-                    Width="40"
                     Height="40"
                     MouseDown="Ellipse_MouseDown"
                     MouseLeftButtonDown="Ellipse_MouseLeftButtonDown_1"
                     MouseMove="Ellipse_MouseMove_1"
                     MouseUp="Ellipse_MouseUp"
-                    Stroke="Gray">
+                    Stroke="Gray"
+                    Width="40"
+                    x:Name="EllipseInstance">
                     <Ellipse.Fill>
-                        <LinearGradientBrush StartPoint=".5,0" EndPoint=".5,1">
-                            <GradientStop Offset="0.0" Color="White" />
-                            <GradientStop Offset="1.0" Color="LightGray" />
+                        <LinearGradientBrush EndPoint=".5,1" StartPoint=".5,0">
+                            <GradientStop Color="White" Offset="0.0" />
+                            <GradientStop Color="LightGray" Offset="1.0" />
                         </LinearGradientBrush>
                     </Ellipse.Fill>
                 </Ellipse>
                 <Line
-                    x:Name="Line"
                     Canvas.Left="20"
                     Canvas.Top="20"
                     MouseMove="Ellipse_MouseMove_1"
@@ -71,7 +70,8 @@
                     X1="0"
                     X2="22"
                     Y1="0"
-                    Y2="0">
+                    Y2="0"
+                    x:Name="Line">
                     <Line.RenderTransform>
                         <TransformGroup>
                             <ScaleTransform />
@@ -88,55 +88,55 @@
 
                 </Line>
                 <Ellipse
-                    Name="CenterPoint"
-                    Grid.Column="0"
                     Canvas.Left="18"
                     Canvas.Top="18"
-                    Width="4"
+                    Fill="Gray"
+                    Grid.Column="0"
                     Height="4"
-                    Fill="Gray" />
+                    Name="CenterPoint"
+                    Width="4" />
 
             </Canvas>
             <Grid Grid.Column="2">
                 <Grid>
                     <TextBox
-                        x:Name="TextBox"
-                        MinWidth="30"
-                        Margin="0,0,13,0"
-                        VerticalAlignment="Center"
                         LostFocus="TextBox_LostFocus_1"
-                        PreviewKeyDown="TextBox_PreviewKeyDown_1">
+                        Margin="0,0,13,0"
+                        MinWidth="30"
+                        PreviewKeyDown="TextBox_PreviewKeyDown_1"
+                        VerticalAlignment="Center"
+                        x:Name="TextBox">
                         <TextBox.ContextMenu>
                             <ContextMenu />
                         </TextBox.ContextMenu>
                     </TextBox>
                     <decorators:NoSizeDecorator>
                         <TextBlock
-                            x:Name="PlaceholderText"
+                            Foreground="Gray"
+                            IsHitTestVisible="False"
                             Margin="3,0,16,0"
                             VerticalAlignment="Center"
-                            Foreground="Gray"
-                            IsHitTestVisible="False" />
+                            x:Name="PlaceholderText" />
                     </decorators:NoSizeDecorator>
                 </Grid>
                 <Label
+                    Content="&#186;"
                     HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Content="&#186;" />
+                    VerticalAlignment="Center" />
             </Grid>
         </Grid>
         <TextBlock
-            x:Name="HintTextBlock"
-            Grid.Row="2"
-            Grid.ColumnSpan="3"
-            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
-            Margin="0,0,-4,0"
-            Padding="8,1,0,4"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
             FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:AngleSelectorDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
+            Grid.ColumnSpan="3"
+            Grid.Row="2"
+            HorizontalAlignment="Left"
+            Margin="0,0,-4,0"
+            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+            Padding="8,1,0,4"
             Text="This is a property description. But what if it is longer?"
-            TextWrapping="Wrap" />
+            TextWrapping="Wrap"
+            VerticalAlignment="Top"
+            x:Name="HintTextBlock" />
 
     </StackPanel>
 </UserControl>
