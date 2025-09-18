@@ -22,6 +22,7 @@ using Gum.Services.Dialogs;
 using Gum.Plugins;
 using Gum.ViewModels;
 using Expression = System.Linq.Expressions.Expression;
+using Gum.Plugins.ImportPlugin.Manager;
 
 namespace Gum.Services;
 
@@ -66,7 +67,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<DragDropManager>();
         services.AddSingleton<MenuStripManager>();
-        
+        services.AddSingleton<ImportLogic>();
+
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();
         services.AddSingleton<SetVariableLogic>();

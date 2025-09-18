@@ -30,6 +30,7 @@ internal class MainGumFormsPlugin : PluginBase
     System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
     private readonly FormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
+    private readonly ImportLogic _importLogic;
 
     #endregion
 
@@ -37,7 +38,7 @@ internal class MainGumFormsPlugin : PluginBase
     {
         _formsFileService = new FormsFileService();
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        
+        _importLogic = Locator.GetRequiredService<ImportLogic>();
     }
 
     public override void StartUp()
@@ -89,7 +90,7 @@ internal class MainGumFormsPlugin : PluginBase
         }
         #endregion
 
-        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands);
+        var viewModel = new AddFormsViewModel(_formsFileService, _dialogService, _fileCommands, _importLogic);
         _dialogService.Show(viewModel);
     }
 

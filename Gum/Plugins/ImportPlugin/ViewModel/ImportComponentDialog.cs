@@ -15,6 +15,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
     private readonly IFileCommands _fileCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
+    private readonly ImportLogic _importLogic;
 
     public override string Title => "Import Component";
     public override string BrowseFileFilter => "Gum Component (*.gucx)|*.gucx";
@@ -23,11 +24,14 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
         IFileCommands fileCommands,
         IGuiCommands guiCommands,
         ISelectedState selectedState,
-        IDialogService dialogService) : base(dialogService)
+        IDialogService dialogService,
+        ImportLogic importLogic) 
+        : base(dialogService)
     {
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _selectedState = selectedState;
+        _importLogic = importLogic;
 
         List<FilePath> componentFilesNotInProject = FileManager.GetAllFilesInDirectory(
             GumState.Self.ProjectState.ComponentFilePath.FullPath, "gucx")
@@ -54,7 +58,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
             ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
         foreach (var file in SelectedFiles)
         {
-            lastImportedComponent = ImportLogic.ImportComponent(file, desiredDirectory,
+            lastImportedComponent = _importLogic.ImportComponent(file, desiredDirectory,
                 // dont' save - we'll do it below:
                 saveProject: false);
         }

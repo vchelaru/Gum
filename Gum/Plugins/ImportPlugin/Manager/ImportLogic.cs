@@ -10,14 +10,22 @@ using ToolsUtilities;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
 
-public static class ImportLogic
+public class ImportLogic
 {
-    private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
-    private static readonly IGuiCommands _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-    private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
-    private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
+    private readonly ISelectedState _selectedState;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly IDialogService _dialogService;
 
-    public static void ImportScreen(FilePath fileName, string desiredDirectory = null, bool saveProject = true)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService)
+    {
+        _selectedState = selectedState;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _dialogService = dialogService;
+    }
+
+    public void ImportScreen(FilePath fileName, string desiredDirectory = null, bool saveProject = true)
     {
         desiredDirectory = desiredDirectory ?? 
             FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
@@ -76,7 +84,7 @@ public static class ImportLogic
         }
     }
 
-    public static ComponentSave ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    public ComponentSave ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
     {
         var shouldAdd = true;
 
@@ -143,7 +151,7 @@ public static class ImportLogic
         return toReturn;
     }
 
-    public static BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
+    public BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
     {
         var shouldAdd = true;
 
