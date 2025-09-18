@@ -292,6 +292,7 @@
     * [Layered Forms](code/monogame/gum-forms/layered-forms.md)
     * [Troubleshooting](code/monogame/gum-forms/troubleshooting.md)
   * [File Loading](code/monogame/file-loading.md)
+  * [Ordering](code/monogame/ordering.md)
   * [Profiling](code/monogame/profiling.md)
   * [Resolution and Resizing the Game Window](code/monogame/resizing-the-game-window.md)
   * [Known Issues](code/monogame/known-issues.md)
