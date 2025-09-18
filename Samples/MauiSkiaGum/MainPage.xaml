@@ -1,25 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MauiSkiaGum.MainPage"
-             xmlns:SkiaGum="clr-namespace:SkiaGum.Maui;assembly=SkiaGum.Maui"
-             >
+<ContentPage
+    x:Class="MauiSkiaGum.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:SkiaGum="clr-namespace:SkiaGum.Maui;assembly=SkiaGum.Maui">
 
     <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25">
+        <VerticalStackLayout Padding="30,0" Spacing="25">
             <Label
-                Text="Hello, World!"
+                SemanticProperties.HeadingLevel="Level1"
                 Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
+                Text="Hello, World!" />
             <Button
                 x:Name="CounterBtn"
-                Text="Click me to add Skia circles" 
-                SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
+                HorizontalOptions="Fill"
+                SemanticProperties.Hint="Counts the number of times you click"
+                Text="Click me to add Skia circles" />
+            <SkiaGum:SkiaGumCanvasView
+                x:Name="SkiaGumCanvasView"
+                HeightRequest="200"
                 HorizontalOptions="Fill" />
-            <SkiaGum:SkiaGumCanvasView HorizontalOptions="Fill" HeightRequest="200" x:Name="SkiaGumCanvasView"/>
 
         </VerticalStackLayout>
     </ScrollView>

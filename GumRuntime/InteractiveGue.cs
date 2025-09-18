@@ -174,6 +174,9 @@ public partial class InteractiveGue : BindableGue
     /// </summary>
     public event EventHandler Click;
 
+    public event EventHandler<RoutedEventArgs> ClickPreview;
+    public event EventHandler<RoutedEventArgs> PushPreview;
+
     /// <summary>
     /// Event raised whenever this is double-clicked by a cursor. A double-click occurs
     /// when the cursor is over this and the left mouse button is clicked twice in rapid succession.
@@ -322,6 +325,34 @@ public partial class InteractiveGue : BindableGue
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
         {
+            if(asInteractive != null && asInteractive.HasEvents  && asInteractive.IsEnabledRecursively)
+            {
+                if(asInteractive.ClickPreview != null &&
+                    !handledActions.HandledClickPreview && cursor.PrimaryClick)
+                {
+                    var args = new InputEventArgs() { InputDevice = cursor };
+                    asInteractive.ClickPreview(asInteractive, args);
+
+                    if(args.Handled)
+                    {
+                        cursor.WindowPushed = asInteractive;
+                        handledActions.HandledClickPreview = true;
+                    }
+                }
+                if(asInteractive.PushPreview != null &&
+                    !handledActions.handledPushPreview && cursor.PrimaryPush)
+                {
+                    var args = new InputEventArgs() { InputDevice = cursor };
+                    asInteractive.PushPreview(asInteractive, args);
+
+                    if (args.Handled)
+                    {
+                        handledActions.handledPushPreview = true;
+                    }
+                }
+            }
+
+
             #region Try handling by children
 
             if(currentItem.Children == null)
@@ -420,7 +451,7 @@ public partial class InteractiveGue : BindableGue
                         cursor.WindowOver = asInteractive;
                         handledActions.SetWindowOver = true;
 
-                        if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively)
+                        if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively && handledActions.handledPushPreview == false)
                         {
 
                             cursor.WindowPushed = asInteractive;
@@ -446,14 +477,16 @@ public partial class InteractiveGue : BindableGue
                         {
                             if (cursor.WindowPushed == asInteractive)
                             {
-                                if (asInteractive.Click != null)
+                                if (asInteractive.Click != null && handledActions.HandledClickPreview == false)
                                 {
                                     // Should InputDevice be the cursor? Or the underlying hardware?
                                     // I don't know if we have access to the underlying hardware here...
                                     var args = new InputEventArgs() { InputDevice = cursor };
                                     asInteractive.Click(asInteractive, args);
+
+
                                 }
-                                if(asInteractive.DoubleClick != null && cursor.PrimaryDoubleClick)
+                                if(asInteractive.DoubleClick != null && cursor.PrimaryDoubleClick && handledActions.HandledClickPreview == false)
                                 {
                                     var args = new InputEventArgs() { InputDevice = cursor };
                                     asInteractive.DoubleClick(asInteractive, args);
@@ -939,6 +972,8 @@ class HandledActions
 {
     public bool HandledMouseWheel;
     public bool HandledRollOver;
+    public bool HandledClickPreview;
+    public bool handledPushPreview;
     public bool SetWindowOver;
 }
 public static class GueInteractiveExtensionMethods

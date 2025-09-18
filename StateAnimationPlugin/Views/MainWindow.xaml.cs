@@ -207,18 +207,14 @@ namespace StateAnimationPlugin.Views
             }
             /////////// End Early Out/////////
 
-            SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
+            SubAnimationSelectionDialogViewModel window = new();
 
             window.AnimationToExclude = this.ViewModel.SelectedAnimation;
 
             window.AnimationContainers = CreateAnimationContainers();
 
-            var result = window.ShowDialog();
-
-            if (result.HasValue && result.Value && window.SelectedAnimation != null)
+            if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
             {
-                var selectedAnimation = window.SelectedAnimation;
-
                 AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
                 if (selectedAnimation.ContainingInstance != null)
                 {

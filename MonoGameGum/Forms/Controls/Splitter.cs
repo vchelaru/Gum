@@ -183,21 +183,53 @@ public class Splitter :
             secondVisual = parent.Children[index + 1] as GraphicalUiElement;
         }
 
+        var resizeBehavior = EffectiveResizeBehavior;
         if(firstVisual != null)
         {
-            var absoluteHeight = firstVisual.GetAbsoluteHeight();
-            changeInPixels = Math.Max(-absoluteHeight, changeInPixels);
+            if(resizeBehavior == Controls.ResizeBehavior.Rows)
+            {
+                var absoluteHeight = firstVisual.GetAbsoluteHeight();
+                if(firstVisual.MinHeight != null)
+                {
+                    absoluteHeight -= firstVisual.MinHeight.Value;
+                }
+                changeInPixels = Math.Max(-absoluteHeight, changeInPixels);
+            }
+            else
+            {
+                var absoluteWidth = firstVisual.GetAbsoluteWidth();
+                if(firstVisual.MinWidth != null)
+                {
+                    absoluteWidth -= firstVisual.MinWidth.Value;
+                }
+                changeInPixels = Math.Max(-absoluteWidth, changeInPixels);
+            }
         }
         if (secondVisual != null)
         {
-            var absoluteHeight = secondVisual.GetAbsoluteHeight();
-            changeInPixels = Math.Min(absoluteHeight, changeInPixels);
+            if(resizeBehavior == Controls.ResizeBehavior.Rows)
+            {
+                var absoluteHeight = secondVisual.GetAbsoluteHeight();
+                if(secondVisual.MinHeight != null)
+                {
+                    absoluteHeight -= secondVisual.MinHeight.Value;
+                }
+                changeInPixels = Math.Min(absoluteHeight, changeInPixels);
+            }
+            else
+            {
+                var absoluteWidth = secondVisual.GetAbsoluteWidth();
+                if(secondVisual.MinWidth != null)
+                {
+                    absoluteWidth -= secondVisual.MinWidth.Value;
+                }
+                changeInPixels = Math.Min(absoluteWidth, changeInPixels);
+            }
         }
 
         DimensionUnitType? firstUnits;
         DimensionUnitType? secondUnits;
 
-        var resizeBehavior = EffectiveResizeBehavior;
 
         if (resizeBehavior == Controls.ResizeBehavior.Rows)
         {

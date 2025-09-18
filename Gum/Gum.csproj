@@ -2,7 +2,6 @@
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<OutputType>WinExe</OutputType>
-		<BaseIntermediateOutputPath>objNetFramework\</BaseIntermediateOutputPath>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWindowsForms>true</UseWindowsForms>
