@@ -17,6 +17,7 @@ public class AddFormsViewModel : DialogViewModel
     private readonly FormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
+    private readonly ImportLogic _importLogic;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -26,11 +27,15 @@ public class AddFormsViewModel : DialogViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService, IFileCommands fileCommands)
+    public AddFormsViewModel(FormsFileService formsFileService, 
+        IDialogService dialogService, 
+        IFileCommands fileCommands,
+        ImportLogic importLogic)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
+        _importLogic = importLogic;
     }
 
     protected override void OnAffirmative()
@@ -70,17 +75,17 @@ public class AddFormsViewModel : DialogViewModel
             if (extension == "gusx")
             {
                 // add screen
-                ImportLogic.ImportScreen(item.Value, saveProject: false);
+                _importLogic.ImportScreen(item.Value, saveProject: false);
             }
             else if (extension == "gucx")
             {
                 // add component
-                ImportLogic.ImportComponent(item.Value, saveProject: false);
+                _importLogic.ImportComponent(item.Value, saveProject: false);
             }
             else if (extension == "behx")
             {
                 // add behavior
-                ImportLogic.ImportBehavior(item.Value, saveProject: false);
+                _importLogic.ImportBehavior(item.Value, saveProject: false);
             }
             // standards are already added
         }

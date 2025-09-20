@@ -7,88 +7,134 @@ using System;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using System.Linq;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
 
-public static class ImportLogic
+public class ImportLogic
 {
-    private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
-    private static readonly IGuiCommands _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-    private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
-    private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
+    private readonly ISelectedState _selectedState;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly IDialogService _dialogService;
 
-    public static void ImportScreen(FilePath fileName, string desiredDirectory = null, bool saveProject = true)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService)
     {
-        desiredDirectory = desiredDirectory ?? 
-            FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
+        _selectedState = selectedState;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _dialogService = dialogService;
+    }
 
-        var shouldAdd = true;
+    public ScreenSave? ImportScreen(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    {
+        string screensOrComponents = "Screens";
+        var elementReferences = ProjectManager.Self.GumProjectSave.ScreenReferences;
 
+        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
 
-        if (FileManager.IsRelativeTo(fileName.FullPath, desiredDirectory) == false)
+        ScreenSave? toReturn = null;
+        ScreenSave? screenSave = null;
+        if (shouldAdd)
         {
-            var copyResult = _dialogService.ShowYesNoMessage("The file must be in the Gum project's Screens folder.  " +
-                "Would you like to copy the file?.", "Copy?");
+            screenSave = FileManager.XmlDeserialize<ScreenSave>(filePath.FullPath);
 
-            shouldAdd = copyResult;
+            var isDuplicate = ObjectFinder.Self.GetElementSave(screenSave.Name) != null;
 
-            try
+            if (isDuplicate)
             {
-                string destination = desiredDirectory + FileManager.RemovePath(fileName.FullPath);
-                System.IO.File.Copy(fileName.FullPath,
-                    destination);
-
-                fileName = destination;
-            }
-            catch (Exception ex)
-            {
-                _dialogService.ShowMessage("Error copying the file: " + ex.ToString());
+                _dialogService.ShowMessage($"This project already a screen named {screenSave.Name} in this project");
+                shouldAdd = false;
             }
         }
 
-        if (shouldAdd)
-        {
-            string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName.FullPath));
+        if(shouldAdd)
+        { 
+            elementReferences.Add(new ElementReference { Name = screenSave!.Name, ElementType = ElementType.Screen });
+            elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            ProjectManager.Self.GumProjectSave.ScreenReferences.Add(
-                new ElementReference { Name = strippedName, ElementType = ElementType.Screen });
-
-            ProjectManager.Self.GumProjectSave.ScreenReferences.Sort(
-                (first, second) => first.Name.CompareTo(second.Name));
-
-            var screenSave = FileManager.XmlDeserialize<ScreenSave>(fileName.FullPath);
-
-            ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
-
-            ProjectManager.Self.GumProjectSave.Screens.Sort(
-                (first, second) => first.Name.CompareTo(second.Name));
+            var screens = ProjectManager.Self.GumProjectSave.Screens;
+            screens.Add(screenSave);
+            screens.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             screenSave.Initialize(null);
 
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
-            if(saveProject)
-            {
-                _guiCommands.RefreshElementTreeView();
-                _selectedState.SelectedScreen = screenSave;
-                _fileCommands.TryAutoSaveProject();
-            }
-            _fileCommands.TryAutoSaveElement(screenSave);
+            DoAfterImportLogic(saveProject, screenSave);
+
+            toReturn = screenSave;
         }
+
+        return toReturn;
     }
 
-    public static ComponentSave ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+
+    public ComponentSave? ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    {
+        string screensOrComponents = "Components";
+        var elementReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
+
+        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
+
+        ComponentSave? toReturn = null;
+        ComponentSave? componentSave = null;
+        if (shouldAdd)
+        {
+            componentSave = FileManager.XmlDeserialize<ComponentSave>(filePath.FullPath);
+
+            var isDuplicate = ObjectFinder.Self.GetElementSave(componentSave.Name) != null;
+
+            if(isDuplicate)
+            {
+                _dialogService.ShowMessage($"This project already a component named {componentSave.Name} in this project");
+                shouldAdd = false;
+            }
+        }
+
+        if(shouldAdd)
+        {
+            elementReferences.Add(new ElementReference { Name = componentSave!.Name, ElementType = ElementType.Component });
+            elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+            var components = ProjectManager.Self.GumProjectSave.Components;
+            components.Add(componentSave);
+            components.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+            componentSave.InitializeDefaultAndComponentVariables();
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+
+            DoAfterImportLogic(saveProject, componentSave);
+
+            toReturn = componentSave;
+        }
+
+        return toReturn;
+    }
+
+    private void DoAfterImportLogic(bool saveProject, ElementSave screenSave)
+    {
+        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
+
+        if (saveProject)
+        {
+            _guiCommands.RefreshElementTreeView();
+            _selectedState.SelectedElement = screenSave;
+            _fileCommands.TryAutoSaveProject();
+        }
+        _fileCommands.TryAutoSaveElement(screenSave);
+    }
+
+    private bool DetermineIfShouldAdd(ref FilePath filePath, ref string desiredDirectory, string screensOrComponents)
     {
         var shouldAdd = true;
-
         desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
+            ProjectManager.Self.GumProjectSave.FullFileName) + $"{screensOrComponents}/";
 
         if (!FileManager.IsRelativeTo(filePath.FullPath, desiredDirectory))
         {
             string fileNameWithoutPath = FileManager.RemovePath(filePath.FullPath);
 
-            var copyResult = _dialogService.ShowYesNoMessage("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
-                "Would you like to copy the file?", "Copy?");
+            var copyResult = _dialogService.ShowYesNoMessage("The file " + fileNameWithoutPath + $" must be in the Gum project's {screensOrComponents} folder.  " +
+                "Would you like to copy the file?.", "Copy?");
 
             shouldAdd = copyResult;
 
@@ -103,47 +149,17 @@ public static class ImportLogic
                 }
                 catch (Exception ex)
                 {
-                    _guiCommands.PrintOutput("Error copying file: " + ex);
+                    _dialogService.ShowMessage("Error copying the file: " + ex);
                     shouldAdd = false;
                 }
             }
         }
 
-        ComponentSave toReturn = null;
-
-        if (shouldAdd)
-        {
-            string strippedName = filePath.RemoveExtension().FileNameNoPath;
-
-            var componentSave = FileManager.XmlDeserialize<ComponentSave>(filePath.FullPath);
-
-            var componentReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
-            componentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-            componentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            var components = ProjectManager.Self.GumProjectSave.Components;
-            components.Add(componentSave);
-            components.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            componentSave.InitializeDefaultAndComponentVariables();
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-
-
-            if(saveProject)
-            {
-                _guiCommands.RefreshElementTreeView();
-                _selectedState.SelectedComponent = componentSave;
-                _fileCommands.TryAutoSaveProject();
-            }
-            _fileCommands.TryAutoSaveElement(componentSave);
-
-            toReturn = componentSave;
-        }
-
-        return toReturn;
+        return shouldAdd;
     }
 
-    public static BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
+
+    public BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
     {
         var shouldAdd = true;
 
