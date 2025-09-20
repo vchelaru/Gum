@@ -68,6 +68,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BmfcSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\GradientType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalAlignment.cs" />
