@@ -40,7 +40,7 @@ namespace Gum.DataTypes
 
     public static class ElementSaveExtensionMethods
     {
-        public static bool Initialize(this ElementSave elementSave, StateSave defaultState)
+        public static bool Initialize(this ElementSave elementSave, StateSave? defaultState)
         {
             bool wasModified = false;
 
@@ -101,7 +101,7 @@ namespace Gum.DataTypes
             }
         }
 
-        private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave defaultState)
+        private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave? defaultState)
         {
             bool wasModified = false;
             // Use States and not AllStates because we want to make sure we
