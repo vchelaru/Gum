@@ -470,14 +470,25 @@ public class ScrollViewer :
         if(verticalScrollBar != null)
         {
             var isShiftHeld = false;
+
+            var hasExplicitKeyboardsForUiControl = false;
+
 #if !FRB && !RAYLIB
             foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
             {
                 isShiftHeld |= keyboard.IsShiftDown;
+                hasExplicitKeyboardsForUiControl = true;
             }
 #endif
 
-            if(isShiftHeld == false)
+            if(!hasExplicitKeyboardsForUiControl)
+            {
+#if !RAYLIB
+                isShiftHeld |= FrameworkElement.MainKeyboard.IsShiftDown;
+#endif
+            }
+
+            if (isShiftHeld == false)
             {
                 var valueBefore = verticalScrollBar.Value;
 
@@ -494,7 +505,6 @@ public class ScrollViewer :
 
                 args.Handled = horizontalScrollBar.Value != valueBefore;
             }
-            // todo - handle shift+mouse wheel for horizontal scrolling
         }
     }
 

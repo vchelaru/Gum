@@ -86,9 +86,13 @@ public class FrameworkElement : INotifyPropertyChanged
 #if FRB
     public static Cursor MainCursor => GuiManager.Cursor;
 
+    public static FlatRedBall.Input.Keyboard MainKeyboard => FlatRedBall.Input.Keyboard.Main;
+
     public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
     public static ICursor MainCursor { get; set; }
+
+    public static IInputReceiverKeyboard MainKeyboard { get; set; }
 
 #if !FRB
     public Cursors? CustomCursor { get; set; }
