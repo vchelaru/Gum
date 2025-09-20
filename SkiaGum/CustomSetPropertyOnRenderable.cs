@@ -356,13 +356,13 @@ public class CustomSetPropertyOnRenderable
         //}
         //else
         {
-            if (/*FontSize > 0 &&*/ !string.IsNullOrEmpty(graphicalUiElement.Font))
+            if(graphicalUiElement is TextRuntime asTextRuntime && !string.IsNullOrEmpty(asTextRuntime.Font))
             {
                 //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
-                if (graphicalUiElement.Font != null && itext is Text text)
+                if (asTextRuntime.Font != null && itext is Text text)
                 {
-                    text.FontName = graphicalUiElement.Font;
-                    text.FontSize = graphicalUiElement.FontSize;
+                    text.FontName = asTextRuntime.Font;
+                    text.FontSize = asTextRuntime.FontSize;
                 }
             }
         }
@@ -373,6 +373,8 @@ public class CustomSetPropertyOnRenderable
     private static bool TrySetPropertyOnText(Text text, GraphicalUiElement gue, string propertyName, object value)
     {
         bool handled = false;
+
+        var gueAsTextRuntime = gue as TextRuntime;
 
         void ReactToFontValueChange()
         {
@@ -422,37 +424,57 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font")
         {
-            gue.Font = value as string;
+            if(gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Font = value as string;
+            }
 
             ReactToFontValueChange();
         }
 
 
-        else if (propertyName == nameof(gue.FontSize))
+        else if (propertyName == nameof(gueAsTextRuntime.FontSize))
         {
-            gue.FontSize = (int)value;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.FontSize = (int)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(gue.OutlineThickness))
+        else if (propertyName == nameof(gueAsTextRuntime.OutlineThickness))
         {
-            gue.OutlineThickness = (int)value;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.OutlineThickness = (int)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(gue.IsItalic))
+        else if (propertyName == nameof(gueAsTextRuntime.IsItalic))
         {
-            gue.IsItalic = (bool)value;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.IsItalic = (bool)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(gue.IsBold))
+        else if (propertyName == nameof(gueAsTextRuntime.IsBold))
         {
-            gue.IsBold = (bool)value;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.IsBold = (bool)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(gue.UseFontSmoothing))
+#if !SKIA
+        else if (propertyName == nameof(gueAsTextRuntime.UseFontSmoothing))
         {
-            gue.UseFontSmoothing = (bool)value;
+            if (gueAsTextRuntime != null)
+            {
+                gue.UseFontSmoothing = (bool)value;
+            }
             ReactToFontValueChange();
         }
+#endif
         else if (propertyName == nameof(Blend))
         {
 #if MONOGAME || XNA4
