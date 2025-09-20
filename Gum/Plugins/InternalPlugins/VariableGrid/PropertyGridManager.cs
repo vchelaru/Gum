@@ -269,7 +269,7 @@ public partial class PropertyGridManager
                 hasChangedObjectShowing = false;
             }
 
-            mVariablesDataGrid.IsInnerGridEnabled = !hasCustomState;
+            mVariablesDataGrid.IsEnabled = !hasCustomState;
 
             List<List<MemberCategory>> listOfCategories = new List<List<MemberCategory>>();
 

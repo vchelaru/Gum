@@ -1,11 +1,11 @@
 ﻿<UserControl
-    x:Class="WpfDataUiCore.Controls.PlusMinusTextBox"
+    mc:Ignorable="d"
+    x:Class="WpfDataUi.Controls.PlusMinusTextBox"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:WpfDataUiCore.Controls"
+    xmlns:local="clr-namespace:WpfDataUi.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
 
         <Grid x:Name="TopRowGrid">
@@ -18,57 +18,57 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock
-                x:Name="Label"
                 MinWidth="100"
                 Padding="4,4,4,0"
+                TextWrapping="Wrap"
                 VerticalAlignment="Center"
-                TextWrapping="Wrap">
+                x:Name="Label">
                 Property Label:
             </TextBlock>
 
             <StackPanel
                 Grid.Column="1"
-                Margin="3,0,3,0"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Stretch"
-                Orientation="Horizontal">
+                Margin="3,0,3,0"
+                Orientation="Horizontal"
+                VerticalAlignment="Stretch">
                 <Button
-                    Width="18"
+                    Click="MinusButtonClicked"
                     Height="18"
-                    Click="MinusButtonClicked">
+                    Width="18">
                     -
                 </Button>
                 <TextBox
-                    x:Name="TextBox"
-                    Width="60"
+                    GotFocus="TextBox_GotFocus"
                     Height="20"
                     HorizontalContentAlignment="Center"
+                    LostFocus="TextBox_LostFocus_1"
                     VerticalContentAlignment="Center"
-                    GotFocus="TextBox_GotFocus"
-                    LostFocus="TextBox_LostFocus_1">
+                    Width="60"
+                    x:Name="TextBox">
                     <TextBox.ContextMenu>
                         <ContextMenu />
                     </TextBox.ContextMenu>
                 </TextBox>
                 <Button
-                    Width="18"
+                    Click="PlusButtonClicked"
                     Height="18"
-                    Click="PlusButtonClicked">
+                    Width="18">
                     +
                 </Button>
             </StackPanel>
         </Grid>
         <TextBlock
-            x:Name="HintTextBlock"
-            Grid.Row="2"
-            Grid.ColumnSpan="3"
-            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
-            Margin="0,0,-4,0"
-            Padding="8,1,0,4"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
             FontSize="10"
+            Grid.ColumnSpan="3"
+            Grid.Row="2"
+            HorizontalAlignment="Left"
+            Margin="0,0,-4,0"
+            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+            Padding="8,1,0,4"
             Text="This is a property description. But what if it is longer?"
-            TextWrapping="Wrap" />
+            TextWrapping="Wrap"
+            VerticalAlignment="Top"
+            x:Name="HintTextBlock" />
     </StackPanel>
 </UserControl>

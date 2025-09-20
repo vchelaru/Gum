@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using WpfDataUi.Controls;
 
-namespace WpfDataUiCore.Controls
+namespace WpfDataUi.Controls
 {
     /// <summary>
     /// This is added for convenience for systems which cannot set values on their displayers
