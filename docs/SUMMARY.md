@@ -155,6 +155,7 @@
   * [ContainerRuntime](code/gum-code-reference/containerruntime.md)
   * [Cursor](code/gum-code-reference/cursor/README.md)
     * [Position](code/gum-code-reference/cursor/position.md)
+    * [TransformMatrix](code/gum-code-reference/cursor/transformmatrix.md)
   * [DataUiGrid](code/gum-code-reference/datauigrid/README.md)
     * [Reflection](code/gum-code-reference/datauigrid/reflection.md)
     * [Categories](code/gum-code-reference/datauigrid/categories.md)
