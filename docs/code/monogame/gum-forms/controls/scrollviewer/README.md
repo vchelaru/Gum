@@ -4,7 +4,7 @@
 
 The ScrollViewer control provides a container which can hold Gum objects (including other Gum Forms objects). The user can scroll the ScrollViewer with the mouse or ScrollBar.
 
-By default the ScrollViewer's InnerPanel expands automatically in response to its children and stacks its children top-to-bottom. Of course, this behavior can be changed since the InnterPanel is a standard GraphicalUiElement.
+By default the ScrollViewer's InnerPanel expands automatically in response to its children and stacks its children top-to-bottom. Of course, this behavior can be changed since the InnerPanel is a standard GraphicalUiElement.
 
 ## Code Example: Creating a ScrollViewer with Forms Children
 
@@ -30,6 +30,15 @@ for (int i = 0; i < 30; i++)
 ```
 
 <figure><img src="../../../../../.gitbook/assets/13_09 43 23.gif" alt=""><figcaption><p>Children in a ScrollViewer</p></figcaption></figure>
+
+## Scrolling a ScrollViewer
+
+ScrollViewers can be scrolled by the user using by performing any of the following actions:
+
+* Clicking on the ScrollBar buttons or track
+* Dragging the ScrollBar thumb
+* Using the mouse wheel to scroll vertically
+* Using shift+mouse wheel to scroll horizontally. For more information see the [Horizontal Scrolling](horizontal-scrolling.md) page.
 
 ## Code Example: Creating a ScrollViewer With Non-Forms Children
 

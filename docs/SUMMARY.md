@@ -272,6 +272,7 @@
       * [RadioButton](code/monogame/gum-forms/controls/radiobutton.md)
       * [ScrollBar](code/monogame/gum-forms/controls/scrollbar.md)
       * [ScrollViewer](code/monogame/gum-forms/controls/scrollviewer/README.md)
+        * [Horizontal Scrolling](code/monogame/gum-forms/controls/scrollviewer/horizontal-scrolling.md)
         * [MakeSizedToChildren](code/monogame/gum-forms/controls/scrollviewer/makesizedtochildren.md)
         * [VerticalScrollBarValue](code/monogame/gum-forms/controls/scrollviewer/verticalscrollbarvalue.md)
         * [VerticalScrollBarVisibility](code/monogame/gum-forms/controls/scrollviewer/verticalscrollbarvisibility.md)
