@@ -164,6 +164,7 @@ public class FormsUtilities
         UpdateGamepads(0);
 
         FrameworkElement.MainCursor = cursor;   
+        FrameworkElement.MainKeyboard = keyboard;
 
 
         FrameworkElement.PopupRoot = CreateFullscreenContainer(nameof(FrameworkElement.PopupRoot), systemManagers);
