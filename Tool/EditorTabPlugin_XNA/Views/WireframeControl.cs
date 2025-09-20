@@ -1,29 +1,29 @@
-﻿using System;
-using System.Linq;
-using XnaAndWinforms;
-using System.Windows.Forms;
-using RenderingLibrary.Math.Geometry;
-using RenderingLibrary.Graphics;
-using RenderingLibrary;
+﻿using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.DataTypes;
-using RenderingLibrary.Content;
 using Gum.Managers;
-using Gum.Plugins.BaseClasses;
-using Gum.ToolCommands;
-using System.ComponentModel.Composition;
-using FlatRedBall.AnimationEditorForms.Controls;
-using Microsoft.Xna.Framework.Graphics;
-
-using WinCursor = System.Windows.Forms.Cursor;
 using Gum.Plugins;
-
-using Color = System.Drawing.Color;
-using Matrix = System.Numerics.Matrix4x4;
-using System.Security.Policy;
+using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolCommands;
 using Gum.Wireframe;
+using GumRuntime;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.GueDeriving;
+using RenderingLibrary;
+using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
+using RenderingLibrary.Math.Geometry;
+using System;
+using System.ComponentModel.Composition;
+using System.Linq;
+using System.Security.Policy;
+using System.Windows.Forms;
+using XnaAndWinforms;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
+using WinCursor = System.Windows.Forms.Cursor;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 
@@ -147,6 +147,8 @@ public class WireframeControl : GraphicsDeviceControl
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(GraphicsDevice);
 
+            InitializeDefaultTypeInstantiation();
+
             ToolFontService.Self.Initialize();
             ToolLayerService.Self.Initialize();
 
@@ -201,6 +203,12 @@ public class WireframeControl : GraphicsDeviceControl
         }
     }
 
+    private void InitializeDefaultTypeInstantiation()
+    {
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Text",
+            () => new TextRuntime(systemManagers: this.SystemManagers));
+    }
 
     public void ShareLayerReferences(LayerService layerService)
     {
@@ -234,8 +242,6 @@ public class WireframeControl : GraphicsDeviceControl
     }
 
     #endregion
-
-
 
     bool isInActivity = false;
     private CameraController _cameraController;

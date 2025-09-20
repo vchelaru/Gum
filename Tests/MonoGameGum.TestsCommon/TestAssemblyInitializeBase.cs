@@ -34,7 +34,10 @@ public class TestAssemblyInitializeBase : XunitTestFramework
         ISystemManagers.Default = SystemManagers.Default;
 
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+        GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
+        
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
+
 
         Gum.Forms.FormsUtilities.InitializeDefaults(defaultVisualsVersion: visualVersion);
         CreateStubbedFonts();

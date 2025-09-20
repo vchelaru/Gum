@@ -15,6 +15,7 @@ public class FontManagerTests : BaseTestClass
 
     public FontManagerTests()
     {
+        mocker = new AutoMocker();
         _fontManager = mocker.CreateInstance<FontManager>();
     }
 }

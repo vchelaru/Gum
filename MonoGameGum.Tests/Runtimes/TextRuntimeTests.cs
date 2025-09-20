@@ -1,4 +1,5 @@
-﻿using MonoGameGum.GueDeriving;
+﻿using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -7,12 +8,19 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
 public class TextRuntimeTests
 {
+
+    const string fontPattern =
+$"info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+$"common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\r\n" +
+$"chars count=223\r\n";
+
     [Fact]
     public void AbsoluteWidth_ShouldNotIncludeNewlines()
     {
@@ -146,5 +154,28 @@ public class TextRuntimeTests
         Text sut = new();
         var clone = sut.Clone();
         clone.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UseCustomFont_ShouldChangeFont_OnFontPropertiesSet()
+    {
+        // file name is:
+        // FontCache\Font18SomeFont_Italic_Bold.fnt
+        var bitmapFont = new BitmapFont((Texture2D)null, fontPattern);
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase:true, makeAbsolute:true);
+        loaderManager.AddDisposable(fileName, bitmapFont);
+
+        TextRuntime sut = new();
+        sut.UseCustomFont = true;
+        // set up all the properties:
+        sut.FontSize = 18;
+        sut.Font = "SomeFont";
+        sut.IsBold = true;
+        sut.IsItalic = true;
+
+        sut.UseCustomFont = false;
+
+        sut.BitmapFont.ShouldBe(bitmapFont);
     }
 }
