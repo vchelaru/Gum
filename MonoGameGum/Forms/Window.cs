@@ -67,7 +67,21 @@ public class Window :
             }
         }
     }
-    public ResizeMode ResizeMode { get; set; } = ResizeMode.CanResize;
+
+    ResizeMode _resizeMode = ResizeMode.CanResize;
+    public ResizeMode ResizeMode
+    {
+        get => _resizeMode;
+        set
+        {
+            if (value != _resizeMode)
+            {
+                _resizeMode = value;
+
+            }
+            ResizeModeChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
 
     GraphicalUiElement innerPanel;
@@ -99,26 +113,29 @@ public class Window :
         get => _children;
     }
 
+    public event EventHandler? ResizeModeChanged;
+
     #region Initialize Methods
 
     public Window() : base()
+    {
+        InitializeInternal();
+    }
+    public Window(InteractiveGue visual) : base(visual)
+    {
+        InitializeInternal();
+    }
+
+    private void InitializeInternal()
     {
         if(Visual != null)
         {
             // this allows the window to consume cursor events:
             this.Visual.Click += (_,_) => { };
         }
+        ResizeMode = ResizeMode.CanResize;
     }
 
-
-    public Window(InteractiveGue visual) : base(visual)
-    {
-        if (Visual != null)
-        {
-            // this allows the window to consume cursor events:
-            this.Visual.Click += (_, _) => { };
-        }
-    }
 
     protected override void ReactToVisualChanged()
     {
@@ -248,16 +265,28 @@ public class Window :
             switch (Visual.XOrigin)
             {
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
-                    Visual.X += difference;
-                    Visual.Width -= difference;
+                    {
+                        var widthBefore = Visual.GetAbsoluteWidth();
+                        Visual.Width -= difference;
+                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        Visual.X -= addedWidth;
+                    }
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
-                    Visual.X += difference / 2f;
-                    Visual.Width -= difference;
+                    {
+                        var widthBefore = Visual.GetAbsoluteWidth();
+                        Visual.Width -= difference;
+                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        Visual.X -= addedWidth / 2f;
+                    }
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Right:
                     Visual.Width -= difference;
                     break;
+            }
+            if (Visual.MinWidth != null)
+            {
+                Visual.Width = Math.Max(Visual.MinWidth.Value, Visual.Width);
             }
         }
         if (topGrabbedInOffset != null)
@@ -268,40 +297,67 @@ public class Window :
             switch (Visual.YOrigin)
             {
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
-                    Visual.Y += difference;
-                    Visual.Height -= difference;
+                    {
+                        var heightBefore = Visual.GetAbsoluteHeight();
+                        Visual.Height -= difference;
+                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        Visual.Y -= addedHeight;
+                    }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
-                    Visual.Y += difference / 2f;
-                    Visual.Height -= difference;
+                    {
+                        var heightBefore = Visual.GetAbsoluteHeight();
+                        Visual.Height -= difference;
+                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        Visual.Y -= addedHeight / 2f;
+                    }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
                     Visual.Height -= difference;
                     break;
             }
+            if (Visual.MinHeight != null)
+            {
+                Visual.Height = Math.Max(Visual.MinHeight.Value, Visual.Height);
+            }
         }
         if (rightGrabbedInOffset != null)
         {
             var desiredRight = cursorX + rightGrabbedInOffset.Value;
+             
             var difference = desiredRight - Visual.AbsoluteRight;
-
+            
             switch (Visual.XOrigin)
             {
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
                     Visual.Width += difference;
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
-                    Visual.X += difference / 2f;
-                    Visual.Width += difference;
+                    {
+                        var widthBefore = Visual.GetAbsoluteWidth();
+                        Visual.Width += difference;
+                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        Visual.X += addedWidth / 2f;
+                    }
+
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Right:
-                    Visual.X += difference;
-                    Visual.Width += difference;
+                    {
+                        var widthBefore = Visual.GetAbsoluteWidth();
+                        Visual.Width += difference;
+                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        Visual.X += addedWidth;
+                    }
                     break;
+            }
+            if(Visual.MinWidth != null)
+            {
+                Visual.Width = Math.Max(Visual.MinWidth.Value, Visual.Width);
             }
         }
         if (bottomGrabbedInOffset != null)
         {
+            // todo - finish here
             var desiredBottom = cursorY + bottomGrabbedInOffset.Value;
             var difference = desiredBottom - Visual.AbsoluteBottom;
 
@@ -311,13 +367,26 @@ public class Window :
                     Visual.Height += difference;
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
-                    Visual.Y = Visual.Y + difference / 2f;
-                    Visual.Height += difference;
+                    {
+                        var heightBefore = Visual.GetAbsoluteHeight();
+                        Visual.Height += difference;
+                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        Visual.Y += addedHeight / 2f;
+
+                    }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
-                    Visual.Y += difference;
-                    Visual.Height += difference;
+                    {
+                        var heightBefore = Visual.GetAbsoluteHeight();
+                        Visual.Height += difference;
+                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        Visual.Y += addedHeight;
+                    }
                     break;
+            }
+            if(Visual.MinHeight != null)
+            {
+                Visual.Height = Math.Max(Visual.MinHeight.Value, Visual.Height);
             }
         }
 

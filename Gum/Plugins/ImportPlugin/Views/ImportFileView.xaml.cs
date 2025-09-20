@@ -1,121 +1,43 @@
 ﻿using Gum.Plugins.ImportPlugin.ViewModel;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
+using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.ImportPlugin.Views
 {
     /// <summary>
     /// Interaction logic for ImportFileView.xaml
     /// </summary>
-    public partial class ImportFileView : Window
+    [Dialog(typeof(ImportComponentDialog))]
+    [Dialog(typeof(ImportScreenDialog))]
+    [Dialog(typeof(ImportBehaviorDialog))]
+
+    public partial class ImportFileView : UserControl
     {
-        public ImportFileViewModel ViewModel => DataContext as ImportFileViewModel;
+        public ImportBaseDialogViewModel ViewModel => DataContext as ImportBaseDialogViewModel;
 
         public ImportFileView()
         {
             InitializeComponent();
         }
 
-        private void DoAcceptLogic()
+        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            var selectedItem = ViewModel.SelectedListBoxItem;
+            int current = ListBoxInstance.SelectedIndex;
+            int max = ListBoxInstance.Items.Count - 1;
 
-            if (!string.IsNullOrEmpty(selectedItem))
+            int? direction = e.Key switch
             {
-                ViewModel.SelectedFiles.Clear();
-                ViewModel.SelectedFiles.Add(ViewModel.ContentFolder + ViewModel.SelectedListBoxItem);
-                this.DialogResult = true;
-            }
-            else
+                Key.Down when current < max => 1,
+                Key.Up when current > 0 => -1,
+                _ => null
+            };
+
+            if (direction.HasValue)
             {
-                System.Windows.Forms.MessageBox.Show("Select a file or click the Browse button");
-            }
-        }
-
-        private void OkButtonClicked(object sender, RoutedEventArgs e)
-        {
-            DoAcceptLogic();
-        }
-
-
-        private void CancelButtonClicked(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = false;
-        }
-
-        private void TextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            switch (e.Key)
-            {
-                case Key.Enter:
-                    DoAcceptLogic();
-                    break;
-                case Key.Escape:
-                    this.DialogResult = false;
-                    break;
-            }
-        }
-
-        private void TextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            switch (e.Key)
-            {
-                case Key.Down:
-                    e.Handled = true;
-                    {
-                        var index = ViewModel.FilteredFileList.IndexOf(ViewModel.SelectedListBoxItem);
-
-                        if (index < ViewModel.FilteredFileList.Count - 1)
-                        {
-                            ViewModel.SelectedListBoxItem = ViewModel.FilteredFileList[index + 1];
-                        }
-                    }
-                    break;
-                case Key.Up:
-                    e.Handled = true;
-                    {
-                        var index = ViewModel.FilteredFileList.IndexOf(ViewModel.SelectedListBoxItem);
-
-                        if (index > 0)
-                        {
-                            ViewModel.SelectedListBoxItem = ViewModel.FilteredFileList[index - 1];
-                        }
-                    }
-                    break;
-            }
-        }
-
-        private void ListBoxInstance_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ListBoxInstance.ScrollIntoView(ViewModel.SelectedListBoxItem);
-
-        }
-
-        private void HandleBrowseClicked(object sender, RoutedEventArgs e)
-        {
-            // add externally built file, add external file, add built file
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-
-            if(!string.IsNullOrWhiteSpace( ViewModel.BrowseFileFilter))
-            {
-                openFileDialog.Filter = ViewModel.BrowseFileFilter;
+                ListBoxInstance.SelectedIndex += direction.Value;
             }
 
-                // false for now. Components support it, but screens don't, and we're going
-                // to use this view on both
-            //openFileDialog.Multiselect = true;
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                ViewModel.SelectedFiles.Clear();
-                ViewModel.SelectedFiles.AddRange(openFileDialog.FileNames);
-                this.DialogResult = true;
-            }
         }
-
-
-
     }
 }

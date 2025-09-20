@@ -6,6 +6,7 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
+using Moq.AutoMock;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -14,26 +15,22 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.ViewModels.Dialogs;
-public class AddCategoryDialogViewModelTests
+public class AddCategoryDialogViewModelTests : BaseTestClass
 {
+    private readonly AutoMocker mocker;
+
     private readonly Mock<ISelectedState> _selectedState;
-    private readonly Mock<IElementCommands> _elementCommands;
-    private readonly Mock<IUndoManager> _undoManager;
     private readonly Mock<INameVerifier> _nameVerifier;
     AddCategoryDialogViewModel _viewModel;
 
     public AddCategoryDialogViewModelTests()
     {
-        _selectedState = new Mock<ISelectedState>();
-        _elementCommands = new Mock<IElementCommands>();
-        _undoManager = new Mock<IUndoManager>();
-        _nameVerifier = new Mock<INameVerifier>();
+        mocker = new();
 
-        _viewModel = new AddCategoryDialogViewModel(
-            _selectedState.Object,
-            _elementCommands.Object,
-            _undoManager.Object,
-            _nameVerifier.Object);
+        _viewModel = mocker.CreateInstance<AddCategoryDialogViewModel>();
+
+        _selectedState = mocker.GetMock<ISelectedState>();
+        _nameVerifier = mocker.GetMock<INameVerifier>();
     }
 
     [Fact]

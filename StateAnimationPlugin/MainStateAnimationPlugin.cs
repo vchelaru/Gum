@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Managers;
+using Gum.Services.Dialogs;
 
 
 namespace StateAnimationPlugin;
@@ -35,6 +36,7 @@ public class MainStateAnimationPlugin : PluginBase
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
     #region Fields
     private readonly DuplicateService _duplicateService;
@@ -75,6 +77,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        _animationVmFactory = () => new ElementAnimationsViewModel(_nameVerifier, _dialogService);
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
@@ -281,7 +284,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         // forces a refresh:
-        _viewModel = new ElementAnimationsViewModel(_nameVerifier);
+        _viewModel = new ElementAnimationsViewModel(_nameVerifier, _dialogService);
 
         RefreshViewModel();
     }
@@ -304,70 +307,37 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (!string.IsNullOrEmpty(whyIsntValid))
         {
-            System.Windows.MessageBox.Show(whyIsntValid);
-
+            _dialogService.ShowMessage(whyIsntValid);
+            return;
         }
-        else
+
+        AddStateKeyframeDialog dialog = new()
         {
-            ListBoxMessageBox lbmb = new ListBoxMessageBox();
-            lbmb.RequiresSelection = true;
-            lbmb.Message = "Select a state";
-            lbmb.Title = "Add a state";
+            ElementSave = _selectedState.SelectedElement
+        };
 
-            var element = _selectedState.SelectedElement;
+        _dialogService.Show(dialog);
 
-            foreach (var state in element.States)
+        if (dialog.Result is { } newVm)
+        {
+            if (_viewModel.SelectedAnimation.SelectedKeyframe != null)
             {
-                lbmb.Items.Add(state.Name);
+                // put this after the current animation
+                newVm.Time = _viewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+            }
+            else if (_viewModel.SelectedAnimation.Keyframes.Count != 0)
+            {
+                newVm.Time = _viewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            foreach (var category in element.Categories)
-            {
-                foreach (var state in category.States)
-                {
-                    lbmb.Items.Add(category.Name + "/" + state.Name);
-                }
-            }
+            _viewModel.SelectedAnimation.Keyframes.BubbleSort();
 
-
-            var dialogResult = lbmb.ShowDialog();
-
-            if (dialogResult.HasValue && dialogResult.Value)
-            {
-                var item = lbmb.SelectedItem;
-
-                var newVm = new AnimatedKeyframeViewModel();
-
-
-                newVm.StateName = (string)item;
-                // User just selected the state, so it better be valid!
-                newVm.HasValidState = true;
-                newVm.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
-                newVm.Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
-
-
-                if (_viewModel.SelectedAnimation.SelectedKeyframe != null)
-                {
-                    // put this after the current animation
-                    newVm.Time = _viewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
-                }
-                else if (_viewModel.SelectedAnimation.Keyframes.Count != 0)
-                {
-                    newVm.Time = _viewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
-                }
-
-
-                _viewModel.SelectedAnimation.Keyframes.BubbleSort();
-
-                _viewModel.SelectedAnimation.Keyframes.Add(newVm);
-                // Call this *before* setting SelectedKeyframe so the available
-                // states are assigned. Otherwise
-                // StateName will be nulled out.
-                HandleAnimationKeyrameAdded(newVm);
-                _viewModel.SelectedAnimation.SelectedKeyframe = newVm;
-
-
-            }
+            _viewModel.SelectedAnimation.Keyframes.Add(newVm);
+            // Call this *before* setting SelectedKeyframe so the available
+            // states are assigned. Otherwise
+            // StateName will be nulled out.
+            HandleAnimationKeyrameAdded(newVm);
+            _viewModel.SelectedAnimation.SelectedKeyframe = newVm;
         }
     }
 
@@ -479,7 +449,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (_viewModel == null)
         {
-            _viewModel = new ElementAnimationsViewModel(_nameVerifier);
+            _viewModel = new(_nameVerifier, _dialogService);
         }
     }
 
@@ -593,9 +563,7 @@ public class MainStateAnimationPlugin : PluginBase
                 message += animation.Name;
             }
 
-            var result = System.Windows.MessageBox.Show(message, "Delete state?", MessageBoxButton.YesNo);
-
-            if (result != MessageBoxResult.Yes)
+            if (!_dialogService.ShowYesNoMessage(message, "Delete state?"))
             {
                 response.ShouldDelete = false;
                 response.Message = null;
@@ -630,9 +598,7 @@ public class MainStateAnimationPlugin : PluginBase
                 message += animation.Name;
             }
 
-            var result = System.Windows.MessageBox.Show(message, "Delete category?", MessageBoxButton.YesNo);
-
-            if (result != MessageBoxResult.Yes)
+            if (!_dialogService.ShowYesNoMessage(message, "Delete category?"))
             {
                 response.ShouldDelete = false;
                 response.Message = null;

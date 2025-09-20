@@ -374,6 +374,7 @@ public class MenuItem : ItemsControl
 
             // sometimes the Gum project includes children, so let's remove them:
             itemsPopup.InnerPanel.Children.Clear();
+            MenuItemsInternal.Clear();
 
             foreach (var item in Items)
             {

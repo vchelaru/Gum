@@ -77,7 +77,7 @@ namespace Gum.Managers
 
                     if (selectedInstance.DefinedByBase)
                     {
-                        MessageBox.Show($"The instance {selectedInstance.Name} cannot be deleted becuase it is defined in a base object.");
+                        _dialogService.ShowMessage($"The instance {selectedInstance.Name} cannot be deleted becuase it is defined in a base object.");
                     }
                     else
                     {
@@ -277,10 +277,7 @@ namespace Gum.Managers
                     message += "\n" + instance.Name;
                 }
 
-                DialogResult result =
-                    MessageBox.Show(message, "Delete instances?", MessageBoxButtons.YesNo);
-
-                if (result == DialogResult.Yes)
+                if (_dialogService.ShowYesNoMessage(message, "Delete instances?"))
                 {
                     ElementSave selectedElement = _selectedState.SelectedElement;
                     foreach (var instance in deletableInstances)
@@ -296,7 +293,7 @@ namespace Gum.Managers
                 // only from base
                 var message = "All selected instances are defined in a base object, so cannot be deleted";
 
-                MessageBox.Show(message);
+                _dialogService.ShowMessage(message);
             }
             else
             {
@@ -306,10 +303,8 @@ namespace Gum.Managers
                 {
                     message += "\n" + instance.Name;
                 }
-                DialogResult result =
-                    MessageBox.Show(message, "Delete instances?", MessageBoxButtons.YesNo);
-
-                if (result == DialogResult.Yes)
+                
+                if (_dialogService.ShowYesNoMessage(message, "Delete instances?"))
                 {
                     ElementSave selectedElement = _selectedState.SelectedElement;
 

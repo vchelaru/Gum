@@ -86,9 +86,13 @@ public class FrameworkElement : INotifyPropertyChanged
 #if FRB
     public static Cursor MainCursor => GuiManager.Cursor;
 
+    public static FlatRedBall.Input.Keyboard MainKeyboard => FlatRedBall.Input.Keyboard.Main;
+
     public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
     public static ICursor MainCursor { get; set; }
+
+    public static IInputReceiverKeyboard MainKeyboard { get; set; }
 
 #if !FRB
     public Cursors? CustomCursor { get; set; }
@@ -621,9 +625,11 @@ public class FrameworkElement : INotifyPropertyChanged
     /// to a Gum screen in Gum will automatically be displayed when the Screen is created, and calling
     /// this will result in the object being added twice.</remarks>
     /// <param name="layer">The layer to add this to, can be null to add it directly to managers</param>
+    [Obsolete("Do not use this method. Either add this to the Root, to a Screen, or to a parent container")]
 #if FRB
     public void Show(FlatRedBall.Graphics.Layer layer = null)
 #else
+
     public void Show(Layer layer = null)
 #endif
     {

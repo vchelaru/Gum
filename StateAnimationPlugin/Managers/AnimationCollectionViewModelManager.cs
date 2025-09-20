@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.Managers;
 
@@ -20,12 +21,15 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
     AnimationFilePathService _animationFilePathService;
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
     public AnimationCollectionViewModelManager()
     {
         _animationFilePathService = new AnimationFilePathService();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
+        _animationVmFactory = () => new(_nameVerifier, dialogService);
     }
 
     public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
@@ -34,25 +38,17 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         {
             return null;
         }
-        else
+
+        ElementAnimationsViewModel toReturn = _animationVmFactory();
+
+        if (GetElementAnimationsSave(element) is { } model)
         {
-            var model = GetElementAnimationsSave(element);
-
-            ElementAnimationsViewModel toReturn;
-            if (model != null)
-            {
-                toReturn = ElementAnimationsViewModel.FromSave(model, element, _nameVerifier);
-            }
-            else
-            {
-                toReturn = new ElementAnimationsViewModel(_nameVerifier);
-
-            }
-
-            toReturn.Element = element;
-
-            return toReturn;
+            toReturn.LoadFromSave(model, element);
         }
+
+        toReturn.Element = element;
+
+        return toReturn;
 
     }
 

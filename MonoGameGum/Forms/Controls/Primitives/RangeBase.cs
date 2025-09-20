@@ -183,10 +183,21 @@ public abstract class RangeBase :
     /// </summary>
     public bool IsMoveToPointEnabled { get; set; }
 
-    // this is used for clicking on the thumb. Eventually this may be
-    // assignable in the future, but for now we're just adding a get so
-    // that ScrollBar can overwrite it.
-    public virtual Orientation Orientation => Orientation.Horizontal;
+    Orientation _orientation = Orientation.Horizontal;
+
+    public virtual Orientation Orientation
+    {
+        get => _orientation;
+        set
+        {
+            if (_orientation != value)
+            {
+                _orientation = value;
+
+                OrientationChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
 
     #endregion
 
@@ -218,6 +229,11 @@ public abstract class RangeBase :
     /// when Value changes are performed in code, such as by assigning the Value property.
     /// </summary>
     public event EventHandler ValueChangedByUi;
+
+    /// <summary>
+    /// Event raised when the Orientation property is changed.
+    /// </summary>
+    public event EventHandler OrientationChanged;
 
     #endregion
 

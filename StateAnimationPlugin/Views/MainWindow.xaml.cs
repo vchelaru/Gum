@@ -28,6 +28,7 @@ using SkiaSharp.Views.WPF;
 using Gum.Logic;
 using ToolsUtilities;
 using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.Views
 {
@@ -58,6 +59,7 @@ namespace StateAnimationPlugin.Views
         private readonly ISelectedState _selectedState;
         private readonly INameVerifier _nameVerifier;
         private readonly NameValidator _nameValidator;
+        private readonly IDialogService _dialogService;
 
         public event EventHandler AddStateKeyframeClicked;
         public event Action<AnimatedKeyframeViewModel> AnimationKeyframeAdded;
@@ -74,6 +76,7 @@ namespace StateAnimationPlugin.Views
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _nameVerifier = Locator.GetRequiredService<INameVerifier>();
             _nameValidator = new NameValidator(_nameVerifier);
+            _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
         private void HandleDataContext(object sender, DependencyPropertyChangedEventArgs e)
@@ -159,32 +162,30 @@ namespace StateAnimationPlugin.Views
 
             if(!string.IsNullOrEmpty(whyIsntValid))
             {
-                MessageBox.Show(whyIsntValid);
+                _dialogService.ShowMessage(whyIsntValid);
             }
             else
             {
 
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new animation name:";
-                tiw.Title = "New animation";
-
-                var dialogResult = tiw.ShowDialog();
-
-                if(dialogResult == System.Windows.Forms.DialogResult.OK)
+                GetUserStringOptions options = new()
                 {
-                    string whyInvalid;
-                    if (!_nameValidator.IsAnimationNameValid(tiw.Result, this.ViewModel.Animations, out whyInvalid))
-                    {
-                        MessageBox.Show(whyInvalid);
-                    }
-                    else
-                    {
-                        var newAnimation = new AnimationViewModel() { Name = tiw.Result };
+                    Validator = x =>
+                        _nameValidator.IsAnimationNameValid(x, ViewModel.Animations, out string whyInvalid)
+                            ? null
+                            : whyInvalid,
+                };
 
-                        this.ViewModel.Animations.Add(newAnimation);
+                if(_dialogService.GetUserString(
+                       message: "Enter new animation name:",
+                       title: "New animation",
+                       options: options) is {} result)
+                {
 
-                        this.ViewModel.SelectedAnimation = newAnimation;
-                    }
+                    var newAnimation = new AnimationViewModel() { Name = result };
+
+                    this.ViewModel.Animations.Add(newAnimation);
+
+                    this.ViewModel.SelectedAnimation = newAnimation;
                 }
             }
         }
@@ -201,23 +202,19 @@ namespace StateAnimationPlugin.Views
             ////////////// Early Out//////////
             if(ViewModel.SelectedAnimation == null)
             {
-                MessageBox.Show("You must first select an animation");
+                _dialogService.ShowMessage("You must first select an animation");
                 return;
             }
             /////////// End Early Out/////////
 
-            SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
+            SubAnimationSelectionDialogViewModel window = new();
 
             window.AnimationToExclude = this.ViewModel.SelectedAnimation;
 
             window.AnimationContainers = CreateAnimationContainers();
 
-            var result = window.ShowDialog();
-
-            if (result.HasValue && result.Value && window.SelectedAnimation != null)
+            if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
             {
-                var selectedAnimation = window.SelectedAnimation;
-
                 AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
                 if (selectedAnimation.ContainingInstance != null)
                 {
@@ -256,21 +253,16 @@ namespace StateAnimationPlugin.Views
             ////////////// Early Out//////////
             if (ViewModel.SelectedAnimation == null)
             {
-                MessageBox.Show("You must first select an animation");
+                _dialogService.ShowMessage("You must first select an animation");
                 return;
             }
             /////////// End Early Out/////////
             
-            var textInputWindow = new TextInputWindow();
-            textInputWindow.Message = "Enter new event name";
-            textInputWindow.Title = "New event";
-            var result = textInputWindow.ShowDialog();
-
-            if(result == System.Windows.Forms.DialogResult.OK)
+            if(_dialogService.GetUserString("Enter new event name", "New event") is { } result)
             {
                 AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
 
-                newVm.EventName = textInputWindow.Result;
+                newVm.EventName = result;
 
                 if (ViewModel.SelectedAnimation.SelectedKeyframe != null)
                 {
@@ -361,11 +353,7 @@ namespace StateAnimationPlugin.Views
             if (e.Key == Key.Delete && this.ViewModel.SelectedAnimation != null)
             {
                 e.Handled = true;
-                var result = MessageBox.Show(
-                    $"Delete animation {ViewModel.SelectedAnimation.Name}?", 
-                    "Delete?", 
-                    MessageBoxButton.YesNo);
-                if(result == MessageBoxResult.Yes)
+                if(_dialogService.ShowYesNoMessage($"Delete animation {ViewModel.SelectedAnimation.Name}?", "Delete?"))
                 {
                     this.ViewModel.Animations.Remove(this.ViewModel.SelectedAnimation);
                     this.ViewModel.SelectedAnimation = null;

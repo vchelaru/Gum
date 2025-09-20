@@ -280,27 +280,29 @@ public class TextBox : TextBoxBase
     protected override void HandlePaste()
     {
         var whatToPaste = Clipboard.ClipboardImplementation.GetText();
+        //////////////////////Early Out////////////////////
+        if (string.IsNullOrEmpty(whatToPaste)) return;
+        ///////////////////End Early Out///////////////////
 
-        if (!string.IsNullOrEmpty(whatToPaste))
+        var args = RaisePreviewTextInput(whatToPaste);
+
+        if(args.Handled == false)
         {
-            var args = RaisePreviewTextInput(whatToPaste);
+            whatToPaste = whatToPaste.Replace("\r\n", "\n");
 
-            if(args.Handled == false)
+            if (selectionLength != 0)
             {
-                if (selectionLength != 0)
-                {
-                    DeleteSelection();
-                }
-                foreach (var character in whatToPaste)
-                {
-                    this.Text = this.Text.Insert(caretIndex, "" + character);
-                    caretIndex++;
-                }
-
-                TruncateTextToMaxLength();
-                UpdateCaretPositionFromCaretIndex();
-                OffsetTextToKeepCaretInView();
+                DeleteSelection();
             }
+            foreach (var character in whatToPaste)
+            {
+                this.Text = this.Text.Insert(caretIndex, "" + character);
+                caretIndex++;
+            }
+
+            TruncateTextToMaxLength();
+            UpdateCaretPositionFromCaretIndex();
+            OffsetTextToKeepCaretInView();
         }
     }
 

@@ -2,7 +2,6 @@
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<OutputType>WinExe</OutputType>
-		<BaseIntermediateOutputPath>objNetFramework\</BaseIntermediateOutputPath>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWindowsForms>true</UseWindowsForms>
@@ -79,7 +78,6 @@
 		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-		<ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
@@ -374,63 +372,6 @@
 		<Compile Remove="Managers\ObjectFinder.cs" />
 		<Compile Remove="Managers\StandardElementsManager.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\CustomizableTextInputWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\CustomizableTextInputWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ListBoxMessageBox.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ListBoxMessageBox.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\MainPanelControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\MainPanelControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\GeneratedInternalTypeHelper.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\GeneratedInternalTypeHelper.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\CreateComponentWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\CreateComponentWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\DeleteOptionsWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\DeleteOptionsWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gum_Content.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gum_Content.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\ImportPlugin\Views\ImportFileView.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\ImportPlugin\Views\ImportFileView.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AlignmentPluginControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AlignmentPluginControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AnchorControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AnchorControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\DockControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\DockControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Behaviors\BehaviorsControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Behaviors\BehaviorsControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorDisplay.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorDisplay.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorListEntry.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorListEntry.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\Views\ErrorTabHeader.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\Views\ErrorTabHeader.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\FileWatchPlugin\FileWatchControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\FileWatchPlugin\FileWatchControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Hotkey\Views\HotkeyView.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Hotkey\Views\HotkeyView.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\LoadRecentWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\LoadRecentWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\TreeView\FlatSearchListBox.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\TreeView\FlatSearchListBox.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Undos\UndoDisplay.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Undos\UndoDisplay.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\AddVariableWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\AddVariableWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.i.cs" />
 		<Compile Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml.cs" />
 		<Compile Remove="RenderingLibrary\Blend.cs" />
 		<Compile Remove="RenderingLibrary\BlendExtensions.cs" />

@@ -273,7 +273,6 @@ namespace RenderingLibrary
                 GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
                 GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
                 GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
-                GraphicalUiElement.CloneRenderableFunction = RenderableCloneLogic.Clone;
 
                 GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
                 GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
@@ -327,7 +326,9 @@ namespace RenderingLibrary
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
             // qualify for Android:
-            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont);
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont, 
+                // This allows unit tests, and can avoid confusiong errors
+                LoaderManager.ExistingContentBehavior.Replace);
 
             return bitmapFont;
         }

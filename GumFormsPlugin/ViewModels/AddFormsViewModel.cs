@@ -1,30 +1,23 @@
 ﻿using Gum.ToolStates;
-using Gum;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Gum.Plugins.ImportPlugin.Manager;
 using ToolsUtilities;
-using Gum.Mvvm;
 using GumFormsPlugin.Services;
 using Gum.Managers;
-using System.Reflection.Metadata.Ecma335;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
-using Newtonsoft.Json;
 
 namespace GumFormsPlugin.ViewModels;
 
-public class AddFormsViewModel : ViewModel
+public class AddFormsViewModel : DialogViewModel
 {
     #region Fields/Properties
 
     private readonly FormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
+    private readonly ImportLogic _importLogic;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -34,14 +27,18 @@ public class AddFormsViewModel : ViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService, IDialogService dialogService, IFileCommands fileCommands)
+    public AddFormsViewModel(FormsFileService formsFileService, 
+        IDialogService dialogService, 
+        IFileCommands fileCommands,
+        ImportLogic importLogic)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
+        _importLogic = importLogic;
     }
 
-    public void DoIt()
+    protected override void OnAffirmative()
     {
         var sourceDestinations = _formsFileService.GetSourceDestinations(IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
@@ -65,6 +62,7 @@ public class AddFormsViewModel : ViewModel
                 _dialogService.ShowMessage("You must Save, then close/reopen the project.");
             }
         }
+        base.OnAffirmative();
     }
 
 
@@ -77,17 +75,17 @@ public class AddFormsViewModel : ViewModel
             if (extension == "gusx")
             {
                 // add screen
-                ImportLogic.ImportScreen(item.Value, saveProject: false);
+                _importLogic.ImportScreen(item.Value, saveProject: false);
             }
             else if (extension == "gucx")
             {
                 // add component
-                ImportLogic.ImportComponent(item.Value, saveProject: false);
+                _importLogic.ImportComponent(item.Value, saveProject: false);
             }
             else if (extension == "behx")
             {
                 // add behavior
-                ImportLogic.ImportBehavior(item.Value, saveProject: false);
+                _importLogic.ImportBehavior(item.Value, saveProject: false);
             }
             // standards are already added
         }

@@ -757,8 +757,8 @@ namespace CommonFormsAndControls
 
         private void HandleException(Exception ex)
         {
-            // Perform some error handling here.
-            // We don't want to bubble errors to the CLR. 
+            // Perform some error handling here. 
+            // We don't want to bubble errors to the CLR.  
             MessageBox.Show(ex.Message);
         }
 
@@ -1087,3 +1087,4 @@ namespace CommonFormsAndControls
         RegularClick
     }
 }
+

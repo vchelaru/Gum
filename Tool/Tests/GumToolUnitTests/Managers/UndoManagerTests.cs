@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
-public class UndoManagerTests
+public class UndoManagerTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IRenameLogic> _renameLogic;
@@ -106,7 +106,7 @@ public class UndoManagerTests
     }
 
     [Fact]
-    public void currentElementHistory_ShouldReportExposedVariables()
+    public void CurrentElementHistory_ShouldReportExposedVariables()
     {
         {
             ComponentSave component = _selectedState.Object.SelectedComponent;
@@ -129,5 +129,45 @@ public class UndoManagerTests
 
             comparisonInformation.ToString().ShouldBe("Un-exposed variables: X");
         }
+    }
+
+    [Fact]
+    public void RecordUndo_ShouldNotCrash_WithDifferentSelectedElement()
+    {
+        var component1 = new ComponentSave();
+        component1.Name = "component1";
+        component1.States.Add(new Gum.DataTypes.Variables.StateSave
+        {
+            Name = "Default",
+            ParentContainer = component1
+        });
+
+        var component2 = new ComponentSave();
+        component2.Name = "component2";
+        component2.States.Add(new Gum.DataTypes.Variables.StateSave
+        {
+            Name = "Default",
+            ParentContainer = component2
+        });
+
+        _selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(component1);
+
+        _selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(component1.DefaultState);
+
+        _undoManager.RecordState();
+
+        _selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(component2);
+
+        _selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(component2.DefaultState);
+
+        _undoManager.RecordUndo();
     }
 }

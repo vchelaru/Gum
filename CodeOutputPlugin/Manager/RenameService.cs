@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager;
@@ -16,11 +18,13 @@ internal class RenameService
     private CodeGenerationService _codeGenerationService;
     private readonly CodeGenerator _codeGenerator;
     private readonly CustomCodeGenerator _customCodeGenerator;
+    private readonly IDialogService _dialogService;
 
     public RenameService(CodeGenerationService codeGenerationService,
         CodeGenerator codeGenerator,
         CustomCodeGenerator customCodeGenerator)
     {
+        _dialogService = Locator.GetRequiredService<IDialogService>();
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
@@ -56,10 +60,7 @@ internal class RenameService
             if (newCustomFileName?.Exists() == true)
             {
                 var message = $"Would you like to rename the custom code file to:\n{newCustomFileName.FullPath}\nThis would delete the existing file that is already there";
-                var result = System.Windows.Forms.MessageBox.Show(message,
-                    "Overwrite?",
-                    System.Windows.Forms.MessageBoxButtons.YesNo);
-                shouldMove = result == System.Windows.Forms.DialogResult.Yes;
+                shouldMove = _dialogService.ShowYesNoMessage(message, "Overwrite?");
 
                 if (shouldMove)
                 {

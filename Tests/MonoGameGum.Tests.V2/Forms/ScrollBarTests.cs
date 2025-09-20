@@ -1,4 +1,6 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +13,19 @@ public class ScrollBarTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var scrollBar = new MonoGameGum.Forms.Controls.ScrollBar();
+        ScrollBar scrollBar = new ();
         scrollBar.Visual.ShouldNotBeNull();
-        (scrollBar.Visual is Gum.Forms.DefaultVisuals.ScrollBarVisual).ShouldBeTrue();
+        (scrollBar.Visual is ScrollBarVisual).ShouldBeTrue();
     }
+
+    [Fact]
+    public void ScrollBar_ThumbWidth_ShouldMatchScrollBarWidth()
+    {
+        ScrollBar scrollBar = new();
+        ScrollBarVisual scrollBarVisual = (ScrollBarVisual)scrollBar.Visual;
+
+        scrollBarVisual.ThumbInstance.GetAbsoluteWidth().ShouldBe(
+            scrollBarVisual.GetAbsoluteWidth());
+    }
+
 }

@@ -513,17 +513,15 @@ public class SpriteRenderer
                     roundedHeight = MathFunctions.RoundToInt(worldHeight * CurrentZoom) / CurrentZoom;
                 }
 
-
                 if(flipVerticalHorizontal)
                 {
-                    scale.X = roundedHeight / sourceWidth;
-                    scale.Y = roundedWidth / sourceHeight;
+                    scale.X = roundedHeight / sourceHeight;
+                    scale.Y = roundedWidth / sourceWidth;
                 }
                 else
                 {
                     scale.X = roundedWidth / sourceWidth;
                     scale.Y = roundedHeight / sourceHeight;
-
                 }
             }
 

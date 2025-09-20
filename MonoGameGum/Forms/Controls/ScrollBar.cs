@@ -54,20 +54,48 @@ public class ScrollBar : RangeBase
 
 
     float MinThumbPosition => 0;
-    float MaxThumbPosition => Track.GetAbsoluteHeight() - thumb.ActualHeight;
+    float MaxThumbPosition =>
+        Orientation == Orientation.Vertical
+        ? Track.GetAbsoluteHeight() - thumb.ActualHeight
+        : Track.GetAbsoluteWidth() - thumb.ActualWidth;
 
-    public override Orientation Orientation => Orientation.Vertical;
+
+    public override Orientation Orientation 
+    { 
+        get => base.Orientation; 
+        set
+        {
+            if(value != Orientation)
+            {
+                base.Orientation = value;
+
+                UpdateOrientationState();
+            }
+        }
+    }
 
     #endregion
 
     #region Initialize
 
-    public ScrollBar() : base() { }
+    public ScrollBar() : base() 
+    {
+        base.Orientation = Orientation.Vertical;
+    }
 
-    public ScrollBar(InteractiveGue visual) : base(visual) { }
+    public ScrollBar(InteractiveGue visual) : base(visual) 
+    {
+        base.Orientation = Orientation.Vertical;
+    }
 
+    bool hasAssignedOrientation = false;
     protected override void ReactToVisualChanged()
     {
+        if(!hasAssignedOrientation)
+        {
+            // default it!
+            Orientation = Orientation.Vertical;
+        }
         RefreshInternalVisualReferences();
 
         base.ReactToVisualChanged();
@@ -171,21 +199,45 @@ public class ScrollBar : RangeBase
     #region Event Handlers
     protected override void HandleThumbPush(object sender, EventArgs e)
     {
-        var topOfThumb = this.thumb.AbsoluteTop;
-        var cursorScreen = MainCursor.YRespectingGumZoomAndBounds();
+        if(Orientation == Orientation.Vertical)
+        {
+            var topOfThumb = this.thumb.AbsoluteTop;
+            var cursorScreen = MainCursor.YRespectingGumZoomAndBounds();
 
-        cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
+            cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
+        }
+        else
+        {
+            var leftOfThumb = this.thumb.AbsoluteLeft;
+            var cursorScreen = MainCursor.XRespectingGumZoomAndBounds();
+
+            cursorGrabOffsetRelativeToThumb = cursorScreen - leftOfThumb;
+        }
     }
 
     private void HandleTrackPush(object sender, EventArgs args)
     {
-        if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)
+        if(Orientation == Orientation.Vertical)
         {
-            Value -= LargeChange;
+            if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)
+            {
+                Value -= LargeChange;
+            }
+            else if (MainCursor.YRespectingGumZoomAndBounds() > thumb.AbsoluteTop + thumb.ActualHeight)
+            {
+                Value += LargeChange;
+            }
         }
-        else if (MainCursor.YRespectingGumZoomAndBounds() > thumb.AbsoluteTop + thumb.ActualHeight)
+        else
         {
-            Value += LargeChange;
+            if(MainCursor.XRespectingGumZoomAndBounds() < thumb.AbsoluteLeft)
+            {
+                Value -= LargeChange;
+            }
+            else if(MainCursor.XRespectingGumZoomAndBounds() > thumb.AbsoluteLeft + thumb.ActualHeight)
+            {
+                Value += LargeChange;
+            }
         }
     }
 
@@ -236,13 +288,27 @@ public class ScrollBar : RangeBase
             ratioDown = 0;
         }
 
-        thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-
-        thumb.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-
         var range = MaxThumbPosition - MinThumbPosition;
-        thumb.Y = MinThumbPosition + range * (float)ratioDown;
+
+        if(Orientation == Orientation.Vertical)
+        {
+            thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+            thumb.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+
+            thumb.Y = MinThumbPosition + range * (float)ratioDown;
+        }
+        else
+        {
+            thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+            thumb.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+
+            thumb.X = MinThumbPosition + range * (float)ratioDown;
+        }
+
     }
 
 #if FRB
@@ -251,21 +317,36 @@ public class ScrollBar : RangeBase
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
 #endif
     {
-        var cursorScreenY = cursor.YRespectingGumZoomAndBounds();
-        var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
+        if (Orientation == Orientation.Vertical)
+        {
+            var cursorScreenY = cursor.YRespectingGumZoomAndBounds();
+            var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
 
+            thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
-        thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            thumb.Y = cursorYRelativeToTrack - cursorGrabOffsetRelativeToThumb;
+        }
+        else
+        {
+            var cursorScreenX = cursor.XRespectingGumZoomAndBounds();
+            var cursorXRelativeToTrack = cursorScreenX - Track.AbsoluteLeft;
 
-        thumb.Y = cursorYRelativeToTrack - cursorGrabOffsetRelativeToThumb;
+            thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+            thumb.X = cursorXRelativeToTrack - cursorGrabOffsetRelativeToThumb;
+        }
 
         float range = MaxThumbPosition - MinThumbPosition;
 
         var valueBefore = Value;
         if (range != 0)
         {
-            var ratio = (thumb.Y) / range;
+            var ratio = Orientation == Orientation.Vertical
+                ? (thumb.Y) / range
+                : (thumb.X) / range;
+
             var ratioBefore = ratio;
             ratio = System.Math.Max(0, ratio);
             ratio = System.Math.Min(1, ratio);
@@ -310,20 +391,52 @@ public class ScrollBar : RangeBase
         var desiredHeight = MinimumThumbSize;
         if (ViewportSize != 0 && Track != null)
         {
-            float trackHeight = Track.GetAbsoluteHeight();
 
             var valueRange = (Maximum - Minimum) + ViewportSize;
             if (valueRange > 0)
             {
                 var thumbRatio = ViewportSize / valueRange;
 
-                thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-                thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                if(Orientation == Orientation.Vertical)
+                {
+                    float trackSize =  Track.GetAbsoluteHeight();
+                    thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                    thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
-                thumb.Height = System.Math.Max(MinimumThumbSize, (float)(trackHeight * thumbRatio));
+                    thumb.Height = System.Math.Max(MinimumThumbSize, (float)(trackSize * thumbRatio));
+                }
+                else
+                {
+                    float trackSize =  Track.GetAbsoluteWidth();
+                    thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                    thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+                    thumb.Width = System.Math.Max(MinimumThumbSize, (float)(trackSize * thumbRatio));
+                }
             }
         }
     }
 
 #endregion
+
+    private void UpdateOrientationState()
+    {
+        var categoryName = "OrientationCategory";
+
+        string state = string.Empty;
+        if(Orientation == Orientation.Horizontal)
+        {
+            state = "Horizontal";
+        }
+        else
+        {
+            state = "Vertical";
+        }
+
+        Visual.SetProperty(categoryName + "State", state);
+
+
+        UpdateThumbSize();
+        UpdateThumbPositionAccordingToValue();
+    }
 }

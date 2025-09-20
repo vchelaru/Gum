@@ -325,6 +325,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
+                VisibleChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }
@@ -682,7 +683,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     float stackSpacing;
     /// <summary>
     /// The number of pixels spacing between each child if this has a ChildrenLayout of 
-    /// TopToBottomStack or LeftToRightStack.
+    /// TopToBottomStack or LeftToRightStack. This has no affect on other types of ChildrenLayout, 
+    /// including AutoGridHorizontal or AutoGridVertical.
     /// </summary>
     public float StackSpacing
     {
@@ -1496,6 +1498,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public event EventHandler SizeChanged;
     public event EventHandler PositionChanged;
+    public event EventHandler VisibleChanged;
     public event EventHandler<ParentChangedEventArgs> ParentChanged;
 
     public class ParentChangedEventArgs
@@ -1635,7 +1638,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public virtual GraphicalUiElement Clone()
     {
-        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
         IRenderable? clonedRenderable = (this.mContainedObjectAsIpso as ICloneable)?.Clone() as IRenderable;
 
@@ -1648,6 +1650,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             clonedRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
         }
+
+        GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
 
         newClone.SetContainedObject(clonedRenderable);
         newClone.mWhatContainsThis = null;
@@ -4190,15 +4194,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // of the currentDirtyState
     }
 
-    private GraphicalUiElement GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
+    private GraphicalUiElement? GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
     {
+        IPositionedSizedObject? whatToStackAfter = null;
+        whatToStackAfterX = 0;
+        whatToStackAfterY = 0;
+
         var parentGue = this.EffectiveParentGue;
+
+        ////////////////////////////////Early Out//////////////////////////////////
+        if(parentGue == null)
+        {
+            return null;
+        }
 
         int thisIndex = 0;
 
         // We used to have a static list we were populating, but that allocates memory so we
         // now use the actual list.
-        System.Collections.IList siblings = null;
+        System.Collections.IList? siblings = null;
 
         if (this.Parent == null)
         {
@@ -4208,11 +4222,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
         }
+
+        if(siblings == null)
+        {
+            return null;
+        }
+        /////////////////////////////End Early Out/////////////////////////////////
+
         thisIndex = siblings.IndexOf(this);
 
-        IPositionedSizedObject whatToStackAfter = null;
-        whatToStackAfterX = 0;
-        whatToStackAfterY = 0;
 
         if (parentGue.StackedRowOrColumnDimensions == null)
         {
@@ -4228,7 +4246,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var index = thisIndex - 1;
             while (index > -1)
             {
-                if ((siblings[index] as IVisible).Visible)
+                if (((IVisible)siblings[index]).Visible)
                 {
                     whatToStackAfter = siblings[index] as GraphicalUiElement;
                     break;

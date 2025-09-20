@@ -2312,7 +2312,7 @@ public static class TreeNodeExtensionMethods
             if (ProjectManager.Self.GumProjectSave == null ||
                 string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
             {
-                MessageBox.Show("Project isn't saved yet so the root of the project isn't known");
+                Locator.GetRequiredService<IDialogService>().ShowMessage("Project isn't saved yet so the root of the project isn't known");
                 return null;
             }
             else

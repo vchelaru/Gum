@@ -91,10 +91,13 @@ public abstract class TextBoxBase :
         get => caretIndex; 
         set
         {
-            if(value != caretIndex)
+            bool valueChanged = value != caretIndex;
+
+            caretIndex = value;
+            UpdateCaretPositionFromCaretIndex();
+
+            if (valueChanged)
             {
-                caretIndex = value;
-                UpdateCaretPositionFromCaretIndex();
                 OffsetTextToKeepCaretInView();
                 PushValueToViewModel();
                 CaretIndexChanged?.Invoke(this, EventArgs.Empty);
@@ -359,6 +362,10 @@ public abstract class TextBoxBase :
             case "Text":
                 OnTextChanged(this.coreTextObject.RawText);
                 break;
+            case "HorizontalAlignment":
+                UpdateCaretPositionFromCaretIndex();
+                UpdateToSelection();
+                break;
         }
     }
 
@@ -372,7 +379,7 @@ public abstract class TextBoxBase :
         if (selectionInstance != null)
         {
             // We need to do an if-check to support older FRB games that don't have this
-            if (GraphicalUiElement.CloneRenderableFunction != null)
+            if (GraphicalUiElement.CloneRenderableFunction != null || selectionInstance?.RenderableComponent is ICloneable)
             { 
                 selectionTemplate = selectionInstance.Clone();
             }
@@ -399,6 +406,14 @@ public abstract class TextBoxBase :
 
     private void HandlePush(object sender, EventArgs args)
     {
+        // September 7, 2025
+        // When pushing on a TextBox,
+        // the selection can begin. Since
+        // the TextBox selection is changing,
+        // the TextBox should immediately receive
+        // focus.
+        InteractiveGue.CurrentInputReceiver = this;
+
         if (MainCursor.PrimaryDoublePush)
         {
             indexPushed = null;
@@ -416,12 +431,6 @@ public abstract class TextBoxBase :
     private void HandleClick(object sender, EventArgs args)
     {
         InteractiveGue.CurrentInputReceiver = this;
-
-        if (this.LosesFocusWhenClickedOff)
-        {
-            InteractiveGue.AddNextPushAction(TryLoseFocusFromPush);
-        }
-
     }
 
     private void TryLoseFocusFromPush()
@@ -433,18 +442,23 @@ public abstract class TextBoxBase :
             cursor.WindowOver == this.Visual ||
             (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
 
-        if (clickedOnThisOrChild == false && IsFocused)
+        if (clickedOnThisOrChild == false && IsFocused && cursor.WindowPushed != this.Visual)
         {
             this.IsFocused = false;
         }
     }
 
-    private void HandleClickOff()
+    private void HandlePushOff()
     {
-        if (MainCursor.WindowOver != Visual && timeFocused != InteractiveGue.CurrentGameTime &&
+        if (MainCursor.WindowOver != Visual && 
+            timeFocused != InteractiveGue.CurrentGameTime &&
             LosesFocusWhenClickedOff)
         {
             IsFocused = false;
+        }
+        else
+        {
+            InteractiveGue.AddNextPushAction(HandlePushOff);
         }
     }
 
@@ -546,13 +560,15 @@ public abstract class TextBoxBase :
 
             if (lineOn < coreTextObject.WrappedText.Count)
             {
-                int indexInThisLine = GetIndex(cursorOffset, coreTextObject.WrappedText[lineOn]);
+                string lineText = coreTextObject.WrappedText[lineOn];
+                cursorOffset -= GetLineXOffsetForHorizontalAlignment(lineText);
+                int indexInThisLine = GetIndex(cursorOffset, lineText);
 
                 var isOnLastLine = lineOn == coreTextObject.WrappedText.Count - 1;
                 if(!isOnLastLine && 
-                    indexInThisLine == coreTextObject.WrappedText[lineOn].Length &&
+                    indexInThisLine == lineText.Length &&
                     indexInThisLine > 0 &&
-                    char.IsWhiteSpace( coreTextObject.WrappedText[lineOn][indexInThisLine-1]))
+                    char.IsWhiteSpace(lineText[indexInThisLine-1]))
                 {
                     index = indexInThisLine - 1;
                 }
@@ -622,179 +638,179 @@ public abstract class TextBoxBase :
     /// <param name="isCtrlDown"></param>
     public void HandleKeyDown(Microsoft.Xna.Framework.Input.Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
-        if (isFocused)
+        //////////////////////////Early Out////////////////////////
+        if (!isFocused) return;
+        /////////////////////////End Early Out/////////////////////
+        var oldIndex = caretIndex;
+
+        switch (key)
         {
-            var oldIndex = caretIndex;
-
-            switch (key)
-            {
-                case Microsoft.Xna.Framework.Input.Keys.Left:
-                    // todo - extract this so that we can also use CTRL for shift and delete/backspace...
-                    if (selectionLength != 0 && isShiftDown == false)
+            case Microsoft.Xna.Framework.Input.Keys.Left:
+                // todo - extract this so that we can also use CTRL for shift and delete/backspace...
+                if (selectionLength != 0 && isShiftDown == false)
+                {
+                    caretIndex = selectionStart;
+                    SelectionLength = 0;
+                }
+                else if (caretIndex > 0)
+                {
+                    int? letterToMoveToFromCtrl = null;
+                    if (isCtrlDown)
                     {
-                        caretIndex = selectionStart;
-                        SelectionLength = 0;
-                    }
-                    else if (caretIndex > 0)
-                    {
-                        int? letterToMoveToFromCtrl = null;
-                        if (isCtrlDown)
+                        // Both WPF (and visual Studio) Move to the beginning of the
+                        // current word. Discord works differently but we're going to 
+                        // match WPF behavior. For example:
+                        // 12 34
+                        // If the cursor is at 4, pressing left moves the cursor
+                        // before the 3 but after the space.
+                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(caretIndex - 1);
+                        if (letterToMoveToFromCtrl != null)
                         {
-                            // Both WPF (and visual Studio) Move to the beginning of the
-                            // current word. Discord works differently but we're going to 
-                            // match WPF behavior. For example:
-                            // 12 34
-                            // If the cursor is at 4, pressing left moves the cursor
-                            // before the 3 but after the space.
-                            letterToMoveToFromCtrl = GetCtrlBeforeTarget(caretIndex - 1);
-                            if (letterToMoveToFromCtrl != null)
-                            {
 
-                                if (letterToMoveToFromCtrl == caretIndex - 1)
-                                {
-                                    letterToMoveToFromCtrl = null;
-                                }
-                            }
-                            else
+                            if (letterToMoveToFromCtrl == caretIndex - 1)
                             {
-                                letterToMoveToFromCtrl = 0;
+                                letterToMoveToFromCtrl = null;
                             }
-                        }
-
-                        caretIndex = letterToMoveToFromCtrl ?? (caretIndex - 1);
-                    }
-                    break;
-                case Keys.Home:
-                    {
-                        this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
-                        caretIndex = absoluteStartOfLine;
-                    }
-                    break;
-                case Keys.End:
-                    {
-                        if (string.IsNullOrEmpty(DisplayedText))
-                        {
-                            caretIndex = 0;
                         }
                         else
                         {
-                            this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
-                            if(lineNumber == coreTextObject.WrappedText.Count-1)
-                            {
-                                caretIndex = (DisplayedText?.Length ?? 0);
-                            }
-                            else
-                            {
-                                var startofIndex = GetAbsoluteCharacterIndexForLine(lineNumber + 1);
-                                caretIndex = startofIndex - 1;
-                            }
+                            letterToMoveToFromCtrl = 0;
                         }
                     }
-                    break;
-                case Keys.Back:
-                    if (!IsReadOnly)
-                    {
-                        HandleBackspace(isCtrlDown);
-                    }
-                    break;
-                case Microsoft.Xna.Framework.Input.Keys.Right:
-                    if (selectionLength != 0 && isShiftDown == false)
-                    {
-                        caretIndex = selectionStart + selectionLength;
-                        SelectionLength = 0;
-                    }
-                    else if (caretIndex < (DisplayedText?.Length ?? 0))
-                    {
-                        int? letterToMoveToFromCtrl = null;
 
-                        if (isCtrlDown)
+                    caretIndex = letterToMoveToFromCtrl ?? (caretIndex - 1);
+                }
+                break;
+            case Keys.Home:
+                {
+                    this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                    caretIndex = absoluteStartOfLine;
+                }
+                break;
+            case Keys.End:
+                {
+                    if (string.IsNullOrEmpty(DisplayedText))
+                    {
+                        caretIndex = 0;
+                    }
+                    else
+                    {
+                        this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                        if(lineNumber == coreTextObject.WrappedText.Count-1)
                         {
-                            letterToMoveToFromCtrl = GetSpaceIndexAfter(caretIndex + 1);
-                            if (letterToMoveToFromCtrl != null)
-                            {
-
-                                // match Visual Studio behavior, and go after the last space
-                                if (letterToMoveToFromCtrl != caretIndex + 1)
-                                {
-                                    letterToMoveToFromCtrl++;
-                                }
-                                else
-                                {
-                                    letterToMoveToFromCtrl = null;
-                                }
-                            }
-                            else
-                            {
-                                letterToMoveToFromCtrl = DisplayedText?.Length ?? 0;
-                            }
+                            caretIndex = (DisplayedText?.Length ?? 0);
                         }
-
-                        caretIndex = letterToMoveToFromCtrl ?? (caretIndex + 1);
-
-                    }
-                    break;
-                case Keys.Up:
-                    MoveCursorUpOneLine();
-                    break;
-                case Keys.Down:
-                    MoveCursorDownOneLine();
-                    break;
-                case Microsoft.Xna.Framework.Input.Keys.Delete:
-                    if (!IsReadOnly)
-                    {
-                        if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
+                        else
                         {
-                            HandleDelete();
+                            var startofIndex = GetAbsoluteCharacterIndexForLine(lineNumber + 1);
+                            caretIndex = startofIndex - 1;
                         }
                     }
-                    break;
-                case Keys.C:
-                    
+                }
+                break;
+            case Keys.Back:
+                if (!IsReadOnly)
+                {
+                    HandleBackspace(isCtrlDown);
+                }
+                break;
+            case Microsoft.Xna.Framework.Input.Keys.Right:
+                if (selectionLength != 0 && isShiftDown == false)
+                {
+                    caretIndex = selectionStart + selectionLength;
+                    SelectionLength = 0;
+                }
+                else if (caretIndex < (DisplayedText?.Length ?? 0))
+                {
+                    int? letterToMoveToFromCtrl = null;
+
                     if (isCtrlDown)
                     {
-                        HandleCopy();
-                    }
-                    break;
-                case Keys.X:
-                    if (!IsReadOnly)
-                    {
-                        if (isCtrlDown)
+                        letterToMoveToFromCtrl = GetSpaceIndexAfter(caretIndex + 1);
+                        if (letterToMoveToFromCtrl != null)
                         {
-                            HandleCut();
+
+                            // match Visual Studio behavior, and go after the last space
+                            if (letterToMoveToFromCtrl != caretIndex + 1)
+                            {
+                                letterToMoveToFromCtrl++;
+                            }
+                            else
+                            {
+                                letterToMoveToFromCtrl = null;
+                            }
+                        }
+                        else
+                        {
+                            letterToMoveToFromCtrl = DisplayedText?.Length ?? 0;
                         }
                     }
-                    break;
-                case Keys.V:
-                    if (!IsReadOnly)
+
+                    caretIndex = letterToMoveToFromCtrl ?? (caretIndex + 1);
+
+                }
+                break;
+            case Keys.Up:
+                MoveCursorUpOneLine();
+                break;
+            case Keys.Down:
+                MoveCursorDownOneLine();
+                break;
+            case Microsoft.Xna.Framework.Input.Keys.Delete:
+                if (!IsReadOnly)
+                {
+                    if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
                     {
-                        if (isCtrlDown)
-                        {
-                            HandlePaste();
-                        }
+                        HandleDelete();
                     }
-                    break;
-                case Keys.A:
-
-                    if(isCtrlDown)
+                }
+                break;
+            case Keys.C:
+                    
+                if (isCtrlDown)
+                {
+                    HandleCopy();
+                }
+                break;
+            case Keys.X:
+                if (!IsReadOnly)
+                {
+                    if (isCtrlDown)
                     {
-                        SelectAll();
+                        HandleCut();
                     }
-                    break;
-            }
+                }
+                break;
+            case Keys.V:
+                if (!IsReadOnly)
+                {
+                    if (isCtrlDown)
+                    {
+                        HandlePaste();
+                    }
+                }
+                break;
+            case Keys.A:
 
-
-            if (oldIndex != caretIndex)
-            {
-                UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
-                UpdateCaretPositionFromCaretIndex();
-                OffsetTextToKeepCaretInView();
-                CaretIndexChanged?.Invoke(this, EventArgs.Empty);
-            }
-
-            var keyEventArg = new KeyEventArgs();
-            keyEventArg.Key = key;
-            KeyDown?.Invoke(this, keyEventArg);
+                if(isCtrlDown)
+                {
+                    SelectAll();
+                }
+                break;
         }
+
+
+        if (oldIndex != caretIndex)
+        {
+            UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
+            UpdateCaretPositionFromCaretIndex();
+            OffsetTextToKeepCaretInView();
+            CaretIndexChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        var keyEventArg = new KeyEventArgs();
+        keyEventArg.Key = key;
+        KeyDown?.Invoke(this, keyEventArg);
     }
 
     private void MoveCursorUpOneLine()
@@ -1202,7 +1218,7 @@ public abstract class TextBoxBase :
 
         if (isFocused)
         {
-            InteractiveGue.AddNextClickAction(HandleClickOff);
+            InteractiveGue.AddNextPushAction(HandlePushOff);
 
             if (InteractiveGue.CurrentInputReceiver != this)
             {
@@ -1524,12 +1540,25 @@ public abstract class TextBoxBase :
         if (this.coreTextObject.BitmapFont != null)
         {
             var measure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-            return measure + this.textComponent.X;
+            return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
         else
         {
-            return caretComponent.X = 0;
+            return caretComponent.X = GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
+    }
+
+    public float GetLineXOffsetForHorizontalAlignment(string stringToMeasure)
+    {
+        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Left)
+            return 0;
+
+        float measuredLineWidth = coreTextObject.MeasureString(stringToMeasure);
+        float textComponentWidth = textComponent.GetAbsoluteWidth();
+        float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
+        if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
+            gapBetweenTextAndEdge /= 2.0f;
+        return gapBetweenTextAndEdge;
     }
 
     float CoreTextObjectHeight =>

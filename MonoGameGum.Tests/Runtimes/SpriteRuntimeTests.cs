@@ -1,4 +1,6 @@
-﻿using MonoGameGum.GueDeriving;
+﻿using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.GueDeriving;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -34,5 +36,14 @@ public class SpriteRuntimeTests
         rect.Y.ShouldBe(10);
         rect.Width.ShouldBe(30);
         rect.Height.ShouldBe(40);
+    }
+
+    [Fact]
+    public void Clone_ShouldCreateClonedSprite()
+    {
+        Sprite sut = new((Texture2D?)null);
+
+        var clone = sut.Clone() as Sprite;
+        clone.ShouldNotBeNull();
     }
 }

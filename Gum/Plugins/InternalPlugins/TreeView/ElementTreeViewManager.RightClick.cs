@@ -17,6 +17,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
 
 namespace Gum.Managers;
 
@@ -191,7 +192,7 @@ public partial class ElementTreeViewManager
                 }
                 catch (Exception exc)
                 {
-                    MessageBox.Show("Could not open location:\n\n" + exc.ToString());
+                    _dialogService.ShowMessage("Could not open location:\n\n" + exc.ToString());
                 }
             }
             else
@@ -226,18 +227,18 @@ public partial class ElementTreeViewManager
 
                 if (files != null && files.Length > 0)
                 {
-                    MessageBox.Show("Cannot delete this folder, it currently contains " + files.Length + " files.");
+                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + files.Length + " files.");
                 }
                 else if (directories != null && directories.Length > 0)
                 {
-                    MessageBox.Show("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
+                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
                 }
 
                 else
                 {
-                    DialogResult result = MessageBox.Show("Delete folder " + treeNode.Text + "?", "Delete", MessageBoxButtons.YesNo);
+                    bool result = _dialogService.ShowYesNoMessage("Delete folder " + treeNode.Text + "?", "Delete");
 
-                    if (result == DialogResult.Yes)
+                    if (result)
                     {
                         try
                         {
@@ -247,7 +248,7 @@ public partial class ElementTreeViewManager
                         catch(Exception exception)
                         {
                             _guiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
-                            MessageBox.Show("Could not delete folder\nSee the output tab for more info");
+                            _dialogService.ShowMessage("Could not delete folder\nSee the output tab for more info");
                         }
                     }
                 }
@@ -480,7 +481,7 @@ public partial class ElementTreeViewManager
 
     private void HandleViewReferences(object sender, EventArgs e)
     {
-        _editCommands.DisplayReferencesTo(_selectedState.SelectedElement);
+        _dialogService.Show<DisplayReferencesDialog>(vm => vm.ElementSave = _selectedState.SelectedElement);
     }
 
     private void HandleRenameFolder(object sender, EventArgs e)
@@ -498,17 +499,37 @@ public partial class ElementTreeViewManager
 
     private void HandleImportBehavior(object sender, EventArgs args)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportBehaviorUi();
+        if (GuardProjectSaved("before importing behaviors"))
+        {
+            _dialogService.Show<ImportBehaviorDialog>();
+        }
     }
 
     public void ImportScreenClick(object sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportScreenUi();
+        if (GuardProjectSaved("before importing screens"))
+        {
+            _dialogService.Show<ImportScreenDialog>();
+        }
     }
 
     public void ImportComponentsClick(object sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportComponentUi();
+        if (GuardProjectSaved("before importing components"))
+        {
+            _dialogService.Show<ImportComponentDialog>();
+        }
+    }
+
+    private bool GuardProjectSaved(string? reason = null)
+    {
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        {
+            _dialogService.ShowMessage("You must first save the project");
+            return false;
+        }
+
+        return true;
     }
 
     private void HandleAddLinkedComponentClick(object sender, EventArgs e)
@@ -516,7 +537,7 @@ public partial class ElementTreeViewManager
         ////////////////Early Out/////////////////////////
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
         {
-            MessageBox.Show("You must first save the project before adding a new component");
+            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
         //////////////End Early Out////////////////////////

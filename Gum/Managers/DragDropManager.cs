@@ -55,6 +55,7 @@ public class DragDropManager
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly CopyPasteLogic _copyPasteLogic;
+    private readonly ImportLogic _importLogic;
 
     #endregion
 
@@ -77,7 +78,8 @@ public class DragDropManager
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         SetVariableLogic setVariableLogic, 
-        CopyPasteLogic copyPasteLogic)
+        CopyPasteLogic copyPasteLogic,
+        ImportLogic importLogic)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -89,6 +91,7 @@ public class DragDropManager
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _copyPasteLogic = copyPasteLogic;
+        _importLogic = importLogic;
     }
 
     #region Drag+drop File (from windows explorer)
@@ -180,11 +183,11 @@ public class DragDropManager
         }
         else if(draggedAsElementSave is ScreenSave && targetTag is BehaviorSave)
         {
-            MessageBox.Show("Screens cannot be added as required instances in behaviors");
+            _dialogService.ShowMessage("Screens cannot be added as required instances in behaviors");
         }
         else
         {
-            MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
+            _dialogService.ShowMessage("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
         }
     }
 
@@ -192,7 +195,7 @@ public class DragDropManager
     {
         if(draggedAsElementSave is StandardElementSave)
         {
-            MessageBox.Show("Cannot move standard elements to different folders");
+            _dialogService.ShowMessage("Cannot move standard elements to different folders");
             handled = true;
         }
         else
@@ -250,7 +253,7 @@ public class DragDropManager
 
         if (!string.IsNullOrEmpty(errorMessage))
         {
-            MessageBox.Show(errorMessage);
+            _dialogService.ShowMessage(errorMessage);
         }
         else
         {
@@ -286,7 +289,7 @@ public class DragDropManager
 
         if (!string.IsNullOrEmpty(errorMessage))
         {
-            MessageBox.Show(errorMessage);
+            _dialogService.ShowMessage(errorMessage);
         }
         else
         {
@@ -580,7 +583,7 @@ public class DragDropManager
             {
                 if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
                 {
-                    ImportLogic.ImportScreen(file);
+                    _importLogic.ImportScreen(file);
                 }
             }
         }

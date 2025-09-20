@@ -630,10 +630,13 @@ public class CodeGenerator
 
         foreach (var exposedVariable in exposedVariables)
         {
-            // 
+            var instanceName = exposedVariable.SourceObject;
+            context.Instance = context.Element.GetInstance(instanceName);
             FillWithExposedVariable(exposedVariable, context);
             context.StringBuilder.AppendLine();
         }
+
+        context.Instance = null;
     }
 
     private void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
@@ -1034,7 +1037,7 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(isFullyInstantiatingInCode && !isDerived)
+        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.Skia)
         {
             //RefreshInternalVisualReferences
             context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");

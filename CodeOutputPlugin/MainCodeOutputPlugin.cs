@@ -158,9 +158,7 @@ public class MainCodeOutputPlugin : PluginBase
         {
             var message = $"Would you like to delete the generated and custom code files for {element}?";
 
-            var result = System.Windows.MessageBox.Show(message, "Delete Code?", System.Windows.MessageBoxButton.YesNo);
-
-            if(result == System.Windows.MessageBoxResult.Yes)
+            if(_dialogService.ShowYesNoMessage(message, "Delete Code?"))
             {
                 if(generatedFile?.Exists() == true)
                 {

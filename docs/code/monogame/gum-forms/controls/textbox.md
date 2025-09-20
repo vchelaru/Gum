@@ -127,6 +127,10 @@ A push+drag with the mouse selects the text between the start and the current lo
 
 <figure><img src="../../../../.gitbook/assets/13_10 01 46.gif" alt=""><figcaption><p>Push+drag to select text</p></figcaption></figure>
 
+Selection is performed based on the X position of the cursor, even if the cursor is outside of the bounds of the TextBox.
+
+<figure><img src="../../../../.gitbook/assets/17_21 57 11.gif" alt=""><figcaption><p>Selection by dragging outside of the TextBox bounds</p></figcaption></figure>
+
 Holding down the shift key and pressing the arrow keys adjusts the selection. CTRL+Shift+arrow selects the next or previous word.
 
 <figure><img src="../../../../.gitbook/assets/14_05 58 31.gif" alt=""><figcaption><p>Arrow keys + shift to select</p></figcaption></figure>
