@@ -78,7 +78,6 @@
 		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-		<ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
