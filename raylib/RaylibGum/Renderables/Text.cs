@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.GueDeriving;
+using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -71,7 +72,11 @@ public class Text : InvisibleRenderable, IText
     private static void HandleUpdateFontValues(IText text, GraphicalUiElement element)
     {
         var asText = text as Text;
-        asText.FontSize = element.FontSize;
+        if(element is TextRuntime asTextRuntime)
+        {
+            asText.FontSize = asTextRuntime.FontSize;
+
+        }
     }
 
     public override void Render(ISystemManagers managers)

@@ -147,4 +147,10 @@ public class TextRuntimeTests
         var clone = sut.Clone();
         clone.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void UseCustomFont_ShouldChangeFont_OnFontPropertiesSet()
+    {
+        throw new NotImplementedException();
+    }
 }
