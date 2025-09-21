@@ -63,8 +63,8 @@ internal class CodeGenerationFileLocationsService
         return generatedFileName;
     }
 
-    public FilePath GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string forcedElementName = null )
+    public FilePath? GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
     {
         var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, visualApi, forcedElementName);
         if (generatedFileName == null)

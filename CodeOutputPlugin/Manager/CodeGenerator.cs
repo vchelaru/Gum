@@ -1433,6 +1433,7 @@ public class CodeGenerator
         { "ButtonBehavior", "global::Gum.Forms.Controls.Button" },
         { "CheckBoxBehavior", "global::Gum.Forms.Controls.CheckBox" },
         { "ComboBoxBehavior", "global::Gum.Forms.Controls.ComboBox" },
+        { "ItemsControlBehavior", "global::Gum.Forms.Controls.ItemsControl" },
         { "LabelBehavior", "global::Gum.Forms.Controls.Label" },
         { "ListBoxBehavior", "global::Gum.Forms.Controls.ListBox" },
         { "ListBoxItemBehavior", "global::Gum.Forms.Controls.ListBoxItem" },
@@ -3973,11 +3974,11 @@ public class CodeGenerator
             {
                 var instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
                 isPolygon = (instanceType is StandardElementSave && instanceType.Name == "Polygon") ||
-                    ObjectFinder.Self.GetBaseElements(instanceType).Any(item => item is StandardElementSave && item.Name == "Polygon");
+                    (instanceType != null && ObjectFinder.Self.GetBaseElements(instanceType).Any(item => item is StandardElementSave && item.Name == "Polygon"));
 
                 if (isPolygon)
                 {
-                    context.StringBuilder.AppendLine(context.Tabs + $"this.{ToCSharpName(context.Instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
+                    context.StringBuilder.AppendLine(context.Tabs + $"this.{ToCSharpName(instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
                     context.TabCount++;
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
@@ -3992,7 +3993,7 @@ public class CodeGenerator
         }
     }
 
-    private static string VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object forcedValue = null)
+    private static string? VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object forcedValue = null)
     {
         var value = forcedValue ?? variable.Value;
         var rootName = variable.GetRootName();
