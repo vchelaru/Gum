@@ -415,6 +415,13 @@ public class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
+#if FRB
+        // FRB doesn't yet have a TextRuntime, so we have to do this:
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+#endif
+
         void ReactToFontValueChange()
         {
             UpdateToFontValues(mContainedObjectAsIpso as IText, graphicalUiElement);
@@ -478,14 +485,20 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font")
         {
-            graphicalUiElement.Font = value as string;
+            if(textRuntime != null)
+            {
+                textRuntime.Font = value as string;
+            }
 
             ReactToFontValueChange();
         }
 #if MONOGAME || KNI || XNA4 || FNA
-        else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
+        else if (propertyName == nameof(textRuntime.UseCustomFont))
         {
-            graphicalUiElement.UseCustomFont = (bool)value;
+            if (textRuntime != null)
+            {
+                textRuntime.UseCustomFont = (bool)value;
+            }
             var asText = ((Text)mContainedObjectAsIpso);
 
             if (!string.IsNullOrEmpty(asText.StoredMarkupText))
@@ -495,38 +508,56 @@ public class CustomSetPropertyOnRenderable
             ReactToFontValueChange();
         }
 
-        else if (propertyName == nameof(graphicalUiElement.CustomFontFile))
+        else if (propertyName == nameof(textRuntime.CustomFontFile))
         {
-            graphicalUiElement.CustomFontFile = (string)value;
+            if (textRuntime != null)
+            {
+                textRuntime.CustomFontFile = (string)value;
+            }
             ReactToFontValueChange();
 
         }
 #if USE_GUMCOMMON
-        else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont) && graphicalUiElement is MonoGameGum.GueDeriving.TextRuntime textRuntime)
+        else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont))
         {
-            textRuntime.BitmapFont = (BitmapFont)value;
+            if(textRuntime != null)
+            {
+                textRuntime.BitmapFont = (BitmapFont)value;
+            }
             handled = true;
         }
 #endif
 #endif
-        else if (propertyName == nameof(graphicalUiElement.FontSize))
+        else if (propertyName == nameof(textRuntime.FontSize))
         {
-            graphicalUiElement.FontSize = (int)value;
+            if (textRuntime != null)
+            {
+                textRuntime.FontSize = (int)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(graphicalUiElement.OutlineThickness))
+        else if (propertyName == nameof(textRuntime.OutlineThickness))
         {
-            graphicalUiElement.OutlineThickness = (int)value;
+            if (textRuntime != null)
+            {
+                textRuntime.OutlineThickness = (int)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(graphicalUiElement.IsItalic))
+        else if (propertyName == nameof(textRuntime.IsItalic))
         {
-            graphicalUiElement.IsItalic = (bool)value;
+            if (textRuntime != null)
+            {
+                textRuntime.IsItalic = (bool)value;
+            }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(graphicalUiElement.IsBold))
+        else if (propertyName == nameof(textRuntime.IsBold))
         {
-            graphicalUiElement.IsBold = (bool)value;
+            if (textRuntime != null)
+            {
+                textRuntime.IsBold = (bool)value;
+            }
             ReactToFontValueChange();
         }
         else if (propertyName == "LineHeightMultiplier")
@@ -534,9 +565,12 @@ public class CustomSetPropertyOnRenderable
             var asText = ((Text)mContainedObjectAsIpso);
             asText.LineHeightMultiplier = (float)value;
         }
-        else if (propertyName == nameof(graphicalUiElement.UseFontSmoothing))
+        else if (propertyName == nameof(textRuntime.UseFontSmoothing))
         {
-            graphicalUiElement.UseFontSmoothing = (bool)value;
+            if (textRuntime != null)
+            {
+                textRuntime.UseFontSmoothing = (bool)value;
+            }
             ReactToFontValueChange();
         }
         else if (propertyName == nameof(Blend))
@@ -693,37 +727,48 @@ public class CustomSetPropertyOnRenderable
         asText.RawText = strippedText;
 
         fontNameStack.Clear();
-        if (graphicalUiElement.UseCustomFont)
+
+#if FRB
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+#endif
+
+        if(textRuntime != null)
         {
-            var customFont = graphicalUiElement.CustomFontFile;
-            if (customFont?.EndsWith(".fnt") == true)
+            if (textRuntime.UseCustomFont)
             {
-                customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                var customFont = textRuntime.CustomFontFile;
+                if (customFont?.EndsWith(".fnt") == true)
+                {
+                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                }
+                fontNameStack.Push(customFont);
             }
-            fontNameStack.Push(customFont);
+            else
+            {
+                fontNameStack.Push(textRuntime.Font);
+            }
+
+            fontSizeStack.Clear();
+            fontSizeStack.Push(textRuntime.FontSize);
+
+            outlineThicknessStack.Clear();
+            outlineThicknessStack.Push(textRuntime.OutlineThickness);
+
+            useFontSmoothingStack.Clear();
+            useFontSmoothingStack.Push(textRuntime.UseFontSmoothing);
+
+            isItalicStack.Clear();
+            isItalicStack.Push(textRuntime.IsItalic);
+
+            isBoldStack.Clear();
+            isBoldStack.Push(textRuntime.IsBold);
+
+            useCustomFontStack.Clear();
+            useCustomFontStack.Push(textRuntime.UseCustomFont);
+
         }
-        else
-        {
-            fontNameStack.Push(graphicalUiElement.Font);
-        }
-
-        fontSizeStack.Clear();
-        fontSizeStack.Push(graphicalUiElement.FontSize);
-
-        outlineThicknessStack.Clear();
-        outlineThicknessStack.Push(graphicalUiElement.OutlineThickness);
-
-        useFontSmoothingStack.Clear();
-        useFontSmoothingStack.Push(graphicalUiElement.UseFontSmoothing);
-
-        isItalicStack.Clear();
-        isItalicStack.Push(graphicalUiElement.IsItalic);
-
-        isBoldStack.Clear();
-        isBoldStack.Push(graphicalUiElement.IsBold);
-
-        useCustomFontStack.Clear();
-        useCustomFontStack.Push(graphicalUiElement.UseCustomFont);
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
         var contentLoader = loaderManager.ContentLoader;
@@ -1050,7 +1095,15 @@ public class CustomSetPropertyOnRenderable
 
         // Residual properties could exist on a Text instnace, so we need to
         // tolerate a missing item and not crash. 
-        if(text == null)
+
+#if FRB
+        // FRB doesn't yet have a TextRuntime, so we have to do this:
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+
+#endif
+        if (text == null || textRuntime == null)
         {
             return;
         }
@@ -1060,20 +1113,20 @@ public class CustomSetPropertyOnRenderable
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
         var contentLoader = loaderManager.ContentLoader;
 
-        if (graphicalUiElement.UseCustomFont)
+        if (textRuntime.UseCustomFont)
         {
 
-            if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
+            if (!string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
-                font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
+                font = loaderManager.GetDisposable(textRuntime.CustomFontFile) as BitmapFont;
                 if (font == null)
                 {
 #if KNI
                         try
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                            font = new BitmapFont(graphicalUiElement.CustomFontFile);
-                            loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                            font = new BitmapFont(textRuntime.CustomFontFile);
+                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
                         }
                         catch
                         {
@@ -1082,10 +1135,10 @@ public class CustomSetPropertyOnRenderable
 #else
                     // so normally we would just let the content loader check if the file exists but since we're not going to
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                    if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
+                    if (ToolsUtilities.FileManager.FileExists(textRuntime.CustomFontFile))
                     {
-                        font = new BitmapFont(graphicalUiElement.CustomFontFile);
-                        loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                        font = new BitmapFont(textRuntime.CustomFontFile);
+                        loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
                     }
 #endif
                 }
@@ -1103,16 +1156,16 @@ public class CustomSetPropertyOnRenderable
         }
         else
         {
-            if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
+            if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
             {
 
                 string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    graphicalUiElement.FontSize,
-                    graphicalUiElement.Font,
-                    graphicalUiElement.OutlineThickness,
-                    graphicalUiElement.UseFontSmoothing,
-                    graphicalUiElement.IsItalic,
-                    graphicalUiElement.IsBold);
+                    textRuntime.FontSize,
+                    textRuntime.Font,
+                    textRuntime.OutlineThickness,
+                    textRuntime.UseFontSmoothing,
+                    textRuntime.IsItalic,
+                    textRuntime.IsBold);
 
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
@@ -1201,7 +1254,7 @@ public class CustomSetPropertyOnRenderable
         return global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(embeddedFontName) as BitmapFont;
     }
 
-    #endregion
+#endregion
 
     private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -1659,26 +1712,36 @@ public class CustomSetPropertyOnRenderable
         // that's what we're going to do here:
         if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text asText)
         {
+
+#if FRB
+        // FRB doesn't yet have a TextRuntime, so we have to do this:
+        var textRuntime = graphicalUiElement;
+#else
+            var textRuntime = graphicalUiElement as MonoGameGum.GueDeriving.TextRuntime;
+
+#endif
+
+
             // check it
             if (asText.BitmapFont == null)
             {
-                if (graphicalUiElement.UseCustomFont)
+                if (textRuntime.UseCustomFont)
                 {
-                    var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase: true, makeAbsolute: true);
+                    var fontName = ToolsUtilities.FileManager.Standardize(textRuntime.CustomFontFile, preserveCase: true, makeAbsolute: true);
 
                     throw new System.IO.FileNotFoundException($"Missing:{fontName}");
                 }
                 else
                 {
-                    if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
+                    if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
                     {
                         string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                            graphicalUiElement.FontSize,
-                            graphicalUiElement.Font,
-                            graphicalUiElement.OutlineThickness,
-                            graphicalUiElement.UseFontSmoothing,
-                            graphicalUiElement.IsItalic,
-                            graphicalUiElement.IsBold);
+                            textRuntime.FontSize,
+                            textRuntime.Font,
+                            textRuntime.OutlineThickness,
+                            textRuntime.UseFontSmoothing,
+                            textRuntime.IsItalic,
+                            textRuntime.IsBold);
 
                         var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
@@ -1689,9 +1752,9 @@ public class CustomSetPropertyOnRenderable
             else
             {
                 // we have a valid font file, so let's make sure the BitmapFont matches the expected font
-                if (graphicalUiElement.UseCustomFont)
+                if (textRuntime.UseCustomFont)
                 {
-                    var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
+                    var expectedFont = textRuntime.CustomFontFile?.Replace("\\", "/");
                     var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
 
                     if (expectedFont != null && !expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))

@@ -6245,6 +6245,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+#if FRB
+    //FRB doesn't yet have a native TextRuntime - it uses codegen to create a TextRuntime.
+    // Until it switches over, these properties must be here:
+
     bool useCustomFont;
     /// <summary>
     /// Whether to use the CustomFontFile to determine the font value. 
@@ -6322,6 +6326,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get { return outlineThickness; }
         set { outlineThickness = value; UpdateToFontValues(); }
     }
+
+#endif
 
     public void UpdateFontRecursive()
     {
