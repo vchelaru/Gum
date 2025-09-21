@@ -193,7 +193,7 @@
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
       <Value xsi:type="xsd:string">Cancel</Value>
-      <ExposedAsName>ButtonDisplayText</ExposedAsName>
+      <ExposedAsName>Text</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

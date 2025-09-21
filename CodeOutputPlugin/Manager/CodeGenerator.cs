@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Reflection;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using System;
@@ -769,11 +770,14 @@ public class CodeGenerator
 
                 string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
                 string? sourceObjectCast = null;
+
+                ElementSave? sourceInstanceElement = null;
+
                 if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
                     // only if the object is not a standard element
-                    var element = ObjectFinder.Self.GetElementSave(foundInstance);
-                    if (element is not StandardElementSave)
+                    sourceInstanceElement = ObjectFinder.Self.GetElementSave(foundInstance);
+                    if (sourceInstanceElement is not StandardElementSave)
                     {
                         // We need to check if the variable should be on .Visual:
                         // It is on visual only if the instance 
@@ -789,7 +793,15 @@ public class CodeGenerator
                     }
                 }
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {name}");
+                var isOverride = GetIfExposedVariableIsOverride(exposedVariable, context);
+
+                string possibleVirtual = isOverride
+                    ? "override " 
+                    : string.Empty;
+
+
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleVirtual}{type} {name}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
@@ -854,7 +866,32 @@ public class CodeGenerator
 
 
     }
-    
+
+    private bool GetIfExposedVariableIsOverride(VariableSave exposedVariable, CodeGenerationContext context)
+    {
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            GetGumFormsTypeFromBehaviors(context.Element, out string? formsType, out _);
+
+            if(formsType != null)
+            {
+                // eventually this will be Gum.Forms.Controls, but for now...
+                if(formsType.StartsWith("global::"))
+                {
+                    formsType = formsType.Substring("global::".Length);
+                }
+                var type = this.GetType().Assembly.GetType(formsType);
+                var property = type?.GetProperty(exposedVariable.ExposedAsName);
+                var setter = property?.GetSetMethod();
+                var isVirtual = setter?.IsVirtual == true && !setter.IsFinal;
+                var doTypesMatch = 
+                    TypeManager.Self.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
+                return isVirtual && doTypesMatch;
+            }
+        }
+        return false;
+    }
+
     #endregion
 
     #region Instance Properties (like ColoredRectangleInstance or ButtonInstance)
@@ -3964,7 +4001,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, categoryContainer, category, context.CodeOutputProjectSettings);
     }
 
-    private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object forcedValue = null)
+    private static string? VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object forcedValue = null)
     {
         var value = forcedValue ?? variable.ValueAsIList;
         var rootName = variable.GetRootName();
@@ -4062,7 +4099,7 @@ public class CodeGenerator
         }
     }
 
-    private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeGenerationContext context)
     {
         if (value is float asFloat)
         {
@@ -4278,7 +4315,7 @@ public class CodeGenerator
 
                 if (contextInstance != null)
                 {
-                    var standardizedParentName = ToCSharpName(parentName);
+                    var standardizedParentName = ToCSharpName(parentName!);
                     if (IsTabControl(parentInstance))
                     {
                         var stringBuilder = new StringBuilder();

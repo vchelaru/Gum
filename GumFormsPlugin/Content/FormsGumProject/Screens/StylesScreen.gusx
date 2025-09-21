@@ -233,7 +233,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonConfirmInstance.ButtonDisplayText</Name>
+      <Name>ButtonConfirmInstance.Text</Name>
       <Value xsi:type="xsd:string">Confirm</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -251,7 +251,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonDenyInstance.ButtonDisplayText</Name>
+      <Name>ButtonDenyInstance.Text</Name>
       <Value xsi:type="xsd:string">Deny</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -323,7 +323,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonStandardIconInstance.ButtonDisplayText</Name>
+      <Name>ButtonStandardIconInstance.Text</Name>
       <Value xsi:type="xsd:string">Standard Icon</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -341,7 +341,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonStandardInstance.ButtonDisplayText</Name>
+      <Name>ButtonStandardInstance.Text</Name>
       <Value xsi:type="xsd:string">Standard</Value>
       <SetsValue>true</SetsValue>
     </Variable>

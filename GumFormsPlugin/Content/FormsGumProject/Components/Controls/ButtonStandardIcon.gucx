@@ -225,7 +225,7 @@
     <Variable>
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
-      <ExposedAsName>ButtonDisplayText</ExposedAsName>
+      <ExposedAsName>Text</ExposedAsName>
       <SetsValue>false</SetsValue>
     </Variable>
     <Variable>
