@@ -144,7 +144,7 @@ public class FormsUtilities
             {
                 var baseType = formsType.BaseType;
 
-                if(baseType?.FullName.StartsWith("Gum.Forms.") == true)
+                if(baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
                 {
                     FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
                 }

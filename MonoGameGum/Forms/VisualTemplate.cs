@@ -17,6 +17,8 @@ public class VisualTemplate
 
     static Type[] boolTypes = new Type[2];
 
+    string? diagnosticsInfo = null;
+
     static VisualTemplate()
     {
         boolTypes[0] = typeof(bool);
@@ -32,7 +34,10 @@ public class VisualTemplate
             throw new ArgumentException(
                 $"The type {type} must be derived from GraphicalUiElement (Gum Runtime usually)");
         }
+
 #endif
+
+        diagnosticsInfo = "Returns new " + type.FullName;
 
         var foundConstructor = false;
 
@@ -94,5 +99,17 @@ public class VisualTemplate
     public GraphicalUiElement CreateContent(object bindingContext, bool createFormsInternally = false)
     {
         return creationFunc(bindingContext, createFormsInternally);
+    }
+
+    public override string ToString()
+    {
+        if(diagnosticsInfo != null)
+        {
+            return diagnosticsInfo;
+        }
+        else
+        {
+            return base.ToString();
+        }
     }
 }

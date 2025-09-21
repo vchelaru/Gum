@@ -456,6 +456,12 @@ public class FrameworkElement : INotifyPropertyChanged
     [Obsolete("Use DefaultFormsTemplates")]
     public static Dictionary<Type, Type> DefaultFormsComponents { get; private set; } = new Dictionary<Type, Type>();
 
+    /// <summary>
+    /// Contains the default association from a Forms type (such as Button) to the visual template used
+    /// for that particular forms type (such as the V2 button style, or a Component loaded from the Gum tool).
+    /// This may contain standard Gum types such as Gum.Forms.Controls, as well as derived types, such as
+    /// forms types created from components in generated code.
+    /// </summary>
     public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; private set; } = new Dictionary<Type, VisualTemplate>();
 
     protected static InteractiveGue GetGraphicalUiElementFor(FrameworkElement element)
