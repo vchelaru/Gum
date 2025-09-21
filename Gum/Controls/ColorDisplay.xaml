@@ -1,31 +1,32 @@
-﻿<UserControl x:Class="Gum.Controls.DataUi.ColorDisplay"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
-             mc:Ignorable="d" 
-             >
+﻿<UserControl
+    x:Class="Gum.Controls.DataUi.ColorDisplay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
     <Grid x:Name="MainGrid">
         <Grid.ContextMenu>
-            <ContextMenu></ContextMenu>
+            <ContextMenu />
         </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"></ColumnDefinition>
-            <ColumnDefinition Width="1*"></ColumnDefinition>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
 
 
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>
 
-        <!--If this isn't avaiable, try "unblocking" your dlls: https://wpftoolkit.codeplex.com/discussions/572836-->
-        <colorpicker:PortableColorPicker Grid.Column="1" MinHeight="12" Margin="0,5,0,5"
-                          Name="ColorPicker"
-                          MouseUp="ColorPicker_MouseUp"
-                                         PreviewMouseUp="ColorPicker_PreviewMouseUp"
-                          ColorChanged="HandleColorChange" 
-                          VerticalAlignment="Stretch">
-            
-        </colorpicker:PortableColorPicker>
+        <!--  If this isn't avaiable, try "unblocking" your dlls: https://wpftoolkit.codeplex.com/discussions/572836  -->
+        <colorpicker:PortableColorPicker
+            Name="ColorPicker"
+            Grid.Column="1"
+            MinHeight="12"
+            Margin="0,5,0,5"
+            VerticalAlignment="Stretch"
+            ColorChanged="HandleColorChange"
+            MouseUp="ColorPicker_MouseUp"
+            PreviewMouseUp="ColorPicker_PreviewMouseUp" />
     </Grid>
 </UserControl>

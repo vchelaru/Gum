@@ -30,7 +30,7 @@ public class Button : ButtonBase
     /// Text displayed by the button. This property requires that the TextInstance instance be present in the Gum component.
     /// If the TextInstance instance is not present, an exception will be thrown in DEBUG mode
     /// </summary>
-    public string Text
+    public virtual string Text
     {
         get
         {
@@ -94,7 +94,8 @@ public class Button : ButtonBase
         {
             throw new Exception(
                 $"This button was created with a Gum component ({Visual?.ElementSave}) " +
-                "that does not have an instance called 'TextInstance'. A 'TextInstance' instance must be added to modify the button's Text property.");
+                "that does not have an instance called 'TextInstance'. " +
+                "A 'TextInstance' instance must be added to modify the button's Text property.");
         }
     }
 #endif

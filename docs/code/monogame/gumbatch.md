@@ -166,7 +166,7 @@ spriteBatch.Draw(MyRenderTarget, new Vector2(0, 0), Color.White);
 
 Note that if you are rendering multiple objects on a render target, the BlendState must be set as to add the transparency. Using the default BlendState may result in alpha being "removed" from the render target when new instances are drawn.
 
-The following shows how to create a BlendState for objects which have partial transpraency and are to be drawn on RenderTargets:
+The following shows how to create a BlendState for objects which have partial transparency and are to be drawn on RenderTargets:
 
 ```csharp
 var blendState = new BlendState();

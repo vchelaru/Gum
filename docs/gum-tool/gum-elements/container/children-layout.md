@@ -127,6 +127,8 @@ For more information on ordering, see the [Order](../general-properties/order.md
 
 `Auto Grid Horizontal` and `Auto Grid Vertical` layouts result in each child of the container being placed in its own cell. All position and size values are relative to the entire cell, so children can expand to fill their cell or be positioned according to any side or corner.
 
+The following image shows a container with 4x4 auto grid. Each child is positioned relative to the top-left corner of each grid. In this case, each child has an `Absolute` `Width` and `Height` of `50` and the parent container is sized `256x256`. This results in each rectangle leaving a gap between itself and its neighbor.
+
 <figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal </p></figcaption></figure>
 
 The following shows a container with an `Auto Grid Horizontal` and `Vertical Cells` of 2, resulting in a 2x2 grid. As children are added to the container through copy/paste, each child is placed in its own cell.

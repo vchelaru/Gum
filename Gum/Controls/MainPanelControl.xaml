@@ -1,15 +1,15 @@
-<UserControl
-    FontSize="{Binding FontSize, Mode=OneWay}"
-    d:DataContext="{d:DesignInstance Type=local:MainPanelViewModel}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
-    mc:Ignorable="d"
+﻿<UserControl
     x:Class="Gum.Controls.MainPanelControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    d:DataContext="{d:DesignInstance Type=local:MainPanelViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    FontSize="{Binding FontSize, Mode=OneWay}"
+    mc:Ignorable="d">
     <UserControl.Resources>
         <ResourceDictionary>
             <!--  When CustomHeaderContent exists, just present it  -->
@@ -23,14 +23,14 @@
             </DataTemplate>
 
             <local:PluginTabHeaderTemplateSelector
+                x:Key="PluginTabHeaderSelector"
                 CustomHeaderTemplate="{StaticResource TabCustomHeaderTemplate}"
-                TitleHeaderTemplate="{StaticResource TabTitleHeaderTemplate}"
-                x:Key="PluginTabHeaderSelector" />
+                TitleHeaderTemplate="{StaticResource TabTitleHeaderTemplate}" />
 
             <Style
+                x:Key="PluginTabStyle"
                 BasedOn="{StaticResource {x:Type TabItem}}"
-                TargetType="{x:Type TabItem}"
-                x:Key="PluginTabStyle">
+                TargetType="{x:Type TabItem}">
                 <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                 <Setter Property="HeaderTemplateSelector" Value="{StaticResource PluginTabHeaderSelector}" />
 
@@ -46,24 +46,24 @@
             </Style>
 
             <Style
+                x:Key="PluginTabControlStyle"
                 BasedOn="{StaticResource {x:Type TabControl}}"
-                TargetType="{x:Type TabControl}"
-                x:Key="PluginTabControlStyle">
+                TargetType="{x:Type TabControl}">
                 <Setter Property="ItemContainerStyle" Value="{StaticResource PluginTabStyle}" />
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" x:Name="LeftColumn" />
-            <ColumnDefinition Width="4" x:Name="LeftSplitter" />
-            <ColumnDefinition Width="*" x:Name="MiddleColumn" />
-            <ColumnDefinition Width="4" x:Name="MiddleSplitter" />
-            <ColumnDefinition Width="3*" x:Name="RightColumn" />
+            <ColumnDefinition x:Name="LeftColumn" Width="*" />
+            <ColumnDefinition x:Name="LeftSplitter" Width="4" />
+            <ColumnDefinition x:Name="MiddleColumn" Width="*" />
+            <ColumnDefinition x:Name="MiddleSplitter" Width="4" />
+            <ColumnDefinition x:Name="RightColumn" Width="3*" />
         </Grid.ColumnDefinitions>
 
 
-        <Grid Grid.Column="2" x:Name="CenterGrid">
+        <Grid x:Name="CenterGrid" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*" />
                 <RowDefinition Height="4" />
@@ -71,10 +71,10 @@
             </Grid.RowDefinitions>
 
             <TabControl
+                x:Name="CenterTopTabControl"
                 Grid.Row="0"
                 ItemsSource="{Binding CenterTopView}"
-                Style="{StaticResource PluginTabControlStyle}"
-                x:Name="CenterTopTabControl" />
+                Style="{StaticResource PluginTabControlStyle}" />
 
             <GridSplitter
                 Grid.Row="1"
@@ -84,25 +84,25 @@
 
 
             <TabControl
+                x:Name="CenterBottomTabControl"
                 Grid.Row="2"
                 ItemsSource="{Binding CenterBottomView}"
-                Style="{StaticResource PluginTabControlStyle}"
-                x:Name="CenterBottomTabControl" />
+                Style="{StaticResource PluginTabControlStyle}" />
 
         </Grid>
 
-        <Grid Grid.Column="4" x:Name="RightGrid">
+        <Grid x:Name="RightGrid" Grid.Column="4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="3* " />
-                <RowDefinition Height="4" x:Name="BottomRightSplitter" />
-                <RowDefinition Height="1*" x:Name="BottomRightPanel" />
+                <RowDefinition x:Name="BottomRightSplitter" Height="4" />
+                <RowDefinition x:Name="BottomRightPanel" Height="1*" />
             </Grid.RowDefinitions>
 
             <TabControl
+                x:Name="RightTopTabControl"
                 Grid.Row="0"
                 ItemsSource="{Binding RightTopView}"
-                Style="{StaticResource PluginTabControlStyle}"
-                x:Name="RightTopTabControl" />
+                Style="{StaticResource PluginTabControlStyle}" />
             <GridSplitter
                 Grid.Row="1"
                 Height="4"
@@ -110,28 +110,28 @@
                 VerticalAlignment="Center" />
 
             <TabControl
+                x:Name="RightBottomTabControl"
                 Grid.Row="2"
                 ItemsSource="{Binding RightBottomView}"
                 SelectedItem="{Binding LeftView.CurrentItem, Mode=OneWay}"
-                Style="{StaticResource PluginTabControlStyle}"
-                x:Name="RightBottomTabControl" />
+                Style="{StaticResource PluginTabControlStyle}" />
         </Grid>
 
         <TabControl
+            x:Name="LeftTabControl"
             Grid.Row="0"
             ItemsSource="{Binding LeftView}"
-            Style="{StaticResource PluginTabControlStyle}"
-            x:Name="LeftTabControl" />
+            Style="{StaticResource PluginTabControlStyle}" />
         <GridSplitter
             Grid.Column="1"
+            Width="4"
             HorizontalAlignment="Center"
-            VerticalAlignment="Stretch"
-            Width="4" />
+            VerticalAlignment="Stretch" />
 
         <GridSplitter
             Grid.Column="3"
+            Width="4"
             HorizontalAlignment="Center"
-            VerticalAlignment="Stretch"
-            Width="4" />
+            VerticalAlignment="Stretch" />
     </Grid>
 </UserControl>

@@ -284,6 +284,7 @@
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
       <Value xsi:type="xsd:string">Menu Item</Value>
+      <ExposedAsName>Header</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

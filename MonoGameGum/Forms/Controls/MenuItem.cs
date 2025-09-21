@@ -39,7 +39,7 @@ public class MenuItem : ItemsControl
 
                 if (isSelected)
                 {
-                    Selected?.Invoke(this, null);
+                    Selected?.Invoke(this, EventArgs.Empty);
                 }
                 // force it or else it won't revert to highlighted until the user moves the mouse
                 UpdateState(force: true);
@@ -65,12 +65,21 @@ public class MenuItem : ItemsControl
 
     internal bool SelectOnHighlight { get; set; } = false;
 
-    public string Header
+    public virtual string Header
     {
-        get => coreText.RawText;
+        get
+        {
+#if DEBUG
+            ReportMissingTextInstance();
+#endif
+            return coreText!.RawText;
+        }
         set
         {
-            if (value != coreText.RawText)
+#if DEBUG
+            ReportMissingTextInstance();
+#endif
+            if (value != coreText!.RawText)
             {
                 coreText.RawText = value;
             }
@@ -540,8 +549,25 @@ public class MenuItem : ItemsControl
 
     #endregion
 
+    #region Utilities
+
     public override string ToString()
     {
         return Header ?? base.ToString();
     }
+
+#if DEBUG
+    private void ReportMissingTextInstance()
+    {
+        if (coreText == null)
+        {
+            throw new Exception(
+                $"This MenuItem was created with a Gum component ({Visual?.ElementSave}) " +
+                "that does not have an instance called 'TextInstance'. " +
+                "A 'TextInstance' instance must be added to modify the Menu's Header property.");
+        }
+    }
+#endif
+
+    #endregion
 }
