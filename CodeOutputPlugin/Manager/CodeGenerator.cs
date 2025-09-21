@@ -1098,7 +1098,7 @@ public class CodeGenerator
 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{ToCSharpName(context.Instance.Name)} = " +
-                    $"global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
+                    $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
             }
             else
             {
@@ -1260,7 +1260,7 @@ public class CodeGenerator
 
 
 
-            builder.AppendLine(context.Tabs + "var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
+            builder.AppendLine(context.Tabs + "var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
@@ -1301,7 +1301,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "});");
 
             builder.AppendLine(context.Tabs +
-                $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
+                $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
                 $"[typeof({className})] = template;");
 
             var element = context.Element;
@@ -1313,7 +1313,7 @@ public class CodeGenerator
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
-                        $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
+                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
                 }
             }
 
@@ -1358,7 +1358,7 @@ public class CodeGenerator
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
-                        $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
+                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
                 }
             }
 
@@ -1393,24 +1393,24 @@ public class CodeGenerator
 
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
     {
-        { "ButtonBehavior", "global::MonoGameGum.Forms.Controls.Button" },
-        { "CheckBoxBehavior", "global::MonoGameGum.Forms.Controls.CheckBox" },
-        { "ComboBoxBehavior", "global::MonoGameGum.Forms.Controls.ComboBox" },
-        { "LabelBehavior", "global::MonoGameGum.Forms.Controls.Label" },
-        { "ListBoxBehavior", "global::MonoGameGum.Forms.Controls.ListBox" },
-        { "ListBoxItemBehavior", "global::MonoGameGum.Forms.Controls.ListBoxItem" },
-        { "MenuBehavior", "global::MonoGameGum.Forms.Controls.Menu" },
-        { "MenuItemBehavior", "global::MonoGameGum.Forms.Controls.MenuItem" },
-        { "PanelBehavior", "global::MonoGameGum.Forms.Controls.Panel" },
-        { "PasswordBoxBehavior", "global::MonoGameGum.Forms.Controls.PasswordBox" },
-        { "RadioButtonBehavior", "global::MonoGameGum.Forms.Controls.RadioButton" },
-        { "ScrollBarBehavior", "global::MonoGameGum.Forms.Controls.ScrollBar" },
-        { "ScrollViewerBehavior", "global::MonoGameGum.Forms.Controls.ScrollViewer" },
-        { "SliderBehavior", "global::MonoGameGum.Forms.Controls.Slider" },
-        { "SplitterBehavior", "global::MonoGameGum.Forms.Controls.Splitter" },
-        { "StackPanelBehavior", "global::MonoGameGum.Forms.Controls.StackPanel" },
-        { "TextBoxBehavior", "global::MonoGameGum.Forms.Controls.TextBox" },
-        { "WindowBehavior", "global::MonoGameGum.Forms.Window" },
+        { "ButtonBehavior", "global::Gum.Forms.Controls.Button" },
+        { "CheckBoxBehavior", "global::Gum.Forms.Controls.CheckBox" },
+        { "ComboBoxBehavior", "global::Gum.Forms.Controls.ComboBox" },
+        { "LabelBehavior", "global::Gum.Forms.Controls.Label" },
+        { "ListBoxBehavior", "global::Gum.Forms.Controls.ListBox" },
+        { "ListBoxItemBehavior", "global::Gum.Forms.Controls.ListBoxItem" },
+        { "MenuBehavior", "global::Gum.Forms.Controls.Menu" },
+        { "MenuItemBehavior", "global::Gum.Forms.Controls.MenuItem" },
+        { "PanelBehavior", "global::Gum.Forms.Controls.Panel" },
+        { "PasswordBoxBehavior", "global::Gum.Forms.Controls.PasswordBox" },
+        { "RadioButtonBehavior", "global::Gum.Forms.Controls.RadioButton" },
+        { "ScrollBarBehavior", "global::Gum.Forms.Controls.ScrollBar" },
+        { "ScrollViewerBehavior", "global::Gum.Forms.Controls.ScrollViewer" },
+        { "SliderBehavior", "global::Gum.Forms.Controls.Slider" },
+        { "SplitterBehavior", "global::Gum.Forms.Controls.Splitter" },
+        { "StackPanelBehavior", "global::Gum.Forms.Controls.StackPanel" },
+        { "TextBoxBehavior", "global::Gum.Forms.Controls.TextBox" },
+        { "WindowBehavior", "global::Gum.Forms.Window" },
     };
 
     static void AddGumFormsMembers(CodeGenerationContext context)
