@@ -22,22 +22,22 @@ public class Button : ButtonBase
 
     #region Fields/Properties
 
-    GraphicalUiElement textComponent;
+    GraphicalUiElement? textComponent;
 
-    global::RenderingLibrary.Graphics.IText coreTextObject;
+    global::RenderingLibrary.Graphics.IText? coreTextObject;
 
     /// <summary>
     /// Text displayed by the button. This property requires that the TextInstance instance be present in the Gum component.
     /// If the TextInstance instance is not present, an exception will be thrown in DEBUG mode
     /// </summary>
-    public virtual string Text
+    public virtual string? Text
     {
         get
         {
 #if DEBUG
             ReportMissingTextInstance();
 #endif
-            return coreTextObject.RawText;
+            return coreTextObject?.RawText;
         }
         set
         {

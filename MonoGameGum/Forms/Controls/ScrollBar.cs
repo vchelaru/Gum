@@ -25,8 +25,8 @@ public class ScrollBar : RangeBase
 {
     #region Fields/Properties
 
-    Button upButton;
-    Button downButton;
+    Button? upButton;
+    Button? downButton;
 
     public Button? UpButton => upButton;
     public Button? DownButton => downButton;
@@ -201,14 +201,14 @@ public class ScrollBar : RangeBase
     {
         if(Orientation == Orientation.Vertical)
         {
-            var topOfThumb = this.thumb.AbsoluteTop;
+            var topOfThumb = this.thumb!.AbsoluteTop;
             var cursorScreen = MainCursor.YRespectingGumZoomAndBounds();
 
             cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
         }
         else
         {
-            var leftOfThumb = this.thumb.AbsoluteLeft;
+            var leftOfThumb = this.thumb!.AbsoluteLeft;
             var cursorScreen = MainCursor.XRespectingGumZoomAndBounds();
 
             cursorGrabOffsetRelativeToThumb = cursorScreen - leftOfThumb;
@@ -217,6 +217,10 @@ public class ScrollBar : RangeBase
 
     private void HandleTrackPush(object sender, EventArgs args)
     {
+        // Early out, can't calulate without this
+        if (thumb == null)
+            return;
+
         if(Orientation == Orientation.Vertical)
         {
             if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)

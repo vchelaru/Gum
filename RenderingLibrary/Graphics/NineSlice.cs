@@ -911,7 +911,7 @@ public class NineSlice : IRenderableIpso,
         }
     }
 
-    public void SetSingleTexture(Texture2D texture)
+    public void SetSingleTexture(Texture2D? texture)
     {
         foreach (var sprite in mSprites)
         {

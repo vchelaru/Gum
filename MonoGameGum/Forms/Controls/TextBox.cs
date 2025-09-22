@@ -19,12 +19,12 @@ public class TextBox : TextBoxBase
 {
     #region Fields/Properties
 
-    protected override string DisplayedText => Text;
+    protected override string? DisplayedText => Text;
 
     /// <summary>
     /// Gets and sets the displayed Text. If the text exceeds MaxLength, it will be truncated.
     /// </summary>
-    public string Text
+    public string? Text
     {
         get => coreTextObject.RawText;
         set
@@ -354,7 +354,7 @@ public class TextBox : TextBoxBase
 
     #endregion
 
-    protected override void OnTextChanged(string value)
+    protected override void OnTextChanged(string? value)
     {
 
         CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);

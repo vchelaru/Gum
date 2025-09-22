@@ -125,7 +125,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         }
     }
 
-    string mRawText;
+    
     List<string> mWrappedText = new List<string>();
     float? mWidth = 200;
     float mHeight = 200;
@@ -136,7 +136,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     BitmapFont mBitmapFont;
     Texture2D mTextureToRender;
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
     ObservableCollection<IRenderableIpso> mChildren;
 
@@ -271,7 +271,8 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         // temp:
         = true;
 
-    public string RawText
+    string? mRawText;
+    public string? RawText
     {
         get
         {
@@ -473,7 +474,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         set;
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -1153,12 +1154,14 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
                 if (fontToUse.Texture == null)
                 {
-                    spriteRenderer.Draw(Sprite.InvalidTexture,
-                        new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
-                        sourceRectangle,
-                        Color.White,
-                        this);
-
+                    if (Sprite.InvalidTexture != null)
+                    {
+                        spriteRenderer.Draw(Sprite.InvalidTexture,
+                            new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
+                            sourceRectangle,
+                            Color.White,
+                            this);
+                    }
                 }
                 else
                 {

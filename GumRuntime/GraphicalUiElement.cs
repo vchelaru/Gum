@@ -5289,7 +5289,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="propertyName">The name of the variable on this object such as X or Height. If the property is a state, then the name should be "{CategoryName}State".</param>
     /// <param name="value">The value, casted to the correct type.</param>
-    public void SetProperty(string propertyName, object value)
+    public void SetProperty(string propertyName, object? value)
     {
 
         if (mExposedVariables.ContainsKey(propertyName))

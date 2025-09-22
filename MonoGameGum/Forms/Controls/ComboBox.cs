@@ -73,7 +73,7 @@ public class ComboBox :
         }
     }
 
-    public string Text
+    public string? Text
     {
         get => coreTextObject.RawText;
         set
