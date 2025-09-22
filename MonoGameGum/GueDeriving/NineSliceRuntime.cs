@@ -173,13 +173,13 @@ namespace MonoGameGum.GueDeriving
         #region Source File / Texture
 
         [Obsolete("Use Texture")]
-        public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
+        public Microsoft.Xna.Framework.Graphics.Texture2D? SourceFile
         {
             get => Texture;
             set => Texture = value;
         }
 
-        public Microsoft.Xna.Framework.Graphics.Texture2D Texture
+        public Microsoft.Xna.Framework.Graphics.Texture2D? Texture
         {
             get
             {

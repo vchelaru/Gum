@@ -65,7 +65,7 @@ public class MenuItem : ItemsControl
 
     internal bool SelectOnHighlight { get; set; } = false;
 
-    public virtual string Header
+    public virtual string? Header
     {
         get
         {

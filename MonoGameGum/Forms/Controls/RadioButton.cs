@@ -28,9 +28,9 @@ public class RadioButton : ToggleButton
 
     private string _groupName;
 
-    private object GetParent()
+    private object? GetParent()
     {
-        object parent;
+        object? parent;
         if (Visual == null)
             parent = null;
         else if (Visual.Parent != null)
@@ -107,7 +107,7 @@ public class RadioButton : ToggleButton
 
 
 
-    public string Text
+    public string? Text
     {
         get
         {

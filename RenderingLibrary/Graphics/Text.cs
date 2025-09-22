@@ -125,7 +125,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         }
     }
 
-    string mRawText;
+    
     List<string> mWrappedText = new List<string>();
     float? mWidth = 200;
     float mHeight = 200;
@@ -271,7 +271,8 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         // temp:
         = true;
 
-    public string RawText
+    string? mRawText;
+    public string? RawText
     {
         get
         {

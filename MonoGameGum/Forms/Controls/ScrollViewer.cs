@@ -104,8 +104,8 @@ public class ScrollViewer :
 
     bool reactToInnerPanelPositionOrSizeChanged = true;
 
-    protected ScrollBar verticalScrollBar;
-    protected ScrollBar horizontalScrollBar;
+    protected ScrollBar? verticalScrollBar;
+    protected ScrollBar? horizontalScrollBar;
 
     GraphicalUiElement innerPanel;
     public GraphicalUiElement InnerPanel => innerPanel;

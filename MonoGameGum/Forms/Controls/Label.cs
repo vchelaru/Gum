@@ -23,7 +23,7 @@ public class Label :
 
     public GraphicalUiElement TextComponent => textComponent;
 
-    public string Text
+    public string? Text
     {
         get
         {

@@ -28,7 +28,7 @@ public class Image : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
 
-    public Microsoft.Xna.Framework.Graphics.Texture2D Texture
+    public Microsoft.Xna.Framework.Graphics.Texture2D? Texture
     {
         get
         {

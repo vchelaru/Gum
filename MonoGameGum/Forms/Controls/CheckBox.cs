@@ -16,11 +16,11 @@ public class CheckBox : ToggleButton
 {
     #region Fields/Properties
 
-    private GraphicalUiElement textComponent;
+    private GraphicalUiElement? textComponent;
 
-    private global::RenderingLibrary.Graphics.IText coreTextObject;
+    private global::RenderingLibrary.Graphics.IText? coreTextObject;
 
-    public string Text
+    public string? Text
     {
         get
         {
@@ -35,7 +35,7 @@ public class CheckBox : ToggleButton
             ReportMissingTextInstance();
 #endif
             // go through the component instead of the core text object to force a layout refresh if necessary
-            textComponent.SetProperty("Text", value);
+            textComponent?.SetProperty("Text", value);
         }
     }
 

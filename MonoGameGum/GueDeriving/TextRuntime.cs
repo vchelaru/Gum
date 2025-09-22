@@ -13,7 +13,7 @@ namespace MonoGameGum.GueDeriving;
 
 public class TextRuntime : InteractiveGue
 {
-    Text mContainedText;
+    Text? mContainedText;
     Text ContainedText
     {
         get
@@ -191,14 +191,14 @@ public class TextRuntime : InteractiveGue
         set { useCustomFont = value; UpdateToFontValues(); }
     }
 
-    string customFontFile;
+    string? customFontFile;
     /// <summary>
     /// Specifies the name of the custom font. This can be specified relative to
     /// FileManager.RelativeDirectory, which is the Content folder for code-only projects,
     /// or the folder containing the .gumx project if loading a Gum project. This should
     /// include the .fnt extension.
     /// </summary>
-    public string CustomFontFile
+    public string? CustomFontFile
     {
         get { return customFontFile; }
         set { customFontFile = value; UpdateToFontValues(); }
@@ -263,7 +263,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-    public string Text
+    public string? Text
     {
         get
         {

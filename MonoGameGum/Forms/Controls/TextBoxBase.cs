@@ -129,7 +129,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    protected abstract string DisplayedText { get; }
+    protected abstract string? DisplayedText { get; }
 
     TextWrapping textWrapping = TextWrapping.NoWrap;
     public TextWrapping TextWrapping

@@ -173,7 +173,7 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue
     #region Source File/Texture
 
     [Obsolete("Use Texture")]
-    public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
+    public Microsoft.Xna.Framework.Graphics.Texture2D? SourceFile
     {
         get
         {
@@ -184,7 +184,7 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue
             this.Texture = value;
         }
     }
-    public Microsoft.Xna.Framework.Graphics.Texture2D Texture
+    public Microsoft.Xna.Framework.Graphics.Texture2D? Texture
     {
         get
         {
