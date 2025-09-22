@@ -412,6 +412,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>DemoSettingsMenu.WidthUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>DemoSettingsMenu.X</Name>
       <Value xsi:type="xsd:float">15</Value>
@@ -424,9 +430,9 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>DetectResolutionsButton.Text</Name>
-      <Value xsi:type="xsd:string">Detect Resolutions</Value>
+      <Type>PositionUnitType</Type>
+      <Name>DemoSettingsMenu.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -439,6 +445,12 @@
       <Type>string</Type>
       <Name>DetectResolutionsButton.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>DetectResolutionsButton.Text</Name>
+      <Value xsi:type="xsd:string">Detect Resolutions</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1625,12 +1637,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>ShowDialogButton.Text</Name>
-      <Value xsi:type="xsd:string">Show Dialog Box</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>ShowDialogButton.Height</Name>
       <Value xsi:type="xsd:float">24</Value>
@@ -1639,6 +1645,12 @@
     <Variable>
       <Type>string</Type>
       <Name>ShowDialogButton.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ShowDialogButton.Text</Name>
+      <Value xsi:type="xsd:string">Show Dialog Box</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1678,12 +1690,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>ShowToastButton.Text</Name>
-      <Value xsi:type="xsd:string">Show Toast</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>ShowToastButton.Height</Name>
       <Value xsi:type="xsd:float">24</Value>
@@ -1692,6 +1698,12 @@
     <Variable>
       <Type>string</Type>
       <Name>ShowToastButton.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ShowToastButton.Text</Name>
+      <Value xsi:type="xsd:string">Show Toast</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

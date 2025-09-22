@@ -1,11 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>1591</NoWarn>
 		<Nullable>enable</Nullable>
 
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<OutputPath>bin\$(Configuration)\</OutputPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>$(DefineConstants)TRACE;MONOGAME;FRB</DefineConstants>
