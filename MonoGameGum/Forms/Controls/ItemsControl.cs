@@ -384,7 +384,10 @@ public class ItemsControl : ScrollViewer
                             newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
 
                             // the visual template should respect the item (BindingContext), but just in case it doesn't:
-                            newVisual.BindingContext = item;
+                            if(newVisual is InteractiveGue interactivegue)
+                            {
+                                interactivegue.BindingContext = item;
+                            }
                         }
                         else
                         {
