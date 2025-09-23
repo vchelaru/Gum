@@ -382,6 +382,9 @@ public class ItemsControl : ScrollViewer
                             // since they want to force a ListBoxItem. For
                             // now let's make it false, and revisit later.
                             newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
+
+                            // the visual template should respect the item (BindingContext), but just in case it doesn't:
+                            newVisual.BindingContext = item;
                         }
                         else
                         {
