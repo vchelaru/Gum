@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:variableGrid="clr-namespace:Gum.Plugins.VariableGrid"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+    xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=WpfDataUi"
     d:DataContext="{d:DesignInstance d:Type={x:Type variableGrid:MainControlViewModel},
                                      IsDesignTimeCreatable=False}"
     d:DesignHeight="200"
@@ -38,7 +39,56 @@
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <WpfDataUi:DataUiGrid Name="DataGrid" Visibility="{Binding ShowVariableGrid}" />
+            <WpfDataUi:DataUiGrid
+                Name="DataGrid"
+                OverridesIsDefaultStyling="True"
+                Visibility="{Binding ShowVariableGrid}">
+                <WpfDataUi:DataUiGrid.Style>
+                    <Style BasedOn="{StaticResource {x:Type WpfDataUi:DataUiGrid}}" TargetType="{x:Type WpfDataUi:DataUiGrid}">
+                        <Style.Resources>
+                            <DataTemplate x:Key="DataUi.InstanceMemberTemplate" DataType="{x:Type wpfdatauiTypes:InstanceMember}">
+                                <Border
+                                    Margin="0,0,0,0"
+                                    Padding="0,2"
+                                    BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+                                    BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <!--<ColumnDefinition Width="Auto" SharedSizeGroup="DefaultColumn" />-->
+                                            <!--<ColumnDefinition Width="Auto" SharedSizeGroup="LabelColumn"/>-->
+                                            <!--<ColumnDefinition Width="0" SharedSizeGroup="Splitter"/>-->
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <!--<wpf:FluentIcon
+                                            x:Name="IsDefaultIcon"
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Icon="Edit"
+                                            Visibility="Visible" />-->
+                                        <!--<Border Grid.Column="1" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource Frb.Brushes.Border}" HorizontalAlignment="Stretch">
+    <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+</Border>
+<GridSplitter Grid.Column="2" HorizontalAlignment="Stretch"/>-->
+                                        <Border
+                                            x:Name="Container"
+                                            Grid.Column="0"
+                                            BorderBrush="{DynamicResource Frb.Brushes.Border}"
+                                            BorderThickness="0,0,0,0">
+                                            <WpfDataUi:SingleDataUiContainer DataContext="{Binding}" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <!--<DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                                        <Setter TargetName="IsDefaultIcon" Property="Visibility" Value="Hidden" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>-->
+                            </DataTemplate>
+                        </Style.Resources>
+                    </Style>
+                </WpfDataUi:DataUiGrid.Style>
+            </WpfDataUi:DataUiGrid>
             <Grid Visibility="{Binding ShowBehaviorUi}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
