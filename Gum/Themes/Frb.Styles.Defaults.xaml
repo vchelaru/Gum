@@ -8,6 +8,7 @@
     xmlns:system="clr-namespace:System;assembly=mscorlib"
     xmlns:themes="clr-namespace:FlatRedBall.Glue.Themes"
     xmlns:themes1="clr-namespace:Gum.Themes"
+    xmlns:variableGrid="clr-namespace:Gum.Plugins.VariableGrid"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
     xmlns:wpfdataui="clr-namespace:WpfDataUi;assembly=WpfDataUi"
     xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=WpfDataUi">
@@ -1274,35 +1275,14 @@
 
     </Style>
 
-    <DataTemplate x:Key="DataUi.InstanceMemberTemplate" DataType="{x:Type wpfdatauiTypes:InstanceMember}">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <!--<ColumnDefinition Width="Auto" SharedSizeGroup="DefaultColumn"/>-->
-                <!--<ColumnDefinition Width="Auto" SharedSizeGroup="LabelColumn"/>-->
-                <!--<ColumnDefinition Width="0" SharedSizeGroup="Splitter"/>-->
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <!--<wpf:FluentIcon x:Name="IsDefaultIcon" Icon="Status" Grid.Column="0" VerticalAlignment="Center" Visibility="Visible"/>-->
-            <!--<Border Grid.Column="1" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource Frb.Brushes.Border}" HorizontalAlignment="Stretch">
-                <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-            </Border>
-            <GridSplitter Grid.Column="2" HorizontalAlignment="Stretch"/>-->
-            <Border
-                x:Name="Container"
-                Grid.Column="0"
-                BorderBrush="{DynamicResource Frb.Brushes.Border}"
-                BorderThickness="0,0,0,0">
-                <wpfdataui:SingleDataUiContainer DataContext="{Binding}" />
-            </Border>
-        </Grid>
-        <!--<DataTemplate.Triggers>
-            <DataTrigger Binding="{Binding IsDefault}" Value="True">
-                <Setter TargetName="IsDefaultIcon" Property="Visibility" Value="Hidden"/>
-            </DataTrigger>
-        </DataTemplate.Triggers>-->
-    </DataTemplate>
+
 
     <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
+        <Style.Resources>
+            <DataTemplate x:Key="DataUi.InstanceMemberTemplate" DataType="{x:Type wpfdatauiTypes:InstanceMember}">
+                <wpfdataui:SingleDataUiContainer DataContext="{Binding}" />
+            </DataTemplate>
+        </Style.Resources>
         <Setter Property="Grid.IsSharedSizeScope" Value="True" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="ItemTemplate">
@@ -1320,7 +1300,7 @@
                         </Expander.HeaderTemplate>
                         <ItemsControl
                             AlternationCount="2"
-                            ItemTemplate="{StaticResource DataUi.InstanceMemberTemplate}"
+                            ItemTemplate="{DynamicResource DataUi.InstanceMemberTemplate}"
                             ItemsSource="{Binding Members}" />
                     </Expander>
                 </DataTemplate>
@@ -1354,5 +1334,19 @@
         </Style.Resources>
     </Style>
 
+    <Style TargetType="{x:Type variableGrid:VariableRemoveButton}">
+        <Style.Resources>
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Button Content="{md:PackIcon Kind=Close}" Style="{StaticResource IconButton}" />
+                        </ControlTemplate>
+                    </Setter.Value>
+
+                </Setter>
+            </Style>
+        </Style.Resources>
+    </Style>
 
 </ResourceDictionary>

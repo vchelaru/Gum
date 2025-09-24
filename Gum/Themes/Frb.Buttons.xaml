@@ -76,7 +76,7 @@
                 <Setter Property="Opacity" Value="0.5" />
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Primary}" />
             </Trigger>
         </Style.Triggers>
     </Style>
