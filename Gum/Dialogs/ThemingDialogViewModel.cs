@@ -59,6 +59,7 @@ public class ThemingDialogViewModel : DialogViewModel
     public List<ThemeMode> ThemeModes { get; } = [..Enum.GetValues(typeof(ThemeMode)).OfType<ThemeMode>().Take(2)];
     public List<SolidColorBrush> AccentOptions { get; } = new ()
     {
+        new ((Color)ColorConverter.ConvertFromString("#6cc395")), // Gum Green
         new ((Color)ColorConverter.ConvertFromString("#3E9ECE")), // Default FRB Blue
         new ((Color)ColorConverter.ConvertFromString("#F44336")), // Red
         new ((Color)ColorConverter.ConvertFromString("#E91E63")), // Pink

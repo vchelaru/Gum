@@ -35,7 +35,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Border Background="{DynamicResource Frb.Surface01}">
+            <Border Background="{DynamicResource Frb.Brushes.Background}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -44,10 +44,11 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Image
-                        Width="32"
                         Height="16"
+                        Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Source="pack://application:,,,/GumIcon.ico" />
+                        Source="pack://application:,,,/GumLogo64.png"
+                        Stretch="Uniform" />
                     <WindowsFormsHost
                         x:Name="WinformsMenuHost"
                         Grid.Column="1"
