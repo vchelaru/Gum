@@ -43,8 +43,9 @@ jobs:
     - name: Build solution
       run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-restore
     
-    - name: Run tests
-      run: dotnet test ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+    # Vic says - why run tests? This seems redundant since we already run tests before merging into master
+    # - name: Run tests
+    #  run: dotnet test ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
     
     # Pack NuGet packages (Debug build) - includes both .nupkg and .snupkg
     - name: Pack NuGet packages
