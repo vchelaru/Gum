@@ -142,18 +142,16 @@
                                 ToolTip="All elements in project" />
                         </StackPanel>
 
-                        <ScrollViewer
+                        <WpfDataUi:DataUiGrid
+                            Name="DataGrid"
                             Grid.Row="1"
                             Grid.ColumnSpan="2"
-                            VerticalScrollBarVisibility="Auto">
-                            <StackPanel Visibility="{Binding NeedsSetup, Converter={StaticResource InverseBoolToVisibilityConverter}}">
-                                <WpfDataUi:DataUiGrid Name="DataGrid" />
+                            Visibility="{Binding NeedsSetup, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
 
 
-                                <!--  Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)  -->
-                                <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
-                            </StackPanel>
-                        </ScrollViewer>
+                        <!--  Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)  -->
+                        <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
+
                     </Grid>
 
                 </Border>
