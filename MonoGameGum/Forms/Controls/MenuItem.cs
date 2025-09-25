@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Wireframe;
+using MonoGameGum;
 using RenderingLibrary;
 
 #if FRB
@@ -158,11 +159,61 @@ public class MenuItem : ItemsControl
 #endif
         RefreshInternalVisualReferences();
 
+        UpdateMenuItems();   
+
         // Just in case it needs to set the state to "enabled"
         UpdateState();
-
-
         base.ReactToVisualChanged();
+    }
+
+    private void UpdateMenuItems()
+    {
+        var containerInstance = Visual.GetGraphicalUiElementByName(
+            "SubItemContainerInstance");
+
+        if (containerInstance != null)
+        {
+            foreach (var child in containerInstance.Children)
+            {
+                if (child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
+                {
+                    child.Parent = null;
+                    Items.Add(menuItem);
+                }
+            }
+
+            containerInstance.Children.CollectionChanged += HandleSubItemContainerChanged;
+
+            containerInstance.Parent = null;
+        }
+    }
+
+    private void HandleSubItemContainerChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        List<MenuItem> items = null;
+        if(e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+        {
+            items = new List<MenuItem>();
+
+            foreach (var item in e.NewItems)
+            {
+                if(item is InteractiveGue gue && gue.FormsControlAsObject is MenuItem menuitem)
+                {
+                    items.Add(menuitem);
+                }
+            }
+        }
+
+        if(items != null)
+        {
+            GumService.Default.DeferredQueue.Enqueue(() =>
+            {
+                foreach(var item in items)
+                {
+                    this.Items.Add(item);
+                }
+            });
+        }
     }
 
     protected virtual void RefreshInternalVisualReferences()
