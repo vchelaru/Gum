@@ -206,7 +206,11 @@ public class MenuItem : ItemsControl
 
         if(items != null)
         {
+#if FRB
+            _=FlatRedBall.Instructions.InstructionManager.DoOnMainThreadAsync(() =>
+#else
             GumService.Default.DeferredQueue.Enqueue(() =>
+#endif
             {
                 foreach(var item in items)
                 {
@@ -264,7 +268,7 @@ public class MenuItem : ItemsControl
         //}
     }
 
-    #endregion
+#endregion
 
     #region Event Handlers
     private void HandleRollOn(object sender, EventArgs args)
@@ -519,10 +523,10 @@ public class MenuItem : ItemsControl
                 itemsPopup.Visual.RemoveFromManagers();
 
                 Visual.EffectiveManagers.Renderer.MainLayer.Remove(itemsPopup.Visual);
-    #if FRB
-    #else
+#if FRB
+#else
                 itemsPopup.Visual.GetTopParent()?.Children.Remove(itemsPopup.Visual);
-    #endif
+#endif
                 itemsPopup = null;
 
             }
