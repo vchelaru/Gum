@@ -22,6 +22,7 @@ using System.Xml.Linq;
 using ToolsUtilities;
 using Gum.Forms;
 using System.Collections.Specialized;
+using Gum.Threading;
 
 namespace MonoGameGum;
 
@@ -54,6 +55,8 @@ public class GumService
     public Renderer Renderer => this.SystemManagers.Renderer;
 
     public SystemManagers SystemManagers { get; private set; }
+
+    public DeferredActionQueue DeferredQueue { get; private set; }
 
     public float CanvasWidth
     {
@@ -89,6 +92,8 @@ public class GumService
         Root.HasEvents = false;
 
         Root.Children.CollectionChanged += (o,e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root,e);
+
+        DeferredQueue = new DeferredActionQueue();
     }
 
     /// <summary>
@@ -295,6 +300,7 @@ public class GumService
 
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
     {
+        DeferredQueue.ProcessPending();
         GameTime = gameTime;
         Gum.Forms.FormsUtilities.Update(game, gameTime, root);
         // SystemManagers.Activity (as of Sept 13, 2025) only 
@@ -308,6 +314,7 @@ public class GumService
 
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
+        DeferredQueue.ProcessPending();
         GameTime = gameTime;
         Gum.Forms.FormsUtilities.Update(game, gameTime, roots);
         this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
