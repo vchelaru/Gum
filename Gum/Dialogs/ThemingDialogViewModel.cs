@@ -1,12 +1,13 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Gum.Controls;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using CommunityToolkit.Mvvm.Messaging;
-using Gum.Controls;
-using Gum.Services;
-using Gum.Services.Dialogs;
 
 namespace Gum.Dialogs;
 
@@ -57,7 +58,7 @@ public class ThemingDialogViewModel : DialogViewModel
     }
 
     public List<ThemeMode> ThemeModes { get; } = [..Enum.GetValues(typeof(ThemeMode)).OfType<ThemeMode>().Take(2)];
-    public List<SolidColorBrush> AccentOptions { get; } = new ()
+    public static List<SolidColorBrush> AccentOptions { get; } = new ()
     {
         new ((Color)ColorConverter.ConvertFromString("#6cc395")), // Gum Green
         new ((Color)ColorConverter.ConvertFromString("#3E9ECE")), // Default FRB Blue
@@ -104,8 +105,8 @@ public record ThemeConfig(ThemeMode? Mode = null, Color? Accent = null)
 public interface IThemingService
 {
     void SwitchThemes(ThemeConfig config);
-    
     ThemeConfig? CurrentTheme { get; }
+    bool IsSystemInDarkMode { get; }
 }
 
 public class ThemingService : IThemingService
@@ -143,7 +144,7 @@ public class ThemingService : IThemingService
 
         CurrentTheme = config;
 
-        _dispatcher.Post(() =>
+        _dispatcher.Invoke(() =>
         {
             if (cached.Accent != config.Accent && config.Accent is { } accent)
             {
@@ -164,6 +165,8 @@ public class ThemingService : IThemingService
                            s.EndsWith("Frb.Brushes.Light.xaml", StringComparison.OrdinalIgnoreCase)), 
                     out _, out _, out var themeDict))
             {
+                if (config.Mode == ThemeMode.System)
+                    config = config with { Mode = IsSystemInDarkMode ? ThemeMode.Dark : ThemeMode.Light };
                 themeDict!.Source = config.Mode == ThemeMode.Dark
                     ? DarkUri
                     : LightUri;
@@ -202,5 +205,24 @@ public class ThemingService : IThemingService
             if (TryFind(child, match, out parent, out index, out found)) return true;
         }
         return false;
+    }
+
+    public bool IsSystemInDarkMode
+    {
+        get
+        {
+            const string key = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+            using var personalizeKey = Registry.CurrentUser.OpenSubKey(key);
+            if (personalizeKey == null)
+                return false; // default to light if not found 
+
+            var appsUseLightTheme = personalizeKey.GetValue("AppsUseLightTheme");
+            if (appsUseLightTheme is int value)
+            {
+                return value == 0; // 0 = dark, 1 = light 
+            }
+
+            return false;
+        }
     }
 }
