@@ -245,12 +245,15 @@ public partial class MultiSelectTreeView
             {
                 switch (_dropKind)
                 {
+
+                    //note: because we are taking over node-drop externally, and "before/after"
+                    // is not supported by that, we'll just forward the visuals to "into"
                     case DropKind.Before:
-                        e.Graphics.DrawLine(pen, 0, e.Bounds.Top, ClientSize.Width, e.Bounds.Top);
-                        break;
+                        //e.Graphics.DrawLine(pen, 0, e.Bounds.Top, ClientSize.Width, e.Bounds.Top);
+                        //break;
                     case DropKind.After:
-                        e.Graphics.DrawLine(pen, 0, e.Bounds.Bottom - 1, ClientSize.Width, e.Bounds.Bottom - 1);
-                        break;
+                        //e.Graphics.DrawLine(pen, 0, e.Bounds.Bottom - 1, ClientSize.Width, e.Bounds.Bottom - 1);
+                        //break;
                     case DropKind.Into:
                         using (Pen p = new Pen(Color.FromArgb(160, SelectedBorderColor), 1f))
                         {
@@ -680,6 +683,12 @@ public partial class MultiSelectTreeView
                 {
                     int x = (short)(m.LParam.ToInt32() & 0xFFFF);
                     int y = (short)((m.LParam.ToInt32() >> 16) & 0xFFFF);
+
+                    if (!Focused) 
+                    { 
+                        Focus(); 
+                    }
+
                     _modsAtMouseDown = ModsFromWParam(m.WParam);
                     _inMouseSeq = true;
 
@@ -751,6 +760,11 @@ public partial class MultiSelectTreeView
                 {
                     int x = (short)(m.LParam.ToInt32() & 0xFFFF);
                     int y = (short)((m.LParam.ToInt32() >> 16) & 0xFFFF);
+
+                    if (!Focused)
+                    {
+                        Focus();
+                    }
 
                     var node = GetNodeAtRowY(y);
                     if (node != null)
