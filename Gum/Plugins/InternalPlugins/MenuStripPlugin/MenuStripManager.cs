@@ -44,7 +44,7 @@ namespace Gum.Managers
         private ToolStripMenuItem contentToolStripMenuItem;
 
         private ToolStripMenuItem helpToolStripMenuItem;
-        
+
         private ToolStripMenuItem RemoveStateMenuItem;
         private ToolStripMenuItem RemoveElementMenuItem;
         private ToolStripMenuItem RemoveVariableMenuItem;
@@ -88,7 +88,7 @@ namespace Gum.Managers
             {
                 var tsmi = new ToolStripMenuItem();
                 tsmi.Text = text;
-                if(clickEvent != null)
+                if (clickEvent != null)
                 {
                     tsmi.Click += (not, used) => clickEvent();
                 }
@@ -196,7 +196,7 @@ namespace Gum.Managers
                 PluginsWindow pluginsWindow = new PluginsWindow();
                 pluginsWindow.Show();
             };
-            
+
 
             // 
             // findFileReferencesToolStripMenuItem
@@ -229,7 +229,7 @@ namespace Gum.Managers
                 }
 
             };
-            
+
 
             // 
             // contentToolStripMenuItem
@@ -326,7 +326,7 @@ namespace Gum.Managers
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            
+
             this.saveAllToolStripMenuItem,
             this.newProjectToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -350,9 +350,9 @@ namespace Gum.Managers
             this._menuStrip.Name = "menuStrip1";
             this._menuStrip.TabIndex = 0;
             this._menuStrip.Text = "menuStrip1";
-            
-            
-            
+
+
+
             RefreshUI();
             _menuStrip.Font = new Font("Verdana", DefaultFontSize);
             return this._menuStrip;
@@ -360,23 +360,23 @@ namespace Gum.Managers
 
         private FrbMenuStripRenderer? GetCurrentThemeRenderer(float? fontSize = null)
         {
-            if (System.Windows.Application.Current is {} app &&
-                app.TryFindResource("Frb.Colors.Surface01") is System.Windows.Media.Color bgColor &&
+            if (System.Windows.Application.Current is { } app &&
+                app.TryFindResource("Frb.Colors.Background") is System.Windows.Media.Color bgColor &&
                 app.TryFindResource("Frb.Colors.Foreground") is System.Windows.Media.Color fgColor &&
                 app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color primaryColor)
             {
                 System.Drawing.Color bg = System.Drawing.Color.FromArgb(bgColor.A, bgColor.R, bgColor.G, bgColor.B);
                 System.Drawing.Color fg = System.Drawing.Color.FromArgb(fgColor.A, fgColor.R, fgColor.G, fgColor.B);
                 System.Drawing.Color primary = System.Drawing.Color.FromArgb(primaryColor.A, primaryColor.R, primaryColor.G, primaryColor.B);
-                
+
                 Font font = new("Verdana", fontSize ?? DefaultFontSize, FontStyle.Regular);
                 _menuStrip.ForeColor = fg;
                 _menuStrip.BackColor = bg;
                 _menuStrip.Font = font;
-                
+
                 return new(bg, fg, primary, font);
             }
-            
+
 
 
             return null;
@@ -418,7 +418,7 @@ namespace Gum.Managers
                 RemoveElementMenuItem.Enabled = false;
             }
 
-            if(_selectedState.SelectedBehaviorVariable != null)
+            if (_selectedState.SelectedBehaviorVariable != null)
             {
                 RemoveVariableMenuItem.Text = _selectedState.SelectedBehaviorVariable.ToString();
                 RemoveVariableMenuItem.Enabled = true;
@@ -452,18 +452,18 @@ namespace Gum.Managers
             }
         }
 
-        const int DefaultFontSize = 8;
+        const int DefaultFontSize = 9;
 
-        
+
         void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
         {
-            float fontSize = (8/12f) * (float)message.Size;
+            float fontSize = (DefaultFontSize / 12f) * (float)message.Size;
 
             _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily, fontSize);
             _menuStrip.Renderer = GetCurrentThemeRenderer(fontSize);
             _menuStrip.Invalidate();
         }
-        
+
         public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
         {
             string menuName = menuAndSubmenus.Last();
@@ -474,7 +474,7 @@ namespace Gum.Managers
 
             var menuToAddTo =
                 _menuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(
-                    item=>item.Text == menuNameToAddTo);
+                    item => item.Text == menuNameToAddTo);
             //true);
 
             if (menuToAddTo == null)
@@ -493,7 +493,7 @@ namespace Gum.Managers
             return menuItem;
 
         }
-    
+
         public ToolStripMenuItem GetItem(string name)
         {
             foreach (ToolStripMenuItem item in _menuStrip.Items)
