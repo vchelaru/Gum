@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
+using Gum.Controls;
 using ToolsUtilities;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
@@ -546,7 +547,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         InitializeMenuItems();
 
-        //var panel = new Panel();
 
         var grid = new Grid();
         grid.Margin = new Thickness(4);
@@ -563,10 +563,20 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _tabManager.AddControl(grid, "Project", TabLocation.Left);
 
         ObjectTreeView.Dock = DockStyle.Fill;
-        //panel.Controls.Add(ObjectTreeView);
+
         TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
         TreeViewHost.Background = System.Windows.Media.Brushes.Transparent;
-        TreeViewHost.Child = ObjectTreeView;
+
+        ThemedScrollContainer scrollContainer = new()
+        {
+            AutoComputeExtent = false,
+            Dock = DockStyle.Fill,
+            EnableHorizontalScroll = true
+        };
+        scrollContainer.AddContent(ObjectTreeView);
+        scrollContainer.WireTreeToScroller(ObjectTreeView);
+
+        TreeViewHost.Child = scrollContainer;
         TreeViewHost.Margin = new Thickness(0,4,0,0);
         
         Grid.SetRow(TreeViewHost, 2);
@@ -648,14 +658,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             Application.Current.TryFindResource("Frb.Colors.SurfaceO1") is System.Windows.Media.Color color
                 ? System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B)
                 : System.Drawing.SystemColors.Window;
-
+        this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
 
         this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
         this.ObjectTreeView.FontChanged += (sender, _) =>
         {
             if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
             {
-                const float defaultFontSize = 8.25f;
+                const float defaultFontSize = 9f;
                 UpdateTreeviewIconScale(fontSize/defaultFontSize);
                 mMenuStrip.Renderer = GetCurrentThemeRenderer(fontSize);
                 mMenuStrip.Font = font;
@@ -700,16 +710,39 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
         if (System.Windows.Application.Current is { } current &&
-            current.TryFindResource("Frb.Brushes.Foreground") is SolidColorBrush{ Color: var fg }  &&
-            current.TryFindResource("Frb.Surface01") is SolidColorBrush { Color: var field })
+            current.TryFindResource("Frb.Brushes.Foreground") is SolidColorBrush { Color: var fg } &&
+            current.TryFindResource("Frb.Surface01") is SolidColorBrush { Color: var field } bgBrush)
         {
             Color foregroundColor = Color.FromArgb(fg.A, fg.R, fg.G, fg.B);
             Color fieldColor = Color.FromArgb(field.A, field.R, field.G, field.B);
             this.ObjectTreeView.ForeColor = mMenuStrip.ForeColor = foregroundColor;
             this.ObjectTreeView.BackColor = mMenuStrip.BackColor = fieldColor;
+            this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
             this.mMenuStrip.Renderer = GetCurrentThemeRenderer(this.ObjectTreeView.Font.Size);
+            this.TreeViewHost.Background = bgBrush;
+            (TreeViewHost.Child as ThemedScrollContainer)!.BackColor = fieldColor;
+
+            if (current.TryFindResource("Frb.Brushes.Primary.Transparent") is SolidColorBrush
+                {
+                    Opacity: var primOpacity
+                } T &&
+                current.TryFindResource("Frb.Brushes.Primary") is SolidColorBrush { Color: var primColor })
+            {
+                this.ObjectTreeView.HoverBgColor =
+                    Color.FromArgb(Map01To255(primOpacity), primColor.R, primColor.G, primColor.B);
+                this.ObjectTreeView.SelectedBorderColor =
+                    Color.FromArgb(primColor.A, primColor.R, primColor.G, primColor.B);
+            }
         }
 
+        static int Map01To255(double value)
+        {
+            // clamp just in case
+            if (value < 0) value = 0;
+            if (value > 1) value = 1;
+
+            return (int)Math.Round(value * 255);
+        }
     }
 
     private FrbMenuStripRenderer? GetCurrentThemeRenderer(float? fontSize = null)
