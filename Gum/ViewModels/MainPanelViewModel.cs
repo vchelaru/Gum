@@ -85,15 +85,16 @@ public class MainPanelViewModel : ViewModel, ITabManager
 
     public PluginTab AddControl(FrameworkElement element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
-        // This should be moved to the MainPanelControl wpf 
-        // string AppTheme = "Light";
-        // element.Resources = new System.Windows.ResourceDictionary();
-        // element.Resources.Source = new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
-
         PluginTab newPluginTab = _pluginTabFactory(element);
         newPluginTab.Title = tabTitle;
         newPluginTab.Location = tabLocation;
-        
+
+        if (element is WindowsFormsHost host && tabTitle == "Editor")
+        {   // this is kind of a hack to deal with the the airspace issue
+            // blocking mouse interaction with the grid splitter
+            host.Margin = new Thickness(4, 0, 0, 0);
+        }
+
         PluginTabs.Add(newPluginTab);
         return newPluginTab;
     }

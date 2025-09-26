@@ -141,13 +141,11 @@
             Style="{StaticResource MainTabControl.Style}" />
         <GridSplitter
             Grid.Column="1"
-            Width="4"
             HorizontalAlignment="Center"
             VerticalAlignment="Stretch" />
 
         <GridSplitter
             Grid.Column="3"
-            Width="4"
             HorizontalAlignment="Center"
             VerticalAlignment="Stretch" />
     </Grid>
