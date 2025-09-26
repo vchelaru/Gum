@@ -1,10 +1,13 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
@@ -129,6 +132,12 @@ namespace Gum
             };
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
+                
+            { //todo: use persistence
+                IThemingService theming = services.GetRequiredService<IThemingService>();
+                ThemeConfig config = new(ThemeMode.System, ThemingDialogViewModel.AccentOptions.First().Color);
+                theming.SwitchThemes(config);
+            }
         }
     }
 
