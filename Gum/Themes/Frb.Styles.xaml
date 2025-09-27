@@ -12,6 +12,7 @@
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:themes="clr-namespace:FlatRedBall.Glue.Themes"
     xmlns:themes1="clr-namespace:Gum.Themes"
+    xmlns:windows="clr-namespace:Gum.Gui.Windows"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
     xmlns:wpfdataui="clr-namespace:WpfDataUi;assembly=WpfDataUi"
     xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit">
@@ -58,6 +59,8 @@
 
     <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type dialogs:DialogWindow}" />
     <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type gum:MainWindow}" />
+    <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type windows:DeleteOptionsWindow}" />
+    <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type controls2:Spinner}" />
 
     <DataTemplate x:Key="ToggleButtonOptionDisplayOptionContentTemplate" DataType="{x:Type controls:ToggleButtonOptionDisplay+Option}">
         <wpf:FluentIcon FontSize="{Binding Source={StaticResource Scale}, Path=IconButton}" Icon="{Binding IconName}" />
