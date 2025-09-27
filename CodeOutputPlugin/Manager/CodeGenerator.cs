@@ -419,7 +419,7 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.XamarinForms)
         {
-            switch (container.Name)
+            switch (container?.Name)
             {
                 case "Text":
                     className = "Label";
@@ -3950,7 +3950,7 @@ public class CodeGenerator
         return forceSetDirectlyOnInstance;
     }
 
-    private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
     {
         var value = variable.Value;
         var rootName = variable.GetRootName();
@@ -3958,7 +3958,7 @@ public class CodeGenerator
         return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
     }
 
-    private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
     {
         var value = variable.ValueAsIList;
         var rootName = variable.GetRootName();
@@ -4105,7 +4105,7 @@ public class CodeGenerator
         }
     }
 
-    private static string? VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
     {
         if (value is float asFloat)
         {

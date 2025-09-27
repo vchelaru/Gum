@@ -25,6 +25,8 @@ namespace Gum.Wireframe;
 
 public abstract class WireframeEditor
 {
+    #region Fields/Properties
+
     protected HotkeyManager _hotkeyManager { get; private set; }
 
     private readonly SelectionManager _selectionManager;
@@ -48,6 +50,8 @@ public abstract class WireframeEditor
 
 
     public bool RestrictToUnitValues { get; set; }
+
+    #endregion
 
     public WireframeEditor(
         global::Gum.Managers.HotkeyManager hotkeyManager,
@@ -188,6 +192,10 @@ public abstract class WireframeEditor
 
                 foreach (InstanceSave instance in selectedInstances)
                 {
+                    // Update September 27, 2025
+                    // Only move this instance if
+                    // its parent is not one of the 
+                    // selected instances.
 
                     var xOrY = grabbedState.AxisMovedFurthestAlong;
 
