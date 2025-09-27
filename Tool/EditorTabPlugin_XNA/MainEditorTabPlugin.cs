@@ -116,6 +116,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     #endregion
 
@@ -126,8 +127,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _scrollbarService = new ScrollbarService();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
-        _editingManager = new EditingManager();
+        _editingManager = new EditingManager(Locator.GetRequiredService<WireframeObjectManager>());
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
@@ -138,7 +140,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             _editingManager, 
             dialogService, 
             hotkeyManager,
-            _variableInCategoryPropagationLogic);
+            _variableInCategoryPropagationLogic,
+            _wireframeObjectManager);
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
@@ -235,7 +238,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         {
             foreach (var instance in _selectedState.SelectedInstances)
             {
-                var representation = WireframeObjectManager.Self.GetRepresentation(instance);
+                var representation = _wireframeObjectManager.GetRepresentation(instance);
                 if (representation != null)
                 {
                     ipsosToReturn.Add(representation);
@@ -244,7 +247,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         }
         else if (_selectedState.SelectedElement != null)
         {
-            var representation = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+            var representation = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
             if (representation != null)
             {
                 ipsosToReturn.Add(representation);
@@ -316,7 +319,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _selectionManager.Refresh();
 
         // reset everything. This is slow, but is easy
-        WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     private void HandleIpsoSelected(IPositionedSizedObject ipso)
@@ -409,7 +412,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         {
             _singlePixelTextureService.RefreshSinglePixelTexture();
 
-            WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
+            _wireframeObjectManager.RefreshAll(forceLayout: true, forceReloadTextures: true);
         }
     }
 
@@ -435,7 +438,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
     private void HandleElementDeleted(ElementSave save)
     {
-        Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
@@ -510,15 +513,15 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             {
                 // this assumes that the object having its variable set is the selected instance. If we're setting
                 // an exposed variable, this is not the case - the object having its variable set is actually the instance.
-                //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                //GraphicalUiElement gue = _wireframeObjectManager.GetSelectedRepresentation();
                 GraphicalUiElement gue = null;
                 if (instance != null)
                 {
-                    gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                    gue = _wireframeObjectManager.GetRepresentation(instance);
                 }
                 else
                 {
-                    gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                    gue = _wireframeObjectManager.GetSelectedRepresentation();
                 }
 
                 // If we dispose a file, we should re-create the screen for sure!
@@ -557,20 +560,20 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
                     gue.SetProperty(unqualifiedMember, value);
 
-                    WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(state);
+                    _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = !disposedFile;
                 }
                 if (unqualifiedMember == "Text" && _localizationManager.HasDatabase)
                 {
-                    WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
+                    _wireframeObjectManager.ApplyLocalization(gue, value as string);
                 }
             }
 
             if (!handledByDirectSet)
             {
-                WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures: false);
+                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: false);
             }
 
 
@@ -582,14 +585,14 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     // need to only handle this 1 time. Currently there is a double-refresh
     private void HandleElementSelected(ElementSave save)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout: true);
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
         _selectionManager.Refresh();
 
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout: false);
+        _wireframeObjectManager.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenuStrip();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
         _selectionManager.Refresh();
@@ -731,7 +734,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             _fileCommands.TryAutoSaveCurrentElement();
             _guiCommands.RefreshVariables();
 
-            WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
         }
     }
 
@@ -910,7 +913,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeControl.XnaUpdate += () =>
         {
             _backgroundSpriteService.Activity();
-            Wireframe.WireframeObjectManager.Self.Activity();
+            _wireframeObjectManager.Activity();
             ToolLayerService.Self.Activity();
         };
 
@@ -948,7 +951,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
     private void HandleStateSelected(StateSave save)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout: true);
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
     }
 
     private void wireframeControl1_MouseDown(object sender, MouseEventArgs e)

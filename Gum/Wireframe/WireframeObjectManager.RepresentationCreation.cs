@@ -52,19 +52,6 @@ public partial class WireframeObjectManager
 
     #endregion
 
-    FontManager _fontManager;
-    private readonly ISelectedState _selectedState;
-    private readonly IDialogService _dialogService;
-    private readonly IGuiCommands _guiCommands;
-
-    public WireframeObjectManager()
-    {
-        _fontManager = Locator.GetRequiredService<FontManager>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
-    }
 
     private bool GetIfSelectedStateIsSetRecursively()
     {

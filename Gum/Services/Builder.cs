@@ -23,6 +23,7 @@ using Gum.Plugins;
 using Gum.ViewModels;
 using Expression = System.Linq.Expressions.Expression;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Wireframe;
 
 namespace Gum.Services;
 
@@ -52,6 +53,7 @@ file static class ServiceCollectionExtensions
         
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        services.AddSingleton<WireframeObjectManager>(WireframeObjectManager.Self);
 
         // singletons
         services.AddSingleton<ISelectedState, SelectedState>();

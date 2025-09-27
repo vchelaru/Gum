@@ -1,20 +1,21 @@
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.Managers;
+using Gum.Plugins;
+using Gum.RenderingLibrary;
+using Gum.Services;
+using Gum.Services.Dialogs; 
+using Gum.ToolStates;
+using GumRuntime;
+using RenderingLibrary;
+using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gum.Commands;
-using Gum.DataTypes;
-using Gum.ToolStates;
-using Gum.Managers;
-using RenderingLibrary.Graphics;
-using RenderingLibrary.Content;
-using RenderingLibrary;
-using Gum.RenderingLibrary;
-using Gum.Plugins;
-using Gum.Services.Dialogs; 
 using Color = System.Drawing.Color; 
-using Rectangle = System.Drawing.Rectangle; 
 using Matrix = System.Numerics.Matrix4x4; 
-using GumRuntime;
+using Rectangle = System.Drawing.Rectangle; 
 
 namespace Gum.Wireframe;
 
@@ -51,6 +52,7 @@ public partial class WireframeObjectManager
         private set;
     }
 
+    [Obsolete("Inject this through constructors, or grab from locator at the root of plugins/views")]
     public static WireframeObjectManager Self
     {
         get
@@ -72,11 +74,26 @@ public partial class WireframeObjectManager
     public System.Windows.Forms.Cursor AddCursor { get; private set; }
 
     #endregion
-    
-    #region Initialize
 
+    #region Constructor/Initialize
+
+
+    FontManager _fontManager;
+    private ISelectedState _selectedState;
+    private IDialogService _dialogService;
+    private IGuiCommands _guiCommands;
+
+    public WireframeObjectManager() { }
+
+    // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
     public void Initialize()
     {
+        _fontManager = Locator.GetRequiredService<FontManager>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+
         gueManager = new GraphicalUiElementManager();
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
@@ -435,7 +452,7 @@ public partial class WireframeObjectManager
             }
             else
             {
-                IEnumerable<IPositionedSizedObject> currentChildren = WireframeObjectManager.Self.AllIpsos.Where(item => item.Parent == null);
+                IEnumerable<IPositionedSizedObject> currentChildren = AllIpsos.Where(item => item.Parent == null);
 
                 return AllIpsos.FirstOrDefault(item => item.Tag == instanceSave);
                         
@@ -456,10 +473,11 @@ public partial class WireframeObjectManager
         ElementSave selectedElement = _selectedState.SelectedElement;
 
         string prefix = selectedElement.Name + ".";
-        if (selectedElement is ScreenSave)
-        {
-            prefix = "";
-        }
+        // Screens now have parents, so we no longer need to strip prefixes:
+        //if (selectedElement is ScreenSave)
+        //{
+        //    prefix = "";
+        //}
 
         return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
     }
