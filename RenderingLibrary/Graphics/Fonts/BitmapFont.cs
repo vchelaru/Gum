@@ -769,8 +769,12 @@ public class BitmapFont : IDisposable
 
                         var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
 
-                        finalPosition.X += xOffsetRoundedToZoom;
-                        finalPosition.Y += yOffsetRoundedToZoom;
+                        // This is free floating:
+                        //finalPosition.X += xOffsetRoundedToZoom;
+                        //finalPosition.Y += yOffsetRoundedToZoom;
+
+                        finalPosition.X += xOffset;
+                        finalPosition.Y += yOffset;
 
 
                         var scale = new Vector2(scaleX, scaleY);
