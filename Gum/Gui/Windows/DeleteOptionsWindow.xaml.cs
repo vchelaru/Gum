@@ -28,6 +28,7 @@ namespace Gum.Gui.Windows
 
         public DeleteOptionsWindow()
         {
+            this.Owner = Application.Current.MainWindow;
             InitializeComponent();
         }
 
