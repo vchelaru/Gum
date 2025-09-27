@@ -7,19 +7,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.Dialogs;
 using Gum.Services;
 
 namespace EditorTabPlugin_XNA.Services;
-internal class BackgroundSpriteService
+internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
 {
     private readonly WireframeCommands _wireframeCommands;
+    private readonly IMessenger _messenger;
+    
     Sprite BackgroundSprite;
     SolidRectangle BackgroundSolidColor;
 
     public BackgroundSpriteService()
     {
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+        _messenger.RegisterAll(this);
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -80,21 +86,46 @@ internal class BackgroundSpriteService
         BackgroundSprite.Visible =
                 _wireframeCommands.IsBackgroundGridVisible;
 
-        if (ProjectManager.Self.GeneralSettingsFile != null)
+        // if (ProjectManager.Self.GeneralSettingsFile != null)
+        // {
+        //     BackgroundSolidColor.Color = System.Drawing.Color.FromArgb(255,
+        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor1R,
+        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor1G,
+        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor1B
+        //     );
+        //
+        //
+        //     BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
+        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
+        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
+        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
+        //     );
+        //
+        // }
+        (var checkerColor1, var checkerColor2) = GetCheckerColors();
+        BackgroundSolidColor.Color = checkerColor1;
+        BackgroundSprite.Color = checkerColor2;
+    }
+
+    public (System.Drawing.Color, System.Drawing.Color) GetCheckerColors()
+    {
+        return GetThemeDefaultCheckerColors();
+    }
+
+    private (System.Drawing.Color, System.Drawing.Color) GetThemeDefaultCheckerColors()
+    {
+        return _currentThemeMode switch
         {
-            BackgroundSolidColor.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1B
-            );
+            ThemeMode.Dark => (System.Drawing.Color.FromArgb(255, 45, 45, 45),
+                System.Drawing.Color.FromArgb(255, 62, 62, 62)),
+            _ => (System.Drawing.Color.FromArgb(255, 150, 150, 150), System.Drawing.Color.FromArgb(255, 170, 170, 170)),
+        };
+    }
 
-
-            BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
-            );
-
-        }
+    private ThemeMode _currentThemeMode;
+    
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        _currentThemeMode = message.Mode;
     }
 }

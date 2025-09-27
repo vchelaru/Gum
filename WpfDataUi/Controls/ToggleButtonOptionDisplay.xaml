@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="WpfDataUi.Controls.ToggleButtonOptionDisplay"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -13,30 +13,35 @@
     <UserControl.Resources>
         <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
     </UserControl.Resources>
-    <StackPanel>
+    <!--<StackPanel>-->
 
-        <Grid x:Name="Grid">
-            <Grid.ContextMenu>
-                <ContextMenu />
-            </Grid.ContextMenu>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+    <Grid x:Name="Grid" HorizontalAlignment="Left">
+        <Grid.ContextMenu>
+            <ContextMenu />
+        </Grid.ContextMenu>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
 
-            <TextBlock
-                x:Name="Label"
-                MinWidth="100"
-                Padding="4"
-                VerticalAlignment="Center"
-                TextWrapping="Wrap">
-                Property Label:
-            </TextBlock>
-            <WrapPanel
-                x:Name="ButtonWrapPanel"
-                Grid.Column="1"
-                Orientation="Horizontal" />
-        </Grid>
+        <TextBlock
+            x:Name="Label"
+            MinWidth="100"
+            Padding="4"
+            VerticalAlignment="Center"
+            TextWrapping="Wrap">
+            Property Label:
+        </TextBlock>
+        <WrapPanel
+            x:Name="ButtonWrapPanel"
+            Grid.Column="1"
+            ItemHeight="{Binding ActualHeight, ElementName=Label}"
+            ItemWidth="{Binding ActualHeight, ElementName=Label}"
+            Orientation="Horizontal" />
         <TextBlock
             x:Name="HintTextBlock"
             Grid.Row="1"
@@ -47,5 +52,7 @@
             TextWrapping="Wrap">
             This is a property description.
         </TextBlock>
-    </StackPanel>
+    </Grid>
+    <!--
+  </StackPanel>-->
 </UserControl>

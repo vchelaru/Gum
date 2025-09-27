@@ -66,26 +66,30 @@ namespace Gum.Controls
                     {
                         Name = "Top",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                        Image = topBitmap
+                        Image = topBitmap,
+                        IconName = "AlignTop"
 
                     },
                     new Option
                     {
                         Name = "Center",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                        Image = centerBitmap
+                        Image = centerBitmap,
+                        IconName = "AlignCenterHorizontal"
                     },
                     new Option
                     {
                         Name = "Bottom",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                        Image = bottomBitmap
+                        Image = bottomBitmap,
+                        IconName = "AlignBottom"
                     },
                     new Option
                     {
                         Name = "Baseline",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.TextBaseline,
-                        Image = baselineBitmap
+                        Image = baselineBitmap,
+                        IconName = "TextboxAlignBottom"
                     }
 
             };

@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
@@ -55,10 +59,11 @@ namespace Gum
                 
                 await host.StartAsync().ConfigureAwait(true);
 
-                App app = new()
-                {
-                    MainWindow = host.Services.GetRequiredService<MainWindow>()
-                };
+                App app = new();
+                app.InitializeComponent();
+                app.Startup += (_, _) =>
+                    host.Services.GetRequiredService<IMessenger>().Send<ApplicationStartupMessage>();
+                app.MainWindow = host.Services.GetRequiredService<MainWindow>();
                 app.MainWindow.Visibility = Visibility.Visible;
                 
                 
@@ -124,6 +129,13 @@ namespace Gum
                 };
                 
                 fileWatchTimer.Start(TimeSpan.FromSeconds(2));
+
+                
+                { //todo: use persistence
+                    IThemingService theming = services.GetRequiredService<IThemingService>();
+                    ThemeConfig config = new(ThemeMode.System, ThemingDialogViewModel.AccentOptions.First().Color);
+                    theming.SwitchThemes(config);
+                }
             }
     }
 
@@ -132,4 +144,6 @@ namespace Gum
         public const int Success = 0;
         public const int UnexpectedFailure = 1;
     }
+
+    public record ApplicationStartupMessage;
 }
