@@ -777,7 +777,6 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="ExpandDirection" Value="Down" />
-        <Setter Property="md:ExpanderAssist.HeaderFontSize" Value="{Binding Source={StaticResource Scale}, Path=H3}" />
         <Setter Property="md:ExpanderAssist.HeaderBackground" Value="{DynamicResource Frb.Brushes.Contrast01}" />
         <Setter Property="HeaderTemplate">
             <Setter.Value>
@@ -802,10 +801,8 @@
                                 themes:FrbButton.BorderCornerRadius="0"
                                 Background="{Binding Path=(md:ExpanderAssist.HeaderBackground), RelativeSource={RelativeSource TemplatedParent}}"
                                 BorderThickness="0"
-                                FontSize="{Binding Path=(md:ExpanderAssist.HeaderFontSize), RelativeSource={RelativeSource TemplatedParent}}"
                                 Foreground="{DynamicResource Frb.Brushes.Foreground}"
-                                IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                TextElement.FontSize="{Binding (md:ExpanderAssist.HeaderFontSize), RelativeSource={RelativeSource TemplatedParent}}">
+                                IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                                 <Border>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
