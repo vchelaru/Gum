@@ -720,6 +720,37 @@ public class FrameworkElement
 
     }
 
+
+    /// <summary>
+    /// return all the children of an element who match the required type
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public List<T> GetAllVisualsByType<T>() where T : GraphicalUiElement
+    {
+        List<T> list = [];
+        var children = Visual.Children;
+        foreach (var child in  children)
+        {
+            if (child is T mathchingChild)
+            {
+                list.Add(mathchingChild);
+            }
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// Return all the children of an element and turn it into a list.
+    /// </summary>
+    /// <remarks>
+    /// do take in consideration you still need to cast the  elements if you seeking to have specific type just use GetAllVisualsByType
+    /// </remarks>
+    /// <returns></returns>
+    public List<IRenderableIpso> GetAllVisuals()
+    {
+        return Visual.Children.ToList();
+    }
     public T? GetVisual<T>(string? name = null) where T : GraphicalUiElement
     {
         var currentItem = Visual;
