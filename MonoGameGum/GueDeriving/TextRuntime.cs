@@ -263,6 +263,19 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
+    /// specified.
+    /// </summary>
+    /// <remarks>Set this property to control how text positioning is handled during rendering. If the value
+    /// is <see langword="null"/>, the default rendering position mode is used. Changing this property affects only the
+    /// contained text and does not impact other elements.</remarks>
+    public TextRenderingPositionMode? TextRenderingPositionMode
+    {
+        get => ContainedText.OverrideTextRenderingPositionMode;
+        set => ContainedText.OverrideTextRenderingPositionMode = value;
+    }
+
     public string? Text
     {
         get
