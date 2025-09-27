@@ -46,47 +46,127 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     #region Gradient Colors
 
+    #region Gradient Colors
 
-    int Blue1 { get;set; }
+    public int Blue1
+    {
+        get => ContainedRenderable.Blue1;
+        set => ContainedRenderable.Blue1 = value;
+    }
 
-    int Green1 { get; set; }
+    public int Green1
+    {
+        get => ContainedRenderable.Green1;
+        set => ContainedRenderable.Green1 = value;
+    }
 
-    int Red1 { get; set; }
-
-
-    int Blue2 { get; set; }
-
-    int Green2 { get; set; }
-
-    int Red2 { get; set; }
-
-    float GradientX1 { get; set; }
-    GeneralUnitType GradientX1Units { get; set; }
-
-    float GradientY1 { get; set; }
-    GeneralUnitType GradientY1Units { get; set; }
-
-    float GradientX2 { get; set; }
-    float GradientY2 { get; set; }
-
-    bool UseGradient { get; set; }
-
-    bool IsEndRounded { get; set; }
-
-    GradientType GradientType { get; set; }
-
-    float GradientInnerRadius { get; set; }
-
-    DimensionUnitType GradientInnerRadiusUnits { get; set; }
-
-    float GradientOuterRadius { get; set; }
-
-    DimensionUnitType GradientOuterRadiusUnits { get; set; }
+    public int Red1
+    {
+        get => ContainedRenderable.Red1;
+        set => ContainedRenderable.Red1 = value;
+    }
 
 
+    public int Blue2
+    {
+        get => ContainedRenderable.Blue2;
+        set => ContainedRenderable.Blue2 = value;
+    }
+
+    public int Green2
+    {
+        get => ContainedRenderable.Green2;
+        set => ContainedRenderable.Green2 = value;
+    }
+
+    public int Red2
+    {
+        get => ContainedRenderable.Red2;
+        set => ContainedRenderable.Red2 = value;
+    }
+
+    public float GradientX1
+    {
+        get => ContainedRenderable.GradientX1;
+        set => ContainedRenderable.GradientX1 = value;
+    }
+    public GeneralUnitType GradientX1Units
+    {
+        get => ContainedRenderable.GradientX1Units;
+        set => ContainedRenderable.GradientX1Units = value;
+    }
+    public float GradientY1
+    {
+        get => ContainedRenderable.GradientY1;
+        set => ContainedRenderable.GradientY1 = value;
+    }
+    public GeneralUnitType GradientY1Units
+    {
+        get => ContainedRenderable.GradientY1Units;
+        set => ContainedRenderable.GradientY1Units = value;
+    }
+
+    public float GradientX2
+    {
+        get => ContainedRenderable.GradientX2;
+        set => ContainedRenderable.GradientX2 = value;
+    }
+    public GeneralUnitType GradientX2Units
+    {
+        get => ContainedRenderable.GradientX2Units;
+        set => ContainedRenderable.GradientX2Units = value;
+    }
+    public float GradientY2
+    {
+        get => ContainedRenderable.GradientY2;
+        set => ContainedRenderable.GradientY2 = value;
+    }
+    public GeneralUnitType GradientY2Units
+    {
+        get => ContainedRenderable.GradientY2Units;
+        set => ContainedRenderable.GradientY2Units = value;
+    }
+
+    public bool UseGradient
+    {
+        get => ContainedRenderable.UseGradient;
+        set => ContainedRenderable.UseGradient = value;
+    }
+
+    public GradientType GradientType
+    {
+        get => ContainedRenderable.GradientType;
+        set => ContainedRenderable.GradientType = value;
+    }
+
+    public float GradientInnerRadius
+    {
+        get => ContainedRenderable.GradientInnerRadius;
+        set => ContainedRenderable.GradientInnerRadius = value;
+    }
+
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => ContainedRenderable.GradientInnerRadiusUnits;
+        set => ContainedRenderable.GradientInnerRadiusUnits = value;
+    }
+
+    public float GradientOuterRadius
+    {
+        get => ContainedRenderable.GradientOuterRadius;
+        set => ContainedRenderable.GradientOuterRadius = value;
+    }
+
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => ContainedRenderable.GradientOuterRadiusUnits;
+        set => ContainedRenderable.GradientOuterRadiusUnits = value;
+    }
 
     #endregion
 
+
+    #endregion
 
     #region Filled/Stroke
 

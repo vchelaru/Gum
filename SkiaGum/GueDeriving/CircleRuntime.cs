@@ -12,8 +12,8 @@ public class CircleRuntime : SkiaShapeRuntime
 {
     protected override RenderableBase ContainedRenderable => ContainedCircle;
 
-    SkiaGum.Renderables.Circle mContainedCircle;
-    SkiaGum.Renderables.Circle ContainedCircle
+    Circle mContainedCircle;
+    Circle ContainedCircle
     {
         get
         {

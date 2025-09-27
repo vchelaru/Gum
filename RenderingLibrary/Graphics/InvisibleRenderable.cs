@@ -90,6 +90,7 @@ public class InvisibleRenderable : IVisible, IRenderableIpso,
 
     public bool FlipHorizontal { get; set; }
 
+    // Is this actually needed publicly?
     public float Alpha { get; set; } = 255;
 
     int IRenderableIpso.Alpha => (int)this.Alpha;

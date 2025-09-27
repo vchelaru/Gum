@@ -241,6 +241,8 @@ namespace RenderingLibrary.Graphics
                 throw new Exception("Error trying to set scissor rectangle:" + scissorRectangle.ToString(), e);
             }
             beginEndState = SpriteBatchBeginEndState.Began;
+            // assign here so that any other renderables that rely on scissor rects can use it
+            SpriteBatch.GraphicsDevice.RasterizerState = rasterizerState;
             SpriteBatch.Begin(sortMode,
                 blendState.ToXNA(),
                 samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
