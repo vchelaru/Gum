@@ -148,8 +148,9 @@ public class FileCommands : IFileCommands
     /// This will copy the ascii character file ".gumfcs" that contains the default characters that match the BmfcSave.DefaultRanges.
     /// The file contains all the actual characters like "abcde..." etc, not the numerical range.
     /// This file is used in the project properties for the optional "Use Font Character File" checkbox.
+    /// Method is non-destructive by default, it will not overwrite an existing .gumfcs file.
     /// </summary>
-    public void CreateDefaultFontCharacterFile()
+    public void CreateDefaultFontCharacterFile(bool forceOverwrite = false)
     {
         var gumProject = ObjectFinder.Self.GumProjectSave;
         if (gumProject == null)
@@ -157,6 +158,14 @@ public class FileCommands : IFileCommands
 
         var sourceFile = System.IO.Path.Combine(GetExecutingDirectory(), "Content\\.gumfcs");
         var destinationFile = FileManager.GetDirectory(gumProject.FullFileName) + ".gumfcs";
+
+        // Exit early if the destination file already exists and we are not forcing an overwrite
+        if (System.IO.File.Exists(destinationFile) && !forceOverwrite)
+        {
+            return;
+        }
+
+        // Copy the file from Content to the saved Project folder
         try
         {
             System.IO.File.Copy(sourceFile, destinationFile);
@@ -167,6 +176,7 @@ public class FileCommands : IFileCommands
         }
     }
 
+    // Method copied from MineNineSlicePlugin.cs, potential candidate for DRY refactor
     static string GetExecutingDirectory()
     {
         string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
