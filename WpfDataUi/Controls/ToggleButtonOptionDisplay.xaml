@@ -45,7 +45,6 @@
         <TextBlock
             x:Name="HintTextBlock"
             Grid.Row="1"
-            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
             Margin="0,0,-4,0"
             Padding="8,0,0,0"
             FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
