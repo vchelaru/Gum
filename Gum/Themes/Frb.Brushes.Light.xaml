@@ -14,7 +14,8 @@
             <StaticResource x:Key="Frb.Colors.Surface01" ResourceKey="Gray100" />
             <StaticResource x:Key="Frb.Colors.Surface02" ResourceKey="Gray200" />
 
-            <Color x:Key="Frb.Colors.Error">#D32F2F</Color>
+            <Color x:Key="Frb.Colors.Error">#C62828</Color>
+            <Color x:Key="Frb.Colors.Success">#2E7D32</Color>
 
             <Color x:Key="Frb.Colors.ThemeContrast">Black</Color>
 
@@ -80,6 +81,7 @@
                 Color="{DynamicResource Frb.Colors.Foreground}" />
 
             <SolidColorBrush x:Key="Frb.Brushes.Error" Color="{DynamicResource Frb.Colors.Error}" />
+            <SolidColorBrush x:Key="Frb.Brushes.Success" Color="{DynamicResource Frb.Colors.Success}" />
 
             <StaticResource x:Key="Frb.Brushes.Field.Background" ResourceKey="Frb.Brushes.Contrast01" />
 

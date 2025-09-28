@@ -38,7 +38,7 @@ public class MainErrorsPlugin : InternalPlugin
         control.DataContext = viewModel;
         tabPage = _tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
 
-        _tabPageHeader = new ErrorTabHeader();
+        _tabPageHeader = new ErrorTabHeader { DataContext = viewModel };
         tabPage.CustomHeaderContent = _tabPageHeader;
     }
 
@@ -92,7 +92,5 @@ public class MainErrorsPlugin : InternalPlugin
         {
             viewModel.Errors.Add(item);
         }
-
-        _tabPageHeader.SetErrorCount(errors.Length);
     }
 }
