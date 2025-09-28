@@ -248,8 +248,10 @@ namespace SkiaPlugin.Managers
 
                 AddBlendVariable(arcState);
 
-
                 AddGradientVariables(arcState);
+
+                AddDropshadowVariables(arcState);
+
                 AddVariableReferenceList(arcState);
 #if GUM
                 StandardElementsManagerGumTool.SetPreferredDisplayers(arcState);
