@@ -1331,19 +1331,4 @@
         </Style.Resources>
     </Style>
 
-    <Style TargetType="{x:Type variableGrid:VariableRemoveButton}">
-        <Style.Resources>
-            <Style TargetType="{x:Type Button}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="Button">
-                            <Button Content="{md:PackIcon Kind=Close}" Style="{StaticResource IconButton}" />
-                        </ControlTemplate>
-                    </Setter.Value>
-
-                </Setter>
-            </Style>
-        </Style.Resources>
-    </Style>
-
 </ResourceDictionary>

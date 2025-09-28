@@ -5,20 +5,35 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Plugins.VariableGrid"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
     d:DesignHeight="300"
     d:DesignWidth="300"
     mc:Ignorable="d">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="{Binding ActualHeight, ElementName=TextBlockInstance}" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
-        <Button x:Name="ButtonInstance" Click="ButtonInstance_Click">X</Button>
+        <Button
+            x:Name="ButtonInstance"
+            Margin="4,0,0,0"
+            Click="ButtonInstance_Click"
+            Content="{wpf:FluentIcon Icon=Delete}">
+            <Button.Style>
+                <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type Button}">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Error}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
         <TextBlock
             Name="TextBlockInstance"
             Grid.Column="1"
-            Margin="4,0,0,0"
+            Margin="8,0,0,0"
             VerticalAlignment="Center">
             Member Name
         </TextBlock>
