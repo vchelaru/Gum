@@ -4,6 +4,7 @@
     xmlns:controls="clr-namespace:Gum.Controls"
     xmlns:controls1="clr-namespace:WpfDataUi.Controls;assembly=WpfDataUi"
     xmlns:converters="clr-namespace:Gum.Themes.Converters"
+    xmlns:gum="clr-namespace:Gum"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:system="clr-namespace:System;assembly=mscorlib"
     xmlns:themes="clr-namespace:FlatRedBall.Glue.Themes"
@@ -612,11 +613,13 @@
     </Style>
 
     <!--  TreeViewItem  -->
-    <Style TargetType="{x:Type TreeViewItem}">
+    <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="{x:Type TreeViewItem}">
         <Setter Property="Margin" Value="0,0,0,0" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
 
         <!--  Set Template  -->
         <Setter Property="Template">
@@ -884,6 +887,13 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type MenuItem}">
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type wpfdataui:MenuItemExposedClick}" />
 
     <!--  Outer menu  -->
     <Style TargetType="{x:Type ContextMenu}">
