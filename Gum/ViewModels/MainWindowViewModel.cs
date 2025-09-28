@@ -28,15 +28,15 @@ public class MainWindowViewModel : ViewModel
         set => Set(value);
     }
 
-    public double Width
+    public double? Width
     {
-        get => Get<double>();
+        get => Get<double?>();
         set => Set(value);
     }
 
-    public double Height
+    public double? Height
     {
-        get => Get<double>();
+        get => Get<double?>();
         set => Set(value);
     }
 
