@@ -584,8 +584,14 @@ namespace SkiaGum.Renderables
             }
         }
 
-
+        /// <summary>
+        /// The offset X when rendering a Skia shape considering the dropshadow
+        /// </summary>
         protected float XSizeSpillover => HasDropshadow ? DropshadowBlurX + Math.Abs(DropshadowOffsetX) : 0;
+
+        /// <summary>
+        /// The offset Y when rendering a Skia shape considering the dropshadow
+        /// </summary>
         protected float YSizeSpillover => HasDropshadow ? DropshadowBlurY + Math.Abs(DropshadowOffsetY) : 0;
 
         #endregion

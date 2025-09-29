@@ -72,18 +72,16 @@ namespace SkiaGum.Renderables
             using (var paint = CreatePaint())
             { 
                 var adjustedRect = new SKRect(
-                    0 + Thickness / 2,
-                    0 + Thickness / 2,
-                    Width - Thickness / 2,
-                    Height - Thickness / 2);
+                    XSizeSpillover + Thickness / 2,
+                    YSizeSpillover + Thickness / 2,
+                    XSizeSpillover + Width - Thickness / 2,
+                    YSizeSpillover + Height - Thickness / 2);
 
                 using (var path = new SKPath())
                 {
                     path.AddArc(adjustedRect, -startAngle, -sweepAngle);
                     surface.Canvas.DrawPath(path, paint);
                 }
-
-
             }
         }
     }
