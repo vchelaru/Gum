@@ -1,18 +1,20 @@
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Gum.Dialogs;
-using Gum.PropertyGridHelpers;
-using Gum.Services.Dialogs;
+using Gum.Undo;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 
 namespace Gum.Managers;
@@ -191,6 +193,7 @@ public class HotkeyManager
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
+    private readonly IUndoManager _undoManager;
 
     // If adding any new keys here, modify HotkeyViewModel
     
@@ -201,7 +204,8 @@ public class HotkeyManager
         IFileCommands fileCommands,
         SetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
-        CopyPasteLogic copyPasteLogic)
+        CopyPasteLogic copyPasteLogic,
+        IUndoManager undoManager)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -211,35 +215,39 @@ public class HotkeyManager
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
+        _undoManager = undoManager;
     }
 
     #region App Wide Keys
 
 
-    public void PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
+    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.F && 
-            Keyboard.Modifiers == ModifierKeys.Control)
+        Action? match = (e.Key, Keyboard.Modifiers) switch
         {
-            _guiCommands.FocusSearch();
+            (Key.F, ModifierKeys.Control) => _guiCommands.FocusSearch,
+            (Key.Z, ModifierKeys.Control | ModifierKeys.Shift) => _undoManager.PerformRedo,
+            (Key.Z, ModifierKeys.Control) => _undoManager.PerformUndo,
+            (Key.Y, ModifierKeys.Control) => _undoManager.PerformRedo,
+            _ when ZoomDirection() is { } dir => () => _uiSettingsService.Scale += dir,
+            _ => null
+        };
+
+        if (match is not null)
+        {
             e.Handled = true;
-            return;
+            match.Invoke();
         }
-        
-        int direction = 
+
+        return match is not null;
+
+        int? ZoomDirection() =>
             ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
             ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
-            0;
-        
-        if (direction != 0)
-        {
-            double step = _uiSettingsService.Scale < 1 ? 0.1 : 0.25;
-            _uiSettingsService.Scale += direction > 0 ? step : -step;
-            e.Handled = true;
-        }
+            null;
     }
-    
-    
+
+
     #endregion
 
 
@@ -247,6 +255,12 @@ public class HotkeyManager
 
     public void HandleKeyDownElementTreeView(KeyEventArgs e)
     {
+        if (PreviewKeyDownAppWide(e.ToWpf()))
+        {
+            e.Handled = true;
+            return;
+        }
+
         HandleCopyCutPaste(e);
         HandleDelete(e);
         HandleReorder(e);
@@ -375,6 +389,12 @@ public class HotkeyManager
 
     public void HandleKeyDownWireframe(KeyEventArgs e)
     {
+        if (PreviewKeyDownAppWide(e.ToWpf()))
+        {
+            e.Handled = true;
+            return;
+        }
+
         HandleCopyCutPaste(e);
 
         HandleDelete(e);
@@ -473,4 +493,18 @@ public class HotkeyManager
     }
 
     #endregion
+}
+file static class Helpers
+{
+    public static System.Windows.Input.KeyEventArgs ToWpf(this System.Windows.Forms.KeyEventArgs e)
+    {
+        return new System.Windows.Input.KeyEventArgs(
+            Keyboard.PrimaryDevice,
+            PresentationSource.FromVisual(System.Windows.Application.Current.MainWindow),
+            0, // timestamp
+            KeyInterop.KeyFromVirtualKey((int)e.KeyCode))
+        {
+            RoutedEvent = Keyboard.KeyDownEvent
+        };
+    }
 }
