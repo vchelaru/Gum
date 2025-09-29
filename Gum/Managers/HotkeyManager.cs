@@ -154,6 +154,14 @@ public class HotkeyManager
     public KeyCombination Cut { get; private set; } = KeyCombination.Ctrl(Keys.X);
     public KeyCombination Undo { get; private set; } = KeyCombination.Ctrl(Keys.Z);
     public KeyCombination Redo { get; private set; } = KeyCombination.Ctrl(Keys.Y);
+
+    public KeyCombination RedoAlt { get; private set; } = new KeyCombination()
+    {
+        IsCtrlDown = true,
+        IsShiftDown = true,
+        Key = Keys.Z
+    };
+
     public KeyCombination ReorderUp { get; private set; } = KeyCombination.Alt(Keys.Up);
     public KeyCombination ReorderDown { get; private set; } = KeyCombination.Alt(Keys.Down);
     public KeyCombination GoToDefinition { get; private set; } = KeyCombination.Pressed(Keys.F12);
