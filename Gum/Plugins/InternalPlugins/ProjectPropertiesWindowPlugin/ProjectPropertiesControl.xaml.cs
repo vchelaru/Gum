@@ -64,9 +64,15 @@ namespace Gum.Gui.Controls
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
 
             DataGrid.MoveMemberToCategory(nameof(ViewModel.FontRanges), "Font Generation");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.UseFontCharacterFile), "Font Generation");
+            var useFontCharacterFileMember = DataGrid.GetInstanceMember(nameof(ViewModel.UseFontCharacterFile));
+            if (useFontCharacterFileMember != null)
+            {
+                useFontCharacterFileMember.DisplayName = useFontCharacterFileMember.DisplayName + " (.gumfcs)";
+            }
             DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingHorizontal), "Font Generation");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.UseFontCharacterFile), "Font Generation");
+
             var textureFilterMember = DataGrid.GetInstanceMember(nameof(ViewModel.TextureFilter));
             if(textureFilterMember != null)
             {

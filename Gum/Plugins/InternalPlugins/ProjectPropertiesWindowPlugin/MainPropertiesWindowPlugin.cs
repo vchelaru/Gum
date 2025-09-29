@@ -226,6 +226,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 else
                 {
                     _fontCharacterFileAbsolute = null;
+                    viewModel.FontRanges = BmfcSave.DefaultRanges;
                 }
 
                 RefreshFontRangeEditability();

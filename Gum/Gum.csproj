@@ -224,6 +224,9 @@
 		<None Update="Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<Content Include="Content\.gumfcs">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<EmbeddedResource Include="Content\BmfcTemplate.bmfc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
@@ -378,6 +381,7 @@
 		<Compile Remove="Wireframe\CustomSetPropertyOnRenderable.cs" />
 		<Compile Remove="Wireframe\ElementWithState.cs" />
 		<Compile Remove="Wireframe\RuntimeObjectCreator.cs" />
+		<None Remove="Content\.gumfcs" />
 		<None Remove="Content\BmfcTemplate.bmfc" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>

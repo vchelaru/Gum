@@ -21,7 +21,7 @@ public class BmfcSave
     public bool IsBold = false;
     public int SpacingHorizontal = 1;
     public int SpacingVertical = 1;
-    const string DefaultRanges = "32-126,160-255";
+    public const string DefaultRanges = "32-126,160-255";
     public string Ranges = DefaultRanges;
     public int OutputWidth = 512;
     public int OutputHeight = 256;
