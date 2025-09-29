@@ -233,10 +233,9 @@ public class HotkeyManager
     {
         Action? match = (e.Key, Keyboard.Modifiers) switch
         {
-            (Key.F, ModifierKeys.Control) => _guiCommands.FocusSearch,
-            (Key.Z, ModifierKeys.Control | ModifierKeys.Shift) => _undoManager.PerformRedo,
-            (Key.Z, ModifierKeys.Control) => _undoManager.PerformUndo,
-            (Key.Y, ModifierKeys.Control) => _undoManager.PerformRedo,
+            _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
+            _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
+            _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
             _ when ZoomDirection() is { } dir => () => _uiSettingsService.Scale += dir,
             _ => null
         };
