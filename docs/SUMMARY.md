@@ -27,6 +27,7 @@
     * [Custom NineSlice](gum-tool/tutorials-and-examples/examples/custom-nineslice.md)
     * [Health Bar](gum-tool/tutorials-and-examples/examples/health-bar.md)
     * [Padding](gum-tool/tutorials-and-examples/examples/padding.md)
+    * [Silhouette (Solid Colored Sprite)](gum-tool/tutorials-and-examples/examples/silhouette-solid-colored-sprite.md)
 * [Gum Elements](gum-tool/gum-elements/README.md)
   * [General Properties](gum-tool/gum-elements/general-properties/README.md)
     * [Alpha](gum-tool/gum-elements/general-properties/alpha.md)
