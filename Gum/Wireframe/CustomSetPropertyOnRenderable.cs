@@ -689,7 +689,9 @@ public class CustomSetPropertyOnRenderable
         "isbold",
         "usefontsmoothing",
         "fontscale",
-        "lineheightmultiplier"
+        "lineheightmultiplier",
+        // Added Sept 30, 2025 to handle parsing custom blocks
+        "custom"
 
     };
 
@@ -809,7 +811,35 @@ public class CustomSetPropertyOnRenderable
                         }
                     }
                     break;
+                case "Custom":
+                    if(castedValue is string functionName && Text.Customizations.ContainsKey(functionName))
+                    {
+                        var function = Text.Customizations[functionName];
 
+                        var startStripped = item.Open.StartStrippedIndex;
+
+                        var substring = strippedText.Substring(startStripped, item.Close.StartStrippedIndex - startStripped);
+
+                        for (int i = 0; i < substring.Length; i++)
+                        {
+                            var customization = function(i, substring);
+
+                            // we probably need to check and add variables only as needed
+                            var inlineVariable = new InlineVariable
+                            {
+                                CharacterCount = 1,
+                                StartIndex = startStripped + i,
+                                VariableName = "Y",
+                                Value = customization.YOffset
+                            };
+
+                            asText.InlineVariables.Add(inlineVariable);
+                        }
+                    }
+
+                    // we apply the inline ourselves
+                    shouldApply = false;
+                    break;
                     // Don't do anything like IsBold or IsItalic here - these are handled in ApplyFontVariables
             }
 

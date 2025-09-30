@@ -66,6 +66,25 @@ public class InlineVariable
 
 #endregion
 
+#region LetterCustomization
+public struct LetterCustomization
+{
+    public char? ReplacementCharacter;
+    public float XOffset;
+    public float YOffset;
+    public Color? Color;
+    public float ScaleX;
+    public float ScaleY;
+    public float Rotation;
+
+    public LetterCustomization()
+    {
+        ScaleX = 1;
+        ScaleY = 1;
+    }
+}
+#endregion
+
 public class Text : IRenderableIpso, IVisible, IText, ICloneable
 {
     #region Fields
@@ -662,6 +681,26 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     public float LineHeightMultiplier { get; set; } = 1;
 
     bool IRenderableIpso.IsRenderTarget => false;
+
+    /// <summary>
+    /// Customization functions, where the key is the name of the custom function in bbcode, and the Func returns
+    /// customization per letter.
+    /// </summary>
+    /// <example>
+    /// LetterCustomization SineWave(int index, string textInBlock)
+    /// {
+    ///   // Index is the letter, it will get called for each character in the block, starting at 0
+    ///   // textInBlock is the entire block, in case the function needs to reference it.
+    ///   return new LetterCustomization
+    ///   {
+    ///     OffsetY = MathF.Sin(DateTime.Now.TotalSeconds + index/5);
+    ///   };
+    /// }
+    /// // This would be used as follows:
+    /// Text.Customizations["SineWave"] = SineWave;
+    /// </example>
+    public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
+        = new ();
 
     #endregion
 
@@ -1282,6 +1321,8 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                     color = Color;
                     var fontScale = mFontScale;
                     var effectiveFont = fontToUse;
+                    var effectiveTopOfLine = topOfLine;
+                    float yOffset = 0;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1309,10 +1350,12 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         {
                             color = color.WithBlue((byte)variable.Value);
                         }
-
+                        else if(variable.VariableName == nameof(Y))
+                        {
+                            yOffset = (float)variable.Value;
+                        }
                     }
 
-                    var effectiveTopOfLine = topOfLine;
 
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                     effectiveTopOfLine += baselineDifference;
@@ -1321,7 +1364,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         this,
                         requiredWidth, individualLineWidth, spriteRenderer, color,
                         absoluteLeft,
-                        effectiveTopOfLine,
+                        effectiveTopOfLine + yOffset,
                         rotation, fontScale, fontScale, lettersLeft, 
                         OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                         shiftForOutline:substringIndex == 0);
