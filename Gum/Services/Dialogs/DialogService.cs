@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 namespace Gum.Services.Dialogs;
@@ -19,10 +20,12 @@ public interface IDialogService
 internal class DialogService : IDialogService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger _logger;
     
-    public DialogService(IServiceProvider serviceProvider)
+    public DialogService(IServiceProvider serviceProvider, ILogger<DialogService> logger)
     {
         _serviceProvider = serviceProvider;
+        _logger = logger;       
     }
     
     public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null)
@@ -58,10 +61,20 @@ internal class DialogService : IDialogService
 
     private DialogWindow CreateDialogWindow(DialogViewModel dialogViewModel)
     {
+        Window? owner = null;
+        if (Application.Current.MainWindow is { IsLoaded: true } mainWindow)
+        {
+            owner = mainWindow; 
+        }
+        else
+        {
+            _logger.LogWarning("Showing dialog before main window is loaded.");
+        }
+
         DialogWindow window = new()
         {
             DataContext = dialogViewModel, 
-            Owner = Application.Current.MainWindow,
+            Owner = owner,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             MaxHeight = Application.Current.MainWindow!.ActualHeight
         };
