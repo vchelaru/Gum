@@ -66,6 +66,41 @@ public class InlineVariable
 
 #endregion
 
+
+#region LetterCustomization
+public struct LetterCustomization
+{
+    public float XOffset;
+    public float YOffset;
+    public Color? Color;
+    public float ScaleX;
+    public HorizontalAlignment ScaleXOrigin = HorizontalAlignment.Center;
+    public float ScaleY;
+    public VerticalAlignment ScaleYOrigin = VerticalAlignment.Center;
+    public float RotationDegrees;
+    public char? ReplacementCharacter;
+
+    public LetterCustomization()
+    {
+        ScaleX = 1;
+        ScaleY = 1;
+    }
+}
+#endregion
+
+#region ParameterizedLetterCustomizationCall
+
+public class ParameterizedLetterCustomizationCall
+{
+    public Func<int, string, LetterCustomization> Function { get; set; }
+    public int CharacterIndex { get; set; }
+
+    public string TextBlock { get; set; }
+
+}
+
+#endregion
+
 public class Text : IRenderableIpso, IVisible, IText, ICloneable
 {
     #region Fields
@@ -662,6 +697,26 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     public float LineHeightMultiplier { get; set; } = 1;
 
     bool IRenderableIpso.IsRenderTarget => false;
+
+    /// <summary>
+    /// Customization functions, where the key is the name of the custom function in bbcode, and the Func returns
+    /// customization per letter.
+    /// </summary>
+    /// <example>
+    /// LetterCustomization SineWave(int index, string textInBlock)
+    /// {
+    ///   // Index is the letter, it will get called for each character in the block, starting at 0
+    ///   // textInBlock is the entire block, in case the function needs to reference it.
+    ///   return new LetterCustomization
+    ///   {
+    ///     OffsetY = MathF.Sin(DateTime.Now.TotalSeconds + index/5);
+    ///   };
+    /// }
+    /// // This would be used as follows:
+    /// Text.Customizations["SineWave"] = SineWave;
+    /// </example>
+    public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
+        = new ();
 
     #endregion
 
@@ -1282,6 +1337,12 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                     color = Color;
                     var fontScale = mFontScale;
                     var effectiveFont = fontToUse;
+                    var effectiveTopOfLine = topOfLine;
+                    float yOffset = 0;
+                    float xOffset = 0;
+                    float scaleX = 1;
+                    float scaleY = 1;
+                    float rotationOffset = 0;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1309,21 +1370,88 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         {
                             color = color.WithBlue((byte)variable.Value);
                         }
+                        else if(variable.VariableName == nameof(Y))
+                        {
+                            yOffset = (float)variable.Value;
+                        }
+                        else if(variable.VariableName == "Custom")
+                        {
+                            var function = variable.Value as ParameterizedLetterCustomizationCall;
 
+                            if(function != null)
+                            {
+                                var response = function.Function(function.CharacterIndex, function.TextBlock);
+
+                                xOffset = response.XOffset;
+                                yOffset = response.YOffset;
+                                if(response.ReplacementCharacter != null)
+                                {
+                                    lineByLineList[0] = response.ReplacementCharacter.ToString()!;
+                                }
+                                if(response.Color != null)
+                                {
+                                    color = response.Color.Value;
+                                }
+                                scaleX = response.ScaleX;
+                                scaleY = response.ScaleY;
+
+                                if(scaleX != 1)
+                                {
+                                    switch(response.ScaleXOrigin)
+                                    {
+                                        case HorizontalAlignment.Left:
+                                            // do nothing
+                                            break;
+                                        case HorizontalAlignment.Center:
+                                            xOffset -= (fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1)) / 2.0f;
+                                            break;
+                                        case HorizontalAlignment.Right:
+                                            xOffset -= fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1);
+                                            break;
+                                    }
+                                }
+                                if(scaleY != 1)
+                                {
+                                    switch(response.ScaleYOrigin)
+                                    {
+                                        case VerticalAlignment.Top:
+                                            // do nothing
+                                            break;
+                                        case VerticalAlignment.Center:
+                                            yOffset -= (fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1)) / 2.0f;
+                                            break;
+                                        case VerticalAlignment.Bottom:
+                                            yOffset -= fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1);
+                                            break;
+                                        case VerticalAlignment.TextBaseline:
+                                            yOffset -= fontScale * effectiveFont.BaselineY * (scaleY - 1);
+                                            break;
+                                    }
+                                }
+
+                                rotationOffset = response.RotationDegrees;
+                            }
+                        }
                     }
 
-                    var effectiveTopOfLine = topOfLine;
 
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                     effectiveTopOfLine += baselineDifference;
 
                     var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
-                        requiredWidth, individualLineWidth, spriteRenderer, color,
-                        absoluteLeft,
-                        effectiveTopOfLine,
-                        rotation, fontScale, fontScale, lettersLeft, 
-                        OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                        requiredWidth, 
+                        individualLineWidth,
+                        spriteRenderer, 
+                        color,
+                        absoluteLeft + xOffset,
+                        effectiveTopOfLine + yOffset,
+                        rotation + rotationOffset, 
+                        fontScale * scaleX, 
+                        fontScale * scaleY, 
+                        lettersLeft, 
+                        OverrideTextRenderingPositionMode, 
+                        lineHeightMultiplier: LineHeightMultiplier,
                         shiftForOutline:substringIndex == 0);
 
                     if (lettersLeft != null)
@@ -1331,7 +1459,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         lettersLeft -= substring.Substring.Length;
                     }
 
-                    absoluteLeft += rect.Width;
+                    absoluteLeft += rect.Width / scaleX;
 
                 }
 

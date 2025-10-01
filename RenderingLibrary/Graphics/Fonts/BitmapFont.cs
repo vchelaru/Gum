@@ -597,7 +597,7 @@ public class BitmapFont : IDisposable
     /// <param name="color"></param>
     /// <param name="xOffset"></param>
     /// <param name="yOffset"></param>
-    /// <param name="rotation"></param>
+    /// <param name="rotationDegrees"></param>
     /// <param name="scaleX"></param>
     /// <param name="scaleY"></param>
     /// <param name="numberOfLettersToRender"></param>
@@ -609,7 +609,7 @@ public class BitmapFont : IDisposable
         SpriteRenderer spriteRenderer,
         Color color,
         float xOffset = 0, float yOffset = 0, 
-        float rotation = 0, float scaleX = 1, float scaleY = 1,
+        float rotationDegrees = 0, float scaleX = 1, float scaleY = 1,
         int? numberOfLettersToRender = null, 
         TextRenderingPositionMode? overrideTextRenderingPositionMode = null, 
         float lineHeightMultiplier = 1,
@@ -648,12 +648,12 @@ public class BitmapFont : IDisposable
                 (byte)(color.B * multiple));
         }
 
-        var rotationRadians = MathHelper.ToRadians(rotation);
+        var rotationRadians = MathHelper.ToRadians(rotationDegrees);
 
         Vector2 xAxis = Vector2.UnitX;
         Vector2 yAxis = Vector2.UnitY;
 
-        if (rotation != 0)
+        if (rotationDegrees != 0)
         {
             xAxis.X = (float)System.Math.Cos(-rotationRadians);
             xAxis.Y = (float)System.Math.Sin(-rotationRadians);
@@ -756,7 +756,7 @@ public class BitmapFont : IDisposable
 
                     var isFreeFloating = effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                         // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotation != 0;
+                        rotationDegrees != 0;
 
                     if(!isFreeFloating)
                     {
