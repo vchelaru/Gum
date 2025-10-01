@@ -215,6 +215,7 @@
     * [TextureTop](code/gum-code-reference/spriteruntime/texturetop.md)
     * [TextureWidth](code/gum-code-reference/spriteruntime/texturewidth.md)
   * [TextRuntime](code/gum-code-reference/textruntime/README.md)
+    * [BBCode](code/gum-code-reference/textruntime/bbcode.md)
     * [Color](code/gum-code-reference/textruntime/color.md)
     * [FontScale](code/gum-code-reference/textruntime/fontscale.md)
     * [FontSize](code/gum-code-reference/textruntime/fontsize.md)
