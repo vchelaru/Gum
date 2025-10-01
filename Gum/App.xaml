@@ -6,7 +6,6 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-
                 <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

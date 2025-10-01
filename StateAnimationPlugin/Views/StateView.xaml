@@ -6,7 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="180"
     d:DesignWidth="200"
-    Background="#FFFFFE"
     Focusable="true"
     mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
