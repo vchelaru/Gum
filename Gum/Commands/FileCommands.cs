@@ -18,6 +18,7 @@ namespace Gum.Commands;
 public class FileCommands : IFileCommands
 {
     private readonly LocalizationManager _localizationManager;
+    private readonly FileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
@@ -35,6 +36,7 @@ public class FileCommands : IFileCommands
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _localizationManager = localizationManager;
+        _fileWatchManager = FileWatchManager.Self;
     }
 
     /// <summary>
@@ -226,7 +228,7 @@ public class FileCommands : IFileCommands
                 }
                 else
                 {
-                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath);
+                    _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
 
                     const int maxNumberOfTries = 5;
                     const int msBetweenSaves = 100;
@@ -329,7 +331,7 @@ public class FileCommands : IFileCommands
                 //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                 string fileName = GetFullPathXmlFile( behavior).FullPath;
-                FileWatchManager.Self.IgnoreNextChangeUntil(fileName);
+                _fileWatchManager.IgnoreNextChangeUntil(fileName);
                 // if it's readonly, let's warn the user
                 bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 

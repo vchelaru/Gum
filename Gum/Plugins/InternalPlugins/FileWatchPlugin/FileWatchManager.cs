@@ -61,16 +61,26 @@ public class FileWatchManager : Singleton<FileWatchManager>
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
     {
-        FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
+        var gumProject = ProjectManager.Self.GumProjectSave;
+        if(gumProject == null)
+        {
+            return;
+        }
+        FilePath gumProjectFilePath = gumProject.FullFileName;
 
-        char gumProjectDrive = gumProjectFilePath.Standardized[0];
+        char? gumProjectDrive = gumProjectFilePath.Standardized[0];
 
         var rootmostDirectory = directories
-            .Where(item =>  FileManager.IsUrl(item.Original) == false)
+            .Where(item => item != null && FileManager.IsUrl(item.Original) == false)
             .OrderBy(item => item.FullPath.Length).FirstOrDefault();
 
         foreach (var path in directories)
         {
+            // be safe:
+            if(path == null)
+            {
+                continue;
+            }
             // make sure this is on the same drive as the gum project. If not, don't include it:
             if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
             {
@@ -81,13 +91,20 @@ public class FileWatchManager : Singleton<FileWatchManager>
             }
         }
 
-        var filePathAsString = rootmostDirectory.StandardizedCaseSensitive;
-        // Gum standard is to have a trailing slash, 
-        // but FileSystemWatcher expects no trailing slash:
-        fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
-        CurrentFilePathWatching = fileSystemWatcher.Path;
+        if(rootmostDirectory != null)
+        {
+            var filePathAsString = rootmostDirectory.StandardizedCaseSensitive;
+            // Gum standard is to have a trailing slash, 
+            // but FileSystemWatcher expects no trailing slash:
+            fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
+            CurrentFilePathWatching = fileSystemWatcher.Path;
 
-        fileSystemWatcher.EnableRaisingEvents = true;
+            fileSystemWatcher.EnableRaisingEvents = true;
+        }
+        else
+        {
+            fileSystemWatcher.EnableRaisingEvents = false;
+        }
     }
 
     public void Disable()
