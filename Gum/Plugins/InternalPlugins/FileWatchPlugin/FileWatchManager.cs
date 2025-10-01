@@ -84,7 +84,7 @@ public class FileWatchManager : Singleton<FileWatchManager>
             // make sure this is on the same drive as the gum project. If not, don't include it:
             if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
             {
-                while (rootmostDirectory.IsRootOf(path) == false && rootmostDirectory != path)
+                while (rootmostDirectory != null && rootmostDirectory.IsRootOf(path) == false && rootmostDirectory != path)
                 {
                     rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
                 }
