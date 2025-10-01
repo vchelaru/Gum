@@ -59,6 +59,10 @@
         <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconInline}" />
     </Style>
 
+    <Style x:Key="FluentIcon.ButtonSize" TargetType="{x:Type wpf:FluentIcon}">
+        <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
+    </Style>
+
     <!--  TextBox  -->
     <Style BasedOn="{StaticResource MaterialDesignTextBox}" TargetType="TextBox">
         <Style.Resources>

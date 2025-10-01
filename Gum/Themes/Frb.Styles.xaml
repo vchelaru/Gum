@@ -18,6 +18,7 @@
     xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit">
 
     <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Converters.xaml" />
         <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Styles.Variants.xaml" />
     </ResourceDictionary.MergedDictionaries>
 

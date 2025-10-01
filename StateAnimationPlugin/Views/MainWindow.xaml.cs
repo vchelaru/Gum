@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls;
+using CommonFormsAndControls;
 using Gum.ToolStates;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -24,6 +24,7 @@ using StateAnimationPlugin.Managers;
 using Gum;
 using SkiaSharp;
 using System.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using SkiaSharp.Views.WPF;
 using Gum.Logic;
 using ToolsUtilities;
@@ -377,16 +378,6 @@ namespace StateAnimationPlugin.Views
                     AnimationKeyframeAdded?.Invoke(copiedFrame);
                 }
             }
-        }
-
-        private void HandlePlayStopClicked(object sender, RoutedEventArgs e)
-        {
-            if (this.ViewModel != null && _selectedState.SelectedElement != null && this.ViewModel.SelectedAnimation != null)
-            {
-                this.ViewModel.SelectedAnimation.RefreshCumulativeStates(_selectedState.SelectedElement);
-            }
-
-            ViewModel.TogglePlayStop();
         }
 
         private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
