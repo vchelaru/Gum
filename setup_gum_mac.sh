@@ -4,7 +4,7 @@
 ### Check if wine-stable is installed
 ################################################################################
 echo "Verifying that WINE is installed..."
-if ! command -v wine &> /dev/null
+if ! wine --version &> /dev/null
 then
     echo "Wine-stable is not installed."
     echo "Please install Wine-stable using the following command:"
@@ -16,7 +16,7 @@ fi
 ### Check if winetricks is installed
 ################################################################################
 echo "Verifying that winetricks is installed..."
-if ! command -v winetricks &> /dev/null
+if ! winetricks --version &> /dev/null
 then
     echo "Winetricks is not installed."
     echo "Please install Winetricks using the following command:"

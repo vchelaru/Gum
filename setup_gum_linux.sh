@@ -20,7 +20,7 @@ esac
 
 echo "Verifying that WINE is installed..."
 
-if ! command -v wine &> /dev/null; then
+if ! wine --version &> /dev/null; then
     echo "Wine is not installed. Attempting to install..."
 
     DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
@@ -91,7 +91,7 @@ fi
 ################################################################################
 ### Check if winetricks is installed
 ################################################################################
-if ! command -v winetricks &> /dev/null; then
+if ! winetricks --version &> /dev/null; then
     echo "Winetricks is not installed. Attempting to install..."
 
     case "$DISTRO" in
