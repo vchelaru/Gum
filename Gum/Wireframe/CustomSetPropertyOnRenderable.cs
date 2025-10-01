@@ -820,17 +820,23 @@ public class CustomSetPropertyOnRenderable
 
                         var substring = strippedText.Substring(startStripped, item.Close.StartStrippedIndex - startStripped);
 
+
+                        // this function needs to be called on every letter:
                         for (int i = 0; i < substring.Length; i++)
                         {
-                            var customization = function(i, substring);
-
+                            var call = new ParameterizedLetterCustomizationCall
+                            {
+                                Function = function,
+                                CharacterIndex = startStripped + i,
+                                TextBlock = substring
+                            };
                             // we probably need to check and add variables only as needed
                             var inlineVariable = new InlineVariable
                             {
                                 CharacterCount = 1,
                                 StartIndex = startStripped + i,
-                                VariableName = "Y",
-                                Value = customization.YOffset
+                                VariableName = "Custom",
+                                Value = call
                             };
 
                             asText.InlineVariables.Add(inlineVariable);

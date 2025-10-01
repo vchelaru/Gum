@@ -66,6 +66,7 @@ public class InlineVariable
 
 #endregion
 
+
 #region LetterCustomization
 public struct LetterCustomization
 {
@@ -75,7 +76,7 @@ public struct LetterCustomization
     public Color? Color;
     public float ScaleX;
     public float ScaleY;
-    public float Rotation;
+    public float RotationDegrees;
 
     public LetterCustomization()
     {
@@ -83,6 +84,19 @@ public struct LetterCustomization
         ScaleY = 1;
     }
 }
+#endregion
+
+#region ParameterizedLetterCustomizationCall
+
+public class ParameterizedLetterCustomizationCall
+{
+    public Func<int, string, LetterCustomization> Function { get; set; }
+    public int CharacterIndex { get; set; }
+
+    public string TextBlock { get; set; }
+
+}
+
 #endregion
 
 public class Text : IRenderableIpso, IVisible, IText, ICloneable
@@ -1323,6 +1337,10 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                     var effectiveFont = fontToUse;
                     var effectiveTopOfLine = topOfLine;
                     float yOffset = 0;
+                    float xOffset = 0;
+                    float scaleX = 1;
+                    float scaleY = 1;
+                    float rotationOffset = 0;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1354,6 +1372,39 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         {
                             yOffset = (float)variable.Value;
                         }
+                        else if(variable.VariableName == "Custom")
+                        {
+                            var function = variable.Value as ParameterizedLetterCustomizationCall;
+
+                            if(function != null)
+                            {
+                                var response = function.Function(function.CharacterIndex, function.TextBlock);
+
+                                /*
+                                    char? ReplacementCharacter;
+                                    float XOffset;
+                                    float YOffset;
+                                    Color? Color;
+                                    float ScaleX;
+                                    float ScaleY;
+                                    float Rotation;
+                                 */
+
+                                xOffset = response.XOffset;
+                                yOffset = response.YOffset;
+                                if(response.ReplacementCharacter != null)
+                                {
+                                    lineByLineList[0] = response.ReplacementCharacter.ToString()!;
+                                }
+                                if(response.Color != null)
+                                {
+                                    color = response.Color.Value;
+                                }
+                                scaleX = response.ScaleX;
+                                scaleY = response.ScaleY;
+                                rotationOffset = response.RotationDegrees;
+                            }
+                        }
                     }
 
 
@@ -1362,10 +1413,14 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
                     var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
-                        requiredWidth, individualLineWidth, spriteRenderer, color,
-                        absoluteLeft,
+                        requiredWidth, individualLineWidth,
+                        spriteRenderer, color,
+                        absoluteLeft + xOffset,
                         effectiveTopOfLine + yOffset,
-                        rotation, fontScale, fontScale, lettersLeft, 
+                        rotation + rotationOffset, 
+                        fontScale * scaleX, 
+                        fontScale * scaleY, 
+                        lettersLeft, 
                         OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                         shiftForOutline:substringIndex == 0);
 
