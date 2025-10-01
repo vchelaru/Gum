@@ -70,13 +70,15 @@ public class InlineVariable
 #region LetterCustomization
 public struct LetterCustomization
 {
-    public char? ReplacementCharacter;
     public float XOffset;
     public float YOffset;
     public Color? Color;
     public float ScaleX;
+    public HorizontalAlignment ScaleXOrigin = HorizontalAlignment.Center;
     public float ScaleY;
+    public VerticalAlignment ScaleYOrigin = VerticalAlignment.Center;
     public float RotationDegrees;
+    public char? ReplacementCharacter;
 
     public LetterCustomization()
     {
@@ -1380,16 +1382,6 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                             {
                                 var response = function.Function(function.CharacterIndex, function.TextBlock);
 
-                                /*
-                                    char? ReplacementCharacter;
-                                    float XOffset;
-                                    float YOffset;
-                                    Color? Color;
-                                    float ScaleX;
-                                    float ScaleY;
-                                    float Rotation;
-                                 */
-
                                 xOffset = response.XOffset;
                                 yOffset = response.YOffset;
                                 if(response.ReplacementCharacter != null)
@@ -1402,6 +1394,41 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                                 }
                                 scaleX = response.ScaleX;
                                 scaleY = response.ScaleY;
+
+                                if(scaleX != 1)
+                                {
+                                    switch(response.ScaleXOrigin)
+                                    {
+                                        case HorizontalAlignment.Left:
+                                            // do nothing
+                                            break;
+                                        case HorizontalAlignment.Center:
+                                            xOffset -= (fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1)) / 2.0f;
+                                            break;
+                                        case HorizontalAlignment.Right:
+                                            xOffset -= fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1);
+                                            break;
+                                    }
+                                }
+                                if(scaleY != 1)
+                                {
+                                    switch(response.ScaleYOrigin)
+                                    {
+                                        case VerticalAlignment.Top:
+                                            // do nothing
+                                            break;
+                                        case VerticalAlignment.Center:
+                                            yOffset -= (fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1)) / 2.0f;
+                                            break;
+                                        case VerticalAlignment.Bottom:
+                                            yOffset -= fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1);
+                                            break;
+                                        case VerticalAlignment.TextBaseline:
+                                            yOffset -= fontScale * effectiveFont.BaselineY * (scaleY - 1);
+                                            break;
+                                    }
+                                }
+
                                 rotationOffset = response.RotationDegrees;
                             }
                         }
@@ -1413,15 +1440,18 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
                     var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
-                        requiredWidth, individualLineWidth,
-                        spriteRenderer, color,
+                        requiredWidth, 
+                        individualLineWidth,
+                        spriteRenderer, 
+                        color,
                         absoluteLeft + xOffset,
                         effectiveTopOfLine + yOffset,
                         rotation + rotationOffset, 
                         fontScale * scaleX, 
                         fontScale * scaleY, 
                         lettersLeft, 
-                        OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                        OverrideTextRenderingPositionMode, 
+                        lineHeightMultiplier: LineHeightMultiplier,
                         shiftForOutline:substringIndex == 0);
 
                     if (lettersLeft != null)
@@ -1429,7 +1459,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         lettersLeft -= substring.Substring.Length;
                     }
 
-                    absoluteLeft += rect.Width;
+                    absoluteLeft += rect.Width / scaleX;
 
                 }
 
