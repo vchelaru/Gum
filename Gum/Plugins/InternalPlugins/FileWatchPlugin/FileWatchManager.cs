@@ -84,6 +84,11 @@ public class FileWatchManager : Singleton<FileWatchManager>
             // make sure this is on the same drive as the gum project. If not, don't include it:
             if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
             {
+                // This is finding a common root for all folders
+                // If the folders are in different directories, then
+                // no common root is possible, so this will ultimately
+                // result in a null value. We should tolerate this
+                // by not turning on file watch
                 while (rootmostDirectory != null && rootmostDirectory.IsRootOf(path) == false && rootmostDirectory != path)
                 {
                     rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
