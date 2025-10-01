@@ -91,7 +91,7 @@ fi
 ################################################################################
 ### Check if winetricks is installed
 ################################################################################
-if ! command -v winetricks &> /dev/null; then
+if ! winetricks --version &> /dev/null; then
     echo "Winetricks is not installed. Attempting to install..."
 
     case "$DISTRO" in
