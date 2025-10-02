@@ -26,13 +26,13 @@ public class RoundedRectangle : AposShapeBase
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX / 2f;
-            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurX / 2f;
+            var shadowLeft = absoluteLeft + DropshadowOffsetX;
+            var shadowTop = absoluteTop + DropshadowOffsetY;
 
             // Currently apos shapes doesn't support different sizes for anti-aliasing on X and Y
             var dropshadowSize = size;
-            dropshadowSize.X -= DropshadowBlurX;
-            dropshadowSize.Y -= DropshadowBlurX;
+            //dropshadowSize.X -= DropshadowBlurX;
+            //dropshadowSize.Y -= DropshadowBlurX;
 
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize, 
                 MathFunctions.RoundToInt(DropshadowBlurX), 
@@ -91,15 +91,31 @@ public class RoundedRectangle : AposShapeBase
         }
         else
         {
-            sb.DrawRectangle(
-                position,
-                size,
-                Microsoft.Xna.Framework.Color.Transparent,
-                forcedColor ?? Color,
-                StrokeWidth,
-                CornerRadius,
-                0,
-                antiAliasSize);
+            if(UseGradient && forcedColor == null)
+            {
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                sb.DrawRectangle(
+                    position,
+                    size,
+                    Microsoft.Xna.Framework.Color.Transparent,
+                    gradient,
+                    StrokeWidth,
+                    CornerRadius,
+                    0,
+                    antiAliasSize);
+            }
+            else
+            {
+                sb.DrawRectangle(
+                    position,
+                    size,
+                    Microsoft.Xna.Framework.Color.Transparent,
+                    forcedColor ?? Color,
+                    StrokeWidth,
+                    CornerRadius,
+                    0,
+                    antiAliasSize);
+            }
         }
     }
 }

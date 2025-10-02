@@ -50,8 +50,6 @@ public class FileWatchManager : Singleton<FileWatchManager>
             // ... but it's needed for file names on PNG
             |NotifyFilters.FileName;
 
-
-
         fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
         fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
         // Gum files get deleted and then created, rather than changed

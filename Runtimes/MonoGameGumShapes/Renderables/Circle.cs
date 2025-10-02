@@ -29,14 +29,14 @@ public class Circle : AposShapeBase
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX / 2f;
-            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurX / 2f;
+            var shadowLeft = absoluteLeft + DropshadowOffsetX ;
+            var shadowTop = absoluteTop + DropshadowOffsetY;
 
             var dropshadowCenter = center;
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX/2f, 
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius, 
                 MathFunctions.RoundToInt(DropshadowBlurX),
                 DropshadowColor);
         }
@@ -86,12 +86,28 @@ public class Circle : AposShapeBase
         }
         else
         {
-            sb.DrawCircle(center,
-                radius,
-                Color.Transparent,
-                this.Color,
-                StrokeWidth,
-                aaSize: antiAliasSize);
+            if(UseGradient && forcedColor == null)
+            {
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+
+                sb.DrawCircle(center,
+                    radius,
+                    Color.Transparent,
+                    gradient,
+                    StrokeWidth,
+                    aaSize: antiAliasSize);
+            }
+            else
+            {
+                var color = forcedColor ?? this.Color;
+
+                sb.DrawCircle(center,
+                    radius,
+                    Color.Transparent,
+                    color,
+                    StrokeWidth,
+                    aaSize: antiAliasSize);
+            }
         }
     }
 }

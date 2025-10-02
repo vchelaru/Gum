@@ -62,6 +62,9 @@ public class ArcRuntime : AposShapeRuntime
             Width = 100;
             Height = 100;
 
+            StartAngle = 0;
+            SweepAngle = 90;
+
             Red1 = 255;
             Green1 = 255;
             Blue1 = 255;
