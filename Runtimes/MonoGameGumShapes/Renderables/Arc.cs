@@ -106,31 +106,64 @@ internal class Arc : AposShapeBase
 
         var endpointRadius = lineThickness / 2;
 
-        if (UseGradient && forcedColor == null)
+        if(_isEndRounded)
         {
-            var gradient = base.GetGradient(absoluteLeft, absoluteTop);
-            sb.DrawArc(center,
-                startAngleRadians,
-                endAngleRadians,
-                radius,
-                endpointRadius,
-                gradient,
-                gradient,
-                1,
-                aaSize: antiAliasSize);
+            if (UseGradient && forcedColor == null)
+            {
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                sb.DrawArc(center,
+                    startAngleRadians,
+                    endAngleRadians,
+                    radius,
+                    endpointRadius,
+                    gradient,
+                    gradient,
+                    1,
+                    aaSize: antiAliasSize);
+            }
+            else
+            {
+                var color = forcedColor ?? this.Color;
+                sb.DrawArc(center,
+                    startAngleRadians,
+                    endAngleRadians,
+                    radius,
+                    endpointRadius,
+                    color,
+                    color,
+                    1,
+                    aaSize: antiAliasSize);
+            }
         }
         else
         {
-            var color = forcedColor ?? this.Color;
-            sb.DrawArc(center,
-                startAngleRadians,
-                endAngleRadians,
-                radius,
-                endpointRadius,
-                color,
-                color,
-                1,
-                aaSize: antiAliasSize);
+            if (UseGradient && forcedColor == null)
+            {
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+                sb.DrawRing(center,
+                    startAngleRadians,
+                    endAngleRadians,
+                    radius,
+                    endpointRadius,
+                    gradient,
+                    gradient,
+                    1,
+                    aaSize: antiAliasSize);
+            }
+            else
+            {
+                var color = forcedColor ?? this.Color;
+                sb.DrawRing(center,
+                    startAngleRadians,
+                    endAngleRadians,
+                    radius,
+                    endpointRadius,
+                    color,
+                    color,
+                    1,
+                    aaSize: antiAliasSize);
+            }
         }
+
     }
 }

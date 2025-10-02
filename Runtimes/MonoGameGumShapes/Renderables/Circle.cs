@@ -29,14 +29,14 @@ public class Circle : AposShapeBase
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX / 2f;
-            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurX / 2f;
+            var shadowLeft = absoluteLeft + DropshadowOffsetX ;
+            var shadowTop = absoluteTop + DropshadowOffsetY;
 
             var dropshadowCenter = center;
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX/2f, 
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius, 
                 MathFunctions.RoundToInt(DropshadowBlurX),
                 DropshadowColor);
         }
@@ -86,12 +86,35 @@ public class Circle : AposShapeBase
         }
         else
         {
-            sb.DrawCircle(center,
-                radius,
-                Color.Transparent,
-                this.Color,
-                StrokeWidth,
-                aaSize: antiAliasSize);
+            if(UseGradient && forcedColor == null)
+            {
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+
+                var transparentGradient = gradient;
+                transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
+                transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
+
+                sb.DrawCircle(center,
+                    radius,
+                    transparentGradient,
+                    gradient,
+                    StrokeWidth,
+                    aaSize: antiAliasSize);
+            }
+            else
+            {
+                var color = forcedColor ?? this.Color;
+
+                var transparentColor = color;
+                transparentColor.A = 0;
+
+                sb.DrawCircle(center,
+                    radius,
+                    transparentColor,
+                    color,
+                    StrokeWidth,
+                    aaSize: antiAliasSize);
+            }
         }
     }
 }

@@ -61,6 +61,10 @@ public class RoundedRectangleRuntime : AposShapeRuntime
             GradientY1 = 0;
             GradientY1Units = GeneralUnitType.PixelsFromSmall;
 
+            Red = 255;
+            Green = 255;
+            Blue = 255;
+
             Red1 = 255;
             Green1 = 255;
             Blue1 = 255;

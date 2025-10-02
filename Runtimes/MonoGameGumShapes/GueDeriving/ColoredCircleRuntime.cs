@@ -46,6 +46,11 @@ public class ColoredCircleRuntime : AposShapeRuntime
             Green2 = 255;
             Blue2 = 0;
 
+            GradientX1 = 0;
+            GradientY1 = 0;
+            GradientX2 = 100;
+            GradientY2 = 100;
+
             DropshadowAlpha = 255;
             DropshadowRed = 0;
             DropshadowGreen = 0;

@@ -46,11 +46,10 @@ public class ArcRuntime : AposShapeRuntime
         set => ContainedArc.SweepAngle = value;
     }
 
-    [Obsolete("Not currently functional, added to match SkiaGum syntax")]
     public bool IsEndRounded
     {
-        get;
-        set;
+        get => ContainedArc.IsEndRounded;
+        set => ContainedArc.IsEndRounded = value;
     }
 
     public ArcRuntime(bool fullInstantiation = true)
@@ -61,6 +60,11 @@ public class ArcRuntime : AposShapeRuntime
             this.Color = Microsoft.Xna.Framework.Color.White;
             Width = 100;
             Height = 100;
+
+            IsEndRounded = true;
+
+            StartAngle = 0;
+            SweepAngle = 90;
 
             Red1 = 255;
             Green1 = 255;

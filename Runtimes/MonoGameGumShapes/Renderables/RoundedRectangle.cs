@@ -26,13 +26,13 @@ public class RoundedRectangle : AposShapeBase
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX / 2f;
-            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurX / 2f;
+            var shadowLeft = absoluteLeft + DropshadowOffsetX;
+            var shadowTop = absoluteTop + DropshadowOffsetY;
 
             // Currently apos shapes doesn't support different sizes for anti-aliasing on X and Y
             var dropshadowSize = size;
-            dropshadowSize.X -= DropshadowBlurX;
-            dropshadowSize.Y -= DropshadowBlurX;
+            //dropshadowSize.X -= DropshadowBlurX;
+            //dropshadowSize.Y -= DropshadowBlurX;
 
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize, 
                 MathFunctions.RoundToInt(DropshadowBlurX), 
@@ -91,15 +91,40 @@ public class RoundedRectangle : AposShapeBase
         }
         else
         {
-            sb.DrawRectangle(
-                position,
-                size,
-                Microsoft.Xna.Framework.Color.Transparent,
-                forcedColor ?? Color,
-                StrokeWidth,
-                CornerRadius,
-                0,
-                antiAliasSize);
+            if(UseGradient && forcedColor == null)
+            {
+                var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+
+                var transparentGradient = gradient;
+                transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
+                transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
+
+                sb.DrawRectangle(
+                    position,
+                    size,
+                    transparentGradient,
+                    gradient,
+                    StrokeWidth,
+                    CornerRadius,
+                    0,
+                    antiAliasSize);
+            }
+            else
+            {
+                var color= forcedColor ?? this.Color;
+                var transparentColor = color;
+                transparentColor.A = 0;
+
+                sb.DrawRectangle(
+                    position,
+                    size,
+                    transparentColor,
+                    color,
+                    StrokeWidth,
+                    CornerRadius,
+                    0,
+                    antiAliasSize);
+            }
         }
     }
 }
