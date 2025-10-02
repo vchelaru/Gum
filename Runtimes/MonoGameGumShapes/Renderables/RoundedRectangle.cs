@@ -94,10 +94,15 @@ public class RoundedRectangle : AposShapeBase
             if(UseGradient && forcedColor == null)
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
+
+                var transparentGradient = gradient;
+                transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
+                transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
+
                 sb.DrawRectangle(
                     position,
                     size,
-                    Microsoft.Xna.Framework.Color.Transparent,
+                    transparentGradient,
                     gradient,
                     StrokeWidth,
                     CornerRadius,
@@ -106,11 +111,15 @@ public class RoundedRectangle : AposShapeBase
             }
             else
             {
+                var color= forcedColor ?? this.Color;
+                var transparentColor = color;
+                transparentColor.A = 0;
+
                 sb.DrawRectangle(
                     position,
                     size,
-                    Microsoft.Xna.Framework.Color.Transparent,
-                    forcedColor ?? Color,
+                    transparentColor,
+                    color,
                     StrokeWidth,
                     CornerRadius,
                     0,

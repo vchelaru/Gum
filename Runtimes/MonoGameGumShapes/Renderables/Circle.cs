@@ -90,9 +90,13 @@ public class Circle : AposShapeBase
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop);
 
+                var transparentGradient = gradient;
+                transparentGradient.AC = new Color((int)gradient.AC.R, gradient.AC.G, gradient.AC.B, 0);
+                transparentGradient.BC = new Color((int)gradient.BC.R, gradient.BC.G, gradient.BC.B, 0);
+
                 sb.DrawCircle(center,
                     radius,
-                    Color.Transparent,
+                    transparentGradient,
                     gradient,
                     StrokeWidth,
                     aaSize: antiAliasSize);
@@ -101,9 +105,12 @@ public class Circle : AposShapeBase
             {
                 var color = forcedColor ?? this.Color;
 
+                var transparentColor = color;
+                transparentColor.A = 0;
+
                 sb.DrawCircle(center,
                     radius,
-                    Color.Transparent,
+                    transparentColor,
                     color,
                     StrokeWidth,
                     aaSize: antiAliasSize);
