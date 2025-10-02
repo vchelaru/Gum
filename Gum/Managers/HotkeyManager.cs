@@ -248,9 +248,9 @@ public class HotkeyManager
 
         return match is not null;
 
-        int? ZoomDirection() =>
-            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
-            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
+        double? ZoomDirection() =>
+            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 0.1 :
+            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -0.1 :
             null;
     }
 
