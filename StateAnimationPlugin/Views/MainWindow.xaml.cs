@@ -394,5 +394,21 @@ namespace StateAnimationPlugin.Views
         {
             ViewModel.IncreaseGameSpeed();
         }
+
+        private void OnKeyframeMouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
+            {
+                frame.IsTimelineVisualHovered = true;
+            }
+        }
+
+        private void OnKeyframeMouseLeave(object sender, MouseEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
+            {
+                frame.IsTimelineVisualHovered = false;
+            }
+        }
     }
 }
