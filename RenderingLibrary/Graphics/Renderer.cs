@@ -207,6 +207,12 @@ public class Renderer : IRenderer
         set;
     } = BlendState.NonPremultiplied;
 
+    public bool IsUsingPremultipliedAlpha
+    {
+        get; set;
+    }
+    = false;
+
     /// <summary>
     /// Use the custom effect for rendering. This setting takes priority if 
     /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
@@ -246,7 +252,7 @@ public class Renderer : IRenderer
 
     public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
 
-    #endregion
+#endregion
 
     public Renderer()
     {
