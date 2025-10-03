@@ -103,6 +103,10 @@ As `Alpha` is reduced, the amount of opacity removed effect is also reduced. A S
 
 Replace Alpha forcefully sets the opacity of whatever is below. Rather than subtracting alpha, replace can forcefully set the alpha.
 
+{% hint style="warning" %}
+Runtimes which use premultiplied alpha (such as FlatRedBall) may not render color values correctly when using Replace Alpha. Consider using alternatives like Min Alpha if targeting a runtime that uses premultiplied alpha.
+{% endhint %}
+
 Replace Alpha with an Alpha value of 255 results in no changes if what is under is already opaque, but it can add alpha if what is under is transparent.
 
 <figure><img src="../../../.gitbook/assets/09_08 05 33.gif" alt=""><figcaption><p>Replace Alpha with Alpha of 255 results in no changes on already-opaque regions, but can add alpha</p></figcaption></figure>
