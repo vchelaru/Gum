@@ -215,7 +215,7 @@ namespace Gum
             MinAlpha.ColorDestinationBlend = Blend.One;
 
             MinAlpha.AlphaSourceBlend = Blend.One;
-            MinAlpha.AlphaBlendFunction = BlendFunction.Add;
+            MinAlpha.AlphaBlendFunction = BlendFunction.Min;
             MinAlpha.AlphaDestinationBlend = Blend.One;
 
             MinAlpha.BlendFactor = Color.White;
