@@ -1,8 +1,10 @@
-﻿<UserControl
+<UserControl
     x:Class="StateAnimationPlugin.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StateAnimationPlugin.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
     xmlns:views="clr-namespace:StateAnimationPlugin.Views"
@@ -26,8 +28,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="80" />
                 <ColumnDefinition />
-                <ColumnDefinition Width="50" />
-                <ColumnDefinition Width="Auto" MinWidth="40" />
+                <ColumnDefinition Width="10" />
             </Grid.ColumnDefinitions>
             <Button
                 x:Name="PlayStopButton"
@@ -38,45 +39,19 @@
                 Visibility="{Binding PlayButtonVisibility}">
                 <Image x:Name="ButtonImage" Source="{Binding ButtonBitmapFrame}" />
             </Button>
-            <Slider
-                Grid.Row="1"
-                Grid.Column="1"
-                Maximum="{Binding SelectedAnimation.Length}"
-                Minimum="0"
-                TickFrequency="1"
-                TickPlacement="BottomRight"
-                Value="{Binding DisplayedAnimationTime}" />
 
-            <TextBox
+            <controls:TimelineControl
                 Grid.Row="1"
-                Grid.Column="2"
-                Text="{Binding DisplayedAnimationTime}" />
-
-            <TextBlock
-                Grid.Row="1"
-                Grid.Column="3"
-                Margin="0,0,5,0"
-                VerticalAlignment="Bottom"
-                Text="{Binding OverLengthTime}" />
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="0,4,0,0"
+                Animation="{Binding SelectedAnimation}"
+                CurrentTime="{Binding DisplayedAnimationTime, Mode=TwoWay}" />
             <!--<views:TimedStateMarkerDisplay Grid.Column="1"
                                                RangeMaximum="{Binding SelectedAnimation.Length}"
                                                MarkerItemSource="{Binding SelectedAnimation.Keyframes}"
                                                SelectedKeyframe="{Binding SelectedAnimation.SelectedKeyframe}" Grid.Row="1"/>-->
-            <skia:SKElement
-                x:Name="LeftSkiaElement"
-                Grid.Row="2"
-                Grid.Column="0"
-                VerticalAlignment="Stretch"
-                PaintSurface="LeftSkiaElement_PaintSurface" />
 
-            <skia:SKElement
-                x:Name="SkiaElement"
-                Grid.Row="2"
-                Grid.Column="1"
-                VerticalAlignment="Stretch"
-                MouseLeftButtonDown="SkiaElement_MouseLeftButtonDown"
-                MouseMove="SkiaElement_MouseMove"
-                PaintSurface="SKElement_PaintSurface" />
             <Grid
                 Grid.Row="0"
                 Grid.Column="1"
