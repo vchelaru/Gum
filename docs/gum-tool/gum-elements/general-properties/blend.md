@@ -79,9 +79,13 @@ Changing the `Alpha` on a Sprite with `Replace` `Blend` does not affect how it i
 
 ## Alpha-Only Blends
 
-Gum supports **Blend** modes which modify the alpha (opacity) of whatever is under the instance using the alpha-only `Blend` . Alpha-only `Blend` modes ignore the color of the instance using the `Blend` - only the alpha matters. Therefore, the following three circles would behave the same despite having different colors:
+Gum supports **Blend** modes which modify the alpha (opacity) of whatever is under the instance using the alpha-only `Blend` . Alpha-only `Blend` modes ignore the color of the instance using the `Blend` - only the alpha matters (see note below about premultiplied alpha). Therefore, the following three circles would behave the same despite having different colors:
 
 <figure><img src="../../../.gitbook/assets/09_06 55 32.png" alt=""><figcaption><p>Color values are ignored with Alpha-only Blends</p></figcaption></figure>
+
+{% hint style="warning" %}
+Runtimes which use premultiplied alpha (such as FlatRedBall) require using objects that are fully white when modifying alpha. Otherwise, the color of the overlaying instance will blend with the underlying object.
+{% endhint %}
 
 Since alpha-only blends operate directly on the alpha of whatever is below, they are only intended to be used on Containers with `Is Render Target` set to true. Usually objects with these blend modes are drawn on top of all other items in the container. For example, the following image shows a RenderTargetContainer which holds a number of items including the AlphaOnlyCircle. AlphaOnlyCircle is an instance which can be used to apply Alpha-only Blends to whatever is below.
 
@@ -102,10 +106,6 @@ As `Alpha` is reduced, the amount of opacity removed effect is also reduced. A S
 ## Replace Alpha Blend
 
 Replace Alpha forcefully sets the opacity of whatever is below. Rather than subtracting alpha, replace can forcefully set the alpha.
-
-{% hint style="warning" %}
-Runtimes which use premultiplied alpha (such as FlatRedBall) may not render color values correctly when using Replace Alpha. Consider using alternatives like Min Alpha if targeting a runtime that uses premultiplied alpha.
-{% endhint %}
 
 Replace Alpha with an Alpha value of 255 results in no changes if what is under is already opaque, but it can add alpha if what is under is transparent.
 
