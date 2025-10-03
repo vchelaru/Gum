@@ -3842,7 +3842,7 @@ public class CodeGenerator
 
                 if (forceSetDirectlyOnInstance)
                 {
-                    return $"this.{ToCSharpName(context.Instance.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    return $"this.{ToCSharpName(context.Instance!.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
@@ -3861,7 +3861,11 @@ public class CodeGenerator
         }
         else // xamarin forms
         {
-            var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+            string? fullLineReplacement = null;
+            if (context.Instance != null)
+            {
+                fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+            }
             if (fullLineReplacement != null)
             {
                 return fullLineReplacement;
@@ -3933,7 +3937,10 @@ public class CodeGenerator
 
             string? formsType = null;
 
-            GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+            if(instanceElement != null)
+            {
+                GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+            }
 
             // special case for now, need to handle this in a more generalized manner:
             if (formsType == BehaviorGumFormsTypes["LabelBehavior"])
@@ -4163,7 +4170,11 @@ public class CodeGenerator
             }
             else if (isState)
             {
-                var containerClassName = GetClassNameForType(categoryContainer, VisualApi.XamarinForms, context);
+
+                var containerClassName = categoryContainer == null 
+                    ? string.Empty
+                    : GetClassNameForType(categoryContainer, VisualApi.XamarinForms, context);
+
                 if (category == null)
                 {
                     return $"{containerClassName}.VariableState.{value}";
