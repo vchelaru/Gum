@@ -1255,6 +1255,10 @@ public static class StateSaveExtensionMethods
 
             return (int)(.5f + firstFloat + (secondFloat - firstFloat) * interpolationValue);
         }
+        if(firstValue is bool && secondValue is bool)
+        {
+            return interpolationValue >= 1 ? secondValue : firstValue;
+        }
         else
         {
             return secondValue;

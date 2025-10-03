@@ -518,7 +518,7 @@ public class AnimationViewModel : ViewModel
         }
         else if (stateVmBefore != null && stateVmAfter != null)
         {
-            if (stateVmAfter.CachedCumulativeState == null ||
+            if (stateVmBefore.CachedCumulativeState == null ||
                 stateVmAfter.CachedCumulativeState == null)
             {
                 if (element != null)
