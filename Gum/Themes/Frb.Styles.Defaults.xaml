@@ -1,9 +1,10 @@
-﻿<ResourceDictionary
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Gum.Controls"
     xmlns:controls1="clr-namespace:WpfDataUi.Controls;assembly=WpfDataUi"
     xmlns:converters="clr-namespace:Gum.Themes.Converters"
+    xmlns:converters1="clr-namespace:Gum.Converters"
     xmlns:gum="clr-namespace:Gum"
     xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:system="clr-namespace:System;assembly=mscorlib"
@@ -1282,14 +1283,36 @@
 
     </Style>
 
+    <DataTemplate x:Key="InstanceMember.DefaultColumnTemplate" DataType="{x:Type wpfdatauiTypes:InstanceMember}">
+        <DataTemplate.Resources>
+            <converters1:BoolToVisibilityConverter
+                x:Key="InverseBoolVis"
+                Collapse="False"
+                Invert="True" />
+        </DataTemplate.Resources>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <wpf:FluentIcon
+                x:Name="IsDefaultIcon"
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                Icon="Status"
+                Visibility="{Binding IsDefault, Converter={StaticResource InverseBoolVis}}" />
+            <Border
+                Grid.Column="1"
+                Margin="0,2"
+                BorderBrush="{DynamicResource Frb.Brushes.Border}"
+                BorderThickness="0,0,0,0">
 
+                <wpfdataui:SingleDataUiContainer x:Name="Container" DataContext="{Binding}" />
+            </Border>
+        </Grid>
+    </DataTemplate>
 
     <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
-        <Style.Resources>
-            <DataTemplate x:Key="DataUi.InstanceMemberTemplate" DataType="{x:Type wpfdatauiTypes:InstanceMember}">
-                <wpfdataui:SingleDataUiContainer DataContext="{Binding}" />
-            </DataTemplate>
-        </Style.Resources>
         <Setter Property="Grid.IsSharedSizeScope" Value="True" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="ItemTemplate">
@@ -1307,7 +1330,7 @@
                         </Expander.HeaderTemplate>
                         <ItemsControl
                             AlternationCount="2"
-                            ItemTemplate="{DynamicResource DataUi.InstanceMemberTemplate}"
+                            ItemTemplate="{Binding InstanceMemberItemTemplate, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type wpfdataui:DataUiGrid}}}"
                             ItemsSource="{Binding Members}" />
                     </Expander>
                 </DataTemplate>

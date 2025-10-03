@@ -261,6 +261,11 @@ namespace WpfDataUi.Controls
 
         private void RefreshButtonAppearance()
         {
+            if (DataUiGrid.GetOverridesIsDefaultStyling(this))
+            {
+                return;
+            }
+
             foreach (var button in toggleButtons)
             {
                 if (button.Template is not null)

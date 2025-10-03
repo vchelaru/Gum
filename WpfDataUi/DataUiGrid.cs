@@ -105,7 +105,14 @@ namespace WpfDataUi
         public static readonly DependencyProperty OverridesIsDefaultStylingProperty =
             DependencyProperty.RegisterAttached("OverridesIsDefaultStyling", typeof(bool), typeof(DataUiGrid), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
 
+        public static readonly DependencyProperty InstanceMemberItemTemplateProperty = DependencyProperty.Register(
+            nameof(InstanceMemberItemTemplate), typeof(DataTemplate), typeof(DataUiGrid), new PropertyMetadata(default(DataTemplate?)));
 
+        public DataTemplate? InstanceMemberItemTemplate
+        {
+            get { return (DataTemplate?)GetValue(InstanceMemberItemTemplateProperty); }
+            set { SetValue(InstanceMemberItemTemplateProperty, value); }
+        }
 
         #endregion
 

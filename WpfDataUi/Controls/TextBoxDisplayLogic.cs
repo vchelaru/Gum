@@ -555,7 +555,8 @@ namespace WpfDataUi.Controls
         {
             mAssociatedTextBox.Dispatcher.BeginInvoke(() =>
             {
-                if (mAssociatedTextBox.GetValue(DataUiGrid.OverridesIsDefaultStylingProperty) is true)
+                
+                if (DataUiGrid.GetOverridesIsDefaultStyling(mAssociatedTextBox))
                 {
                     return;
                 }

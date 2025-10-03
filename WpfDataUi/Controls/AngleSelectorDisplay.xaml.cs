@@ -261,22 +261,25 @@ namespace WpfDataUi.Controls
 
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
-            if (TextBox.GetValue(DataUiGrid.OverridesIsDefaultStylingProperty) is false)
-            {
-                if (InstanceMember.IsDefault)
-                {
-                    TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
-                }
-                else if (InstanceMember.IsIndeterminate)
-                {
-                    TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
-                }
-                else
-                {
-                    TextBox.Background = TextBoxDisplayLogic.CustomValueBackground;
-                }
-            }
 
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+                    if (InstanceMember.IsDefault)
+                    {
+                        TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                    }
+                    else if (InstanceMember.IsIndeterminate)
+                    {
+                        TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+                    }
+                    else
+                    {
+                        TextBox.Background = TextBoxDisplayLogic.CustomValueBackground;
+                    }
+                }
+            });
 
             RefreshIsEnabled();
 
