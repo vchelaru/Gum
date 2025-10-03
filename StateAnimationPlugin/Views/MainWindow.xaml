@@ -6,12 +6,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
     xmlns:themes="clr-namespace:Gum.Themes;assembly=Gum"
     xmlns:viewModels="clr-namespace:StateAnimationPlugin.ViewModels"
     xmlns:views="clr-namespace:StateAnimationPlugin.Views"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
-    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     d:DataContext="{d:DesignInstance {x:Type viewModels:ElementAnimationsViewModel},
                                      IsDesignTimeCreatable=False}"
     d:DesignHeight="580"
@@ -83,11 +81,13 @@
                 </ToggleButton.Style>
             </ToggleButton>
 
-            <TextBox
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Text="{Binding DisplayedAnimationTime}" 
-                    materialDesign:TextFieldAssist.SuffixText="{Binding OverLengthTime}" Margin="4,0"/>
+            <controls:TimelineControl
+                Grid.Row="1"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="0,4,0,0"
+                Animation="{Binding SelectedAnimation}"
+                CurrentTime="{Binding DisplayedAnimationTime, Mode=TwoWay}" />
 
             <!--<views:TimedStateMarkerDisplay Grid.Column="1"
                                                RangeMaximum="{Binding SelectedAnimation.Length}"
@@ -313,14 +313,25 @@
                                             <TextBlock>This state is uncategorized which can cause unexpected results due to only some variables being assigned. Consider using only categorized states.</TextBlock>
                                         </wpf:FluentIcon.ToolTip>
                                     </wpf:FluentIcon>
-                                    <Label
+                                    <TextBlock
                                         Grid.Column="2"
                                         VerticalAlignment="Center"
-                                        Content="{Binding DisplayString}"
-                                        Foreground="{Binding LabelBrush}" />
+                                        Text="{Binding DisplayString}" />
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
+
+                        <ListBox.ItemContainerStyle>
+                            <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="{x:Type ListBoxItem}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                                <EventSetter Event="MouseEnter" Handler="OnKeyframeMouseEnter" />
+                                <EventSetter Event="MouseLeave" Handler="OnKeyframeMouseLeave" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
 
                     </ListBox>
                 </Grid>
@@ -331,9 +342,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Stretch" />
 
-            <views:StateView
-                Grid.Column="4"
-                DataContext="{Binding SelectedAnimation.SelectedKeyframe}" />
+            <views:StateView Grid.Column="4" DataContext="{Binding SelectedAnimation.SelectedKeyframe}" />
 
         </Grid>
 

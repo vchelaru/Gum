@@ -374,7 +374,7 @@
                             <Style TargetType="{x:Type Border}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
-                                        <Setter Property="BorderBrush" Value="{StaticResource Frb.Brushes.Primary}" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -382,23 +382,19 @@
                         <Border
                             x:Name="Bd2"
                             Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
                             BorderThickness="1"
                             SnapsToDevicePixels="True">
                             <ContentPresenter />
-                            <Border.Style>
-                                <Style TargetType="{x:Type Border}">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource Frb.Brushes.Primary.Transparent}" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
                         </Border>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="TextElement.Foreground" Value="red" />
+                        </Trigger>
+
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
