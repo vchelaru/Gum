@@ -173,6 +173,7 @@ namespace WpfDataUi.DataTypes
                 LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
             }
             OnPropertyChanged("Value");
+            OnPropertyChanged(nameof(IsDefault));
             return result;
         }
 
