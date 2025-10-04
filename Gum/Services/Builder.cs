@@ -54,6 +54,7 @@ file static class ServiceCollectionExtensions
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         services.AddSingleton<WireframeObjectManager>(WireframeObjectManager.Self);
+        services.AddSingleton<PluginManager>(PluginManager.Self);
 
         // singletons
         services.AddSingleton<ISelectedState, SelectedState>();
