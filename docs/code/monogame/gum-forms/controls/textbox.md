@@ -262,7 +262,7 @@ The TextBox supports entering characters respecting the current keyboard languag
 
 Characters must be available in the current font to support being written in TextBoxes. If you would like to support more characters, you can explicitly create a font (.fnt) including the desired characters, or change the default character set in Gum.
 
-For more information on creating fonts, see the [Font](../../../../gum-tool/gum-elements/text/font.md) and [Use Custom Font](../../../../gum-tool/gum-elements/text/use-custom-font.md) pages. For more information on specifying the default character set in Gum, see the [Project Property Font Ranges](../../../../gum-tool/menu/project-properties.md#font-ranges) page.
+For more information on creating fonts, see the [Font](../../../../gum-tool/gum-elements/text/font.md) and [Use Custom Font](../../../../gum-tool/gum-elements/text/use-custom-font.md) pages. For more information on specifying the default character set in Gum, see the [Project Property Font Ranges](../../../../gum-tool/project-properties.md#font-ranges) page.
 
 
 
