@@ -300,19 +300,25 @@ public class CopyPasteLogic
 
     private void PasteCopiedInstanceSaves(TopOrRecursive topOrRecursive)
     {
-        var element = _selectedState.SelectedElement;
+        var selectedElement = _selectedState.SelectedElement;
 
-        if(element == null)
+        if(selectedElement == null)
         {
             _dialogService.ShowMessage("Select a target Screen or component to paste the copied instance(s).");
         }
         else if(topOrRecursive == TopOrRecursive.Recursive)
         {
-            PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, _selectedState.SelectedElement, _selectedState.SelectedInstance);
+            PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance);
         }
         else
         {
-            PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, _selectedState.SelectedElement, _selectedState.SelectedInstance);
+            PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance);
+        }
+
+        if(selectedElement != null)
+        {
+            _elementCommands.SortVariables(selectedElement);
+            _fileCommands.TryAutoSaveElement(selectedElement);
         }
     }
 

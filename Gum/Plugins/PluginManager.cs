@@ -61,9 +61,9 @@ namespace Gum.Plugins
         static List<PluginManager> mInstances = new List<PluginManager>();
         private bool mGlobal;
 
-        private readonly IGuiCommands _guiCommands;
-        private readonly IMessenger _messenger;
-        private readonly IDialogService _dialogService;
+        private IGuiCommands _guiCommands;
+        private IMessenger _messenger;
+        private IDialogService _dialogService;
 
         public static string PluginFolder
         {
@@ -655,16 +655,17 @@ namespace Gum.Plugins
 
         public PluginManager()
         {
-            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-            _messenger = Locator.GetRequiredService<IMessenger>();
-            _dialogService = Locator.GetRequiredService<IDialogService>();
 
-            _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
         }
 
 
         public void Initialize()
         {
+            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+            _messenger = Locator.GetRequiredService<IMessenger>();
+            _dialogService = Locator.GetRequiredService<IDialogService>();
+
+            _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
             LoadPluginSettings();
             LoadPlugins(this);
             mInstances.Add(this);
