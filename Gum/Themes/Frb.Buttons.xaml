@@ -37,9 +37,6 @@
 
     <ControlTemplate x:Key="IconButtonBaseTemplate" TargetType="{x:Type ButtonBase}">
         <ControlTemplate.Resources>
-            <Style TargetType="{x:Type wpf:FluentIcon}">
-                <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
-            </Style>
             <Style TargetType="{x:Type materialDesign:PackIcon}">
                 <Setter Property="Height" Value="Auto" />
                 <Setter Property="Width" Value="Auto" />
@@ -62,6 +59,11 @@
     </ControlTemplate>
 
     <Style x:Key="IconButton" TargetType="{x:Type ButtonBase}">
+        <Style.Resources>
+            <Style TargetType="{x:Type wpf:FluentIcon}">
+                <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
+            </Style>
+        </Style.Resources>
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -80,6 +82,17 @@
                 <Setter Property="Background" Value="{DynamicResource Darken}" />
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <Style
+        x:Key="IconButton.Inline"
+        BasedOn="{StaticResource IconButton}"
+        TargetType="{x:Type ButtonBase}">
+        <Style.Resources>
+            <Style TargetType="{x:Type wpf:FluentIcon}">
+                <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconInline}" />
+            </Style>
+        </Style.Resources>
     </Style>
 
 </ResourceDictionary>

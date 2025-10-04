@@ -153,7 +153,10 @@
             VerticalAlignment="Center"
             ResizeBehavior="PreviousAndNext" />
 
-        <Grid x:Name="BottomGrid" Grid.Row="2">
+        <Grid
+            x:Name="BottomGrid"
+            Grid.Row="2"
+            Grid.IsSharedSizeScope="True">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -165,29 +168,31 @@
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" SharedSizeGroup="Header" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Border
-                    Grid.Row="0"
-                    Padding="4,0,0,0"
-                    Background="{DynamicResource Frb.Brushes.Field.Background}">
+                <Border Grid.Row="0" Background="{DynamicResource Frb.Brushes.Field.Background}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock VerticalAlignment="Center" Text="Animations" />
+                        <TextBlock
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="Animations" />
                         <Button
                             Grid.Column="1"
+                            Padding="4"
                             Click="AddAnimationButton_Click"
                             Content="{wpf:FluentIcon Icon=Add}"
-                            Style="{StaticResource IconButton}" />
+                            Style="{StaticResource IconButton.Inline}" />
                     </Grid>
                 </Border>
                 <ListBox
                     Grid.Row="1"
+                    Padding="4"
                     ItemsSource="{Binding Animations}"
                     PreviewKeyDown="HandleAnimationListKeyPressed"
                     SelectedItem="{Binding SelectedAnimation}">
@@ -236,27 +241,28 @@
                 BorderThickness="1,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" SharedSizeGroup="Header" />
                         <RowDefinition />
                     </Grid.RowDefinitions>
 
-                    <Border
-                        Grid.Row="0"
-                        Padding="4,0,0,0"
-                        Background="{DynamicResource Frb.Brushes.Field.Background}">
+                    <Border Grid.Row="0" Background="{DynamicResource Frb.Brushes.Field.Background}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock VerticalAlignment="Center" Text="{Binding SelectedAnimation.Name}" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="{Binding SelectedAnimation.Name, FallbackValue='No Animation Selected'}" />
                             <Grid Grid.Column="1">
                                 <ToggleButton
                                     x:Name="AddStateButton"
+                                    Padding="4"
                                     Content="{wpf:FluentIcon Icon=Add}"
                                     IsChecked="{Binding IsOpen, ElementName=StateButtonMenu}"
-                                    Style="{StaticResource IconButton}">
+                                    Style="{StaticResource IconButton.Inline}">
                                     <ToggleButton.ContextMenu>
                                         <ContextMenu x:Name="StateButtonMenu" HasDropShadow="True">
                                             <MenuItem Click="AddStateKeyframeButton_Click" Header="State" />
@@ -274,6 +280,7 @@
                     <!--  State List Box  -->
                     <ListBox
                         Grid.Row="1"
+                        Padding="4"
                         ItemsSource="{Binding SelectedAnimation.Keyframes}"
                         KeyDown="HandleAnimationKeyframeListBoxKey"
                         SelectedItem="{Binding SelectedAnimation.SelectedKeyframe}">
@@ -342,7 +349,31 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Stretch" />
 
-            <views:StateView Grid.Column="4" DataContext="{Binding SelectedAnimation.SelectedKeyframe}" />
+            <Grid Grid.Column="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" SharedSizeGroup="Header" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border Background="{DynamicResource Frb.Brushes.Field.Background}">
+                    <TextBlock Margin="4,0,0,0" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+                                <Setter Property="Text" Value="{Binding SelectedAnimation.SelectedKeyframe.DisplayName, FallbackValue='No Keyframe Selected'}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedAnimation.SelectedKeyframe.StateName, Converter={StaticResource NullToBoolConverter}}" Value="True">
+                                        <Setter Property="Text" Value="State" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+                <views:StateView
+                    Grid.Row="1"
+                    DataContext="{Binding SelectedAnimation.SelectedKeyframe}"
+                    Visibility="{Binding Converter={StaticResource NullToVisibilityConverter}}" />
+            </Grid>
+
 
         </Grid>
 
