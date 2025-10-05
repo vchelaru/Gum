@@ -78,6 +78,11 @@ public class GumService
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
+    public void UseKeyboardDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+    }
+
     Game _game;
 
     #region Initialize
