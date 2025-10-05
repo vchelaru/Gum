@@ -209,10 +209,10 @@ public class MenuItem : ItemsControl
 #if FRB
             _=FlatRedBall.Instructions.InstructionManager.DoOnMainThreadAsync(() =>
 #else
-            GumService.Default.DeferredQueue.Enqueue(() =>
+            global::MonoGameGum.GumService.Default.DeferredQueue.Enqueue(() =>
 #endif
             {
-                foreach(var item in items)
+                foreach (var item in items)
                 {
                     this.Items.Add(item);
                 }

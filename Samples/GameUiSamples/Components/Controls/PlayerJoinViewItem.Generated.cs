@@ -1,5 +1,6 @@
 //Code for Controls/PlayerJoinViewItem (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,20 +15,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
+partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/PlayerJoinViewItem");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/PlayerJoinViewItem - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new PlayerJoinViewItem(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PlayerJoinViewItem)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PlayerJoinViewItem)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/PlayerJoinViewItem", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -78,7 +82,7 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "PlayerJoinCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "PlayerJoinCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -103,7 +107,7 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "PlayerIndexCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "PlayerIndexCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -128,7 +132,7 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "GamepadLayoutCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "GamepadLayoutCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -139,7 +143,9 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
     public TextRuntime ControllerDisplayNameTextInstance { get; protected set; }
     public Icon InputDeviceIcon { get; protected set; }
 
-    public PlayerJoinViewItem(InteractiveGue visual) : base(visual) { }
+    public PlayerJoinViewItem(InteractiveGue visual) : base(visual)
+    {
+    }
     public PlayerJoinViewItem()
     {
 
@@ -149,9 +155,9 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-        ControllerDisplayNameTextInstance = this.Visual?.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as TextRuntime;
-        InputDeviceIcon = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"InputDeviceIcon");
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        ControllerDisplayNameTextInstance = this.Visual?.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        InputDeviceIcon = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"InputDeviceIcon");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

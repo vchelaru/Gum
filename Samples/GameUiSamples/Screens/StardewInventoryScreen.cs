@@ -24,8 +24,6 @@ partial class StardewInventoryScreen : IUpdateScreen
 
     ItemIcon _grabbedIcon;
 
-    int? inventoryIndexGrabbed = null;
-
     partial void CustomInitialize()
     {
         _inventoryService = Game1.ServiceContainer.GetService<InventoryService>();

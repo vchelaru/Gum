@@ -1,5 +1,6 @@
 //Code for MainMenu
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,24 +15,27 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Screens;
-partial class MainMenu : MonoGameGum.Forms.Controls.FrameworkElement
+partial class MainMenu : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("MainMenu");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named MainMenu - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new MainMenu(visual);
             visual.Width = 0;
-            visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             visual.Height = 0;
-            visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(MainMenu)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(MainMenu)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("MainMenu", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -46,7 +50,9 @@ partial class MainMenu : MonoGameGum.Forms.Controls.FrameworkElement
     public ListBoxItem InventoryStardew { get; protected set; }
     public ListBoxItem FrbClicker { get; protected set; }
 
-    public MainMenu(InteractiveGue visual) : base(visual) { }
+    public MainMenu(InteractiveGue visual) : base(visual)
+    {
+    }
     public MainMenu()
     {
 
@@ -56,13 +62,13 @@ partial class MainMenu : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        ListBoxInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBox>(this.Visual,"ListBoxInstance");
-        ButtonConfirmInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonConfirm>(this.Visual,"ButtonConfirmInstance");
-        GameTitleScreenItem = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"GameTitleScreenItem");
-        GameHudHollowKnight = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"GameHudHollowKnight");
-        HotbarStardew = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"HotbarStardew");
-        InventoryStardew = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"InventoryStardew");
-        FrbClicker = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"FrbClicker");
+        ListBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBox>(this.Visual,"ListBoxInstance");
+        ButtonConfirmInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonConfirm>(this.Visual,"ButtonConfirmInstance");
+        GameTitleScreenItem = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"GameTitleScreenItem");
+        GameHudHollowKnight = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"GameHudHollowKnight");
+        HotbarStardew = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"HotbarStardew");
+        InventoryStardew = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"InventoryStardew");
+        FrbClicker = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"FrbClicker");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

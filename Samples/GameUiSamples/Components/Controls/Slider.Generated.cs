@@ -1,5 +1,6 @@
 //Code for Controls/Slider (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,20 +15,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class Slider : MonoGameGum.Forms.Controls.Slider
+partial class Slider : global::Gum.Forms.Controls.Slider
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/Slider");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Slider - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Slider(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/Slider", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -59,7 +63,7 @@ partial class Slider : MonoGameGum.Forms.Controls.Slider
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "SliderCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "SliderCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -77,7 +81,9 @@ partial class Slider : MonoGameGum.Forms.Controls.Slider
         set => ThumbInstance.Visual.X = value;
     }
 
-    public Slider(InteractiveGue visual) : base(visual) { }
+    public Slider(InteractiveGue visual) : base(visual)
+    {
+    }
     public Slider()
     {
 
@@ -87,10 +93,10 @@ partial class Slider : MonoGameGum.Forms.Controls.Slider
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as ContainerRuntime;
-        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as NineSliceRuntime;
-        ThumbInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ThumbInstance");
-        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
+        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ThumbInstance");
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

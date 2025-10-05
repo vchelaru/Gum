@@ -9,10 +9,9 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 using System;
-using MonoGameGum.Forms;
 using MonoGameGum;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.ExtensionMethods;
 namespace GameUiSamples.Components;
 

@@ -18,9 +18,9 @@ namespace FnaSample.Components
         public static void RegisterRuntimeType()
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/TextBox", typeof(TextBoxRuntime));
-            MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(MonoGameGum.Forms.Controls.TextBox)] = typeof(TextBoxRuntime);
+            Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(Gum.Forms.Controls.TextBox)] = typeof(TextBoxRuntime);
         }
-        public MonoGameGum.Forms.Controls.TextBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.TextBox;
+        public Gum.Forms.Controls.TextBox FormsControl => FormsControlAsObject as Gum.Forms.Controls.TextBox;
         public enum TextBoxCategory
         {
             Enabled,
@@ -99,7 +99,7 @@ namespace FnaSample.Components
         {
             if (FormsControl == null)
             {
-                FormsControlAsObject = new MonoGameGum.Forms.Controls.TextBox(this);
+                FormsControlAsObject = new Gum.Forms.Controls.TextBox(this);
             }
             Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
             SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as NineSliceRuntime;

@@ -489,7 +489,7 @@ public class CodeGenerator
             {
                 if (string.IsNullOrEmpty(element.BaseType))
                 {
-                    inheritance = "MonoGameGum.Forms.Controls.FrameworkElement";
+                    inheritance = "global::Gum.Forms.Controls.FrameworkElement";
                 }
                 else
                 {
@@ -528,7 +528,7 @@ public class CodeGenerator
                     // if it inherits from a standard element that is not a container, and it doesn't have any Forms behaviors
                     if (element.BaseType == "Container")
                     {
-                        gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
+                        gumFormsType = "global::Gum.Forms.Controls.FrameworkElement";
                     }
                     // else it is something like a NineSlice-inheriting object, so don't return a forms inheritance
                     else if (ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
