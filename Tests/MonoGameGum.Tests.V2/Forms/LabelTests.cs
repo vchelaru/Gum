@@ -11,7 +11,7 @@ public class LabelTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var label = new MonoGameGum.Forms.Controls.Label();
+        var label = new Gum.Forms.Controls.Label();
         label.Visual.ShouldNotBeNull();
         (label.Visual is Gum.Forms.DefaultVisuals.LabelVisual).ShouldBeTrue();
     }

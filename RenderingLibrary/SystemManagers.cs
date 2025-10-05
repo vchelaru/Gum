@@ -312,7 +312,6 @@ namespace RenderingLibrary
         ///     FnaGum.Font18Arial_0.png
         ///     MonoGameGum.Content.Font18Arial_0.png
         /// </summary>
-        /// <param name="graphicsDevice"></param>
         /// <param name="fontName">The filename without the extension</param>
         /// <returns></returns>
         private BitmapFont LoadEmbeddedFont(string fontName)

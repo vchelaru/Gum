@@ -188,6 +188,9 @@ namespace RenderingLibrary
         /// Returns the absolute rotation in degrees.
         /// </summary>
         /// <param name="ipso">The object for which to return rotation.</param>
+        /// <param name="ignoreParentRotationIfRenderTarget">If true, then the parent's rotation is ignored if the parent
+        /// is a render target. This is needed because a child's rotation should not be modified by its parent if the parent
+        /// is a render target since the rotation is automatically cascaded.</param>
         /// <returns>The rotation in degrees.</returns>
         public static float GetAbsoluteRotation(this IRenderableIpso ipso, bool ignoreParentRotationIfRenderTarget = false)
         {

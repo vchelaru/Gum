@@ -1517,18 +1517,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public static Action<IText, GraphicalUiElement> UpdateFontFromProperties;
-    public static Action<GraphicalUiElement> ThrowExceptionsForMissingFiles;
-    public static Action<IRenderableIpso, ISystemManagers> RemoveRenderableFromManagers;
-    public static Action<IRenderableIpso, ISystemManagers, Layer> AddRenderableToManagers;
-    public static Action<string, GraphicalUiElement> ApplyMarkup;
+    public static Action<IText, GraphicalUiElement>? UpdateFontFromProperties;
+    public static Action<GraphicalUiElement>? ThrowExceptionsForMissingFiles;
+    public static Action<IRenderableIpso, ISystemManagers>? RemoveRenderableFromManagers;
+    public static Action<IRenderableIpso, ISystemManagers, Layer>? AddRenderableToManagers;
+    public static Action<string, GraphicalUiElement>? ApplyMarkup;
 
     public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable =
         // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide 
         // better performance.
         SetPropertyThroughReflection;
 
-    public static Func<IRenderable, IRenderable> CloneRenderableFunction;
+    public static Func<IRenderable, IRenderable>? CloneRenderableFunction;
 
 
     #endregion
@@ -4113,7 +4113,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var siblingsAsIpsos = parentGue.Children;
                     for (int i = 0; i < siblingsAsIpsos.Count; i++)
                     {
-                        var siblingAsGraphicalUiElement = siblingsAsIpsos[i] as GraphicalUiElement;
+                        var siblingAsGraphicalUiElement = (GraphicalUiElement)siblingsAsIpsos[i];
                         if (siblingAsGraphicalUiElement.WidthUnits == DimensionUnitType.Ratio || siblingAsGraphicalUiElement.HeightUnits == DimensionUnitType.Ratio)
                         {
                             return true;

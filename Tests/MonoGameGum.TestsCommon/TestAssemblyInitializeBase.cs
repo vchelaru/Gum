@@ -1,7 +1,6 @@
 ﻿using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Content;

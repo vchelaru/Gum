@@ -5,8 +5,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
@@ -121,8 +120,6 @@ public class GumService
             Gum.Forms.DefaultVisualsVersion.V2);
     }
 
-    public void Initialize(Game game, MonoGameGum.Forms.DefaultVisualsVersion defaultVisualsVersion) =>
-        Initialize(game, (Gum.Forms.DefaultVisualsVersion)(int)defaultVisualsVersion);
 
     public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
     {
@@ -300,7 +297,7 @@ public class GumService
 
     }
 
-    public void Update(Game game, GameTime gameTime, Forms.Controls.FrameworkElement root) =>
+    public void Update(Game game, GameTime gameTime, FrameworkElement root) =>
         Update(game, gameTime, root.Visual);
 
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
@@ -355,10 +352,6 @@ public static class GraphicalUiElementExtensionMethods
 
 
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
-    {
-        element.Children.Add(child.Visual);
-    }
-    public static void AddChild(this GraphicalUiElement element, MonoGameGum.Forms.Controls.FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }

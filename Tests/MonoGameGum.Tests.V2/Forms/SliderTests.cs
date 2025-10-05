@@ -11,7 +11,7 @@ public class SliderTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var slider = new MonoGameGum.Forms.Controls.Slider();
+        var slider = new Gum.Forms.Controls.Slider();
         slider.Visual.ShouldNotBeNull();
         (slider.Visual is Gum.Forms.DefaultVisuals.SliderVisual).ShouldBeTrue();
     }

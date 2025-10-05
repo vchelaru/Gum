@@ -49,7 +49,7 @@ public class Window :
 #if RAYLIB
     FrameworkElement
 #else
-    MonoGameGum.Forms.Controls.FrameworkElement
+    Gum.Forms.Controls.FrameworkElement
 #endif
 {
     public const string WindowCategoryName = "WindowCategory";

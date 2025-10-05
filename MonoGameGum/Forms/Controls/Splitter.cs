@@ -30,7 +30,7 @@ public class Splitter :
 #if RAYLIB
     FrameworkElement
 #else
-    MonoGameGum.Forms.Controls.FrameworkElement
+    Gum.Forms.Controls.FrameworkElement
 #endif
 {
     /// <summary>
