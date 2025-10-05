@@ -255,10 +255,12 @@ public class ItemsControl : ScrollViewer
         {
             var listBoxItemGumType = ItemGumType;
 
+#pragma warning disable CS0618 // we need this to support old projects
             if (listBoxItemGumType == null && DefaultFormsComponents.ContainsKey(typeof(ListBoxItem)))
             {
                 listBoxItemGumType = DefaultFormsComponents[typeof(ListBoxItem)];
             }
+#pragma warning restore CS0618 // Type or member is obsolete
 #if DEBUG
             if (listBoxItemGumType == null)
             {

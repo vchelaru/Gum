@@ -20,9 +20,9 @@ partial class ScrollViewerRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ScrollViewer", typeof(ScrollViewerRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.ScrollViewer)] = typeof(ScrollViewerRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.ScrollViewer)] = typeof(ScrollViewerRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.ScrollViewer FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.ScrollViewer;
+    public global::Gum.Forms.Controls.ScrollViewer FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ScrollViewer;
     public enum ScrollBarVisibility
     {
         NoScrollBar,
@@ -104,7 +104,7 @@ partial class ScrollViewerRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.ScrollViewer(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.ScrollViewer(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ScrollBarRuntime;

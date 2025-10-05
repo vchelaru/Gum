@@ -1,5 +1,6 @@
 //Code for GameTitleScreen
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,24 +15,27 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Screens;
-partial class GameTitleScreen : MonoGameGum.Forms.Controls.FrameworkElement
+partial class GameTitleScreen : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("GameTitleScreen");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named GameTitleScreen - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new GameTitleScreen(visual);
             visual.Width = 0;
-            visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             visual.Height = 0;
-            visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(GameTitleScreen)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(GameTitleScreen)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("GameTitleScreen", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -45,7 +49,9 @@ partial class GameTitleScreen : MonoGameGum.Forms.Controls.FrameworkElement
     public TitleScreenButton ExitButton { get; protected set; }
     public TextRuntime TextInstance { get; protected set; }
 
-    public GameTitleScreen(InteractiveGue visual) : base(visual) { }
+    public GameTitleScreen(InteractiveGue visual) : base(visual)
+    {
+    }
     public GameTitleScreen()
     {
 
@@ -55,12 +61,12 @@ partial class GameTitleScreen : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as ContainerRuntime;
-        Player1Button = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"Player1Button");
-        Player2Button = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"Player2Button");
-        OptionsButton = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"OptionsButton");
-        ExitButton = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"ExitButton");
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+        ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
+        Player1Button = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"Player1Button");
+        Player2Button = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"Player2Button");
+        OptionsButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"OptionsButton");
+        ExitButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TitleScreenButton>(this.Visual,"ExitButton");
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

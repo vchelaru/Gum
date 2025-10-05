@@ -472,10 +472,11 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static InteractiveGue? GetGraphicalUiElementForFrameworkElement(Type type)
     {
-        if(DefaultFormsTemplates.ContainsKey(type))
+        if (DefaultFormsTemplates.ContainsKey(type))
         {
             return DefaultFormsTemplates[type].CreateContent(null, createFormsInternally:false) as InteractiveGue;
         }
+#pragma warning disable CS0618 // We need this in place to support existing code which uses DefaultFormsComponents
         else if (DefaultFormsComponents.ContainsKey(type))
         {
             var gumType = DefaultFormsComponents[type];
@@ -496,6 +497,7 @@ public class FrameworkElement : INotifyPropertyChanged
             }
 
         }
+#pragma warning restore CS0618 // Type or member is obsolete
         else
         {
             var baseType = type.BaseType;
@@ -875,10 +877,10 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
     [Obsolete("Use OnBindingContextChanged")]
-    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
+    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) =>
+        OnBindingContextChanged(sender, args);
 
-    protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) =>
-        HandleVisualBindingContextChanged(sender, args);
+    protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
     protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
     {

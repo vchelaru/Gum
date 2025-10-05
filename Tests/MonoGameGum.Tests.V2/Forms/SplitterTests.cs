@@ -11,7 +11,7 @@ public class SplitterTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var splitter = new MonoGameGum.Forms.Controls.Splitter();
+        var splitter = new Gum.Forms.Controls.Splitter();
         splitter.Visual.ShouldNotBeNull();
         (splitter.Visual is Gum.Forms.DefaultVisuals.SplitterVisual).ShouldBeTrue();
     }

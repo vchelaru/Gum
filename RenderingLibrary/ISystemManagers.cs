@@ -9,7 +9,6 @@ namespace RenderingLibrary
 
     public interface ISystemManagers : ISurfaceInvalidatable
     {
-        void InvalidateSurface();
         bool EnableTouchEvents { get; set; }
         IRenderer Renderer { get; }
 

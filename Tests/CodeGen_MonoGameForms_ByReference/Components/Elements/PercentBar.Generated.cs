@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Elements;
-partial class PercentBar : MonoGameGum.Forms.Controls.FrameworkElement
+partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/PercentBar");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/PercentBar - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new PercentBar(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PercentBar)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PercentBar)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Elements/PercentBar", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -93,8 +96,8 @@ partial class PercentBar : MonoGameGum.Forms.Controls.FrameworkElement
         Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         BarContainer = this.Visual?.GetGraphicalUiElementByName("BarContainer") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         Bar = this.Visual?.GetGraphicalUiElementByName("Bar") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        CautionLinesInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CautionLines>(this.Visual,"CautionLinesInstance");
-        VerticalLinesInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<VerticalLines>(this.Visual,"VerticalLinesInstance");
+        CautionLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CautionLines>(this.Visual,"CautionLinesInstance");
+        VerticalLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<VerticalLines>(this.Visual,"VerticalLinesInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

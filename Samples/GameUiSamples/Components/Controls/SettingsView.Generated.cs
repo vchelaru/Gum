@@ -1,5 +1,6 @@
 //Code for Controls/SettingsView (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,20 +15,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
+partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/SettingsView");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/SettingsView - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new SettingsView(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SettingsView)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SettingsView)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/SettingsView", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -40,7 +44,9 @@ partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
     public Label SoundVolumeLabel { get; protected set; }
     public Slider SoundSliderInstance { get; protected set; }
 
-    public SettingsView(InteractiveGue visual) : base(visual) { }
+    public SettingsView(InteractiveGue visual) : base(visual)
+    {
+    }
     public SettingsView()
     {
 
@@ -50,11 +56,11 @@ partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        FullscreenCheckboxInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CheckBox>(this.Visual,"FullscreenCheckboxInstance");
-        MusicVolumeLabel = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"MusicVolumeLabel");
-        MusicSliderInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"MusicSliderInstance");
-        SoundVolumeLabel = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"SoundVolumeLabel");
-        SoundSliderInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"SoundSliderInstance");
+        FullscreenCheckboxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CheckBox>(this.Visual,"FullscreenCheckboxInstance");
+        MusicVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"MusicVolumeLabel");
+        MusicSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"MusicSliderInstance");
+        SoundVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"SoundVolumeLabel");
+        SoundSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"SoundSliderInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

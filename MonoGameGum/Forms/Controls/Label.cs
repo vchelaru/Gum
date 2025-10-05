@@ -15,7 +15,7 @@ public class Label :
 #if RAYLIB || FRB
     FrameworkElement
 #else
-    MonoGameGum.Forms.Controls.FrameworkElement
+    Gum.Forms.Controls.FrameworkElement
 #endif
 {
     protected GraphicalUiElement textComponent;

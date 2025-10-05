@@ -2,9 +2,9 @@
 using GumFormsSample.CustomRuntimes;
 using Microsoft.Xna.Framework;
 using MonoGameGum;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultVisuals;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -90,7 +90,7 @@ namespace GumFormsSample.Screens
             CustomMenuItem.Header = "Custom Dropdown";
             var customScrollViewerVisualTemplate = new VisualTemplate(() =>
             {
-                var toReturn = new DefaultScrollViewerRuntime();
+                var toReturn = new MonoGameGum.Forms.DefaultVisuals.DefaultScrollViewerRuntime();
                 toReturn.MakeSizedToChildren();
                 var background = toReturn.GetGraphicalUiElementByName("Background")
                     as ColoredRectangleRuntime;
@@ -174,7 +174,7 @@ namespace GumFormsSample.Screens
             stackPanel.AddChild(comboBox);
 
             // We can also create buttons through their visual type:
-            var buttonRuntime = new DefaultButtonRuntime();
+            var buttonRuntime = new MonoGameGum.Forms.DefaultVisuals.DefaultButtonRuntime();
             buttonRuntime.Width = 100;
             buttonRuntime.Height = 50;
             buttonRuntime.TextInstance.Text = "Other Button!";
@@ -241,7 +241,7 @@ namespace GumFormsSample.Screens
             
             // Make it no wrap to still accept return but not automatically wrap
             //wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.NoWrap;
-            wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+            wrappedTextBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
             wrappedTextBox.AcceptsReturn = true;
             wrappedTextBox.Height = 140;
             wrappedTextBox.Placeholder = "Placeholder Text...";

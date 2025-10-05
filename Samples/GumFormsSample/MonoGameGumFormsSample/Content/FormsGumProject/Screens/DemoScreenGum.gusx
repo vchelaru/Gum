@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>DemoScreenGum</Name>
   <State>
     <Name>Default</Name>
@@ -2476,6 +2476,54 @@
     </Variable>
     <Variable>
       <Type>string</Type>
+      <Name>SizedBasedOnContentsTextBox.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>Sizing</Type>
+      <Name>SizedBasedOnContentsTextBox.SizingState</Name>
+      <Value xsi:type="xsd:string">BasedOnContents</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SizedBasedOnContentsTextBox.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>SizedBasedOnContentsTextBox.XOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>SizedBasedOnContentsTextBox.XUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SizedBasedOnContentsTextBox.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>SizedBasedOnContentsTextBox.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>SizedBasedOnContentsTextBox.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
       <Name>SoundLabel.LabelText</Name>
       <Value xsi:type="xsd:string">Sound Volume</Value>
       <SetsValue>true</SetsValue>
@@ -2790,54 +2838,6 @@
       <Type>float</Type>
       <Name>TextBoxInstance1.Y</Name>
       <Value xsi:type="xsd:float">7</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>SizedBasedOnContentsTextBox.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>Sizing</Type>
-      <Name>SizedBasedOnContentsTextBox.SizingState</Name>
-      <Value xsi:type="xsd:string">BasedOnContents</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SizedBasedOnContentsTextBox.X</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>SizedBasedOnContentsTextBox.XOrigin</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>SizedBasedOnContentsTextBox.XUnits</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>SizedBasedOnContentsTextBox.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>SizedBasedOnContentsTextBox.YOrigin</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>SizedBasedOnContentsTextBox.YUnits</Name>
-      <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

@@ -1,7 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
 using Shouldly;
 using System;

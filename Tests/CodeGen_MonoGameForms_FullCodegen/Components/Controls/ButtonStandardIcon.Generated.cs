@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class ButtonStandardIcon : global::MonoGameGum.Forms.Controls.Button
+partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandardIcon");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ButtonStandardIcon - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonStandardIcon(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonStandardIcon)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonStandardIcon)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/ButtonStandardIcon", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -141,7 +144,6 @@ partial class ButtonStandardIcon : global::MonoGameGum.Forms.Controls.Button
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -159,6 +161,7 @@ partial class ButtonStandardIcon : global::MonoGameGum.Forms.Controls.Button
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -185,8 +188,8 @@ partial class ButtonStandardIcon : global::MonoGameGum.Forms.Controls.Button
         this.TextInstance.SetProperty("ColorCategoryState", "White");
         this.TextInstance.SetProperty("StyleCategoryState", "Strong");
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.Width = -32f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TextInstance.X = 32f;

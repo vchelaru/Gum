@@ -13,21 +13,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class SplitterStandard : global::MonoGameGum.Forms.Controls.Splitter
+partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/SplitterStandard");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/SplitterStandard - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new SplitterStandard(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SplitterStandard)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.Splitter)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SplitterStandard)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Splitter)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/SplitterStandard", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -59,12 +62,12 @@ partial class SplitterStandard : global::MonoGameGum.Forms.Controls.Splitter
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         NineSliceInstance = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         NineSliceInstance.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.AddStatesAndCategoriesRecursivelyToGue(NineSliceInstance.ElementSave);
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.SetInitialState();
         NineSliceInstance.Name = "NineSliceInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

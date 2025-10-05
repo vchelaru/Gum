@@ -3,7 +3,7 @@ using GumFormsSample.Components;
 using GumFormsSample.CustomForms;
 using GumFormsSample.CustomRuntimes;
 using MonoGameGum;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using System;
 using System.Collections.Generic;
@@ -75,7 +75,7 @@ internal class FormsCustomizationScreen : ContainerRuntime
 
         // ... or we can make a visual templte using gum-defined components:
         //listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(typeof(FancyListBoxItemRuntime));
-        listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(() => new FancyListBoxItemRuntime());
+        listBox.VisualTemplate = new Gum.Forms.VisualTemplate(() => new FancyListBoxItemRuntime());
 
         for (int i = 0; i < 20; i++)
         {

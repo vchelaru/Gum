@@ -21,7 +21,7 @@ partial class ButtonCloseRuntime : ContainerRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonClose", typeof(ButtonCloseRuntime));
     }
-    public global::MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Button;
+    public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
     {
         Enabled,
@@ -76,7 +76,7 @@ partial class ButtonCloseRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Button(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         Icon = this.GetGraphicalUiElementByName("Icon") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;

@@ -424,15 +424,15 @@ namespace MonoGameGumFromFile
         {
             var itemOver = GetItemOver(mouseState.X, mouseState.Y, GumService.Default.Root);
 
-            if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
+            if(itemOver is TextRuntime textRuntime && itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
             {
-                if(itemOver.FontSize == 16)
+                if(textRuntime.FontSize == 16)
                 {
-                    itemOver.FontSize = 32;
+                    textRuntime.FontSize = 32;
                 }
                 else
                 {
-                    itemOver.FontSize = 16;
+                    textRuntime.FontSize = 16;
                 }
             }
         }

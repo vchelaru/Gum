@@ -155,7 +155,8 @@ namespace RenderingLibrary.Math.Geometry
         /// Renders the primtive line object.
         /// </summary>
         /// <param name="spriteRenderer">The sprite renderer to use to render the primitive line object.</param>
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
+        /// <param name="managers"></param>The system managers to use.  Can be null.</param>
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers)
         {
             Render(spriteRenderer, managers, mTexture, .2f);
         }
@@ -187,7 +188,7 @@ namespace RenderingLibrary.Math.Geometry
             mVectors[index] = point;
         }
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, 
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers, 
             Texture2D textureToUse, float repetitionsPerLength, System.Drawing.Rectangle? sourceRectangle = null, float rotation = 0)
         {
             if (mVectors.Count < 2)

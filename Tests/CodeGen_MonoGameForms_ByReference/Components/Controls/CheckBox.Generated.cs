@@ -14,21 +14,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Controls;
-partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
+partial class CheckBox : global::Gum.Forms.Controls.CheckBox
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/CheckBox");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/CheckBox - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new CheckBox(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.CheckBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.CheckBox)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/CheckBox", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -109,7 +112,7 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
         base.ReactToVisualChanged();
         CheckboxBackground = this.Visual?.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Check = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Check");
+        Check = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Check");
         FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

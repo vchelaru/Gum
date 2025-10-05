@@ -19,9 +19,9 @@ partial class PasswordBoxRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/PasswordBox", typeof(PasswordBoxRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.PasswordBox)] = typeof(PasswordBoxRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.PasswordBox)] = typeof(PasswordBoxRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.PasswordBox;
+    public global::Gum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.PasswordBox;
     public enum PasswordBoxCategory
     {
         Enabled,
@@ -82,7 +82,7 @@ partial class PasswordBoxRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.PasswordBox(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.PasswordBox(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;

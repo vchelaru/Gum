@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class PlayerJoinView : MonoGameGum.Forms.Controls.FrameworkElement
+partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/PlayerJoinView");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/PlayerJoinView - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new PlayerJoinView(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PlayerJoinView)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PlayerJoinView)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/PlayerJoinView", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -60,7 +63,6 @@ partial class PlayerJoinView : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         InnerPanelInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         InnerPanelInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
@@ -74,6 +76,7 @@ partial class PlayerJoinView : MonoGameGum.Forms.Controls.FrameworkElement
         PlayerJoinViewItem3.Name = "PlayerJoinViewItem3";
         PlayerJoinViewItem4 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.PlayerJoinViewItem();
         PlayerJoinViewItem4.Name = "PlayerJoinViewItem4";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
-partial class @interface : MonoGameGum.Forms.Controls.FrameworkElement
+partial class @interface : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("interface");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named interface - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new @interface(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(@interface)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(@interface)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("interface", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -79,7 +82,7 @@ partial class @interface : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

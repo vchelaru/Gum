@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
+partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelector");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelector - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new InputDeviceSelector(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(InputDeviceSelector)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(InputDeviceSelector)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/InputDeviceSelector", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -73,7 +76,6 @@ partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -112,6 +114,7 @@ partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
         InputDeviceSelectionItemInstance2.Name = "InputDeviceSelectionItemInstance2";
         InputDeviceSelectionItemInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.InputDeviceSelectionItem();
         InputDeviceSelectionItemInstance3.Name = "InputDeviceSelectionItemInstance3";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -133,9 +136,9 @@ partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
 
         this.TextInstance.SetProperty("ColorCategoryState", "White");
         this.TextInstance.SetProperty("StyleCategoryState", "H1");
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance.Text = @"Press A / Space to Join";
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.X = 0f;
         this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -145,9 +148,9 @@ partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
 
         this.TextInstance1.SetProperty("ColorCategoryState", "White");
         this.TextInstance1.SetProperty("StyleCategoryState", "H1");
-        this.TextInstance1.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.TextInstance1).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance1.Text = @"Press Start / Enter to Continue";
-        this.TextInstance1.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance1).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance1.X = 0f;
         this.TextInstance1.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance1.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;

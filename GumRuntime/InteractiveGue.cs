@@ -172,29 +172,29 @@ public partial class InteractiveGue : BindableGue
     /// Event raised whenever this is clicked by a cursor. A click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
-    public event EventHandler Click;
+    public event EventHandler? Click;
 
-    public event EventHandler<RoutedEventArgs> ClickPreview;
-    public event EventHandler<RoutedEventArgs> PushPreview;
+    public event EventHandler<RoutedEventArgs>? ClickPreview;
+    public event EventHandler<RoutedEventArgs>? PushPreview;
 
     /// <summary>
     /// Event raised whenever this is double-clicked by a cursor. A double-click occurs
     /// when the cursor is over this and the left mouse button is clicked twice in rapid succession.
     /// </summary>
-    public event EventHandler DoubleClick;
+    public event EventHandler? DoubleClick;
 
     /// <summary>
     /// Event which is raised whenever this is right-clicked by a cursor. A right-click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
-    public event EventHandler RightClick;
+    public event EventHandler? RightClick;
 
     /// <summary>
     /// Event which is raised whenever this is pushed by a cursor. A push occurs
     /// when the cursor is over this and the left mouse button is pushed (not down last frame,
     /// down this frame).
     /// </summary>
-    public event EventHandler Push;
+    public event EventHandler? Push;
 
     /// <summary>
     /// Event which is raised whenever this loses a push. A push occurs when the
@@ -206,7 +206,7 @@ public partial class InteractiveGue : BindableGue
     /// LosePush is often used to change the state of a button back to its regular state.
     /// </remarks>
     //public event EventHandler LosePush;
-    public event EventHandler LosePush
+    public event EventHandler? LosePush
     {
         add
         {
@@ -218,28 +218,28 @@ public partial class InteractiveGue : BindableGue
             _losePush -= value;
         }
     }
-    private EventHandler _losePush;
+    private EventHandler? _losePush;
 
 
     /// <summary>
     /// Event raised when the cursor first moves over this object.
     /// </summary>
-    public event EventHandler RollOn;
+    public event EventHandler? RollOn;
     /// <summary>
     /// Event when the cursor first leaves this object.
     /// </summary>
-    public event EventHandler RollOff;
+    public event EventHandler? RollOff;
     /// <summary>
     /// Event raised every frame the cursor is over this object and the Cursor has changed position.
     /// This event is not raized if the cursor has moved off of the object. For events raised when the 
     /// cursor is not over this instance, see Dragging.
     /// </summary>
-    public event EventHandler RollOver;
+    public event EventHandler? RollOver;
 
     /// <summary>
     /// Event raised every frame the cursor is over this object whether the Cursor has changed positions or not.
     /// </summary>
-    public event EventHandler HoverOver;
+    public event EventHandler? HoverOver;
 
     /// <summary>
     /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, 
@@ -247,12 +247,12 @@ public partial class InteractiveGue : BindableGue
     /// object is to be moved by dragging since it will be raised even if the user moves the 
     /// cursor quickly outside of its bounds.
     /// </summary>
-    public event EventHandler Dragging;
+    public event EventHandler? Dragging;
 
     /// <summary>
     /// Event raised when the Enabled property changed.
     /// </summary>
-    public event EventHandler EnabledChange;
+    public event EventHandler? EnabledChange;
 
     /// <summary>
     /// Eent raised when the mouse wheel has been scrolled while the cursor is over this instance.
@@ -260,7 +260,7 @@ public partial class InteractiveGue : BindableGue
     /// If a control sets the argument RoutedEventArgs Handled to true, the children objects 
     /// will not have this event raised.
     /// </summary>
-    public event Action<object, RoutedEventArgs> MouseWheelScroll;
+    public event Action<object, RoutedEventArgs>? MouseWheelScroll;
 
     /// <summary>
     /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
@@ -268,13 +268,13 @@ public partial class InteractiveGue : BindableGue
     /// RoutedEventArgs Handled to true,
     /// then parent objects will not have this event raised.
     /// </summary>
-    public event Action<object, RoutedEventArgs> RollOverBubbling;
+    public event Action<object, RoutedEventArgs>? RollOverBubbling;
 
     /// <summary>
     /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
     /// This can be used to detect the end of a drag operation, or to reset the state of a button.
     /// </summary>
-    public event EventHandler RemovedAsPushed;
+    public event EventHandler? RemovedAsPushed;
 
     public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
     public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  

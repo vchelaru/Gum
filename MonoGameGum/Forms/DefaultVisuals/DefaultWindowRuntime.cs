@@ -1,6 +1,6 @@
 ﻿using Gum.Wireframe;
 using MonoGameGum;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -127,9 +127,9 @@ public class DefaultWindowRuntime : InteractiveGue
 
         if (tryCreateFormsObject)
         {
-            FormsControlAsObject = new Window(this);
+            FormsControlAsObject = new Gum.Forms.Window(this);
         }
     }
 
-    public Window FormsControl => FormsControlAsObject as Window;
+    public Gum.Forms.Window FormsControl => FormsControlAsObject as Gum.Forms.Window;
 }

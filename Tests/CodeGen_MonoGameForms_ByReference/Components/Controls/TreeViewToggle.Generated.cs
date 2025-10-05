@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Controls;
-partial class TreeViewToggle : MonoGameGum.Forms.Controls.FrameworkElement
+partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/TreeViewToggle");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/TreeViewToggle - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new TreeViewToggle(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TreeViewToggle)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TreeViewToggle)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/TreeViewToggle", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -86,7 +89,7 @@ partial class TreeViewToggle : MonoGameGum.Forms.Controls.FrameworkElement
     {
         base.ReactToVisualChanged();
         NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        IconInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance");
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

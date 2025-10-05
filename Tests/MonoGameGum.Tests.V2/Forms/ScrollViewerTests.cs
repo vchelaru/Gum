@@ -11,7 +11,7 @@ public class ScrollViewerTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var scrollViewer = new MonoGameGum.Forms.Controls.ScrollViewer();
+        var scrollViewer = new Gum.Forms.Controls.ScrollViewer();
         scrollViewer.Visual.ShouldNotBeNull();
         (scrollViewer.Visual is Gum.Forms.DefaultVisuals.ScrollViewerVisual).ShouldBeTrue();
     }

@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class ButtonClose : global::MonoGameGum.Forms.Controls.Button
+partial class ButtonClose : global::Gum.Forms.Controls.Button
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/ButtonClose");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ButtonClose - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonClose(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonClose)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonClose)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/ButtonClose", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -123,7 +126,6 @@ partial class ButtonClose : global::MonoGameGum.Forms.Controls.Button
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -136,6 +138,7 @@ partial class ButtonClose : global::MonoGameGum.Forms.Controls.Button
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

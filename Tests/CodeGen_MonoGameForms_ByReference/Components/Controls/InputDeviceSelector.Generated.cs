@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Controls;
-partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
+partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelector");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelector - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new InputDeviceSelector(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(InputDeviceSelector)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(InputDeviceSelector)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/InputDeviceSelector", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -63,10 +66,10 @@ partial class InputDeviceSelector : MonoGameGum.Forms.Controls.FrameworkElement
         ContainerInstance1 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance1") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         InputDeviceContainerInstance = this.Visual?.GetGraphicalUiElementByName("InputDeviceContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         ContainerInstance2 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance2") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        InputDeviceSelectionItemInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance");
-        InputDeviceSelectionItemInstance1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance1");
-        InputDeviceSelectionItemInstance2 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance2");
-        InputDeviceSelectionItemInstance3 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance3");
+        InputDeviceSelectionItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance");
+        InputDeviceSelectionItemInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance1");
+        InputDeviceSelectionItemInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance2");
+        InputDeviceSelectionItemInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance3");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

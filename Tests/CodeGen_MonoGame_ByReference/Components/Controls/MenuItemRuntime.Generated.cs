@@ -19,9 +19,9 @@ partial class MenuItemRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/MenuItem", typeof(MenuItemRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.MenuItem)] = typeof(MenuItemRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.MenuItem)] = typeof(MenuItemRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.MenuItem FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.MenuItem;
+    public global::Gum.Forms.Controls.MenuItem FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.MenuItem;
     public enum MenuItemCategory
     {
         Enabled,
@@ -75,7 +75,7 @@ partial class MenuItemRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.MenuItem(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.MenuItem(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;

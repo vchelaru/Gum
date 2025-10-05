@@ -19,9 +19,9 @@ partial class MenuRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Menu", typeof(MenuRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.Menu)] = typeof(MenuRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Menu)] = typeof(MenuRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.Menu FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Menu;
+    public global::Gum.Forms.Controls.Menu FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Menu;
     public NineSliceRuntime Background { get; protected set; }
     public ContainerRuntime InnerPanelInstance { get; protected set; }
 
@@ -40,7 +40,7 @@ partial class MenuRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Menu(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Menu(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;

@@ -13,21 +13,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
+partial class MenuItem : global::Gum.Forms.Controls.MenuItem
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/MenuItem");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/MenuItem - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new MenuItem(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.MenuItem)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.MenuItem)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/MenuItem", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -112,7 +115,6 @@ partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -133,6 +135,7 @@ partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
         if (ContainerInstance.ElementSave != null) ContainerInstance.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance.ElementSave);
         if (ContainerInstance.ElementSave != null) ContainerInstance.SetInitialState();
         ContainerInstance.Name = "ContainerInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -159,9 +162,9 @@ partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
         this.TextInstance.SetProperty("StyleCategoryState", "Normal");
         this.TextInstance.Height = 0f;
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance.Text = @"Menu Item";
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.Width = 2f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         this.TextInstance.X = 0f;
@@ -175,9 +178,9 @@ partial class MenuItem : global::MonoGameGum.Forms.Controls.MenuItem
         this.SubmenuIndicatorInstance.SetProperty("StyleCategoryState", "Normal");
         this.SubmenuIndicatorInstance.Height = 0f;
         this.SubmenuIndicatorInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        this.SubmenuIndicatorInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.SubmenuIndicatorInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.SubmenuIndicatorInstance.Text = @">";
-        this.SubmenuIndicatorInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.SubmenuIndicatorInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.SubmenuIndicatorInstance.Width = 2f;
         this.SubmenuIndicatorInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         this.SubmenuIndicatorInstance.X = 8f;

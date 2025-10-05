@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components;
-partial class TextComponent : MonoGameGum.Forms.Controls.FrameworkElement
+partial class TextComponent : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("TextComponent");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named TextComponent - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new TextComponent(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TextComponent)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TextComponent)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("TextComponent", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;

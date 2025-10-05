@@ -64,7 +64,7 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
             nameof(listBox.SelectedObject),
             nameof(ViewModel.SelectedItem));
 
-        listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(
+        listBox.VisualTemplate = new Gum.Forms.VisualTemplate(
             () => new StoreListBoxItemRuntime(fullInstantiation:true, tryCreateFormsObject:false));
 
         InventoryLabel.SetBinding(
