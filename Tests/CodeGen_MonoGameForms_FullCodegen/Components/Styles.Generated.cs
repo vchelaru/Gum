@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
-partial class Styles : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Styles : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Styles");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Styles - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Styles(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Styles)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Styles)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Styles", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -84,7 +87,6 @@ partial class Styles : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Colors = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         Colors.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (Colors.ElementSave != null) Colors.AddStatesAndCategoriesRecursivelyToGue(Colors.ElementSave);
@@ -200,6 +202,7 @@ partial class Styles : MonoGameGum.Forms.Controls.FrameworkElement
         if (Title.ElementSave != null) Title.AddStatesAndCategoriesRecursivelyToGue(Title.ElementSave);
         if (Title.ElementSave != null) Title.SetInitialState();
         Title.Name = "Title";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

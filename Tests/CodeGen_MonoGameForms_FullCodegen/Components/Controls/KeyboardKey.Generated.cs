@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
+partial class KeyboardKey : global::Gum.Forms.Controls.Button
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/KeyboardKey");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/KeyboardKey - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new KeyboardKey(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(KeyboardKey)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(KeyboardKey)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/KeyboardKey", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -99,7 +102,7 @@ partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string Text
+    public override string Text
     {
         get => TextInstance.Text;
         set => TextInstance.Text = value;
@@ -127,7 +130,6 @@ partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -143,6 +145,7 @@ partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -161,9 +164,9 @@ partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
         this.TextInstance.SetProperty("StyleCategoryState", "Normal");
         this.TextInstance.Height = 0f;
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         this.TextInstance.Text = @"A";
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.Width = 0f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TextInstance.X = 0f;

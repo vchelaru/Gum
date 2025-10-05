@@ -20,7 +20,7 @@ partial class PanelRuntime : ContainerRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Panel", typeof(PanelRuntime));
     }
-    public global::MonoGameGum.Forms.Controls.Panel FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Panel;
+    public global::Gum.Forms.Controls.Panel FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Panel;
 
     public PanelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
@@ -37,7 +37,7 @@ partial class PanelRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Panel(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Panel(this);
         }
         CustomInitialize();
     }

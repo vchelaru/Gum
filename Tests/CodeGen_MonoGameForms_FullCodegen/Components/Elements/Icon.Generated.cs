@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Elements;
-partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Icon : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/Icon");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/Icon - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Icon(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Icon)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Icon)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Elements/Icon", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -654,12 +657,12 @@ partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         IconSprite = new global::MonoGameGum.GueDeriving.SpriteRuntime();
         IconSprite.ElementSave = ObjectFinder.Self.GetStandardElement("Sprite");
         if (IconSprite.ElementSave != null) IconSprite.AddStatesAndCategoriesRecursivelyToGue(IconSprite.ElementSave);
         if (IconSprite.ElementSave != null) IconSprite.SetInitialState();
         IconSprite.Name = "IconSprite";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

@@ -16,15 +16,18 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Screens;
-partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
+partial class DemoScreenGum : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("DemoScreenGum");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named DemoScreenGum - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new DemoScreenGum(visual);
             visual.Width = 0;
@@ -33,7 +36,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
             visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(DemoScreenGum)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(DemoScreenGum)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("DemoScreenGum", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -122,7 +125,6 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         @this = new CodeGen_MonoGameForms_FullCodegen.Components.@interface();
         @this.Name = "this";
         DemoSettingsMenu = new global::MonoGameGum.GueDeriving.ContainerRuntime();
@@ -292,6 +294,7 @@ partial class DemoScreenGum : MonoGameGum.Forms.Controls.FrameworkElement
         Spaced_Component_Instance.Name = "Spaced Component Instance";
         _123Instance = new CodeGen_MonoGameForms_FullCodegen.Components._123Component();
         _123Instance.Name = "123Instance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

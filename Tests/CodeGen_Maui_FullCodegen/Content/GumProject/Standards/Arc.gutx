@@ -53,6 +53,62 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>int</Type>
+      <Name>DropshadowAlpha</Name>
+      <Value xsi:type="xsd:int">255</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>DropshadowBlue</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DropshadowBlurX</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DropshadowBlurY</Name>
+      <Value xsi:type="xsd:float">3</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>DropshadowGreen</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DropshadowOffsetX</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DropshadowOffsetY</Name>
+      <Value xsi:type="xsd:float">3</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>DropshadowRed</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <Category>Dropshadow</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>bool</Type>
       <Name>ExposeChildrenEvents</Name>
       <Value xsi:type="xsd:boolean">false</Value>
@@ -169,6 +225,13 @@
       <Name>Green2</Name>
       <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>HasDropshadow</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Dropshadow</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

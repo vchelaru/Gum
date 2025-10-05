@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
+partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/SettingsView");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/SettingsView - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new SettingsView(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SettingsView)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(SettingsView)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/SettingsView", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -60,7 +63,6 @@ partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         FullscreenCheckboxInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.CheckBox();
         FullscreenCheckboxInstance.Name = "FullscreenCheckboxInstance";
         MusicVolumeLabel = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
@@ -71,6 +73,7 @@ partial class SettingsView : MonoGameGum.Forms.Controls.FrameworkElement
         SoundVolumeLabel.Name = "SoundVolumeLabel";
         SoundSliderInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Slider();
         SoundSliderInstance.Name = "SoundSliderInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

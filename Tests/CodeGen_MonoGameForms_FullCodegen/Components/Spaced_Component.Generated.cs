@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
-partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Spaced_Component : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Spaced Component");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Spaced Component - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Spaced_Component(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Spaced_Component)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Spaced_Component)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Spaced Component", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -74,7 +77,7 @@ partial class Spaced_Component : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

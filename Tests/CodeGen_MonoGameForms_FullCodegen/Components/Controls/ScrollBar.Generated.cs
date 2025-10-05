@@ -14,21 +14,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
+partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/ScrollBar");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ScrollBar - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ScrollBar(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.ScrollBar)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.ScrollBar)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/ScrollBar", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -82,7 +85,6 @@ partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         UpButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonIcon();
         UpButtonInstance.Name = "UpButtonInstance";
         DownButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonIcon();
@@ -99,6 +101,7 @@ partial class ScrollBar : global::MonoGameGum.Forms.Controls.ScrollBar
         TrackBackground.Name = "TrackBackground";
         ThumbInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ThumbInstance.Name = "ThumbInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

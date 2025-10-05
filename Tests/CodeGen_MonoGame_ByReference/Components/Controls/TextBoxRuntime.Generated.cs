@@ -19,9 +19,9 @@ partial class TextBoxRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/TextBox", typeof(TextBoxRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.TextBox)] = typeof(TextBoxRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.TextBox)] = typeof(TextBoxRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.TextBox FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.TextBox;
+    public global::Gum.Forms.Controls.TextBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.TextBox;
     public enum TextBoxCategory
     {
         Enabled,
@@ -131,7 +131,7 @@ partial class TextBoxRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.TextBox(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.TextBox(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         ClipContainer = this.GetGraphicalUiElementByName("ClipContainer") as global::MonoGameGum.GueDeriving.ContainerRuntime;

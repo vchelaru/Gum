@@ -13,21 +13,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class Menu : global::MonoGameGum.Forms.Controls.Menu
+partial class Menu : global::Gum.Forms.Controls.Menu
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/Menu");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Menu - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Menu(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Menu)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.Menu)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Menu)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Menu)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/Menu", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -64,7 +67,6 @@ partial class Menu : global::MonoGameGum.Forms.Controls.Menu
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -75,6 +77,7 @@ partial class Menu : global::MonoGameGum.Forms.Controls.Menu
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

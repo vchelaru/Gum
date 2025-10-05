@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Controls;
-partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
+partial class PlayerJoinViewItem : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/PlayerJoinViewItem");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/PlayerJoinViewItem - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new PlayerJoinViewItem(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PlayerJoinViewItem)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(PlayerJoinViewItem)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/PlayerJoinViewItem", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -153,7 +156,7 @@ partial class PlayerJoinViewItem : MonoGameGum.Forms.Controls.FrameworkElement
         base.ReactToVisualChanged();
         Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         ControllerDisplayNameTextInstance = this.Visual?.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        InputDeviceIcon = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"InputDeviceIcon");
+        InputDeviceIcon = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"InputDeviceIcon");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

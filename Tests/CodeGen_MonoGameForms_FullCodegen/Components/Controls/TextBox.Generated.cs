@@ -13,21 +13,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
+partial class TextBox : global::Gum.Forms.Controls.TextBox
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/TextBox");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/TextBox - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new TextBox(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.TextBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.TextBox)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/TextBox", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -101,18 +104,18 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
                 switch (value)
                 {
                     case LineModeCategory.Single:
-                        this.PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                        ((TextRuntime)this.PlaceholderTextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                         this.SelectionInstance.Height = -4f;
                         this.SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-                        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                         this.TextInstance.Width = 0f;
                         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                         break;
                     case LineModeCategory.Multi:
-                        this.PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                        ((TextRuntime)this.PlaceholderTextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                         this.SelectionInstance.Height = 20f;
                         this.SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-                        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                         this.TextInstance.Width = -8f;
                         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                         break;
@@ -173,7 +176,6 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -209,6 +211,7 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
         if (CaretInstance.ElementSave != null) CaretInstance.AddStatesAndCategoriesRecursivelyToGue(CaretInstance.ElementSave);
         if (CaretInstance.ElementSave != null) CaretInstance.SetInitialState();
         CaretInstance.Name = "CaretInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -250,9 +253,9 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
         this.TextInstance.SetProperty("StyleCategoryState", "Normal");
         this.TextInstance.Height = -4f;
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance.Text = @"";
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.Width = 0f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         this.TextInstance.X = 4f;
@@ -267,7 +270,7 @@ partial class TextBox : global::MonoGameGum.Forms.Controls.TextBox
         this.PlaceholderTextInstance.Height = -4f;
         this.PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.PlaceholderTextInstance.Text = @"Text Placeholder";
-        this.PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.PlaceholderTextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.PlaceholderTextInstance.Width = -8f;
         this.PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
