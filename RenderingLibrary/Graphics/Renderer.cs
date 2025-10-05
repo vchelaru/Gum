@@ -975,7 +975,7 @@ public class GumBatch
         }
 
         internalTextForRendering.BitmapFont = font;
-        internalTextForRendering.Width = 0;
+        internalTextForRendering.Width = null;
         internalTextForRendering.RawText = text;
         internalTextForRendering.X = position.X;
         internalTextForRendering.Y = position.Y;
