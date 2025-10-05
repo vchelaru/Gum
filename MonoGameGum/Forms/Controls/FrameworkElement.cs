@@ -217,7 +217,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get { return Visual.Height; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value))
             {
                 throw new Exception("NaN value not supported for FrameworkElement Height");
@@ -235,7 +235,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get { return Visual.Width; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value))
             {
                 throw new Exception("NaN value not supported for FrameworkElement Width");
@@ -358,7 +358,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get => visual;
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             // allow the visual to be un-assigned if it was assigned before, like if a forms control is getting removed.
             if (value == null && visual == null)
             {
@@ -368,8 +368,8 @@ public class FrameworkElement : INotifyPropertyChanged
             InteractiveGue oldVisual = visual;
             if (visual != value)
             {
-#if DEBUG
-                if(value?.FormsControlAsObject != null)
+#if FULL_DIAGNOSTICS
+                if (value?.FormsControlAsObject != null)
                 {
                     var message =
                         $"Cannot set the {this.GetType().Name}'s Visual to {value.Name} because the assigned Visual is already the Visual for another framework element of type {value.FormsControlAsObject}";
@@ -641,7 +641,7 @@ public class FrameworkElement : INotifyPropertyChanged
     public void Show(Layer layer = null)
 #endif
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
             throw new InvalidOperationException("Visual must be set before calling Show");
@@ -654,7 +654,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             gumLayer = Gum.GumIdb.Self.GumLayersOnFrbLayer(layer).FirstOrDefault();
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if(gumLayer == null)
             {
                 throw new InvalidOperationException("Could not find a Gum layer on this FRB layer");
@@ -691,7 +691,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <returns>A task which will complete once this element is removed from managers.</returns>
     public async Task<bool?> ShowDialog(FlatRedBall.Graphics.Layer frbLayer = null)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
             throw new InvalidOperationException("Visual must be set before calling Show");
@@ -754,7 +754,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public void RepositionToKeepInScreen()
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
             throw new InvalidOperationException("Visual hasn't yet been set");
@@ -1289,7 +1289,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         var cursor = MainCursor;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (cursor == null)
         {
             throw new InvalidOperationException("MainCursor must be assigned before performing any UI logic");

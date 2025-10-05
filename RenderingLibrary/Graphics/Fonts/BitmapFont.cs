@@ -533,7 +533,7 @@ public class BitmapFont : IDisposable
 
         if (requiredWidth != 0)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             foreach (var texture in this.Textures)
             {
                 if (texture.IsDisposed)
@@ -677,8 +677,8 @@ public class BitmapFont : IDisposable
 
             float offsetFromAlignment = 0;
 
-#if DEBUG
-            if(lineNumber >= widths.Count)
+#if FULL_DIAGNOSTICS
+            if (lineNumber >= widths.Count)
             {
                 var message = $"Error trying to draw text with {lines.Count} lines, but only {widths.Count} widths. Lines:\n{GetCombinedLines()}";
                 throw new Exception(message);
@@ -747,8 +747,8 @@ public class BitmapFont : IDisposable
 
 
 
-#if DEBUG
-                    if(mTextures.Length <= pageIndex)
+#if FULL_DIAGNOSTICS
+                    if (mTextures.Length <= pageIndex)
                     {
                         throw new Exception($"Attempting to render a character {c} in line {line} with font which accesses a character on page {pageIndex}, but only {mTextures} texture page(s) exist");
                     }

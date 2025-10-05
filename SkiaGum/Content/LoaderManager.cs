@@ -71,7 +71,7 @@ public class LoaderManager
 
     public T LoadContent<T>(string contentName)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (this.ContentLoader == null)
         {
             throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
@@ -84,7 +84,7 @@ public class LoaderManager
     public T TryLoadContent<T>(string contentName)
     {
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (this.ContentLoader == null)
         {
             throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
@@ -107,8 +107,8 @@ public class LoaderManager
 
     public void AddDisposable(string name, IDisposable disposable, ExistingContentBehavior existingContentBehavior = ExistingContentBehavior.ThrowException)
     {
-#if DEBUG
-        if(mCachedDisposables.ContainsKey(name) && existingContentBehavior == ExistingContentBehavior.ThrowException)
+#if FULL_DIAGNOSTICS
+        if (mCachedDisposables.ContainsKey(name) && existingContentBehavior == ExistingContentBehavior.ThrowException)
         {
             throw new ArgumentException(
                 $"The cached disposable already contains an entry for {name}:{mCachedDisposables[name]}");

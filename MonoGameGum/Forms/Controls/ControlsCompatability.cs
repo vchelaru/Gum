@@ -66,7 +66,7 @@ namespace MonoGameGum.Forms
         {
             var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (frameworkVisual == null)
             {
                 throw new ArgumentException("Could not find a GraphicalUiElement with the name " + name);
@@ -75,7 +75,7 @@ namespace MonoGameGum.Forms
 
             var frameworkVisualAsInteractiveGue = frameworkVisual as InteractiveGue;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
 
             if (frameworkVisualAsInteractiveGue == null)
             {
@@ -85,7 +85,7 @@ namespace MonoGameGum.Forms
 #endif
             var formsControlAsObject = frameworkVisualAsInteractiveGue?.FormsControlAsObject;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
 
             if (formsControlAsObject == null)
             {
@@ -95,7 +95,7 @@ namespace MonoGameGum.Forms
             var frameworkElement = formsControlAsObject as FrameworkElementType;
             if (frameworkElement == null)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 var message = "The GraphicalUiElement with the name " + name +
                     " is expected to be of type " + typeof(FrameworkElementType) + " but is instead " + formsControlAsObject?.GetType();
 

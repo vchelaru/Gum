@@ -24,8 +24,8 @@ namespace RenderingLibrary.Math
         /// <exception cref="ArgumentException">Thrown if the float is NaN (not a number)</exception>
         public static int RoundToInt(float floatToRound)
         {
-#if DEBUG
-            if(float.IsNaN(floatToRound))
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(floatToRound))
             {
                 throw new ArgumentException("floatToRound cannot be NaN");
             }

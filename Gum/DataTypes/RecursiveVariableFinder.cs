@@ -117,7 +117,7 @@ public class RecursiveVariableFinder : IVariableFinder
 
     public RecursiveVariableFinder(StateSave stateSave)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (stateSave == null)
         {
             throw new ArgumentNullException(nameof(stateSave));
@@ -143,7 +143,7 @@ public class RecursiveVariableFinder : IVariableFinder
         {
             case VariableContainerType.InstanceSave:
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (ElementStack.Count != 0)
                 {
                     if (ElementStack.Last().Element == null)
@@ -175,7 +175,7 @@ public class RecursiveVariableFinder : IVariableFinder
 
     public T GetValue<T>(string variableName)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if ( ElementStack.Count != 0)
         {
             if (ElementStack.Last().Element == null)
@@ -214,7 +214,7 @@ public class RecursiveVariableFinder : IVariableFinder
 
                 bool onlyIfSetsValue = false;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (ElementStack.Count != 0)
                 {
                     if (ElementStack.Last().Element == null)

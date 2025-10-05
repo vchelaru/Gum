@@ -18,7 +18,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Configurations>Debug;Release;TEST</Configurations>
+		<Configurations>Debug;Release;TEST;Release_No_Diagnostics</Configurations>
 
 	</PropertyGroup>
 
@@ -38,6 +38,42 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='TEST|net8.0|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;TEST;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='TEST|net9.0-ios|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;TEST;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release_No_Diagnostics|net8.0|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release_No_Diagnostics|net9.0-ios|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

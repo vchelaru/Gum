@@ -163,7 +163,7 @@ public class FormsUtilities
 
         if (FrameworkElement.ModalRoot.Children.Count > 0)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (FrameworkElement.ModalRoot.Managers == null)
             {
                 throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
@@ -205,7 +205,7 @@ public class FormsUtilities
 
             if (!isRootInRoots && FrameworkElement.PopupRoot.Children.Count > 0)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (FrameworkElement.PopupRoot.Managers == null)
                 {
                     throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");

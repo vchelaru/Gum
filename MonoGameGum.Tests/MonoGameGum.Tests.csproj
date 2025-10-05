@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
 	<IsTestProject>true</IsTestProject>
+	<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 
   </PropertyGroup>
 

@@ -117,7 +117,7 @@ public abstract class RangeBase :
         get => value;
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (double.IsNaN(value))
             {
                 throw new InvalidOperationException("Can't set the ScrollBar Value to NaN");
@@ -251,8 +251,8 @@ public abstract class RangeBase :
             this.Visual.GetGraphicalUiElementByName("ThumbInstance");
         var thumbVisual = thumbInstanceUncasted as InteractiveGue;
 
-#if DEBUG
-        if(thumbInstanceUncasted != null && thumbVisual == null)
+#if FULL_DIAGNOSTICS
+        if (thumbInstanceUncasted != null && thumbVisual == null)
         {
             throw new InvalidOperationException(
                 $"The {this.GetType()} contains a visual {thumbInstanceUncasted} which is not an InteractiveGue. " +
@@ -330,7 +330,7 @@ public abstract class RangeBase :
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
 #if MONOGAME && !FRB
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (trackLocal == null)
         {
             throw new Exception($"Could not find a child named TrackInstance when creating a {this.GetType()}");

@@ -457,7 +457,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
         else
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (ItemFormsType == null)
             {
                 throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemFormsType specified. " +

@@ -111,7 +111,7 @@ public class RadioButton : ToggleButton
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
 
@@ -120,7 +120,7 @@ public class RadioButton : ToggleButton
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             // go through the component instead of the core text object to force a layout refresh if necessary
@@ -232,7 +232,7 @@ public class RadioButton : ToggleButton
 
     #region Utilities
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
     private void ReportMissingTextInstance()
     {
         if (textComponent == null)

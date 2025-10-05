@@ -213,7 +213,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             bool isSTAThreadUsed =
                 System.Threading.Thread.CurrentThread.GetApartmentState() == System.Threading.ApartmentState.STA;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (!isSTAThreadUsed)
             {
                 throw new InvalidOperationException("Need to set [STAThread] on Main to support copy/paste");

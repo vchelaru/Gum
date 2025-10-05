@@ -405,8 +405,8 @@ public class SpriteRenderer
         bool offsetPixel = true,
         DimensionSnapping dimensionSnapping = DimensionSnapping.SideSnapping)
     {
-#if DEBUG
-        if(float.IsPositiveInfinity(scale.X))
+#if FULL_DIAGNOSTICS
+        if (float.IsPositiveInfinity(scale.X))
         {
             throw new ArgumentException("scale.X cannot be positive infinity");
         }

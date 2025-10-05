@@ -70,14 +70,14 @@ public class MenuItem : ItemsControl
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             return coreText!.RawText;
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             if (value != coreText!.RawText)
@@ -611,7 +611,7 @@ public class MenuItem : ItemsControl
         return Header ?? base.ToString();
     }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
     private void ReportMissingTextInstance()
     {
         if (coreText == null)

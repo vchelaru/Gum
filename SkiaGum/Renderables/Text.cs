@@ -451,7 +451,7 @@ public class Text : IRenderableIpso, IVisible, IText
         catch(Exception e)
         {
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             throw new InvalidOperationException($"An internal exception has occurred: {e.ToString()} with the following information:" +
                 $"forcedWidth {forcedWidth}\n" +
                 $"FontName {FontName}\n" +

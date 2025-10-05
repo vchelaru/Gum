@@ -34,14 +34,14 @@ public class Button : ButtonBase
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             return coreTextObject?.RawText;
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             // go through the component instead of the core text object to force a layout refresh if necessary
@@ -87,7 +87,7 @@ public class Button : ButtonBase
 
     #region Utilities
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
     private void ReportMissingTextInstance()
     {
         if (textComponent == null)

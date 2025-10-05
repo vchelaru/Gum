@@ -276,8 +276,8 @@ public class FormsUtilities
         var didModalsProcessInput = false;
         if (FrameworkElement.ModalRoot.Children.Count > 0)
         {
-#if DEBUG
-            if(FrameworkElement.ModalRoot.Managers == null)
+#if FULL_DIAGNOSTICS
+            if (FrameworkElement.ModalRoot.Managers == null)
             {
                 throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
             }
@@ -319,7 +319,7 @@ public class FormsUtilities
 
             if (!isRootInRoots && FrameworkElement.PopupRoot.Children.Count > 0)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (FrameworkElement.PopupRoot.Managers == null)
                 {
                     throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
@@ -398,7 +398,7 @@ public class FormsUtilities
             Gamepads[i].Activity(gamepadState, time);
         }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
 
         if (hashSet.Count != FrameworkElement.GamePadsForUiControl.Count)
@@ -422,8 +422,8 @@ public class FormsUtilities
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
-#if DEBUG
-        if(ObjectFinder.Self.GumProjectSave == null)
+#if FULL_DIAGNOSTICS
+        if (ObjectFinder.Self.GumProjectSave == null)
         {
             throw new InvalidOperationException("A Gum project (gumx) must be loaded and assigned to" +
                 "ObjectFinder.Self.GumProjectSave before making this call");
