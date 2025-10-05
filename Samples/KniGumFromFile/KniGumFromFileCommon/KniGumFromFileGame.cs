@@ -390,15 +390,15 @@ public class KniGumFromFileGame : Game
     {
         var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenGue);
 
-        if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
+        if(itemOver is TextRuntime asTextRuntime && itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
         {
-            if(itemOver.FontSize == 16)
+            if(asTextRuntime.FontSize == 16)
             {
-                itemOver.FontSize = 32;
+                asTextRuntime.FontSize = 32;
             }
             else
             {
-                itemOver.FontSize = 16;
+                asTextRuntime.FontSize = 16;
             }
         }
     }
