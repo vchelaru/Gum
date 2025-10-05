@@ -9,7 +9,7 @@ set -e
 GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
 
 echo "This is an experimental script."
-echo "Script last updated on the 29th of July 2025!"
+echo "Script last updated on the 4th of October 2025!"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -19,10 +19,27 @@ case "$choice" in
 esac
 
 echo "Verifying that WINE is installed..."
+WINE_VERSION=$(wine --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
+INSTALL_OR_UPGRADE_NEEDED="N"
+if [[ ! "${WINE_VERSION}" ]]; then
+    echo "Wine is not installed!"
+    INSTALL_OR_UPGRADE_NEEDED="Y"
+elif [[ "${WINE_VERSION}" -lt 10 ]]; then
+    echo "Wine is version [${WINE_VERSION}] and must be at least 10!"
+    INSTALL_OR_UPGRADE_NEEDED="Y"
+else
+    echo "Wine version [${WINE_VERSION}] found!" 
+fi
 
-if ! wine --version &> /dev/null; then
-    echo "Wine is not installed. Attempting to install..."
-
+# Install or update wine
+if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
+    read -p "Do you wish to install the latest version of wine? (Y/n): " choice
+    case "$choice" in
+        ""|y|Y ) echo "INFO: Installing latest Wine";;
+        n|N ) echo "WARN: Unable to continue, GUM requires Wine on Linux!"; exit 0;;
+          * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
+    esac
+    
     DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
     VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
 
@@ -138,7 +155,7 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 ################################################################################
 echo "Installing GUM Tool..."
 GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
-curl -L -o "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
+wget -O "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
     && echo "Download completed." || { echo "Download failed."; exit 1; }
 
 ################################################################################
