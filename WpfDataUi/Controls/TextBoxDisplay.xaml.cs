@@ -268,7 +268,10 @@ namespace WpfDataUi.Controls
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
                 this.Refresh();
-
+            }
+            else if(e.PropertyName == nameof(InstanceMember.SupportsMakeDefault))
+            {
+                this.RefreshAllContextMenus(force: true);
             }
         }
 

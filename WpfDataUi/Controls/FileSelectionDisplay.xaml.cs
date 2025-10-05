@@ -32,19 +32,22 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         {
             mTextBoxLogic.InstanceMember = value;
 
-            bool valueChanged = mInstanceMember != value;
-            if (mInstanceMember != null && valueChanged)
+            bool instanceMemberChanged = mInstanceMember != value;
+            if (mInstanceMember != null && instanceMemberChanged)
             {
                 mInstanceMember.PropertyChanged -= HandlePropertyChange;
             }
             mInstanceMember = value;
 
-            if (mInstanceMember != null && valueChanged)
+            if (mInstanceMember != null && instanceMemberChanged)
             {
                 mInstanceMember.PropertyChanged += HandlePropertyChange;
             }
 
-
+            if (instanceMemberChanged)
+            {
+                this.RefreshAllContextMenus(force: true);
+            }
             //if (mInstanceMember != null)
             //{
             //    mInstanceMember.DebugInformation = "TextBoxDisplay " + mInstanceMember.Name;
@@ -80,8 +83,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
         mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
-        this.RefreshContextMenu(TextBox.ContextMenu);
-        this.RefreshContextMenu(Label.ContextMenu);
+        RefreshAllContextMenus();
     }
 
 
@@ -96,10 +98,25 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         HintTextBlock.Text = InstanceMember?.DetailText;
 
         this.Label.Text = InstanceMember.DisplayName;
-        this.RefreshContextMenu(TextBox.ContextMenu);
-        this.RefreshContextMenu(Label.ContextMenu);
+
+        RefreshAllContextMenus();
+
 
         SuppressSettingProperty = false;
+    }
+
+    private void RefreshAllContextMenus(bool force = false)
+    {
+        if (force)
+        {
+            this.ForceRefreshContextMenu(TextBox.ContextMenu);
+            this.ForceRefreshContextMenu(Label.ContextMenu);
+        }
+        else
+        {
+            this.RefreshContextMenu(TextBox.ContextMenu);
+            this.RefreshContextMenu(Label.ContextMenu);
+        }
     }
 
     public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
