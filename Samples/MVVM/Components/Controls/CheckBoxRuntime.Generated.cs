@@ -1,4 +1,4 @@
-//Code for Controls/ButtonStandard (Container)
+//Code for Controls/CheckBox (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,65 +13,72 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-partial class ButtonStandardRuntime : ContainerRuntime
+partial class CheckBoxRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/CheckBox", typeof(CheckBoxRuntime));
     }
-    public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
-    public enum ButtonCategory
+    public global::Gum.Forms.Controls.CheckBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.CheckBox;
+    public enum CheckBoxCategory
     {
-        Enabled,
-        Disabled,
-        Highlighted,
-        Pushed,
-        HighlightedFocused,
-        Focused,
-        DisabledFocused,
+        EnabledOn,
+        EnabledOff,
+        DisabledOn,
+        DisabledOff,
+        HighlightedOn,
+        HighlightedOff,
+        PushedOn,
+        PushedOff,
+        FocusedOn,
+        FocusedOff,
+        HighlightedFocusedOn,
+        HighlightedFocusedOff,
+        DisabledFocusedOn,
+        DisabledFocusedOff,
     }
 
-    ButtonCategory? _buttonCategoryState;
-    public ButtonCategory? ButtonCategoryState
+    CheckBoxCategory? _checkBoxCategoryState;
+    public CheckBoxCategory? CheckBoxCategoryState
     {
-        get => _buttonCategoryState;
+        get => _checkBoxCategoryState;
         set
         {
-            _buttonCategoryState = value;
+            _checkBoxCategoryState = value;
             if(value != null)
             {
-                if(Categories.ContainsKey("ButtonCategory"))
+                if(Categories.ContainsKey("CheckBoxCategory"))
                 {
-                    var category = Categories["ButtonCategory"];
+                    var category = Categories["CheckBoxCategory"];
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
                 else
                 {
-                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "CheckBoxCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
             }
         }
     }
-    public NineSliceRuntime Background { get; protected set; }
+    public NineSliceRuntime CheckboxBackground { get; protected set; }
     public TextRuntime TextInstance { get; protected set; }
+    public IconRuntime Check { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string ButtonDisplayText
+    public string CheckboxDisplayText
     {
         get => TextInstance.Text;
         set => TextInstance.Text = value;
     }
 
-    public ButtonStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public CheckBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
+            var element = ObjectFinder.Self.GetElementSave("Controls/CheckBox");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
@@ -82,10 +89,11 @@ partial class ButtonStandardRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.CheckBox(this);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        CheckboxBackground = this.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        Check = this.GetGraphicalUiElementByName("Check") as IconRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

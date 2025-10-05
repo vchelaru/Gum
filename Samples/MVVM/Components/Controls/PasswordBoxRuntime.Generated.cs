@@ -1,4 +1,4 @@
-//Code for Controls/ButtonStandard (Container)
+//Code for Controls/PasswordBox (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,44 +13,40 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-partial class ButtonStandardRuntime : ContainerRuntime
+partial class PasswordBoxRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/PasswordBox", typeof(PasswordBoxRuntime));
     }
-    public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
-    public enum ButtonCategory
+    public global::Gum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.PasswordBox;
+    public enum PasswordBoxCategory
     {
         Enabled,
         Disabled,
         Highlighted,
-        Pushed,
-        HighlightedFocused,
-        Focused,
-        DisabledFocused,
+        Selected,
     }
 
-    ButtonCategory? _buttonCategoryState;
-    public ButtonCategory? ButtonCategoryState
+    PasswordBoxCategory? _passwordBoxCategoryState;
+    public PasswordBoxCategory? PasswordBoxCategoryState
     {
-        get => _buttonCategoryState;
+        get => _passwordBoxCategoryState;
         set
         {
-            _buttonCategoryState = value;
+            _passwordBoxCategoryState = value;
             if(value != null)
             {
-                if(Categories.ContainsKey("ButtonCategory"))
+                if(Categories.ContainsKey("PasswordBoxCategory"))
                 {
-                    var category = Categories["ButtonCategory"];
+                    var category = Categories["PasswordBoxCategory"];
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
                 else
                 {
-                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "PasswordBoxCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
@@ -58,20 +54,23 @@ partial class ButtonStandardRuntime : ContainerRuntime
         }
     }
     public NineSliceRuntime Background { get; protected set; }
+    public NineSliceRuntime SelectionInstance { get; protected set; }
     public TextRuntime TextInstance { get; protected set; }
+    public TextRuntime PlaceholderTextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
+    public SpriteRuntime CaretInstance { get; protected set; }
 
-    public string ButtonDisplayText
+    public string PlaceholderText
     {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
+        get => PlaceholderTextInstance.Text;
+        set => PlaceholderTextInstance.Text = value;
     }
 
-    public ButtonStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public PasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
+            var element = ObjectFinder.Self.GetElementSave("Controls/PasswordBox");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
@@ -82,11 +81,14 @@ partial class ButtonStandardRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.PasswordBox(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        PlaceholderTextInstance = this.GetGraphicalUiElementByName("PlaceholderTextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        CaretInstance = this.GetGraphicalUiElementByName("CaretInstance") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

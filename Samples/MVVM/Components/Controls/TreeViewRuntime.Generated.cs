@@ -1,4 +1,4 @@
-//Code for Controls/ListBox (Container)
+//Code for Controls/TreeView (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,45 +13,12 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-partial class ListBoxRuntime : ContainerRuntime
+partial class TreeViewRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBox", typeof(ListBoxRuntime));
-    }
-    public global::Gum.Forms.Controls.ListBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ListBox;
-    public enum ListBoxCategory
-    {
-        Enabled,
-        Disabled,
-        Focused,
-        DisabledFocused,
-    }
-
-    ListBoxCategory? _listBoxCategoryState;
-    public ListBoxCategory? ListBoxCategoryState
-    {
-        get => _listBoxCategoryState;
-        set
-        {
-            _listBoxCategoryState = value;
-            if(value != null)
-            {
-                if(Categories.ContainsKey("ListBoxCategory"))
-                {
-                    var category = Categories["ListBoxCategory"];
-                    var state = category.States.Find(item => item.Name == value.ToString());
-                    this.ApplyState(state);
-                }
-                else
-                {
-                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ListBoxCategory");
-                    var state = category.States.Find(item => item.Name == value.ToString());
-                    this.ApplyState(state);
-                }
-            }
-        }
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/TreeView", typeof(TreeViewRuntime));
     }
     public NineSliceRuntime Background { get; protected set; }
     public ScrollBarRuntime VerticalScrollBarInstance { get; protected set; }
@@ -59,11 +26,11 @@ partial class ListBoxRuntime : ContainerRuntime
     public ContainerRuntime InnerPanelInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public ListBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public TreeViewRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ListBox");
+            var element = ObjectFinder.Self.GetElementSave("Controls/TreeView");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
@@ -72,10 +39,6 @@ partial class ListBoxRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        if (FormsControl == null)
-        {
-            FormsControlAsObject = new global::Gum.Forms.Controls.ListBox(this);
-        }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as ScrollBarRuntime;
         ClipContainerInstance = this.GetGraphicalUiElementByName("ClipContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;

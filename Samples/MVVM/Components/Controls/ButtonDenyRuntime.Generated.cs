@@ -1,4 +1,4 @@
-//Code for Controls/ButtonStandard (Container)
+//Code for Controls/ButtonDeny (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,13 +13,12 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-partial class ButtonStandardRuntime : ContainerRuntime
+partial class ButtonDenyRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonDeny", typeof(ButtonDenyRuntime));
     }
     public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
@@ -67,11 +66,11 @@ partial class ButtonStandardRuntime : ContainerRuntime
         set => TextInstance.Text = value;
     }
 
-    public ButtonStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public ButtonDenyRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
+            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonDeny");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 

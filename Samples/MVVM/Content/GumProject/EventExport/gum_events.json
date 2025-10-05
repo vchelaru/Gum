@@ -2,256 +2,214 @@
   "UserEvents": {
     "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
       {
-        "NewName": "Screen1.ButtonCloseInstance2",
-        "OldName": "Screen1.ButtonCloseInstance",
+        "NewName": "MainMenuGum.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-02T13:42:38.3716783Z"
+      },
+      {
+        "NewName": "MainMenuGum.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-02T13:42:43.4406427Z"
+      },
+      {
+        "NewName": "MainMenuGum.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-02T13:42:48.0866327Z"
+      },
+      {
+        "NewName": "MainMenuGum.ContainerInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:36:55.118943Z"
+      },
+      {
+        "NewName": "MainMenuGum.ColoredRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:36:55.1396059Z"
+      },
+      {
+        "NewName": "MainMenuGum.SpriteInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:36:55.1599751Z"
+      },
+      {
+        "NewName": "MainMenuGum.ContainerInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:37:30.646445Z"
+      },
+      {
+        "NewName": "MainMenuGum.ColoredRectangleInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:37:30.6679272Z"
+      },
+      {
+        "NewName": "MainMenuGum.SpriteInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:37:30.6907587Z"
+      },
+      {
+        "NewName": "MainMenuGum.ContainerInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:38:25.8075107Z"
+      },
+      {
+        "NewName": "MainMenuGum.ColoredRectangleInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:38:25.8455636Z"
+      },
+      {
+        "NewName": "MainMenuGum.SpriteInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:38:25.8675111Z"
+      },
+      {
+        "NewName": "MainMenuGum.ContainerInstance4",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:38:47.2050971Z"
+      },
+      {
+        "NewName": "MainMenuGum.ColoredRectangleInstance4",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:38:47.2260976Z"
+      },
+      {
+        "NewName": "MainMenuGum.SpriteInstance4",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T03:38:47.2483372Z"
+      },
+      {
+        "NewName": "MainMenuGum.MinAlphaTest1",
+        "OldName": "MainMenuGum.ContainerInstance4",
         "ElementType": "Screens",
         "EventType": 7,
-        "TimestampUtc": "2025-06-16T03:33:43.4862566Z"
+        "TimestampUtc": "2025-10-03T13:09:41.4690227Z"
       },
       {
-        "NewName": "Regular2",
-        "OldName": "Regular",
-        "ElementType": "Components",
-        "EventType": 3,
-        "TimestampUtc": "2025-06-18T12:33:16.7543547Z"
-      },
-      {
-        "NewName": "TestScreen",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 0,
-        "TimestampUtc": "2025-06-19T19:19:04.4220542Z"
-      },
-      {
-        "NewName": "TestScreen.ColoredRectangleInstance",
+        "NewName": "MainMenuGum.MinAlphaTest2",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-06-19T19:19:41.236217Z"
+        "TimestampUtc": "2025-10-03T13:09:44.1070411Z"
       },
       {
-        "NewName": "TestComponent",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-06-19T19:35:40.7313727Z"
-      },
-      {
-        "NewName": "TestComponent (Container).ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T19:35:42.9769305Z"
-      },
-      {
-        "NewName": "TestComponent (Container).ColoredRectangleInstance1",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T19:38:15.396647Z"
-      },
-      {
-        "NewName": "TestScreen.TestComponentInstance",
+        "NewName": "MainMenuGum.ColoredRectangleInstance5",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-06-19T19:54:05.6829612Z"
+        "TimestampUtc": "2025-10-03T13:09:44.1436793Z"
       },
       {
-        "NewName": "DerivedComponent",
+        "NewName": "MainMenuGum.SpriteInstance5",
         "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-06-19T20:04:19.9853649Z"
-      },
-      {
-        "NewName": "SimpleComponent",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-06-19T20:18:06.6362525Z"
-      },
-      {
-        "NewName": "SimpleComponent (Container).ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Components",
+        "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-06-19T20:18:09.7725011Z"
+        "TimestampUtc": "2025-10-03T13:09:44.174004Z"
       },
       {
-        "NewName": "RatioComponent",
+        "NewName": "ShapesScreen.ArcInstance3",
         "OldName": null,
-        "ElementType": "Components",
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T22:13:08.5385362Z"
+      },
+      {
+        "NewName": "ShapesScreen.ArcInstance4",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-03T22:13:44.0009095Z"
+      },
+      {
+        "NewName": "TestScreen1",
+        "OldName": null,
+        "ElementType": "Screens",
         "EventType": 0,
-        "TimestampUtc": "2025-06-19T21:34:20.6298933Z"
+        "TimestampUtc": "2025-10-04T03:54:44.8129374Z"
       },
       {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance",
+        "NewName": "TestScreen1.ContainerInstance",
         "OldName": null,
-        "ElementType": "Components",
+        "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-06-19T21:34:30.7686451Z"
+        "TimestampUtc": "2025-10-04T03:55:53.5560101Z"
       },
       {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance1",
+        "NewName": "TestScreen1.ContainerInstance1",
         "OldName": null,
-        "ElementType": "Components",
+        "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-06-19T21:34:32.2350721Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance2",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T21:34:32.6057308Z"
-      },
-      {
-        "NewName": "RatioComponent1",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-06-19T22:03:10.4493845Z"
+        "TimestampUtc": "2025-10-04T03:56:13.7759129Z"
       },
       {
         "NewName": null,
-        "OldName": "RatioComponent1",
-        "ElementType": "Components",
-        "EventType": 1,
-        "TimestampUtc": "2025-06-19T22:03:23.6962949Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ContainerInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:03:27.6445082Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance3",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:04:01.7255435Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance4",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:04:01.8033255Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance5",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:04:01.8736573Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ContainerInstance1",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:04:01.9461615Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance6",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:06:55.9744999Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance7",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:06:56.1134798Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance8",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:06:56.21466Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ContainerInstance2",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:06:56.3053594Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance9",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:07:15.2968511Z"
-      },
-      {
-        "NewName": "RatioComponent (Container).ColoredRectangleInstance10",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-19T22:16:51.3283443Z"
-      },
-      {
-        "NewName": "TestScreen.TextInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-22T13:16:15.840779Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "TestScreen.TestComponent TestComponentInstance in TestScreen",
+        "OldName": "TestScreen1.Container ContainerInstance1 in TestScreen1",
         "ElementType": "Screens",
         "EventType": 6,
-        "TimestampUtc": "2025-06-22T18:44:14.6549737Z"
+        "TimestampUtc": "2025-10-04T03:56:29.2610363Z"
       },
       {
-        "NewName": null,
-        "OldName": "TestScreen.ColoredRectangle ColoredRectangleInstance in TestScreen",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2025-06-22T18:49:50.9312325Z"
-      },
-      {
-        "NewName": "MainMenu.ListBoxInstance1",
+        "NewName": "TestScreen1.ContainerInstance1",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-06-22T21:04:54.5145847Z"
-      },
-      {
-        "NewName": "MainMenu.NotEnoughMoney1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-06-22T21:05:23.6886699Z"
-      },
-      {
-        "NewName": "MainMenu.InventoryLabel",
-        "OldName": "MainMenu.NotEnoughMoney1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-06-22T21:05:34.2701815Z"
-      },
-      {
-        "NewName": "MainMenu.InventoryListBox",
-        "OldName": "MainMenu.ListBoxInstance1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-06-22T21:05:42.4639501Z"
+        "TimestampUtc": "2025-10-04T03:56:36.2050476Z"
       },
       {
         "NewName": null,
-        "OldName": "MainMenu.Controls/ListBox InventoryListBox in MainMenu",
+        "OldName": "TestScreen1.Container ContainerInstance1 in TestScreen1",
         "ElementType": "Screens",
         "EventType": 6,
-        "TimestampUtc": "2025-06-22T21:11:56.8540735Z"
+        "TimestampUtc": "2025-10-04T03:56:45.9462535Z"
+      },
+      {
+        "NewName": "TestScreen1.ContainerInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-04T04:34:52.4748613Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestScreen1.Container ContainerInstance1 in TestScreen1",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2025-10-04T04:38:43.5775721Z"
+      },
+      {
+        "NewName": "TestScreen1.ContainerInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-04T04:39:27.6219643Z"
       }
     ]
   }

@@ -1,4 +1,4 @@
-//Code for Controls/ButtonStandard (Container)
+//Code for Controls/ButtonTab (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,13 +13,12 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-partial class ButtonStandardRuntime : ContainerRuntime
+partial class ButtonTabRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonTab", typeof(ButtonTabRuntime));
     }
     public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
@@ -58,20 +57,20 @@ partial class ButtonStandardRuntime : ContainerRuntime
         }
     }
     public NineSliceRuntime Background { get; protected set; }
-    public TextRuntime TextInstance { get; protected set; }
+    public TextRuntime TabText { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string ButtonDisplayText
+    public string TabDisplayText
     {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
+        get => TabText.Text;
+        set => TabText.Text = value;
     }
 
-    public ButtonStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public ButtonTabRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
+            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonTab");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
@@ -85,7 +84,7 @@ partial class ButtonStandardRuntime : ContainerRuntime
             FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        TabText = this.GetGraphicalUiElementByName("TabText") as global::MonoGameGum.GueDeriving.TextRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

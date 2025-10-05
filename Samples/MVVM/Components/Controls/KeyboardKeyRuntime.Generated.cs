@@ -1,4 +1,4 @@
-//Code for Controls/ButtonStandard (Container)
+//Code for Controls/KeyboardKey (Container)
 using GumRuntime;
 using System.Linq;
 using MonoGameGum;
@@ -13,13 +13,12 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-partial class ButtonStandardRuntime : ContainerRuntime
+partial class KeyboardKeyRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
-        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/KeyboardKey", typeof(KeyboardKeyRuntime));
     }
     public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
@@ -28,8 +27,8 @@ partial class ButtonStandardRuntime : ContainerRuntime
         Disabled,
         Highlighted,
         Pushed,
-        HighlightedFocused,
         Focused,
+        HighlightedFocused,
         DisabledFocused,
     }
 
@@ -61,17 +60,17 @@ partial class ButtonStandardRuntime : ContainerRuntime
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string ButtonDisplayText
+    public string Text
     {
         get => TextInstance.Text;
         set => TextInstance.Text = value;
     }
 
-    public ButtonStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public KeyboardKeyRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
+            var element = ObjectFinder.Self.GetElementSave("Controls/KeyboardKey");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
