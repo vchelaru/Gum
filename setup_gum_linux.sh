@@ -9,7 +9,7 @@ set -e
 GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
 
 echo "This is an experimental script."
-echo "Script last updated on the 29th of July 2025!"
+echo "Script last updated on the 4th of October 2025!"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
