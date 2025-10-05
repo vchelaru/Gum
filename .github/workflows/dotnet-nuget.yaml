@@ -16,7 +16,7 @@ on:
 
 env:
   DOTNET_VERSIONS: '6.0.x;8.0.x' # Multiple .NET versions
-  CONFIGURATION: Release
+  CONFIGURATION: Debug
   SOLUTION_FILE: 'AllLibraries.sln' # Specify which solution to build
 
 jobs:
