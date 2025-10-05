@@ -101,7 +101,7 @@ public class ParameterizedLetterCustomizationCall
 
 #endregion
 
-public class Text : IRenderableIpso, IVisible, IText, ICloneable
+public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText, ICloneable
 {
     #region Fields
 
@@ -1139,7 +1139,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     }
 
 
-    public void Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
 
         if (AbsoluteVisible && !string.IsNullOrEmpty(RawText))

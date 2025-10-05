@@ -371,9 +371,17 @@ public class SpriteRenderer
         basicEffect.VertexColorEnabled = true;
     }
 
-    public void Begin()
+    public void Begin(bool createNewParameters = true)
     {
-        mSpriteBatch.Begin();
+        if(mSpriteBatch.BeginEndState != SpriteBatchStack.SpriteBatchBeginEndState.Began)
+        {
+            mSpriteBatch.Begin(createNewParameters);
+        }
+    }
+
+    public void ForceSetRenderStatesToCurrent()
+    {
+        mSpriteBatch.ForceSetRenderStatesToCurrent();
     }
 
     internal void End()

@@ -25,7 +25,7 @@ namespace SkiaGum.Renderables
 
 
 
-    public abstract class RenderableSkiaObject : IRenderableIpso, IVisible, IManagedObject
+    public abstract class RenderableSkiaObject : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject
 #if FAST_GL_SKIA_RENDERING
         ,ISkiaRenderable
 #endif
@@ -678,7 +678,7 @@ namespace SkiaGum.Renderables
             mChildren = new ObservableCollection<IRenderableIpso>();
         }
 
-        public void Render(ISystemManagers managers)
+        public override void Render(ISystemManagers managers)
         {
             if (AbsoluteVisible)
             {

@@ -88,7 +88,7 @@ namespace RenderingLibrary.Graphics
     {
         static StateChangeInfoListPool StateChangeInfoListPool = new StateChangeInfoListPool();
 
-        enum SpriteBatchBeginEndState
+        public enum SpriteBatchBeginEndState
         {
             Ended,
             Began
@@ -98,6 +98,8 @@ namespace RenderingLibrary.Graphics
         #region Fields
 
         SpriteBatchBeginEndState beginEndState;
+
+        public SpriteBatchBeginEndState BeginEndState => beginEndState;
 
         List<BeginParameters> beginParametersUsedThisFrame = new List<BeginParameters>();
 
@@ -156,14 +158,17 @@ namespace RenderingLibrary.Graphics
             StateChangeInfoListPool.MakeAllUnused();
         }
 
-        public void Begin()
+        public void Begin(bool createNewParameters = true)
         {
-            var beginParams = new BeginParameters();
-            beginParams.ChangeRecord = StateChangeInfoListPool.GetNextAvailable();
-            beginParams.ChangeRecord.Clear();
+            if(createNewParameters)
+            {
+                var beginParams = new BeginParameters();
+                beginParams.ChangeRecord = StateChangeInfoListPool.GetNextAvailable();
+                beginParams.ChangeRecord.Clear();
 
-            beginParams.IsDefault = true;
-            currentParameters = beginParams;
+                beginParams.IsDefault = true;
+                currentParameters = beginParams;
+            }
 
             if (beginEndState == SpriteBatchBeginEndState.Began)
             {
@@ -187,6 +192,22 @@ namespace RenderingLibrary.Graphics
             // begin will end 
             ReplaceRenderStates(
                 sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle, objectChangingState);
+        }
+
+        public void ForceSetRenderStatesToCurrent()
+        {
+            if (currentParameters != null)
+            {
+                ReplaceRenderStates(currentParameters.Value.SortMode,
+                    currentParameters.Value.BlendState,
+                    currentParameters.Value.SamplerState,
+                    currentParameters.Value.DepthStencilState,
+                    currentParameters.Value.RasterizerState,
+                    currentParameters.Value.Effect,
+                    currentParameters.Value.TransformMatrix,
+                    currentParameters.Value.ScissorRectangle,
+                    currentParameters.Value.ObjectChangingState);
+            }
         }
 
         public void ReplaceRenderStates(SpriteSortMode sortMode, 
@@ -242,7 +263,8 @@ namespace RenderingLibrary.Graphics
             }
             beginEndState = SpriteBatchBeginEndState.Began;
             // assign here so that any other renderables that rely on scissor rects can use it
-            SpriteBatch.GraphicsDevice.RasterizerState = rasterizerState;
+            SpriteBatch.GraphicsDevice.RasterizerState = 
+                rasterizerState ?? RasterizerState.CullCounterClockwise;
             SpriteBatch.Begin(sortMode,
                 blendState.ToXNA(),
                 samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
@@ -305,13 +327,13 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        void TryEnd()
-        {
-            if (currentParameters != null)
-            {
-                End();
-            }
-        }
+        //void TryEnd()
+        //{
+        //    if (currentParameters != null)
+        //    {
+        //        End();
+        //    }
+        //}
 
         internal void End()
         {

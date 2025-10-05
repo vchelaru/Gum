@@ -516,12 +516,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         mContainedObjectAsIpso.Render(managers);
     }
 
+    public virtual string BatchKey => mContainedObjectAsIpso?.BatchKey ?? string.Empty;
+
+    public virtual void StartBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.StartBatch(systemManagers);
+    public virtual void EndBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.EndBatch(systemManagers);
 
     Layer mLayer;
 
     public Layer Layer => mLayer;
 
-    #endregion
+#endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
     public int Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
@@ -1482,7 +1486,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 #endif
 
-    #endregion
+#endregion
 
     #region Events
 

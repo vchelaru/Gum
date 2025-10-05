@@ -438,6 +438,8 @@ public class Renderer : IRenderer
     {
         RenderLayer(managers as SystemManagers, layer, prerender);
     }
+    
+
 
     internal void RenderLayer(SystemManagers managers, Layer layer, bool prerender = true)
     {
@@ -461,7 +463,13 @@ public class Renderer : IRenderer
 
         Render(layer.Renderables, managers, layer);
 
+        lastBatchOwner?.EndBatch(managers);
+        lastBatchOwner = null;
+        currentBatchKey = string.Empty;
+
+#if !NET8_0_OR_GREATER
         spriteRenderer.EndSpriteBatch();
+#endif
     }
 
 
@@ -626,6 +634,9 @@ public class Renderer : IRenderer
 
     Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
 
+    string currentBatchKey = string.Empty;
+    IRenderable? lastBatchOwner;
+
     private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
     {
         if (renderable.Visible)
@@ -658,6 +669,18 @@ public class Renderer : IRenderer
             }
             else
             {
+                if(!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != currentBatchKey)
+                {
+                    if(lastBatchOwner != null)
+                    {
+                        lastBatchOwner.EndBatch(managers);
+                    }
+
+                    currentBatchKey = renderable.BatchKey;
+                    lastBatchOwner = renderable;
+                    renderable.StartBatch(managers);
+                }
+
                 renderable.Render(managers);
 
 

@@ -17,8 +17,6 @@ public class RoundedRectangle : AposShapeBase
     {
         var sb = ShapeRenderer.ShapeBatch;
 
-        sb.Begin();
-
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
 
@@ -40,8 +38,6 @@ public class RoundedRectangle : AposShapeBase
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, size, 1);
-
-        sb.End();
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb, 
