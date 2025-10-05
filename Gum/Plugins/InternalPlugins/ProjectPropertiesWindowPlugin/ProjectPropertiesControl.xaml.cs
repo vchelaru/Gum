@@ -48,6 +48,11 @@ namespace Gum.Gui.Controls
             // Move all colors into their own category:
             var allMembers = DataGrid.Categories.SelectMany(item => item.Members).ToArray();
 
+            foreach(var member in allMembers)
+            {
+                member.SupportsMakeDefault = false;
+            }
+
             DataGrid.MoveMemberToCategory(nameof(ViewModel.OutlineColor), "Guides and Colors");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.GuideLineColor), "Guides and Colors");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.GuideTextColor), "Guides and Colors");

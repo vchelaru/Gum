@@ -290,12 +290,16 @@ public static class IDataUiExtensionMethods
 
     public static void ForceRefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
     {
-        contextMenu?.Items.Clear();
+        if(contextMenu == null)
+        {
+            return;
+        }
+        contextMenu.Items.Clear();
 
         var shouldAddMakeDefault = dataUi.InstanceMember == null ||
             dataUi.InstanceMember.SupportsMakeDefault;
 
-        if(shouldAddMakeDefault)
+        if(shouldAddMakeDefault  && contextMenu != null)
         {
             var makeDefault = new MenuItemExposedClick();
             makeDefault.Header = "Make Default";
