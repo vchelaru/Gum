@@ -279,7 +279,7 @@ public class ScrollViewer :
     {
         var verticalScrollBarVisualAsGue = Visual.GetGraphicalUiElementByName(VerticalScrollBarInstanceName);
         var horizontalScrollBarVisualAsGue = Visual.GetGraphicalUiElementByName(HorizontalScrollBarInstanceName);
-#if DEBUG
+#if FULL_DIAGNOSTICS
         // Since ScrollViewer is the base for ItemsControl, and since ItemsControl is the base for Menu, we have to make
         // scrollbars optional
         //if (scrollBarVisualAsGue == null)
@@ -292,7 +292,7 @@ public class ScrollViewer :
 
         var vericalScrollBarVisual = verticalScrollBarVisualAsGue as InteractiveGue;
         var horizontalScrollBarVisual = horizontalScrollBarVisualAsGue as InteractiveGue;
-#if DEBUG
+#if FULL_DIAGNOSTICS
         //if (scrollBarVisual == null)
         //{
         //    throw new InvalidOperationException($"The child with the name {VerticalScrollBarInstanceName} was found, but is not an InteractiveGue." +

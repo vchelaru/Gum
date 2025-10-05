@@ -27,7 +27,7 @@ public class Label :
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             return coreTextObject.RawText;
@@ -37,7 +37,7 @@ public class Label :
             if(value != Text)
             {
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 ReportMissingTextInstance();
 #endif
                 // go through the component instead of the core text object to force a layout refresh if necessary
@@ -75,7 +75,7 @@ public class Label :
             textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
         }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         // If we do this, we prevent Label controls from instantiating and later setting their visuals...
         //ReportMissingTextInstance();
 #endif
@@ -83,7 +83,7 @@ public class Label :
         coreTextObject = (global::RenderingLibrary.Graphics.IText)textComponent?.RenderableComponent;
     }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
     private void ReportMissingTextInstance()
     {
         if(Visual == null)

@@ -38,7 +38,7 @@ public class ScrollBar : RangeBase
         get { return viewportSize; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (double.IsNaN(value))
             {
                 throw new Exception("ScrollBar ViewportSize cannot be float.NaN");
@@ -156,13 +156,13 @@ public class ScrollBar : RangeBase
     protected override void RefreshInternalVisualReferences()
     {
         var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
-#if DEBUG
+#if FULL_DIAGNOSTICS
         //if (upButtonVisual == null)
         //{
         //    throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
         //}
 #endif
-        if(upButtonVisual != null)
+        if (upButtonVisual != null)
         {
             if (upButtonVisual.FormsControlAsObject == null)
             {
@@ -175,13 +175,13 @@ public class ScrollBar : RangeBase
         }
 
         var downButtonVisual = this.Visual.GetGraphicalUiElementByName("DownButtonInstance") as InteractiveGue;
-#if DEBUG
+#if FULL_DIAGNOSTICS
         //if (downButtonVisual == null)
         //{
         //    throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
         //}
 #endif
-        if(downButtonVisual != null)
+        if (downButtonVisual != null)
         {
             if (downButtonVisual.FormsControlAsObject == null)
             {

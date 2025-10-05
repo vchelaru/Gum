@@ -1245,7 +1245,7 @@ public class CustomSetPropertyOnRenderable
 
                 // FRB may dispose fonts, so let's check:
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
                 {
                     throw new InvalidOperationException("The returned font has a disposed texture");

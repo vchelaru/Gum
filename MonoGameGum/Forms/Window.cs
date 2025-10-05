@@ -194,7 +194,7 @@ public class Window :
                 }
             }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (innerPanel == null)
             {
                 throw new InvalidOperationException("Window Visual must contain a child named InnerPanelInstance");

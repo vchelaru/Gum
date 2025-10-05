@@ -495,7 +495,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (mContainedObjectAsIpso == null)
             {
                 throw new NullReferenceException("This GraphicalUiElemente has not had its visual set, so it does not have a blend operation. This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
@@ -734,7 +734,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value) || float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
             {
                 throw new Exception($"Invalid Rotation value set: {value}");
@@ -775,7 +775,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mX != value && mContainedObjectAsIpso != null)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (float.IsNaN(value))
                 {
                     throw new ArgumentException("Not a Number (NAN) not allowed");
@@ -832,7 +832,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mY != value && mContainedObjectAsIpso != null)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (float.IsNaN(value))
                 {
                     throw new ArgumentException("Not a Number (NAN) not allowed");
@@ -900,7 +900,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get => mWidth;
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsPositiveInfinity(value) ||
                 float.IsNegativeInfinity(value) ||
                 float.IsNaN(value))
@@ -954,7 +954,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mHeight != value)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (float.IsPositiveInfinity(value) ||
                     float.IsNegativeInfinity(value) ||
                     float.IsNaN(value))
@@ -981,7 +981,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get { return mParent; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (value == this)
             {
                 throw new InvalidOperationException("Cannot attach an object to itself");
@@ -1548,7 +1548,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         Width = 32;
         Height = 32;
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (containedObject is GraphicalUiElement)
         {
             throw new InvalidOperationException("GraphicalUiElements cannot contain other GraphicalUiElements as their renderable. " +
@@ -3009,7 +3009,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
         }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsPositiveInfinity(parentHeight))
         {
             throw new Exception();
@@ -3646,7 +3646,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool shouldWrap, XOrY? xOrY, float parentRotation)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsPositiveInfinity(parentHeight) || float.IsNegativeInfinity(parentHeight))
         {
             throw new ArgumentException(nameof(parentHeight));
@@ -3675,7 +3675,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
         AdjustOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, xOrY, ref unitOffsetX, ref unitOffsetY);
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsNaN(unitOffsetX))
         {
             throw new Exception("Invalid unitOffsetX after AdjustOffsetsByUnits - it's NaN");
@@ -3689,7 +3689,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
         AdjustOffsetsByOrigin(isParentFlippedHorizontally, ref unitOffsetX, ref unitOffsetY);
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsNaN(unitOffsetX))
         {
             throw new Exception("Invalid unitOffsetX after AdjustOffsetsByOrigin - it's NaN");
@@ -3779,7 +3779,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
         {
             throw new Exception("Rotation cannot be negative/positive infinity");
@@ -4963,7 +4963,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public virtual void AddToManagers(ISystemManagers managers, Layer layer = null)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (managers == null)
         {
             throw new ArgumentNullException("managers cannot be null");
@@ -5042,7 +5042,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             foreach (var newItem in e.NewItems)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (newItem == null)
                 {
                     throw new InvalidOperationException($"Attempting to add a null child to {this}");
@@ -5327,7 +5327,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (this.mContainedObjectAsIpso != null)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (SetPropertyOnRenderable == null)
             {
                 throw new Exception($"{nameof(SetPropertyOnRenderable)} must be set on GraphicalUiElement");
@@ -5584,7 +5584,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // am concerned there may be other exceptions
             // being swallowed, but maybe we should push those
             // errors up and let the callers handle it.
-#if DEBUG
+#if FULL_DIAGNOSTICS
             throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}", innerException);
 #endif
         }
@@ -5662,7 +5662,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public virtual void ApplyState(DataTypes.Variables.StateSave state)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         // Dynamic states can be applied in code. It is cumbersome for the user to
         // specify the ParentContainer, especially if the state is to be reused. 
         // I'm removing this to see if it causes problems:
@@ -5773,7 +5773,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void AddCategory(DataTypes.Variables.StateSaveCategory category)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (string.IsNullOrEmpty(category.Name))
         {
             throw new ArgumentException("The category must have its Name set before being added to this");
@@ -5789,8 +5789,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         foreach (var state in list)
         {
-#if DEBUG
-            if(state.Name == null)
+#if FULL_DIAGNOSTICS
+            if (state.Name == null)
             {
                 throw new ArgumentException("One of the states being added has a null name - be sure to set the name of all states");
             }

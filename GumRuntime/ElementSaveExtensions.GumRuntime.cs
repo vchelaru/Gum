@@ -55,7 +55,7 @@ namespace GumRuntime
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave));
@@ -250,7 +250,7 @@ namespace GumRuntime
 
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (stateSave == null)
             {
                 throw new ArgumentNullException(nameof(stateSave), "State cannot be null");
@@ -586,8 +586,8 @@ namespace GumRuntime
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, ISystemManagers systemManagers)
         {
-#if DEBUG
-            if(elementSave == null)
+#if FULL_DIAGNOSTICS
+            if (elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave), "elementSave parameter is required");
             }

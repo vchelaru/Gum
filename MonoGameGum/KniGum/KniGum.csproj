@@ -16,15 +16,20 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<LangVersion>12.0</LangVersion>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

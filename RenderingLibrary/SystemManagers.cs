@@ -119,8 +119,8 @@ namespace RenderingLibrary
         /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
         public void Activity(double currentTime)
         {
-#if DEBUG
-            if(SpriteManager == null)
+#if FULL_DIAGNOSTICS
+            if (SpriteManager == null)
             {
                 throw new InvalidOperationException("The SpriteManager is null - did you remember to initialize the SystemManagers?");
             }

@@ -28,7 +28,7 @@ public class VisualTemplate
 
     public VisualTemplate(Type type)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (typeof(GraphicalUiElement).IsAssignableFrom(type) == false)
         {
             throw new ArgumentException(
@@ -63,7 +63,7 @@ public class VisualTemplate
 
             var constructor = type.GetConstructor(Type.EmptyTypes);
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (constructor == null)
             {
                 throw new ArgumentException(

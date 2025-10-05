@@ -13,15 +13,20 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);XNA4;FNA;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);XNA4;FNA;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);FNA;USE_GUMCOMMON;XNA4</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
