@@ -693,6 +693,14 @@ public class Renderer : IRenderer
             if (didClipChange)
             {
                 mRenderStateVariables.ClipRectangle = oldClip;
+
+                if (lastBatchOwner != null)
+                {
+                    lastBatchOwner.EndBatch(managers);
+                    lastBatchOwner = null;
+                    currentBatchKey = string.Empty;
+                }
+
                 spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
             }
         }
