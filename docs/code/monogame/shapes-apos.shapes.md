@@ -20,3 +20,24 @@ Currently this library is not distributed as a NuGet package, so games must link
 
 Your game now has access to the shape runtimes mentioned above.
 
+## Setup in Code
+
+Whether you are using code-only or the Gum tool, you must add the following line of code **before initializing Gum**:
+
+```csharp
+ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+// initialize Gum now:
+```
+
+## Setup in Gum Tool
+
+Shapes can be used in the Gum tool. To add shapes:
+
+1. Launch the Gum tool
+2. Select Plugins ⇒ Add Skia Standard Elements
+3. Add instances of Arc, ColoredCircle, or RoundedRectangleRuntime to your Screens or Components
+
+{% hint style="warning" %}
+Shapes only supports the shapes listed above. Adding other Skia instanes, such as SVG or Lottie, will result in compile time or runtime errors.
+{% endhint %}
+
