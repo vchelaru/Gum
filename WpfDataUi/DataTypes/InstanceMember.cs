@@ -444,6 +444,7 @@ namespace WpfDataUi.DataTypes
         public void SimulateValueChanged()
         {
             OnPropertyChanged("Value");
+            OnPropertyChanged(nameof(IsDefault));
         }
 
         protected virtual void OnPropertyChanged(string propertyName)
