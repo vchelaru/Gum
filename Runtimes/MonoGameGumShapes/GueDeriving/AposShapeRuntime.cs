@@ -106,6 +106,16 @@ public abstract class AposShapeRuntime : BindableGue
         set => ContainedRenderable.Red = value;
     }
 
+    /// <summary>
+    /// Gets or sets the color used to render the contained object.
+    /// This value is ignored if a gradient is being used.
+    /// </summary>
+    public Color Color
+    {
+        get => ContainedRenderable.Color;
+        set => ContainedRenderable.Color = value;
+    }
+
     #endregion
 
     #region Gradient Colors
@@ -353,53 +363,100 @@ public abstract class AposShapeRuntime : BindableGue
 
     #region Dropshadow
 
+    /// <summary>
+    /// Gets or sets the alpha (opacity) value of the drop shadow effect.
+    /// The value range is 0-255.
+    /// </summary>
     public int DropshadowAlpha
     {
         get => ContainedRenderable.DropshadowAlpha;
         set => ContainedRenderable.DropshadowAlpha = value;
     }
 
+    /// <summary>
+    /// Gets or sets the blue component of the drop shadow color.
+    /// The value range is 0-255.
+    /// </summary>
     public int DropshadowBlue
     {
         get => ContainedRenderable.DropshadowBlue;
         set => ContainedRenderable.DropshadowBlue = value;
     }
 
+    /// <summary>
+    /// Gets or sets the green component of the drop shadow color.
+    /// The value range is 0-255.
+    /// </summary>
     public int DropshadowGreen
     {
         get => ContainedRenderable.DropshadowGreen;
         set => ContainedRenderable.DropshadowGreen = value;
     }
 
+    /// <summary>
+    /// Gets or sets the red component of the drop shadow color.
+    /// The value range is 0-255.
+    /// </summary>
     public int DropshadowRed
     {
         get => ContainedRenderable.DropshadowRed;
         set => ContainedRenderable.DropshadowRed = value;
     }
 
+    /// <summary>
+    /// Gets or sets the color used for the drop shadow effect.
+    /// </summary>
+    public Color DropshadowColor
+    {
+        get => new Color(DropshadowRed, DropshadowGreen, DropshadowBlue, DropshadowAlpha);
+        set
+        {
+            DropshadowRed = value.R;
+            DropshadowGreen = value.G;
+            DropshadowBlue = value.B;
+            DropshadowAlpha = value.A;
+        }
+    }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether a drop shadow is visibile.
+    /// </summary>
     public bool HasDropshadow
     {
         get => ContainedRenderable.HasDropshadow;
         set => ContainedRenderable.HasDropshadow = value;
     }
 
+    /// <summary>
+    /// Gets or sets the horizontal offset, in pixels, of the drop shadow.
+    /// </summary>
     public float DropshadowOffsetX
     {
         get => ContainedRenderable.DropshadowOffsetX;
         set => ContainedRenderable.DropshadowOffsetX = value;
     }
+
+    /// <summary>
+    /// Gets or sets the vertical offset, in pixels, of the drop shadow.
+    /// </summary>
     public float DropshadowOffsetY
     {
         get => ContainedRenderable.DropshadowOffsetY;
         set => ContainedRenderable.DropshadowOffsetY = value;
     }
 
+    /// <summary>
+    /// The amount of horizontal blur applied to the drop shadow. A value of 0 means no blur (sharp shadow).
+    /// </summary>
     public float DropshadowBlurX
     {
         get => ContainedRenderable.DropshadowBlurX;
         set => ContainedRenderable.DropshadowBlurX = value;
     }
+
+    /// <summary>
+    /// The amount of vertical blur applied to the drop shadow. A value of 0 means no blur (sharp shadow).
+    /// </summary>
     public float DropshadowBlurY
     {
         get => ContainedRenderable.DropshadowBlurY;
@@ -410,18 +467,28 @@ public abstract class AposShapeRuntime : BindableGue
 
     #region Filled/Stroke
 
+    /// <summary>
+    /// Whether the shape is filled (true) or just an outline (false).
+    /// </summary>
     public bool IsFilled
     {
         get => ContainedRenderable.IsFilled;
         set => ContainedRenderable.IsFilled = value;
     }
 
+    /// <summary>
+    /// Gets or sets the width of the stroke used to draw shapes or lines.
+    /// This is only applicable when IsFilled is false.
+    /// </summary>
     public float StrokeWidth
     {
         get;
         set;
     }
 
+    /// <summary>
+    /// Gets or sets the unit of measurement used for the stroke width.
+    /// </summary>
     public DimensionUnitType StrokeWidthUnits
     {
         get;
@@ -431,11 +498,6 @@ public abstract class AposShapeRuntime : BindableGue
     #endregion
 
 
-    public Color Color
-    {
-        get => ContainedRenderable.Color;
-        set => ContainedRenderable.Color = value;
-    }
 
     public override void PreRender()
     {
