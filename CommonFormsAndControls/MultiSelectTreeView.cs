@@ -22,6 +22,7 @@ namespace CommonFormsAndControls
         private bool mSelectedNodeChanged = false;
         private List<TreeNode> mSelectedNodes = null;
         private ImageList ElementTreeImages;
+        private System.ComponentModel.IContainer components;
         private TreeNode nodeOnDragStart;
         public ImageList ElementTreeImageList => ElementTreeImages;
 
@@ -1024,15 +1025,14 @@ namespace CommonFormsAndControls
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources =
-                new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
-            this.ElementTreeImages = new System.Windows.Forms.ImageList();
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
+            this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
             this.SuspendLayout();
-            //   
-            // ElementTreeImages  
-            //   
-            this.ElementTreeImages.ImageStream =
-                ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
+            // 
+            // ElementTreeImages
+            // 
+            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
             this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
             this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
             this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
