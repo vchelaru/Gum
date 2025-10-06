@@ -16,6 +16,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\x86\Release\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DefineConstants>$(DefineConstants);INCLUDE_SVG;GUM</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="SkiaInGumShared\obj\**" />
