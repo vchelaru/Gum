@@ -3,7 +3,6 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
-using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -21,6 +20,7 @@ using SkiaGum.Renderables;
 using SkiaSharp;
 namespace SkiaGum;
 #else
+using MonoGameAndGum.Renderables;
 using MonoGameGum.GueDeriving;
 namespace MonoGameGumShapes;
 
