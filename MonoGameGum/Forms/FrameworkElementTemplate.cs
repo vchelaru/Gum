@@ -20,7 +20,7 @@ public class FrameworkElementTemplate
 
     public FrameworkElementTemplate(Type type)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
 
 
         if (typeof(FrameworkElement).IsAssignableFrom(type) == false)
@@ -30,7 +30,7 @@ public class FrameworkElementTemplate
 #endif
         var constructor = type.GetConstructor(Type.EmptyTypes);
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (constructor == null)
         {
             throw new ArgumentException($"The type {type} must have a constructor with no arguments");

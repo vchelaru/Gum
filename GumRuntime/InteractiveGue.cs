@@ -758,7 +758,7 @@ public partial class InteractiveGue : BindableGue
     /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
     public static void AddNextPushAction(Action action)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (action == null)
         {
             throw new ArgumentNullException(nameof(action));
@@ -779,7 +779,7 @@ public partial class InteractiveGue : BindableGue
     /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
     public static void AddNextClickAction(Action action)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (action == null)
         {
             throw new ArgumentNullException(nameof(action));
@@ -991,8 +991,8 @@ public static class GueInteractiveExtensionMethods
     static List<IInputReceiver> previewList = new();
     public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
     {
-#if DEBUG
-        if(cursor == null)
+#if FULL_DIAGNOSTICS
+        if (cursor == null)
         {
             throw new ArgumentNullException(nameof(cursor));
         }

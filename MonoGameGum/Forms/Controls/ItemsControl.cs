@@ -261,7 +261,7 @@ public class ItemsControl : ScrollViewer
                 listBoxItemGumType = DefaultFormsComponents[typeof(ListBoxItem)];
             }
 #pragma warning restore CS0618 // Type or member is obsolete
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (listBoxItemGumType == null)
             {
                 throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemGumType specified, " +

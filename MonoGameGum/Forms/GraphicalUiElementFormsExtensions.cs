@@ -28,8 +28,8 @@ public static class GraphicalUiElementFormsExtensions
     {
         var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);
 
-#if DEBUG
-        if(frameworkVisual == null)
+#if FULL_DIAGNOSTICS
+        if (frameworkVisual == null)
         {
             throw new ArgumentException("Could not find a GraphicalUiElement with the name " + name);
         }
@@ -37,7 +37,7 @@ public static class GraphicalUiElementFormsExtensions
 
         var frameworkVisualAsInteractiveGue = frameworkVisual as InteractiveGue;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
 
         if (frameworkVisualAsInteractiveGue == null)
         {
@@ -47,7 +47,7 @@ public static class GraphicalUiElementFormsExtensions
 #endif
         var formsControlAsObject = frameworkVisualAsInteractiveGue?.FormsControlAsObject;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
 
         if (formsControlAsObject == null)
         {
@@ -57,7 +57,7 @@ public static class GraphicalUiElementFormsExtensions
         var frameworkElement = formsControlAsObject as FrameworkElementType;
         if (frameworkElement == null)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             var message = "The GraphicalUiElement with the name " + name +
                 " is expected to be of type " + typeof(FrameworkElementType) + " but is instead " + formsControlAsObject?.GetType();
 

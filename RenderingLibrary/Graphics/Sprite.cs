@@ -189,8 +189,8 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
         get => _height;
         set
         {
-#if DEBUG
-            if(float.IsNaN(value))
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
             {
                 throw new InvalidOperationException("Cannot assign a Sprite's Height to NaN");
             }
@@ -759,8 +759,8 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
                 }
             }
 
-#if DEBUG
-            if(float.IsPositiveInfinity( scale.X))
+#if FULL_DIAGNOSTICS
+            if (float.IsPositiveInfinity( scale.X))
             {
                 throw new Exception("scale.X is positive infinity, it shouldn't be!");
             }
@@ -903,8 +903,8 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
 
             Texture = frame.Texture;
 
-#if DEBUG
-            if(Texture == null)
+#if FULL_DIAGNOSTICS
+            if (Texture == null)
             {
                 throw new NullReferenceException("The AnimationFrame for this sprite has a null texture. This is not allowed.");
             }

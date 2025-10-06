@@ -350,7 +350,7 @@ public class BindableGue : GraphicalUiElement
                     }
                     catch
                     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                         if (convertedValue != null && uiProperty.PropertyType != convertedValue.GetType())
                         {
                             throw new InvalidCastException(

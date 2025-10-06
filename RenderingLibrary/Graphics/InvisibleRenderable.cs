@@ -40,8 +40,8 @@ public class InvisibleRenderable : IVisible, IRenderableIpso,
         get { return height; }
         set
         {
-#if DEBUG
-            if(float.IsPositiveInfinity(value))
+#if FULL_DIAGNOSTICS
+            if (float.IsPositiveInfinity(value))
             {
                 throw new ArgumentException();
             }

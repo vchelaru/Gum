@@ -619,7 +619,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
         get { return mFontScale; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value) || float.IsInfinity(value))
             {
                 throw new ArgumentException($"Invalid value: {value}. FontScale cannot be NaN.");

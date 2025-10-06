@@ -102,7 +102,7 @@ public class Renderer : IRenderer
     {
         get
         {
-#if DEBUG && !TEST
+#if FULL_DIAGNOSTICS && !TEST
             // This should always be available
             if (mSinglePixelTexture == null)
             {
@@ -135,7 +135,7 @@ public class Renderer : IRenderer
     {
         get
         {
-#if DEBUG && !TEST
+#if FULL_DIAGNOSTICS && !TEST
             // This should always be available
             if (mDottedLineTexture == null)
             {
@@ -497,8 +497,8 @@ public class Renderer : IRenderer
 
     private void PreRender(IList<IRenderableIpso> renderables)
     {
-#if DEBUG
-        if(renderables == null)
+#if FULL_DIAGNOSTICS
+        if (renderables == null)
         {
             throw new ArgumentNullException("renderables");
         }

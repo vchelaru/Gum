@@ -338,7 +338,7 @@ public abstract class TextBoxBase :
 
         placeholderComponent = base.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (textComponent == null) throw new Exception("Gum object must have an object called \"TextInstance\"");
         if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
 #endif
@@ -348,7 +348,7 @@ public abstract class TextBoxBase :
         placeholderTextObject = placeholderComponent?.RenderableComponent as
             global::RenderingLibrary.Graphics.Text;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
 #endif
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;

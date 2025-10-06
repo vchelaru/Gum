@@ -311,9 +311,9 @@ public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso,
     {
         get { return Position.X; }
         set 
-        { 
-#if DEBUG
-            if(float.IsNaN(value))
+        {
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
             {
                 throw new Exception("NaN is not an acceptable value");
             }
@@ -327,7 +327,7 @@ public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso,
         get { return Position.Y; }
         set 
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value))
             {
                 throw new Exception("NaN is not an acceptable value");
