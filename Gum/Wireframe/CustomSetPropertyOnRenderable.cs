@@ -24,6 +24,7 @@ using MonoGameGum.Localization;
 using System.Security.Policy;
 using Gum.Managers;
 using Microsoft.Xna.Framework.Graphics;
+using Gum.Converters;
 
 #if GUM
 using Gum.Services;
@@ -158,10 +159,17 @@ public class CustomSetPropertyOnRenderable
 
                 if (propertyInfo != null && propertyInfo.CanWrite)
                 {
-
-                    if (value.GetType() != propertyInfo.PropertyType)
+                    var valueType = value.GetType();
+                    if (valueType != propertyInfo.PropertyType)
                     {
-                        value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                        if(valueType == typeof(PositionUnitType) && propertyInfo.PropertyType == typeof(GeneralUnitType))
+                        {
+                            value = UnitConverter.ConvertToGeneralUnit((PositionUnitType)value);
+                        }
+                        else
+                        {
+                            value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                        }
                     }
                     propertyInfo.SetValue(renderableIpso, value, null);
                 }

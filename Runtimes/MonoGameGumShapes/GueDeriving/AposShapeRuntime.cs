@@ -35,6 +35,8 @@ public abstract class AposShapeRuntime : BindableGue
 
         StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
 
+        GraphicalUiElement.SetPropertyOnRenderable += MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+
     }
 
     private static StateSave HandleCustomGetDefaultState(string arg)
@@ -55,7 +57,7 @@ public abstract class AposShapeRuntime : BindableGue
         return null;
     }
 
-    protected abstract AposShapeBase ContainedRenderable { get; }
+    protected abstract RenderableBase ContainedRenderable { get; }
 
     #region Solid colors
 

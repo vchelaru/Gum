@@ -3,12 +3,8 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
-using HarfBuzzSharp;
+using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
-using SkiaGum.Content;
-using SkiaGum.GueDeriving;
-using SkiaGum.Renderables;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,151 +13,22 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+#if SKIA
+using HarfBuzzSharp;
+using SkiaGum.Content;
+using SkiaGum.GueDeriving;
+using SkiaGum.Renderables;
+using SkiaSharp;
 namespace SkiaGum;
+#else
+using MonoGameGum.GueDeriving;
+namespace MonoGameGumShapes;
+
+#endif
+
 
 public class CustomSetPropertyOnRenderable
 {
-    // todo - fill this out for the sake of performance...
-    // If it's not filled out, then properties will be set by reflection
-    // It would be nice to share this with MonoGame at some point too so 
-    // we don't have to keep everything in duplicate
-    public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-    {
-        bool handled = false;
-        if (mContainedObjectAsIpso is Text asText)
-        {
-            handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
-        }
-        else if(mContainedObjectAsIpso is Arc asArc)
-        {
-            handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
-            if(!handled)
-            {
-                handled = TrySetPropertyOnArc(asArc, graphicalUiElement, propertyName, value);
-            }
-        }
-        else if(mContainedObjectAsIpso is RoundedRectangle asRoundedRectangle)
-        {
-            handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
-            if(!handled)
-            {
-                handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
-            }
-        }
-        else if (mContainedObjectAsIpso is Circle asCircle)
-        {
-            if(graphicalUiElement is CircleRuntime circleRuntime)
-            {
-                switch (propertyName)
-                {
-                    case "Radius":
-                        var radius = (float)value;
-                        graphicalUiElement.Width = radius * 2;
-                        graphicalUiElement.Height = radius * 2;
-                        break;
-                }
-
-            }
-
-            handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
-            if (!handled)
-            {
-                // todo - if there end up being circle-specific properties, set them here
-                //handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
-            }
-        }
-        else if(mContainedObjectAsIpso is VectorSprite asSvg)
-        {
-            //handled = TrySetPropertiesOnRenderableBase(asSvg, graphicalUiElement, propertyName, value);
-            if(!handled)
-            {
-                handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
-            }
-        }
-        else if(mContainedObjectAsIpso is Sprite asSprite)
-        {
-            if(!handled)
-            {
-                handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
-            }
-        }
-        else if(mContainedObjectAsIpso is Polygon asPolygon)
-        {
-            if(!handled)
-            {
-                handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
-            }
-        }
-        if (!handled)
-        {
-            GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
-            //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
-        }
-    }
-
-    private static bool TrySetPropertyOnPolygon(Polygon asPolygon, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-    {
-        switch(propertyName)
-        {
-            case "Points":
-                if(value is List<System.Numerics.Vector2> vector2s)
-                {
-                    var toAssign = new List<SKPoint>();
-                    toAssign.AddRange(vector2s.Select(item => new SKPoint(item.X, item.Y)));
-                    asPolygon.Points = toAssign;
-                    return true;
-                }
-                //asPolygon.Points = ;
-                break;
-        }
-        return false;
-    }
-
-    private static bool TrySetPropertyOnSprite(Sprite asSprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-    {
-        switch(propertyName)
-        {
-            case "SourceFile":
-                var asString = value as string;
-                if(graphicalUiElement is SpriteRuntime spriteRuntime)
-                {
-                    spriteRuntime.SourceFile = asString;
-                }
-                else if (!string.IsNullOrEmpty(asString))
-                {
-                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    var contentLoader = loaderManager.ContentLoader;
-                    var image = contentLoader.LoadContent<SKBitmap>(asString);
-                    asSprite.Texture = image;
-                }
-                else
-                {
-                    asSprite.Texture = null;
-                }
-                break;
-        }
-        return false;
-    }
-
-    private static bool TrySetPropertyOnSvg(VectorSprite asSvg, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-    {
-        switch(propertyName) 
-        {
-            case "SourceFile":
-                var asString = value as string;
-
-                if(!string.IsNullOrEmpty(asString))
-                {
-                    asSvg.Texture = SkiaResourceManager.GetSvg(asString);
-                }
-                else
-                {
-                    asSvg.Texture = null;
-                }
-                break;
-        }
-        return false;
-    }
 
     private static bool TrySetPropertiesOnRenderableBase(RenderableBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -342,6 +209,153 @@ public class CustomSetPropertyOnRenderable
 
         return false;
     }
+
+    // todo - fill this out for the sake of performance...
+    // If it's not filled out, then properties will be set by reflection
+    // It would be nice to share this with MonoGame at some point too so 
+    // we don't have to keep everything in duplicate
+    public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+        if(mContainedObjectAsIpso is Arc asArc)
+        {
+            handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
+            if(!handled)
+            {
+                handled = TrySetPropertyOnArc(asArc, graphicalUiElement, propertyName, value);
+            }
+        }
+        else if(mContainedObjectAsIpso is RoundedRectangle asRoundedRectangle)
+        {
+            handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            if(!handled)
+            {
+                handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            }
+        }
+        else if (mContainedObjectAsIpso is Circle asCircle)
+        {
+            if(graphicalUiElement is CircleRuntime circleRuntime)
+            {
+                switch (propertyName)
+                {
+                    case "Radius":
+                        var radius = (float)value;
+                        graphicalUiElement.Width = radius * 2;
+                        graphicalUiElement.Height = radius * 2;
+                        break;
+                }
+
+            }
+
+            handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
+            if (!handled)
+            {
+                // todo - if there end up being circle-specific properties, set them here
+                //handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            }
+        }
+#if SKIA
+        else if (mContainedObjectAsIpso is Text asText)
+        {
+            handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
+        }
+        else if(mContainedObjectAsIpso is VectorSprite asSvg)
+        {
+            //handled = TrySetPropertiesOnRenderableBase(asSvg, graphicalUiElement, propertyName, value);
+            if(!handled)
+            {
+                handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
+            }
+        }
+        else if(mContainedObjectAsIpso is Sprite asSprite)
+        {
+            if(!handled)
+            {
+                handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
+            }
+        }
+        else if(mContainedObjectAsIpso is Polygon asPolygon)
+        {
+            if(!handled)
+            {
+                handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
+            }
+        }
+#endif
+        if (!handled)
+        {
+            GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
+            //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
+        }
+    }
+
+#if SKIA
+
+    private static bool TrySetPropertyOnPolygon(Polygon asPolygon, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch(propertyName)
+        {
+            case "Points":
+                if(value is List<System.Numerics.Vector2> vector2s)
+                {
+                    var toAssign = new List<SKPoint>();
+                    toAssign.AddRange(vector2s.Select(item => new SKPoint(item.X, item.Y)));
+                    asPolygon.Points = toAssign;
+                    return true;
+                }
+                //asPolygon.Points = ;
+                break;
+        }
+        return false;
+    }
+
+    private static bool TrySetPropertyOnSprite(Sprite asSprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch(propertyName)
+        {
+            case "SourceFile":
+                var asString = value as string;
+                if(graphicalUiElement is SpriteRuntime spriteRuntime)
+                {
+                    spriteRuntime.SourceFile = asString;
+                }
+                else if (!string.IsNullOrEmpty(asString))
+                {
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    var contentLoader = loaderManager.ContentLoader;
+                    var image = contentLoader.LoadContent<SKBitmap>(asString);
+                    asSprite.Texture = image;
+                }
+                else
+                {
+                    asSprite.Texture = null;
+                }
+                break;
+        }
+        return false;
+    }
+
+    private static bool TrySetPropertyOnSvg(VectorSprite asSvg, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch(propertyName) 
+        {
+            case "SourceFile":
+                var asString = value as string;
+
+                if(!string.IsNullOrEmpty(asString))
+                {
+                    asSvg.Texture = SkiaResourceManager.GetSvg(asString);
+                }
+                else
+                {
+                    asSvg.Texture = null;
+                }
+                break;
+        }
+        return false;
+    }
+
 
     public static void UpdateToFontValues(IText itext, GraphicalUiElement graphicalUiElement)
     {
@@ -566,6 +580,6 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-
+#endif
 
 }
