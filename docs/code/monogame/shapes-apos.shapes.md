@@ -103,9 +103,12 @@ Shapes can be used in the Gum tool. To add shapes:
 2. Select Plugins ⇒ Add Skia Standard Elements
 3. Add instances of Arc, ColoredCircle, or RoundedRectangleRuntime to your Screens or Components
 
+For information on using these shapes in the Gum tool, see the [Arc](../../gum-tool/gum-elements/skia-standard-elements/arc/), [ColoredCircle](../../gum-tool/gum-elements/skia-standard-elements/coloredcircle.md), and [RoundedRectangle](../../gum-tool/gum-elements/skia-standard-elements/roundedrectangle/) pages. These shapes all share common values for fill, gradients, dropshadows. For information on these general properties, see the [Skia Element General Properties](../../gum-tool/gum-elements/skia-standard-elements/general-properties/) page.
+
 {% hint style="warning" %}
 Shapes only supports the shapes listed above. Adding other Skia instances, such as SVG or Lottie, will result in compile time or runtime errors.
 {% endhint %}
 
 Screens and components containing shapes mentioned above can be loaded with no code gen, by reference code gen, or full code gen (no .gumx loaded at runtime).
 
+<figure><img src="../../.gitbook/assets/06_07 20 36.png" alt=""><figcaption><p>Shapes in the Gum tool</p></figcaption></figure>
