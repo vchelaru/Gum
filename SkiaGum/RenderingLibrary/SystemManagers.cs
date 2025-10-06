@@ -151,15 +151,15 @@ namespace RenderingLibrary
             switch(arg)
             {
                 case "Arc":
-                    return DefaultStateManager.GetArcState();
+                    return StandardElementsManager.GetArcState();
                 case "Canvas":
                     return DefaultStateManager.GetCanvasState();
                 case "ColoredCircle":
-                    return DefaultStateManager.GetColoredCircleState();
+                    return StandardElementsManager.GetColoredCircleState();
                 case "LottieAnimation":
                     return DefaultStateManager.GetLottieAnimationState();
                 case "RoundedRectangle":
-                    return DefaultStateManager.GetRoundedRectangleState();
+                    return StandardElementsManager.GetRoundedRectangleState();
                 case "Svg":
                     return DefaultStateManager.GetSvgState();
             }

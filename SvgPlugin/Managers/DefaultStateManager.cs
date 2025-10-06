@@ -21,11 +21,9 @@ namespace SkiaPlugin.Managers
     {
         #region Fields/Properties
 
-        static StateSave? arcState;
         static StateSave? canvasState;
         static StateSave? svgState;
-        static StateSave? filledCircleState;
-        static StateSave? roundedRectangleState;
+
         static StateSave? lottieAnimationState;
 
         #endregion
@@ -37,7 +35,7 @@ namespace SkiaPlugin.Managers
             {
                 svgState = new StateSave();
                 svgState.Name = "Default";
-                AddVisibleVariable(svgState);
+                StandardElementsManager.AddVisibleVariable(svgState);
                 StandardElementsManager.AddPositioningVariables(svgState);
                 StandardElementsManager.AddDimensionsVariables(svgState, 100, 100,
                     Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
@@ -53,7 +51,7 @@ namespace SkiaPlugin.Managers
 
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
 
-                AddBlendVariable(svgState);
+                StandardElementsManager.AddBlendVariable(svgState);
 
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
@@ -78,7 +76,7 @@ namespace SkiaPlugin.Managers
                 canvasState = new StateSave();
                 canvasState.Name = "Default";
 
-                AddVisibleVariable(canvasState);
+                StandardElementsManager.AddVisibleVariable(canvasState);
 
                 StandardElementsManager.AddClipsChildren(canvasState);
 
@@ -87,7 +85,7 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddDimensionsVariables(canvasState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
 
-                AddVariableReferenceList(canvasState);
+                StandardElementsManager.AddVariableReferenceList(canvasState);
 
                 StandardElementsManager.AddEventVariables(canvasState);
 
@@ -108,7 +106,7 @@ namespace SkiaPlugin.Managers
             {
                 lottieAnimationState = new StateSave();
                 lottieAnimationState.Name = "Default";
-                AddVisibleVariable(lottieAnimationState);
+                StandardElementsManager.AddVisibleVariable(lottieAnimationState);
                 StandardElementsManager.AddPositioningVariables(lottieAnimationState);
                 StandardElementsManager.AddDimensionsVariables(lottieAnimationState, 100, 100,
                     Gum.Managers.StandardElementsManager.DimensionVariableAction.AllowFileOptions);
@@ -118,10 +116,10 @@ namespace SkiaPlugin.Managers
 
                 lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
 
-                AddBlendVariable(lottieAnimationState);
+                StandardElementsManager.AddBlendVariable(lottieAnimationState);
 
 
-                AddVariableReferenceList(lottieAnimationState);
+                StandardElementsManager.AddVariableReferenceList(lottieAnimationState);
 
                 StandardElementsManager.AddEventVariables(lottieAnimationState);
 
@@ -133,234 +131,8 @@ namespace SkiaPlugin.Managers
         }
         #endregion
 
-        #region Colored Circle State
-        public static StateSave GetColoredCircleState()
-        {
-            if (filledCircleState == null)
-            {
-                filledCircleState = new StateSave();
-                filledCircleState.Name = "Default";
-                AddVisibleVariable(filledCircleState);
-
-                StandardElementsManager.AddPositioningVariables(filledCircleState);
-                StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64,
-                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-                StandardElementsManager.AddColorVariables(filledCircleState);
-
-                AddGradientVariables(filledCircleState);
-
-                AddDropshadowVariables(filledCircleState);
-
-
-                AddStrokeAndFilledVariables(filledCircleState);
-
-                AddBlendVariable(filledCircleState);
-
-                filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
-
-                AddVariableReferenceList(filledCircleState);
-                StandardElementsManager.AddEventVariables(filledCircleState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(filledCircleState);
-#endif
-            }
-
-            return filledCircleState;
-        }
-        #endregion
-
-        #region Rounded Rectangle State
-
-        public static StateSave GetRoundedRectangleState()
-        {
-            if (roundedRectangleState == null)
-            {
-                roundedRectangleState = new StateSave();
-                roundedRectangleState.Name = "Default";
-                AddVisibleVariable(roundedRectangleState);
-
-                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5f, Name = "CornerRadius", Category = "Dimensions" });
-                roundedRectangleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
-
-                StandardElementsManager.AddPositioningVariables(roundedRectangleState);
-                StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,
-                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-                StandardElementsManager.AddColorVariables(roundedRectangleState);
-
-                AddGradientVariables(roundedRectangleState);
-
-                AddDropshadowVariables(roundedRectangleState);
-
-                AddStrokeAndFilledVariables(roundedRectangleState);
-
-                AddBlendVariable(roundedRectangleState);
-
-
-                AddVariableReferenceList(roundedRectangleState);
-
-                StandardElementsManager.AddClipsChildren(roundedRectangleState);
-                StandardElementsManager.AddEventVariables(roundedRectangleState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(roundedRectangleState);
-#endif
-            }
-
-            return roundedRectangleState;
-        }
-
-        #endregion
-
-        #region Arc State
-
-        public static StateSave GetArcState()
-        {
-            if (arcState == null)
-            {
-                arcState = new StateSave();
-                arcState.Name = "Default";
-                arcState.Variables.Add(new VariableSave { Type = "float", Value = 10f, Category = "Arc", Name = "Thickness", SetsValue = true });
-
-                var startAngle = new VariableSave { Type = "float", Value = 0f, Category = "Arc", Name = "StartAngle", SetsValue = true };
-#if GUM
-                StandardElementsManagerGumTool.MakeDegreesAngle(startAngle);
-#endif
-                arcState.Variables.Add(startAngle);
-
-                var sweepAngle = new VariableSave { Type = "float", Value = 90f, Category = "Arc", Name = "SweepAngle", SetsValue = true };
-#if GUM
-                StandardElementsManagerGumTool.MakeDegreesAngle(sweepAngle);
-#endif
-                arcState.Variables.Add(sweepAngle);
-
-                arcState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Arc", Name = "IsEndRounded", SetsValue = true });
-
-                AddVisibleVariable(arcState);
-
-                StandardElementsManager.AddPositioningVariables(arcState);
-                StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
-                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-                StandardElementsManager.AddColorVariables(arcState);
-                StandardElementsManager.AddEventVariables(arcState);
-                //StandardElementsManager.
-
-
-                AddBlendVariable(arcState);
-
-                AddGradientVariables(arcState);
-
-                AddDropshadowVariables(arcState);
-
-                AddVariableReferenceList(arcState);
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(arcState);
-#endif
-            }
-
-            return arcState;
-        }
-
-        #endregion
-
 
         #region Add Common Variables
-
-        private static void AddGradientVariables(StateSave state)
-        {
-            List<object> xUnitsExclusions = new List<object>();
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
-            xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
-
-            List<object> yUnitsExclusions = new List<object>();
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
-            yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
-
-
-            state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient", SetsValue = true });
-
-            state.Variables.Add(new VariableSave
-            {
-                SetsValue = true,
-                Type = typeof(GradientType).Name,
-                Value = GradientType.Linear,
-                Name = "GradientType",
-                Category = "Rendering",
-                CustomTypeConverter = new EnumConverter(typeof(GradientType))
-            });
-
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientX1" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX1Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
-
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientY1" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientX2" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX2Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientY2" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY2Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 50f, Category = "Rendering", Name = "GradientInnerRadius" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
-
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientOuterRadius" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
-        }
-
-        private static void AddVisibleVariable(StateSave state)
-        {
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-        }
-
-        static void AddDropshadowVariables(StateSave stateSave)
-        {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasDropshadow", Category = "Dropshadow" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowOffsetX", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowOffsetY", Category = "Dropshadow" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowBlurX", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowBlurY", Category = "Dropshadow" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "DropshadowAlpha", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowRed", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowGreen", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowBlue", Category = "Dropshadow" });
-        }
-
-        private static void AddStrokeAndFilledVariables(StateSave stateSave)
-        {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
-
-        }
-
-        private static void AddBlendVariable(StateSave stateSave)
-        {
-            var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
-
-            stateSave.Variables.Add(blendariable);
-        }
 
         #endregion
 

@@ -1,5 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
@@ -30,6 +32,27 @@ public abstract class AposShapeRuntime : BindableGue
         ElementSaveExtensions.RegisterGueInstantiation(
             "RoundedRectangle",
             () => new RoundedRectangleRuntime());
+
+        StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
+
+    }
+
+    private static StateSave HandleCustomGetDefaultState(string arg)
+    {
+        switch (arg)
+        {
+            case "Arc":
+                return StandardElementsManager.GetArcState();
+            case "ColoredCircle":
+                return StandardElementsManager.GetColoredCircleState();
+            case "RoundedRectangle":
+                return StandardElementsManager.GetRoundedRectangleState();
+
+            // temp?
+            default:
+                return StandardElementsManager.Self.DefaultStates["Container"];
+        }
+        return null;
     }
 
     protected abstract AposShapeBase ContainedRenderable { get; }
