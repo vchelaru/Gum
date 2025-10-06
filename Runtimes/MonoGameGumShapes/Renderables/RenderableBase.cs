@@ -408,7 +408,7 @@ public abstract class RenderableBase : InvisibleRenderable
     protected Gradient GetGradient(float absoluteLeft, float absoluteTop)
     {
         var firstColor = new Microsoft.Xna.Framework.Color(
-            (byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+                (byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
         var secondColor = new Microsoft.Xna.Framework.Color(
             (byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
 
@@ -426,19 +426,6 @@ public abstract class RenderableBase : InvisibleRenderable
                 break;
         }
 
-        var effectiveGradientX2 = absoluteLeft + GradientX2;
-        switch (this.GradientX2Units)
-        {
-            case GeneralUnitType.PixelsFromMiddle:
-                effectiveGradientX2 += Width / 2.0f;
-                break;
-            case GeneralUnitType.PixelsFromLarge:
-                effectiveGradientX2 += Width;
-                break;
-            case GeneralUnitType.Percentage:
-                effectiveGradientX2 = Width * GradientX2 / 100;
-                break;
-        }
 
         var effectiveGradientY1 = absoluteTop + GradientY1;
         switch (this.GradientY1Units)
@@ -454,24 +441,51 @@ public abstract class RenderableBase : InvisibleRenderable
                 break;
         }
 
-        var effectiveGradientY2 = absoluteTop + GradientY2;
-        switch (this.GradientY2Units)
-        {
-            case GeneralUnitType.PixelsFromMiddle:
-                effectiveGradientY2 += Height / 2.0f;
-                break;
-            case GeneralUnitType.PixelsFromLarge:
-                effectiveGradientY2 += Height;
-                break;
-            case GeneralUnitType.Percentage:
-                effectiveGradientY2 = Height * GradientY2 / 100;
-                break;
-        }
 
-        return new Gradient(firstColor, 
-            new Vector2(effectiveGradientX1, effectiveGradientY1),
-            secondColor,
-            new Vector2(effectiveGradientX2, effectiveGradientY2));
+        if(_gradientType == GradientType.Linear)
+        {
+            var effectiveGradientX2 = absoluteLeft + GradientX2;
+            switch (this.GradientX2Units)
+            {
+                case GeneralUnitType.PixelsFromMiddle:
+                    effectiveGradientX2 += Width / 2.0f;
+                    break;
+                case GeneralUnitType.PixelsFromLarge:
+                    effectiveGradientX2 += Width;
+                    break;
+                case GeneralUnitType.Percentage:
+                    effectiveGradientX2 = Width * GradientX2 / 100;
+                    break;
+            }
+            var effectiveGradientY2 = absoluteTop + GradientY2;
+            switch (this.GradientY2Units)
+            {
+                case GeneralUnitType.PixelsFromMiddle:
+                    effectiveGradientY2 += Height / 2.0f;
+                    break;
+                case GeneralUnitType.PixelsFromLarge:
+                    effectiveGradientY2 += Height;
+                    break;
+                case GeneralUnitType.Percentage:
+                    effectiveGradientY2 = Height * GradientY2 / 100;
+                    break;
+            }
+
+            return new Gradient(firstColor, 
+                new Vector2(effectiveGradientX1, effectiveGradientY1),
+                secondColor,
+                new Vector2(effectiveGradientX2, effectiveGradientY2));
+        }
+        else
+        {
+            var effectiveGradientX2 = effectiveGradientX1 + _gradientOuterRadius;
+            var effectiveGradientY2 = effectiveGradientY1;
+            return new Gradient(firstColor,
+                new Vector2(effectiveGradientX1, effectiveGradientY1),
+                secondColor,
+                new Vector2(effectiveGradientX2, effectiveGradientY2),
+                s:Gradient.Shape.Radial);
+        }
 
         // todo - eventually support rotation
         //var rectToUse = boundingRect;

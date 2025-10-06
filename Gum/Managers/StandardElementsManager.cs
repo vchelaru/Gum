@@ -886,10 +886,6 @@ namespace Gum.Managers
 
                 AddVariableReferenceList(filledCircleState);
                 StandardElementsManager.AddEventVariables(filledCircleState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(filledCircleState);
-#endif
             }
 
             return filledCircleState;
@@ -927,10 +923,6 @@ namespace Gum.Managers
 
                 StandardElementsManager.AddClipsChildren(roundedRectangleState);
                 StandardElementsManager.AddEventVariables(roundedRectangleState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(roundedRectangleState);
-#endif
             }
 
             return roundedRectangleState;
@@ -979,9 +971,6 @@ namespace Gum.Managers
                 AddDropshadowVariables(arcState);
 
                 AddVariableReferenceList(arcState);
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(arcState);
-#endif
             }
 
             return arcState;

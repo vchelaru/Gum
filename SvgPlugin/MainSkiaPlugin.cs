@@ -23,7 +23,7 @@ using ToolsUtilities;
 namespace SkiaPlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainSvgPlugin : PluginBase
+    public class MainSkiaPlugin : PluginBase
     {
         #region Fields/Properties
 
@@ -37,7 +37,7 @@ namespace SkiaPlugin
 
         #endregion
 
-        public MainSvgPlugin()
+        public MainSkiaPlugin()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
@@ -56,6 +56,8 @@ namespace SkiaPlugin
             AddMenuItems();
 
             RegisterEnumTypes();
+
+            DefaultStateManager.UpdateDisplayersForStandards();
         }
 
         private void RegisterEnumTypes()
