@@ -2,6 +2,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Linq;
 using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics;
@@ -97,9 +98,19 @@ public class InvisibleRenderable : IVisible, IRenderableIpso,
 
     IVisible IVisible.Parent { get { return Parent as IVisible; } }
 
+    public virtual string BatchKey => string.Empty;
+    public virtual void StartBatch(ISystemManagers systemManagers) 
+    {
+        this.Children?.FirstOrDefault()?.StartBatch(systemManagers);
+    }
+    public virtual void EndBatch(ISystemManagers systemManagers) 
+    { 
+        this.Children?.LastOrDefault()?.EndBatch(systemManagers);
+    }
+
     public virtual void PreRender()
     {
-
+        
     }
 
     public virtual void Render(ISystemManagers managers)

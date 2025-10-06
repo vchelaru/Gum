@@ -490,4 +490,18 @@ public abstract class AposShapeBase : InvisibleRenderable
         //}
 
     }
+
+    public override string BatchKey => "Apos.Shapes";
+
+    public override void StartBatch(ISystemManagers systemManagers)
+    {
+        var sb = ShapeRenderer.ShapeBatch;
+        sb.Begin();
+    }
+
+    public override void EndBatch(ISystemManagers systemManagers)
+    {
+        var sb = ShapeRenderer.ShapeBatch;
+        sb.End();
+    }
 }

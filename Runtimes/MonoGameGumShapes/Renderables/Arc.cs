@@ -48,7 +48,6 @@ internal class Arc : AposShapeBase
         if (SweepAngle == 0) return;
 
         var sb = ShapeRenderer.ShapeBatch;
-        sb.Begin();
 
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
@@ -79,8 +78,6 @@ internal class Arc : AposShapeBase
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1, Thickness);
-
-        sb.End();
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb, 

@@ -93,6 +93,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RendererSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SortableLayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Sprite.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteBatchStack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteRenderer.cs" />

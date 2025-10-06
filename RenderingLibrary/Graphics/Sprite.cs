@@ -15,7 +15,7 @@ using RenderingLibrary.Math;
 namespace RenderingLibrary.Graphics;
 
 
-public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
+public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
 {
     #region Fields
 
@@ -359,7 +359,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         }
     }
 
-    void IRenderable.Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
         if (this.AbsoluteVisible && Width > 0 && Height > 0)
         {

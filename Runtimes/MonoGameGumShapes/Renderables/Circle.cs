@@ -16,8 +16,6 @@ public class Circle : AposShapeBase
     {
         var sb = ShapeRenderer.ShapeBatch;
 
-        sb.Begin();
-
         var absoluteLeft = this.GetAbsoluteLeft();
         var absoluteTop = this.GetAbsoluteTop();
 
@@ -42,8 +40,6 @@ public class Circle : AposShapeBase
         }
 
         RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1);
-
-        sb.End();
     }
 
     private void RenderInternal(ShapeBatch sb, 

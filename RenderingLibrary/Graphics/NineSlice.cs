@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace RenderingLibrary.Graphics;
 
-public class NineSlice : IRenderableIpso, 
+public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso, 
     IVisible, ITextureCoordinate, IAnimatable, ICloneable
 {
     #region Fields
@@ -453,7 +453,7 @@ public class NineSlice : IRenderableIpso,
         RefreshSpriteDimensions();
     }
 
-    void IRenderable.Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
         if (AbsoluteVisible && Width > 0 && Height > 0)
         {

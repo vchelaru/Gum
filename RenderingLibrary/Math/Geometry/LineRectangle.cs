@@ -9,7 +9,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineRectangle : IVisible, IRenderableIpso, ISetClipsChildren
+    public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, ISetClipsChildren
     {
         #region Fields
 
@@ -268,7 +268,7 @@ namespace RenderingLibrary.Math.Geometry
         }
 
 
-        void IRenderable.Render(ISystemManagers managers)
+        public override void Render(ISystemManagers managers)
         {
             if (AbsoluteVisible && LocalVisible)
             {

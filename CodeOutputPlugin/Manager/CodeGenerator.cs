@@ -4559,6 +4559,25 @@ public class CodeGenerator
             }
         }
 
+        if(context.Element is ScreenSave && context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        {
+            // October 5, 2025
+            // Generate the screen
+            // size:
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                // children attached to the screen should behave as if they are attached to the entire root, so make the screen fully
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Width = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Height = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+            }
+            else
+            {
+
+            }
+        }
+
         foreach (var instance in context.Element.Instances)
         {
             context.Instance = instance;

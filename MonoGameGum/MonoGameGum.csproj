@@ -76,6 +76,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="Renderables\SpriteBatchRenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />

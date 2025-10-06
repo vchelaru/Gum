@@ -33,11 +33,19 @@ namespace RenderingLibrary.Graphics
         }
 
 
+
 #if SKIA
         public void Render(SkiaSharp.SKCanvas canvas)
         {
             throw new NotImplementedException();
         }
 #endif
+
+#if !NET8_0_OR_GREATER
+    public string BatchKey => string.Empty;
+    public void StartBatch(ISystemManagers systemManagers) { }
+    public void EndBatch(ISystemManagers systemManagers) { }
+#endif
+
     }
 }
