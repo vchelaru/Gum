@@ -57,7 +57,7 @@ namespace SkiaPlugin.Managers
 
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
-                AddVariableReferenceList(svgState);
+                StandardElementsManager.AddVariableReferenceList(svgState);
 
                 StandardElementsManager.AddEventVariables(svgState);
 
@@ -330,11 +330,6 @@ namespace SkiaPlugin.Managers
         private static void AddVisibleVariable(StateSave state)
         {
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-        }
-
-        private static void AddVariableReferenceList(StateSave stateSave)
-        {
-            stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = new List<string>(), Category = "References", Name = "VariableReferences" });
         }
 
         static void AddDropshadowVariables(StateSave stateSave)

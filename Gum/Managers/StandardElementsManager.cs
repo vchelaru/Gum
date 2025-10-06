@@ -545,7 +545,7 @@ namespace Gum.Managers
             stateSave.Variables.Add(variable);
         }
 
-        private void AddVariableReferenceList(StateSave stateSave)
+        public static void AddVariableReferenceList(StateSave stateSave)
         {
             var variableListSave = new VariableListSave<string>
             {

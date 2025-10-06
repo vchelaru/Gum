@@ -1,6 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.Xna.Framework;
 using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
@@ -14,6 +15,23 @@ namespace MonoGameGum.GueDeriving;
 
 public abstract class AposShapeRuntime : BindableGue
 {
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    public static void RegisterRuntimeTypes()
+    {
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Arc",
+            () => new ArcRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "ColoredCircle",
+            () => new ColoredCircleRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "RoundedRectangle",
+            () => new RoundedRectangleRuntime());
+    }
+
     protected abstract AposShapeBase ContainedRenderable { get; }
 
     #region Solid colors
