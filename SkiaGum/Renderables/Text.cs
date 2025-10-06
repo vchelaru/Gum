@@ -490,6 +490,14 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public void PreRender() { }
 
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
+
     #region IVisible Implementation
 
     public bool Visible
@@ -520,6 +528,8 @@ public class Text : IRenderableIpso, IVisible, IText
             return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
+
+    public string BatchKey => string.Empty;
 
     #endregion
 }
