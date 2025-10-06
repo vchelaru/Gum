@@ -12,7 +12,7 @@ namespace MonoGameGum.GueDeriving;
 
 public class ColoredCircleRuntime : AposShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => ContainedCircle;
+    protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
 
     Circle mContainedCircle;
     Circle ContainedCircle

@@ -10,7 +10,7 @@ namespace MonoGameGum.GueDeriving;
 
 public class ArcRuntime : AposShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => ContainedArc;
+    protected override RenderableShapeBase ContainedRenderable => ContainedArc;
 
 
 

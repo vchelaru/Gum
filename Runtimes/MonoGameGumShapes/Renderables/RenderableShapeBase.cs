@@ -16,14 +16,14 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameAndGum.Renderables;
 
-public abstract class RenderableBase : InvisibleRenderable
+public abstract class RenderableShapeBase : RenderableBase
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 
 
     // this is the default in Skia renderables so use that here:
     public Color Color { get; set; } = Color.Red;
-    public int Alpha
+    public new int Alpha
     {
         get => Color.A;
         set

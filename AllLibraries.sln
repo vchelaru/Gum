@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11018.127 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "GumCommon\GumCommon.csproj", "{C1AFB9E5-6076-4637-BC7D-A6555DA4770E}"
 EndProject
@@ -30,6 +30,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.IntegrationTests", "Tests\MonoGameGum.IntegrationTests\MonoGameGum.IntegrationTests.csproj", "{2F966462-A7FB-4D99-AE43-4597A145C809}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.TestsCommon", "Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj", "{96A05A7C-90CA-437F-ACFA-8C8193DD2791}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGumShapes", "Runtimes\MonoGameGumShapes\MonoGameGumShapes.csproj", "{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -185,6 +187,18 @@ Global
 		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|Any CPU.Build.0 = Release|Any CPU
 		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|x86.ActiveCfg = Release|Any CPU
 		{96A05A7C-90CA-437F-ACFA-8C8193DD2791}.Release|x86.Build.0 = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Debug|x86.Build.0 = Debug|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release_No_Diagnostics|Any CPU.Build.0 = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release_No_Diagnostics|x86.ActiveCfg = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release_No_Diagnostics|x86.Build.0 = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release|x86.ActiveCfg = Release|Any CPU
+		{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

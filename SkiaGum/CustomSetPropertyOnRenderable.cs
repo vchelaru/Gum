@@ -18,6 +18,7 @@ using SkiaGum.Content;
 using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using RenderableBase = SkiaGum.Renderables.RenderableBase;
 namespace SkiaGum;
 #else
 using MonoGameAndGum.Renderables;
@@ -30,7 +31,7 @@ namespace MonoGameGumShapes;
 public class CustomSetPropertyOnRenderable
 {
 
-    private static bool TrySetPropertiesOnRenderableBase(RenderableBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    private static bool TrySetPropertiesOnRenderableBase(Renderables.RenderableBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         switch (propertyName)
         {
