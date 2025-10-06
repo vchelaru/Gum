@@ -72,11 +72,11 @@ namespace Gum.Managers
                 }
                 else if (variable.Type == nameof(PositionUnitType))
                 {
-                    if (variable.Name == "XUnits")
+                    if (variable.Name == "XUnits" || variable.Name == "GradientX1Units" || variable.Name == "GradientX2Units")
                     {
                         variable.PreferredDisplayer = typeof(XUnitsControl);
                     }
-                    else if (variable.Name == "YUnits")
+                    else if (variable.Name == "YUnits" || variable.Name == "GradientY1Units" || variable.Name == "GradientY2Units")
                     {
                         variable.PreferredDisplayer = typeof(YUnitsControl);
                     }

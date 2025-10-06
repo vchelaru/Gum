@@ -58,10 +58,6 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddVariableReferenceList(svgState);
 
                 StandardElementsManager.AddEventVariables(svgState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(svgState);
-#endif
             }
             return svgState;
         }
@@ -88,10 +84,6 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddVariableReferenceList(canvasState);
 
                 StandardElementsManager.AddEventVariables(canvasState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(canvasState);
-#endif
             }
 
             return canvasState;
@@ -122,19 +114,11 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddVariableReferenceList(lottieAnimationState);
 
                 StandardElementsManager.AddEventVariables(lottieAnimationState);
-
-#if GUM
-                StandardElementsManagerGumTool.SetPreferredDisplayers(lottieAnimationState);
-#endif
             }
             return lottieAnimationState;
         }
         #endregion
 
-
-        #region Add Common Variables
-
-        #endregion
 
         #region Property Grid Utilities
 
@@ -225,8 +209,21 @@ namespace SkiaPlugin.Managers
 
             return false;
         }
-        #endregion
 
+#if GUM
+        internal static void UpdateDisplayersForStandards()
+        {
+            StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetArcState());
+            StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetColoredCircleState());
+            StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetRoundedRectangleState());
+
+            StandardElementsManagerGumTool.SetPreferredDisplayers(GetCanvasState());
+            StandardElementsManagerGumTool.SetPreferredDisplayers(GetSvgState());
+            StandardElementsManagerGumTool.SetPreferredDisplayers(GetLottieAnimationState());
+
+        }
+#endif
+        #endregion
 
     }
 }

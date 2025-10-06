@@ -46,7 +46,6 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     #region Gradient Colors
 
-    #region Gradient Colors
 
     public int Blue1
     {
@@ -66,6 +65,24 @@ public abstract class SkiaShapeRuntime : BindableGue
         set => ContainedRenderable.Red1 = value;
     }
 
+    public int Alpha1
+    {
+        get => ContainedRenderable.Alpha1;
+        set => ContainedRenderable.Alpha1 = value;
+    }
+
+    public SKColor Color1
+    {
+        get => new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+        set
+        {
+            Red1 = value.Red;
+            Green1 = value.Green;
+            Blue1 = value.Blue;
+            Alpha1 = value.Alpha;
+        }
+    }
+
 
     public int Blue2
     {
@@ -83,6 +100,24 @@ public abstract class SkiaShapeRuntime : BindableGue
     {
         get => ContainedRenderable.Red2;
         set => ContainedRenderable.Red2 = value;
+    }
+
+    public int Alpha2
+    {
+        get => ContainedRenderable.Alpha2;
+        set => ContainedRenderable.Alpha2 = value;
+    }
+
+    public SKColor Color2
+    {
+        get => new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
+        set
+        {
+            Red2 = value.Red;
+            Green2 = value.Green;
+            Blue2 = value.Blue;
+            Alpha2 = value.Alpha;
+        }
     }
 
     public float GradientX1
@@ -163,7 +198,6 @@ public abstract class SkiaShapeRuntime : BindableGue
         set => ContainedRenderable.GradientOuterRadiusUnits = value;
     }
 
-    #endregion
 
 
     #endregion
