@@ -10,7 +10,7 @@ namespace MonoGameGum.GueDeriving;
 
 public class RoundedRectangleRuntime : AposShapeRuntime
 {
-    protected override AposShapeBase ContainedRenderable => ContainedRectangle;
+    protected override RenderableBase ContainedRenderable => ContainedRectangle;
 
     RoundedRectangle _containedRectangle;
     RoundedRectangle ContainedRectangle

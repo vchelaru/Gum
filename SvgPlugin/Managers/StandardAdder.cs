@@ -19,11 +19,11 @@ namespace SkiaPlugin.Managers
         private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
         public static void AddAllStandards()
         {
-            AddStandard("Arc", DefaultStateManager.GetArcState());
+            AddStandard("Arc", StandardElementsManager.GetArcState());
             AddStandard("Canvas", DefaultStateManager.GetCanvasState());
-            AddStandard("ColoredCircle", DefaultStateManager.GetColoredCircleState());
+            AddStandard("ColoredCircle", StandardElementsManager.GetColoredCircleState());
             AddStandard("LottieAnimation", DefaultStateManager.GetLottieAnimationState());
-            AddStandard("RoundedRectangle", DefaultStateManager.GetRoundedRectangleState());
+            AddStandard("RoundedRectangle", StandardElementsManager.GetRoundedRectangleState());
             AddStandard("Svg", DefaultStateManager.GetSvgState());
         }
 

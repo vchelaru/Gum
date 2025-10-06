@@ -733,7 +733,9 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
         }
     }
 
-#endregion
+    public string BatchKey => string.Empty;
+
+    #endregion
 
     protected void ApplyGradientToPaint(SKRect boundingRect, SKPaint paint, float absoluteRotation)
     {
@@ -896,5 +898,13 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
                 }
             }
         }
+    }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
     }
 }

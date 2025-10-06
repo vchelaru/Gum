@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-internal class Arc : AposShapeBase
+internal class Arc : RenderableBase
 {
 
     public float StartAngle

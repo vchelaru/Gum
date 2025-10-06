@@ -1,6 +1,9 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.Xna.Framework;
 using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
@@ -14,7 +17,47 @@ namespace MonoGameGum.GueDeriving;
 
 public abstract class AposShapeRuntime : BindableGue
 {
-    protected abstract AposShapeBase ContainedRenderable { get; }
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    public static void RegisterRuntimeTypes()
+    {
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Arc",
+            () => new ArcRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "ColoredCircle",
+            () => new ColoredCircleRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "RoundedRectangle",
+            () => new RoundedRectangleRuntime());
+
+        StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
+
+        GraphicalUiElement.SetPropertyOnRenderable += MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+
+    }
+
+    private static StateSave HandleCustomGetDefaultState(string arg)
+    {
+        switch (arg)
+        {
+            case "Arc":
+                return StandardElementsManager.GetArcState();
+            case "ColoredCircle":
+                return StandardElementsManager.GetColoredCircleState();
+            case "RoundedRectangle":
+                return StandardElementsManager.GetRoundedRectangleState();
+
+            // temp?
+            default:
+                return StandardElementsManager.Self.DefaultStates["Container"];
+        }
+        return null;
+    }
+
+    protected abstract RenderableBase ContainedRenderable { get; }
 
     #region Solid colors
 

@@ -140,11 +140,11 @@ namespace SkiaPlugin
         {
             switch(type)
             {
-                case "Arc": return DefaultStateManager.GetArcState();
+                case "Arc": return StandardElementsManager.GetArcState();
                 case "Canvas": return DefaultStateManager.GetCanvasState();
-                case "ColoredCircle": return DefaultStateManager.GetColoredCircleState();
+                case "ColoredCircle": return StandardElementsManager.GetColoredCircleState();
                 case "LottieAnimation": return DefaultStateManager.GetLottieAnimationState();
-                case "RoundedRectangle": return DefaultStateManager.GetRoundedRectangleState();
+                case "RoundedRectangle": return StandardElementsManager.GetRoundedRectangleState();
                 case "Svg": return DefaultStateManager.GetSvgState();
             }
             return null;

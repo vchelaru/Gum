@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-public class Circle : AposShapeBase
+public class Circle : RenderableBase
 {
     public override void Render(ISystemManagers managers)
     {

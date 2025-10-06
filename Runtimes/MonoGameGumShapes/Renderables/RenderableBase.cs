@@ -16,7 +16,7 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace MonoGameAndGum.Renderables;
 
-public abstract class AposShapeBase : InvisibleRenderable
+public abstract class RenderableBase : InvisibleRenderable
 {
     protected ShapeRenderer ShapeRenderer => ShapeRenderer.Self;
 

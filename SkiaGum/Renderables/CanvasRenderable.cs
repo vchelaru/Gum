@@ -136,6 +136,14 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
             canvas.Restore();
         }
     }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
 #else
     public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
     {
@@ -180,6 +188,8 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
             return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
+
+    public string BatchKey => string.Empty;
 
     #endregion
 
