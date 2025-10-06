@@ -791,7 +791,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void UpdateTreeviewIconScale(float scale = 1.0f)
     {
-        int baseImageSize = 16;
+        int baseImageSize = 20;
 
         // Then we can re-scale the images
         ObjectTreeView.ImageList = ResizeImageListImages(
@@ -811,31 +811,25 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             foreach (string key in originalImageList.Images.Keys)
             {
                 Image originalImage = originalImageList.Images[key];
-                Image resizedImage = ResizeImageWithoutGraphics(originalImage, newSize); // Reuse ResizeImage method
+                Image resizedImage = ResizeImageWithAntialiasing(originalImage, newSize); // Reuse ResizeImage method
                 resizedImageList.Images.Add(key, resizedImage);
             }
 
             return resizedImageList;
         }
 
-        Image ResizeImageWithoutGraphics(Image originalImage, Size newSize)
+        Image ResizeImageWithAntialiasing(Image originalImage, Size newSize)
         {
-            Bitmap resizedImage = new Bitmap(newSize.Width, newSize.Height);
-
-            for (int x = 0; x < newSize.Width; x++)
+            var dest = new Bitmap(newSize.Width, newSize.Height);
+            using (var g = System.Drawing.Graphics.FromImage(dest))
             {
-                for (int y = 0; y < newSize.Height; y++)
-                {
-                    // Calculate the position in the original image
-                    int originalX = x * originalImage.Width / newSize.Width;
-                    int originalY = y * originalImage.Height / newSize.Height;
-
-                    // Copy the pixel from the original image
-                    resizedImage.SetPixel(x, y, ((Bitmap)originalImage).GetPixel(originalX, originalY));
-                }
+                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.DrawImage(originalImage, new Rectangle(Point.Empty, newSize));
             }
-
-            return resizedImage;
+            return dest;
         }
     }
 
