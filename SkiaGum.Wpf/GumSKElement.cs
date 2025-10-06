@@ -126,7 +126,7 @@ namespace SkiaGum.Wpf
             base.OnPaintSurface(args);
         }
 
-        void ISystemManagers.InvalidateSurface() => base.InvalidateVisual();
+        void ISurfaceInvalidatable.InvalidateSurface() => base.InvalidateVisual();
 
         public void ForceGumLayout()
         {
