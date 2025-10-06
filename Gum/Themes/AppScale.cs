@@ -13,6 +13,7 @@ public sealed class AppScale : DependencyObject
     private const double H3Scale = 1.16;
     private const double IconInlineScale = 1.16;
     private const double IconButtonScale = 1.667;
+    private const double ToggleDisplayIconScale = 2.333;
 
     public double BaseFontSize
     {
@@ -37,6 +38,7 @@ public sealed class AppScale : DependencyObject
     // Icon tokens
     public double IconInline { get => (double)GetValue(IconInlineProperty); private set => SetValue(IconInlineProperty, value); }
     public double IconButton { get => (double)GetValue(IconButtonProperty); private set => SetValue(IconButtonProperty, value); }
+    public double ToggleDisplayIcon { get => (double)GetValue(ToggleDisplayIconProperty); private set => SetValue(ToggleDisplayIconProperty, value); }
 
     public static readonly DependencyProperty BodyProperty = DP(nameof(Body), BaseFontSizeDefault * BodyScale);
     public static readonly DependencyProperty CaptionProperty = DP(nameof(Caption), BaseFontSizeDefault * CaptionScale);
@@ -45,6 +47,7 @@ public sealed class AppScale : DependencyObject
     public static readonly DependencyProperty H3Property = DP(nameof(H3), BaseFontSizeDefault * H3Scale);
     public static readonly DependencyProperty IconInlineProperty = DP(nameof(IconInline), BaseFontSizeDefault * IconInlineScale);
     public static readonly DependencyProperty IconButtonProperty = DP(nameof(IconButton), BaseFontSizeDefault * IconButtonScale);
+    public static readonly DependencyProperty ToggleDisplayIconProperty = DP(nameof(ToggleDisplayIcon), BaseFontSizeDefault * ToggleDisplayIconScale);
 
     static DependencyProperty DP(string name, double? defaultValue = 0d) =>
         DependencyProperty.Register(name, typeof(double), typeof(AppScale), new PropertyMetadata(defaultValue));
@@ -64,5 +67,6 @@ public sealed class AppScale : DependencyObject
         // Icon scale tokens tied to *current* base
         s.IconInline = b * IconInlineScale;   // inline with text
         s.IconButton = b * IconButtonScale;  // on icon-only or button icons
+        s.ToggleDisplayIcon = b * ToggleDisplayIconScale; // large icon for toggle display
     }
 }

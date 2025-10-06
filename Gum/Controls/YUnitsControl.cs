@@ -38,14 +38,16 @@ namespace Gum.Controls
                     {
                         Name = "Pixels From Top",
                         Value = PositionUnitType.PixelsFromTop,
-                        Image = pixelsFromTopBitmap
+                        Image = pixelsFromTopBitmap,
+                        GumIconName = "YUnitsTop"
 
                     },
                     new Option
                     {
                         Name = "Pixels From Center",
                         Value = PositionUnitType.PixelsFromCenterY,
-                        Image = pixelsFromCenterBitmap
+                        Image = pixelsFromCenterBitmap,
+                        GumIconName = "YUnitsCenter"
                     },
                     // November 7, 2024
                     // even though this exists in the underlying layout engine, we never use it in Gum so let's remove it.
@@ -59,19 +61,22 @@ namespace Gum.Controls
                     {
                         Name = "Pixels From Bottom",
                         Value = PositionUnitType.PixelsFromBottom,
-                        Image = pixelsFromBottomBitmap
+                        Image = pixelsFromBottomBitmap,
+                        GumIconName = "YUnitsBottom"
                     },
                     new Option
                     {
                         Name = "Percentage Parent Height",
                         Value = PositionUnitType.PercentageHeight,
-                        Image = percentageBitmap
+                        Image = percentageBitmap,
+                        GumIconName = "YUnitsPercentageParent"
                     },
                     new Option
                     {
                         Name = "Pixels From Baseline",
                         Value = PositionUnitType.PixelsFromBaseline,
-                        Image = pixelsFromBaseline
+                        Image = pixelsFromBaseline,
+                        GumIconName = "YUnitsBaseline"
                     }
                 };
             }

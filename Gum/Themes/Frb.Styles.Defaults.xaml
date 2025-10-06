@@ -29,28 +29,47 @@
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="{x:Type controls:GumIcon}">
-        <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="False" />
+        <Setter Property="UseLayoutRounding" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:GumIcon}">
-                    <!--  FontSize drives the rendered size (like text)  -->
-                    <Grid Width="{TemplateBinding FontSize}" Height="{TemplateBinding FontSize}">
-                        <!--  Multi-color (DrawingImage/ImageSource) path  -->
-                        <Image
-                            x:Name="PART_Image"
-                            Stretch="{TemplateBinding Stretch}"
-                            Visibility="Collapsed" />
-
-                        <!--  Single-color (Geometry) path; Fill comes from Foreground  -->
-                        <Viewbox Stretch="{TemplateBinding Stretch}">
+                    <Viewbox
+                        ClipToBounds="False"
+                        SnapsToDevicePixels="False"
+                        Stretch="{TemplateBinding Stretch}"
+                        UseLayoutRounding="False">
+                        <Canvas
+                            x:Name="PART_Box"
+                            Width="28"
+                            Height="28"
+                            ClipToBounds="False"
+                            SnapsToDevicePixels="False"
+                            UseLayoutRounding="False">
+                            <Rectangle
+                                Width="28"
+                                Height="28"
+                                Fill="Transparent"
+                                IsHitTestVisible="False" />
+                            <Image
+                                x:Name="PART_Image"
+                                Stretch="Uniform"
+                                Visibility="Collapsed" />
                             <Path
                                 x:Name="PART_Path"
                                 Fill="{TemplateBinding Foreground}"
+                                RenderOptions.EdgeMode="Unspecified"
+                                SnapsToDevicePixels="False"
+                                Stretch="None"
+                                Visibility="Collapsed" />
+                            <Path
+                                x:Name="PART_PathSecondary"
+                                Fill="{TemplateBinding Foreground}"
+                                Opacity="{TemplateBinding SecondaryOpacity}"
                                 Stretch="Uniform"
                                 Visibility="Collapsed" />
-                        </Viewbox>
-                    </Grid>
+                        </Canvas>
+                    </Viewbox>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -58,6 +77,7 @@
 
     <Style TargetType="wpf:FluentIcon">
         <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconInline}" />
+        <Setter Property="Width" Value="Auto" />
     </Style>
 
     <Style x:Key="FluentIcon.ButtonSize" TargetType="{x:Type wpf:FluentIcon}">
@@ -1341,11 +1361,27 @@
     <Style TargetType="{x:Type controls1:ToggleButtonOptionDisplay}">
         <Style.Resources>
             <Style BasedOn="{StaticResource {x:Type ToggleButton}}" TargetType="{x:Type ToggleButton}">
+                <Style.Resources>
+                    <Style BasedOn="{StaticResource {x:Type wpf:FluentIcon}}" TargetType="wpf:FluentIcon">
+                        <Setter Property="HorizontalAlignment" Value="Left" />
+                        <Setter Property="VerticalAlignment" Value="Top" />
+                        <Setter Property="Width" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                        <Setter Property="Height" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                        <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                    </Style>
+                    <Style BasedOn="{StaticResource {x:Type controls:GumIcon}}" TargetType="{x:Type controls:GumIcon}">
+                        <Setter Property="HorizontalAlignment" Value="Left" />
+                        <Setter Property="VerticalAlignment" Value="Top" />
+                        <Setter Property="Width" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                        <Setter Property="Height" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />
+                    </Style>
+                </Style.Resources>
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="2" />
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding Image, Converter={StaticResource NotNullToBoolConverter}}" Value="True">
-                        <Setter Property="BorderThickness" Value="2" />
-                        <Setter Property="BorderBrush" Value="Transparent" />
-                    </DataTrigger>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Value="True" />
@@ -1353,12 +1389,10 @@
                         </MultiDataTrigger.Conditions>
                         <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
                     </MultiDataTrigger>
-                    <DataTrigger Binding="{Binding IconName, Converter={StaticResource NotNullToBoolConverter}}" Value="True">
-                        <Setter Property="BorderThickness" Value="0" />
-                    </DataTrigger>
-                    <DataTrigger Binding="{Binding GumIconName, Converter={StaticResource NotNullToBoolConverter}}" Value="True">
-                        <Setter Property="BorderThickness" Value="0" />
-                    </DataTrigger>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border}" />
+                    </Trigger>
                 </Style.Triggers>
             </Style>
         </Style.Resources>

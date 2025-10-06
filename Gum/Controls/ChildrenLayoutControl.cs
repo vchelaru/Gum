@@ -24,32 +24,37 @@ class ChildrenLayoutControl : ToggleButtonOptionContainer
                 {
                     Name = "Regular",
                     Value = Gum.Managers.ChildrenLayout.Regular,
-                    Image = regularBitmap
+                    Image = regularBitmap,
+                    GumIconName = "ChildrenLayoutRegular"
 
                 },
                 new Option
                 {
                     Name = "Top to Bottom Stack",
                     Value = Gum.Managers.ChildrenLayout.TopToBottomStack,
-                    Image = topToBottomBitmap
+                    Image = topToBottomBitmap,
+                    GumIconName = "ChildrenLayoutTopToBottomStack"
                 },
                 new Option
                 {
                     Name = "Left to Right Stack",
                     Value = Gum.Managers.ChildrenLayout.LeftToRightStack,
-                    Image = leftToRightBitmap
+                    Image = leftToRightBitmap,
+                    GumIconName = "ChildrenLayoutLeftToRightStack"
                 },
                 new Option
                 {
                     Name = "Auto Grid Horizontal",
                     Value = Gum.Managers.ChildrenLayout.AutoGridHorizontal,
-                    Image = autoGridHorizontal
+                    Image = autoGridHorizontal,
+                    GumIconName = "ChildrenLayoutAutoGridHorizontal"
                 },
                 new Option
                 {
                     Name = "Auto Grid Vertical",
                     Value = Gum.Managers.ChildrenLayout.AutoGridVertical,
-                    Image = autoGridVertical
+                    Image = autoGridVertical,
+                    GumIconName = "ChildrenLayoutAutoGridVertical"
                 }
             };
         }

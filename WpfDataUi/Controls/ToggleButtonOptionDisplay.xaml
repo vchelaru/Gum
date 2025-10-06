@@ -39,8 +39,8 @@
         <WrapPanel
             x:Name="ButtonWrapPanel"
             Grid.Column="1"
-            ItemHeight="{Binding ActualHeight, ElementName=Label}"
-            ItemWidth="{Binding ActualHeight, ElementName=Label}"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
             Orientation="Horizontal" />
         <TextBlock
             x:Name="HintTextBlock"

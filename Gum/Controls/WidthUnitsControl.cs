@@ -106,56 +106,65 @@ namespace Gum.Controls
                     {
                         Name = "Absolute",
                         Value = DimensionUnitType.Absolute,
-                        Image = absoluteBitmap
+                        Image = absoluteBitmap,
+                        GumIconName = "WidthUnitsAbsolute"
 
                     },
                     new Option
                     {
                         Name = "Relative to Parent",
                         Value = DimensionUnitType.RelativeToParent,
-                        Image = relativeToParentBitmap
+                        Image = relativeToParentBitmap,
+                        GumIconName = "WidthUnitsRelativeToParent"
                     },
                     new Option
                     {
                         Name = "Percentage of Parent",
                         Value = DimensionUnitType.PercentageOfParent,
-                        Image = percentOfParentBitmap
+                        Image = percentOfParentBitmap,
+                        GumIconName = "WidthUnitsPercentageOfParent"
                     },
                     new Option
                     {
                         Name = "Ratio of Parent",
                         Value = DimensionUnitType.Ratio,
-                        Image = ratioBitmap
+                        Image = ratioBitmap,
+                        GumIconName = "WidthUnitsRatioOfParent"
                     },
                     new Option
                     {
                         Name = "Relative to Children",
                         Value = DimensionUnitType.RelativeToChildren,
-                        Image = relativeToChildrenBitmap
+                        Image = relativeToChildrenBitmap,
+                        GumIconName = "WidthUnitsRelativeToChildren"
                     },
                     new Option
                     {
                         Name = "Percentage of Height",
                         Value = DimensionUnitType.PercentageOfOtherDimension,
-                        Image = percentageOfHeightBitmap
+                        Image = percentageOfHeightBitmap,
+                        GumIconName = "WidthUnitsPercentageOfHeight"
                     },
                     new Option
                     {
                         Name = "Percentage of File Width",
                         Value = DimensionUnitType.PercentageOfSourceFile,
-                        Image = percentageOfFileWidth
+                        Image = percentageOfFileWidth,
+                        GumIconName = "WidthUnitsPercentageOfFileWidth"
                     },
                     new Option
                     {
                         Name = "Maintain File Aspect Ratio Width",
                         Value = DimensionUnitType.MaintainFileAspectRatio,
-                        Image = maintainFileAspectRatio
+                        Image = maintainFileAspectRatio,
+                        GumIconName = "WidthUnitsMaintainFileAspectRatio"
                     },
                     new Option
                     {
                         Name = "Absolute Multiplied by Font Scale",
                         Value = DimensionUnitType.AbsoluteMultipliedByFontScale,
-                        Image = absoluteMultipliedByFontScale
+                        Image = absoluteMultipliedByFontScale,
+                        GumIconName = "WidthUnitsAbsoluteMultipliedByFontScale"
                     }
 
             };

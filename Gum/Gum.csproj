@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<OutputType>WinExe</OutputType>
@@ -251,6 +251,9 @@
 		<Content Include="Content\Fonts\Font18Arial_o1_0.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<Content Include="gum-logo-reverse-filled-64.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Include="GumLogo64.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
@@ -345,6 +348,7 @@
 		<PackageReference Include="PixiEditor.ColorPicker">
 			<Version>3.4.1</Version>
 		</PackageReference>
+		<PackageReference Include="SharpVectors" Version="1.8.5" />
 		<PackageReference Include="SkiaSharp">
 			<Version>3.116.1</Version>
 		</PackageReference>
@@ -395,6 +399,8 @@
 		<Compile Remove="Wireframe\RuntimeObjectCreator.cs" />
 		<None Remove="Content\.gumfcs" />
 		<None Remove="Content\BmfcTemplate.bmfc" />
+		<None Remove="gum-logo-reverse-filled-64.png" />
+		<None Remove="GumLogo64.png" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
 </Project>
