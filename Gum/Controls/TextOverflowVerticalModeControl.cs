@@ -20,13 +20,15 @@ namespace Gum.Controls
                     {
                         Name = "Spill",
                         Value = TextOverflowVerticalMode.SpillOver,
-                        Image = spillVertical
+                        Image = spillVertical,
+                        GumIconName = "TextOverflowVerticalSpill"
                     },
                     new Option
                     {
                         Name = "Truncate Line",
                         Value = TextOverflowVerticalMode.TruncateLine,
-                        Image = truncateLine
+                        Image = truncateLine,
+                        GumIconName = "TextOverflowVerticalTruncateLine"
                     }
                 };
             }

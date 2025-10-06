@@ -64,7 +64,7 @@
     <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type controls2:Spinner}" />
 
     <DataTemplate x:Key="ToggleButtonOptionDisplayOptionContentTemplate" DataType="{x:Type controls:ToggleButtonOptionDisplay+Option}">
-        <wpf:FluentIcon FontSize="{Binding Source={StaticResource Scale}, Path=IconButton}" Icon="{Binding IconName}" />
+        <wpf:FluentIcon FontSize="{Binding Source={StaticResource Scale}, Path=IconButton}" Icon="{Binding IconName}" HorizontalAlignment="Center" />
     </DataTemplate>
     <DataTemplate x:Key="ToggleButtonOptionDisplayOptionContentTemplateGumIcon" DataType="{x:Type controls:ToggleButtonOptionDisplay+Option}">
         <controls2:GumIcon FontSize="{Binding Source={StaticResource Scale}, Path=IconButton}" Icon="{Binding GumIconName}" />
