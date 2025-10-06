@@ -300,6 +300,7 @@
   * [Ordering](code/monogame/ordering.md)
   * [Profiling](code/monogame/profiling.md)
   * [Resolution and Resizing the Game Window](code/monogame/resizing-the-game-window.md)
+  * [Shapes (Apos.Shapes)](code/monogame/shapes-apos.shapes.md)
   * [Known Issues](code/monogame/known-issues.md)
   * [Samples](code/monogame/samples/README.md)
     * [MonoGameGumFormsSample](code/monogame/samples/monogamegumformssample.md)
