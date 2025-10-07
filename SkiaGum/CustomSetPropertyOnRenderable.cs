@@ -18,7 +18,7 @@ using SkiaGum.Content;
 using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
-using RenderableBase = SkiaGum.Renderables.RenderableBase;
+using RenderableShapeBase = SkiaGum.Renderables.RenderableShapeBase;
 namespace SkiaGum;
 #else
 using MonoGameAndGum.Renderables;
@@ -31,71 +31,71 @@ namespace MonoGameGumShapes;
 public class CustomSetPropertyOnRenderable
 {
 
-    private static bool TrySetPropertiesOnRenderableBase(Renderables.RenderableBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    private static bool TrySetPropertiesOnRenderableBase(RenderableShapeBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         switch (propertyName)
         {
-            case nameof(RenderableBase.Alpha):
+            case nameof(RenderableShapeBase.Alpha):
                 renderableBase.Alpha = (int)value;
                 return true;
-            case nameof(RenderableBase.Alpha1):
+            case nameof(RenderableShapeBase.Alpha1):
                 renderableBase.Alpha1 = (int)value;
                 return true;
-            case nameof(RenderableBase.Alpha2):
+            case nameof(RenderableShapeBase.Alpha2):
                 renderableBase.Alpha2 = (int)value;
                 return true;
-            case nameof(RenderableBase.Blue):
+            case nameof(RenderableShapeBase.Blue):
                 renderableBase.Blue = (int)value;
                 return true;
-            case nameof(RenderableBase.Blue1):
+            case nameof(RenderableShapeBase.Blue1):
                 renderableBase.Blue1 = (int)value;
                 return true;
-            case nameof(RenderableBase.Blue2):
+            case nameof(RenderableShapeBase.Blue2):
                 renderableBase.Blue2 = (int)value;
                 return true;
-            case nameof(RenderableBase.DropshadowAlpha):
+            case nameof(RenderableShapeBase.DropshadowAlpha):
                 renderableBase.DropshadowAlpha = (int)value;
                 return true;
-            case nameof(RenderableBase.DropshadowBlue):
+            case nameof(RenderableShapeBase.DropshadowBlue):
                 renderableBase.DropshadowBlue = (int)value;
                 return true;
-            case nameof(RenderableBase.DropshadowBlurX):
+            case nameof(RenderableShapeBase.DropshadowBlurX):
                 renderableBase.DropshadowBlurX = (float)value;
                 return true;
-            case nameof(RenderableBase.DropshadowBlurY):
+            case nameof(RenderableShapeBase.DropshadowBlurY):
                 renderableBase.DropshadowBlurY = (float)value;
                 return true;
-            case nameof(RenderableBase.DropshadowGreen):
+            case nameof(RenderableShapeBase.DropshadowGreen):
                 renderableBase.DropshadowGreen = (int)value;
                 return true;
-            case nameof(RenderableBase.DropshadowOffsetX):
+            case nameof(RenderableShapeBase.DropshadowOffsetX):
                 renderableBase.DropshadowOffsetX = (float)value;
                 return true;
-            case nameof(RenderableBase.DropshadowOffsetY):
+            case nameof(RenderableShapeBase.DropshadowOffsetY):
                 renderableBase.DropshadowOffsetY = (float)value;
                 return true;
-            case nameof(RenderableBase.DropshadowRed):
+            case nameof(RenderableShapeBase.DropshadowRed):
                 renderableBase.DropshadowRed = (int)value;
                 return true;
-            case nameof(RenderableBase.GradientInnerRadius):
+            case nameof(RenderableShapeBase.GradientInnerRadius):
                 renderableBase.GradientInnerRadius = (float)value;
                 return true;
-            case nameof(RenderableBase.GradientInnerRadiusUnits):
+            case nameof(RenderableShapeBase.GradientInnerRadiusUnits):
                 renderableBase.GradientInnerRadiusUnits = (DimensionUnitType)value;
                 return true;
-            case nameof(RenderableBase.GradientOuterRadius):
+            case nameof(RenderableShapeBase.GradientOuterRadius):
                 renderableBase.GradientOuterRadius = (float)value;
                 return true;
-            case nameof(RenderableBase.GradientOuterRadiusUnits):
+            case nameof(RenderableShapeBase.GradientOuterRadiusUnits):
                 renderableBase.GradientOuterRadiusUnits = (DimensionUnitType)value;
                 return true;
-            case nameof(RenderableBase.GradientType):
+            case nameof(RenderableShapeBase.GradientType):
                 renderableBase.GradientType = (GradientType)value;
                 return true;
-            case nameof(RenderableBase.GradientX1):
+            case nameof(RenderableShapeBase.GradientX1):
                 renderableBase.GradientX1 = (float)value;
                 return true;
-            case nameof(RenderableBase.GradientX1Units):
+            case nameof(RenderableShapeBase.GradientX1Units):
                 {
                     if (value is PositionUnitType positionUnitType)
                     {
@@ -107,10 +107,10 @@ public class CustomSetPropertyOnRenderable
                     }
                 }
                 return true;
-            case nameof(RenderableBase.GradientX2):
+            case nameof(RenderableShapeBase.GradientX2):
                 renderableBase.GradientX2 = (float)value;
                 return true;
-            case nameof(RenderableBase.GradientX2Units):
+            case nameof(RenderableShapeBase.GradientX2Units):
                 {
                     if (value is PositionUnitType positionUnitType)
                     {
@@ -122,10 +122,10 @@ public class CustomSetPropertyOnRenderable
                     }
                 }
                 return true;
-            case nameof(RenderableBase.GradientY1):
+            case nameof(RenderableShapeBase.GradientY1):
                 renderableBase.GradientY1 = (float)value;
                 return true;
-            case nameof(RenderableBase.GradientY1Units):
+            case nameof(RenderableShapeBase.GradientY1Units):
                 {
                     if(value is PositionUnitType positionUnitType)
                     {
@@ -137,10 +137,10 @@ public class CustomSetPropertyOnRenderable
                     }
                 }
                 return true;
-            case nameof(RenderableBase.GradientY2):
+            case nameof(RenderableShapeBase.GradientY2):
                 renderableBase.GradientY2 = (float)value;
                 return true;
-            case nameof(RenderableBase.GradientY2Units):
+            case nameof(RenderableShapeBase.GradientY2Units):
                 {
                     if(value is PositionUnitType positionUnitType)
                     {
@@ -153,34 +153,34 @@ public class CustomSetPropertyOnRenderable
                 }
 
                 return true;
-            case nameof(RenderableBase.Green):
+            case nameof(RenderableShapeBase.Green):
                 renderableBase.Green = (int)value;
                 return true;
-            case nameof(RenderableBase.Green1):
+            case nameof(RenderableShapeBase.Green1):
                 renderableBase.Green1 = (int)value;
                 return true;
-            case nameof(RenderableBase.Green2):
+            case nameof(RenderableShapeBase.Green2):
                 renderableBase.Green2 = (int)value;
                 return true;
-            case nameof(RenderableBase.HasDropshadow):
+            case nameof(RenderableShapeBase.HasDropshadow):
                 renderableBase.HasDropshadow = (bool)value;
                 return true;
-            case nameof(RenderableBase.IsFilled):
+            case nameof(RenderableShapeBase.IsFilled):
                 renderableBase.IsFilled = (bool)value;
                 return true;
-            case nameof(RenderableBase.Red):
+            case nameof(RenderableShapeBase.Red):
                 renderableBase.Red = (int)value;
                 return true;
-            case nameof(RenderableBase.Red1):
+            case nameof(RenderableShapeBase.Red1):
                 renderableBase.Red1 = (int)value;
                 return true;
-            case nameof(RenderableBase.Red2):
+            case nameof(RenderableShapeBase.Red2):
                 renderableBase.Red2 = (int)value;
                 return true;
-            case nameof(RenderableBase.StrokeWidth):
+            case nameof(RenderableShapeBase.StrokeWidth):
                 renderableBase.StrokeWidth = (float)value;
                 return true;
-            case nameof(RenderableBase.UseGradient):
+            case nameof(RenderableShapeBase.UseGradient):
                 renderableBase.UseGradient = (bool)value;
                 return true;
                 // todo - more here...

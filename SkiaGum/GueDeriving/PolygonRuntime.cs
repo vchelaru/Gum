@@ -10,7 +10,7 @@ public class PolygonRuntime : SkiaShapeRuntime
 {
     #region Fields/Properties
 
-    protected override RenderableBase ContainedRenderable => ContainedPolygon;
+    protected override RenderableShapeBase ContainedRenderable => ContainedPolygon;
 
 
     Polygon mContainedPolygon;

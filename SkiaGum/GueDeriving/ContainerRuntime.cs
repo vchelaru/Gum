@@ -9,7 +9,7 @@ public class ContainerRuntime : BindableGue
     {
         if(fullInstantiation)
         {
-            SetContainedObject(new RenderableBase());
+            SetContainedObject(new RenderableShapeBase());
             Width = 150;
             Height = 150;
         }

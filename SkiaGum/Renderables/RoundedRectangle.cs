@@ -8,7 +8,7 @@ using System.Text;
 
 namespace SkiaGum.Renderables;
 
-class RoundedRectangle : RenderableBase, IClipPath, ICloneable
+class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
 {
     public float CornerRadius { get; set; }
 

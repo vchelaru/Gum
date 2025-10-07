@@ -61,7 +61,7 @@ public abstract class AposShapeRuntime : BindableGue
         return null;
     }
 
-    protected abstract RenderableBase ContainedRenderable { get; }
+    protected abstract RenderableShapeBase ContainedRenderable { get; }
 
     #region Solid colors
 
