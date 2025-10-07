@@ -299,6 +299,7 @@
   * [File Loading](code/monogame/file-loading.md)
   * [Ordering](code/monogame/ordering.md)
   * [Profiling](code/monogame/profiling.md)
+  * [Rendering Custom Graphics](code/monogame/rendering-custom-graphics.md)
   * [Resolution and Resizing the Game Window](code/monogame/resizing-the-game-window.md)
   * [Shapes (Apos.Shapes)](code/monogame/shapes-apos.shapes.md)
   * [Known Issues](code/monogame/known-issues.md)
