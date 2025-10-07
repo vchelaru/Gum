@@ -14,7 +14,7 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class RenderableBase : IRenderableIpso, IVisible, IDisposable
+public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 {
     #region Fields/Properties
 
@@ -549,7 +549,7 @@ public class RenderableBase : IRenderableIpso, IVisible, IDisposable
 
     #endregion
 
-    public RenderableBase()
+    public RenderableShapeBase()
     {
         Width = 32;
         Height = 32; 

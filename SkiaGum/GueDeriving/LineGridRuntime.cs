@@ -7,7 +7,7 @@ namespace SkiaGum.GueDeriving;
 
 public class LineGridRuntime: SkiaShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => mContainedLineGrid;
+    protected override RenderableShapeBase ContainedRenderable => mContainedLineGrid;
 
     public ushort CellWidth
     {

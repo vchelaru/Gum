@@ -9,7 +9,7 @@ namespace SkiaGum.GueDeriving;
 
 public abstract class SkiaShapeRuntime : BindableGue
 {
-    protected abstract RenderableBase ContainedRenderable { get; }
+    protected abstract Renderables.RenderableShapeBase ContainedRenderable { get; }
 
     #region Solid colors
 

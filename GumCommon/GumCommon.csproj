@@ -101,6 +101,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IText.cs" Link="RenderingLibrary\IText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ITextureCoordinate.cs" Link="RenderingLibrary\ITextureCoordinate.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="RenderingLibrary\NineSliceExtensions.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\RenderableBase.cs" Link="RenderingLibrary\RenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
 		<Compile Include="..\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />

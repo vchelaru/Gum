@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
-public class RoundedRectangle : RenderableBase
+public class RoundedRectangle : RenderableShapeBase
 {
     public float CornerRadius { get; set; }
 
