@@ -552,10 +552,7 @@ public class ControlLogic
                 selector.ShowHandles = true;
                 selector.ShowMoveCursorWhenOver = true;
 
-                control.SystemManagers.Renderer.Camera.X =
-                    selector.Left + selector.Width / 2.0f;
-                control.SystemManagers.Renderer.Camera.Y =
-                    selector.Top + selector.Height / 2.0f;
+                this.CenterCameraOnSelection();
 
             }
             else if (textureAddress == TextureAddress.DimensionsBased)
