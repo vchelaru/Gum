@@ -91,10 +91,8 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     public bool FlipHorizontal { get; set; }
 
-    // Is this actually needed publicly?
-    public float Alpha { get; set; } = 255;
 
-    int IRenderableIpso.Alpha => (int)this.Alpha;
+    int IRenderableIpso.Alpha => 255;
 
     IVisible? IVisible.Parent { get { return Parent as IVisible; } }
 

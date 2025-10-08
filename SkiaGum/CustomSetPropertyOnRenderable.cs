@@ -215,7 +215,7 @@ public class CustomSetPropertyOnRenderable
     // If it's not filled out, then properties will be set by reflection
     // It would be nice to share this with MonoGame at some point too so 
     // we don't have to keep everything in duplicate
-    public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    public static bool SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
         if(mContainedObjectAsIpso is Arc asArc)
@@ -228,7 +228,18 @@ public class CustomSetPropertyOnRenderable
         }
         else if(mContainedObjectAsIpso is RoundedRectangle asRoundedRectangle)
         {
-            handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            // some properties have priority on the base shape itself:
+            switch (propertyName)
+            {
+                case nameof(RoundedRectangleRuntime.StrokeWidth):
+                    ((RoundedRectangleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    handled = true;
+                    break;
+            }
+            if (!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
@@ -244,12 +255,23 @@ public class CustomSetPropertyOnRenderable
                         var radius = (float)value;
                         graphicalUiElement.Width = radius * 2;
                         graphicalUiElement.Height = radius * 2;
+                        handled = true;
                         break;
                 }
-
             }
 
-            handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
+            switch(propertyName)
+            {
+                case nameof(ColoredCircleRuntime.StrokeWidth):
+                    ((ColoredCircleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    handled = true;
+                    break;
+            }
+
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
+            }
             if (!handled)
             {
                 // todo - if there end up being circle-specific properties, set them here
@@ -283,12 +305,14 @@ public class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
             }
         }
-#endif
         if (!handled)
         {
             GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
             //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
         }
+#endif
+
+        return handled;
     }
 
 #if SKIA

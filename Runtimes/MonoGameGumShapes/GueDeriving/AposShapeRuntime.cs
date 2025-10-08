@@ -39,7 +39,8 @@ public abstract class AposShapeRuntime : BindableGue
 
         StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
 
-        GraphicalUiElement.SetPropertyOnRenderable += MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+        CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable += 
+            MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
 
     }
 
