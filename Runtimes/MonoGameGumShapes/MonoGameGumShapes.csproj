@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Apos.Shapes" Version="0.4.4-alpha" />
+    <PackageReference Include="Apos.Shapes" Version="0.4.6-alpha" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
   </ItemGroup>
 

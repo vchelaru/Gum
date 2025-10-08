@@ -7,8 +7,15 @@ using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics;
 
-public class InvisibleRenderable : RenderableBase, ICloneable
+public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
 {
+
+    // Is this actually needed publicly?
+    // Yes, it is set by CustomSetPropertyOnRenderable
+    public float Alpha { get; set; } = 255;
+
+    int IRenderableIpso.Alpha => (int)this.Alpha;
+
     public override void Render(ISystemManagers managers)
     {
 
