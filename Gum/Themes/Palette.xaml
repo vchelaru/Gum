@@ -3,52 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:themes="clr-namespace:Gum.Themes"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf">
-
-    <!--  Global scale palette  -->
-
-
-    <!--  Text styles (semantic, token-based)  -->
-    <!--<Style x:Key="TextBody" TargetType="TextBlock">
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
-  </Style>
-
-  <Style
-    x:Key="TextCaption"
-    BasedOn="{StaticResource TextBody}"
-    TargetType="TextBlock">
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Caption}" />
-  </Style>
-
-  <Style
-    x:Key="TextH2"
-    BasedOn="{StaticResource TextBody}"
-    TargetType="TextBlock">
-    <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=H2}" />
-  </Style>
-
-  <Style
-    x:Key="TextH1"
-    BasedOn="{StaticResource TextBody}"
-    TargetType="TextBlock">
-    <Setter Property="FontWeight" Value="Bold" />
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=H1}" />
-  </Style>
-
-    -->
-    <!--  Icon styles (FluentIcon)  -->
-    <!--  xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"  -->
-    <!--
-  <Style x:Key="IconInline" TargetType="wpf:FluentIcon">
-    <Setter Property="FontSize" Value="{Binding IconInline, Source={StaticResource Scale}}" />
-  </Style>
-  <Style x:Key="IconButton" TargetType="wpf:FluentIcon">
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
-  </Style>
-
-  <Style BasedOn="{StaticResource IconInline}" TargetType="wpf:FluentIcon" />-->
-
-
     <Color x:Key="Gray50">#FAFAFA</Color>
     <Color x:Key="Gray100">#F5F5F5</Color>
     <Color x:Key="Gray150">#EDEDED</Color>

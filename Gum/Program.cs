@@ -13,9 +13,11 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Reflection;
 using Gum.Services;
+using Gum.Settings;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -69,6 +71,7 @@ namespace Gum
             app.MainWindow.Visibility = Visibility.Visible;
                 
             await Initialize(host.Services).ConfigureAwait(true);
+            MigrateAppSettings(host);
 
             if (CommandLineManager.Self.ShouldExitImmediately)
             {
@@ -132,14 +135,30 @@ namespace Gum
             };
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
-                
-            { //todo: use persistence
-                IThemingService theming = services.GetRequiredService<IThemingService>();
-                ThemeConfig config = new(ThemeMode.System, ThemingDialogViewModel.AccentOptions.First().Color);
-                theming.SwitchThemes(config);
+
+
+            ThemeSettingsResolver settings = services.GetRequiredService<ThemeSettingsResolver>();
+            IThemingService theming = services.GetRequiredService<IThemingService>();
+
+            theming.SwitchMode(settings.Mode);
+            theming.SwitchAccent(settings.Accent);
+        }
+
+        private static void MigrateAppSettings(IHost host)
+        {
+            GeneralSettingsFile legacySettings = ProjectManager.Self.GeneralSettingsFile;
+
+            var config = host.Services.GetRequiredService<IConfiguration>();
+
+            var themeSection = config.GetSection(nameof(ThemeSettings));
+            if (!themeSection.Exists())
+            { 
+                var settings = host.Services.GetRequiredService<IWritableOptions<ThemeSettings>>();
+                settings.Update(settings => ThemeSettings.MigrateExplicitLegacyColors(legacySettings, settings));
             }
         }
     }
+
 
     static class RunResponseCodes
     {

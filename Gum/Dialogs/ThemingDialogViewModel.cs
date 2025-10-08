@@ -2,6 +2,7 @@
 using Gum.Controls;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Settings;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -14,23 +15,21 @@ namespace Gum.Dialogs;
 public class ThemingDialogViewModel : DialogViewModel
 {
     private readonly IThemingService _themingService;
-    private ThemeConfig? _cachedConfig;
+    private readonly ThemeSettingsResolver _colorSettings;
+    private ThemeMode CachedMode { get; }
+    private System.Drawing.Color CachedAccent { get; }
     
-    public ThemingDialogViewModel(IThemingService themingService)
+    public ThemingDialogViewModel(IThemingService themingService, ThemeSettingsResolver colorSettings)
     {
         _themingService = themingService;
-        
-        _cachedConfig = themingService.CurrentTheme;
-        
-        if (_cachedConfig is { } savedConfig)
-        {
-            SolidColorBrush? currentAccent = savedConfig.Accent is { } accent ? 
-                AccentOptions.FirstOrDefault(x => x.Color == accent) ?? new(accent) : null;
-            ThemeMode? currentMode = savedConfig.Mode;
-            
-            SetWithoutNotifying(currentAccent, nameof(CurrentAccent));
-            SetWithoutNotifying(currentMode, nameof(CurrentMode));
-        }
+        _colorSettings = colorSettings;
+
+        CachedMode = colorSettings.Mode;
+        CachedAccent = colorSettings.Accent;
+
+        var c = Color.FromArgb(CachedAccent.A, CachedAccent.R, CachedAccent.G, CachedAccent.B);
+        CurrentAccent = AccentOptions.FirstOrDefault(b => b.Color == c) ?? new(c);
+        CurrentMode = CachedMode;
     }
 
     public ThemeMode CurrentMode
@@ -40,24 +39,25 @@ public class ThemingDialogViewModel : DialogViewModel
         {
             if (Set(value))
             {
-                _themingService.SwitchThemes(new ThemeConfig(CurrentMode, CurrentAccent?.Color));
+                _themingService.SwitchMode(value);
             }
         } 
     }
 
-    public SolidColorBrush? CurrentAccent
+    public SolidColorBrush CurrentAccent
     {
         get => Get<SolidColorBrush>();
         set
         {
             if (Set(value))
             {
-                _themingService.SwitchThemes(new ThemeConfig(CurrentMode, CurrentAccent?.Color));
+                var c = value.Color;
+                _themingService.SwitchAccent(System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B));
             }
         }
     }
 
-    public List<ThemeMode> ThemeModes { get; } = [..Enum.GetValues(typeof(ThemeMode)).OfType<ThemeMode>().Take(2)];
+    public List<ThemeMode> ThemeModes { get; } = [..Enum.GetValues(typeof(ThemeMode)).OfType<ThemeMode>()];
     public static List<SolidColorBrush> AccentOptions { get; } = new ()
     {
         new ((Color)ColorConverter.ConvertFromString("#6cc395")), // Gum Green
@@ -83,29 +83,40 @@ public class ThemingDialogViewModel : DialogViewModel
         new ((Color)ColorConverter.ConvertFromString("#607D8B"))  // Blue Grey
     };
 
+    protected override void OnAffirmative()
+    {
+        if (_colorSettings.Mode != CurrentMode)
+        {
+            _colorSettings.Mode = CurrentMode;
+        }
+        var c = CurrentAccent.Color;
+        if (_colorSettings.Accent != System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B))
+        {
+            _colorSettings.Accent = System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
+        }
+        base.OnAffirmative();
+    }
+
     protected override void OnNegative()
     {
-        _themingService.SwitchThemes(_cachedConfig);
+        _themingService.SwitchMode(CachedMode);
+        _themingService.SwitchAccent(CachedAccent);
         base.OnNegative();
     }
 }
 
 public enum ThemeMode
 {
+    System,
     Light,
     Dark,
-    System
 }
 
-public record ThemeConfig(ThemeMode? Mode = null, Color? Accent = null)
-{
-    public ThemeConfig() : this(null, null) { }
-}
 
 public interface IThemingService
 {
-    void SwitchThemes(ThemeConfig config);
-    ThemeConfig? CurrentTheme { get; }
+    void SwitchMode(ThemeMode mode);
+    void SwitchAccent(System.Drawing.Color color);
     bool IsSystemInDarkMode { get; }
 }
 
@@ -117,63 +128,58 @@ public class ThemingService : IThemingService
     
     private readonly IDispatcher _dispatcher;
     private readonly IMessenger _messenger;
-    
-    public static ThemeConfig? CurrentTheme { get; private set; }
-    
-    ThemeConfig? IThemingService.CurrentTheme => CurrentTheme;
-    
-    private ThemeConfig DefaultThemeConfig { get; } = new(ThemeMode.Light, (Color)ColorConverter.ConvertFromString("#3E9ECE"));
 
     public ThemingService(IDispatcher dispatcher, IMessenger messenger)
     {
         _dispatcher = dispatcher;
         _messenger = messenger;
     }
-    
-    public void SwitchThemes(ThemeConfig? config)
+
+    public void SwitchMode(ThemeMode mode)
     {
-        ThemeConfig cached = CurrentTheme ?? DefaultThemeConfig;
-        
-        config = config switch
+        ThemeMode effectiveMode = mode switch
         {
-            null => DefaultThemeConfig,
-            (null, { }) => config with { Mode = (CurrentTheme ?? DefaultThemeConfig).Mode },
-            ({ }, null) => config with { Accent = (CurrentTheme ?? DefaultThemeConfig).Accent },
-            _ => config
+            ThemeMode.Dark or ThemeMode.Light => mode,
+            _ => IsSystemInDarkMode ? ThemeMode.Dark : ThemeMode.Light,
         };
 
-        CurrentTheme = config;
-
-        _dispatcher.Invoke(() =>
+        ResourceDictionary next = effectiveMode switch
         {
-            if (cached.Accent != config.Accent && config.Accent is { } accent)
-            {
-                if (TryFind(Application.Current.Resources, 
-                        d => d.Source?.ToString().EndsWith("Frb.Accents.xaml") is true, 
-                        out _, out _, out var resource))
-                {
-                    resource["Frb.Colors.Primary"] = accent;
-                    resource["Frb.Colors.Primary.Dark"] = MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent);
-                    resource["Frb.Colors.Primary.Light"] = MaterialDesignColors.ColorManipulation.ColorAssist.Lighten(accent);
-                    resource["Frb.Colors.Primary.Contrast"] = MaterialDesignColors.ColorManipulation.ColorAssist.ContrastingForegroundColor(MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent));
-                }
-            }
+            ThemeMode.Dark => new() { Source = DarkUri },
+            ThemeMode.Light => new() { Source = LightUri },
+            _ => throw new InvalidOperationException("We shouldn't get here.")
+        };
+        ResourceDictionary current =
+            Application.Current.Resources.MergedDictionaries.FirstOrDefault(d => d.Source == LightUri || d.Source == DarkUri);
 
-            if (TryFind(Application.Current.Resources.MergedDictionaries, 
-                    d =>  d.Source?.ToString() is { } s &&
-                          (s.EndsWith("Frb.Brushes.Dark.xaml", StringComparison.OrdinalIgnoreCase) ||
-                           s.EndsWith("Frb.Brushes.Light.xaml", StringComparison.OrdinalIgnoreCase)), 
-                    out _, out _, out var themeDict))
-            {
-                if (config.Mode == ThemeMode.System)
-                    config = config with { Mode = IsSystemInDarkMode ? ThemeMode.Dark : ThemeMode.Light };
-                themeDict!.Source = config.Mode == ThemeMode.Dark
-                    ? DarkUri
-                    : LightUri;
-            }
-        
-            _messenger.Send(new ThemeChangedMessage(config.Mode!.Value));
-        });
+        Application.Current.Resources.MergedDictionaries.Remove(current);
+        Application.Current.Resources.MergedDictionaries.Add(next);
+
+        _messenger.Send(new ThemeChangedMessage(effectiveMode));
+    }
+
+    public void SwitchAccent(System.Drawing.Color color)
+    {
+        if (color is { } c && Color.FromArgb(c.A, c.R, c.G, c.B) is { } accent)
+        {
+            // Update colors first
+            Application.Current.Resources["Frb.Colors.Primary"] = accent;
+            Application.Current.Resources["Frb.Colors.Primary.Dark"] = MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent);
+            Application.Current.Resources["Frb.Colors.Primary.Light"] = MaterialDesignColors.ColorManipulation.ColorAssist.Lighten(accent);
+            Application.Current.Resources["Frb.Colors.Primary.Contrast"] = MaterialDesignColors.ColorManipulation.ColorAssist.ContrastingForegroundColor(MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent));
+
+            // Force brush recreation by directly setting new brush instances
+            Application.Current.Resources["Frb.Brushes.Primary"] = new SolidColorBrush(accent);
+            Application.Current.Resources["Frb.Brushes.Primary.Transparent"] = new SolidColorBrush(accent) { Opacity = 0.15 };
+            Application.Current.Resources["Frb.Brushes.Primary.Light"] = new SolidColorBrush(MaterialDesignColors.ColorManipulation.ColorAssist.Lighten(accent));
+            Application.Current.Resources["Frb.Brushes.Primary.Dark"] = new SolidColorBrush(MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent));
+            Application.Current.Resources["Frb.Brushes.Primary.Contrast"] = new SolidColorBrush(MaterialDesignColors.ColorManipulation.ColorAssist.ContrastingForegroundColor(MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent)));
+        }
+
+        ThemeMode current = Application.Current.Resources.MergedDictionaries.FirstOrDefault(d => d.Source == LightUri) != null
+            ? ThemeMode.Light
+            : ThemeMode.Dark;
+        _messenger.Send(new ThemeChangedMessage(current));
     }
     
     static bool TryFind(

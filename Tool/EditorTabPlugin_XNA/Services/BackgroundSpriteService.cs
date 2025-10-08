@@ -11,12 +11,14 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Services;
+using Gum.Settings;
 
 namespace EditorTabPlugin_XNA.Services;
 internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
 {
     private readonly WireframeCommands _wireframeCommands;
     private readonly IMessenger _messenger;
+    private readonly ThemeSettingsResolver _colorSettings;
     
     Sprite BackgroundSprite;
     SolidRectangle BackgroundSolidColor;
@@ -26,6 +28,7 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _messenger.RegisterAll(this);
+        _colorSettings = Locator.GetRequiredService<ThemeSettingsResolver>();
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -109,7 +112,7 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
 
     public (System.Drawing.Color, System.Drawing.Color) GetCheckerColors()
     {
-        return GetThemeDefaultCheckerColors();
+        return (_colorSettings.CheckerA, _colorSettings.CheckerB);
     }
 
     private (System.Drawing.Color, System.Drawing.Color) GetThemeDefaultCheckerColors()

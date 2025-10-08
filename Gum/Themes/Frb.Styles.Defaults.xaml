@@ -16,10 +16,11 @@
     xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=WpfDataUi">
     <ResourceDictionary.MergedDictionaries>
 
-        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Theming.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Brushes.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Buttons.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/GumIcons.xaml" />
+        <ResourceDictionary Source="Frb.Theming.xaml" />
+        <ResourceDictionary Source="Frb.Brushes.Light.xaml" />
+        <ResourceDictionary Source="Frb.Brushes.xaml" />
+        <ResourceDictionary Source="Frb.Buttons.xaml" />
+        <ResourceDictionary Source="GumIcons.xaml" />
 
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.TextBox.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.ScrollViewer.xaml" />
@@ -92,7 +93,7 @@
         <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
         <Setter Property="md:TextFieldAssist.UnderlineBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
         <Setter Property="Padding" Value="3,0,3,1" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="Transparent" />
@@ -178,7 +179,6 @@
             <system:Double x:Key="{x:Static SystemParameters.VerticalScrollBarWidthKey}">8</system:Double>
             <system:Double x:Key="{x:Static SystemParameters.HorizontalScrollBarHeightKey}">8</system:Double>
         </Style.Resources>
-        <Setter Property="Foreground" Value="Green" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="MinWidth" Value="8" />
         <Setter Property="Width" Value="8" />
@@ -430,9 +430,9 @@
 
     <!--  ComboBox  -->
     <Style TargetType="ComboBox">
-        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
         <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="Padding" Value="0,1" />
         <Setter Property="ItemContainerStyle">
@@ -458,7 +458,7 @@
                                         <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource Frb.Brushes.Primary}" />
                                     </Trigger>
                                     <Trigger Property="IsHighlighted" Value="True">
-                                        <Setter TargetName="Border" Property="Background" Value="{StaticResource Frb.Brushes.Primary.Transparent}" />
+                                        <Setter TargetName="Border" Property="Background" Value="{StaticResource Frb.Brushes.Primary}" />
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -519,9 +519,8 @@
                                 Margin="0,0,0,-1"
                                 Padding="3,0,0,0"
                                 VerticalAlignment="Stretch"
-                                Background="Transparent"
                                 BorderThickness="0"
-                                CaretBrush="{StaticResource Frb.Brushes.Primary}"
+                                CaretBrush="{DynamicResource Frb.Brushes.Primary}"
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Text}" />
 
@@ -572,11 +571,11 @@
                         </Trigger>
 
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                            <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Frb.Brushes.Primary}" />
+                            <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource Frb.Brushes.Primary.Dark}" />
-                            <Setter TargetName="DropDownIcon" Property="Foreground" Value="{StaticResource Frb.Brushes.Primary}" />
+                            <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
+                            <Setter TargetName="DropDownIcon" Property="Foreground" Value="{DynamicResource Frb.Brushes.Primary}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -1310,26 +1309,36 @@
                 Collapse="False"
                 Invert="True" />
         </DataTemplate.Resources>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <wpf:FluentIcon
-                x:Name="IsDefaultIcon"
-                Grid.Column="0"
-                VerticalAlignment="Center"
-                Icon="Status"
-                Visibility="{Binding IsDefault, Converter={StaticResource InverseBoolVis}}" />
-            <Border
-                Grid.Column="1"
-                Margin="0,2"
-                BorderBrush="{DynamicResource Frb.Brushes.Border}"
-                BorderThickness="0,0,0,0">
+        <Border
+            Padding="0,2"
+            BorderBrush="{DynamicResource Frb.Brushes.Contrast.Subtle}"
+            BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Margin="0,-1"
+                    Padding="2,0,4,0"
+                    VerticalAlignment="Stretch"
+                    BorderBrush="{DynamicResource Frb.Brushes.Contrast.Subtle}"
+                    BorderThickness="0,0,1,0">
+                    <wpf:FluentIcon
+                        x:Name="IsDefaultIcon"
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Icon="Status"
+                        Visibility="{Binding IsDefault, Converter={StaticResource InverseBoolVis}}" />
+                </Border>
 
-                <wpfdataui:SingleDataUiContainer x:Name="Container" DataContext="{Binding}" />
-            </Border>
-        </Grid>
+                <Border Grid.Column="1" Margin="0,0,6,0">
+
+                    <wpfdataui:SingleDataUiContainer x:Name="Container" DataContext="{Binding}" />
+                </Border>
+            </Grid>
+        </Border>
+
     </DataTemplate>
 
     <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
@@ -1341,11 +1350,16 @@
                     <Expander Header="{Binding Name}" IsExpanded="True">
                         <Expander.HeaderTemplate>
                             <DataTemplate>
+                                <DataTemplate.Resources>
+                                    <converters1:AllCapsConverter x:Key="AllCaps" />
+                                </DataTemplate.Resources>
                                 <TextBlock
+                                    Margin="0,4"
                                     VerticalAlignment="Center"
-                                    FontSize="14"
-                                    Text="{Binding}"
-                                    Typography.Capitals="AllSmallCaps" />
+                                    FontFamily="Verdana"
+                                    FontSize="12"
+                                    FontWeight="Bold"
+                                    Text="{Binding Converter={StaticResource AllCaps}}" />
                             </DataTemplate>
                         </Expander.HeaderTemplate>
                         <ItemsControl
@@ -1381,6 +1395,7 @@
                 <Setter Property="BorderBrush" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="1" />
                 <Setter Property="Padding" Value="2" />
+                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
                 <Style.Triggers>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
@@ -1391,7 +1406,12 @@
                     </MultiDataTrigger>
                     <Trigger Property="IsChecked" Value="True">
                         <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
-                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Contrast02}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
                     </Trigger>
                 </Style.Triggers>
             </Style>

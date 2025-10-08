@@ -21,7 +21,7 @@
     Top="{Binding Top, Mode=TwoWay}"
     WindowState="{Binding WindowState, Mode=TwoWay}"
     mc:Ignorable="d">
-    <Grid Margin="1">
+    <Grid>
         <Grid.Style>
             <Style TargetType="Grid">
                 <Style.Triggers>
