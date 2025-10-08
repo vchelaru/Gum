@@ -4,7 +4,7 @@
     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Palette.xaml" />
+        <ResourceDictionary Source="Palette.xaml" />
         <ResourceDictionary>
             <StaticResource x:Key="Frb.Colors.Foreground" ResourceKey="Gray800" />
             <StaticResource x:Key="Frb.Colors.Foreground.Subtle" ResourceKey="Gray600" />
@@ -20,72 +20,61 @@
             <Color x:Key="Frb.Colors.ThemeContrast">Black</Color>
 
             <StaticResource x:Key="Frb.Colors.Field.Background" ResourceKey="Gray50" />
-
-            <SolidColorBrush
-                x:Key="Darken"
-                Opacity="0.05"
-                Color="Black" />
-            <SolidColorBrush
-                x:Key="Darken02"
-                Opacity="0.1"
-                Color="Black" />
-            <SolidColorBrush
-                x:Key="Darken03"
-                Opacity="0.15"
-                Color="Black" />
-        </ResourceDictionary>
-        <ResourceDictionary>
-            <SolidColorBrush x:Key="MaterialDesign.Brush.Foreground" Color="{DynamicResource Frb.Colors.Foreground}" />
-            <SolidColorBrush x:Key="Frb.Brushes.Primary" Color="{DynamicResource Frb.Colors.Primary}" />
-            <SolidColorBrush
-                x:Key="Frb.Brushes.Primary.Transparent"
-                Opacity="0.15"
-                Color="{DynamicResource Frb.Colors.Primary}" />
-            <SolidColorBrush x:Key="Frb.Brushes.Primary.Light" Color="{DynamicResource Frb.Colors.Primary.Light}" />
-            <SolidColorBrush x:Key="Frb.Brushes.Primary.Dark" Color="{DynamicResource Frb.Colors.Primary.Dark}" />
-            <SolidColorBrush x:Key="Frb.Brushes.Primary.Contrast" Color="{DynamicResource Frb.Colors.Primary.Contrast}" />
-
-            <SolidColorBrush x:Key="Frb.Brushes.Foreground" Color="{DynamicResource Frb.Colors.Foreground}" />
-            <SolidColorBrush x:Key="Frb.Brushes.Foreground.Subtle" Color="{DynamicResource Frb.Colors.Foreground.Subtle}" />
-            <SolidColorBrush
-                x:Key="Frb.Brushes.Foreground.Disabled"
-                Opacity="0.5"
-                Color="{DynamicResource Frb.Colors.Foreground}" />
-
-            <SolidColorBrush x:Key="Frb.Brushes.Border" Color="{DynamicResource Frb.Colors.Border}" />
-
-            <SolidColorBrush x:Key="Frb.Brushes.Background" Color="{DynamicResource Frb.Colors.Background}" />
-
-            <SolidColorBrush x:Key="Frb.Surface01" Color="{DynamicResource Frb.Colors.Surface01}" />
-            <SolidColorBrush x:Key="Frb.Surface02" Color="{DynamicResource Frb.Colors.Surface02}" />
-
-            <SolidColorBrush
-                x:Key="Frb.Brushes.ContrastSubtle"
-                Opacity="0.05"
-                Color="{DynamicResource Frb.Colors.ForegroundSubtle}" />
-            <SolidColorBrush
-                x:Key="Frb.Brushes.Contrast01"
-                Opacity="0.085"
-                Color="{DynamicResource Frb.Colors.Foreground}" />
-            <SolidColorBrush
-                x:Key="Frb.Brushes.Contrast02"
-                Opacity="0.3"
-                Color="{DynamicResource Frb.Colors.Foreground}" />
-            <SolidColorBrush
-                x:Key="Frb.Brushes.Contrast03"
-                Opacity="0.4"
-                Color="{DynamicResource Frb.Colors.Foreground}" />
-            <SolidColorBrush
-                x:Key="Frb.Brushes.Contrast04"
-                Opacity="0.5"
-                Color="{DynamicResource Frb.Colors.Foreground}" />
-
-            <SolidColorBrush x:Key="Frb.Brushes.Error" Color="{DynamicResource Frb.Colors.Error}" />
-            <SolidColorBrush x:Key="Frb.Brushes.Success" Color="{DynamicResource Frb.Colors.Success}" />
-
-            <StaticResource x:Key="Frb.Brushes.Field.Background" ResourceKey="Frb.Brushes.Contrast01" />
-
         </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
-    <system:String x:Key="Theme.Id">Light</system:String>
+
+
+    <SolidColorBrush
+        x:Key="Darken"
+        Opacity="0.05"
+        Color="Black" />
+    <SolidColorBrush
+        x:Key="Darken02"
+        Opacity="0.1"
+        Color="Black" />
+    <SolidColorBrush
+        x:Key="Darken03"
+        Opacity="0.15"
+        Color="Black" />
+
+    <SolidColorBrush x:Key="MaterialDesign.Brush.Foreground" Color="{DynamicResource Frb.Colors.Foreground}" />
+    <SolidColorBrush x:Key="Frb.Brushes.Foreground" Color="{StaticResource Frb.Colors.Foreground}" />
+    <SolidColorBrush x:Key="Frb.Brushes.Foreground.Subtle" Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
+    <SolidColorBrush
+        x:Key="Frb.Brushes.Foreground.Disabled"
+        Opacity="0.5"
+        Color="{StaticResource Frb.Colors.Foreground}" />
+
+    <SolidColorBrush x:Key="Frb.Brushes.Border" Color="{StaticResource Frb.Colors.Border}" />
+
+    <SolidColorBrush x:Key="Frb.Brushes.Background" Color="{StaticResource Frb.Colors.Background}" />
+
+    <SolidColorBrush x:Key="Frb.Surface01" Color="{StaticResource Frb.Colors.Surface01}" />
+    <SolidColorBrush x:Key="Frb.Surface02" Color="{StaticResource Frb.Colors.Surface02}" />
+
+    <SolidColorBrush
+        x:Key="Frb.Brushes.Contrast.Subtle"
+        Opacity="0.05"
+        Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
+    <SolidColorBrush
+        x:Key="Frb.Brushes.Contrast01"
+        Opacity="0.085"
+        Color="{StaticResource Frb.Colors.Foreground}" />
+    <SolidColorBrush
+        x:Key="Frb.Brushes.Contrast02"
+        Opacity="0.3"
+        Color="{StaticResource Frb.Colors.Foreground}" />
+    <SolidColorBrush
+        x:Key="Frb.Brushes.Contrast03"
+        Opacity="0.4"
+        Color="{StaticResource Frb.Colors.Foreground}" />
+    <SolidColorBrush
+        x:Key="Frb.Brushes.Contrast04"
+        Opacity="0.5"
+        Color="{StaticResource Frb.Colors.Foreground}" />
+
+    <SolidColorBrush x:Key="Frb.Brushes.Error" Color="{StaticResource Frb.Colors.Error}" />
+    <SolidColorBrush x:Key="Frb.Brushes.Success" Color="{StaticResource Frb.Colors.Success}" />
+
+    <SolidColorBrush x:Key="Frb.Brushes.Field.Background" Color="{StaticResource Frb.Colors.Field.Background}"/>
 </ResourceDictionary>

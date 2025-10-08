@@ -25,6 +25,10 @@ using Gum.ViewModels;
 using Expression = System.Linq.Expressions.Expression;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Wireframe;
+using Microsoft.Extensions.Configuration;
+using System.IO;
+using Gum.Settings;
+using ToolsUtilities;
 
 namespace Gum.Services;
 
@@ -32,12 +36,32 @@ internal static class GumBuilder
 {
     public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
+        string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Gum");
+        Directory.CreateDirectory(appDir);
+        string settingsPath = Path.Combine(appDir, "appsettings.json");
+
         return Host.CreateDefaultBuilder(args)
-            .ConfigureServices(services =>
+            .ConfigureAppConfiguration(cfg =>
             {
+
+                if (!File.Exists(settingsPath))
+                {
+                    File.WriteAllText(settingsPath, "{}");
+                }
+
+                cfg.Sources.Clear();
+                cfg.SetBasePath(appDir);
+                cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureServices((context, services) =>
+            {
+                services.AddOptions();
+                services.ConfigureWritable<ThemeSettings>(context.Configuration, nameof(ThemeSettings), settingsPath);
                 services.AddGum();
             });
     }
+
+
 }
 
 file static class ServiceCollectionExtensions
@@ -51,7 +75,7 @@ file static class ServiceCollectionExtensions
         );
         services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
         services.AddTransient<PeriodicUiTimer>();
-        
+
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         services.AddSingleton<WireframeObjectManager>(WireframeObjectManager.Self);
@@ -76,7 +100,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();
         services.AddSingleton<SetVariableLogic>();
-        
+
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<EditCommands>();
@@ -86,21 +110,22 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ProjectCommands>();
 
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
-        
+
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelViewModel>());
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();
-        
+
         // other
         services.AddDialogs();
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
         services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Application.Current.Dispatcher));
         services.AddSingleton<IUiSettingsService, UiSettingsService>();
         services.AddSingleton<IThemingService, ThemingService>();
+        services.AddSingleton<ThemeSettingsResolver>();
 
     }
-    
+
     private static IServiceCollection AddDialogs(this IServiceCollection services)
     {
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
@@ -108,10 +133,10 @@ file static class ServiceCollectionExtensions
 
         return services;
     }
-    
+
     private class Lazier<T> : Lazy<T> where T : notnull
     {
-        public Lazier(IServiceProvider serviceProvider) : base(serviceProvider.GetRequiredService<T>){}
+        public Lazier(IServiceProvider serviceProvider) : base(serviceProvider.GetRequiredService<T>) { }
     }
 }
 
