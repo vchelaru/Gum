@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using EditorTabPlugin_XNA.Utilities;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -160,8 +161,10 @@ namespace Gum.Wireframe
 
         private static void GetDimensions(IRenderableIpso pso, out float left, out float top, out float width, out float height)
         {
-            left = pso.GetAbsoluteX();
-            top = pso.GetAbsoluteY();
+            var bounds = pso.GetBounds();
+
+            left = bounds.left;
+            top = bounds.top;
 
 
             float right = left;
@@ -184,8 +187,8 @@ namespace Gum.Wireframe
             }
             else
             {
-                right = pso.GetAbsoluteRight();
-                bottom = pso.GetAbsoluteBottom();
+                right = bounds.right;
+                bottom = bounds.bottom;
             }
 
             width = right - left;
