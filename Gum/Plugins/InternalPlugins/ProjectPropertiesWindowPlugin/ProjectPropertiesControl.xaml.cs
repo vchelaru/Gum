@@ -53,11 +53,6 @@ namespace Gum.Gui.Controls
                 member.SupportsMakeDefault = false;
             }
 
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.OutlineColor), "Guides and Colors");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.GuideLineColor), "Guides and Colors");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.GuideTextColor), "Guides and Colors");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.CheckerboardColor1), "Guides and Colors");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.CheckerboardColor2), "Guides and Colors");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides and Colors");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides and Colors");
 

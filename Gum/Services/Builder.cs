@@ -122,8 +122,6 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Application.Current.Dispatcher));
         services.AddSingleton<IUiSettingsService, UiSettingsService>();
         services.AddSingleton<IThemingService, ThemingService>();
-        services.AddSingleton<ThemeSettingsResolver>();
-
     }
 
     private static IServiceCollection AddDialogs(this IServiceCollection services)

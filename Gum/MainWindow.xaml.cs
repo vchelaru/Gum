@@ -7,6 +7,7 @@ using Gum.Dialogs;
 using Gum.Services;
 using Gum.ViewModels;
 using RoutedEventArgs = System.Windows.RoutedEventArgs;
+using Gum.Settings;
 
 namespace Gum;
 #region TabLocation Enum
@@ -74,4 +75,4 @@ public partial class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 }
 
 public record CloseMainWindowMessage;
-public record ThemeChangedMessage(ThemeMode Mode);
+public record ThemeChangedMessage(IEffectiveThemeSettings settings);

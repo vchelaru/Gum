@@ -1,4 +1,5 @@
 ﻿using CommonFormsAndControls.Forms;
+using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
@@ -11,10 +12,14 @@ using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.ScrollBarPlugin;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Settings;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
 using RenderingLibrary;
@@ -26,14 +31,12 @@ using System.Drawing;
 using System.Linq;
 using System.Management.Instrumentation;
 using System.Numerics;
+using System.Runtime;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
-using CommunityToolkit.Mvvm.Messaging;
-using Gum.Services.Dialogs;
-using Gum.Undo;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
@@ -106,6 +109,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -153,6 +157,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+
         Locator.GetRequiredService<IMessenger>().RegisterAll(this);
     }
 
@@ -208,8 +213,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         this.GetWorldCursorPosition += HandleGetWorldCursorPosition;
 
-        this.GuidesChanged += HandleGuidesChanged;
-
         this.IpsoSelected += HandleIpsoSelected;
         this.SetHighlightedIpso += HandleSetHighlightedElement;
 
@@ -262,11 +265,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private IRenderableIpso? HandleCreateRenderableForType(string type)
     {
         return RuntimeObjectCreator.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
-    }
-
-    private void HandleGuidesChanged()
-    {
-        _wireframeControl.RefreshGuides();
     }
 
     private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)
@@ -985,8 +983,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
-        //gumEditorPanel.BackColor = System.Windows.Application.Current.TryFindResource("Frb.Surface01") is System.Windows.Media.Color c
-        //    ? Color.FromArgb(c.A, c.R, c.G, c.B)
-        //    : Color.Transparent;
+        this._wireframeControl.BackgroundColor = ToXna(message.settings.CheckerA);
+        this._wireframeControl.SetGuideColors(message.settings.GuideLine, message.settings.GuideText);
+
+        static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
     }
 }

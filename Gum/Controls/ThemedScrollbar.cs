@@ -95,7 +95,7 @@ public sealed class ThemedScrollBar : Control
         MouseWheel += OnMouseWheel;
         Locator.GetRequiredService<IMessenger>().Register<ThemeChangedMessage>(this, (recipient, message) =>
         {
-            bool dark = message.Mode is ThemeMode.Dark;
+            bool dark = message.settings.Mode is ThemeMode.Dark;
             ApplyTheme(dark);
         });
     }

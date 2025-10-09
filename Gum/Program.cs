@@ -73,6 +73,9 @@ namespace Gum
             await Initialize(host.Services).ConfigureAwait(true);
             MigrateAppSettings(host);
 
+            host.Services.GetRequiredService<IThemingService>().ApplyInitialTheme();
+
+
             if (CommandLineManager.Self.ShouldExitImmediately)
             {
                 return RunResponseCodes.Success;
@@ -135,13 +138,6 @@ namespace Gum
             };
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
-
-
-            ThemeSettingsResolver settings = services.GetRequiredService<ThemeSettingsResolver>();
-            IThemingService theming = services.GetRequiredService<IThemingService>();
-
-            theming.SwitchMode(settings.Mode);
-            theming.SwitchAccent(settings.Accent);
         }
 
         private static void MigrateAppSettings(IHost host)

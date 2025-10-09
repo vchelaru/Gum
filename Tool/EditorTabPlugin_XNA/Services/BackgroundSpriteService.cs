@@ -18,7 +18,6 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
 {
     private readonly WireframeCommands _wireframeCommands;
     private readonly IMessenger _messenger;
-    private readonly ThemeSettingsResolver _colorSettings;
     
     Sprite BackgroundSprite;
     SolidRectangle BackgroundSolidColor;
@@ -28,7 +27,6 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _messenger.RegisterAll(this);
-        _colorSettings = Locator.GetRequiredService<ThemeSettingsResolver>();
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -88,47 +86,11 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
     {
         BackgroundSprite.Visible =
                 _wireframeCommands.IsBackgroundGridVisible;
-
-        // if (ProjectManager.Self.GeneralSettingsFile != null)
-        // {
-        //     BackgroundSolidColor.Color = System.Drawing.Color.FromArgb(255,
-        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor1R,
-        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor1G,
-        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor1B
-        //     );
-        //
-        //
-        //     BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
-        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
-        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
-        //         ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
-        //     );
-        //
-        // }
-        (var checkerColor1, var checkerColor2) = GetCheckerColors();
-        BackgroundSolidColor.Color = checkerColor1;
-        BackgroundSprite.Color = checkerColor2;
     }
-
-    public (System.Drawing.Color, System.Drawing.Color) GetCheckerColors()
-    {
-        return (_colorSettings.CheckerA, _colorSettings.CheckerB);
-    }
-
-    private (System.Drawing.Color, System.Drawing.Color) GetThemeDefaultCheckerColors()
-    {
-        return _currentThemeMode switch
-        {
-            ThemeMode.Dark => (System.Drawing.Color.FromArgb(255, 45, 45, 45),
-                System.Drawing.Color.FromArgb(255, 62, 62, 62)),
-            _ => (System.Drawing.Color.FromArgb(255, 150, 150, 150), System.Drawing.Color.FromArgb(255, 170, 170, 170)),
-        };
-    }
-
-    private ThemeMode _currentThemeMode;
     
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
-        _currentThemeMode = message.Mode;
+        BackgroundSolidColor.Color = message.settings.CheckerA;
+        BackgroundSprite.Color = message.settings.CheckerB;
     }
 }
