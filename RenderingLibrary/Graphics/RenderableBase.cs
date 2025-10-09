@@ -99,6 +99,11 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
     IVisible? IVisible.Parent { get { return Parent as IVisible; } }
 
     public virtual string BatchKey => string.Empty;
+
+    float IRenderableIpso.RenderTargetScaleX => 1f;
+
+    float IRenderableIpso.RenderTargetScaleY => 1f;
+
     public virtual void StartBatch(ISystemManagers systemManagers) 
     {
     }

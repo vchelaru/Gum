@@ -697,7 +697,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     public float LineHeightMultiplier { get; set; } = 1;
 
     bool IRenderableIpso.IsRenderTarget => false;
-
+    float IRenderableIpso.RenderTargetScaleX => 1f;
+    float IRenderableIpso.RenderTargetScaleY => 1f;
     /// <summary>
     /// Customization functions, where the key is the name of the custom function in bbcode, and the Func returns
     /// customization per letter.

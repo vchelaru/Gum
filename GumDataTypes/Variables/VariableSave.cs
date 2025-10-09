@@ -188,7 +188,7 @@ namespace Gum.DataTypes.Variables
         }
 
         [XmlIgnore]
-        public Dictionary<string, object> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object>();
+        public Dictionary<string, object?> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object?>();
 
         [XmlIgnore]
         public Type PreferredDisplayer { get; set; }

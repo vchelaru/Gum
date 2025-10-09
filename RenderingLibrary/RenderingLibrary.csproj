@@ -79,6 +79,7 @@
 	<ItemGroup>
 	  <Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="Graphics\BlendExtensions.cs" />
 	  <Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	  <Compile Include="..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="Runtimes\SpriteRuntime.cs" />
 	  <Compile Include="..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="Runtimes\TextRuntime.cs" />
 	</ItemGroup>
 	<ItemGroup>

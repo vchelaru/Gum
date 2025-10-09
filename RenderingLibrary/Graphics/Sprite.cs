@@ -229,7 +229,8 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
     }
 
     bool IRenderableIpso.IsRenderTarget => false;
-
+    float IRenderableIpso.RenderTargetScaleX => 1f;
+    float IRenderableIpso.RenderTargetScaleY => 1f;
     public Texture2D? Texture
     {
         get { return mTexture; }

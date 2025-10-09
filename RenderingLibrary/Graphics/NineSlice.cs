@@ -132,6 +132,8 @@ public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso,
     #region Properties
 
     bool IRenderableIpso.IsRenderTarget => false;
+    float IRenderableIpso.RenderTargetScaleX => 1f;
+    float IRenderableIpso.RenderTargetScaleY => 1f;
     ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
     public int Alpha
