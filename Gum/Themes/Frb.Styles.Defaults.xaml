@@ -96,8 +96,9 @@
         <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
         <Setter Property="Padding" Value="3,0,3,1" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="CaretBrush" Value="{DynamicResource Frb.Brushes.Contrast02}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
+        <Setter Property="md:TextFieldAssist.TextFieldCornerRadius" Value="2" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Frb.Brushes.ThemeContrast}" />
         <Setter Property="md:TextFieldAssist.DecorationVisibility" Value="Collapsed" />
         <Style.Triggers>
             <Trigger Property="IsKeyboardFocused" Value="True">
@@ -479,7 +480,7 @@
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         ClipToBounds="True"
-                        CornerRadius="0">
+                        CornerRadius="2">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -1392,30 +1393,35 @@
                 </Style.Resources>
                 <Setter Property="HorizontalAlignment" Value="Left" />
                 <Setter Property="VerticalAlignment" Value="Top" />
-                <Setter Property="BorderBrush" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="Transparent" />
                 <Setter Property="Padding" Value="2" />
-                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
+                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
                 <Style.Triggers>
                     <MultiDataTrigger>
                         <MultiDataTrigger.Conditions>
                             <Condition Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}" Value="True" />
                             <Condition Binding="{Binding Image, Converter={StaticResource NotNullToBoolConverter}}" Value="True" />
                         </MultiDataTrigger.Conditions>
-                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
                     </MultiDataTrigger>
-                    <Trigger Property="IsChecked" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
-                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Contrast02}" />
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Surface.Fill}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
                         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
                     </Trigger>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
                         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
                     </Trigger>
                 </Style.Triggers>
             </Style>
         </Style.Resources>
+        <Setter Property="WrapPanelBackground" Value="{DynamicResource Frb.Brushes.Field.Background}" />
+        <Setter Property="WrapPanelRadius" Value="2" />
+        <Setter Property="WrapPanelBorderThickness" Value="1" />
+        <Setter Property="WrapPanelPadding" Value="1" />
+        <Setter Property="WrapPanelBorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
     </Style>
 
 </ResourceDictionary>

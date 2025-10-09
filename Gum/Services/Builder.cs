@@ -36,7 +36,7 @@ internal static class GumBuilder
 {
     public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
-        string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Gum");
+        string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Gum");
         Directory.CreateDirectory(appDir);
         string settingsPath = Path.Combine(appDir, "appsettings.json");
 

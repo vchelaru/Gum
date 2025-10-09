@@ -36,12 +36,19 @@
             TextWrapping="Wrap">
             Property Label:
         </TextBlock>
-        <WrapPanel
-            x:Name="ButtonWrapPanel"
+        <Border
             Grid.Column="1"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Orientation="Horizontal" />
+            CornerRadius="{Binding WrapPanelRadius, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            BorderThickness="{Binding WrapPanelBorderThickness, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            Background="{Binding WrapPanelBackground, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            Padding="{Binding WrapPanelPadding, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            BorderBrush="{Binding WrapPanelBorderBrush, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}">
+            <WrapPanel
+                x:Name="ButtonWrapPanel"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Orientation="Horizontal" />
+        </Border>
         <TextBlock
             x:Name="HintTextBlock"
             Grid.Row="1"
