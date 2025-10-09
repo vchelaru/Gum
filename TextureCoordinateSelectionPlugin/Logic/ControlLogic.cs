@@ -10,6 +10,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using InputLibrary;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Math;
@@ -17,7 +18,6 @@ using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -347,24 +347,17 @@ public class ControlLogic
             var cursorY = (int)control.XnaCursor.GetWorldY(control.SystemManagers);
 
 
-            int left = Math.Max(0, cursorX - 32);
-            int top = Math.Max(0, cursorY - 32);
-            int right = left + 64;
-            int bottom = top + 64;
+            var selectionRect = GetOptimalSelectionRectangle(cursorX, cursorY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
 
-            int width = right - left;
-            int height = bottom - top;
+            graphicalUiElement.TextureLeft = selectionRect.X;
+            graphicalUiElement.TextureTop = selectionRect.Y;
+            graphicalUiElement.TextureWidth = selectionRect.Width;
+            graphicalUiElement.TextureHeight = selectionRect.Height;
 
-            graphicalUiElement.TextureLeft = left;
-            graphicalUiElement.TextureTop = top;
-
-            graphicalUiElement.TextureWidth = width;
-            graphicalUiElement.TextureHeight = height;
-
-            state.SetValue($"{instancePrefix}TextureLeft", left, "int");
-            state.SetValue($"{instancePrefix}TextureTop", top, "int");
-            state.SetValue($"{instancePrefix}TextureWidth", width, "int");
-            state.SetValue($"{instancePrefix}TextureHeight", height, "int");
+            state.SetValue($"{instancePrefix}TextureLeft", selectionRect.X, "int");
+            state.SetValue($"{instancePrefix}TextureTop", selectionRect.Y, "int");
+            state.SetValue($"{instancePrefix}TextureWidth", selectionRect.Width, "int");
+            state.SetValue($"{instancePrefix}TextureHeight", selectionRect.Height, "int");
             state.SetValue($"{instancePrefix}TextureAddress",
                 Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
 
@@ -379,7 +372,28 @@ public class ControlLogic
             _guiCommands.RefreshVariables();
 
         }
+    }
 
+    private Rectangle GetOptimalSelectionRectangle(int cursorX, int cursorY, int textureWidth, int textureHeight)
+    {
+        // Default to 64x64 size, centered on the cursor position
+        int left = Math.Max(0, cursorX - 32);
+        int top = Math.Max(0, cursorY - 32);
+
+        // If they are using the grid size, snap to it instead!
+        if (ViewModel.IsSnapToGridChecked)
+        {
+            var gridSize = ViewModel.SelectedSnapToGridValue;
+
+            // find the top left using division and floor
+            left = (cursorX / gridSize) * gridSize;
+            top = (cursorY / gridSize) * gridSize;
+
+            // send back the rectangle selection
+            return new Rectangle(left, top, ViewModel.SelectedSnapToGridValue, ViewModel.SelectedSnapToGridValue);
+        }
+
+        return new Rectangle(left, top, 64, 64);
 
     }
 
