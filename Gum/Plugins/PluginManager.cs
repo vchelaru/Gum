@@ -352,9 +352,6 @@ namespace Gum.Plugins
         internal void AfterUndo() =>
             CallMethodOnPlugin(plugin => plugin.CallAfterUndo());
 
-        internal void GuidesChanged() => 
-            CallMethodOnPlugin(plugin => plugin.CallGuidesChanged());
-
         internal List<Attribute> GetAttributesFor(VariableSave variableSave)
         {
             var listToFill = new List<Attribute>();

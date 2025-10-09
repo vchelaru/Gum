@@ -127,6 +127,13 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             }
         }
 
+        public void SetGuideColors(Color guidelineColor, Color guideTextColor) 
+        { 
+            GuideLineColor = guidelineColor;
+            GuideValues = [.. GuideValues];
+            GuideTextColor = guideTextColor;
+        }
+
         Renderer Renderer
         {
             get
@@ -178,54 +185,8 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             private set;
         }
 
-        Color GuideLineColor
-        {
-            get
-            {
-                if (GumState.Self.ProjectState.GeneralSettings != null)
-                {
-                    return Color.FromArgb(
-                        127,
-                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
-                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
-                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB
-                        );
-                }
-                else
-                {
-                    return Color.FromArgb(
-                        127,
-                        255,
-                        255,
-                        255
-                        );
-                }
-            }
-        }
-        Color GuideTextColor
-        {
-            get
-            {
-                if (GumState.Self.ProjectState.GeneralSettings != null)
-                {
-                    return Color.FromArgb(
-                        255,
-                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
-                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
-                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB
-                        );
-                }
-                else
-                {
-                    return Color.FromArgb(
-                        127,
-                        255,
-                        255,
-                        255
-                        );
-                }
-            }
-        }
+        Color GuideLineColor { get; set; } = Color.FromArgb(127, 255, 255, 255);
+        Color GuideTextColor { get; set; } = Color.FromArgb(255, 255, 255, 255);
 
         bool visible = true;
         public bool Visible

@@ -4,6 +4,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Settings;
 using Microsoft.Win32;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,21 +16,20 @@ namespace Gum.Dialogs;
 public class ThemingDialogViewModel : DialogViewModel
 {
     private readonly IThemingService _themingService;
-    private readonly ThemeSettingsResolver _colorSettings;
-    private ThemeMode CachedMode { get; }
-    private System.Drawing.Color CachedAccent { get; }
+    private ThemeMode? CachedMode { get; }
+    private System.Drawing.Color? CachedAccent { get; }
     
-    public ThemingDialogViewModel(IThemingService themingService, ThemeSettingsResolver colorSettings)
+    public ThemingDialogViewModel(IThemingService themingService)
     {
         _themingService = themingService;
-        _colorSettings = colorSettings;
 
-        CachedMode = colorSettings.Mode;
-        CachedAccent = colorSettings.Accent;
+        CachedMode = themingService.Mode;
+        CachedAccent = themingService.Accent;
 
-        var c = Color.FromArgb(CachedAccent.A, CachedAccent.R, CachedAccent.G, CachedAccent.B);
+        var effective = themingService.EffectiveSettings;
+        var c = Color.FromArgb(effective.Accent.A, effective.Accent.R, effective.Accent.G, effective.Accent.B);
         CurrentAccent = AccentOptions.FirstOrDefault(b => b.Color == c) ?? new(c);
-        CurrentMode = CachedMode;
+        CurrentMode = effective.Mode;
     }
 
     public ThemeMode CurrentMode
@@ -39,7 +39,7 @@ public class ThemingDialogViewModel : DialogViewModel
         {
             if (Set(value))
             {
-                _themingService.SwitchMode(value);
+                _themingService.Mode = value;
             }
         } 
     }
@@ -52,7 +52,7 @@ public class ThemingDialogViewModel : DialogViewModel
             if (Set(value))
             {
                 var c = value.Color;
-                _themingService.SwitchAccent(System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B));
+                _themingService.Accent = System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
             }
         }
     }
@@ -83,24 +83,10 @@ public class ThemingDialogViewModel : DialogViewModel
         new ((Color)ColorConverter.ConvertFromString("#607D8B"))  // Blue Grey
     };
 
-    protected override void OnAffirmative()
-    {
-        if (_colorSettings.Mode != CurrentMode)
-        {
-            _colorSettings.Mode = CurrentMode;
-        }
-        var c = CurrentAccent.Color;
-        if (_colorSettings.Accent != System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B))
-        {
-            _colorSettings.Accent = System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
-        }
-        base.OnAffirmative();
-    }
-
     protected override void OnNegative()
     {
-        _themingService.SwitchMode(CachedMode);
-        _themingService.SwitchAccent(CachedAccent);
+        _themingService.Mode = CachedMode;
+        _themingService.Accent = CachedAccent;
         base.OnNegative();
     }
 }
@@ -115,27 +101,141 @@ public enum ThemeMode
 
 public interface IThemingService
 {
-    void SwitchMode(ThemeMode mode);
-    void SwitchAccent(System.Drawing.Color color);
+    IEffectiveThemeSettings EffectiveSettings { get; }
+    ThemeMode? Mode { get; set; }
+    System.Drawing.Color? Accent { get; set; }
+    System.Drawing.Color? CheckerA { get; set; }
+    System.Drawing.Color? CheckerB { get; set; }
+    System.Drawing.Color? OutlineColor { get; set; }
+    System.Drawing.Color? GuideLine { get; set; }
+    System.Drawing.Color? GuideText { get; set; }
+    bool IsSystemInDarkMode { get; }
+    void ApplyInitialTheme();
+}
+
+public interface IEffectiveThemeSettings
+{
+    ThemeMode Mode { get; }
+    System.Drawing.Color Accent { get; }
+    System.Drawing.Color CheckerA { get; }
+    System.Drawing.Color CheckerB { get; }
+    System.Drawing.Color OutlineColor { get; }
+    System.Drawing.Color GuideLine { get; }
+    System.Drawing.Color GuideText { get; }
     bool IsSystemInDarkMode { get; }
 }
 
-public class ThemingService : IThemingService
+
+public class ThemingService : IThemingService, IEffectiveThemeSettings
 {
     static readonly Uri LightUri = new Uri("pack://application:,,,/Gum;component/Themes/Frb.Brushes.Light.xaml");
     static readonly Uri DarkUri  = new Uri("pack://application:,,,/Gum;component/Themes/Frb.Brushes.Dark.xaml");
-    static readonly Uri AccentsUri = new Uri("pack://application:,,,/Gum;component/Themes/Frb.Brushes.Accents.xaml");
     
-    private readonly IDispatcher _dispatcher;
     private readonly IMessenger _messenger;
+    private readonly IWritableOptions<ThemeSettings> _themeSettings;
+    private readonly ThemeDefaultsProvider _defaultsProvider = new();
 
-    public ThemingService(IDispatcher dispatcher, IMessenger messenger)
+    public IEffectiveThemeSettings EffectiveSettings => this;
+
+    public ThemingService(IMessenger messenger, IWritableOptions<ThemeSettings> themeSettings)
     {
-        _dispatcher = dispatcher;
         _messenger = messenger;
+        _themeSettings = themeSettings;
     }
 
-    public void SwitchMode(ThemeMode mode)
+    public void ApplyInitialTheme()
+    {
+        SwitchMode(Mode ?? _defaultsProvider.Mode);
+        SwitchAccent(Accent ?? _defaultsProvider.Accent);
+        _messenger.Send(new ThemeChangedMessage(this));
+    }
+
+    public ThemeMode? Mode
+    {
+        get => _themeSettings.CurrentValue.Mode;
+        set
+        {
+            SwitchMode(value ?? _defaultsProvider.Mode);
+            _themeSettings.Update(s => s.Mode = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+
+    ThemeMode IEffectiveThemeSettings.Mode => (Mode ?? _defaultsProvider.Mode) switch
+    {
+        { } val when val is ThemeMode.Dark or ThemeMode.Light => val,
+        _ => IsSystemInDarkMode ? ThemeMode.Dark : ThemeMode.Light,
+    };
+
+    public System.Drawing.Color? Accent
+    {
+        get => _themeSettings.CurrentValue.Accent;
+        set
+        {
+            SwitchAccent(value ?? _defaultsProvider.Accent);
+            _themeSettings.Update(s => s.Accent = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+    
+    System.Drawing.Color IEffectiveThemeSettings.Accent => _themeSettings.CurrentValue.Accent ?? _defaultsProvider.Accent;
+
+    public System.Drawing.Color? CheckerA
+    {
+        get => _themeSettings.CurrentValue.CheckerA;
+        set
+        {
+            _themeSettings.Update(s => s.CheckerA = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+    System.Drawing.Color IEffectiveThemeSettings.CheckerA => _themeSettings.CurrentValue.CheckerA ?? _defaultsProvider.CheckerA(EffectiveSettings.Mode);
+
+    public System.Drawing.Color? CheckerB
+    {
+        get => _themeSettings.CurrentValue.CheckerB;
+        set
+        {
+            _themeSettings.Update(s => s.CheckerB = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+    System.Drawing.Color IEffectiveThemeSettings.CheckerB => _themeSettings.CurrentValue.CheckerB ?? _defaultsProvider.CheckerB(EffectiveSettings.Mode);
+
+    public System.Drawing.Color? OutlineColor
+    {
+        get => _themeSettings.CurrentValue.OutlineColor;
+        set
+        {
+            _themeSettings.Update(s => s.OutlineColor = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+    System.Drawing.Color IEffectiveThemeSettings.OutlineColor => _themeSettings.CurrentValue.OutlineColor ?? _defaultsProvider.OutlineColor;
+
+    public System.Drawing.Color? GuideLine
+    {
+        get => _themeSettings.CurrentValue.GuideLine;
+        set
+        {
+            _themeSettings.Update(s => s.GuideLine = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+    System.Drawing.Color IEffectiveThemeSettings.GuideLine => _themeSettings.CurrentValue.GuideLine ?? _defaultsProvider.GuideLine;
+
+    public System.Drawing.Color? GuideText
+    {
+        get => _themeSettings.CurrentValue.GuideText;
+        set
+        {
+            _themeSettings.Update(s => s.GuideText = value);
+            _messenger.Send(new ThemeChangedMessage(this));
+        }
+    }
+    System.Drawing.Color IEffectiveThemeSettings.GuideText => _themeSettings.CurrentValue.GuideText ?? _defaultsProvider.GuideText;
+
+    private void SwitchMode(ThemeMode mode)
     {
         ThemeMode effectiveMode = mode switch
         {
@@ -154,11 +254,9 @@ public class ThemingService : IThemingService
 
         Application.Current.Resources.MergedDictionaries.Remove(current);
         Application.Current.Resources.MergedDictionaries.Add(next);
-
-        _messenger.Send(new ThemeChangedMessage(effectiveMode));
     }
 
-    public void SwitchAccent(System.Drawing.Color color)
+    private void SwitchAccent(System.Drawing.Color color)
     {
         if (color is { } c && Color.FromArgb(c.A, c.R, c.G, c.B) is { } accent)
         {
@@ -175,42 +273,6 @@ public class ThemingService : IThemingService
             Application.Current.Resources["Frb.Brushes.Primary.Dark"] = new SolidColorBrush(MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent));
             Application.Current.Resources["Frb.Brushes.Primary.Contrast"] = new SolidColorBrush(MaterialDesignColors.ColorManipulation.ColorAssist.ContrastingForegroundColor(MaterialDesignColors.ColorManipulation.ColorAssist.Darken(accent)));
         }
-
-        ThemeMode current = Application.Current.Resources.MergedDictionaries.FirstOrDefault(d => d.Source == LightUri) != null
-            ? ThemeMode.Light
-            : ThemeMode.Dark;
-        _messenger.Send(new ThemeChangedMessage(current));
-    }
-    
-    static bool TryFind(
-        ICollection<ResourceDictionary> roots,
-        Predicate<ResourceDictionary> match,
-        out ResourceDictionary? parent, out int index, out ResourceDictionary? found)
-    {
-        parent = null; index = -1; found = null;
-        int i = 0;
-        foreach (var r in roots)
-        {
-            if (match(r)) { parent = null; index = i; found = r; return true; }
-            if (TryFind(r, match, out parent, out index, out found)) return true;
-            i++;
-        }
-        return false;
-    }
-
-    static bool TryFind(
-        ResourceDictionary root,
-        Predicate<ResourceDictionary> match,
-        out ResourceDictionary? parent, out int index, out ResourceDictionary? found)
-    {
-        parent = null; index = -1; found = null;
-        for (int i = 0; i < root.MergedDictionaries.Count; i++)
-        {
-            var child = root.MergedDictionaries[i];
-            if (match(child)) { parent = root; index = i; found = child; return true; }
-            if (TryFind(child, match, out parent, out index, out found)) return true;
-        }
-        return false;
     }
 
     public bool IsSystemInDarkMode

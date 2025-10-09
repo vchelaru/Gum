@@ -39,7 +39,6 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<ElementSave>? BeforeElementSave;
         public event Action<ElementSave>? AfterElementSave;
-        public event Action? GuidesChanged;
         public event Action<ElementSave>? Export;
         public event Action<DeleteOptionsWindow, Array>? DeleteOptionsWindowShow;
         public event Action<DeleteOptionsWindow, Array>? DeleteConfirm;
@@ -337,9 +336,6 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallProjectPropertySet(string propertyName) =>
             ProjectPropertySet?.Invoke(propertyName);
-
-        public void CallGuidesChanged() =>
-            GuidesChanged?.Invoke();
 
         public void CallExport(ElementSave elementSave) =>
             Export?.Invoke(elementSave);
