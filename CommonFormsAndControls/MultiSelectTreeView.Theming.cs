@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -40,6 +41,8 @@ public partial class MultiSelectTreeView
 
     private bool _swallowSequence;
     private Rectangle _lastGlyphRect;
+
+    private ImageAttributes ImageAttributes;
 
     private enum DropKind { None, Before, Into, After }
 
@@ -218,7 +221,25 @@ public partial class MultiSelectTreeView
             }
             if (idx >= 0 && idx < ImageList.Images.Count)
             {
-                ImageList.Draw(e.Graphics, rImage.Location, idx);
+
+                var img = ImageList.Images[idx];
+
+                // If you want a fallback when attrs aren't ready:
+                if (ImageAttributes == null)
+                {
+                    // Fallback: normal draw
+                    ImageList.Draw(e.Graphics, rImage.Location, idx);
+                }
+                else
+                {
+                    // Tinted draw — respects ForeColor (including alpha) via your cached ImageAttributes
+                    e.Graphics.DrawImage(
+                        img,
+                        rImage,                         // destination rect
+                        0, 0, img.Width, img.Height,    // source rect
+                        GraphicsUnit.Pixel,
+                        ImageAttributes);
+                }
             }
         }
 
@@ -369,6 +390,27 @@ public partial class MultiSelectTreeView
         }
 
         return false;
+    }
+
+    protected override void OnForeColorChanged(EventArgs e)
+    {
+        ImageAttributes = GetAttrs(ForeColor);
+        base.OnForeColorChanged(e);
+    }
+
+    private System.Drawing.Imaging.ImageAttributes GetAttrs(Color color)
+    {
+        var cm = new System.Drawing.Imaging.ColorMatrix(new float[][]
+        {
+        new[] { color.R/255f, 0, 0, 0, 0 },
+        new[] { 0, color.G/255f, 0, 0, 0 },
+        new[] { 0, 0, color.B/255f, 0, 0 },
+        new[] { 0, 0, 0, color.A/255f, 0 },
+        new[] { 0, 0, 0, 0, 1f },
+        });
+        var ia = new System.Drawing.Imaging.ImageAttributes();
+        ia.SetColorMatrix(cm);
+        return ia;
     }
 
     private void TreeView_MouseDown(object sender, MouseEventArgs e)

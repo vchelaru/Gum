@@ -115,7 +115,7 @@
 
     <Border
         Background="{DynamicResource Frb.Surface01}"
-        BorderBrush="{StaticResource Frb.Brushes.Border}"
+        BorderBrush="{DynamicResource Frb.Brushes.Border}"
         BorderThickness="1"
         CornerRadius="8"
         SnapsToDevicePixels="True"

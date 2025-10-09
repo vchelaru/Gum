@@ -6,20 +6,23 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="Palette.xaml" />
         <ResourceDictionary>
-            <StaticResource x:Key="Frb.Colors.Foreground" ResourceKey="Gray800" />
-            <StaticResource x:Key="Frb.Colors.Foreground.Subtle" ResourceKey="Gray600" />
-            <StaticResource x:Key="Frb.Colors.Border" ResourceKey="Gray500" />
-            <StaticResource x:Key="Frb.Colors.Background" ResourceKey="Gray250" />
+            <Color x:Key="Frb.Colors.Foreground">#e4000000</Color>
+            <Color x:Key="Frb.Colors.Foreground.Subtle">#9E000000</Color>
 
-            <StaticResource x:Key="Frb.Colors.Surface01" ResourceKey="Gray100" />
-            <StaticResource x:Key="Frb.Colors.Surface02" ResourceKey="Gray200" />
+            <Color x:Key="Frb.Colors.Border">#adadad</Color>
+            <Color x:Key="Frb.Colors.Border.Secondary">#80ffffff</Color>
+
+            <Color x:Key="Frb.Colors.Background">#eeeeee</Color>
+
+            <Color x:Key="Frb.Colors.Surface01">#f7f7f7</Color>
+            <Color x:Key="Frb.Colors.Surface.Fill">#0f000000</Color>
+
+            <Color x:Key="Frb.Colors.Field.Background">#eeeeee</Color>
 
             <Color x:Key="Frb.Colors.Error">#C62828</Color>
             <Color x:Key="Frb.Colors.Success">#2E7D32</Color>
 
             <Color x:Key="Frb.Colors.ThemeContrast">Black</Color>
-
-            <StaticResource x:Key="Frb.Colors.Field.Background" ResourceKey="Gray50" />
         </ResourceDictionary>
     </ResourceDictionary.MergedDictionaries>
 
@@ -76,5 +79,10 @@
     <SolidColorBrush x:Key="Frb.Brushes.Error" Color="{StaticResource Frb.Colors.Error}" />
     <SolidColorBrush x:Key="Frb.Brushes.Success" Color="{StaticResource Frb.Colors.Success}" />
 
-    <SolidColorBrush x:Key="Frb.Brushes.Field.Background" Color="{StaticResource Frb.Colors.Field.Background}"/>
+    <SolidColorBrush x:Key="Frb.Brushes.Field.Background" Color="{StaticResource Frb.Colors.Field.Background}" />
+
+    <!--  Added missing brushes for new colors  -->
+    <SolidColorBrush x:Key="Frb.Brushes.Border.Secondary" Color="{StaticResource Frb.Colors.Border.Secondary}" />
+    <SolidColorBrush x:Key="Frb.Brushes.Surface.Fill" Color="{StaticResource Frb.Colors.Surface.Fill}" />
+    <SolidColorBrush x:Key="Frb.Brushes.ThemeContrast" Color="{StaticResource Frb.Colors.ThemeContrast}" />
 </ResourceDictionary>

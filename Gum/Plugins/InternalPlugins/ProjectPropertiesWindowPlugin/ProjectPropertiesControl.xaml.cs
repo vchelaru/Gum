@@ -53,8 +53,8 @@ namespace Gum.Gui.Controls
                 member.SupportsMakeDefault = false;
             }
 
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides and Colors");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides and Colors");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides");
 
 
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");

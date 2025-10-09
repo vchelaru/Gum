@@ -10,84 +10,233 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using CommunityToolkit.Mvvm.Input;
+using Gum.Mvvm;
+using Microsoft.Extensions.Options;
 
 namespace Gum.Dialogs;
 
-public class ThemingDialogViewModel : DialogViewModel
+public partial class ThemingDialogViewModel : DialogViewModel
 {
     private readonly IThemingService _themingService;
-    private ThemeMode? CachedMode { get; }
-    private System.Drawing.Color? CachedAccent { get; }
+    private ThemeSettings _cachedSettings;
     
-    public ThemingDialogViewModel(IThemingService themingService)
+    public ThemingDialogViewModel(IThemingService themingService, IOptionsMonitor<ThemeSettings> settings)
     {
         _themingService = themingService;
-
-        CachedMode = themingService.Mode;
-        CachedAccent = themingService.Accent;
-
-        var effective = themingService.EffectiveSettings;
-        var c = Color.FromArgb(effective.Accent.A, effective.Accent.R, effective.Accent.G, effective.Accent.B);
-        CurrentAccent = AccentOptions.FirstOrDefault(b => b.Color == c) ?? new(c);
-        CurrentMode = effective.Mode;
+        
+        // Create a deep copy of the current settings for cancellation
+        var currentSettings = settings.CurrentValue;
+        _cachedSettings = new ThemeSettings
+        {
+            Mode = currentSettings.Mode,
+            Accent = currentSettings.Accent,
+            CheckerA = currentSettings.CheckerA,
+            CheckerB = currentSettings.CheckerB,
+            OutlineColor = currentSettings.OutlineColor,
+            GuideLine = currentSettings.GuideLine,
+            GuideText = currentSettings.GuideText
+        };
     }
 
-    public ThemeMode CurrentMode
+    public ThemeMode? Mode
     {
-        get => Get<ThemeMode>();
+        get => _themingService.Mode;
         set
         {
-            if (Set(value))
+            if (value != _themingService.Mode)
             {
                 _themingService.Mode = value;
-            }
-        } 
-    }
-
-    public SolidColorBrush CurrentAccent
-    {
-        get => Get<SolidColorBrush>();
-        set
-        {
-            if (Set(value))
-            {
-                var c = value.Color;
-                _themingService.Accent = System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(CheckerAColor));
+                NotifyPropertyChanged(nameof(CheckerBColor));
             }
         }
     }
 
-    public List<ThemeMode> ThemeModes { get; } = [..Enum.GetValues(typeof(ThemeMode)).OfType<ThemeMode>()];
-    public static List<SolidColorBrush> AccentOptions { get; } = new ()
+    public Color? AccentColor
     {
-        new ((Color)ColorConverter.ConvertFromString("#6cc395")), // Gum Green
-        new ((Color)ColorConverter.ConvertFromString("#3E9ECE")), // Default FRB Blue
-        new ((Color)ColorConverter.ConvertFromString("#F44336")), // Red
-        new ((Color)ColorConverter.ConvertFromString("#E91E63")), // Pink
-        new ((Color)ColorConverter.ConvertFromString("#9C27B0")), // Purple
-        new ((Color)ColorConverter.ConvertFromString("#673AB7")), // Deep Purple
-        new ((Color)ColorConverter.ConvertFromString("#3F51B5")), // Indigo
-        new ((Color)ColorConverter.ConvertFromString("#2196F3")), // Blue
-        new ((Color)ColorConverter.ConvertFromString("#03A9F4")), // Light Blue
-        new ((Color)ColorConverter.ConvertFromString("#00BCD4")), // Cyan
-        new ((Color)ColorConverter.ConvertFromString("#009688")), // Teal
-        new ((Color)ColorConverter.ConvertFromString("#4CAF50")), // Green
-        new ((Color)ColorConverter.ConvertFromString("#8BC34A")), // Light Green
-        new ((Color)ColorConverter.ConvertFromString("#CDDC39")), // Lime
-        new ((Color)ColorConverter.ConvertFromString("#FFEB3B")), // Yellow
-        new ((Color)ColorConverter.ConvertFromString("#FFC107")), // Amber
-        new ((Color)ColorConverter.ConvertFromString("#FF9800")), // Orange
-        new ((Color)ColorConverter.ConvertFromString("#FF5722")), // Deep Orange
-        new ((Color)ColorConverter.ConvertFromString("#795548")), // Brown
-        new ((Color)ColorConverter.ConvertFromString("#9E9E9E")), // Grey
-        new ((Color)ColorConverter.ConvertFromString("#607D8B"))  // Blue Grey
-    };
+        get => _themingService.EffectiveSettings.Accent.ToColor();
+        set
+        {
+            if (value?.ToDrawingColor() != _themingService.Accent)
+            {
+                _themingService.Accent = value?.ToDrawingColor();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(HasExplicitAccentColor));
+            }
+        }
+    }
+
+    public Color? CheckerAColor
+    {
+        get => _themingService.EffectiveSettings.CheckerA.ToColor();
+        set
+        {
+            if (value?.ToDrawingColor() != _themingService.CheckerA)
+            {
+                _themingService.CheckerA = value?.ToDrawingColor();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(HasExplicitCheckerAColor));
+            }
+        }
+    }
+
+    public Color? CheckerBColor
+    {
+        get => _themingService.EffectiveSettings.CheckerB.ToColor();
+        set
+        {
+            if (value?.ToDrawingColor() != _themingService.CheckerB)
+            {
+                _themingService.CheckerB = value?.ToDrawingColor();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(HasExplicitCheckerBColor));
+            }
+        }
+    }
+
+    public Color? OutlineColor
+    {
+        get => _themingService.EffectiveSettings.OutlineColor.ToColor();
+        set
+        {
+            if (value?.ToDrawingColor() != _themingService.OutlineColor)
+            {
+                _themingService.OutlineColor = value?.ToDrawingColor();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(HasExplicitOutlineColor));
+            }
+        }
+    }
+
+    public Color? GuideLineColor
+    {
+        get => _themingService.EffectiveSettings.GuideLine.ToColor();
+        set
+        {
+            if (value?.ToDrawingColor() != _themingService.GuideLine)
+            {
+                _themingService.GuideLine = value?.ToDrawingColor();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(HasExplicitGuideLineColor));
+            }
+        }
+    }
+
+    public Color? GuideTextColor
+    {
+        get => _themingService.EffectiveSettings.GuideText.ToColor();
+        set
+        {
+            if (value?.ToDrawingColor() != _themingService.GuideText)
+            {
+                _themingService.GuideText = value?.ToDrawingColor();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(HasExplicitGuideTextColor));
+            }
+        }
+    }
+
+    // Properties to check if settings are explicitly set (not null)
+    public bool HasExplicitAccentColor => _themingService.Accent != null;
+    public bool HasExplicitCheckerAColor => _themingService.CheckerA != null;
+    public bool HasExplicitCheckerBColor => _themingService.CheckerB != null;
+    public bool HasExplicitOutlineColor => _themingService.OutlineColor != null;
+    public bool HasExplicitGuideLineColor => _themingService.GuideLine != null;
+    public bool HasExplicitGuideTextColor => _themingService.GuideText != null;
+
+    [RelayCommand]
+    private void Reset(string? propertyName)
+    {
+        if (propertyName is not null)
+        {
+            switch (propertyName)
+            {
+                case nameof(AccentColor):
+                    _themingService.Accent = null;
+                    NotifyPropertyChanged(nameof(AccentColor));
+                    NotifyPropertyChanged(nameof(HasExplicitAccentColor));
+                    break;
+                case nameof(CheckerAColor):
+                    _themingService.CheckerA = null;
+                    NotifyPropertyChanged(nameof(CheckerAColor));
+                    NotifyPropertyChanged(nameof(HasExplicitCheckerAColor));
+                    break;
+                case nameof(CheckerBColor):
+                    _themingService.CheckerB = null;
+                    NotifyPropertyChanged(nameof(CheckerBColor));
+                    NotifyPropertyChanged(nameof(HasExplicitCheckerBColor));
+                    break;
+                case nameof(OutlineColor):
+                    _themingService.OutlineColor = null;
+                    NotifyPropertyChanged(nameof(OutlineColor));
+                    NotifyPropertyChanged(nameof(HasExplicitOutlineColor));
+                    break;
+                case nameof(GuideLineColor):
+                    _themingService.GuideLine = null;
+                    NotifyPropertyChanged(nameof(GuideLineColor));
+                    NotifyPropertyChanged(nameof(HasExplicitGuideLineColor));
+                    break;
+                case nameof(GuideTextColor):
+                    _themingService.GuideText = null;
+                    NotifyPropertyChanged(nameof(GuideTextColor));
+                    NotifyPropertyChanged(nameof(HasExplicitGuideTextColor));
+                    break;
+            }
+        }
+        else
+        {
+            // Reset all colors
+            _themingService.Accent = null;
+            _themingService.CheckerA = null;
+            _themingService.CheckerB = null;
+            _themingService.OutlineColor = null;
+            _themingService.GuideLine = null;
+            _themingService.GuideText = null;
+            
+            // Notify all property changes
+            NotifyPropertyChanged(nameof(AccentColor));
+            NotifyPropertyChanged(nameof(CheckerAColor));
+            NotifyPropertyChanged(nameof(CheckerBColor));
+            NotifyPropertyChanged(nameof(OutlineColor));
+            NotifyPropertyChanged(nameof(GuideLineColor));
+            NotifyPropertyChanged(nameof(GuideTextColor));
+            NotifyPropertyChanged(nameof(HasExplicitAccentColor));
+            NotifyPropertyChanged(nameof(HasExplicitCheckerAColor));
+            NotifyPropertyChanged(nameof(HasExplicitCheckerBColor));
+            NotifyPropertyChanged(nameof(HasExplicitOutlineColor));
+            NotifyPropertyChanged(nameof(HasExplicitGuideLineColor));
+            NotifyPropertyChanged(nameof(HasExplicitGuideTextColor));
+        }
+    }
+
+    public List<ThemeMode> ThemeModes { get; } = [..Enum.GetValues(typeof(ThemeMode)).OfType<ThemeMode>()];
 
     protected override void OnNegative()
     {
-        _themingService.Mode = CachedMode;
-        _themingService.Accent = CachedAccent;
+        // Restore all cached settings when user cancels
+        _themingService.Mode = _cachedSettings.Mode;
+        _themingService.Accent = _cachedSettings.Accent;
+        _themingService.CheckerA = _cachedSettings.CheckerA;
+        _themingService.CheckerB = _cachedSettings.CheckerB;
+        _themingService.OutlineColor = _cachedSettings.OutlineColor;
+        _themingService.GuideLine = _cachedSettings.GuideLine;
+        _themingService.GuideText = _cachedSettings.GuideText;
         base.OnNegative();
+    }
+}
+
+file static class Helpers
+{
+    public static Color ToColor(this System.Drawing.Color color)
+    {
+        return Color.FromArgb(color.A, color.R, color.G, color.B);
+    }
+
+    public static System.Drawing.Color ToDrawingColor(this Color color)
+    {
+        return System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B);
     }
 }
 

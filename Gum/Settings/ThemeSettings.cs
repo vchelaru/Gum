@@ -57,7 +57,7 @@ public class ThemeSettings
 public sealed class ThemeDefaultsProvider
 {
     public ThemeMode Mode => ThemeMode.System;
-    public Color Accent => Color.FromArgb(108, 195, 149);
+    public Color Accent => Color.FromArgb(85, 161, 121);
 
     public Color CheckerA(ThemeMode mode) => mode == ThemeMode.Dark
         ? Color.FromArgb(255, 30, 30, 30)
