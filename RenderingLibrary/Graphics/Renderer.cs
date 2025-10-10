@@ -416,6 +416,8 @@ public class Renderer : IRenderer
                     mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
                 }
                 PreRender(layer.Renderables);
+
+                PreRenderWithSourceRenderTargets(layer.Renderables);
             }
 
             for (int i = 0; i < layers.Count; i++)
@@ -453,6 +455,8 @@ public class Renderer : IRenderer
         if (prerender)
         {
             PreRender(layer.Renderables);
+
+            PreRenderWithSourceRenderTargets(layer.Renderables);
         }
 
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
@@ -530,6 +534,17 @@ public class Renderer : IRenderer
                 }
             }
         }
+    }
+
+    private void PreRenderWithSourceRenderTargets(IList<IRenderableIpso> renderables)
+    {
+        var count = renderables.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+
         for (int i = 0; i < count; i++)
         {
             var renderable = renderables[i];
@@ -538,8 +553,13 @@ public class Renderer : IRenderer
             {
                 textureReferencer.Texture = renderTargetService.GetRenderTargetFor(
                     GraphicsDevice,
-                    textureReferencer.RenderTargetTextureSource, 
+                    textureReferencer.RenderTargetTextureSource,
                     Camera);
+            }
+
+            if (renderable.Visible && renderable.Children != null)
+            {
+                PreRenderWithSourceRenderTargets(renderable.Children);
             }
         }
     }
