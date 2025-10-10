@@ -505,7 +505,12 @@ public class Renderer : IRenderer
 #endif
 
         var count = renderables.Count;
-        for(int i = 0; i < count; i++)
+        if(count== 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
         {
             var renderable = renderables[i];
             if(renderable.Visible)
@@ -523,6 +528,18 @@ public class Renderer : IRenderer
                 {
                     RenderToRenderTarget(renderable, SystemManagers.Default);
                 }
+            }
+        }
+        for (int i = 0; i < count; i++)
+        {
+            var renderable = renderables[i];
+            if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
+                textureReferencer.RenderTargetTextureSource != null)
+            {
+                textureReferencer.Texture = renderTargetService.GetRenderTargetFor(
+                    GraphicsDevice,
+                    textureReferencer.RenderTargetTextureSource, 
+                    Camera);
             }
         }
     }
@@ -661,33 +678,9 @@ public class Renderer : IRenderer
 
                     renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
                     renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
-                    renderTargetRenderableSprite.Width = renderable.RenderTargetScaleX * renderTarget.Width / Camera.Zoom;
-                    renderTargetRenderableSprite.Height = renderable.RenderTargetScaleY * renderTarget.Height / Camera.Zoom;
+                    renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
+                    renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
 
-                    if(renderable is GraphicalUiElement asGue)
-                    {
-                        float extraScaleX = (renderable.RenderTargetScaleX - 1) * renderTarget.Width;
-                        float extraScaleY = (renderable.RenderTargetScaleY - 1) * renderTarget.Height;
-
-                        switch(asGue.XOrigin)
-                        {
-                            case HorizontalAlignment.Center:
-                                renderTargetRenderableSprite.X -= extraScaleX / 2f;
-                                break;
-                            case HorizontalAlignment.Right:
-                                renderTargetRenderableSprite.Y -= extraScaleX;
-                                break;
-                        }
-                        switch(asGue.YOrigin)
-                        {
-                            case VerticalAlignment.Center:
-                                renderTargetRenderableSprite.Y -= extraScaleY / 2f;
-                                break;
-                            case VerticalAlignment.Bottom:
-                                renderTargetRenderableSprite.Y -= extraScaleY;
-                                break;
-                        }
-                    }
 
                     Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
                 }

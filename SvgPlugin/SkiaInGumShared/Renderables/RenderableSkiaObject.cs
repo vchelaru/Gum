@@ -38,8 +38,7 @@ namespace SkiaGum.Renderables
 #endif
 
         bool IRenderableIpso.IsRenderTarget => false;
-        float IRenderableIpso.RenderTargetScaleX => 1f;
-        float IRenderableIpso.RenderTargetScaleY => 1f;
+
         protected Microsoft.Xna.Framework.Vector2 Position;
 
         IRenderableIpso mParent;

@@ -279,21 +279,6 @@ namespace Gum.Managers
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
 
-                // LabelDragChangeMultiplier
-                var renderTargetScaleXVariable =
-                    new VariableSave { SetsValue = true, Type = "float", Value = 1f, Name = "RenderTargetScaleX", Category = "Rendering" };
-                renderTargetScaleXVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .1m;
-                renderTargetScaleXVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
-                stateSave.Variables.Add(renderTargetScaleXVariable);
-
-                var renderTargetScaleYVariable =
-                    new VariableSave { SetsValue = true, Type = "float", Value = 1f, Name = "RenderTargetScaleY", Category = "Rendering" };
-                renderTargetScaleYVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .1m;
-                renderTargetScaleYVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
-
-                stateSave.Variables.Add(renderTargetScaleYVariable);
-
-
                 var alphaValue = CreateAlphaVariable();
                 stateSave.Variables.Add(alphaValue);
 

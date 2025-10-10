@@ -7,7 +7,7 @@ using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics;
 
-public class InvisibleRenderable : RenderableBase, ICloneable
+public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
 {
     public override void Render(ISystemManagers managers)
     {

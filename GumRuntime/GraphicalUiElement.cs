@@ -528,8 +528,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
-    public float RenderTargetScaleX => mContainedObjectAsIpso?.RenderTargetScaleX ?? 1;
-    public float RenderTargetScaleY => mContainedObjectAsIpso?.RenderTargetScaleY ?? 1;
     public int Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
 
     public GeneralUnitType XUnits

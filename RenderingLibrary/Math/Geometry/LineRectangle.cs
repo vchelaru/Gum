@@ -200,8 +200,6 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        public float RenderTargetScaleX { get; set; } = 1;
-        public float RenderTargetScaleY { get; set; } = 1;
 
         public int Alpha => Color.A;
 

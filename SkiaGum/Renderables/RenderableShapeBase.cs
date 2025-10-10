@@ -563,7 +563,6 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     public bool IsRenderTarget => false;
 
-
     public void PreRender() {}
 
     public void Render(ISystemManagers managers)

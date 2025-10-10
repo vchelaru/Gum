@@ -12,9 +12,6 @@ namespace RenderingLibrary.Graphics
     {
         bool IsRenderTarget { get; }
 
-        float RenderTargetScaleX { get; }
-        float RenderTargetScaleY { get; }
-
         int Alpha { get; }
         bool ClipsChildren { get;  }
         new IRenderableIpso? Parent { get; set; }

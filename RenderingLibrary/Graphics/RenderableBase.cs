@@ -100,9 +100,6 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     public virtual string BatchKey => string.Empty;
 
-    float IRenderableIpso.RenderTargetScaleX => 1f;
-
-    float IRenderableIpso.RenderTargetScaleY => 1f;
 
     public virtual void StartBatch(ISystemManagers systemManagers) 
     {

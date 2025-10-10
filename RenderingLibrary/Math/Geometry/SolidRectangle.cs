@@ -168,8 +168,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
     }
 
     bool IRenderableIpso.IsRenderTarget => false;
-    float IRenderableIpso.RenderTargetScaleX => 1f;
-    float IRenderableIpso.RenderTargetScaleY => 1f;
+
     #endregion
 
     public SolidRectangle()

@@ -1370,18 +1370,6 @@ public class CustomSetPropertyOnRenderable
             ((LineRectangle)mContainedObjectAsIpso).IsRenderTarget = value as bool? ?? false;
             handled = true;
         }
-        else if(propertyName == nameof(IRenderableIpso.RenderTargetScaleX))
-        {
-            ((LineRectangle)mContainedObjectAsIpso).RenderTargetScaleX = value as float? ?? 1f;
-
-            handled = true;
-        }
-        else if(propertyName == nameof(IRenderableIpso.RenderTargetScaleY))
-        {
-            ((LineRectangle)mContainedObjectAsIpso).RenderTargetScaleY = value as float? ?? 1f;
-
-            handled = true;
-        }
 
         return handled;
     }
