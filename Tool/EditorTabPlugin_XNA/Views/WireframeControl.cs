@@ -208,6 +208,10 @@ public class WireframeControl : GraphicsDeviceControl
         ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
             () => new TextRuntime(systemManagers: this.SystemManagers));
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Sprite",
+            () => new SpriteRuntime());
     }
 
     public void ShareLayerReferences(LayerService layerService)

@@ -147,7 +147,6 @@ namespace RenderingLibrary.Math.Geometry
 
         bool IRenderableIpso.IsRenderTarget => false;
 
-
         #endregion
 
         #region Constructor

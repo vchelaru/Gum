@@ -200,6 +200,7 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+
         public int Alpha => Color.A;
 
 

@@ -11,6 +11,7 @@ namespace RenderingLibrary.Graphics
     public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
     {
         bool IsRenderTarget { get; }
+
         int Alpha { get; }
         bool ClipsChildren { get;  }
         new IRenderableIpso? Parent { get; set; }

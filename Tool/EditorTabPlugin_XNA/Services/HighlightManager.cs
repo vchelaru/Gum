@@ -6,6 +6,7 @@ using ToolsUtilitiesStandard.Helpers;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using EditorTabPlugin_XNA.Utilities;
 
 namespace Gum.Wireframe
 {
@@ -134,11 +135,14 @@ namespace Gum.Wireframe
             if (HighlightedSprite != null && AreHighlightsVisible)
             {
                 mOverlaySprite.Visible = true;
-                mOverlaySprite.X = HighlightedSprite.GetAbsoluteX();
-                mOverlaySprite.Y = HighlightedSprite.GetAbsoluteY();
 
-                mOverlaySprite.Width = HighlightedSprite.Width;
-                mOverlaySprite.Height = HighlightedSprite.Height;
+                var bounds = HighlightedSprite.GetBounds();
+
+                mOverlaySprite.X = bounds.left;
+                mOverlaySprite.Y = bounds.top;
+
+                mOverlaySprite.Width = bounds.right - bounds.left;
+                mOverlaySprite.Height = bounds.bottom - bounds.top;
                 mOverlaySprite.Texture = HighlightedSprite.Texture;
 
 
@@ -160,11 +164,14 @@ namespace Gum.Wireframe
                 SolidRectangle overlay = mOverlaySolidRectangle;
 
                 overlay.Visible = true;
-                overlay.X = HighlightedLineRectangle.GetAbsoluteX();
-                overlay.Y = HighlightedLineRectangle.GetAbsoluteY();
 
-                overlay.Width = HighlightedLineRectangle.Width;
-                overlay.Height = HighlightedLineRectangle.Height;
+                var bounds = HighlightedLineRectangle.GetBounds();
+
+                overlay.X = bounds.left;
+                overlay.Y = bounds.top;
+
+                overlay.Width = bounds.right - bounds.left;
+                overlay.Height = bounds.bottom - bounds.top;
 
                 overlay.Rotation = HighlightedLineRectangle.Rotation;
             }
@@ -193,11 +200,14 @@ namespace Gum.Wireframe
         {
 
             mOverlayNineSlice.Visible = true;
-            mOverlayNineSlice.X = HighlightedNineSlice.GetAbsoluteX();
-            mOverlayNineSlice.Y = HighlightedNineSlice.GetAbsoluteY();
 
-            mOverlayNineSlice.Width = HighlightedNineSlice.Width;
-            mOverlayNineSlice.Height = HighlightedNineSlice.Height;
+            var bounds = HighlightedNineSlice.GetBounds();
+
+            mOverlayNineSlice.X = bounds.left;
+            mOverlayNineSlice.Y = bounds.top;
+
+            mOverlayNineSlice.Width = bounds.right - bounds.left;
+            mOverlayNineSlice.Height = bounds.bottom - bounds.top;
             mOverlayNineSlice.TopLeftTexture = HighlightedNineSlice.TopLeftTexture;
             mOverlayNineSlice.TopTexture = HighlightedNineSlice.TopTexture;
             mOverlayNineSlice.TopRightTexture = HighlightedNineSlice.TopRightTexture;

@@ -15,7 +15,14 @@ using RenderingLibrary.Math;
 namespace RenderingLibrary.Graphics;
 
 
-public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
+public class Sprite : SpriteBatchRenderableBase, 
+    IRenderableIpso, 
+    IVisible, 
+    IAspectRatio, 
+    ITextureCoordinate, 
+    IAnimatable, 
+    ICloneable,
+    IRenderTargetTextureReferencer
 {
     #region Fields
 
@@ -229,7 +236,6 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
     }
 
     bool IRenderableIpso.IsRenderTarget => false;
-
     public Texture2D? Texture
     {
         get { return mTexture; }
@@ -239,8 +245,10 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
         }
     }
 
-    public float? TextureWidth => Texture?.Width;
-    public float? TextureHeight => Texture?.Height;
+    public IRenderableIpso? RenderTargetTextureSource { get; set; }
+
+    public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
+    public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
 
     // October 30, 2024
     // Vic asks - is this even used?
@@ -321,7 +329,24 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
         }
     }
 
-    float IAspectRatio.AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
+    float IAspectRatio.AspectRatio
+    {
+        get
+        {
+            if(RenderTargetTextureSource != null)
+            {
+                return (RenderTargetTextureSource.Width / (float)RenderTargetTextureSource.Height);
+            }
+            else if (Texture != null)
+            {
+                return (Texture.Width / (float)Texture.Height);
+            }
+            else
+            {
+                return 1;
+            }
+        }
+    }
 
     #endregion
 
@@ -1028,4 +1053,13 @@ public class Sprite : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IAsp
     {
         return Clone();
     }
+}
+
+
+
+public interface IRenderTargetTextureReferencer
+{
+    IRenderableIpso? RenderTargetTextureSource { get; }
+
+    Texture2D? Texture { get; set; }
 }

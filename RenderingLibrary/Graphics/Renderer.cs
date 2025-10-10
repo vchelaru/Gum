@@ -416,6 +416,8 @@ public class Renderer : IRenderer
                     mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
                 }
                 PreRender(layer.Renderables);
+
+                PreRenderWithSourceRenderTargets(layer.Renderables);
             }
 
             for (int i = 0; i < layers.Count; i++)
@@ -453,6 +455,8 @@ public class Renderer : IRenderer
         if (prerender)
         {
             PreRender(layer.Renderables);
+
+            PreRenderWithSourceRenderTargets(layer.Renderables);
         }
 
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
@@ -505,7 +509,12 @@ public class Renderer : IRenderer
 #endif
 
         var count = renderables.Count;
-        for(int i = 0; i < count; i++)
+        if(count== 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
         {
             var renderable = renderables[i];
             if(renderable.Visible)
@@ -523,6 +532,32 @@ public class Renderer : IRenderer
                 {
                     RenderToRenderTarget(renderable, SystemManagers.Default);
                 }
+            }
+        }
+    }
+
+    private void PreRenderWithSourceRenderTargets(IList<IRenderableIpso> renderables)
+    {
+        var count = renderables.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+
+        for (int i = 0; i < count; i++)
+        {
+            var renderable = renderables[i];
+            if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
+                textureReferencer.RenderTargetTextureSource != null)
+            {
+                textureReferencer.Texture = renderTargetService.GetExistingRenderTarget(
+                    textureReferencer.RenderTargetTextureSource);
+            }
+
+            if (renderable.Visible && renderable.Children != null)
+            {
+                PreRenderWithSourceRenderTargets(renderable.Children);
             }
         }
     }
@@ -663,6 +698,7 @@ public class Renderer : IRenderer
                     renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
                     renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
                     renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
+
 
                     Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
                 }
@@ -906,6 +942,20 @@ class RenderTargetService
         }
 
         itemsUsingRenderTargetsThisFrame.Clear();
+    }
+
+    public RenderTarget2D GetExistingRenderTarget(IRenderableIpso renderable)
+    {
+        if(RenderTargets.ContainsKey(renderable))
+        {
+            var renderTarget = RenderTargets[renderable];
+            if(renderTarget.IsDisposed == false)
+            {
+                return RenderTargets[renderable];
+            }
+        }
+        
+        return null;
     }
 
     public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)

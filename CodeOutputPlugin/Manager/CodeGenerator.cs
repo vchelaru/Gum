@@ -3811,7 +3811,7 @@ public class CodeGenerator
 
     private static void FillWithVariableListAssignments(CodeGenerationContext context, StringBuilder stringBuilder, VariableListSave[] variableListsToAssign)
     {
-        VisualApi visualApi = GetVisualApiForInstance(context.Instance, context.Element);
+        VisualApi visualApi = GetVisualApiForInstance(context.Instance!, context.Element);
 
         foreach (var variableList in variableListsToAssign)
         {

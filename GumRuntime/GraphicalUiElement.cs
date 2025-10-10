@@ -1354,6 +1354,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// The width scale to apply to the texture width when using TextureAddress.DimensionsBased.
+    /// If TextureAddress.DimensionsBased is not used, this value is ignored.
+    /// </summary>
     public float TextureWidthScale
     {
         get
@@ -1369,6 +1373,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+
+    /// <summary>
+    /// The height scale to apply to the texture width when using TextureAddress.DimensionsBased.
+    /// If TextureAddress.DimensionsBased is not used, this value is ignored.
+    /// </summary>
     public float TextureHeightScale
     {
         get
@@ -3203,12 +3212,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         unitType == DimensionUnitType.PercentageOfSourceFile ||
         unitType == DimensionUnitType.MaintainFileAspectRatio ||
         unitType == DimensionUnitType.ScreenPixel;
-
-
-
-
-
-
 
     private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
     {
@@ -6504,6 +6507,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endregion
 }
 
+#region GraphicalUiElementExtensions
 public static class GraphicalUiElementExtensions
 {
 #if !FRB
@@ -6617,10 +6621,10 @@ public static class GraphicalUiElementExtensions
         return graphicalUiElement.Animations?.FirstOrDefault(item => item.Name == animationName);
     }
 
-#endif
+        
+    #endif
 }
-
-
+#endregion
 
 #region Interfaces
 

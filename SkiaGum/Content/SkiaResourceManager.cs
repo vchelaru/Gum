@@ -292,6 +292,9 @@ namespace SkiaGum.Content
                     message += "\nThis assembly contains no embedded resource images.";
                 }
 
+                message += "\nIf you are trying to load an embedded resource from your assembly, you may need " +
+                    "to set SkiaResourceManager.CustomResourceAssembly to your app's assembly";
+
 
                 // See if it's still null
                 if (s == null)

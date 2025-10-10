@@ -732,7 +732,6 @@ public class StandardWireframeEditor : WireframeEditor
         {
             mResizeHandles.Visible = false;
             rotationHandle.Visible = false;
-
         }
         else
         {
@@ -743,6 +742,8 @@ public class StandardWireframeEditor : WireframeEditor
     }
 
     #endregion
+
+    #region Changing the cursor (for resizing
 
     public override System.Windows.Forms.Cursor GetWindowsCursorToShow(
         System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
@@ -774,6 +775,8 @@ public class StandardWireframeEditor : WireframeEditor
         }
         return cursorToSet;
     }
+
+    #endregion
 
     private void RefreshSideOver()
     {
