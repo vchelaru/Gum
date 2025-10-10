@@ -551,10 +551,8 @@ public class Renderer : IRenderer
             if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
                 textureReferencer.RenderTargetTextureSource != null)
             {
-                textureReferencer.Texture = renderTargetService.GetRenderTargetFor(
-                    GraphicsDevice,
-                    textureReferencer.RenderTargetTextureSource,
-                    Camera);
+                textureReferencer.Texture = renderTargetService.GetExistingRenderTarget(
+                    textureReferencer.RenderTargetTextureSource);
             }
 
             if (renderable.Visible && renderable.Children != null)
@@ -944,6 +942,20 @@ class RenderTargetService
         }
 
         itemsUsingRenderTargetsThisFrame.Clear();
+    }
+
+    public RenderTarget2D GetExistingRenderTarget(IRenderableIpso renderable)
+    {
+        if(RenderTargets.ContainsKey(renderable))
+        {
+            var renderTarget = RenderTargets[renderable];
+            if(renderTarget.IsDisposed == false)
+            {
+                return RenderTargets[renderable];
+            }
+        }
+        
+        return null;
     }
 
     public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
