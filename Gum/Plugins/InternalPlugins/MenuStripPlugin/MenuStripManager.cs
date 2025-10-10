@@ -354,7 +354,7 @@ namespace Gum.Managers
 
 
             RefreshUI();
-            _menuStrip.Font = new Font("Verdana", DefaultFontSize);
+            _menuStrip.Font = new Font("Segoe UI", DefaultFontSize);
             return this._menuStrip;
         }
 
@@ -369,7 +369,7 @@ namespace Gum.Managers
                 System.Drawing.Color fg = System.Drawing.Color.FromArgb(fgColor.A, fgColor.R, fgColor.G, fgColor.B);
                 System.Drawing.Color primary = System.Drawing.Color.FromArgb(primaryColor.A, primaryColor.R, primaryColor.G, primaryColor.B);
 
-                Font font = new("Verdana", fontSize ?? DefaultFontSize, FontStyle.Regular);
+                Font font = new("Segoe UI", fontSize ?? DefaultFontSize, FontStyle.Regular);
                 _menuStrip.ForeColor = fg;
                 _menuStrip.BackColor = bg;
                 _menuStrip.Font = font;

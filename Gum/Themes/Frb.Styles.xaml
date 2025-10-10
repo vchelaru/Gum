@@ -25,7 +25,7 @@
     <Style TargetType="{x:Type Window}">
         <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-        <Setter Property="FontFamily" Value="Verdana" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="TextElement.FontWeight" Value="Regular" />
         <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
@@ -40,7 +40,7 @@
     <Style TargetType="WindowsFormsHost">
         <Setter Property="Background" Value="{DynamicResource Frb.Surface01}" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-        <Setter Property="FontFamily" Value="Verdana" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="TextElement.FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
         <Setter Property="TextElement.FontWeight" Value="Regular" />
         <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />

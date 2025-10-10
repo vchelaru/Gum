@@ -756,7 +756,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             System.Drawing.Color fg = System.Drawing.Color.FromArgb(fgColor.A, fgColor.R, fgColor.G, fgColor.B);
             System.Drawing.Color primary = System.Drawing.Color.FromArgb(primaryColor.A, primaryColor.R, primaryColor.G, primaryColor.B);
 
-            Font font = new("Verdana", fontSize ?? (float)8.25, System.Drawing.FontStyle.Regular);
+            Font font = new("Segoe UI", fontSize ?? (float)8.25, System.Drawing.FontStyle.Regular);
             //_menuStrip.ForeColor = fg;
             //_menuStrip.BackColor = bg;
             //_menuStrip.Font = font;
@@ -791,7 +791,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void UpdateTreeviewIconScale(float scale = 1.0f)
     {
-        int baseImageSize = 20;
+        int baseImageSize = 22;
 
         // Then we can re-scale the images
         ObjectTreeView.ImageList = ResizeImageListImages(

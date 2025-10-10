@@ -1035,14 +1035,14 @@ namespace CommonFormsAndControls
             this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
             this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
             this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
-            this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
+            this.ElementTreeImages.Images.SetKeyName(1, "Folder.png");
             this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
             this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
-            this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
+            this.ElementTreeImages.Images.SetKeyName(4, "Screen.png");
             this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
             this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
             this.ElementTreeImages.Images.SetKeyName(7, "state.png");
-            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
+            this.ElementTreeImages.Images.SetKeyName(8, "Behavior.png");
             this.ElementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
             this.ResumeLayout(false);
 
