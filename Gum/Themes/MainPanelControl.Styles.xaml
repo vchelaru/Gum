@@ -85,7 +85,8 @@
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Panel.ZIndex" Value="100" />
-                            <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+                            <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.ThemeContrast}" />
+                            <Setter Property="TextElement.FontWeight" Value="Medium"/>
                             <Setter TargetName="Border" Property="Background" Value="{DynamicResource Frb.Surface01}" />
                             <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
                         </Trigger>

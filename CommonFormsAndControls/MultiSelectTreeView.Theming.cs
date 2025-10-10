@@ -16,7 +16,8 @@ public partial class MultiSelectTreeView
 
     public Color ChevronColor { get; set; } = Color.Empty; // empty -> follows ForeColor
     public float ChevronThickness { get; set; } = 2.0f;    // DIP
-    public int ChevronBoxSize { get; set; } = 14;          // DIP
+    public int ChevronBoxSize => this.FontHeight;          // DIP
+    
 
     #endregion
 
@@ -233,12 +234,15 @@ public partial class MultiSelectTreeView
                 else
                 {
                     // Tinted draw — respects ForeColor (including alpha) via your cached ImageAttributes
-                    e.Graphics.DrawImage(
-                        img,
-                        rImage,                         // destination rect
-                        0, 0, img.Width, img.Height,    // source rect
-                        GraphicsUnit.Pixel,
-                        ImageAttributes);
+                    var oldCQ = e.Graphics.CompositingQuality; e.Graphics.CompositingQuality = CompositingQuality.HighQuality;
+                    var oldIM = e.Graphics.InterpolationMode; e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                    var oldPO = e.Graphics.PixelOffsetMode; e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
+
+                    e.Graphics.DrawImage(img, rImage, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, ImageAttributes);
+
+                    e.Graphics.CompositingQuality = oldCQ;
+                    e.Graphics.InterpolationMode = oldIM;
+                    e.Graphics.PixelOffsetMode = oldPO;
                 }
             }
         }
@@ -250,7 +254,7 @@ public partial class MultiSelectTreeView
             rText,
             ForeColor,
             Color.Transparent,
-            TextFormatFlags.NoClipping | TextFormatFlags.GlyphOverhangPadding | TextFormatFlags.EndEllipsis);
+            TextFormatFlags.NoClipping | TextFormatFlags.GlyphOverhangPadding | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter);
 
         if (isSelected)
         {
@@ -396,6 +400,12 @@ public partial class MultiSelectTreeView
     {
         ImageAttributes = GetAttrs(ForeColor);
         base.OnForeColorChanged(e);
+    }
+
+    protected override void OnFontChanged(EventArgs e)
+    {
+        Indent = (int)DpiScale(ChevronBoxSize);
+        base.OnFontChanged(e);
     }
 
     private System.Drawing.Imaging.ImageAttributes GetAttrs(Color color)
@@ -645,11 +655,12 @@ public partial class MultiSelectTreeView
 
     private void LayoutNodeRow(TreeNode node, Rectangle row, out Rectangle chevron, out Rectangle state, out Rectangle image, out Rectangle text)
     {
-        int spacing = DpiScaleI(3);
+        int spacing = 0;// DpiScaleI(3);
+        int chevronBox = DpiScaleI(ChevronBoxSize);
 
         int left = DisplayRectangle.Left + node.Level * Indent;
 
-        int chevronBox = Math.Max(Indent, DpiScaleI(ChevronBoxSize));
+        
         int chevronSize = Math.Min(chevronBox, row.Height - 2);
         int chevX = left + (chevronBox - chevronSize) / 2;
         int chevY = row.Top + (row.Height - chevronSize) / 2;
@@ -687,7 +698,11 @@ public partial class MultiSelectTreeView
         }
 
         int right = ClientSize.Width;
-        text = new Rectangle(cursor, row.Top, Math.Max(0, right - cursor - 1), row.Height);
+        // Vertically center the text rectangle within the row using the effective font height
+        int fontHeight = (node.NodeFont ?? this.Font).Height;
+        int textHeight = Math.Min(row.Height, fontHeight);
+        int textY = row.Top + (row.Height - textHeight) / 2;
+        text = new Rectangle(cursor, textY, Math.Max(0, right - cursor - 1), textHeight);
     }
 
     #endregion

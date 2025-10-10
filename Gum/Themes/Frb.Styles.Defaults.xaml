@@ -432,7 +432,7 @@
     <!--  ComboBox  -->
     <Style TargetType="ComboBox">
         <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
-        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="Padding" Value="0,1" />
@@ -520,6 +520,7 @@
                                 Margin="0,0,0,-1"
                                 Padding="3,0,0,0"
                                 VerticalAlignment="Stretch"
+                                Background="Transparent"
                                 BorderThickness="0"
                                 CaretBrush="{DynamicResource Frb.Brushes.Primary}"
                                 Foreground="{TemplateBinding Foreground}"
@@ -573,6 +574,7 @@
 
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
                             <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
+                            <Setter TargetName="PART_EditableTextBox" Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="RootBorder" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
@@ -1329,7 +1331,7 @@
                         x:Name="IsDefaultIcon"
                         Grid.Column="0"
                         VerticalAlignment="Center"
-                        Icon="Status"
+                        Icon="BoxEdit"
                         Visibility="{Binding IsDefault, Converter={StaticResource InverseBoolVis}}" />
                 </Border>
 
@@ -1357,10 +1359,9 @@
                                 <TextBlock
                                     Margin="0,4"
                                     VerticalAlignment="Center"
-                                    FontFamily="Verdana"
-                                    FontSize="12"
-                                    FontWeight="Bold"
-                                    Text="{Binding Converter={StaticResource AllCaps}}" />
+                                    FontWeight="Medium"
+                                    Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
+                                    Text="{Binding}" />
                             </DataTemplate>
                         </Expander.HeaderTemplate>
                         <ItemsControl
