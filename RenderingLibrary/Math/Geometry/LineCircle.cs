@@ -236,7 +236,8 @@ namespace RenderingLibrary.Math.Geometry
 
         public override void Render(ISystemManagers managers)
         {
-            if (AbsoluteVisible)
+            // See NineSlice for explanation of this Visible check
+            //if (AbsoluteVisible)
             {
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();

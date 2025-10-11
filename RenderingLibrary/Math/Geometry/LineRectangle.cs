@@ -271,7 +271,8 @@ namespace RenderingLibrary.Math.Geometry
 
         public override void Render(ISystemManagers managers)
         {
-            if (AbsoluteVisible && LocalVisible)
+            //if (AbsoluteVisible && LocalVisible)
+            if(LocalVisible)
             {
                 // todo - add rotation
                 var systemManagers = managers as SystemManagers;

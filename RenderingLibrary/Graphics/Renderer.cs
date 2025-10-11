@@ -465,7 +465,7 @@ public class Renderer : IRenderer
 
         layer.SortRenderables();
 
-        Render(layer.Renderables, managers, layer);
+        Render(layer.Renderables, managers, layer, prerender);
 
         lastBatchOwner?.EndBatch(managers);
         lastBatchOwner = null;
@@ -488,7 +488,7 @@ public class Renderer : IRenderer
 
     public void Draw(IRenderableIpso renderable)
     {
-        Draw(SystemManagers.Default, _layers[0], renderable);
+        Draw(SystemManagers.Default, _layers[0], renderable, forceRenderHierarchy:false, isPreRender:false);
     }
 
     public void End()
@@ -517,14 +517,16 @@ public class Renderer : IRenderer
         for (int i = 0; i < count; i++)
         {
             var renderable = renderables[i];
-            if(renderable.Visible)
+            if(renderable.Visible || 
+                // If it's a render target, then we want to render it fully:
+                renderable.IsRenderTarget)
             {
 
                 renderable.PreRender();
 
                 // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
                 // yet been assigned a visual. Just skip over it...
-                if(renderable.Visible && renderable.Children != null)
+                if((renderable.Visible || renderable.IsRenderTarget) && renderable.Children != null)
                 {
                     PreRender(renderable.Children);
                 }
@@ -563,6 +565,8 @@ public class Renderer : IRenderer
     }
 
     GumBatch gumBatch;
+
+    bool hasSaved = false;
 
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
@@ -630,12 +634,21 @@ public class Renderer : IRenderer
 
             //gumBatch.Draw(renderable);
             //systemManagers.Renderer.Draw(renderable);
-            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
+            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true, isPreRender:true);
 
             gumBatch.End();
-
             GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
 
+            if(!hasSaved)
+            {
+                hasSaved = true;
+                // Uncomment this to test saving...
+                if (!System.IO.File.Exists("Output.png"))
+                {
+                    using var stream = System.IO.File.OpenWrite("Output.png");
+                    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+                }
+            }
 
 
             Camera.ClientWidth = oldCameraWidth;
@@ -656,13 +669,13 @@ public class Renderer : IRenderer
 
     }
 
-    private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
+    private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer, bool isPreRender)
     {
         var count = whatToRender.Count;
         for (int i = 0; i < count; i++)
         {
             var renderable = whatToRender[i];
-            Draw(managers, layer, renderable);
+            Draw(managers, layer, renderable, forceRenderHierarchy:false, isPreRender:isPreRender);
         }
     }
 
@@ -672,9 +685,9 @@ public class Renderer : IRenderer
     string currentBatchKey = string.Empty;
     IRenderable? lastBatchOwner;
 
-    private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
+    private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy, bool isPreRender)
     {
-        if (renderable.Visible)
+        if (renderable.Visible || ( renderable.IsRenderTarget && isPreRender))
         {
             var oldClip = mRenderStateVariables.ClipRectangle;
             AdjustRenderStates(mRenderStateVariables, layer, renderable);
@@ -722,7 +735,7 @@ public class Renderer : IRenderer
 
                 if (RenderUsingHierarchy)
                 {
-                    Render(renderable.Children, managers, layer);
+                    Render(renderable.Children, managers, layer, isPreRender);
                 }
             }
 

@@ -307,7 +307,8 @@ namespace RenderingLibrary.Math.Geometry
 
         public override void Render(ISystemManagers managers)
         {
-            if (Visible)
+            // See NineSlice for explanation of this Visible check
+            //if (Visible)
             {
                 var systemManagers = managers as SystemManagers;
                 mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers);

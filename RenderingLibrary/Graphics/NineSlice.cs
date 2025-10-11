@@ -455,7 +455,13 @@ public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso,
 
     public override void Render(ISystemManagers managers)
     {
-        if (AbsoluteVisible && Width > 0 && Height > 0)
+        //if (AbsoluteVisible && Width > 0 && Height > 0)
+        // Why do we check absolute visible?
+        // This seems to have problems:
+        // 1. It's expensive
+        // 2. The caller should be responsible for this
+        // 3. This prevents render target rendering when the parent is invisible
+        if (Width > 0 && Height > 0)
         {
             RefreshSourceRectangles();
 

@@ -1141,8 +1141,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
 
     public override void Render(ISystemManagers managers)
     {
-
-        if (AbsoluteVisible && !string.IsNullOrEmpty(RawText))
+        // See NineSlice for explanation of this Visible check
+        if (!string.IsNullOrEmpty(RawText))
         {
             var systemManagers = (SystemManagers)managers;
             var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
