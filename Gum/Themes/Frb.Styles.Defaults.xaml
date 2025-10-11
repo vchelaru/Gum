@@ -114,7 +114,7 @@
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Style.Triggers>
       <Trigger Property="IsEnabled" Value="False">
-        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
       </Trigger>
     </Style.Triggers>
   </Style>
@@ -125,7 +125,7 @@
     <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
     <Style.Triggers>
       <Trigger Property="IsEnabled" Value="False">
-        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
       </Trigger>
     </Style.Triggers>
   </Style>
@@ -1355,29 +1355,47 @@
 
   </DataTemplate>
 
+  <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type system:String}">
+    <TextBlock
+      Margin="0,4"
+      VerticalAlignment="Center"
+      FontWeight="Medium"
+      Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
+      Text="{Binding}" />
+  </DataTemplate>
+
   <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
     <Setter Property="Grid.IsSharedSizeScope" Value="True" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="OverridesIsDefaultStyling" Value="True" />
     <Setter Property="ItemTemplate">
       <Setter.Value>
         <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">
-          <Expander Header="{Binding Name}" IsExpanded="True">
-            <Expander.HeaderTemplate>
-              <DataTemplate>
-                <DataTemplate.Resources>
-                  <converters1:AllCapsConverter x:Key="AllCaps" />
-                </DataTemplate.Resources>
-                <TextBlock
-                  Margin="0,4"
-                  VerticalAlignment="Center"
-                  FontWeight="Medium"
-                  Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
-                  Text="{Binding}" />
-              </DataTemplate>
-            </Expander.HeaderTemplate>
+          <Expander
+            Header="{Binding Name}"
+            HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
+            IsExpanded="True">
+            <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
+          </Expander>
+        </DataTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style
+    x:Key="DataUiGrid.VariableGrid"
+    BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}"
+    TargetType="{x:Type wpfdataui:DataUiGrid}">
+    <Setter Property="ItemTemplate">
+      <Setter.Value>
+        <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">
+          <Expander
+            Header="{Binding Name}"
+            HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
+            IsExpanded="True">
             <ItemsControl
               AlternationCount="2"
-              ItemTemplate="{Binding InstanceMemberItemTemplate, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type wpfdataui:DataUiGrid}}}"
+              ItemTemplate="{StaticResource InstanceMember.DefaultColumnTemplate}"
               ItemsSource="{Binding Members}" />
           </Expander>
         </DataTemplate>
