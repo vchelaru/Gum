@@ -32,10 +32,13 @@
             <TextBox
                 x:Name="ValueTextBox"
                 Grid.Column="1"
+                Margin="0,8,0,0"
                 Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
         <TextBlock
-            Margin="0,4,0,0"
+            Margin="0,6,0,0"
+            Foreground="{StaticResource Frb.Brushes.Error}"
+            Style="{StaticResource Frb.Styles.TextBlock.Caption}"
             Text="{Binding Error}"
             TextWrapping="Wrap"
             Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />

@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="WpfDataUi.Controls.ToggleButtonOptionDisplay"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -13,39 +13,52 @@
     <UserControl.Resources>
         <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
     </UserControl.Resources>
-    <StackPanel>
+    <!--<StackPanel>-->
 
-        <Grid x:Name="Grid">
-            <Grid.ContextMenu>
-                <ContextMenu />
-            </Grid.ContextMenu>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+    <Grid x:Name="Grid" HorizontalAlignment="Left">
+        <Grid.ContextMenu>
+            <ContextMenu />
+        </Grid.ContextMenu>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
 
-            <TextBlock
-                x:Name="Label"
-                MinWidth="100"
-                Padding="4"
-                VerticalAlignment="Center"
-                TextWrapping="Wrap">
-                Property Label:
-            </TextBlock>
+        <TextBlock
+            x:Name="Label"
+            MinWidth="100"
+            Padding="4"
+            VerticalAlignment="Center"
+            TextWrapping="Wrap">
+            Property Label:
+        </TextBlock>
+        <Border
+            Grid.Column="1"
+            CornerRadius="{Binding WrapPanelRadius, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            BorderThickness="{Binding WrapPanelBorderThickness, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            Background="{Binding WrapPanelBackground, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            Padding="{Binding WrapPanelPadding, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}"
+            BorderBrush="{Binding WrapPanelBorderBrush, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}}">
             <WrapPanel
                 x:Name="ButtonWrapPanel"
-                Grid.Column="1"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
                 Orientation="Horizontal" />
-        </Grid>
+        </Border>
         <TextBlock
             x:Name="HintTextBlock"
             Grid.Row="1"
-            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
             Margin="0,0,-4,0"
             Padding="8,0,0,0"
             FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
             TextWrapping="Wrap">
             This is a property description.
         </TextBlock>
-    </StackPanel>
+    </Grid>
+    <!--
+  </StackPanel>-->
 </UserControl>

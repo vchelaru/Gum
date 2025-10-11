@@ -10,11 +10,6 @@ public class WireframeCommands
         WireframeObjectManager.Self.RefreshAll(forceLayout, forceReloadContent);
     }
 
-    public void RefreshGuides()
-    {
-        PluginManager.Self.GuidesChanged();
-    }
-
     bool areRulersVisible = true;
     public bool AreRulersVisible
     {

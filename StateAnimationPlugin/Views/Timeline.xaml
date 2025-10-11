@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:Gum.Controls;assembly=Gum"
     xmlns:converters="clr-namespace:Gum.Converters;assembly=Gum"
     xmlns:local="clr-namespace:StateAnimationPlugin.Controls"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:viewModels="clr-namespace:StateAnimationPlugin.ViewModels"
     xmlns:views="clr-namespace:StateAnimationPlugin.Views"
     x:Name="Root">
@@ -19,16 +20,15 @@
         <converters:AreEqualMultiConverter x:Key="Equal" />
 
         <!--  Brushes and Colors  -->
-        <SolidColorBrush x:Key="TimelineBackground" Color="#f0f0f0" />
-        <SolidColorBrush x:Key="MajorLineBrush" Color="#d2d2d2" />
+        <SolidColorBrush x:Key="TimelineBackground" Color="{DynamicResource Frb.Colors.Background}" />
+        <SolidColorBrush x:Key="MajorLineBrush" Color="{DynamicResource Frb.Colors.Border}" />
         <SolidColorBrush
             x:Key="MinorLineBrush"
             Opacity="0.25"
-            Color="#d2d2d2" />
+            Color="{DynamicResource Frb.Colors.Border}" />
         <SolidColorBrush x:Key="NowLineBrush" Color="#c3e3ed" />
-        <SolidColorBrush x:Key="EventBrush" Color="#007000" />
-        <SolidColorBrush x:Key="DeselectedBrush" Color="#ff6464" />
-        <SolidColorBrush x:Key="SelectedBrush" Color="Yellow" />
+        <SolidColorBrush x:Key="DeselectedBrush" Color="{DynamicResource Frb.Colors.Primary.Dark}" />
+        <SolidColorBrush x:Key="SelectedBrush" Color="{DynamicResource Frb.Colors.Primary.Light}" />
 
         <!--  CollectionView for States+Events  -->
         <CollectionViewSource
@@ -44,11 +44,11 @@
                     Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    Stroke="Black"
                     StrokeThickness="1">
                     <Ellipse.Style>
                         <Style TargetType="{x:Type Ellipse}">
-                            <Setter Property="Fill" Value="{StaticResource EventBrush}" />
+                            <Setter Property="Fill" Value="{StaticResource DeselectedBrush}" />
+                            <Setter Property="Stroke" Value="Black" />
                             <Style.Triggers>
                                 <DataTrigger Value="True">
                                     <DataTrigger.Binding>
@@ -58,6 +58,11 @@
                                         </MultiBinding>
                                     </DataTrigger.Binding>
                                     <Setter Property="Fill" Value="{StaticResource SelectedBrush}" />
+
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                                    <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary.Light}" />
                                 </DataTrigger>
 
                             </Style.Triggers>
@@ -69,17 +74,21 @@
 
         <!--  State Template  -->
         <DataTemplate x:Key="StateTemplate" DataType="{x:Type viewModels:AnimatedKeyframeViewModel}">
-            <Grid>
-                <Ellipse
+            <Grid VerticalAlignment="Stretch">
+                <Rectangle
                     Width="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
                     Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    Stroke="Black"
+                    RenderTransformOrigin="0.5,0.5"
                     StrokeThickness="1">
-                    <Ellipse.Style>
-                        <Style TargetType="{x:Type Ellipse}">
+                    <Rectangle.RenderTransform>
+                        <RotateTransform Angle="45" />
+                    </Rectangle.RenderTransform>
+                    <Rectangle.Style>
+                        <Style TargetType="{x:Type Rectangle}">
                             <Setter Property="Fill" Value="{StaticResource DeselectedBrush}" />
+                            <Setter Property="Stroke" Value="Black" />
                             <Style.Triggers>
                                 <DataTrigger Value="True">
                                     <DataTrigger.Binding>
@@ -89,12 +98,15 @@
                                         </MultiBinding>
                                     </DataTrigger.Binding>
                                     <Setter Property="Fill" Value="{StaticResource SelectedBrush}" />
-                                </DataTrigger>
 
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                                    <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary.Light}" />
+                                </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </Ellipse.Style>
-                </Ellipse>
+                    </Rectangle.Style>
+                </Rectangle>
             </Grid>
         </DataTemplate>
 
@@ -233,28 +245,17 @@
             MinorTickInterval="0.25" />
 
         <!--  Current time TextBox  -->
-        <Grid
+
+        <TextBox
+            x:Name="CurrentTimeTextBox"
             Grid.Row="0"
             Grid.Column="0"
             Width="{Binding ActualWidth, ElementName=LabelCol}"
-            MinWidth="64"
-            Margin="0,0,12,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBox
-                x:Name="CurrentTimeTextBox"
-                Grid.Column="0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Center"
-                Text="{Binding CurrentTime, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            <TextBlock
-                Grid.Column="1"
-                Margin="2,0,0,0"
-                VerticalAlignment="Center"
-                Text="{Binding OverLengthTime}" />
-        </Grid>
+            MinWidth="80"
+            Margin="0,0,12,4"
+            VerticalAlignment="Center"
+            materialDesign:TextFieldAssist.SuffixText="{Binding Animation.Length, StringFormat=/{0:0.##}, ElementName=Root}"
+            Text="{Binding CurrentTime, StringFormat={}{0:0.###}, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
 
         <!--  Scrubber  -->
@@ -324,6 +325,11 @@
                                     </MultiBinding>
                                 </Setter.Value>
                             </Setter>
+                            <Setter Property="ToolTip" Value="{Binding DisplayName}" />
+                            <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+                            <EventSetter Event="MouseLeftButtonDown" Handler="Keyframe_MouseDown" />
+                            <EventSetter Event="MouseEnter" Handler="OnKeyframeMouseEnter" />
+                            <EventSetter Event="MouseLeave" Handler="OnKeyframeMouseLeave" />
                         </Style>
                     </ItemsControl.ItemContainerStyle>
 
@@ -338,6 +344,8 @@
             Grid.Column="0"
             Grid.ColumnSpan="2"
             ItemsSource="{Binding SubRows, ElementName=Root}">
+
+
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border BorderBrush="{StaticResource MajorLineBrush}" BorderThickness="0,0,0,1">
@@ -380,16 +388,20 @@
                                                 </MultiBinding>
                                             </Setter.Value>
                                         </Setter>
+                                        <Setter Property="ToolTip" Value="{Binding DisplayName}" />
+                                        <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+                                        <EventSetter Event="MouseLeftButtonDown" Handler="Keyframe_MouseDown" />
+                                        <EventSetter Event="MouseEnter" Handler="OnKeyframeMouseEnter" />
+                                        <EventSetter Event="MouseLeave" Handler="OnKeyframeMouseLeave" />
                                     </Style>
                                 </ItemsControl.ItemContainerStyle>
 
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid VerticalAlignment="Stretch">
+                                        <Grid VerticalAlignment="Stretch" MouseLeftButtonDown="Keyframe_MouseDown">
                                             <Rectangle
                                                 Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
                                                 VerticalAlignment="Center"
-                                                Stroke="Black"
                                                 StrokeThickness="1">
                                                 <Rectangle.Width>
                                                     <MultiBinding Converter="{StaticResource LengthToWidth}">
@@ -401,6 +413,7 @@
 
                                                 <Rectangle.Style>
                                                     <Style TargetType="{x:Type Rectangle}">
+                                                        <Setter Property="Stroke" Value="Black" />
                                                         <Setter Property="Fill" Value="{StaticResource DeselectedBrush}" />
                                                         <Style.Triggers>
                                                             <DataTrigger Value="True">
@@ -411,6 +424,9 @@
                                                                     </MultiBinding>
                                                                 </DataTrigger.Binding>
                                                                 <Setter Property="Fill" Value="{StaticResource SelectedBrush}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                                                                <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary.Light}" />
                                                             </DataTrigger>
 
                                                         </Style.Triggers>

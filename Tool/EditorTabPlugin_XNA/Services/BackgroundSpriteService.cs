@@ -7,19 +7,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.Dialogs;
 using Gum.Services;
+using Gum.Settings;
 
 namespace EditorTabPlugin_XNA.Services;
-internal class BackgroundSpriteService
+internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
 {
     private readonly WireframeCommands _wireframeCommands;
+    private readonly IMessenger _messenger;
+    
     Sprite BackgroundSprite;
     SolidRectangle BackgroundSolidColor;
 
     public BackgroundSpriteService()
     {
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+        _messenger.RegisterAll(this);
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -79,22 +86,11 @@ internal class BackgroundSpriteService
     {
         BackgroundSprite.Visible =
                 _wireframeCommands.IsBackgroundGridVisible;
-
-        if (ProjectManager.Self.GeneralSettingsFile != null)
-        {
-            BackgroundSolidColor.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1B
-            );
-
-
-            BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
-            );
-
-        }
+    }
+    
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        BackgroundSolidColor.Color = message.settings.CheckerA;
+        BackgroundSprite.Color = message.settings.CheckerB;
     }
 }

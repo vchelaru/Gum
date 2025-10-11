@@ -19,32 +19,8 @@ namespace Gum.Plugins.InternalPlugins.Errors.Views;
 /// </summary>
 public partial class ErrorTabHeader : UserControl
 {
-    public void SetErrorCount(int count)
-    {
-        if (count == 0)
-        {
-            CircleInstance.Fill = Brushes.Green;
-            LabelInstance.Content = "0 Errors";
-        }
-        else
-        {
-            CircleInstance.Fill = Brushes.Red;
-
-            if (count == 1)
-            {
-                LabelInstance.Content = "1 Error";
-            }
-            else
-            {
-                LabelInstance.Content = $"{count} Errors";
-            }
-        }
-    }
-
     public ErrorTabHeader()
     {
         InitializeComponent();
-
-        SetErrorCount(0);
     }
 }

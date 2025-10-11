@@ -7,6 +7,7 @@ using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -236,7 +237,7 @@ public class HotkeyManager
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
-            _ when ZoomDirection() is { } dir => () => _uiSettingsService.Scale += dir,
+            _ when ZoomDirection() is { } dir => () => _uiSettingsService.BaseFontSize += dir,
             _ => null
         };
 
@@ -249,8 +250,8 @@ public class HotkeyManager
         return match is not null;
 
         double? ZoomDirection() =>
-            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 0.1 :
-            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -0.1 :
+            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
+            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
             null;
     }
 

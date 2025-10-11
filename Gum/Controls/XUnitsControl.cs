@@ -28,26 +28,30 @@ namespace Gum.Controls
                     {
                         Name = "Pixels From Left",
                         Value = PositionUnitType.PixelsFromLeft,
-                        Image = pixelsFromLeftBitmap
+                        Image = pixelsFromLeftBitmap,
+                        GumIconName = "XUnitsLeft"
 
                     },
                     new Option
                     {
                         Name = "Pixels From Center",
                         Value = PositionUnitType.PixelsFromCenterX,
-                        Image = pixelsFromCenterBitmap
+                        Image = pixelsFromCenterBitmap,
+                        GumIconName = "XUnitsCenter"
                     },
                     new Option
                     {
                         Name = "Pixels From Right",
                         Value = PositionUnitType.PixelsFromRight,
-                        Image = pixelsFromRightBitmap
+                        Image = pixelsFromRightBitmap,
+                        GumIconName = "XUnitsRight"
                     },
                     new Option
                     {
                         Name = "Percentage Parent Width",
                         Value = PositionUnitType.PercentageWidth,
-                        Image = percentageBitmap
+                        Image = percentageBitmap,
+                        GumIconName = "XUnitsPercentageParent"
                     }
                 };
 

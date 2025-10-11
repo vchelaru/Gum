@@ -1,5 +1,8 @@
 ﻿using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.Undos;
 using System.ComponentModel.Composition;
+using System.Linq;
+using System.Windows.Controls;
 
 namespace Gum.Plugins.Undos
 {
@@ -13,9 +16,22 @@ namespace Gum.Plugins.Undos
         {
             var control = new UndoDisplay();
 
-            control.DataContext = new UndosViewModel();
+            UndosViewModel viewModel = new ();
+            control.DataContext = viewModel;
 
-            _tabManager.AddControl(control, "History", TabLocation.RightBottom);
+            PluginTab tab = AddControl(control, "History", TabLocation.RightBottom);
+            tab.GotFocus += () =>
+            {
+                control.ListBoxInstance.SelectedItem = viewModel.HistoryItems.LastOrDefault(x => x.UndoOrRedo is InternalPlugins.Undos.UndoOrRedo.Undo);
+                if (control.ListBoxInstance.SelectedItem is UndoItemViewModel selected)
+                {
+                    UndoItemViewModel? next =
+                        viewModel.HistoryItems.IndexOf(selected) is var index and > -1 ?
+                        viewModel.HistoryItems.ElementAt(index) : null;
+
+                    control.ListBoxInstance.ScrollIntoView(next ?? selected);
+                }
+            };
 
         }
     }

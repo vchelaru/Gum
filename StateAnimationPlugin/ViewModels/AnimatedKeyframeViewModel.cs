@@ -55,6 +55,12 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         set => Set(value); 
     }
 
+    public bool IsTimelineVisualHovered
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     public AnimationViewModel SubAnimationViewModel
     {
         get { return mSubAnimationViewModel; }

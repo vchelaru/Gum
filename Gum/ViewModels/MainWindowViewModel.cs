@@ -1,15 +1,22 @@
 ﻿using System.Drawing;
 using System.Windows;
 using System.Windows.Forms;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Controls;
+using Gum.Dialogs;
 using Gum.Mvvm;
 
 namespace Gum.ViewModels;
 
-public class MainWindowViewModel : ViewModel
+public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>
 {
     public MainPanelViewModel MainPanelViewModel { get; }
-    
+
+    public string? IconSource
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
     public string? Title
     {
         get => Get<string?>();
@@ -46,9 +53,11 @@ public class MainWindowViewModel : ViewModel
         set => Set(value);
     }
 
-    public MainWindowViewModel(MainPanelViewModel mainPanelViewModel)
+    public MainWindowViewModel(MainPanelViewModel mainPanelViewModel, IMessenger messenger)
     {
         MainPanelViewModel = mainPanelViewModel;
+        IconSource = "pack://application:,,,/GumLogo64.png";
+        messenger.RegisterAll(this);
     }
     
     public void LoadWindowSettings()
@@ -78,5 +87,14 @@ public class MainWindowViewModel : ViewModel
         settings.MainWindowState = (FormWindowState)WindowState;
 
         settings.Save();
+    }
+
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        IconSource = message.settings.Mode switch
+        {
+            ThemeMode.Light => "pack://application:,,,/GumLogo64Light.png",
+            _ => "pack://application:,,,/GumLogo64.png"
+        };
     }
 }

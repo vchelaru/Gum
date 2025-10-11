@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace StateAnimationPlugin.Controls;
 
@@ -143,6 +144,31 @@ public partial class TimelineControl : UserControl
         {
             Name = name;
             Items = items;
+        }
+    }
+
+    private void Keyframe_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame } && Animation is { } animation &&
+            animation.Keyframes.Contains(frame))
+        {
+            animation.SelectedKeyframe = frame;
+        }
+    }
+
+    private void OnKeyframeMouseEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
+        {
+            frame.IsTimelineVisualHovered = true;
+        }
+    }
+
+    private void OnKeyframeMouseLeave(object sender, MouseEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
+        {
+            frame.IsTimelineVisualHovered = false;
         }
     }
 }

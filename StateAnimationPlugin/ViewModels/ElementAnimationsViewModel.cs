@@ -462,7 +462,7 @@ public class ElementAnimationsViewModel : ViewModel
                 }
                 else
                 {
-                    TogglePlayStop();
+                    IsPlaying = !IsPlaying;
                 }
             }
         }
@@ -470,30 +470,20 @@ public class ElementAnimationsViewModel : ViewModel
         DisplayedAnimationTime = newValue;
     }
 
-
-
-    internal void TogglePlayStop()
+    public bool IsPlaying
     {
-        lastPlayTimerTickTime = null;
-        mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
-
-        if(mPlayTimer.IsEnabled)
+        get => Get<bool>();
+        set
         {
-            DisplayedAnimationTime = 0;
-        }
-
-        NotifyPropertyChanged(nameof(ButtonBitmapFrame));
-    }
-
-    public void Stop()
-    {
-        if (mPlayTimer.IsEnabled)
-        {
-            lastPlayTimerTickTime = null;
-
-            mPlayTimer.Stop();
-            NotifyPropertyChanged(nameof(ButtonBitmapFrame));
-
+            if (Set(value))
+            {
+                lastPlayTimerTickTime = null;
+                mPlayTimer.IsEnabled = value;
+                if (value)
+                {
+                    DisplayedAnimationTime = 0;
+                }
+            }
         }
     }
 

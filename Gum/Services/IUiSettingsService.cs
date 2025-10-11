@@ -2,5 +2,5 @@
 
 public interface IUiSettingsService
 {
-    public double Scale { get; set; }
+    public double BaseFontSize { get; set; }
 }

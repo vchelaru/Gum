@@ -45,24 +45,6 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
-    public Color OutlineColor
-    {
-        get => Get<Color>();
-        set => Set(value);
-    }
-
-    public Color GuideLineColor
-    {
-        get => Get<Color>();
-        set => Set(value);
-    }
-
-    public Color GuideTextColor
-    {
-        get => Get<Color>();
-        set => Set(value);
-    }
-
     public bool RestrictToUnitValues
     {
         get => Get<bool>();
@@ -97,18 +79,6 @@ public class ProjectPropertiesViewModel : ViewModel
     {
         get => Get<bool>(); 
         set => Set(value); 
-    }
-
-    public Color CheckerboardColor1
-    {
-        get => Get<Color>();
-        set => Set(value);
-    }
-
-    public Color CheckerboardColor2
-    {
-        get => Get<Color>();
-        set => Set(value);
     }
 
     public string LocalizationFile
@@ -185,11 +155,6 @@ public class ProjectPropertiesViewModel : ViewModel
 
     public bool IsUpdatingFromModel { get; private set; }
 
-    public ProjectPropertiesViewModel()
-    {
-        OutlineColor = Color.White;
-    }
-
     public void SetFrom(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
     {
         IsUpdatingFromModel = true;
@@ -219,14 +184,6 @@ public class ProjectPropertiesViewModel : ViewModel
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
             CanvasWidth = this.gumProject.DefaultCanvasWidth;
             RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
-
-
-            CheckerboardColor1 = Color.FromArgb(255, generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
-            CheckerboardColor2 = Color.FromArgb(255, generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
-
-            OutlineColor = Color.FromArgb(255, generalSettings.OutlineColorR, generalSettings.OutlineColorG, generalSettings.OutlineColorB);
-            GuideLineColor = Color.FromArgb(255, generalSettings.GuideLineColorR, generalSettings.GuideLineColorG, generalSettings.GuideLineColorB);
-            GuideTextColor = Color.FromArgb(255, generalSettings.GuideTextColorR, generalSettings.GuideTextColorG, generalSettings.GuideTextColorB);
 
             LocalizationFile = this.gumProject.LocalizationFile;
             LanguageIndex = this.gumProject.CurrentLanguageIndex;
@@ -258,26 +215,6 @@ public class ProjectPropertiesViewModel : ViewModel
         this.gumProject.DefaultCanvasHeight = CanvasHeight;
         this.gumProject.DefaultCanvasWidth = CanvasWidth;
         this.gumProject.RestrictFileNamesForAndroid = RestrictFileNamesForAndroid;
-
-        generalSettings.CheckerColor1R = CheckerboardColor1.R;
-        generalSettings.CheckerColor1G = CheckerboardColor1.G;
-        generalSettings.CheckerColor1B = CheckerboardColor1.B;
-
-        generalSettings.CheckerColor2R = CheckerboardColor2.R;
-        generalSettings.CheckerColor2G = CheckerboardColor2.G;
-        generalSettings.CheckerColor2B = CheckerboardColor2.B;
-
-        generalSettings.OutlineColorR = OutlineColor.R;
-        generalSettings.OutlineColorG = OutlineColor.G;
-        generalSettings.OutlineColorB = OutlineColor.B;
-
-        generalSettings.GuideLineColorR = GuideLineColor.R;
-        generalSettings.GuideLineColorG = GuideLineColor.G;
-        generalSettings.GuideLineColorB = GuideLineColor.B;
-
-        generalSettings.GuideTextColorR = GuideTextColor.R;
-        generalSettings.GuideTextColorG = GuideTextColor.G;
-        generalSettings.GuideTextColorB = GuideTextColor.B;
 
         this.gumProject.LocalizationFile = LocalizationFile;
         this.gumProject.CurrentLanguageIndex = LanguageIndex;

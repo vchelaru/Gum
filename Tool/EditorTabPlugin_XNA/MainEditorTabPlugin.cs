@@ -1,4 +1,5 @@
 ﻿using CommonFormsAndControls.Forms;
+using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
@@ -11,10 +12,14 @@ using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.ScrollBarPlugin;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Settings;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
 using RenderingLibrary;
@@ -22,24 +27,23 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Drawing;
 using System.Linq;
 using System.Management.Instrumentation;
 using System.Numerics;
+using System.Runtime;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
-using CommunityToolkit.Mvvm.Messaging;
-using Gum.Services.Dialogs;
-using Gum.Undo;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
 [Export(typeof(PluginBase))]
-internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChangedMessage>
+internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
 {
     #region Fields/Properties
 
@@ -105,6 +109,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -152,6 +157,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+
         Locator.GetRequiredService<IMessenger>().RegisterAll(this);
     }
 
@@ -207,8 +213,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
         this.GetWorldCursorPosition += HandleGetWorldCursorPosition;
 
-        this.GuidesChanged += HandleGuidesChanged;
-
         this.IpsoSelected += HandleIpsoSelected;
         this.SetHighlightedIpso += HandleSetHighlightedElement;
 
@@ -261,11 +265,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private IRenderableIpso? HandleCreateRenderableForType(string type)
     {
         return RuntimeObjectCreator.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
-    }
-
-    private void HandleGuidesChanged()
-    {
-        _wireframeControl.RefreshGuides();
     }
 
     private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)
@@ -441,11 +440,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeObjectManager.RefreshAll(true);
     }
 
-    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
+    void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         // Uncommenting this makes the area for teh combo box properly grow, but it
         // kills the wireframe view. Not sure why....
-        _wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Scale);
+        //_wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Size);
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
@@ -980,5 +979,13 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeEditControl.TabIndex = 1;
         _defaultWireframeEditControlHeight = _wireframeEditControl.Height;
 
+    }
+
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        this._wireframeControl.BackgroundColor = ToXna(message.settings.CheckerA);
+        this._wireframeControl.SetGuideColors(message.settings.GuideLine, message.settings.GuideText);
+
+        static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
     }
 }
