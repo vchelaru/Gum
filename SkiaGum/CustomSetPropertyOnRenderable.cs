@@ -215,10 +215,13 @@ public class CustomSetPropertyOnRenderable
     // If it's not filled out, then properties will be set by reflection
     // It would be nice to share this with MonoGame at some point too so 
     // we don't have to keep everything in duplicate
-    public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    public static void SetPropertyOnRenderable(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value) =>
+        SetPropertyOnRenderableFunc(containedObjectAsIpso, graphicalUiElement, propertyName, value);
+
+    public static bool SetPropertyOnRenderableFunc(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
-        if(mContainedObjectAsIpso is Arc asArc)
+        if(containedObjectAsIpso is Arc asArc)
         {
             handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
             if(!handled)
@@ -226,15 +229,26 @@ public class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnArc(asArc, graphicalUiElement, propertyName, value);
             }
         }
-        else if(mContainedObjectAsIpso is RoundedRectangle asRoundedRectangle)
+        else if(containedObjectAsIpso is RoundedRectangle asRoundedRectangle)
         {
-            handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            // some properties have priority on the base shape itself:
+            switch (propertyName)
+            {
+                case nameof(RoundedRectangleRuntime.StrokeWidth):
+                    ((RoundedRectangleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    handled = true;
+                    break;
+            }
+            if (!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
             }
         }
-        else if (mContainedObjectAsIpso is Circle asCircle)
+        else if (containedObjectAsIpso is Circle asCircle)
         {
             if(graphicalUiElement is CircleRuntime circleRuntime)
             {
@@ -244,12 +258,23 @@ public class CustomSetPropertyOnRenderable
                         var radius = (float)value;
                         graphicalUiElement.Width = radius * 2;
                         graphicalUiElement.Height = radius * 2;
+                        handled = true;
                         break;
                 }
-
             }
 
-            handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
+            switch(propertyName)
+            {
+                case nameof(ColoredCircleRuntime.StrokeWidth):
+                    ((ColoredCircleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    handled = true;
+                    break;
+            }
+
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
+            }
             if (!handled)
             {
                 // todo - if there end up being circle-specific properties, set them here
@@ -257,11 +282,11 @@ public class CustomSetPropertyOnRenderable
             }
         }
 #if SKIA
-        else if (mContainedObjectAsIpso is Text asText)
+        else if (containedObjectAsIpso is Text asText)
         {
             handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
         }
-        else if(mContainedObjectAsIpso is VectorSprite asSvg)
+        else if(containedObjectAsIpso is VectorSprite asSvg)
         {
             //handled = TrySetPropertiesOnRenderableBase(asSvg, graphicalUiElement, propertyName, value);
             if(!handled)
@@ -269,26 +294,28 @@ public class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
             }
         }
-        else if(mContainedObjectAsIpso is Sprite asSprite)
+        else if(containedObjectAsIpso is Sprite asSprite)
         {
             if(!handled)
             {
                 handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
             }
         }
-        else if(mContainedObjectAsIpso is Polygon asPolygon)
+        else if(containedObjectAsIpso is Polygon asPolygon)
         {
             if(!handled)
             {
                 handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
             }
         }
-#endif
         if (!handled)
         {
-            GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
+            GraphicalUiElement.SetPropertyThroughReflection(containedObjectAsIpso, graphicalUiElement, propertyName, value);
             //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
         }
+#endif
+
+        return handled;
     }
 
 #if SKIA

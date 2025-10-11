@@ -34,3 +34,17 @@ for (int i = 0; i < 10; i++)
 ```
 
 <figure><img src="../../../../../.gitbook/assets/20_05 27 11.gif" alt=""><figcaption><p>ScrollViewer with horizontal scrolling</p></figcaption></figure>
+
+## HorizontalScrollBarVisibility
+
+The following code sets the visibility to never show:
+
+```csharp
+ScrollViewerInstance.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+```
+
+Alternatively this code makes it always show:
+
+```
+ScrollViewerInstance.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+```

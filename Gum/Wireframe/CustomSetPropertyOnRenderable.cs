@@ -54,6 +54,11 @@ public class CustomSetPropertyOnRenderable
 #endif
     }
 
+    /// <summary>
+    /// Additional logic to perform before falling back to reflection. This can be added by libraries adding additional runtime types
+    /// </summary>
+    public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
+
     public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
@@ -145,6 +150,11 @@ public class CustomSetPropertyOnRenderable
             handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, propertyName, value, handled);
         }
 #endif
+
+        if(!handled && AdditionalPropertyOnRenderable != null)
+        {
+            handled = AdditionalPropertyOnRenderable(renderableIpso, graphicalUiElement, propertyName, value);
+        }
 
         // If special case didn't work, let's try reflection
         if (!handled)
