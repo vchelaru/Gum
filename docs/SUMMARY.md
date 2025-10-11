@@ -209,6 +209,7 @@
   * [SpriteRenderer](code/gum-code-reference/spriterenderer/README.md)
     * [LastFrameDrawStates](code/gum-code-reference/spriterenderer/lastframedrawstates.md)
   * [SpriteRuntime](code/gum-code-reference/spriteruntime/README.md)
+    * [RenderTargetTextureSource](code/gum-code-reference/spriteruntime/rendertargettexturesource.md)
     * [TextureAddress](code/gum-code-reference/spriteruntime/textureaddress.md)
     * [TextureHeight](code/gum-code-reference/spriteruntime/textureheight.md)
     * [TextureLeft](code/gum-code-reference/spriteruntime/textureleft.md)
