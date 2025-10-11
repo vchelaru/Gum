@@ -112,12 +112,22 @@
   <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
     <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Style.Triggers>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}"></Setter>
+      </Trigger>
+    </Style.Triggers>
   </Style>
 
   <!--  Label  -->
   <Style TargetType="{x:Type Label}">
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
+    <Style.Triggers>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}"></Setter>
+      </Trigger>
+    </Style.Triggers>
   </Style>
 
   <!--  Button  -->
