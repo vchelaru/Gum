@@ -212,7 +212,8 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
 
     public override void Render(ISystemManagers managers)
     {
-        if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
+        // See NineSlice for explanation of this Visible check
+        if (this.Width > 0 && this.Height > 0)
         {
             Renderer renderer = null;
             if (managers == null)

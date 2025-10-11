@@ -229,7 +229,8 @@ namespace RenderingLibrary.Math.Geometry
         public override void Render(ISystemManagers managers)
         {
             UpdatePoints();
-            if (Visible)
+            // See nineslice for explanation of this Visible check
+            //if (Visible)
             {
 
                 Texture2D textureToUse = AssociatedRenderer.SinglePixelTexture;

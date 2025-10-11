@@ -1724,14 +1724,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             ((parentUpdateType & ParentUpdateType.IfParentHasRatioSizedChildren) == ParentUpdateType.IfParentHasRatioSizedChildren && GetIfParentHasRatioChildren())
             ;
 
-        #region Early Out - Suspended
+        #region Early Out - Suspended or invisible
 
         var asIVisible = this as IVisible;
 
         var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
         if (!isSuspended)
         {
-            isSuspended = !AreUpdatesAppliedWhenInvisible && mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false;
+            isSuspended = !AreUpdatesAppliedWhenInvisible && 
+                (mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false && this.IsInRenderTargetRecursively() == false );
         }
 
         if (isSuspended)
@@ -1740,10 +1741,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return;
         }
 
-        if (!AreUpdatesAppliedWhenInvisible)
+        if (!AreUpdatesAppliedWhenInvisible && 
+            // If this is a render target, we still want to do updates when it is invisible because
+            // it may be used by something else:
+            !this.IsRenderTarget)
         {
             var parentAsIVisible = Parent as IVisible;
-            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false)
+            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false && !this.IsInRenderTargetRecursively())
             {
                 return;
             }

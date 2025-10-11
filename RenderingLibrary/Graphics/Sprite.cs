@@ -386,7 +386,8 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public override void Render(ISystemManagers managers)
     {
-        if (this.AbsoluteVisible && Width > 0 && Height > 0)
+        // See NineSlice for explanation of this Visible check
+        if (Width > 0 && Height > 0)
         {
             var systemManagers = managers as SystemManagers;
             var renderer = systemManagers.Renderer;
