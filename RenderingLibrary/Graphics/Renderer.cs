@@ -639,17 +639,18 @@ public class Renderer : IRenderer
             gumBatch.End();
             GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
 
+#if DEBUG
             if(!hasSaved)
             {
                 hasSaved = true;
                 // Uncomment this to test saving...
-                if (!System.IO.File.Exists("Output.png"))
-                {
-                    using var stream = System.IO.File.OpenWrite("Output.png");
-                    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-                }
+                //if (!System.IO.File.Exists("Output.png"))
+                //{
+                //    using var stream = System.IO.File.OpenWrite("Output.png");
+                //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+                //}
             }
-
+#endif
 
             Camera.ClientWidth = oldCameraWidth;
             Camera.ClientHeight = oldCameraHeight;
