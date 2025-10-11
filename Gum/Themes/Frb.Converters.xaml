@@ -1,14 +1,15 @@
 ﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Gum.Controls"
-    xmlns:converters="clr-namespace:Gum.Themes.Converters"
-    xmlns:converters1="clr-namespace:Gum.Converters">
-    <converters:NotNullConverter x:Key="NotNullToBoolConverter" />
-    <converters:LessThanConverter x:Key="LessThanConverter" />
-    <converters:GreaterThanConverter x:Key="GreaterThanConverter" />
-    <converters1:BoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" Invert="True" />
-    <converters1:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-    <converters1:InverseBoolConverter x:Key="InverseBoolConverter" />
-    <controls:MultiplyConverter x:Key="MultiplyConverter" />
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:Gum.Controls"
+  xmlns:converters="clr-namespace:Gum.Themes.Converters"
+  xmlns:converters1="clr-namespace:Gum.Converters">
+  <converters:NotNullConverter x:Key="NotNullToBoolConverter" />
+  <converters:LessThanConverter x:Key="LessThanConverter" />
+  <converters:GreaterThanConverter x:Key="GreaterThanConverter" />
+  <converters1:BoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" Invert="True" />
+  <converters1:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+  <converters1:BoolToVisibilityConverter x:Key="BoolToVisibilityHiddenConverter" Collapse="False" />
+  <converters1:InverseBoolConverter x:Key="InverseBoolConverter" />
+  <controls:MultiplyConverter x:Key="MultiplyConverter" />
 </ResourceDictionary>
