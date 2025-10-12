@@ -1,106 +1,117 @@
 <UserControl
-    x:Class="Gum.Plugins.InternalPlugins.StatePlugin.Views.StateTreeView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.Converters"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.Views"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.ViewModels"
-    xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
-    mc:Ignorable="d">
-    <UserControl.Resources>
-        <converters:BackgroundConverter x:Key="BackgroundConverter" />
-    </UserControl.Resources>
-    <Grid>
-        <TreeView
-            x:Name="TreeViewInstance"
-            Grid.IsSharedSizeScope="True"
-            ItemsSource="{Binding Items}"
-            KeyDown="TreeViewInstance_KeyDown"
-            PreviewMouseRightButtonDown="TreeViewInstance_PreviewMouseRightButtonDown"
-            SelectedItemChanged="TreeView_SelectedItemChanged">
-            <TreeView.Resources>
+  x:Class="Gum.Plugins.InternalPlugins.StatePlugin.Views.StateTreeView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:converters="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.Converters"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.Views"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:viewmodels="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.ViewModels"
+  xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+  d:DesignHeight="450"
+  d:DesignWidth="800"
+  mc:Ignorable="d">
+  <UserControl.Resources>
+    <converters:BackgroundConverter x:Key="BackgroundConverter" />
 
-                <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
-                    <Grid IsSharedSizeScope="True">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <wpf:FluentIcon Margin="0,0,4,0" Icon="DatabaseMultiple" />
-                        <TextBlock
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Text="{Binding Title}">
-                            <TextBlock.Style>
+  </UserControl.Resources>
+  <Grid>
+    <TreeView
+      x:Name="TreeViewInstance"
+      HorizontalContentAlignment="Stretch"
+      Grid.IsSharedSizeScope="True"
+      ItemsSource="{Binding Items}"
+      KeyDown="TreeViewInstance_KeyDown"
+      PreviewMouseRightButtonDown="TreeViewInstance_PreviewMouseRightButtonDown"
+      SelectedItemChanged="TreeView_SelectedItemChanged">
+      <TreeView.Resources>
 
-                                <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
-                                    <Style.Resources>
-                                        <SolidColorBrush
-                                            x:Key="IncludedInBehaviorBgBrush"
-                                            Opacity=".64"
-                                            Color="Orange" />
-                                    </Style.Resources>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource IncludedInBehaviorBgBrush}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </HierarchicalDataTemplate>
-                <DataTemplate DataType="{x:Type viewmodels:StateViewModel}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <wpf:FluentIcon
-                            Margin="0,0,4,0"
-                            VerticalAlignment="Center"
-                            Icon="Database" />
-                        <TextBlock
-                            Grid.Column="1"
-                            VerticalAlignment="Center"
-                            Text="{Binding Title}">
-                            <TextBlock.Style>
-                                <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
-                                    <Style.Resources>
-                                        <SolidColorBrush
-                                            x:Key="IncludesVariablesBgBrush"
-                                            Opacity=".64"
-                                            Color="Yellow" />
-                                        <SolidColorBrush
-                                            x:Key="IncludedInBehaviorBgBrush"
-                                            Opacity=".64"
-                                            Color="Orange" />
-                                    </Style.Resources>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IncludesVariablesForSelectedInstance}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource IncludesVariablesBgBrush}" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource IncludedInBehaviorBgBrush}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
+        <Style x:Key="BiggerIcon" TargetType="{x:Type wpf:FluentIcon}">
+          <Setter Property="FontSize" Value="{Binding H2, Source={StaticResource Scale}}" />
+        </Style>
 
-                </DataTemplate>
-            </TreeView.Resources>
-            <TreeView.ItemContainerStyle>
-                <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
-                    <Setter Property="IsSelected" Value="{Binding IsSelected}" />
-                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
-                </Style>
-            </TreeView.ItemContainerStyle>
-        </TreeView>
-    </Grid>
+        <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
+          <Border x:Name="bd" BorderThickness="0,0,0,0">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="EditColumn" />
+              </Grid.ColumnDefinitions>
+              <wpf:FluentIcon
+                Margin="0,0,4,0"
+                Icon="DatabaseMultiple"
+                Style="{StaticResource BiggerIcon}" />
+              <TextBlock
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Text="{Binding Title}" />
+              <wpf:FluentIcon
+                Grid.Column="2"
+                Margin="4,0,0,0"
+                Icon="PuzzlePiece"
+                Style="{StaticResource BiggerIcon}"
+                Visibility="{Binding IsRequiredBySelectedBehavior, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+            </Grid>
+          </Border>
+          <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
+            </DataTrigger>
+          </DataTemplate.Triggers>
+        </HierarchicalDataTemplate>
+
+        <DataTemplate DataType="{x:Type viewmodels:StateViewModel}">
+          <Border x:Name="bd" BorderThickness="0,0,0,0">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="EditColumn" />
+              </Grid.ColumnDefinitions>
+              <wpf:FluentIcon
+                Margin="0,0,4,0"
+                VerticalAlignment="Center"
+                Icon="Database"
+                Style="{StaticResource BiggerIcon}" />
+              <TextBlock
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Text="{Binding Title}" />
+              <wpf:FluentIcon
+                Grid.Column="2"
+                Margin="4,0,0,0"
+                Icon="PuzzlePiece"
+                Style="{StaticResource BiggerIcon}"
+                Visibility="{Binding IsRequiredBySelectedBehavior, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+              <wpf:FluentIcon
+                Grid.Column="3"
+                Margin="4,0,0,0"
+                Icon="Edit"
+                Style="{StaticResource BiggerIcon}"
+                Visibility="{Binding IncludesVariablesForSelectedInstance, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+            </Grid>
+          </Border>
+          <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IncludesVariablesForSelectedInstance}" Value="True">
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
+            </DataTrigger>
+          </DataTemplate.Triggers>
+
+        </DataTemplate>
+      </TreeView.Resources>
+      <TreeView.ItemContainerStyle>
+        <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
+          <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+          <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
+        </Style>
+      </TreeView.ItemContainerStyle>
+    </TreeView>
+  </Grid>
 </UserControl>

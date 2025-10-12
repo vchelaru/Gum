@@ -652,7 +652,7 @@
     <Setter Property="Padding" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
 
     <!--  Set Template  -->
@@ -719,49 +719,49 @@
               </Setter>
             </Style>
           </ControlTemplate.Resources>
-          <StackPanel Grid.IsSharedSizeScope="True">
-            <Grid x:Name="ItemGrid">
+          <Grid x:Name="ItemGrid">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Header row  -->
+            <ToggleButton
+              x:Name="Expander"
+              Grid.Row="0"
+              Grid.Column="0"
+              ClickMode="Press"
+              IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+              Style="{StaticResource ExpandCollapseToggleStyle}" />
+
+            <Border
+              x:Name="Bd"
+              Grid.Row="0"
+              Grid.Column="1"
+              Padding="2,0"
+              Background="{TemplateBinding Background}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="2">
+              <ContentPresenter
+                x:Name="PART_Header"
+                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                ContentSource="Header" />
+            </Border>
+            <Grid Grid.Row="1" Grid.Column="1">
               <Grid.ColumnDefinitions>
-
-                <ColumnDefinition Width="Auto" SharedSizeGroup="ExpanderToggle" />
-                <ColumnDefinition Width="*" />
-              </Grid.ColumnDefinitions>
-
-              <!--  Header row  -->
-              <ToggleButton
-                x:Name="Expander"
-                Grid.Column="0"
-                ClickMode="Press"
-                IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
-                Style="{StaticResource ExpandCollapseToggleStyle}" />
-
-              <Border
-                x:Name="Bd"
-                Grid.Column="1"
-                Padding="2,0"
-                Background="{TemplateBinding Background}"
-                BorderThickness="{TemplateBinding BorderThickness}"
-                CornerRadius="2">
-                <ContentPresenter
-                  x:Name="PART_Header"
-                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                  ContentSource="Header" />
-              </Border>
-
-
-            </Grid>
-            <!--  Children row reusing shared expander column  -->
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="ExpanderToggle" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
               </Grid.ColumnDefinitions>
               <ItemsPresenter x:Name="ItemsHost" Grid.Column="1" />
             </Grid>
-          </StackPanel>
 
-
+          </Grid>
 
           <!--  ControlTemplate Triggers  -->
           <ControlTemplate.Triggers>

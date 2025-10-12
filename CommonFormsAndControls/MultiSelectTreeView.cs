@@ -1042,7 +1042,7 @@ namespace CommonFormsAndControls
             this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
             this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
             this.ElementTreeImages.Images.SetKeyName(7, "state.png");
-            this.ElementTreeImages.Images.SetKeyName(8, "Behavior.png");
+            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
             this.ElementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
             this.ResumeLayout(false);
 

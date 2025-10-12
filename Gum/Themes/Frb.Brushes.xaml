@@ -1,28 +1,28 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Frb.Accents.xaml" />
-    </ResourceDictionary.MergedDictionaries>
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Frb.Accents.xaml" />
+  </ResourceDictionary.MergedDictionaries>
 
-    <SolidColorBrush x:Key="Frb.Brushes.Primary" Color="{DynamicResource Frb.Colors.Primary}" />
-    <SolidColorBrush
-        x:Key="Frb.Brushes.Primary.Transparent"
-        Opacity="0.15"
-        Color="{DynamicResource Frb.Colors.Primary}" />
-    <SolidColorBrush x:Key="Frb.Brushes.Primary.Light" Color="{DynamicResource Frb.Colors.Primary.Light}" />
-    <SolidColorBrush x:Key="Frb.Brushes.Primary.Dark" Color="{DynamicResource Frb.Colors.Primary.Dark}" />
-    <SolidColorBrush x:Key="Frb.Brushes.Primary.Contrast" Color="{DynamicResource Frb.Colors.Primary.Contrast}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Primary" Color="{DynamicResource Frb.Colors.Primary}" />
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Primary.Transparent"
+    Opacity="0.15"
+    Color="{DynamicResource Frb.Colors.Primary}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Primary.Light" Color="{DynamicResource Frb.Colors.Primary.Light}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Primary.Dark" Color="{DynamicResource Frb.Colors.Primary.Dark}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Primary.Contrast" Color="{DynamicResource Frb.Colors.Primary.Contrast}" />
 
-    <SolidColorBrush
-        x:Key="Lighten"
-        Opacity="0.1"
-        Color="White" />
-    <SolidColorBrush
-        x:Key="Lighten02"
-        Opacity="0.2"
-        Color="White" />
-    <SolidColorBrush
-        x:Key="Lighten03"
-        Opacity="0.3"
-        Color="White" />
+  <SolidColorBrush
+    x:Key="Lighten"
+    Opacity="0.1"
+    Color="White" />
+  <SolidColorBrush
+    x:Key="Lighten02"
+    Opacity="0.2"
+    Color="White" />
+  <SolidColorBrush
+    x:Key="Lighten03"
+    Opacity="0.3"
+    Color="White" />
 
 </ResourceDictionary>
