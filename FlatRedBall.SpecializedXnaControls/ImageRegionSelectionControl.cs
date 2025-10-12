@@ -253,6 +253,9 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         }
     }
 
+    /// <summary>
+    /// A zoom value in percent, where 100 means 100% zoom (native scale)
+    /// </summary>
     public int ZoomValue
     {
         get
@@ -273,10 +276,8 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
     /// </summary>
     public IList<int> AvailableZoomLevels
     {
-        set
-        {
-            mAvailableZoomLevels = value;
-        }
+        get => mAvailableZoomLevels;
+        set => mAvailableZoomLevels = value;
     }
 
     public int ZoomIndex

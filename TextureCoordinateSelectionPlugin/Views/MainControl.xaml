@@ -16,7 +16,14 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
+
+            <Button Content="-" MinWidth="24" Click="HandleMinusClicked"/>
+            <ComboBox ItemsSource="{Binding AvailableZoomLevels}" SelectedItem="{Binding SelectedZoomLevel}"/>
+            <Button Content="+" MinWidth="24" Click="HandlePlusClicked"/>
+
+
             <CheckBox
+                Margin="16,0,0,0"
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 IsChecked="{Binding IsSnapToGridChecked}">

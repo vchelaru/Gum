@@ -133,6 +133,7 @@ public class ControlLogic
             HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
 
         ViewModel = new MainControlViewModel();
+        ViewModel.AvailableZoomLevels = innerControl.AvailableZoomLevels;
         mainControl.DataContext = ViewModel;
 
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
@@ -160,6 +161,7 @@ public class ControlLogic
         mainControl.InnerControl.MouseWheelZoom += (_, _) =>
         {
             UpdateScrollBarsToTexture();
+            ViewModel.SelectedZoomLevel = mainControl.InnerControl.ZoomValue;
         };
 
         mainControl.InnerControl.Panning += () =>
@@ -271,6 +273,10 @@ public class ControlLogic
             case nameof(MainControlViewModel.SelectedSnapToGridValue):
                 RefreshSnappingGridSize();
                 RefreshLineGrid();
+                break;
+            case nameof(MainControlViewModel.SelectedZoomLevel):
+                mainControl.InnerControl.ZoomValue = ViewModel.SelectedZoomLevel;
+                UpdateScrollBarsToTexture();
                 break;
         }
     }
