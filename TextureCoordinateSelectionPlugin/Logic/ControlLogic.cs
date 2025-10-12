@@ -85,7 +85,8 @@ public class ControlLogic
         IFileCommands fileCommands,
         SetVariableLogic setVariableLogic,
         ITabManager tabManager,
-        HotkeyManager hotkeyManager)
+        HotkeyManager hotkeyManager,
+        ScrollBarLogicWpf scrollBarLogic)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -94,6 +95,7 @@ public class ControlLogic
         _setVariableLogic = setVariableLogic;
         _tabManager = tabManager;
         _hotkeyManager = hotkeyManager;
+        _scrollBarLogic = scrollBarLogic;
     }
 
     public PluginTab CreateControl()
@@ -141,37 +143,69 @@ public class ControlLogic
 
         RefreshLineGrid();
 
+        InitializeScrollBarLogic();
+
         return pluginTab;
+    }
+
+    private void InitializeScrollBarLogic()
+    {
+        _scrollBarLogic.Initialize(mainControl.VerticalScrollBar, mainControl.HorizontalScrollBar, SystemManagers.Renderer.Camera);
+
+        mainControl.InnerControl.SizeChanged += (_, _) =>
+        {
+            UpdateScrollBarsToTexture();
+        };
+
+        mainControl.InnerControl.MouseWheelZoom += (_, _) =>
+        {
+            UpdateScrollBarsToTexture();
+        };
+
+        mainControl.InnerControl.Panning += () =>
+        {
+            UpdateScrollBarsToTexture();
+        };
     }
 
     private void HandleKeyDown(object sender, KeyEventArgs e)
     {
         var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
-        if(_hotkeyManager.MoveCameraRight.IsPressed(e))
+        if (_hotkeyManager.MoveCameraRight.IsPressed(e))
         {
-            camera.X+=10;
+            camera.X += 10;
         }
         if (_hotkeyManager.MoveCameraLeft.IsPressed(e))
         {
-            camera.X-=10;
+            camera.X -= 10;
         }
         if (_hotkeyManager.MoveCameraUp.IsPressed(e))
         {
-            camera.Y-=10;
+            camera.Y -= 10;
         }
         if (_hotkeyManager.MoveCameraDown.IsPressed(e))
         {
-            camera.Y+=10;
+            camera.Y += 10;
         }
-        if(_hotkeyManager.ZoomCameraIn.IsPressed(e) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(e))
+        if (_hotkeyManager.ZoomCameraIn.IsPressed(e) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(e))
         {
-            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomIn, considerCursor:false);
+            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomIn, considerCursor: false);
         }
         if (_hotkeyManager.ZoomCameraOut.IsPressed(e) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(e))
         {
             mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
         }
 
+        UpdateScrollBarsToTexture();
+
+    }
+
+    private void UpdateScrollBarsToTexture()
+    {
+        var texture = mainControl.InnerControl.CurrentTexture;
+        var width = texture?.Width ?? 1024;
+        var height = texture?.Height ?? 1024;
+        _scrollBarLogic.UpdateScrollBarsToCamera(width, height);
     }
 
     private void CreateNineSliceLines()
@@ -405,6 +439,8 @@ public class ControlLogic
             RefreshOutline(control, ref textureOutlineRectangle);
 
             RefreshSelector(RefreshType.Force);
+
+            UpdateScrollBarsToTexture();
 
             // We should refresh the entire grid because we could be
             // changing this from Entire Texture to Custom, resulting in
@@ -661,6 +697,7 @@ public class ControlLogic
         {
             camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
             camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
+            UpdateScrollBarsToTexture();
         }
 
     }

@@ -60,7 +60,8 @@ public class MainTextureCoordinatePlugin : PluginBase
             Locator.GetRequiredService<IFileCommands>(),
             Locator.GetRequiredService<SetVariableLogic>(),
             Locator.GetRequiredService<ITabManager>(),
-            Locator.GetRequiredService<HotkeyManager>());
+            Locator.GetRequiredService<HotkeyManager>(),
+            new ScrollBarLogicWpf());
     }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
