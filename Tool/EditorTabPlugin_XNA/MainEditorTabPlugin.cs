@@ -943,9 +943,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         //_toolbarPanel.Width = _toolbarPanel.Parent.Width;
 
         _wireframeControl.Width = _wireframeControl.Parent.Width;
-
-        // Add location.Y to account for the shortcut bar at the top.
-        _wireframeControl.Height = _wireframeControl.Parent.Height - _wireframeControl.Location.Y;
+       
+        // The combobox's dimensions may have changed due to app-level font scaling, we need to explicitly
+        // set it to it's preferred size, or it will stay constrained to the original docked size
+        var preferred = _wireframeEditControl.GetPreferredSize(new(_wireframeEditControl.Parent.Width, int.MaxValue));
+        _wireframeEditControl.Height = preferred.Height;
     }
 
     private void HandleStateSelected(StateSave save)

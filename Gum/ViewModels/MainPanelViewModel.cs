@@ -91,8 +91,8 @@ public class MainPanelViewModel : ViewModel, ITabManager
 
         if (element is WindowsFormsHost host && tabTitle == "Editor")
         {   // this is kind of a hack to deal with the the airspace issue
-            // blocking mouse interaction with the grid splitter
-            host.Margin = new Thickness(4, 0, 0, 0);
+            // blocking mouse interaction with the grid splitter and window resize handle
+            host.Margin = new Thickness(4, 0, 4, 0);
         }
 
         PluginTabs.Add(newPluginTab);
