@@ -42,6 +42,7 @@ public class ControlLogic
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
+    private readonly ScrollBarLogicWpf _scrollBarLogic;
     
     LineRectangle textureOutlineRectangle = null;
 

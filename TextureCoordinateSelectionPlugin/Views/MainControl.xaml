@@ -29,8 +29,20 @@
                 ItemsSource="{Binding AvailableSnapToGridValues}"
                 SelectedItem="{Binding SelectedSnapToGridValue}" />
         </StackPanel>
-        <WindowsFormsHost Grid.Row="1">
-            <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" />
-        </WindowsFormsHost>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <WindowsFormsHost>
+                <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" />
+            </WindowsFormsHost>
+            <ScrollBar Grid.Column="1"/>
+            <ScrollBar Grid.Row="1" Orientation="Horizontal"/>
+        </Grid>
     </Grid>
 </UserControl>
