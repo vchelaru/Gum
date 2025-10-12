@@ -2,7 +2,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace Gum.Wireframe
+namespace FlatRedBall.SpecializedXnaControls
 {
     public class ScrollBarControlLogic
     {
@@ -64,14 +64,13 @@ namespace Gum.Wireframe
 
             mVerticalScrollBar = new VScrollBar();
             mVerticalScrollBar.Dock = DockStyle.Right;
-            //mVerticalScrollBar.Scroll += HandleVerticalScroll;
             mVerticalScrollBar.ValueChanged += HandleVerticalScroll;
             panel.Controls.Add(mVerticalScrollBar);
 
             mHorizontalScrollBar = new HScrollBar();
             mHorizontalScrollBar.Dock = DockStyle.Bottom;
-
             mHorizontalScrollBar.ValueChanged += HandleHorizontalScroll;
+
             panel.Controls.Add(mHorizontalScrollBar);
 
             SetDisplayedArea(2048, 2048);
@@ -166,7 +165,5 @@ namespace Gum.Wireframe
                 mHorizontalScrollBar.LargeChange = (int)visibleAreaWidth; // the amount of visible area. It's called LargeChange but it really means how much the scrollbar can see 
             }
         }
-
-        
     }
 }
