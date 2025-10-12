@@ -41,7 +41,7 @@ public partial class ThemingDialogViewModel : DialogViewModel
 
     public ThemeMode? Mode
     {
-        get => _themingService.Mode;
+        get => _themingService.Mode ?? ThemeMode.System;
         set
         {
             if (value != _themingService.Mode)

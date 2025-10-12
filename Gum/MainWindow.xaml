@@ -16,124 +16,130 @@
   Width="{Binding Width, Mode=TwoWay, FallbackValue=1280}"
   Height="{Binding Height, Mode=TwoWay, FallbackValue=720}"
   d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel}"
+  AllowsTransparency="False"
+  Background="{DynamicResource Frb.Brushes.Border}"
   Left="{Binding Left, Mode=TwoWay}"
   SizeToContent="Manual"
+  SnapsToDevicePixels="True"
   Top="{Binding Top, Mode=TwoWay}"
+  UseLayoutRounding="True"
   WindowState="{Binding WindowState, Mode=TwoWay}"
   mc:Ignorable="d">
-  <Grid>
-    <Grid.Style>
-      <Style TargetType="Grid">
-        <Style.Triggers>
-          <DataTrigger Binding="{Binding WindowState, ElementName=Root}" Value="{x:Static WindowState.Maximized}">
-            <Setter Property="Margin" Value="7" />
-          </DataTrigger>
-        </Style.Triggers>
-      </Style>
-    </Grid.Style>
+  <Border Margin="0,0,0,0" Background="{DynamicResource Frb.Brushes.Background}" CornerRadius="10" BorderBrush="{DynamicResource Frb.Brushes.Border}" BorderThickness="1">
     <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="*" />
-      </Grid.RowDefinitions>
-      <Border Background="{DynamicResource Frb.Brushes.Background}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <Image
+      <Grid.Style>
+        <Style TargetType="Grid">
+          <Style.Triggers>
+            <DataTrigger Binding="{Binding WindowState, ElementName=Root}" Value="{x:Static WindowState.Maximized}">
+              <Setter Property="Margin" Value="7" />
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </Grid.Style>
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Border>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Image
             Height="16"
             Margin="8,0,4,0"
             VerticalAlignment="Center"
             Source="{Binding IconSource}"
             Stretch="Uniform" />
-          <WindowsFormsHost
+            <WindowsFormsHost
             x:Name="WinformsMenuHost"
             Grid.Column="1"
             VerticalAlignment="Center" />
-          <controls:TitleFilePathDisplay
+            <controls:TitleFilePathDisplay
             Grid.Column="3"
             Margin="12,0,0,0"
             HorizontalAlignment="Center"
             behaviors:TitleBarClickPassthrough.Enable="True"
             FullPath="{Binding Title}"
             WindowChrome.IsHitTestVisibleInChrome="True" />
-          <StackPanel
+            <StackPanel
             Grid.Column="4"
             VerticalAlignment="Center"
             Orientation="Horizontal"
             WindowChrome.IsHitTestVisibleInChrome="True">
-            <StackPanel.Resources>
-              <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
-                <Setter Property="Padding" Value="0" />
-                <Setter Property="Height" Value="32" />
-                <Setter Property="Width" Value="48" />
-                <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0" />
-                <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="Background" Value="Transparent" />
-                <Style.Triggers>
-                  <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
-                    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-                  </Trigger>
-                  <DataTrigger Binding="{Binding IsActive, ElementName=Root}" Value="False">
-                    <Setter Property="Foreground" Value="{StaticResource Frb.Brushes.Foreground.Disabled}" />
-                  </DataTrigger>
-                </Style.Triggers>
-              </Style>
-            </StackPanel.Resources>
-            <Button Click="OnMinimizeButtonClick">
-              <materialDesign:PackIcon Height="14" Kind="Minus" />
-            </Button>
-
-            <Button Click="OnMaximizeButtonClick">
-              <Button.Style>
+              <StackPanel.Resources>
                 <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                  <Setter Property="Content">
-                    <Setter.Value>
-                      <materialDesign:PackIcon Height="14" Kind="Maximize" />
-                    </Setter.Value>
-                  </Setter>
+                  <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
+                  <Setter Property="Padding" Value="0" />
+                  <Setter Property="Height" Value="32" />
+                  <Setter Property="Width" Value="48" />
+                  <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0" />
+                  <Setter Property="BorderThickness" Value="0" />
+                  <Setter Property="Background" Value="Transparent" />
                   <Style.Triggers>
-                    <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
-                      <Setter Property="Content">
-                        <Setter.Value>
-                          <materialDesign:PackIcon Height="16" Kind="WindowRestore" />
-                        </Setter.Value>
-                      </Setter>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+                    </Trigger>
+                    <DataTrigger Binding="{Binding IsActive, ElementName=Root}" Value="False">
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
                     </DataTrigger>
                   </Style.Triggers>
                 </Style>
-              </Button.Style>
-            </Button>
-            <Button Click="OnCloseButtonClick">
-              <materialDesign:PackIcon Height="16" Kind="Close" />
-              <Button.Style>
-                <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                  <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                      <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
-                    </Trigger>
-                  </Style.Triggers>
-                </Style>
-              </Button.Style>
-            </Button>
-          </StackPanel>
+              </StackPanel.Resources>
+              <Button Click="OnMinimizeButtonClick">
+                <materialDesign:PackIcon Height="14" Kind="Minus" />
+              </Button>
 
-        </Grid>
-      </Border>
+              <Button Click="OnMaximizeButtonClick">
+                <Button.Style>
+                  <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                    <Setter Property="Content">
+                      <Setter.Value>
+                        <materialDesign:PackIcon Height="14" Kind="Maximize" />
+                      </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                        <Setter Property="Content">
+                          <Setter.Value>
+                            <materialDesign:PackIcon Height="16" Kind="WindowRestore" />
+                          </Setter.Value>
+                        </Setter>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </Button.Style>
+              </Button>
+              <Button Click="OnCloseButtonClick">
+                <materialDesign:PackIcon Height="16" Kind="Close" />
+                <Button.Style>
+                  <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                    <Style.Triggers>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
+                      </Trigger>
+                    </Style.Triggers>
+                  </Style>
+                </Button.Style>
+              </Button>
+            </StackPanel>
 
-      <controls:MainPanelControl
+          </Grid>
+        </Border>
+
+        <controls:MainPanelControl
         Grid.Row="1"
-        Margin="0,0,0,0"
+        Margin="4,0,4,4"
         DataContext="{Binding MainPanelViewModel}"
         IsToolsVisible="{Binding IsToolsVisible}" />
+      </Grid>
     </Grid>
-  </Grid>
+  </Border>
 
 </Window>

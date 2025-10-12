@@ -14,221 +14,208 @@
   d:DesignWidth="400"
   dialogs:Dialog.DialogTitle="Theming"
   mc:Ignorable="d">
-  <UserControl.Resources />
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <Grid Margin="16">
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-      </Grid.RowDefinitions>
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
+  <UserControl.Resources>
+    <Style
+      x:Key="ResetIconButton"
+      BasedOn="{StaticResource IconButton.Inline}"
+      TargetType="{x:Type Button}">
+      <Setter Property="ToolTip" Value="Reset to Default" />
+      <Setter Property="Margin" Value="8,0,0,0" />
+    </Style>
+  </UserControl.Resources>
 
-      <!--  Theme Mode  -->
-      <Label
-        Grid.Row="0"
-        Grid.Column="0"
-        MinWidth="64"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Theme Mode" />
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" MinWidth="64" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
 
-      <ComboBox
-        Grid.Row="0"
-        Grid.Column="1"
-        Grid.ColumnSpan="2"
-        Margin="0,0,0,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        ItemsSource="{Binding ThemeModes}"
-        SelectedItem="{Binding Mode}" />
+    <!--  Theme Mode  -->
+    <Label
+      Grid.Row="0"
+      Grid.Column="0"
+      MinWidth="64"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Theme Mode" />
 
-      <!--  Accent Color  -->
-      <Label
-        Grid.Row="1"
-        Grid.Column="0"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Accent Color" />
+    <ComboBox
+      Grid.Row="0"
+      Grid.Column="1"
+      Grid.ColumnSpan="2"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      ItemsSource="{Binding ThemeModes}"
+      SelectedItem="{Binding Mode}" />
 
-      <colorPicker:PortableColorPicker
-        Grid.Row="1"
-        Grid.Column="1"
-        Height="16"
-        Margin="0,0,8,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        SelectedColor="{Binding AccentColor, Mode=TwoWay}" />
+    <!--  Accent Color  -->
+    <Label
+      Grid.Row="1"
+      Grid.Column="0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Accent Color" />
 
-      <Button
-        Grid.Row="1"
-        Grid.Column="2"
-        Margin="0,0,0,8"
-        Command="{Binding ResetCommand}"
-        CommandParameter="AccentColor"
-        Content="{wpf:FluentIcon Icon=ArrowReset}"
-        Style="{StaticResource IconButton.Inline}"
-        Visibility="{Binding HasExplicitAccentColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+    <colorPicker:PortableColorPicker
+      Grid.Row="1"
+      Grid.Column="1"
+      Height="16"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      SelectedColor="{Binding AccentColor, Mode=TwoWay}" />
 
-      <!--  Checker A Color  -->
-      <Label
-        Grid.Row="2"
-        Grid.Column="0"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Checker A Color" />
+    <Button
+      Grid.Row="1"
+      Grid.Column="2"
+      Command="{Binding ResetCommand}"
+      CommandParameter="AccentColor"
+      Content="{wpf:FluentIcon Icon=ArrowReset}"
+      Style="{StaticResource ResetIconButton}"
+      Visibility="{Binding HasExplicitAccentColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-      <colorPicker:PortableColorPicker
-        Grid.Row="2"
-        Grid.Column="1"
-        Height="16"
-        Margin="0,0,8,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        SelectedColor="{Binding CheckerAColor, Mode=TwoWay}" />
+    <!--  Checker A Color  -->
+    <Label
+      Grid.Row="2"
+      Grid.Column="0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Checker A Color" />
 
-      <Button
-        Grid.Row="2"
-        Grid.Column="2"
-        Margin="0,0,0,8"
-        Command="{Binding ResetCommand}"
-        CommandParameter="CheckerAColor"
-        Content="{wpf:FluentIcon Icon=ArrowReset}"
-        Style="{StaticResource IconButton.Inline}"
-        Visibility="{Binding HasExplicitCheckerAColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+    <colorPicker:PortableColorPicker
+      Grid.Row="2"
+      Grid.Column="1"
+      Height="16"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      SelectedColor="{Binding CheckerAColor, Mode=TwoWay}" />
 
-      <!--  Checker B Color  -->
-      <Label
-        Grid.Row="3"
-        Grid.Column="0"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Checker B Color" />
+    <Button
+      Grid.Row="2"
+      Grid.Column="2"
+      Command="{Binding ResetCommand}"
+      CommandParameter="CheckerAColor"
+      Content="{wpf:FluentIcon Icon=ArrowReset}"
+      Style="{StaticResource ResetIconButton}"
+      Visibility="{Binding HasExplicitCheckerAColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-      <colorPicker:PortableColorPicker
-        Grid.Row="3"
-        Grid.Column="1"
-        Height="16"
-        Margin="0,0,8,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        SelectedColor="{Binding CheckerBColor, Mode=TwoWay}" />
+    <!--  Checker B Color  -->
+    <Label
+      Grid.Row="3"
+      Grid.Column="0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Checker B Color" />
 
-      <Button
-        Grid.Row="3"
-        Grid.Column="2"
-        Margin="0,0,0,8"
-        Command="{Binding ResetCommand}"
-        CommandParameter="CheckerBColor"
-        Content="{wpf:FluentIcon Icon=ArrowReset}"
-        Style="{StaticResource IconButton.Inline}"
-        Visibility="{Binding HasExplicitCheckerBColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+    <colorPicker:PortableColorPicker
+      Grid.Row="3"
+      Grid.Column="1"
+      Height="16"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      SelectedColor="{Binding CheckerBColor, Mode=TwoWay}" />
 
-      <!--  Outline Color  -->
-      <Label
-        Grid.Row="4"
-        Grid.Column="0"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Outline Color" />
+    <Button
+      Grid.Row="3"
+      Grid.Column="2"
+      Command="{Binding ResetCommand}"
+      CommandParameter="CheckerBColor"
+      Content="{wpf:FluentIcon Icon=ArrowReset}"
+      Style="{StaticResource ResetIconButton}"
+      Visibility="{Binding HasExplicitCheckerBColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-      <colorPicker:PortableColorPicker
-        Grid.Row="4"
-        Grid.Column="1"
-        Height="16"
-        Margin="0,0,8,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        SelectedColor="{Binding OutlineColor, Mode=TwoWay}" />
+    <!--  Outline Color  -->
+    <Label
+      Grid.Row="4"
+      Grid.Column="0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Outline Color" />
 
-      <Button
-        Grid.Row="4"
-        Grid.Column="2"
-        Margin="0,0,0,8"
-        Command="{Binding ResetCommand}"
-        CommandParameter="OutlineColor"
-        Content="{wpf:FluentIcon Icon=ArrowReset}"
-        Style="{StaticResource IconButton.Inline}"
-        Visibility="{Binding HasExplicitOutlineColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+    <colorPicker:PortableColorPicker
+      Grid.Row="4"
+      Grid.Column="1"
+      Height="16"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      SelectedColor="{Binding OutlineColor, Mode=TwoWay}" />
 
-      <!--  Guide Line Color  -->
-      <Label
-        Grid.Row="5"
-        Grid.Column="0"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Guide Line Color" />
+    <Button
+      Grid.Row="4"
+      Grid.Column="2"
+      Command="{Binding ResetCommand}"
+      CommandParameter="OutlineColor"
+      Content="{wpf:FluentIcon Icon=ArrowReset}"
+      Style="{StaticResource ResetIconButton}"
+      Visibility="{Binding HasExplicitOutlineColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-      <colorPicker:PortableColorPicker
-        Grid.Row="5"
-        Grid.Column="1"
-        Height="16"
-        Margin="0,0,8,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        SelectedColor="{Binding GuideLineColor, Mode=TwoWay}" />
+    <!--  Guide Line Color  -->
+    <Label
+      Grid.Row="5"
+      Grid.Column="0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Guide Line Color" />
 
-      <Button
-        Grid.Row="5"
-        Grid.Column="2"
-        Margin="0,0,0,8"
-        Command="{Binding ResetCommand}"
-        CommandParameter="GuideLineColor"
-        Content="{wpf:FluentIcon Icon=ArrowReset}"
-        Style="{StaticResource IconButton.Inline}"
-        Visibility="{Binding HasExplicitGuideLineColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+    <colorPicker:PortableColorPicker
+      Grid.Row="5"
+      Grid.Column="1"
+      Height="16"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      SelectedColor="{Binding GuideLineColor, Mode=TwoWay}" />
 
-      <!--  Guide Text Color  -->
-      <Label
-        Grid.Row="6"
-        Grid.Column="0"
-        Margin="0,0,16,8"
-        HorizontalAlignment="Left"
-        VerticalAlignment="Center"
-        Content="Guide Text Color" />
+    <Button
+      Grid.Row="5"
+      Grid.Column="2"
+      Command="{Binding ResetCommand}"
+      CommandParameter="GuideLineColor"
+      Content="{wpf:FluentIcon Icon=ArrowReset}"
+      Style="{StaticResource ResetIconButton}"
+      Visibility="{Binding HasExplicitGuideLineColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
 
-      <colorPicker:PortableColorPicker
-        Grid.Row="6"
-        Grid.Column="1"
-        Height="16"
-        Margin="0,0,8,8"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Center"
-        SelectedColor="{Binding GuideTextColor, Mode=TwoWay}" />
+    <!--  Guide Text Color  -->
+    <Label
+      Grid.Row="6"
+      Grid.Column="0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Center"
+      Content="Guide Text Color" />
 
-      <Button
-        Grid.Row="6"
-        Grid.Column="2"
-        Margin="0,0,0,8"
-        Command="{Binding ResetCommand}"
-        CommandParameter="GuideTextColor"
-        Content="{wpf:FluentIcon Icon=ArrowReset}"
-        Style="{StaticResource IconButton.Inline}"
-        Visibility="{Binding HasExplicitGuideTextColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+    <colorPicker:PortableColorPicker
+      Grid.Row="6"
+      Grid.Column="1"
+      Height="16"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      SelectedColor="{Binding GuideTextColor, Mode=TwoWay}" />
 
-      <!--  Reset All Button  -->
-      <Button
-        Grid.Row="7"
-        Grid.Column="0"
-        Margin="0,16,0,0"
-        Command="{Binding ResetCommand}"
-        CommandParameter="{x:Null}"
-        Content="Reset All" />
-    </Grid>
-  </ScrollViewer>
+    <Button
+      Grid.Row="6"
+      Grid.Column="2"
+      Command="{Binding ResetCommand}"
+      CommandParameter="GuideTextColor"
+      Content="{wpf:FluentIcon Icon=ArrowReset}"
+      Style="{StaticResource ResetIconButton}"
+      Visibility="{Binding HasExplicitGuideTextColor, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+
+    <!--  Reset All Button  -->
+    <Button
+      Grid.Row="7"
+      Grid.Column="0"
+      Margin="0,16,0,0"
+      Command="{Binding ResetCommand}"
+      CommandParameter="{x:Null}"
+      Content="Reset All" />
+  </Grid>
 </UserControl>

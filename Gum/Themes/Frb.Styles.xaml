@@ -32,7 +32,7 @@
     <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
     <Setter Property="WindowChrome.WindowChrome">
       <Setter.Value>
-        <WindowChrome CaptionHeight="24" ResizeBorderThickness="6" />
+        <WindowChrome CaptionHeight="24" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="16"/>
       </Setter.Value>
     </Setter>
   </Style>
