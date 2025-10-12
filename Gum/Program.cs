@@ -42,8 +42,10 @@ namespace Gum
             }
             catch (Exception e)
             {
-                Debugger.Break();
                 Console.Error.WriteLine(e);
+                System.Diagnostics.Debug.WriteLine(e);
+                // look at the Output window for details
+                Debugger.Break();
                 return RunResponseCodes.UnexpectedFailure;
             }
         }

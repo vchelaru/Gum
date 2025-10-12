@@ -18,6 +18,7 @@ using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -42,7 +43,7 @@ public class ControlLogic
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
-    
+    private readonly HotkeyManager _hotkeyManager;
     LineRectangle textureOutlineRectangle = null;
 
     MainControlViewModel ViewModel;
@@ -76,14 +77,21 @@ public class ControlLogic
         set => mainControl.InnerControl.CurrentTexture = value;
     }
 
-    public ControlLogic()
+    public ControlLogic(ISelectedState selectedState,
+        IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        SetVariableLogic setVariableLogic,
+        ITabManager tabManager,
+        HotkeyManager hotkeyManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
-        _tabManager = Locator.GetRequiredService<ITabManager>();
+        _selectedState = selectedState;
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
+        _tabManager = tabManager;
+        _hotkeyManager = hotkeyManager;
     }
 
     public PluginTab CreateControl()
@@ -112,6 +120,7 @@ public class ControlLogic
         innerControl.StartRegionChanged += HandleStartRegionChanged;
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
+        innerControl.KeyDown += HandleKeyDown;
 
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
@@ -131,6 +140,36 @@ public class ControlLogic
         RefreshLineGrid();
 
         return pluginTab;
+    }
+
+    private void HandleKeyDown(object sender, KeyEventArgs e)
+    {
+        var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
+        if(_hotkeyManager.MoveCameraRight.IsPressed(e))
+        {
+            camera.X+=10;
+        }
+        if (_hotkeyManager.MoveCameraLeft.IsPressed(e))
+        {
+            camera.X-=10;
+        }
+        if (_hotkeyManager.MoveCameraUp.IsPressed(e))
+        {
+            camera.Y-=10;
+        }
+        if (_hotkeyManager.MoveCameraDown.IsPressed(e))
+        {
+            camera.Y+=10;
+        }
+        if(_hotkeyManager.ZoomCameraIn.IsPressed(e) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(e))
+        {
+            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomIn, considerCursor:false);
+        }
+        if (_hotkeyManager.ZoomCameraOut.IsPressed(e) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(e))
+        {
+            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
+        }
+
     }
 
     private void CreateNineSliceLines()

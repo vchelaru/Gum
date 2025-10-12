@@ -29,7 +29,7 @@
                 ItemsSource="{Binding AvailableSnapToGridValues}"
                 SelectedItem="{Binding SelectedSnapToGridValue}" />
         </StackPanel>
-        <WindowsFormsHost Grid.Row="1">
+        <WindowsFormsHost Grid.Row="1" KeyDown="HandleKeyDown">
             <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" />
         </WindowsFormsHost>
     </Grid>
