@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TextureCoordinateSelectionPlugin.ViewModels;
 
 namespace TextureCoordinateSelectionPlugin.Views
 {
@@ -21,6 +22,8 @@ namespace TextureCoordinateSelectionPlugin.Views
     public partial class MainControl : UserControl
     {
         public event EventHandler<KeyEventArgs> ImageRegionKeyDown;
+
+        MainControlViewModel ViewModel => DataContext as MainControlViewModel;
 
         public MainControl()
         {
@@ -33,6 +36,16 @@ namespace TextureCoordinateSelectionPlugin.Views
         private void HandleKeyDown(object sender, KeyEventArgs e)
         {
             ImageRegionKeyDown?.Invoke(null, e);
+        }
+
+        private void HandleMinusClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ZoomOut();
+        }
+
+        private void HandlePlusClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ZoomIn();
         }
     }
 }
