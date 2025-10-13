@@ -773,19 +773,16 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         {
             string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
 
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.CenterParent;
+            string message = "What do you want to do with the file " + fileName;
+            DialogChoices<string> choices = new()
+            {
+                ["set-source"] = "Set source file on " + component.Name,
+                ["_"] = "Add new Sprite"
+            };
 
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
+            string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
 
-            mbmb.AddButton("Set source file on " + component.Name, DialogResult.OK);
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-
-            var result = mbmb.ShowDialog();
-
-            if (result == DialogResult.OK)
+            if (result == "set-source")
             {
                 var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>("SourceFile");
@@ -801,7 +798,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
                 shouldUpdate = true;
                 handled = true;
             }
-            else if (result == DialogResult.Cancel)
+            else if (result == null)
             {
                 handled = true;
 
@@ -827,18 +824,16 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         {
             string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
 
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.CenterParent;
+            string message = "What do you want to do with the file " + fileName;
+            DialogChoices<string> choices = new()
+            {
+                ["set-source"] = "Set source file on " + instance.Name,
+                ["_"] = "Add new Sprite"
+            };
 
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
+            string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
 
-            mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-            var result = mbmb.ShowDialog();
-
-            if (result == DialogResult.OK)
+            if (result == "set-source")
             {
                 var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>(instance.Name + ".SourceFile");
@@ -854,12 +849,12 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
                 shouldUpdate = true;
                 handled = true;
             }
-            else if (result == DialogResult.Cancel)
+            else if (result == null)
             {
                 handled = true;
 
             }
-            // continue for DialogResult.Yes
+            // continue for Add new Sprite
         }
     }
 
