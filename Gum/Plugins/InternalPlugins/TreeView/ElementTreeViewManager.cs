@@ -609,6 +609,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         FlatList = CreateFlatSearchList();
         FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
         FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+        FlatList.Margin = new(0, 4, 0, 0);
 
         Grid.SetRow(FlatList, 2);
         grid.Children.Add(FlatList);
