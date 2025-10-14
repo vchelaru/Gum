@@ -77,11 +77,6 @@
     </Setter>
   </Style>
 
-  <Style TargetType="wpf:FluentIcon">
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconInline}" />
-    <Setter Property="Width" Value="Auto" />
-  </Style>
-
   <Style x:Key="FluentIcon.ButtonSize" TargetType="{x:Type wpf:FluentIcon}">
     <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
   </Style>
@@ -157,11 +152,7 @@
 
   <!--  ToggleButton  -->
   <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type ToggleButton}">
-    <Style.Resources>
-      <Style TargetType="{x:Type wpf:FluentIcon}">
-        <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
-      </Style>
-    </Style.Resources>
+    <Setter Property="FontSize" Value="{Binding IconButton, Source={StaticResource Scale}}" />
     <Style.Triggers>
       <Trigger Property="IsChecked" Value="True">
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Primary}" />
@@ -1342,6 +1333,7 @@
             x:Name="IsDefaultIcon"
             Grid.Column="0"
             VerticalAlignment="Center"
+            FontSize="{Binding IconInline, Source={StaticResource Scale}}"
             Icon="BoxEdit"
             Visibility="{Binding IsDefault, Converter={StaticResource InverseBoolVis}}" />
         </Border>
@@ -1407,7 +1399,7 @@
     <Style.Resources>
       <Style BasedOn="{StaticResource {x:Type ToggleButton}}" TargetType="{x:Type ToggleButton}">
         <Style.Resources>
-          <Style BasedOn="{StaticResource {x:Type wpf:FluentIcon}}" TargetType="wpf:FluentIcon">
+          <Style TargetType="wpf:FluentIcon">
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="VerticalAlignment" Value="Top" />
             <Setter Property="Width" Value="{Binding Source={StaticResource Scale}, Path=ToggleDisplayIcon}" />

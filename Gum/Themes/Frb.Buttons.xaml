@@ -54,16 +54,12 @@
         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
         RenderTransformOrigin="0.5,0.5"
-        SnapsToDevicePixels="True" />
+        SnapsToDevicePixels="True"
+        TextElement.FontSize="{Binding Body, Source={StaticResource Scale}}" />
     </Border>
   </ControlTemplate>
 
   <Style x:Key="IconButton" TargetType="{x:Type ButtonBase}">
-    <Style.Resources>
-      <Style TargetType="{x:Type wpf:FluentIcon}">
-        <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
-      </Style>
-    </Style.Resources>
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="BorderThickness" Value="0" />

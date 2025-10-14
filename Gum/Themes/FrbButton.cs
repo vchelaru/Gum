@@ -3,7 +3,7 @@ using System.Windows.Controls.Primitives;
 
 namespace FlatRedBall.Glue.Themes;
 
-internal static class FrbButton
+public static class FrbButton
 {
     public static readonly DependencyProperty BorderCornerRadiusProperty =
         DependencyProperty.RegisterAttached("BorderCornerRadius", typeof(CornerRadius), typeof(FrbButton),
