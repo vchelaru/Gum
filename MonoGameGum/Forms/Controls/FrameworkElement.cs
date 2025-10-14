@@ -1068,7 +1068,9 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         void UnFocusRequestingVisual()
         {
-            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement)
+            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
+                // this can happen if the only input receiver requests next tab and it loops back on itself.
+                InteractiveGue.CurrentInputReceiver != requestingFrameworkElement)
             {
                 requestingFrameworkElement.IsFocused = false;
             }
