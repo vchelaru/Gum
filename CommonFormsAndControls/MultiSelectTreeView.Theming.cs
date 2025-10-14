@@ -238,7 +238,7 @@ public partial class MultiSelectTreeView
                     var oldIM = e.Graphics.InterpolationMode; e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
                     var oldPO = e.Graphics.PixelOffsetMode; e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
-                    e.Graphics.DrawImage(img, rImage, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, ImageAttributes);
+                    e.Graphics.DrawImage(img, rImage, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel);
 
                     e.Graphics.CompositingQuality = oldCQ;
                     e.Graphics.InterpolationMode = oldIM;

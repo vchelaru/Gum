@@ -2,10 +2,10 @@ using CommonFormsAndControls;
 using CommunityToolkit.Mvvm.Messaging;
 using FlatRedBall.Glue.Themes;
 using Gum.Commands;
+using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Mvvm;
 using Gum.Plugins;
@@ -18,14 +18,14 @@ using Gum.Wireframe;
 using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
-using Gum.Controls;
 using ToolsUtilities;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
@@ -667,7 +667,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
             {
                 const float defaultFontSize = 9f;
-                UpdateTreeviewIconScale(fontSize/defaultFontSize);
+                UpdateTreeviewIcons(fontSize/defaultFontSize);
                 mMenuStrip.Renderer = GetCurrentThemeRenderer(fontSize);
                 mMenuStrip.Font = font;
             }
@@ -733,6 +733,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     Color.FromArgb(Map01To255(primOpacity), primColor.R, primColor.G, primColor.B);
                 this.ObjectTreeView.SelectedBorderColor =
                     Color.FromArgb(primColor.A, primColor.R, primColor.G, primColor.B);
+
+                const float defaultFontSize = 9f;
+                UpdateTreeviewIcons(ObjectTreeView.Font.Size / defaultFontSize);
             }
         }
 
@@ -790,47 +793,123 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return copy;
     }
 
-    private void UpdateTreeviewIconScale(float scale = 1.0f)
+
+
+    private void UpdateTreeviewIcons(
+        float scale = 1.0f)
     {
-        int baseImageSize = 22;
+        int baseImageSize = 20;
+        var size = new Size((int)(baseImageSize * scale), (int)(baseImageSize * scale));
 
-        // Then we can re-scale the images
-        ObjectTreeView.ImageList = ResizeImageListImages(
-            unmodifiableImageList
-            , new System.Drawing.Size(
-                (int)(baseImageSize * scale)
-                , (int)(baseImageSize * scale)));
-
-        ImageList ResizeImageListImages(ImageList originalImageList, Size newSize)
+        var keyedColors = GetCurrentColorMap();
+        Application app = Application.Current;
+        Color? defaultColor = null;
+        if (app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color dc)
         {
-            ImageList resizedImageList = new ImageList
+            defaultColor = Color.FromArgb(dc.A, dc.R, dc.G, dc.B);
+        }
+
+
+        ObjectTreeView.ImageList = BuildTintedImageList(unmodifiableImageList, size, keyedColors, defaultColor ?? Color.White);
+
+        ImageList BuildTintedImageList(
+            ImageList originalImageList,
+            Size newSize,
+            IDictionary<string, Color>? perKeyColors,
+            Color fallbackColor)
+        {
+            var outList = new ImageList
             {
                 ImageSize = newSize,
-                ColorDepth = originalImageList.ColorDepth // Preserve original color depth
+                ColorDepth = originalImageList.ColorDepth // preserve
             };
 
             foreach (string key in originalImageList.Images.Keys)
             {
-                Image originalImage = originalImageList.Images[key];
-                Image resizedImage = ResizeImageWithAntialiasing(originalImage, newSize); // Reuse ResizeImage method
-                resizedImageList.Images.Add(key, resizedImage);
+                var src = originalImageList.Images[key];
+
+                // pick the color for this key (fallback if none specified)
+                var tint = (perKeyColors != null && perKeyColors.TryGetValue(key, out var c)) ? c : fallbackColor;
+
+                // resize + tint in one pass
+                var tinted = ResizeAndTint(src, newSize, tint);
+
+                // ImageList takes ownership of the Image; don't dispose tinted here
+                outList.Images.Add(key, tinted);
             }
 
-            return resizedImageList;
+            return outList;
         }
 
-        Image ResizeImageWithAntialiasing(Image originalImage, Size newSize)
+        static Bitmap ResizeAndTint(Image original, Size newSize, Color tint)
         {
-            var dest = new Bitmap(newSize.Width, newSize.Height);
-            using (var g = System.Drawing.Graphics.FromImage(dest))
+            // Normalize multipliers: white(1,1,1) * (r,g,b) => tint
+            float r = tint.R / 255f;
+            float g = tint.G / 255f;
+            float b = tint.B / 255f;
+            float a = tint.A / 255f; // scales source alpha; use 1.0f to keep original alpha
+
+            var cm = new ColorMatrix(new float[][]
             {
-                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                g.DrawImage(originalImage, new Rectangle(Point.Empty, newSize));
+            new float[] { r, 0, 0, 0, 0 },
+            new float[] { 0, g, 0, 0, 0 },
+            new float[] { 0, 0, b, 0, 0 },
+            new float[] { 0, 0, 0, a, 0 },
+            new float[] { 0, 0, 0, 0, 1 }
+            });
+
+            using var ia = new ImageAttributes();
+            ia.SetColorMatrix(cm, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+            // 32bpp ARGB ensures we keep transparency nice and crisp
+            var dest = new Bitmap(newSize.Width, newSize.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            using (var graphics = System.Drawing.Graphics.FromImage(dest))
+            {
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                var rect = new Rectangle(Point.Empty, newSize);
+                // Draw with the color matrix applied
+                graphics.DrawImage(original,
+                            destRect: rect,
+                            srcX: 0, srcY: 0, srcWidth: original.Width, srcHeight: original.Height,
+                            srcUnit: GraphicsUnit.Pixel,
+                            imageAttr: ia);
             }
+
             return dest;
+        }
+
+        static Dictionary<string, Color> GetCurrentColorMap()
+        {
+            Application app = Application.Current;
+
+            var manillaColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Manilla");
+            var greenColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Green");
+            var blueColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Blue");
+            var redColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Red");
+            var purpleColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Purple");
+
+            var manilla = System.Drawing.Color.FromArgb(manillaColor.A, manillaColor.R, manillaColor.G, manillaColor.B);
+            var green = System.Drawing.Color.FromArgb(greenColor.A, greenColor.R, greenColor.G, greenColor.B);
+            var blue = System.Drawing.Color.FromArgb(blueColor.A, blueColor.R, blueColor.G, blueColor.B);
+            var red = System.Drawing.Color.FromArgb(redColor.A, redColor.R, redColor.G, redColor.B);
+            var purple = System.Drawing.Color.FromArgb(purpleColor.A, purpleColor.R, purpleColor.G, purpleColor.B);
+
+            return new()
+            {
+                ["Folder.png"] = manilla,
+                ["Component.png"] = green,
+                ["Instance.png"] = blue,
+                ["Screen.png"] = red,
+                ["StandardElement.png"] = purple,
+                ["redExclamation.png"] = red,
+                ["state.png"] = blue,
+                ["behavior.png"] = manilla,
+            };
         }
     }
 

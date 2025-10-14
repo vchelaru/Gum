@@ -23,6 +23,12 @@
       <Color x:Key="Frb.Colors.Success">#2E7D32</Color>
 
       <Color x:Key="Frb.Colors.ThemeContrast">Black</Color>
+
+      <Color x:Key="Frb.Colors.Icon.Manilla">#b17900</Color>
+      <Color x:Key="Frb.Colors.Icon.Green">#10900c</Color>
+      <Color x:Key="Frb.Colors.Icon.Blue">#006bbe</Color>
+      <Color x:Key="Frb.Colors.Icon.Red">#cb2b3c</Color>
+      <Color x:Key="Frb.Colors.Icon.Purple">#5b2d90</Color>
     </ResourceDictionary>
   </ResourceDictionary.MergedDictionaries>
 
@@ -81,8 +87,13 @@
 
   <SolidColorBrush x:Key="Frb.Brushes.Field.Background" Color="{StaticResource Frb.Colors.Field.Background}" />
 
-  <!--  Added missing brushes for new colors  -->
   <SolidColorBrush x:Key="Frb.Brushes.Border.Secondary" Color="{StaticResource Frb.Colors.Border.Secondary}" />
   <SolidColorBrush x:Key="Frb.Brushes.Surface.Fill" Color="{StaticResource Frb.Colors.Surface.Fill}" />
   <SolidColorBrush x:Key="Frb.Brushes.ThemeContrast" Color="{StaticResource Frb.Colors.ThemeContrast}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Manilla" Color="{StaticResource Frb.Colors.Icon.Manilla}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Green" Color="{StaticResource Frb.Colors.Icon.Green}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Blue" Color="{StaticResource Frb.Colors.Icon.Blue}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Red" Color="{StaticResource Frb.Colors.Icon.Red}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Purple" Color="{StaticResource Frb.Colors.Icon.Purple}" />
 </ResourceDictionary>

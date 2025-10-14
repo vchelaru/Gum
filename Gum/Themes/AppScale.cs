@@ -11,7 +11,7 @@ public sealed class AppScale : DependencyObject
     private const double H2Scale = 1.25;
     private const double H1Scale = 1.6;
     private const double H3Scale = 1.16;
-    private const double IconInlineScale = 1.16;
+    private const double IconInlineScale = 1.25;
     private const double IconButtonScale = 1.667;
     private const double ToggleDisplayIconScale = 2.333;
 

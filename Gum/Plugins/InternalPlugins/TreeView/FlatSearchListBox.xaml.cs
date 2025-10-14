@@ -1,12 +1,14 @@
-﻿using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
+using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Gum.DataTypes;
-using Gum.DataTypes.Behaviors;
+using System.Windows.Media;
 
 namespace Gum.Plugins.InternalPlugins.TreeView
 {
@@ -54,5 +56,13 @@ namespace Gum.Plugins.InternalPlugins.TreeView
         {
             throw new InvalidOperationException();
         }
+    }
+    class TypeIsConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            => value != null && parameter is Type t && t.IsInstanceOfType(value);
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => Binding.DoNothing;
     }
 }
