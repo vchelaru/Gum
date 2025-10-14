@@ -288,8 +288,15 @@ public class TextRuntime : InteractiveGue
             var heightBefore = ContainedText.WrappedTextHeight;
             if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
             {
-                // make it have no line wrap width before assignign the text:
-                ContainedText.Width = null;
+                if(this.MaxWidth == null)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    ContainedText.Width = null;
+                }
+                else
+                {
+                    ContainedText.Width = this.MaxWidth;
+                }
             }
 
             // Use SetProperty so it goes through the BBCode-checking methods

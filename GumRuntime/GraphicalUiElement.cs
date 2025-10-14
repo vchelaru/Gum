@@ -2199,7 +2199,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var oldWidth = mContainedObjectAsIpso.Width;
                     if (WidthUnits == DimensionUnitType.RelativeToChildren)
                     {
-                        mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                        if(MaxWidth != null)
+                        {
+                            mContainedObjectAsIpso.Width = MaxWidth.Value;
+                        }
+                        else
+                        {
+                            mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                        }
                     }
                     maxHeight = asText.WrappedTextHeight;
                     mContainedObjectAsIpso.Width = oldWidth;
