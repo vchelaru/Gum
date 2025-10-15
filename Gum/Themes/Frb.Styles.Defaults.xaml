@@ -790,7 +790,6 @@
 
   <!--  Expander  -->
   <Style TargetType="Expander">
-
     <Setter Property="ExpandDirection" Value="Down" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="Transparent" />
@@ -822,6 +821,7 @@
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
 
+              <!--  Header  -->
               <ToggleButton
                 x:Name="HeaderButton"
                 Grid.Row="0"
@@ -846,8 +846,9 @@
                     Kind="ChevronRight"
                     RenderTransformOrigin="0.5,0.5">
                     <md:PackIcon.RenderTransform>
+                      <!--  Baseline: expanded  -->
                       <TransformGroup>
-                        <RotateTransform x:Name="ChevronRotate" Angle="0" />
+                        <RotateTransform x:Name="ChevronRotate" Angle="90" />
                         <ScaleTransform x:Name="ChevronScale" ScaleX="1.25" ScaleY="1.25" />
                       </TransformGroup>
                     </md:PackIcon.RenderTransform>
@@ -864,20 +865,22 @@
                 </Grid>
               </ToggleButton>
 
+              <!--  Body (baseline: visible/expanded)  -->
               <Border Grid.Row="1" Padding="{TemplateBinding Padding}">
                 <Grid
                   x:Name="BodyRoot"
-                  Opacity="0"
+                  Opacity="1"
                   RenderTransformOrigin="0.5,0">
                   <Grid.RenderTransform>
-                    <ScaleTransform ScaleY="0.98" />
+                    <ScaleTransform ScaleY="1" />
                   </Grid.RenderTransform>
+
                   <ContentPresenter
                     x:Name="ContentSite"
                     Content="{TemplateBinding Content}"
                     ContentTemplate="{TemplateBinding ContentTemplate}"
                     Focusable="False"
-                    Visibility="Collapsed" />
+                    Visibility="Visible" />
                 </Grid>
               </Border>
             </Grid>
@@ -885,48 +888,30 @@
 
           <!--  Triggers / states  -->
           <ControlTemplate.Triggers>
-            <!--  Show content on expand  -->
-            <Trigger Property="IsExpanded" Value="True">
-              <Setter TargetName="ContentSite" Property="Visibility" Value="Visible" />
-              <!--  Subtle content reveal (avoids animating Auto height)  -->
+
+            <!--  Collapse/expand animations now keyed off IsExpanded = False  -->
+            <Trigger Property="IsExpanded" Value="False">
+              <Setter TargetName="ContentSite" Property="Visibility" Value="Collapsed" />
               <Trigger.EnterActions>
+                <!--  entering False = collapsing  -->
                 <BeginStoryboard>
                   <Storyboard>
                     <DoubleAnimation
-                      Storyboard.TargetName="BodyRoot"
-                      Storyboard.TargetProperty="Opacity"
-                      To="1"
-                      Duration="0:0:0.12" />
-                    <DoubleAnimation
-                      Storyboard.TargetName="BodyRoot"
-                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                      To="1"
-                      Duration="0:0:0.12" />
-                    <DoubleAnimation
                       Storyboard.TargetName="ChevronRotate"
                       Storyboard.TargetProperty="Angle"
-                      To="90"
+                      To="0"
                       Duration="0:0:0.15" />
                   </Storyboard>
                 </BeginStoryboard>
               </Trigger.EnterActions>
+
               <Trigger.ExitActions>
                 <BeginStoryboard>
                   <Storyboard>
                     <DoubleAnimation
-                      Storyboard.TargetName="BodyRoot"
-                      Storyboard.TargetProperty="Opacity"
-                      To="0"
-                      Duration="0:0:0.10" />
-                    <DoubleAnimation
-                      Storyboard.TargetName="BodyRoot"
-                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
-                      To="0.98"
-                      Duration="0:0:0.10" />
-                    <DoubleAnimation
                       Storyboard.TargetName="ChevronRotate"
                       Storyboard.TargetProperty="Angle"
-                      To="0"
+                      To="90"
                       Duration="0:0:0.15" />
                   </Storyboard>
                 </BeginStoryboard>
@@ -942,29 +927,6 @@
               <Setter TargetName="HeaderButton" Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
             </Trigger>
 
-            <!--  ExpandDirection support (rotate chevron accordingly)  -->
-            <Trigger Property="ExpandDirection" Value="Up">
-              <Setter TargetName="Chevron" Property="RenderTransform">
-                <Setter.Value>
-                  <RotateTransform Angle="180" />
-                </Setter.Value>
-              </Setter>
-            </Trigger>
-            <Trigger Property="ExpandDirection" Value="Left">
-              <Setter TargetName="Chevron" Property="RenderTransform">
-                <Setter.Value>
-                  <RotateTransform Angle="270" />
-                </Setter.Value>
-              </Setter>
-            </Trigger>
-            <Trigger Property="ExpandDirection" Value="Right">
-              <Setter TargetName="Chevron" Property="RenderTransform">
-                <Setter.Value>
-                  <RotateTransform Angle="90" />
-                </Setter.Value>
-              </Setter>
-            </Trigger>
-
             <!--  Disabled readability  -->
             <Trigger Property="IsEnabled" Value="False">
               <Setter TargetName="HeaderButton" Property="Opacity" Value="0.6" />
@@ -974,6 +936,7 @@
       </Setter.Value>
     </Setter>
   </Style>
+
 
   <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type MenuItem}">
     <Setter Property="HorizontalContentAlignment" Value="Left" />
