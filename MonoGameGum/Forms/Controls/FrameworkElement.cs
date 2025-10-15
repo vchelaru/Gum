@@ -83,6 +83,7 @@ public class FrameworkElement : INotifyPropertyChanged
 {
     #region Fields/Properties
 
+
 #if FRB
     public static Cursor MainCursor => GuiManager.Cursor;
 
@@ -1385,9 +1386,10 @@ public class FrameworkElement : INotifyPropertyChanged
             {
                 foreach (var combo in FrameworkElement.ClickCombos)
                 {
-                    if (combo.IsComboDown())
+                    if (combo.IsComboDown() && InteractiveGue.LastVisualPushed == this.Visual)
                     {
                         isPushInputHeldDown = true;
+                        break;
                     }
                 }
             }

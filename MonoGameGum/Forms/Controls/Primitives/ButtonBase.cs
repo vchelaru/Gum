@@ -305,6 +305,8 @@ public class ButtonBase :
 
             if(wasPushed)
             {
+                InteractiveGue.LastVisualPushed = this.Visual;
+
                 wasPushedOnCurrentHold = true;
 
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
