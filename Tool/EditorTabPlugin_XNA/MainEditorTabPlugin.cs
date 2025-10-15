@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
+using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -14,6 +15,7 @@ using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Settings;
+using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -442,9 +444,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
-        // Uncommenting this makes the area for teh combo box properly grow, but it
-        // kills the wireframe view. Not sure why....
-        //_wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Size);
+        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var fontSize);
+        _wireframeContextMenuStrip.Font = new Font("Segoe UI", fontSize);
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
@@ -889,6 +890,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         wireframeContextMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
         wireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
         wireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
+        wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
 
         gumEditorPanel = new Panel();
 
@@ -983,6 +985,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     {
         this._wireframeControl.BackgroundColor = ToXna(message.settings.CheckerA);
         this._wireframeControl.SetGuideColors(message.settings.GuideLine, message.settings.GuideText);
+        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
 
         static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
     }

@@ -51,6 +51,7 @@
               <wpf:FluentIcon
                 Grid.Column="2"
                 Margin="4,0,0,0"
+                Foreground="{DynamicResource Frb.Brushes.Icon.Manilla}"
                 Icon="PuzzlePiece"
                 Style="{StaticResource BiggerIcon}"
                 Visibility="{Binding IsRequiredBySelectedBehavior, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
@@ -84,13 +85,14 @@
               <wpf:FluentIcon
                 Grid.Column="2"
                 Margin="4,0,0,0"
+                Foreground="{DynamicResource Frb.Brushes.Icon.Manilla}"
                 Icon="PuzzlePiece"
                 Style="{StaticResource BiggerIcon}"
                 Visibility="{Binding IsRequiredBySelectedBehavior, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
               <wpf:FluentIcon
                 Grid.Column="3"
                 Margin="4,0,0,0"
-                Icon="Edit"
+                Icon="BoxEdit"
                 Style="{StaticResource BiggerIcon}"
                 Visibility="{Binding IncludesVariablesForSelectedInstance, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
             </Grid>

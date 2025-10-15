@@ -24,13 +24,20 @@
   Top="{Binding Top, Mode=TwoWay}"
   UseLayoutRounding="True"
   WindowState="{Binding WindowState, Mode=TwoWay}"
+  WindowStyle="None"
   mc:Ignorable="d">
-  <Border Margin="0,0,0,0" Background="{DynamicResource Frb.Brushes.Background}" CornerRadius="10" BorderBrush="{DynamicResource Frb.Brushes.Border}" BorderThickness="1">
+  <Border
+    Margin="0,0,0,0"
+    Background="{DynamicResource Frb.Brushes.Background}"
+    BorderBrush="{DynamicResource Frb.Brushes.Border}"
+    BorderThickness="1"
+    ClipToBounds="True"
+    CornerRadius="10">
     <Grid>
       <Grid.Style>
         <Style TargetType="Grid">
           <Style.Triggers>
-            <DataTrigger Binding="{Binding WindowState, ElementName=Root}" Value="{x:Static WindowState.Maximized}">
+            <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
               <Setter Property="Margin" Value="7" />
             </DataTrigger>
           </Style.Triggers>
@@ -51,27 +58,27 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Image
-            Height="16"
-            Margin="8,0,4,0"
-            VerticalAlignment="Center"
-            Source="{Binding IconSource}"
-            Stretch="Uniform" />
+              Height="16"
+              Margin="8,0,4,0"
+              VerticalAlignment="Center"
+              Source="{Binding IconSource}"
+              Stretch="Uniform" />
             <WindowsFormsHost
-            x:Name="WinformsMenuHost"
-            Grid.Column="1"
-            VerticalAlignment="Center" />
+              x:Name="WinformsMenuHost"
+              Grid.Column="1"
+              VerticalAlignment="Center" />
             <controls:TitleFilePathDisplay
-            Grid.Column="3"
-            Margin="12,0,0,0"
-            HorizontalAlignment="Center"
-            behaviors:TitleBarClickPassthrough.Enable="True"
-            FullPath="{Binding Title}"
-            WindowChrome.IsHitTestVisibleInChrome="True" />
+              Grid.Column="3"
+              Margin="12,0,0,0"
+              HorizontalAlignment="Center"
+              behaviors:TitleBarClickPassthrough.Enable="True"
+              FullPath="{Binding Title}"
+              WindowChrome.IsHitTestVisibleInChrome="True" />
             <StackPanel
-            Grid.Column="4"
-            VerticalAlignment="Center"
-            Orientation="Horizontal"
-            WindowChrome.IsHitTestVisibleInChrome="True">
+              Grid.Column="4"
+              VerticalAlignment="Center"
+              Orientation="Horizontal"
+              WindowChrome.IsHitTestVisibleInChrome="True">
               <StackPanel.Resources>
                 <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
                   <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
@@ -134,10 +141,10 @@
         </Border>
 
         <controls:MainPanelControl
-        Grid.Row="1"
-        Margin="4,0,4,4"
-        DataContext="{Binding MainPanelViewModel}"
-        IsToolsVisible="{Binding IsToolsVisible}" />
+          Grid.Row="1"
+          Margin="4,0,4,4"
+          DataContext="{Binding MainPanelViewModel}"
+          IsToolsVisible="{Binding IsToolsVisible}" />
       </Grid>
     </Grid>
   </Border>

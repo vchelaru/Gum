@@ -628,7 +628,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip();
         this.mMenuStrip.Name = "ElementMenuStrip";
         this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
-        this.mMenuStrip.Renderer = GetCurrentThemeRenderer();
+        this.mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
         this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
     }
 
@@ -668,7 +668,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 const float defaultFontSize = 9f;
                 UpdateTreeviewIcons(fontSize/defaultFontSize);
-                mMenuStrip.Renderer = GetCurrentThemeRenderer(fontSize);
+                mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var _);
                 mMenuStrip.Font = font;
             }
         };
@@ -719,7 +719,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             this.ObjectTreeView.ForeColor = mMenuStrip.ForeColor = foregroundColor;
             this.ObjectTreeView.BackColor = mMenuStrip.BackColor = fieldColor;
             this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
-            this.mMenuStrip.Renderer = GetCurrentThemeRenderer(this.ObjectTreeView.Font.Size);
+            this.mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
             this.TreeViewHost.Background = bgBrush;
             (TreeViewHost.Child as ThemedScrollContainer)!.BackColor = fieldColor;
 
@@ -747,30 +747,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             return (int)Math.Round(value * 255);
         }
-    }
-
-    private FrbMenuStripRenderer? GetCurrentThemeRenderer(float? fontSize = null)
-    {
-        if (System.Windows.Application.Current is { } app &&
-            app.TryFindResource("Frb.Colors.Surface01") is System.Windows.Media.Color bgColor &&
-            app.TryFindResource("Frb.Colors.Foreground") is System.Windows.Media.Color fgColor &&
-            app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color primaryColor)
-        {
-            System.Drawing.Color bg = System.Drawing.Color.FromArgb(bgColor.A, bgColor.R, bgColor.G, bgColor.B);
-            System.Drawing.Color fg = System.Drawing.Color.FromArgb(fgColor.A, fgColor.R, fgColor.G, fgColor.B);
-            System.Drawing.Color primary = System.Drawing.Color.FromArgb(primaryColor.A, primaryColor.R, primaryColor.G, primaryColor.B);
-
-            Font font = new("Segoe UI", fontSize ?? (float)8.25, System.Drawing.FontStyle.Regular);
-            //_menuStrip.ForeColor = fg;
-            //_menuStrip.BackColor = bg;
-            //_menuStrip.Font = font;
-
-            return new(bg, fg, primary, font);
-        }
-
-
-
-        return null;
     }
 
     private ImageList CloneImageList(ImageList original)

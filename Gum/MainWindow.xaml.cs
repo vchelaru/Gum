@@ -1,13 +1,15 @@
-using System;
-using System.Windows;
-using Gum.Managers;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Dialogs;
+using Gum.Managers;
 using Gum.Services;
-using Gum.ViewModels;
-using RoutedEventArgs = System.Windows.RoutedEventArgs;
 using Gum.Settings;
+using Gum.ViewModels;
+using System;
+using System.Windows;
+using System.Windows.Shell;
+using System.Windows.Threading;
+using RoutedEventArgs = System.Windows.RoutedEventArgs;
 
 namespace Gum;
 #region TabLocation Enum
@@ -50,7 +52,6 @@ public partial class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         this.PreviewKeyDown += (_,e) => hotkeyManager.PreviewKeyDownAppWide(e);
         this.Loaded += (_, _) => mainWindowViewModel.LoadWindowSettings();
         this.Closed += (_, _) => mainWindowViewModel.SaveWindowSettings();
-        //this.Background = SystemColors.ControlBrush;
     }
 
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message)

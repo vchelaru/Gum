@@ -334,7 +334,7 @@ namespace Gum.Managers
 
 
             this._menuStrip = new System.Windows.Forms.MenuStrip();
-            this._menuStrip.Renderer = GetCurrentThemeRenderer();
+            this._menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
 
             // 
             // menuStrip1
@@ -356,30 +356,6 @@ namespace Gum.Managers
             RefreshUI();
             _menuStrip.Font = new Font("Segoe UI", DefaultFontSize);
             return this._menuStrip;
-        }
-
-        private FrbMenuStripRenderer? GetCurrentThemeRenderer(float? fontSize = null)
-        {
-            if (System.Windows.Application.Current is { } app &&
-                app.TryFindResource("Frb.Colors.Background") is System.Windows.Media.Color bgColor &&
-                app.TryFindResource("Frb.Colors.Foreground") is System.Windows.Media.Color fgColor &&
-                app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color primaryColor)
-            {
-                System.Drawing.Color bg = System.Drawing.Color.FromArgb(bgColor.A, bgColor.R, bgColor.G, bgColor.B);
-                System.Drawing.Color fg = System.Drawing.Color.FromArgb(fgColor.A, fgColor.R, fgColor.G, fgColor.B);
-                System.Drawing.Color primary = System.Drawing.Color.FromArgb(primaryColor.A, primaryColor.R, primaryColor.G, primaryColor.B);
-
-                Font font = new("Segoe UI", fontSize ?? DefaultFontSize, FontStyle.Regular);
-                _menuStrip.ForeColor = fg;
-                _menuStrip.BackColor = bg;
-                _menuStrip.Font = font;
-
-                return new(bg, fg, primary, font);
-            }
-
-
-
-            return null;
         }
 
         private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
@@ -459,8 +435,8 @@ namespace Gum.Managers
         {
             float fontSize = (DefaultFontSize / 12f) * (float)message.Size;
 
+            _menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out fontSize, "Frb.Colors.Background");
             _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily, fontSize);
-            _menuStrip.Renderer = GetCurrentThemeRenderer(fontSize);
             _menuStrip.Invalidate();
         }
 
@@ -508,7 +484,7 @@ namespace Gum.Managers
 
         void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
         {
-            _menuStrip.Renderer = GetCurrentThemeRenderer();
+            _menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
             _menuStrip.Invalidate();
         }
     }

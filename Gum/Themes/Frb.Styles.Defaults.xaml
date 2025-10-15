@@ -303,7 +303,7 @@
   <Style TargetType="{x:Type ListBox}">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border}" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="Template">
       <Setter.Value>
@@ -320,11 +320,6 @@
         </ControlTemplate>
       </Setter.Value>
     </Setter>
-    <Style.Triggers>
-      <Trigger Property="IsEnabled" Value="False">
-        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
-      </Trigger>
-    </Style.Triggers>
   </Style>
 
   <!--  RadioButton  -->
