@@ -943,6 +943,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         // set it to it's preferred size, or it will stay constrained to the original docked size
         var preferred = _wireframeEditControl.GetPreferredSize(new(_wireframeEditControl.Parent.Width, int.MaxValue));
         _wireframeEditControl.Height = preferred.Height;
+        _wireframeEditControl.Width = _wireframeEditControl.Parent.Width;
     }
 
     private void HandleStateSelected(StateSave save)

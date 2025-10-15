@@ -798,7 +798,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private void UpdateTreeviewIcons(
         float scale = 1.0f)
     {
-        int baseImageSize = 20;
+        float baseImageSize = 16;
+
+        using (var g = ObjectTreeView.CreateGraphics())
+        {
+            baseImageSize *= (g.DpiX / 96f);
+        }
+        
         var size = new Size((int)(baseImageSize * scale), (int)(baseImageSize * scale));
 
         var keyedColors = GetCurrentColorMap();
