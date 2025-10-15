@@ -86,7 +86,6 @@
     <Style.Resources>
       <SolidColorBrush x:Key="MaterialDesign.Brush.TextBox.HoverBorder" Color="{DynamicResource Frb.Colors.Border}" />
     </Style.Resources>
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
     <Setter Property="md:TextFieldAssist.UnderlineBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
@@ -105,8 +104,6 @@
 
   <!--  TextBlock  -->
   <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
-    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Style.Triggers>
       <Trigger Property="IsEnabled" Value="False">
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
@@ -117,7 +114,6 @@
   <!--  Label  -->
   <Style TargetType="{x:Type Label}">
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
     <Style.Triggers>
       <Trigger Property="IsEnabled" Value="False">
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
@@ -235,7 +231,7 @@
               Width="{TemplateBinding FontSize}"
               Height="{TemplateBinding FontSize}"
               Background="Transparent"
-              BorderBrush="{DynamicResource Frb.Brushes.Foreground.Subtle}"
+              BorderBrush="{TemplateBinding Foreground}"
               BorderThickness="1"
               CornerRadius="1"
               Opacity="1.0" />
@@ -794,95 +790,121 @@
 
   <!--  Expander  -->
   <Style TargetType="Expander">
-    <Setter Property="Padding" Value="0" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="BorderBrush" Value="Transparent" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+
     <Setter Property="ExpandDirection" Value="Down" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="md:ExpanderAssist.HeaderBackground" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+    <Setter Property="md:ExpanderAssist.HeaderFontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
     <Setter Property="HeaderTemplate">
       <Setter.Value>
         <DataTemplate>
-          <TextBlock FontSize="{Binding Path=(md:ExpanderAssist.HeaderFontSize), RelativeSource={RelativeSource FindAncestor, AncestorType=Expander}}" Text="{Binding}" />
+          <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
         </DataTemplate>
       </Setter.Value>
     </Setter>
+
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Expander">
-          <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+          <Border
+            x:Name="Outer"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}">
+
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
+
               <ToggleButton
-                x:Name="Header"
+                x:Name="HeaderButton"
+                Grid.Row="0"
                 HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Left"
-                themes:FrbButton.BorderCornerRadius="0"
+                HorizontalContentAlignment="Stretch"
                 Background="{Binding Path=(md:ExpanderAssist.HeaderBackground), RelativeSource={RelativeSource TemplatedParent}}"
                 BorderThickness="0"
-                Foreground="{DynamicResource Frb.Brushes.Foreground}"
                 IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                <Border>
-                  <Grid>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto" />
-                      <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
 
-                    <md:PackIcon
-                      x:Name="ExpandIcon"
-                      Grid.Column="0"
-                      Height="16"
-                      Margin="4,0,4,0"
-                      VerticalAlignment="Center"
-                      Foreground="{TemplateBinding Foreground}"
-                      Kind="ChevronRight"
-                      RenderTransformOrigin="0.5,0.5">
-                      <md:PackIcon.RenderTransform>
-                        <RotateTransform Angle="0" />
-                      </md:PackIcon.RenderTransform>
-                    </md:PackIcon>
-                    <ContentPresenter
-                      Grid.Column="1"
-                      VerticalAlignment="Center"
-                      Content="{TemplateBinding Header}"
-                      ContentTemplate="{TemplateBinding HeaderTemplate}"
-                      TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type ToggleButton}}}" />
-                  </Grid>
-                </Border>
+                  <md:PackIcon
+                    x:Name="Chevron"
+                    Grid.Column="0"
+                    Width="{Binding Path=(md:ExpanderAssist.HeaderFontSize), RelativeSource={RelativeSource TemplatedParent}}"
+                    Height="{Binding Path=(md:ExpanderAssist.HeaderFontSize), RelativeSource={RelativeSource TemplatedParent}}"
+                    Margin="4,0,8,0"
+                    VerticalAlignment="Center"
+                    Kind="ChevronRight"
+                    RenderTransformOrigin="0.5,0.5">
+                    <md:PackIcon.RenderTransform>
+                      <TransformGroup>
+                        <RotateTransform x:Name="ChevronRotate" Angle="0" />
+                        <ScaleTransform x:Name="ChevronScale" ScaleX="1.25" ScaleY="1.25" />
+                      </TransformGroup>
+                    </md:PackIcon.RenderTransform>
+                  </md:PackIcon>
 
+                  <!--  Header content  -->
+                  <ContentPresenter
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    ContentSource="Header"
+                    ContentTemplate="{TemplateBinding HeaderTemplate}"
+                    RecognizesAccessKey="True"
+                    TextElement.FontSize="{Binding Path=(md:ExpanderAssist.HeaderFontSize), RelativeSource={RelativeSource TemplatedParent}}" />
+                </Grid>
               </ToggleButton>
 
               <Border Grid.Row="1" Padding="{TemplateBinding Padding}">
-                <ContentPresenter
-                  x:Name="ContentSite"
-                  Margin="0,2,0,0"
-                  Focusable="False"
-                  Visibility="Collapsed" />
+                <Grid
+                  x:Name="BodyRoot"
+                  Opacity="0"
+                  RenderTransformOrigin="0.5,0">
+                  <Grid.RenderTransform>
+                    <ScaleTransform ScaleY="0.98" />
+                  </Grid.RenderTransform>
+                  <ContentPresenter
+                    x:Name="ContentSite"
+                    Content="{TemplateBinding Content}"
+                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                    Focusable="False"
+                    Visibility="Collapsed" />
+                </Grid>
               </Border>
-
             </Grid>
           </Border>
+
+          <!--  Triggers / states  -->
           <ControlTemplate.Triggers>
+            <!--  Show content on expand  -->
             <Trigger Property="IsExpanded" Value="True">
               <Setter TargetName="ContentSite" Property="Visibility" Value="Visible" />
-            </Trigger>
-            <Trigger SourceName="Header" Property="IsMouseOver" Value="True">
-              <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
-              <Setter TargetName="Header" Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
-            </Trigger>
-            <Trigger Property="IsExpanded" Value="True">
+              <!--  Subtle content reveal (avoids animating Auto height)  -->
               <Trigger.EnterActions>
                 <BeginStoryboard>
                   <Storyboard>
                     <DoubleAnimation
-                      Storyboard.TargetName="ExpandIcon"
-                      Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(RotateTransform.Angle)"
-                      From="0"
+                      Storyboard.TargetName="BodyRoot"
+                      Storyboard.TargetProperty="Opacity"
+                      To="1"
+                      Duration="0:0:0.12" />
+                    <DoubleAnimation
+                      Storyboard.TargetName="BodyRoot"
+                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                      To="1"
+                      Duration="0:0:0.12" />
+                    <DoubleAnimation
+                      Storyboard.TargetName="ChevronRotate"
+                      Storyboard.TargetProperty="Angle"
                       To="90"
                       Duration="0:0:0.15" />
                   </Storyboard>
@@ -892,15 +914,60 @@
                 <BeginStoryboard>
                   <Storyboard>
                     <DoubleAnimation
-                      Storyboard.TargetName="ExpandIcon"
-                      Storyboard.TargetProperty="(FrameworkElement.RenderTransform).(RotateTransform.Angle)"
-                      From="90"
+                      Storyboard.TargetName="BodyRoot"
+                      Storyboard.TargetProperty="Opacity"
+                      To="0"
+                      Duration="0:0:0.10" />
+                    <DoubleAnimation
+                      Storyboard.TargetName="BodyRoot"
+                      Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                      To="0.98"
+                      Duration="0:0:0.10" />
+                    <DoubleAnimation
+                      Storyboard.TargetName="ChevronRotate"
+                      Storyboard.TargetProperty="Angle"
                       To="0"
                       Duration="0:0:0.15" />
                   </Storyboard>
                 </BeginStoryboard>
               </Trigger.ExitActions>
+            </Trigger>
 
+            <!--  Hover/pressed states on the header  -->
+            <Trigger SourceName="HeaderButton" Property="IsMouseOver" Value="True">
+              <Setter TargetName="HeaderButton" Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
+              <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
+            </Trigger>
+            <Trigger SourceName="HeaderButton" Property="IsPressed" Value="True">
+              <Setter TargetName="HeaderButton" Property="Background" Value="{DynamicResource Frb.Brushes.Primary.Transparent}" />
+            </Trigger>
+
+            <!--  ExpandDirection support (rotate chevron accordingly)  -->
+            <Trigger Property="ExpandDirection" Value="Up">
+              <Setter TargetName="Chevron" Property="RenderTransform">
+                <Setter.Value>
+                  <RotateTransform Angle="180" />
+                </Setter.Value>
+              </Setter>
+            </Trigger>
+            <Trigger Property="ExpandDirection" Value="Left">
+              <Setter TargetName="Chevron" Property="RenderTransform">
+                <Setter.Value>
+                  <RotateTransform Angle="270" />
+                </Setter.Value>
+              </Setter>
+            </Trigger>
+            <Trigger Property="ExpandDirection" Value="Right">
+              <Setter TargetName="Chevron" Property="RenderTransform">
+                <Setter.Value>
+                  <RotateTransform Angle="90" />
+                </Setter.Value>
+              </Setter>
+            </Trigger>
+
+            <!--  Disabled readability  -->
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="HeaderButton" Property="Opacity" Value="0.6" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

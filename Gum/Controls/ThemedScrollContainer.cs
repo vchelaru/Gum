@@ -184,7 +184,7 @@ namespace Gum.Controls
                     _vbar.Minimum = 0;
                     _vbar.Maximum = Math.Max(0, _extent.Height - 1);
                     _vbar.LargeChange = Math.Max(1, vp.Height);
-                    _vbar.SmallChange = Math.Max(1, vp.Height / 6);
+                    _vbar.SmallChange = Math.Max(1, vp.Height / 20);
                     _vbar.Value = Math.Max(0, Math.Min(_vbar.Value, MaxStart(_vbar.Maximum, _vbar.LargeChange)));
                 }
                 else
@@ -197,7 +197,7 @@ namespace Gum.Controls
                     _hbar.Minimum = 0;
                     _hbar.Maximum = Math.Max(0, _extent.Width - 1);
                     _hbar.LargeChange = Math.Max(1, vp.Width);
-                    _hbar.SmallChange = Math.Max(1, vp.Width / 6);
+                    _hbar.SmallChange = Math.Max(1, vp.Width / 20);
                     _hbar.Value = Math.Max(0, Math.Min(_hbar.Value, MaxStart(_hbar.Maximum, _hbar.LargeChange)));
                 }
                 else

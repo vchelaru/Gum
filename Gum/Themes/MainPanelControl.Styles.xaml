@@ -145,10 +145,12 @@
     x:Key="MainTabControl.Style"
     BasedOn="{StaticResource {x:Type TabControl}}"
     TargetType="TabControl">
+    <Setter Property="Background" Value="{DynamicResource Frb.Surface01}" />
     <Setter Property="ItemContainerStyle" Value="{StaticResource MainTabControl.MainTabItem.Style}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border}" />
     <Setter Property="ItemTemplate" Value="{DynamicResource MainTabControl.ItemTemplate}" />
     <Setter Property="ContentTemplate" Value="{StaticResource MainTabControl.ContentTemplate}" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Margin" Value="0.5" />
     <Setter Property="Template">
@@ -169,7 +171,7 @@
               x:Name="PART_SelectedContentHost"
               Grid.Row="1"
               Padding="0"
-              Background="{DynamicResource Frb.Surface01}"
+              Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="0"
               CornerRadius="0">

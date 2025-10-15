@@ -59,7 +59,6 @@
   <SolidColorBrush x:Key="Frb.Brushes.Background" Color="{StaticResource Frb.Colors.Background}" />
 
   <SolidColorBrush x:Key="Frb.Surface01" Color="{StaticResource Frb.Colors.Surface01}" />
-  <SolidColorBrush x:Key="Frb.Surface02" Color="{StaticResource Frb.Colors.Surface02}" />
 
   <SolidColorBrush
     x:Key="Frb.Brushes.Contrast.Subtle"
