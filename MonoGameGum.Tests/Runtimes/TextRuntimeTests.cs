@@ -149,6 +149,24 @@ $"chars count=223\r\n";
     }
 
     [Fact]
+    public void MaxWidth_ShouldWrapText_IfTextExceedsMaxWidth()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Width = 0;
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        textRuntime.MaxWidth = 50; // Set a max width
+        textRuntime.Text = "a a a a a a a a a a a a a a a a a";
+
+        textRuntime.GetAbsoluteWidth().ShouldBeLessThanOrEqualTo(50);
+        var innerText = (Text)textRuntime.RenderableComponent;
+        innerText.WrappedText.Count.ShouldBeGreaterThan(1);
+        var lineCount = innerText.WrappedText.Count;
+
+        var absoluteHeight = textRuntime.GetAbsoluteHeight();
+        absoluteHeight.ShouldBe(lineCount * textRuntime.BitmapFont.LineHeightInPixels);
+    }
+
+    [Fact]
     public void Clone_ShouldCreateClonedText()
     {
         Text sut = new();
