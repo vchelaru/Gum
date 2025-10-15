@@ -696,6 +696,7 @@ public class ComboBox :
             }
             if(wasPushed)
             {
+                InteractiveGue.LastVisualPushed = this.Visual;
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 OpenAndFocusListBox();

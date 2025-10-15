@@ -80,7 +80,8 @@ public partial class InteractiveGue : BindableGue
     /// </summary>
     public static double CurrentGameTime { get; internal set; }
 
-    static IInputReceiver currentInputReceiver;
+    public static InteractiveGue? LastVisualPushed { get; set; }
+    static IInputReceiver? currentInputReceiver;
 
     
     public static IInputReceiver? CurrentInputReceiver
@@ -222,7 +223,9 @@ public partial class InteractiveGue : BindableGue
 
 
     /// <summary>
-    /// Event raised when the cursor first moves over this object.
+    /// Event raised when the cursor first moves over this object. This is only raised if the
+    /// cursor is moved directly over this object. If it is instead moved over a child object
+    /// which has its own events, then the parent will not have this raised.
     /// </summary>
     public event EventHandler? RollOn;
     /// <summary>
@@ -336,6 +339,8 @@ public partial class InteractiveGue : BindableGue
                     if(args.Handled)
                     {
                         cursor.WindowPushed = asInteractive;
+                        LastVisualPushed = asInteractive;
+
                         handledActions.HandledClickPreview = true;
                     }
                 }
@@ -455,6 +460,7 @@ public partial class InteractiveGue : BindableGue
                         {
 
                             cursor.WindowPushed = asInteractive;
+                            LastVisualPushed = asInteractive;
 
                             if (asInteractive.Push != null)
                                 asInteractive.Push(asInteractive, EventArgs.Empty);
@@ -948,7 +954,11 @@ public interface ICursor
     bool MiddleClick { get; }
     bool MiddleDoubleClick { get; }
 
+    /// <summary>
+    /// Returns the visual that was last pushed.
+    /// </summary>
     InteractiveGue? WindowPushed { get; set; }
+
     InteractiveGue? VisualRightPushed { get; set; }
     InteractiveGue? WindowOver { get; set; }
 
@@ -1076,6 +1086,7 @@ public static class GueInteractiveExtensionMethods
         }
         if(cursor.PrimaryDown == false)
         {
+            InteractiveGue.LastVisualPushed = null;
             cursor.WindowPushed = null;
         }
         if(cursor.SecondaryDown == false)
