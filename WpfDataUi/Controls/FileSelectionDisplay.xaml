@@ -61,12 +61,16 @@
                 </Button>
                 <Button
                     Grid.Column="2"
+                    x:Name="ViewInExplorerButton"
                     Width="{Binding ActualHeight, ElementName=TextBox}"
                     Height="{Binding ActualHeight, ElementName=TextBox}"
                     MinWidth="24"
                     MinHeight="24"
                     Margin="1,0,0,0"
                     Click="ViewInExplorerClicked">
+                    <Button.ToolTip>
+                        <ToolTip Content="View file in explorer"></ToolTip>
+                    </Button.ToolTip>
                     <Image Source="/WpfDataUi;component/Content/Icons/OpenFolder.png" />
                 </Button>
 
