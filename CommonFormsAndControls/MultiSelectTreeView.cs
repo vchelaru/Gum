@@ -333,7 +333,10 @@ namespace CommonFormsAndControls
                 // should we ensure all?  
                 foreach (var node in mSelectedNodes)
                 {
-                    node.EnsureVisible();
+                    if (!node.IsVisible)
+                    {
+                        node.EnsureVisible();
+                    }
                 }
 
                 base.OnAfterSelect(e);
@@ -942,10 +945,12 @@ namespace CommonFormsAndControls
         {
             if (node == null)
                 return;
-
             ClearSelectedNodes();
             SetNodeSelected(node, true);
-            node.EnsureVisible();
+            if (!node.IsVisible)
+            {
+                node.EnsureVisible();
+            }
         }
 
         private void SetNodeSelected(TreeNode node, bool selected)
