@@ -160,4 +160,20 @@ public static class IDialogServiceExt
     {
         return dialogService.Show<T>(initializer, out _);
     }
+
+    public static T? ShowChoices<T>(this IDialogService dialogService, string message, Dictionary<T, string> options,
+        string? title = null,
+        bool canCancel = false) where T : notnull
+    {
+        dialogService.Show(Configure, out ChoiceDialogViewModel dialog);
+        return (T?)dialog.SelectedKey;
+
+        void Configure(ChoiceDialogViewModel d)
+        {
+            d.SetOptions(options);
+            d.Title = title ?? "Gum";
+            d.Message = message;
+            d.CanCancel = canCancel;
+        }
+    }
 }

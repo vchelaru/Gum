@@ -1,0 +1,78 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:WpfDataUi.Controls;assembly=WpfDataUi"
+  xmlns:controls2="clr-namespace:Gum.Controls"
+  xmlns:converters="clr-namespace:Gum.Converters"
+  xmlns:converters1="clr-namespace:Gum.Themes.Converters"
+  xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+  xmlns:gum="clr-namespace:Gum"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+  xmlns:pt="http://propertytools.org/wpf"
+  xmlns:system="clr-namespace:System;assembly=System.Runtime"
+  xmlns:themes="clr-namespace:FlatRedBall.Glue.Themes"
+  xmlns:themes1="clr-namespace:Gum.Themes"
+  xmlns:windows="clr-namespace:Gum.Gui.Windows"
+  xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+  xmlns:wpfdataui="clr-namespace:WpfDataUi;assembly=WpfDataUi"
+  xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Converters.xaml" />
+    <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Styles.Variants.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <Style TargetType="{x:Type Window}">
+    <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
+    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Setter Property="FontFamily" Value="Segoe UI" />
+    <Setter Property="FontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
+    <Setter Property="TextElement.FontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
+    <Setter Property="TextElement.FontWeight" Value="Regular" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
+    <Setter Property="WindowChrome.WindowChrome">
+      <Setter.Value>
+        <WindowChrome
+          CaptionHeight="24"
+          CornerRadius="16"
+          GlassFrameThickness="0"
+          ResizeBorderThickness="6" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="WindowsFormsHost">
+    <Setter Property="Background" Value="{DynamicResource Frb.Surface01}" />
+    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Setter Property="FontFamily" Value="Segoe UI" />
+    <Setter Property="FontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
+    <Setter Property="TextElement.FontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
+    <Setter Property="TextElement.FontWeight" Value="Regular" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="UseLayoutRounding" Value="True" />
+  </Style>
+
+  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type dialogs:DialogWindow}" />
+  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type gum:MainWindow}" />
+  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type windows:DeleteOptionsWindow}" />
+  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type controls2:Spinner}" />
+
+  <DataTemplate x:Key="ToggleButtonOptionDisplayOptionContentTemplate" DataType="{x:Type controls:ToggleButtonOptionDisplay+Option}">
+    <wpf:FluentIcon
+      HorizontalAlignment="Center"
+      FontSize="{Binding Source={StaticResource Scale}, Path=IconButton}"
+      Icon="{Binding IconName}" />
+  </DataTemplate>
+  <DataTemplate x:Key="ToggleButtonOptionDisplayOptionContentTemplateGumIcon" DataType="{x:Type controls:ToggleButtonOptionDisplay+Option}">
+    <controls2:GumIcon FontSize="{Binding Source={StaticResource Scale}, Path=IconButton}" Icon="{Binding GumIconName}" />
+  </DataTemplate>
+
+</ResourceDictionary>

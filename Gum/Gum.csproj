@@ -11,6 +11,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<Nullable>enable</Nullable>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<OutputPath>bin\Debug\</OutputPath>
@@ -227,6 +228,12 @@
 		<Content Include="Content\.gumfcs">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<Content Include="GumIcon.ico">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="GumLogo64Light.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<EmbeddedResource Include="Content\BmfcTemplate.bmfc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
@@ -249,6 +256,9 @@
 		</Content>
 		<Content Include="Content\Fonts\Font18Arial_o1_0.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="GumLogo64.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Resource Include="Content\Icons\folder.png" />
 		<Content Include="Content\Icons\Origins\Baseline.png">
@@ -289,7 +299,6 @@
 		<None Update="Content\Icons\WidthUnits\AbsoluteWidthMulitpliedByFontScale.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<Content Include="GumIcon.ico" />
 		<Content Include="Libraries\TargaImage.dll" />
 		<Content Include="Libraries\TargaImage.xml" />
 		<None Update="Content\InvalidTexture.png">
@@ -315,6 +324,10 @@
 		</PackageReference>
 
 			<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+
+			<PackageReference Include="FluentIcons.Wpf">
+			  <Version>1.1.308</Version>
+			</PackageReference>
 		
 		<PackageReference Include="Microsoft.AppCenter.Analytics">
 			<Version>4.2.0</Version>
@@ -335,6 +348,7 @@
 		<PackageReference Include="PixiEditor.ColorPicker">
 			<Version>3.4.1</Version>
 		</PackageReference>
+		<PackageReference Include="SharpVectors" Version="1.8.5" />
 		<PackageReference Include="SkiaSharp">
 			<Version>3.116.1</Version>
 		</PackageReference>
@@ -359,8 +373,10 @@
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
 		<PackageReference Include="System.Resources.Extensions" Version="9.0.5" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="objNetFramework\**" />
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />
@@ -383,6 +399,9 @@
 		<Compile Remove="Wireframe\RuntimeObjectCreator.cs" />
 		<None Remove="Content\.gumfcs" />
 		<None Remove="Content\BmfcTemplate.bmfc" />
+		<None Remove="GumIcon.ico" />
+		<None Remove="GumLogo64.png" />
+		<None Remove="GumLogo64Light.png" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
 </Project>

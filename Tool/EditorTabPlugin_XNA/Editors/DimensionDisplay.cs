@@ -116,7 +116,7 @@ namespace Gum.Wireframe.Editors
 
             // Adjust the Font size based on the UI's scale.  Instead of the Editors zoom level.
             // This should have ZERO affect for anyone not using UI level zoom
-            float scaleFactor = (float)_uiSettingsService.Scale;
+            float scaleFactor = (float)(_uiSettingsService.BaseFontSize/12);
             float decreasedScaleFactor = scaleFactor * 0.75f;
             float finalizedScaleFactor = decreasedScaleFactor < 1 ? 1 : decreasedScaleFactor;
 

@@ -1,5 +1,10 @@
-﻿using System.Windows.Forms.Integration;
+﻿using System.Drawing;
+using System.Windows;
+using System.Windows.Forms.Integration;
 using System.Windows.Media.Animation;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum;
+using Gum.Services;
 
 namespace FlatRedBall.AnimationEditorForms.Controls;
 
@@ -22,7 +27,7 @@ partial class WireframeEditControl
         }
         base.Dispose(disposing);
     }
-
+    
     #region Component Designer generated code
 
     /// <summary> 
@@ -41,7 +46,6 @@ partial class WireframeEditControl
         this.ComboBox.IsEditable = false;
         this.ComboBox.Margin = new System.Windows.Thickness(0, 0, 0, 0);
         this.ComboBox.Name = "ComboBox";
-        this.ComboBox.Height = 21;
         this.ComboBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
         this.ComboBox.TabIndex = 0;
         this.ComboBox.SelectionChanged += this.ComboBox_SelectedIndexChanged;
@@ -50,9 +54,11 @@ partial class WireframeEditControl
         var elementHost = new ElementHost
         {
             Dock = System.Windows.Forms.DockStyle.Fill,
-            Child = this.ComboBox
+            Child = this.ComboBox,
+            AutoSize = true
         };
 
+        
         // 
         // WireframeEditControl
         // 
@@ -62,6 +68,10 @@ partial class WireframeEditControl
         this.Name = "WireframeEditControl";
         this.Size = new System.Drawing.Size(215, 21);
         this.ResumeLayout(false);
+        this.Load += (_, _) =>
+        {
+            ComboBox.Resources = Application.Current.Resources;
+        };
     }
 
     #endregion

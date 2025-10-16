@@ -1,6 +1,8 @@
 ﻿using RenderingLibrary;
 using System;
+using System.Drawing;
 using System.Windows.Forms;
+using Gum.Controls;
 
 namespace FlatRedBall.SpecializedXnaControls
 {
@@ -8,8 +10,8 @@ namespace FlatRedBall.SpecializedXnaControls
     {
         #region Fields
 
-        ScrollBar mVerticalScrollBar;
-        ScrollBar mHorizontalScrollBar;
+        ThemedScrollBar mVerticalScrollBar;
+        ThemedScrollBar mHorizontalScrollBar;
 
         int minimumX = 0;
         int minimumY = 0;
@@ -47,7 +49,7 @@ namespace FlatRedBall.SpecializedXnaControls
             get => managers;
             set
             {
-                if(value == null)
+                if (value == null)
                 {
                     throw new ArgumentNullException("Managers value should not be null");
                 }
@@ -62,12 +64,12 @@ namespace FlatRedBall.SpecializedXnaControls
             mPanel = panel;
             this.xnaControl = xnaControl;
 
-            mVerticalScrollBar = new VScrollBar();
+            mVerticalScrollBar = new() { Orientation = ScrollOrientationEx.Vertical };
             mVerticalScrollBar.Dock = DockStyle.Right;
             mVerticalScrollBar.ValueChanged += HandleVerticalScroll;
             panel.Controls.Add(mVerticalScrollBar);
 
-            mHorizontalScrollBar = new HScrollBar();
+            mHorizontalScrollBar = new() { Orientation = ScrollOrientationEx.Horizontal };
             mHorizontalScrollBar.Dock = DockStyle.Bottom;
             mHorizontalScrollBar.ValueChanged += HandleHorizontalScroll;
 
@@ -77,13 +79,18 @@ namespace FlatRedBall.SpecializedXnaControls
 
             xnaControl.Resize += HandlePanelResize;
 
+            (mVerticalScrollBar as Control).BackColorChanged += (_, _) =>
+            {
+                //(mVerticalScrollBar as Control).BackColor = Color.Red;
+            };
+            //(mHorizontalScrollBar as Control).BackColor = Color.Red;
         }
-        
+
         void HandlePanelResize(object sender, EventArgs e)
         {
             UpdateScrollBars();
         }
-        
+
         private void HandleVerticalScroll(object sender, EventArgs e)
         {
             Managers.Renderer.Camera.Y = mVerticalScrollBar.Value;
@@ -97,22 +104,22 @@ namespace FlatRedBall.SpecializedXnaControls
 
         public void UpdateScrollBarsToCameraPosition()
         {
-            mVerticalScrollBar.Value = 
+            mVerticalScrollBar.Value =
                 Math.Min(Math.Max(mVerticalScrollBar.Minimum, (int)Managers.Renderer.Camera.Y), mVerticalScrollBar.Maximum);
 
-            mHorizontalScrollBar.Value = 
+            mHorizontalScrollBar.Value =
                 Math.Min(Math.Max(mHorizontalScrollBar.Minimum, (int)Managers.Renderer.Camera.X), mHorizontalScrollBar.Maximum);
         }
 
         public void SetDisplayedArea(int? width = null, int? height = null)
         {
-            if(width != null)
+            if (width != null)
             {
                 displayedAreaWidth = width.Value;
                 minimumX = -width.Value / 2;
             }
 
-            if(height != null)
+            if (height != null)
             {
                 displayedAreaHeight = height.Value;
                 minimumY = -height.Value / 2;

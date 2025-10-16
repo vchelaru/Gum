@@ -21,20 +21,23 @@ namespace Gum.Controls
                     {
                         Name = "Top",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                        Image = topAlignBitmap
+                        Image = topAlignBitmap,
+                        IconName = "TextboxAlignTop"
 
                     },
                     new Option
                     {
                         Name = "Center",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                        Image = verticalCenterAlignBitmap
+                        Image = verticalCenterAlignBitmap,
+                        IconName = "TextboxAlignMiddle"
                     },
                     new Option
                     {
                         Name = "Bottom",
                         Value = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                        Image = bottomAlignBitmap
+                        Image = bottomAlignBitmap,
+                        IconName = "TextboxAlignBottom"
                     },
                 };
             }

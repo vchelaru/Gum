@@ -231,9 +231,6 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
                 RefreshFontRangeEditability();
                 break;
-            case nameof(viewModel.GuideLineColor):
-                _wireframeCommands.RefreshGuides();
-                break;
             case nameof(viewModel.SinglePixelTextureFile):
             case nameof(viewModel.SinglePixelTextureTop):
             case nameof(viewModel.SinglePixelTextureLeft):

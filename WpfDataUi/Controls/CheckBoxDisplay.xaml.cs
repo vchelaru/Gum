@@ -129,7 +129,14 @@ namespace WpfDataUi.Controls
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
 
-            SetForeground(DesiredForegroundBrush);
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+
+                    SetForeground(DesiredForegroundBrush);
+                }
+            });
 
             RefreshIsEnabled();
 
@@ -190,7 +197,13 @@ namespace WpfDataUi.Controls
             {
                 this.TrySetValueOnInstance();
 
-                SetForeground(DesiredForegroundBrush);
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                    {
+                        SetForeground(DesiredForegroundBrush);
+                    }
+                });
             }
         }
 

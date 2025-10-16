@@ -1,159 +1,85 @@
-﻿<UserControl
+<UserControl
     x:Class="Gum.Plugins.AlignmentButtons.AnchorControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Plugins.AlignmentButtons"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+    HorizontalContentAlignment="Center"
     mc:Ignorable="d">
-    <GroupBox VerticalAlignment="Top" Header="Anchor">
-
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type Button}" />
+    </UserControl.Resources>
+    <Border
+        BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+        BorderThickness="1"
+        CornerRadius="4">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
+            <Button
+                Click="TopLeftButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowUpLeft}"
+                ToolTip="Top Left" />
 
             <Button
-                x:Name="TopLeftButton"
-                Grid.Row="0"
-                Grid.Column="0"
-                Margin="3"
-                Click="TopLeftButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/TopLeft.png" />
-                <Button.ToolTip>
-                    Anchor Top Left
-                </Button.ToolTip>
-            </Button>
-            <Button
-                x:Name="TopButton"
-                Grid.Row="0"
                 Grid.Column="1"
-                Margin="3"
-                Click="TopButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/TopMiddle.png" />
-                <Button.ToolTip>
-                    Anchor Top
-                </Button.ToolTip>
-            </Button>
+                Click="TopButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowUp}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="TopRightButton"
-                Grid.Row="0"
                 Grid.Column="2"
-                Margin="3"
-                Click="TopRightButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/TopRight.png" />
-                <Button.ToolTip>
-                    Anchor Top Right
-                </Button.ToolTip>
-            </Button>
-
-
+                Click="TopRightButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowUpRight}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="LeftButton"
                 Grid.Row="1"
                 Grid.Column="0"
-                Margin="3"
-                Click="MiddleLeftButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleLeft.png" />
-                <Button.ToolTip>
-                    Anchor Left
-                </Button.ToolTip>
-            </Button>
+                Click="MiddleLeftButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowLeft}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="FillButton"
                 Grid.Row="1"
                 Grid.Column="1"
-                Margin="3"
-                Click="MiddleMiddleButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleMiddle.png" />
-                <Button.ToolTip>
-                    Anchor Center
-                </Button.ToolTip>
-            </Button>
+                Click="MiddleMiddleButton_Click"
+                Content="{wpf:FluentIcon Icon=Stop}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="RightButton"
                 Grid.Row="1"
                 Grid.Column="2"
-                Margin="3"
-                Click="MiddleRightButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleRight.png" />
-                <Button.ToolTip>
-                    Anchor Right
-                </Button.ToolTip>
-            </Button>
-
-
+                Click="MiddleRightButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowRight}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="BottomLeftButton"
                 Grid.Row="2"
                 Grid.Column="0"
-                Margin="3"
-                Click="BottomLeftButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/BottomLeft.png" />
-                <Button.ToolTip>
-                    Anchor Bottom Left
-                </Button.ToolTip>
-            </Button>
+                Click="BottomLeftButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowDownLeft}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="BottomButton"
                 Grid.Row="2"
                 Grid.Column="1"
-                Margin="3"
-                Click="BottomMiddleButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/BottomMiddle.png" />
-                <Button.ToolTip>
-                    Anchor Bottom
-                </Button.ToolTip>
-            </Button>
+                Click="BottomMiddleButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowDown}"
+                ToolTip="Top Left" />
             <Button
-                x:Name="BottomRightButton"
                 Grid.Row="2"
                 Grid.Column="2"
-                Margin="3"
-                Click="BottomRightButton_Click">
-                <Image
-                    Width="32"
-                    Height="32"
-                    Source="/Gum;component/Content/Icons/AnchorPlugin/BottomRight.png" />
-                <Button.ToolTip>
-                    Anchor Bottom Right
-                </Button.ToolTip>
-            </Button>
-
+                Click="BottomRightButton_Click"
+                Content="{wpf:FluentIcon Icon=ArrowDownRight}"
+                ToolTip="Top Left" />
 
         </Grid>
-    </GroupBox>
+    </Border>
 
 </UserControl>

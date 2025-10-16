@@ -73,6 +73,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     #region Properties
 
+    public Microsoft.Xna.Framework.Color BackgroundColor { get; set; } = new(75, 75, 75);
 
     public LineRectangle ScreenBounds
     {
@@ -341,20 +342,7 @@ public class WireframeControl : GraphicsDeviceControl
     {
         if (mHasInitialized)
         {
-            var backgroundColor = new Microsoft.Xna.Framework.Color();
-            if (ProjectManager.Self.GeneralSettingsFile != null)
-            {
-                backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;
-                backgroundColor.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor1G;
-                backgroundColor.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor1B;
-            }
-            else
-            {
-                backgroundColor.R = 150;
-                backgroundColor.G = 150;
-                backgroundColor.B = 150;
-            }
-            GraphicsDevice.Clear(backgroundColor);
+            GraphicsDevice.Clear(BackgroundColor);
 
             PluginManager.Self.BeforeRender();
 
@@ -365,11 +353,9 @@ public class WireframeControl : GraphicsDeviceControl
         }
     }
 
-    public void RefreshGuides()
+    internal void SetGuideColors(Color guidelineColor, Color guideTextColor)
     {
-        // setting GuideValues forces a refresh
-        mTopRuler.GuideValues = mTopRuler.GuideValues.ToArray();
-
-        mLeftRuler.GuideValues = mLeftRuler.GuideValues.ToArray();
+        mTopRuler.SetGuideColors(guidelineColor, guideTextColor);
+        mLeftRuler.SetGuideColors(guidelineColor, guideTextColor);
     }
 }

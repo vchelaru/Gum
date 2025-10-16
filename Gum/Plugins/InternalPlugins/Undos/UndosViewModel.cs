@@ -36,6 +36,10 @@ namespace Gum.Plugins.Undos
             }
         }
 
+        public int GetIndexOfCurrent() => _historyItems.LastOrDefault(x => x.UndoOrRedo is UndoOrRedo.Undo) is { } current
+            ? _historyItems.IndexOf(current)
+            : -1;
+
         void RefreshHistoryItems()
         {
             var elementHistory = _undoManager.CurrentElementHistory;

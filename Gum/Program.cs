@@ -1,17 +1,23 @@
-﻿using System;
+using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Reflection;
 using Gum.Services;
+using Gum.Settings;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -57,14 +63,18 @@ namespace Gum
 
             await host.StartAsync().ConfigureAwait(true);
 
-            App app = new()
-            {
-                MainWindow = host.Services.GetRequiredService<MainWindow>()
-            };
+            App app = new();
+            app.InitializeComponent();
+            app.Startup += (_, _) =>
+                host.Services.GetRequiredService<IMessenger>().Send<ApplicationStartupMessage>();
+            app.MainWindow = host.Services.GetRequiredService<MainWindow>();
             app.MainWindow.Visibility = Visibility.Visible;
-
-
+                
             await Initialize(host.Services).ConfigureAwait(true);
+            MigrateAppSettings(host);
+
+            host.Services.GetRequiredService<IThemingService>().ApplyInitialTheme();
+
 
             if (CommandLineManager.Self.ShouldExitImmediately)
             {
@@ -129,11 +139,28 @@ namespace Gum
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
         }
+
+        private static void MigrateAppSettings(IHost host)
+        {
+            GeneralSettingsFile legacySettings = ProjectManager.Self.GeneralSettingsFile;
+
+            var config = host.Services.GetRequiredService<IConfiguration>();
+
+            var themeSection = config.GetSection(nameof(ThemeSettings));
+            if (!themeSection.Exists())
+            { 
+                var settings = host.Services.GetRequiredService<IWritableOptions<ThemeSettings>>();
+                settings.Update(settings => ThemeSettings.MigrateExplicitLegacyColors(legacySettings, settings));
+            }
+        }
     }
+
 
     static class RunResponseCodes
     {
         public const int Success = 0;
         public const int UnexpectedFailure = 1;
     }
+
+    public record ApplicationStartupMessage;
 }
