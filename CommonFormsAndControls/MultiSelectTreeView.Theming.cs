@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -10,8 +11,24 @@ namespace CommonFormsAndControls;
 public partial class MultiSelectTreeView
 {
     #region Appearance
-
-    public Color HoverBgColor { get; set; } = Color.Transparent;
+    private float _dpiScale = 1f;
+    private int _cachedFontHeight;
+    private readonly Dictionary<(Color color, float width), Pen> _penCache = new();
+    private SolidBrush? _rowBgBrushHot;
+    private SolidBrush? _rowBgBrushNormal;
+    private Color _hoverBgColor = Color.Transparent;
+    public Color HoverBgColor
+    {
+        get => _hoverBgColor;
+        set
+        {
+            if (value == _hoverBgColor) return;
+            _hoverBgColor = value;
+            _rowBgBrushHot?.Dispose();
+            _rowBgBrushHot = new SolidBrush(_hoverBgColor);
+            Invalidate(); // redraw to reflect new hover color
+        }
+    }
     public Color SelectedBorderColor { get; set; } = Color.Blue;
 
     public Color ChevronColor { get; set; } = Color.Empty; // empty -> follows ForeColor
@@ -93,10 +110,21 @@ public partial class MultiSelectTreeView
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
+
+        using (var g = CreateGraphics())
+            _dpiScale = g.DpiX / 96f;
+
+        _cachedFontHeight = Font.Height;
+
         const int TVM_SETEXTENDEDSTYLE = 0x1100 + 44;
         const int TVS_EX_DOUBLEBUFFER = 0x0004;
         SendMessage(Handle, TVM_SETEXTENDEDSTYLE, (IntPtr)TVS_EX_DOUBLEBUFFER, (IntPtr)TVS_EX_DOUBLEBUFFER);
+
+        RebuildBrushes();
     }
+
+    private int DpiScaleI(int v) => (int)Math.Round(v * _dpiScale);
+    private float DpiScaleF(float v) => v * _dpiScale;
 
     protected override CreateParams CreateParams
     {
@@ -156,7 +184,20 @@ public partial class MultiSelectTreeView
     }
 
     #region Drawing
-
+    private Pen GetPen(Color color, float widthPx)
+    {
+        // widthPx should already be DPI-scaled
+        var key = (color, widthPx);
+        if (_penCache.TryGetValue(key, out var pen)) return pen;
+        pen = new Pen(color, Math.Max(1f, widthPx))
+        {
+            StartCap = LineCap.Round,
+            EndCap = LineCap.Round,
+            LineJoin = LineJoin.Round
+        };
+        _penCache[key] = pen;
+        return pen;
+    }
     protected override void OnDrawNode(DrawTreeNodeEventArgs e)
     {
         e.DrawDefault = false;
@@ -164,129 +205,91 @@ public partial class MultiSelectTreeView
         bool isSelected = SelectedNodes.Contains(e.Node);
         bool isHot = e.Node == _hotNode;
 
+        var g = e.Graphics;
+        // Keep defaults – no expensive high-quality modes
+        // g.SmoothingMode = SmoothingMode.None; // (default is fine)
+
+        // Full-row rect once
         Rectangle row = new Rectangle(0, e.Bounds.Top, ClientSize.Width, e.Bounds.Height);
-        Color rowBg = isHot ? HoverBgColor : BackColor;
 
-        using (SolidBrush b = new SolidBrush(rowBg))
-        {
-            e.Graphics.FillRectangle(b, row);
-        }
+        // Fill background with cached brushes (no new brush per node)
+        var rowBrush = isHot ? _rowBgBrushHot : _rowBgBrushNormal;
+        if (rowBrush != null)
+            g.FillRectangle(rowBrush, row);
 
-        Rectangle rChevron;
-        Rectangle rState;
-        Rectangle rImage;
-        Rectangle rText;
+        // Single layout pass
+        Rectangle rChevron, rState, rImage, rText;
         LayoutNodeRow(e.Node, row, out rChevron, out rState, out rImage, out rText);
 
-        if (e.Node.Nodes.Count > 0)
+        // Chevron (no SmoothingScope, no per-call pen allocations)
+        if (!rChevron.IsEmpty)
         {
-            Rectangle box = GetChevronRect(e.Node);
-            if (!box.IsEmpty)
-            {
-                using (SmoothingScope scope = new SmoothingScope(e.Graphics))
-                {
-                    Color color = (e.Node == _hotChevronNode)
-                        ? SelectedBorderColor
-                        : (ChevronColor.IsEmpty ? ForeColor : ChevronColor);
+            var color = (e.Node == _hotChevronNode) ? SelectedBorderColor :
+                        (ChevronColor.IsEmpty ? ForeColor : ChevronColor);
 
-                    using (Pen pen = new Pen(color, Math.Max(1f, DpiScale(ChevronThickness))))
-                    {
-                        pen.StartCap = LineCap.Round;
-                        pen.EndCap = LineCap.Round;
-                        pen.LineJoin = LineJoin.Round;
+            // Width already DPI-scaled once
+            float w = Math.Max(1f, DpiScaleF(ChevronThickness));
+            var pen = GetPen(color, w);
 
-                        if (e.Node.IsExpanded)
-                        {
-                            DrawChevronDown(e.Graphics, pen, box);
-                        }
-                        else
-                        {
-                            DrawChevronRight(e.Graphics, pen, box);
-                        }
-                    }
-                }
-            }
+            if (e.Node.IsExpanded)
+                DrawChevronDownFast(g, pen, rChevron);
+            else
+                DrawChevronRightFast(g, pen, rChevron);
         }
 
-        if (!rState.IsEmpty)
+        // State image – GDI path is fast
+        if (!rState.IsEmpty && StateImageList != null &&
+            e.Node.StateImageIndex >= 0 && e.Node.StateImageIndex < StateImageList.Images.Count)
         {
-            StateImageList.Draw(e.Graphics, rState.Location, e.Node.StateImageIndex);
+            StateImageList.Draw(g, rState.Location, e.Node.StateImageIndex);
         }
 
-        if (!rImage.IsEmpty)
+        // Node image – use ImageList.Draw only. No per-node quality switches.
+        if (!rImage.IsEmpty && ImageList != null)
         {
             int idx = e.Node.ImageIndex;
             if (idx < 0 && !string.IsNullOrEmpty(e.Node.ImageKey))
-            {
                 idx = ImageList.Images.IndexOfKey(e.Node.ImageKey);
-            }
+
             if (idx >= 0 && idx < ImageList.Images.Count)
-            {
-
-                var img = ImageList.Images[idx];
-
-                // If you want a fallback when attrs aren't ready:
-                if (ImageAttributes == null)
-                {
-                    // Fallback: normal draw
-                    ImageList.Draw(e.Graphics, rImage.Location, idx);
-                }
-                else
-                {
-                    // Tinted draw — respects ForeColor (including alpha) via your cached ImageAttributes
-                    var oldCQ = e.Graphics.CompositingQuality; e.Graphics.CompositingQuality = CompositingQuality.HighQuality;
-                    var oldIM = e.Graphics.InterpolationMode; e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-                    var oldPO = e.Graphics.PixelOffsetMode; e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
-
-                    e.Graphics.DrawImage(img, rImage, 0, 0, img.Width, img.Height, GraphicsUnit.Pixel);
-
-                    e.Graphics.CompositingQuality = oldCQ;
-                    e.Graphics.InterpolationMode = oldIM;
-                    e.Graphics.PixelOffsetMode = oldPO;
-                }
-            }
+                ImageList.Draw(g, rImage.Location, idx);
         }
 
+        // Text – TextRenderer is already the fast path
         TextRenderer.DrawText(
-            e.Graphics,
+            g,
             e.Node.Text,
             e.Node.NodeFont ?? Font,
             rText,
             ForeColor,
             Color.Transparent,
-            TextFormatFlags.NoClipping | TextFormatFlags.GlyphOverhangPadding | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter);
+            TextFormatFlags.NoClipping |
+            TextFormatFlags.GlyphOverhangPadding |
+            TextFormatFlags.EndEllipsis |
+            TextFormatFlags.VerticalCenter);
 
         if (isSelected)
         {
-            using (Pen p = new Pen(SelectedBorderColor))
-            {
-                e.Graphics.DrawRectangle(p, Rectangle.Inflate(row, -1, -1));
-            }
+            // 1px cached pen
+            var pen = GetPen(SelectedBorderColor, 1f);
+            var rr = Rectangle.Inflate(row, -1, -1);
+            g.DrawRectangle(pen, rr);
         }
 
         if (_hotDropNode == e.Node && _dropKind != DropKind.None)
         {
-            using (Pen pen = new Pen(SelectedBorderColor, Math.Max(2f, DpiScale(2f))))
+            // Keep this light – thin pen only, no AA
+            var pen = GetPen(SelectedBorderColor, Math.Max(2f, DpiScaleF(2f)));
+            switch (_dropKind)
             {
-                switch (_dropKind)
-                {
-
-                    //note: because we are taking over node-drop externally, and "before/after"
-                    // is not supported by that, we'll just forward the visuals to "into"
-                    case DropKind.Before:
-                        //e.Graphics.DrawLine(pen, 0, e.Bounds.Top, ClientSize.Width, e.Bounds.Top);
-                        //break;
-                    case DropKind.After:
-                        //e.Graphics.DrawLine(pen, 0, e.Bounds.Bottom - 1, ClientSize.Width, e.Bounds.Bottom - 1);
-                        //break;
-                    case DropKind.Into:
-                        using (Pen p = new Pen(Color.FromArgb(160, SelectedBorderColor), 1f))
-                        {
-                            Rectangle rr = Rectangle.Inflate(new Rectangle(0, e.Bounds.Top, ClientSize.Width, e.Bounds.Height), -1, -1);
-                            e.Graphics.DrawRectangle(p, rr);
-                        }
-                        break;
-                }
+                case DropKind.Into:
+                    using (var pThin = new Pen(Color.FromArgb(160, SelectedBorderColor), 1f))
+                    {
+                        Rectangle rr = Rectangle.Inflate(new Rectangle(0, e.Bounds.Top, ClientSize.Width, e.Bounds.Height), -1, -1);
+                        g.DrawRectangle(pThin, rr);
+                    }
+                    break;
+                    // Before/After visuals removed per your comment
             }
         }
     }
@@ -349,19 +352,6 @@ public partial class MultiSelectTreeView
         }
     }
 
-    private float DpiScale(float value)
-    {
-        using (Graphics g = CreateGraphics())
-        {
-            return value * (g.DpiX / 96f);
-        }
-    }
-
-    private int DpiScaleI(int v)
-    {
-        return (int)Math.Round(DpiScale(v));
-    }
-
     private sealed class SmoothingScope : IDisposable
     {
         private readonly Graphics _g;
@@ -384,6 +374,13 @@ public partial class MultiSelectTreeView
 
     #region BaseOverrides
 
+
+    protected override void OnBackColorChanged(EventArgs e)
+    {
+        base.OnBackColorChanged(e);
+        RebuildBrushes();
+    }
+
     private partial bool MouseUpOverride()
     {
         _dragCandidateNode = null;
@@ -396,18 +393,35 @@ public partial class MultiSelectTreeView
         return false;
     }
 
-    protected override void OnForeColorChanged(EventArgs e)
-    {
-        ImageAttributes = GetAttrs(ForeColor);
-        base.OnForeColorChanged(e);
-    }
-
     protected override void OnFontChanged(EventArgs e)
     {
-        Indent = (int)DpiScale(ChevronBoxSize);
         base.OnFontChanged(e);
+        _cachedFontHeight = Font.Height;
+        Indent = DpiScaleI(ChevronBoxSize);
     }
 
+    // If you support per-monitor DPI, also recompute _dpiScale on WM_DPICHANGED.
+    // Otherwise this suffices.
+
+    protected override void OnForeColorChanged(EventArgs e)
+    {
+        base.OnForeColorChanged(e);
+        // If you really need tinted icons, build a tinted ImageList *here* once.
+        // ImageAttributes = GetAttrs(ForeColor);  // remove per-node tinting path below
+        RebuildBrushes();
+    }
+    private void RebuildBrushes()
+    {
+        _rowBgBrushNormal?.Dispose();
+        _rowBgBrushHot?.Dispose();
+
+        _rowBgBrushNormal = new SolidBrush(BackColor);
+        _rowBgBrushHot = new SolidBrush(HoverBgColor);
+    }
+    protected override void OnPaintBackground(PaintEventArgs pevent)
+    {
+        // base.OnPaintBackground(pevent); // comment out to reduce extra fill if safe
+    }
     private System.Drawing.Imaging.ImageAttributes GetAttrs(Color color)
     {
         var cm = new System.Drawing.Imaging.ColorMatrix(new float[][]
@@ -887,5 +901,43 @@ public partial class MultiSelectTreeView
         if (data.GetDataPresent(typeof(TreeNode)))
             return new[] { (TreeNode)data.GetData(typeof(TreeNode)) };
         return Array.Empty<TreeNode>();
+    }
+
+    private static void DrawChevronRightFast(Graphics g, Pen pen, Rectangle r)
+    {
+        int s = Math.Min(r.Width, r.Height);
+        int x0 = r.Left + (r.Width - s) / 2;
+        int y0 = r.Top + (r.Height - s) / 2;
+
+        float mx = s * 0.40f;
+        float my = s * 0.28f;
+
+        float leftX = x0 + mx;
+        float midX = x0 + s - mx;
+        float midY = y0 + s * 0.50f;
+        float upY = y0 + my;
+        float downY = y0 + s - my;
+
+        g.DrawLine(pen, leftX, upY, midX, midY);
+        g.DrawLine(pen, leftX, downY, midX, midY);
+    }
+
+    private static void DrawChevronDownFast(Graphics g, Pen pen, Rectangle r)
+    {
+        int s = Math.Min(r.Width, r.Height);
+        int x0 = r.Left + (r.Width - s) / 2;
+        int y0 = r.Top + (r.Height - s) / 2;
+
+        float mx = s * 0.28f;
+        float my = s * 0.40f;
+
+        float midX = x0 + s * 0.50f;
+        float topY = y0 + my;
+        float botY = y0 + s - my;
+        float leftX = x0 + mx;
+        float rightX = x0 + s - mx;
+
+        g.DrawLine(pen, leftX, topY, midX, botY);
+        g.DrawLine(pen, rightX, topY, midX, botY);
     }
 }
