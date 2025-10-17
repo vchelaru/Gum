@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
@@ -62,22 +64,30 @@ namespace Gum
             Locator.Register(host.Services);
 
             await host.StartAsync().ConfigureAwait(true);
+            IMessenger messenger = host.Services.GetRequiredService<IMessenger>();
 
             App app = new();
             app.InitializeComponent();
-            app.Startup += (_, _) =>
-                host.Services.GetRequiredService<IMessenger>().Send<ApplicationStartupMessage>();
+
+            app.Startup += (_, _) => messenger.Send<ApplicationStartupMessage>();
+            app.Exit += (_, _) =>
+            {
+                List<Action> teardownActions = [];
+                messenger.Send(new ApplicationTeardownMessage(teardownActions));
+                foreach (Action action in teardownActions)
+                {
+                    action();
+                }
+            };
+
             app.MainWindow = host.Services.GetRequiredService<MainWindow>();
             app.MainWindow.Visibility = Visibility.Visible;
                 
-            await Initialize(host.Services).ConfigureAwait(true);
-            MigrateAppSettings(host);
-
-            host.Services.GetRequiredService<IThemingService>().ApplyInitialTheme();
-
+            await InitializeGum(host.Services).ConfigureAwait(true);
 
             if (CommandLineManager.Self.ShouldExitImmediately)
             {
+                await host.StopAsync().ConfigureAwait(true);
                 return RunResponseCodes.Success;
             }
 
@@ -87,7 +97,7 @@ namespace Gum
             return RunResponseCodes.Success;
         }
 
-        private static async Task Initialize(IServiceProvider services)
+        private static async Task InitializeGum(IServiceProvider services)
         {
             TypeManager.Self.Initialize();
 
@@ -138,19 +148,27 @@ namespace Gum
             };
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
+
+            MigrateAppSettings(services);
+            services.GetRequiredService<IThemingService>().ApplyInitialTheme();
         }
 
-        private static void MigrateAppSettings(IHost host)
+        private static void MigrateAppSettings(IServiceProvider services)
         {
             GeneralSettingsFile legacySettings = ProjectManager.Self.GeneralSettingsFile;
+            IConfiguration config = services.GetRequiredService<IConfiguration>();
 
-            var config = host.Services.GetRequiredService<IConfiguration>();
+            ApplyIfNotExists<ThemeSettings>(x => ThemeSettings.MigrateExplicitLegacyColors(legacySettings, x));
+            ApplyIfNotExists<LayoutSettings>(x => LayoutSettings.MigrateLegacyLayout(legacySettings, x));
 
-            var themeSection = config.GetSection(nameof(ThemeSettings));
-            if (!themeSection.Exists())
-            { 
-                var settings = host.Services.GetRequiredService<IWritableOptions<ThemeSettings>>();
-                settings.Update(settings => ThemeSettings.MigrateExplicitLegacyColors(legacySettings, settings));
+            void ApplyIfNotExists<T>(Action<T> applyAction) where T : class, new()
+            {
+                if (config.GetSection(typeof(T).Name) is { } section &&
+                    section.Exists())
+                {
+                    return;
+                }
+                services.GetRequiredService<IWritableOptions<T>>().Update(applyAction);
             }
         }
     }
@@ -163,4 +181,9 @@ namespace Gum
     }
 
     public record ApplicationStartupMessage;
+
+    public class ApplicationTeardownMessage(List<Action> teardownList)
+    {
+        public void OnTearDown(Action action) => teardownList.Add(action);
+    }
 }

@@ -23,6 +23,7 @@
   SnapsToDevicePixels="True"
   Top="{Binding Top, Mode=TwoWay}"
   UseLayoutRounding="True"
+  WindowStartupLocation="CenterScreen"
   WindowState="{Binding WindowState, Mode=TwoWay}"
   WindowStyle="None"
   mc:Ignorable="d">
