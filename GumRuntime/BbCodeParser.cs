@@ -10,8 +10,14 @@ namespace Gum.Wireframe;
 
 public struct TagInfo
 {
+    /// <summary>
+    /// The index that this tag begins in text that includes all bbcode tags
+    /// </summary>
     public int StartIndex;
     public int Count;
+    /// <summary>
+    /// The index that this tag begins after tags have been stripped from the text.
+    /// </summary>
     public int StartStrippedIndex;
     public string Argument;
 
@@ -40,7 +46,7 @@ public struct FoundTag
 
     public override string ToString()
     {
-        return $"{Name}";
+        return Open.ToString();
     }
 }
 
@@ -93,7 +99,12 @@ public static class BbCodeParser
                 }
                 else if(activeTags.Count > 0)
                 {
-                    Tag foundTag = activeTags.FirstOrDefault(
+                    // October 17, 2025 - need to do
+                    // LastOrDefault so we pop the last 
+                    // index of this tag rather that the 
+                    // first, or else they do not stack properly.
+                    //Tag foundTag = activeTags.FirstOrDefault(
+                    Tag foundTag = activeTags.LastOrDefault(
                         item => item.Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase));
                     if(foundTag.Name == tag.Name)
                     {
