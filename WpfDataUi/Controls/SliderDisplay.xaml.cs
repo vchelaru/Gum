@@ -188,21 +188,22 @@ namespace WpfDataUi.Controls
             MinValueText.Text = (this.MinValue * DisplayedValueMultiplier).ToString();
             MaxValueText.Text = (this.MaxValue * DisplayedValueMultiplier).ToString();
 
-            // Ticks are hidden by styling (I believe) but I don't know enough
-            // about styling (or didn't spend enough time) to solve the problem
-            //this.Slider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight;
-            //this.Slider.TickFrequency = (this.MaxValue - this.MinValue) / 4.0;
+            // Ticks are only visible if the styles defined in these below files
+            // Contain a Slider with at least 1 TickBar entry
+            // ..\Gum\Gum\Themes\Frb.Styles.Defaults.xaml
+            // ..\FlatRedBall\FRBDK\Glue\Glue\Themes\Frb.Styles.xaml
+            this.Slider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight;
+            this.Slider.TickFrequency = (this.MaxValue - this.MinValue) / 4.0;
 
-            //this.Slider.Ticks.Clear();
+            this.Slider.Ticks.Clear();
 
-            //var range = this.MaxValue - this.MinValue;
-            //var quarterRange = range / 4.0;
-            //this.Slider.Ticks.Add(MinValue);
-            //this.Slider.Ticks.Add(MinValue + quarterRange);
-            //this.Slider.Ticks.Add(MinValue + 2 * quarterRange);
-            //this.Slider.Ticks.Add(MinValue + 3 * quarterRange);
-            //this.Slider.Ticks.Add(MaxValue);
-
+            var range = this.MaxValue - this.MinValue;
+            var quarterRange = range / 4.0;
+            this.Slider.Ticks.Add(MinValue);
+            this.Slider.Ticks.Add(MinValue + quarterRange);
+            this.Slider.Ticks.Add(MinValue + 2 * quarterRange);
+            this.Slider.Ticks.Add(MinValue + 3 * quarterRange);
+            this.Slider.Ticks.Add(MaxValue);
         }
 
         public void SetToDefault()
