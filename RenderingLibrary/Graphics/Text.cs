@@ -1472,11 +1472,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     // made public for auto tests:
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color)
     {
-        List<StyledSubstring> substrings = new List<StyledSubstring>();
+        List<StyledSubstring> substrings = new ();
         int currentSubstringStart = 0;
 
-        List<InlineVariable> currentlyActiveInlines = new List<InlineVariable>();
-        List<InlineVariable> inlinesForThisCharacter = new List<InlineVariable>();
+        List<InlineVariable> currentlyActiveInlines = new ();
+        List<InlineVariable> inlinesForThisCharacter = new ();
 
         int relativeLetterIndex = 0;
         for (; relativeLetterIndex < lineOfText.Length; relativeLetterIndex++)
@@ -1520,7 +1520,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
                 currentSubstringStart = relativeLetterIndex;
 
                 var styledSubstring = new StyledSubstring();
-                styledSubstring.Variables.AddRange(inlinesForThisCharacter);
+                foreach(var item in inlinesForThisCharacter)
+                {
+                    var existing = styledSubstring.Variables.FirstOrDefault(x => x.VariableName == item.VariableName);
+                    if(existing != null)
+                    {
+                        // This allows new variables to replace old ones:
+                        styledSubstring.Variables.Remove(existing);
+                    }
+                    styledSubstring.Variables.Add(item);
+                }
                 styledSubstring.StartIndex = relativeLetterIndex;
 
                 if (relativeLetterIndex == lineOfText.Length - 1)

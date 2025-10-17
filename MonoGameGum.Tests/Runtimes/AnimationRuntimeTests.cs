@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
-public class AnimationRuntimeTests
+public class AnimationRuntimeTests : BaseTestClass
 {
     [Fact]
     public void GetStateToSet_ShouldInterpolateKeyframes()
