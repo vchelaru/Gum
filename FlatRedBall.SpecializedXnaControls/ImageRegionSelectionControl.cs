@@ -461,6 +461,18 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
     private void HandlePanning()
     {
+        var cameraWidth = this.Camera.ClientWidth / this.Camera.Zoom;
+        var cameraHeight = this.Camera.ClientHeight / this.Camera.Zoom;
+
+        this.Camera.X = Math.Max(Camera.X, -cameraWidth / 2.0f);
+        this.Camera.Y = Math.Max(Camera.Y, -cameraHeight / 2.0f);
+
+        if(CurrentTexture != null)
+        {
+            this.Camera.X = Math.Min(Camera.X, CurrentTexture.Width + -cameraWidth / 2f);
+            this.Camera.Y = Math.Min(Camera.Y, CurrentTexture.Height + -cameraHeight / 2f);
+        }
+
         if (Panning != null)
         {
             Panning();
