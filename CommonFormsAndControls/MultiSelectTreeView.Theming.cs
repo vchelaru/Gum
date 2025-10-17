@@ -747,6 +747,8 @@ public partial class MultiSelectTreeView
         const int WM_LBUTTONDOWN = 0x0201;
         const int WM_LBUTTONUP = 0x0202;
         const int WM_LBUTTONDBLCLK = 0x0203;
+        const int TV_FIRST = 0x1100;
+        const int TVM_ENSUREVISIBLE = TV_FIRST + 20;
 
         switch (m.Msg)
         {
@@ -862,6 +864,21 @@ public partial class MultiSelectTreeView
 
                     break;
                 }
+            case TVM_ENSUREVISIBLE:
+                {
+                    if (m.Msg == TVM_ENSUREVISIBLE)
+                    {
+                        // lParam = HTREEITEM
+                        var node = NodeFromHandle(m.LParam);
+                        if (node != null)
+                        {
+                            EnsureVisibleRequested?.Invoke(this, new EnsureVisibleEventArgs(node));
+                            // swallow native scrolling since we handle it via custom scroller
+                            return true;
+                        }
+                    }
+                    break;
+                }
         }
 
         return false;
@@ -893,6 +910,39 @@ public partial class MultiSelectTreeView
 
         return false;
     }
+
+    #region EnsureVisibility
+    public sealed class EnsureVisibleEventArgs : EventArgs
+    {
+        public EnsureVisibleEventArgs(TreeNode node) => Node = node;
+        public TreeNode Node { get; }
+    }
+
+    // In MultiSelectTreeView:
+    public event EventHandler<EnsureVisibleEventArgs>? EnsureVisibleRequested;
+
+    // Cache the private NodeFromHandle(IntPtr) method once
+    private Func<IntPtr, TreeNode?>? _nodeFromHandle;
+
+    private TreeNode? NodeFromHandle(IntPtr hItem)
+    {
+        if (_nodeFromHandle == null)
+        {
+            var mi = typeof(TreeView).GetMethod("NodeFromHandle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (mi != null)
+            {
+                _nodeFromHandle = (Func<IntPtr, TreeNode?>)mi.CreateDelegate(typeof(Func<IntPtr, TreeNode?>), this);
+            }
+            else
+            {
+                return null;
+            }
+        }
+        return _nodeFromHandle(hItem);
+    }
+
+
+    #endregion
 
     private static TreeNode[] ExtractDraggedNodes(IDataObject data)
     {
