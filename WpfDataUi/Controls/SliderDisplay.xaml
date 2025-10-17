@@ -42,6 +42,7 @@
                 MinWidth="60"
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
+                IsMoveToPointEnabled="True"
                 PreviewMouseLeftButtonUp="Slider_MouseLeftButtonUp"
                 Thumb.DragCompleted="Slider_DragCompleted"
                 ValueChanged="Slider_ValueChanged" />
