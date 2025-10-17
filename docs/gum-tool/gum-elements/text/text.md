@@ -34,12 +34,6 @@ Any other `Width Unit` can be used to make the text wrap. For example, setting `
 
 For a deeper dive into Width Units, see the [Width Units page](../general-properties/width-units.md).
 
-{% hint style="warning" %}
-The current version of Gum only wraps text on space and newline characters. Future versions of Gum will introduce support for breaking words apart if they extend beyond the bounds of the Text instance.
-
-![](<../../../.gitbook/assets/22_13 47 15.png>)
-{% endhint %}
-
 ## Using BBCode for Inline Styling
 
 Gum text supports inline styling using BBCode-like syntax. To add inline styling, surround text with variable assignment tags as shown in the following screenshot:
