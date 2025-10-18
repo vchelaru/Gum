@@ -86,13 +86,13 @@ public class Program
 
 Run the game to see a functional button that responds to clicks.
 
-<figure><img src="../.gitbook/assets/10_07 36 10.gif" alt=""><figcaption><p>Button in raylib responding to clicks</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/10_07 36 10.gif" alt=""><figcaption><p>Button in raylib responding to clicks</p></figcaption></figure>
 
 ## Next Steps
 
 Once you have Gum working in your project, you can begin working with the controls that Gum offers.
 
-Most of the Forms controls (such as Button, ListBox, and CheckBox) are available in raylib. You can see more details by looking at the [Forms Controls](monogame/tutorials/code-only-gum-forms-tutorial/forms-controls.md) tutorial.
+Most of the Forms controls (such as Button, ListBox, and CheckBox) are available in raylib. You can see more details by looking at the [Forms Controls](../monogame/tutorials/code-only-gum-forms-tutorial/forms-controls.md) tutorial.
 
 {% hint style="warning" %}
 As of August 2025 the raylib implementation is missing a few controls. Specifically the controls that are not present are:

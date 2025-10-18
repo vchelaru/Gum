@@ -382,7 +382,6 @@ internal static class CustomSetPropertyOnRenderable
     }
 
 
-
     public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
     {
         var managers = iSystemManagers as SystemManagers;
