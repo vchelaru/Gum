@@ -1132,12 +1132,33 @@
           </Style>
         </ControlTemplate.Resources>
         <Grid>
+          <Grid.RowDefinitions>
+            <!--  top ticks  -->
+            <RowDefinition Height="Auto" />
+            <!--  track  -->
+            <RowDefinition Height="Auto" />
+            <!--  bottom ticks  -->
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <TickBar
+            x:Name="TopTicks"
+            Grid.Row="0"
+            Height="8"
+            Fill="{TemplateBinding Foreground}"
+            IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+            Maximum="{TemplateBinding Maximum}"
+            Minimum="{TemplateBinding Minimum}"
+            Placement="Top"
+            TickFrequency="{TemplateBinding TickFrequency}"
+            Ticks="{TemplateBinding Ticks}"
+            Visibility="Collapsed" />
           <Border
+            Grid.Row="1"
             Height="4"
             Background="{TemplateBinding Background}"
             CornerRadius="4"
             Opacity="0.4" />
-          <Track x:Name="PART_Track">
+          <Track x:Name="PART_Track" Grid.Row="1">
             <Track.DecreaseRepeatButton>
               <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource SliderRepeatButtonStyle}" />
             </Track.DecreaseRepeatButton>
@@ -1183,7 +1204,43 @@
               </Thumb>
             </Track.Thumb>
           </Track>
+          <TickBar
+            x:Name="BottomTicks"
+            Grid.Row="2"
+            Height="8"
+            Fill="{TemplateBinding Foreground}"
+            IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+            Maximum="{TemplateBinding Maximum}"
+            Minimum="{TemplateBinding Minimum}"
+            Placement="Bottom"
+            TickFrequency="{TemplateBinding TickFrequency}"
+            Ticks="{TemplateBinding Ticks}" />
         </Grid>
+        <ControlTemplate.Triggers>
+          <!--  show top ticks  -->
+          <Trigger Property="TickPlacement" Value="TopLeft">
+            <Setter TargetName="TopTicks" Property="Visibility" Value="Visible" />
+            <Setter TargetName="BottomTicks" Property="Visibility" Value="Collapsed" />
+          </Trigger>
+
+          <!--  show bottom ticks  -->
+          <Trigger Property="TickPlacement" Value="BottomRight">
+            <Setter TargetName="TopTicks" Property="Visibility" Value="Collapsed" />
+            <Setter TargetName="BottomTicks" Property="Visibility" Value="Visible" />
+          </Trigger>
+
+          <!--  show both  -->
+          <Trigger Property="TickPlacement" Value="Both">
+            <Setter TargetName="TopTicks" Property="Visibility" Value="Visible" />
+            <Setter TargetName="BottomTicks" Property="Visibility" Value="Visible" />
+          </Trigger>
+
+          <!--  hide all  -->
+          <Trigger Property="TickPlacement" Value="None">
+            <Setter TargetName="TopTicks" Property="Visibility" Value="Collapsed" />
+            <Setter TargetName="BottomTicks" Property="Visibility" Value="Collapsed" />
+          </Trigger>
+        </ControlTemplate.Triggers>
       </ControlTemplate>
     </Style.Resources>
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Primary}" />
