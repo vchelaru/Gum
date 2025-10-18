@@ -34,7 +34,7 @@ internal class AnimationFilePathService
         }
     }
 
-    public FilePath GetAbsoluteAnimationFileNameFor(ElementSave elementSave)
+    public FilePath? GetAbsoluteAnimationFileNameFor(ElementSave elementSave)
     {
         var fullPathXmlForElement = elementSave.GetFullPathXmlFile();
 

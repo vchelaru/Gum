@@ -136,7 +136,7 @@ public class MainStateAnimationPlugin : PluginBase
         {
             var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
 
-            if (fileName.Exists())
+            if (fileName?.Exists() == true)
             {
                 pluginTab.Show();
             }

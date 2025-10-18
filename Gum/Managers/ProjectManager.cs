@@ -676,7 +676,7 @@ namespace Gum
             }
         }
 
-        internal void SaveProject(bool forceSaveContainedElements = false)
+        internal bool SaveProject(bool forceSaveContainedElements = false)
         {
             bool succeeded = false;
 
@@ -766,6 +766,8 @@ namespace Gum
                     }
                 }
             }
+
+            return succeeded;
         }
 
 
