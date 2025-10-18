@@ -38,6 +38,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
     public ListBoxRuntime ResolutionBox { get; protected set; }
     public CheckBoxRuntime FullScreenCheckbox { get; protected set; }
     public ButtonStandardRuntime DetectResolutionsButton { get; protected set; }
+    public ButtonStandardRuntime ClearResolutionsButton { get; protected set; }
     public ContainerRuntime ContainerInstance3 { get; protected set; }
     public DividerHorizontalRuntime DividerInstance1 { get; protected set; }
     public LabelRuntime MusicLabel { get; protected set; }
@@ -135,6 +136,7 @@ partial class DemoScreenGumRuntime : Gum.Wireframe.BindableGue
         ResolutionBox = this.GetGraphicalUiElementByName("ResolutionBox") as GumFormsSample.Components.ListBoxRuntime;
         FullScreenCheckbox = this.GetGraphicalUiElementByName("FullScreenCheckbox") as GumFormsSample.Components.CheckBoxRuntime;
         DetectResolutionsButton = this.GetGraphicalUiElementByName("DetectResolutionsButton") as GumFormsSample.Components.ButtonStandardRuntime;
+        ClearResolutionsButton = this.GetGraphicalUiElementByName("ClearResolutionsButton") as GumFormsSample.Components.ButtonStandardRuntime;
         ContainerInstance3 = this.GetGraphicalUiElementByName("ContainerInstance3") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         DividerInstance1 = this.GetGraphicalUiElementByName("DividerInstance1") as GumFormsSample.Components.DividerHorizontalRuntime;
         MusicLabel = this.GetGraphicalUiElementByName("MusicLabel") as GumFormsSample.Components.LabelRuntime;

@@ -66,6 +66,13 @@ partial class DemoScreenGumRuntime
             ShowPopup();
         };
 
+        ClearResolutionsButton.Click += (not, used) =>
+        {
+            var listBox = this.ResolutionBox.FormsControl;
+
+            listBox.Items.Clear();
+        };
+
 
         var gamepad = FormsUtilities.Gamepads[0];
         //if(gamepad.IsConnected)
