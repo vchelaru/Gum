@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GumProjectSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CustomProperties />
+  <FontRanges>32-126,160-255</FontRanges>
+  <FontSpacingVertical>1</FontSpacingVertical>
+  <FontSpacingHorizontal>1</FontSpacingHorizontal>
+  <UseFontCharacterFile>false</UseFontCharacterFile>
+  <Version>0</Version>
+  <DefaultCanvasWidth>800</DefaultCanvasWidth>
+  <DefaultCanvasHeight>600</DefaultCanvasHeight>
+  <ShowOutlines>true</ShowOutlines>
+  <ShowCanvasOutline>true</ShowCanvasOutline>
+  <ShowRuler>true</ShowRuler>
+  <ShowCheckerBackground>true</ShowCheckerBackground>
+  <TextureFilter>Point</TextureFilter>
+  <ConvertVariablesOnUnitTypeChange>false</ConvertVariablesOnUnitTypeChange>
+  <RestrictToUnitValues>true</RestrictToUnitValues>
+  <RestrictFileNamesForAndroid>false</RestrictFileNamesForAndroid>
+  <Guides />
+  <ShowLocalizationInGum>true</ShowLocalizationInGum>
+  <CurrentLanguageIndex>0</CurrentLanguageIndex>
+  <ComponentReference>
+    <Name>TestComponent</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <StandardElementReference>
+    <Name>Text</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Sprite</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Container</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>ColoredRectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Circle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Rectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Polygon</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>NineSlice</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Component</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Arc</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Canvas</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>ColoredCircle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>LottieAnimation</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>RoundedRectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Svg</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <SinglePixelTextureTop xsi:nil="true" />
+  <SinglePixelTextureLeft xsi:nil="true" />
+  <SinglePixelTextureRight xsi:nil="true" />
+  <SinglePixelTextureBottom xsi:nil="true" />
+</GumProjectSave>
