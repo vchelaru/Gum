@@ -13,14 +13,33 @@ using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Services;
+using Gum.Settings;
+using Microsoft.Extensions.Options;
 using Control = System.Windows.Forms.Control;
 
 namespace Gum.Controls;
 
-public class MainPanelViewModel : ViewModel, ITabManager
+public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<ApplicationTeardownMessage>
 {
-    private readonly IUiSettingsService _uiSettingsService;
-    
+    private readonly IWritableOptions<LayoutSettings> _layoutSettings;
+
+    public double LeftColumnWidth
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
+
+    public double CenterColumnWidth
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
+    public double BottomRightHeight
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
+
     private readonly Func<FrameworkElement, PluginTab> _pluginTabFactory;
     private ObservableCollection<PluginTab> PluginTabs { get; } = [];
 
@@ -37,11 +56,16 @@ public class MainPanelViewModel : ViewModel, ITabManager
         set => Set(value);
     }
 
-    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger)
+    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
     {
+        _layoutSettings = layoutSettings;
         _pluginTabFactory = pluginTabFactory;
         messenger.RegisterAll(this);
-        
+
+        LeftColumnWidth = layoutSettings.CurrentValue.MainTabDimensions.LeftColumnWidth;
+        CenterColumnWidth = layoutSettings.CurrentValue.MainTabDimensions.CenterColumnWidth;
+        BottomRightHeight = layoutSettings.CurrentValue.MainTabDimensions.BottomRightHeight;
+
         IsToolsVisible = true;
         PluginTabs.CollectionChanged += PluginTabsOnCollectionChanged;
         
@@ -100,4 +124,23 @@ public class MainPanelViewModel : ViewModel, ITabManager
     }
     
     public void RemoveTab(PluginTab tab) => PluginTabs.Remove(tab);
+
+    private void SaveLayoutSettings()
+    {
+        _layoutSettings.Update(l =>
+        {
+            l.MainTabDimensions =
+                new MainTabDimensions
+                {
+                    LeftColumnWidth = LeftColumnWidth,
+                    CenterColumnWidth = CenterColumnWidth,
+                    BottomRightHeight = BottomRightHeight
+                };
+        });
+    }
+
+    void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message)
+    {
+        message.OnTearDown(SaveLayoutSettings);
+    }
 }

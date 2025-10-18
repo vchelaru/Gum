@@ -57,6 +57,7 @@ internal static class GumBuilder
             {
                 services.AddOptions();
                 services.ConfigureWritable<ThemeSettings>(context.Configuration, nameof(ThemeSettings), settingsPath);
+                services.ConfigureWritable<LayoutSettings>(context.Configuration, nameof(LayoutSettings), settingsPath);
                 services.AddGum();
             });
     }
