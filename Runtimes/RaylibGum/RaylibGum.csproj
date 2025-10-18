@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
+    <Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" Link="Forms\Controls\ComboBox.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
     <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+    <Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
+    <Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

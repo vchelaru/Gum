@@ -64,9 +64,16 @@ public class Text : InvisibleRenderable, IText
     }
 
     static Text()
-
     {
         GraphicalUiElement.UpdateFontFromProperties += HandleUpdateFontValues;
+    }
+
+    public Text() : this(null)
+    {
+    }
+
+    public Text(ISystemManagers? managers)
+    {
     }
 
     private static void HandleUpdateFontValues(IText text, GraphicalUiElement element)

@@ -19,8 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests", "MonoGameGum.Tests\MonoGameGum.Tests.csproj", "{2DE63E97-9A29-456F-DE64-4A6ECD619252}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "raylib\RaylibGum\RaylibGum.csproj", "{906F65C0-4E97-45CD-A935-1E9832686820}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalLibraries", "ExternalLibraries", "{8A971C48-D5E3-433D-B669-E805D6C7F319}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Maui", "Runtimes\SkiaGum.Maui\SkiaGum.Maui.csproj", "{451E6BB0-1DE2-AB36-9951-A335EA552C11}"
@@ -34,6 +32,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGumShapes", "Runtimes\MonoGameGumShapes\MonoGameGumShapes.csproj", "{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Shapes.Tests", "Tests\MonoGameGum.Shapes.Tests\MonoGameGum.Shapes.Tests.csproj", "{E43273A6-C44C-49A4-9301-5D5250688229}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "Runtimes\RaylibGum\RaylibGum.csproj", "{299C14B8-2DF8-94FB-4395-0E49C58874BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,18 +129,6 @@ Global
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|x86.ActiveCfg = Release|Any CPU
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|x86.Build.0 = Release|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Debug|x86.Build.0 = Debug|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release_No_Diagnostics|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release_No_Diagnostics|Any CPU.Build.0 = Release_No_Diagnostics|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release_No_Diagnostics|x86.ActiveCfg = Release_No_Diagnostics|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release_No_Diagnostics|x86.Build.0 = Release_No_Diagnostics|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|Any CPU.Build.0 = Release|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|x86.ActiveCfg = Release|Any CPU
-		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|x86.Build.0 = Release|Any CPU
 		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -213,6 +201,18 @@ Global
 		{E43273A6-C44C-49A4-9301-5D5250688229}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E43273A6-C44C-49A4-9301-5D5250688229}.Release|x86.ActiveCfg = Release|Any CPU
 		{E43273A6-C44C-49A4-9301-5D5250688229}.Release|x86.Build.0 = Release|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Debug|x86.Build.0 = Debug|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release_No_Diagnostics|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release_No_Diagnostics|Any CPU.Build.0 = Release_No_Diagnostics|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release_No_Diagnostics|x86.ActiveCfg = Release_No_Diagnostics|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release_No_Diagnostics|x86.Build.0 = Release_No_Diagnostics|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|x86.ActiveCfg = Release|Any CPU
+		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

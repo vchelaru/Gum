@@ -13,7 +13,7 @@ using static Raylib_cs.Raylib;
 namespace Gum.Renderables;
 public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
 {
-    public Texture2D Texture { get; set; }
+    public Texture2D? Texture { get; set; }
     public Raylib_cs.Rectangle? SourceRectangle
     { 
         get; 
@@ -60,9 +60,9 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         get; set;
     } = Color.White;
 
-    public float? TextureWidth => Texture.Width;
+    public float? TextureWidth => Texture?.Width;
 
-    public float? TextureHeight => Texture.Height;
+    public float? TextureHeight => Texture?.Height;
 
     public float AspectRatio => TextureHeight > 0 && TextureWidth != null ?
         (float)TextureWidth.Value / TextureHeight.Value : 1;
@@ -71,7 +71,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
 
     public override void Render(ISystemManagers managers)
     {
-        if (!Visible) return;
+        if (!Visible || Texture == null) return;
 
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
@@ -79,17 +79,22 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         if(SourceRectangle == null)
         {
             // todo - support scaling
-            DrawTextureEx(Texture, new Vector2(x, y), -Rotation, 1, Color);
+            DrawTextureEx(Texture.Value, new Vector2(x, y), -Rotation, 1, Color);
         }
         else
         {
             var destinationRectangle = new Rectangle(
                 x, y, this.Width, this.Height);
 
-            DrawTexturePro(Texture, SourceRectangle.Value, destinationRectangle, Vector2.Zero, -Rotation, Color);
+            DrawTexturePro(Texture.Value, SourceRectangle.Value, destinationRectangle, Vector2.Zero, -Rotation, Color);
         }
 
 
 
+    }
+
+    public Sprite(Texture2D? texture = null)
+    {
+        this.Texture = texture;
     }
 }

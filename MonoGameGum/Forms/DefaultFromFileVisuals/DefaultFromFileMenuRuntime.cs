@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 
+#if !RAYLIB
+
 internal class DefaultFromFileMenuRuntime : InteractiveGue
 {
     public DefaultFromFileMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
@@ -26,3 +28,4 @@ internal class DefaultFromFileMenuRuntime : InteractiveGue
     public Menu FormsControl => FormsControlAsObject as Menu;
 
 }
+#endif

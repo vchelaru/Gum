@@ -1,10 +1,15 @@
 ﻿using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if RAYLIB
+using Gum.GueDeriving;
+#else
+using MonoGameGum.GueDeriving;
+#endif
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 internal class DefaultFromFilePanelRuntime : ContainerRuntime
