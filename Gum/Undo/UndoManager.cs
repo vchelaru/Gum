@@ -411,18 +411,46 @@ public class UndoManager : IUndoManager
         return undoLock;
     }
 
-    public void PerformUndo()
+
+
+    
+    public bool CanUndo()
     {
-        ElementHistory elementHistory = null;
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
-        if (_selectedState.SelectedElement != null && mUndos.ContainsKey(_selectedState.SelectedElement))
-        {
-            elementHistory = mUndos[_selectedState.SelectedElement];
-        }
+        return CanUndo(elementHistory);
+    }
 
+    public bool CanUndo(ElementHistory? elementHistory)
+    {
         if (elementHistory != null && elementHistory.Actions.Count != 0 && elementHistory.UndoIndex > -1)
         {
-            var isLast = elementHistory.UndoIndex == elementHistory.Actions.Count - 1;
+            return true;
+        }
+
+        return false;
+    }
+
+    private ElementHistory? GetValidUndosForElement(ElementSave? elementSave)
+    {
+        ElementHistory? elementHistory = null;
+
+        if (elementSave != null && mUndos.ContainsKey(elementSave))
+        {
+            elementHistory = mUndos[elementSave];
+        }
+
+        return elementHistory;
+    }
+
+    public void PerformUndo()
+    {
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
+
+        if (CanUndo(elementHistory)) 
+        { 
+
+            var isLast = elementHistory!.UndoIndex == elementHistory.Actions.Count - 1;
 
             if(isLast)
             {
@@ -519,15 +547,28 @@ public class UndoManager : IUndoManager
         //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
     }
 
-    public void PerformRedo()
+    public bool CanRedo()
     {
-        ElementHistory elementHistory = null;
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
-        if (_selectedState.SelectedElement != null && mUndos.ContainsKey(_selectedState.SelectedElement))
+        UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
+
+        return CanRedo(elementHistory, redoSnapshot);
+    }
+
+    public bool CanRedo(ElementHistory? elementHistory, UndoSnapshot? redoSnapshot)
+    {
+        if (redoSnapshot != null)
         {
-            elementHistory = mUndos[_selectedState.SelectedElement];
+            return true;
         }
-        UndoSnapshot redoSnapshot = null;
+
+        return false;
+    }
+
+    private UndoSnapshot? GetRedoSnapshot(ElementHistory elementHistory)
+    {
+        UndoSnapshot? redoSnapshot = null;
 
         if (elementHistory != null)
         {
@@ -540,10 +581,17 @@ public class UndoManager : IUndoManager
             }
         }
 
-        if(redoSnapshot != null)
+        return redoSnapshot;
+    }
+
+    public void PerformRedo()
+    {
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
+
+        UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
+
+        if(CanRedo(elementHistory, redoSnapshot))
         {
-
-
             ElementSave toApplyTo = _selectedState.SelectedElement;
 
             ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, 
@@ -570,11 +618,7 @@ public class UndoManager : IUndoManager
 
             DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, 
                 shouldRefreshBehaviorView);
-
-
         }
-
-
     }
 
     public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
