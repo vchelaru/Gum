@@ -188,22 +188,35 @@ namespace WpfDataUi.Controls
             MinValueText.Text = (this.MinValue * DisplayedValueMultiplier).ToString();
             MaxValueText.Text = (this.MaxValue * DisplayedValueMultiplier).ToString();
 
-            // Ticks are only visible if the styles defined in these below files
-            // Contain a Slider with at least 1 TickBar entry
-            // ..\Gum\Gum\Themes\Frb.Styles.Defaults.xaml
-            // ..\FlatRedBall\FRBDK\Glue\Glue\Themes\Frb.Styles.xaml
-            this.Slider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight;
-            this.Slider.TickFrequency = (this.MaxValue - this.MinValue) / 4.0;
-
             this.Slider.Ticks.Clear();
 
             var range = this.MaxValue - this.MinValue;
-            var quarterRange = range / 4.0;
-            this.Slider.Ticks.Add(MinValue);
-            this.Slider.Ticks.Add(MinValue + quarterRange);
-            this.Slider.Ticks.Add(MinValue + 2 * quarterRange);
-            this.Slider.Ticks.Add(MinValue + 3 * quarterRange);
-            this.Slider.Ticks.Add(MaxValue);
+            //this.Slider.TickFrequency = 0; // This removes the automatic min/max ticks
+            if (range > 0)
+            {
+                // Vic C October 18, 2025
+                // I burned a bunch of time 
+                // trying to figure out how to
+                // get ticks to only show at 25%,
+                // 50%, and 75%. I couldn't get it
+                // to work. More info here:
+                // https://github.com/vchelaru/Gum/pull/1583
+                // For now, ticks are removed.
+                //// Ticks are only visible if the styles defined in these below files
+                //// Contain a Slider with at least 1 TickBar entry
+                //// ..\Gum\Gum\Themes\Frb.Styles.Defaults.xaml
+                //// ..\FlatRedBall\FRBDK\Glue\Glue\Themes\Frb.Styles.xaml
+                //this.Slider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight;
+
+                //var quarterRange = range / 4.0;
+
+                //this.Slider.Ticks = new System.Windows.Media.DoubleCollection
+                //{
+                //    MinValue + quarterRange,
+                //    MinValue + 2*quarterRange,
+                //    MinValue + 3*quarterRange,
+                //};
+            }
         }
 
         public void SetToDefault()
