@@ -8,10 +8,11 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Schema;
+using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class NineSlice : InvisibleRenderable, ITextureCoordinate
+public class NineSlice : RenderableBase, ITextureCoordinate
 {
     public Texture2D? Texture { get; set; }
 
@@ -68,6 +69,66 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
     { 
         get => false;
         set {} 
+    }
+
+    public int Alpha
+    {
+        get
+        {
+            return Color.A;
+        }
+        set
+        {
+            if (value != Color.A)
+            {
+                Color = new Color(Color.R, Color.G, Color.B, (byte)value);
+            }
+        }
+    }
+
+    public int Red
+    {
+        get
+        {
+            return Color.R;
+        }
+        set
+        {
+            if (value != Color.R)
+            {
+                Color = new Color((byte)value, Color.G, Color.B, Color.A);
+            }
+        }
+    }
+
+    public int Green
+    {
+        get
+        {
+            return Color.G;
+        }
+        set
+        {
+            if (value != Color.G)
+            {
+                Color = new Color(Color.R, (byte)value, Color.B, Color.A);
+            }
+        }
+    }
+
+    public int Blue
+    {
+        get
+        {
+            return Color.B;
+        }
+        set
+        {
+            if (value != Color.B)
+            {
+                Color = new Color(Color.R, Color.G, (byte)value, Color.A);
+            }
+        }
     }
 
     public Color Color
