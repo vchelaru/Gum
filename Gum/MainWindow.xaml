@@ -28,12 +28,25 @@
   WindowStyle="None"
   mc:Ignorable="d">
   <Border
-    Margin="0,0,0,0"
     Background="{DynamicResource Frb.Brushes.Background}"
     BorderBrush="{DynamicResource Frb.Brushes.Border}"
     BorderThickness="1"
     ClipToBounds="True"
     CornerRadius="10">
+    <Border.Style>
+      <Style TargetType="Border">
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+            <!--
+              On maximized we do -7 and then +7 below to compensate for oddities with custom chrome:
+              https://stackoverflow.com/questions/13422666/wpf-borderless-window-issues-aero-snap-maximizing
+              https://www.programmersought.com/article/82767298877/
+            -->
+            <Setter Property="Margin" Value="-7" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </Border.Style>
     <Grid>
       <Grid.Style>
         <Style TargetType="Grid">
