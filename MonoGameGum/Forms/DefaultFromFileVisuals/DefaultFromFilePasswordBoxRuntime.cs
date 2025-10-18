@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 
+#if !RAYLIB
 public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
 {
     public DefaultFromFilePasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
@@ -26,3 +27,4 @@ public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
     public PasswordBox FormsControl => FormsControlAsObject as PasswordBox;
 
 }
+#endif

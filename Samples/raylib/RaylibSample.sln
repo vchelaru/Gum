@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumTest", "GumTest.csproj",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{5B23E538-252F-4AD1-9149-541654225D7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "..\..\raylib\RaylibGum\RaylibGum.csproj", "{6807EC07-BC95-45CD-AB76-7E322C8D7A45}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "..\..\Runtimes\RaylibGum\RaylibGum.csproj", "{6807EC07-BC95-45CD-AB76-7E322C8D7A45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

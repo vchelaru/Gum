@@ -193,6 +193,7 @@ public class GumService
 
         _game = game;
         RegisterRuntimeTypesThroughReflection();
+
         this.SystemManagers = systemManagers ?? new SystemManagers();
         if (systemManagers == null)
         {
@@ -202,7 +203,8 @@ public class GumService
 #endif
         }
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-        Gum.Forms.FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
+        
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
 
         Root.AddToManagers(SystemManagers);

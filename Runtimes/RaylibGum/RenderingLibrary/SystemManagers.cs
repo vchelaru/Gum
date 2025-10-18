@@ -1,4 +1,7 @@
-﻿using Gum.Wireframe;
+﻿using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
 using Raylib_cs;
 using RaylibGum.Renderables;
 using RenderingLibrary;
@@ -8,7 +11,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+
 using static Raylib_cs.Raylib;
+using Gum.Renderables;
 
 
 namespace RenderingLibrary;
@@ -38,11 +44,26 @@ public class SystemManagers : ISystemManagers
 
     public void Initialize()
     {
-        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-
-        GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
 
         Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        bool fullInstantiation = true;
+
+        if(fullInstantiation)
+        {
+            GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+
+            // raylib seems to use a resources folder, but I don't think we should make any
+            // assumptions
+            //ToolsUtilities.FileManager.RelativeDirectory = "Content/";
+
+            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
+
+            StandardElementsManager.Self.Initialize();
+
+            RegisterComponentRuntimeInstantiations();
+        }
     }
 
     public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
@@ -89,5 +110,36 @@ public class SystemManagers : ISystemManagers
     internal void Draw()
     {
         Renderer.Draw(this);
+    }
+
+    private void RegisterComponentRuntimeInstantiations()
+    {
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "ColoredRectangle",
+            () => new ColoredRectangleRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Container",
+            () => new ContainerRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "NineSlice",
+            () => new NineSliceRuntime());
+
+        //ElementSaveExtensions.RegisterGueInstantiation(
+        //    "Polygon",
+        //    () => new PolygonRuntime(systemManagers: this));
+
+        //ElementSaveExtensions.RegisterGueInstantiation(
+        //    "Rectangle",
+        //    () => new RectangleRuntime(systemManagers: this));
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Sprite",
+            () => new SpriteRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Text",
+            () => new TextRuntime(systemManagers: this));
     }
 }

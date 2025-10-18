@@ -16,6 +16,12 @@ using RenderingLibrary.Graphics;
 
 #if RAYLIB
 using RaylibGum.Input;
+using GumRuntime;
+
+using Gum.Managers;
+using Gum.Forms.DefaultFromFileVisuals;
+
+
 #else
 using  MonoGameGum.GueDeriving;
 #endif
@@ -270,5 +276,155 @@ public class FormsUtilities
     private static void UpdateGamepads(double time)
     {
         // todo
+    }
+    public static void RegisterFromFileFormRuntimeDefaults()
+    {
+#if FULL_DIAGNOSTICS
+        if (ObjectFinder.Self.GumProjectSave == null)
+        {
+            throw new InvalidOperationException("A Gum project (gumx) must be loaded and assigned to" +
+                "ObjectFinder.Self.GumProjectSave before making this call");
+        }
+#endif
+        // Some thoughts about this method:
+        // 1. We can probably be more efficient 
+        //    here by doing a single loop for categories
+        //    and behaviors rather than calling Any multiple
+        //    times.
+        // 2. I believe Gum Forms was written before behaviors
+        //    were used. Therefore a lot here use categories instead
+        //    of behaviors. New items (like Menu) are using behaviors
+        //    and old controls should proably be migrated over if we have
+        //    any conflicts.
+        foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
+        {
+            var categoryNames = component.Categories.Select(item => item.Name).ToList();
+            var behaviorNames = component.Behaviors.Select(item => item.BehaviorName).ToList();
+            if (behaviorNames.Contains("ButtonBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileButtonRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("CheckBoxBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileCheckBoxRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (categoryNames.Contains("ComboBoxCategory") || behaviorNames.Contains("ComboBoxBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("ItemsControlBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileItemsControlRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("ListBoxBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileListBoxRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("ListBoxItemBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileListBoxItemRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("MenuBehavior"))
+            {
+#if !RAYLIB
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
+#endif
+            }
+            else if (behaviorNames.Contains("MenuItemBehavior"))
+            {
+#if !RAYLIB
+
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
+#endif
+            }
+            else if (behaviorNames.Contains("PanelBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFilePanelRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("PasswordBoxBehavior"))
+            {
+#if !RAYLIB
+
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
+#endif
+            }
+            else if (behaviorNames.Contains("RadioButtonBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileRadioButtonRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("ScrollBarBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileScrollBarRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("ScrollViewerBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("SliderBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileSliderRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("SplitterBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileSplitterRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("StackPanelBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileStackPanelRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (behaviorNames.Contains("TextBoxBehavior"))
+            {
+#if !RAYLIB
+
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
+#endif
+            }
+            else if (behaviorNames.Contains("WindowBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileWindowRuntime), overwriteIfAlreadyExists: false);
+            }
+        }
     }
 }

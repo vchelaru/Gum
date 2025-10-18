@@ -47,7 +47,7 @@ public class SpriteRuntime : BindableGue
     //    }
     //}
 
-    public Texture2D Texture
+    public Texture2D? Texture
     {
         get => ContainedSprite.Texture;
         set => ContainedSprite.Texture = value;

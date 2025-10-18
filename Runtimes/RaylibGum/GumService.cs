@@ -2,8 +2,10 @@
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Gum.Managers;
 using Gum.Renderables;
 using Gum.Wireframe;
+using GumRuntime;
 using Raylib_cs;
 using RaylibGum.Input;
 using RenderingLibrary;
@@ -14,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ToolsUtilities;
 
 namespace RaylibGum;
 public class GumService
@@ -36,6 +39,8 @@ public class GumService
 
     public Cursor Cursor => FormsUtilities.Cursor;
 
+    public SystemManagers SystemManagers { get; private set; }
+
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 
@@ -47,11 +52,18 @@ public class GumService
             defaultVisualsVersion: defaultVisualsVersion);
     }
 
+    public GumProjectSave Initialize(string gumprojectFile)
+    {
+        return InitializeInternal(
+            gumProjectFile: gumprojectFile,
+            defaultVisualsVersion: DefaultVisualsVersion.V2)!;
+    }
+
     bool hasBeenInitialized = false;
 
-    void InitializeInternal(string? gumProjectFile = null,
+    GumProjectSave? InitializeInternal(string? gumProjectFile = null,
         SystemManagers? systemManagers = null,
-        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
         if (hasBeenInitialized)
         {
@@ -62,8 +74,16 @@ public class GumService
         //_game = game;
         // RegisterRuntimeTypesThroughReflection();
 
-        SystemManagers.Default = new SystemManagers();
-        ISystemManagers.Default = SystemManagers.Default;
+        this.SystemManagers = systemManagers ?? new SystemManagers();
+
+        if (systemManagers == null)
+        {
+            SystemManagers.Default = this.SystemManagers;
+#if NET6_0_OR_GREATER
+            ISystemManagers.Default = this.SystemManagers;
+#endif
+        }
+
         SystemManagers.Default.Initialize();
 
         FormsUtilities.InitializeDefaults(defaultVisualsVersion: defaultVisualsVersion);
@@ -79,7 +99,43 @@ public class GumService
 
         GumProjectSave? gumProject = null;
 
-        // todo - allow loading gum projects eventually
+        if (!string.IsNullOrEmpty(gumProjectFile))
+        {
+
+            gumProject = GumProjectSave.Load(gumProjectFile);
+            ObjectFinder.Self.GumProjectSave = gumProject;
+            gumProject.Initialize();
+            Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+            var absoluteFile = gumProjectFile;
+            if (FileManager.IsRelative(absoluteFile))
+            {
+                absoluteFile = FileManager.MakeAbsolute(gumProjectFile);
+            }
+
+            var gumDirectory = FileManager.GetDirectory(absoluteFile);
+
+            FileManager.RelativeDirectory = gumDirectory;
+
+            ApplyStandardElementDefaults(gumProject);
+        }
+
+        return gumProject;
+    }
+
+    private void ApplyStandardElementDefaults(GumProjectSave gumProject)
+    {
+        var current = gumProject.StandardElements.Find(item => item.Name == "ColoredRectangle");
+        ColoredRectangleRuntime.DefaultWidth = GetFloat("Width");
+        ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
+
+        current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
+
+        // October 18, 2025 - this isn't functional in MonoGame either
+        //NineSliceRuntime.DefaultSourceFile = GetString("SourceFile");
+
+        float GetFloat(string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
+        string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
     List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
@@ -117,9 +173,9 @@ public static class GraphicalUiElementExtensionMethods
 
 public static class ElementSaveExtensionMethods
 {
-    //public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
-    //{
-    //    return elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-    //}
+    public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers = null)
+    {
+        return elementSave.ToGraphicalUiElement(systemManagers ?? SystemManagers.Default, addToManagers: false);
+    }
 
 }

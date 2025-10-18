@@ -7,21 +7,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Renderables
+#if RAYLIB
+namespace Gum.Renderables;
+#else
+namespace MonoGameGum.Renderables;
+#endif
+public static class RenderableCreator
 {
-    public static class RenderableCreator
+    public static IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
     {
-        public static IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
-        {
 
-            IRenderable containedObject = null;
+        IRenderable containedObject = null;
 
-            containedObject = RuntimeObjectCreator.TryHandleAsBaseType(type, systemManagers as SystemManagers);
+        containedObject = RuntimeObjectCreator.TryHandleAsBaseType(type, systemManagers as SystemManagers);
 
 
-            // todo - have a custom method...
+        // todo - have a custom method...
 
-            return containedObject;
-        }
+        return containedObject;
     }
 }
