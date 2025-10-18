@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Renderables;
 using Gum.Wireframe;
 using MonoGameGum.Localization;
@@ -26,6 +27,10 @@ internal static class CustomSetPropertyOnRenderable
         if (renderableIpso is Text asText)
         {
             handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
+        }
+        else if (renderableIpso is Sprite)
+        {
+            handled = TrySetPropertyOnSprite(renderableIpso, graphicalUiElement, propertyName, value);
         }
         else if (renderableIpso is NineSlice)
         {
@@ -178,6 +183,80 @@ internal static class CustomSetPropertyOnRenderable
         }
     }
 
+    private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+        var sprite = renderableIpso as Sprite;
+
+        if (propertyName == "SourceFile")
+        {
+            var asString = value as String;
+            handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
+
+        }
+        else if (propertyName == nameof(Sprite.Alpha))
+        {
+            int valueAsInt = (int)value;
+            sprite.Alpha = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Red))
+        {
+            int valueAsInt = (int)value;
+            sprite.Red = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Green))
+        {
+            int valueAsInt = (int)value;
+            sprite.Green = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Blue))
+        {
+            int valueAsInt = (int)value;
+            sprite.Blue = valueAsInt;
+            handled = true;
+        }
+        //else if (propertyName == nameof(Sprite.Color))
+        //{
+        //    if (value is System.Drawing.Color drawingColor)
+        //    {
+        //        sprite.Color = drawingColor;
+        //    }
+        //    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+        //    {
+        //        sprite.Color = xnaColor.ToSystemDrawing();
+
+        //    }
+        //    handled = true;
+        //}
+
+        //else if (propertyName == "Blend")
+        //{
+        //    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+        //    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+        //    sprite.BlendState = valueAsXnaBlend;
+
+        //    handled = true;
+        //}
+        //else if (propertyName == nameof(Sprite.Animate))
+        //{
+        //    sprite.Animate = (bool)value;
+        //    handled = true;
+        //}
+        //else if (propertyName == nameof(Sprite.CurrentChainName))
+        //{
+        //    sprite.CurrentChainName = (string)value;
+        //    graphicalUiElement.UpdateTextureValuesFrom(sprite);
+        //    graphicalUiElement.UpdateLayout();
+        //    handled = true;
+        //}
+
+        return handled;
+    }
 
     private static bool TrySetPropertyOnText(Text asText, GraphicalUiElement gue, string propertyName, object value)
     {
@@ -209,9 +288,99 @@ internal static class CustomSetPropertyOnRenderable
                 asText.Font = font;
                 handled = true;
             }
+            else if(value is string fontString)
+            {
+                var fontFromGum = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Font>(fontString);
+                asText.Font = fontFromGum;
+                handled = true;
+            }
         }
-            return handled;
+        return handled;
     }
+
+    public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
+    {
+        bool handled;
+
+        var loaderManager =
+            global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (string.IsNullOrEmpty(value))
+        {
+            sprite.Texture = null;
+
+            graphicalUiElement.UpdateLayout();
+        }
+        //else if (value.EndsWith(".achx"))
+        //{
+        //    AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+
+        //    sprite.AnimationChains = animationChainList;
+
+        //    sprite.RefreshCurrentChainToDesiredName();
+
+        //    sprite.UpdateToCurrentAnimationFrame();
+
+        //    graphicalUiElement.UpdateTextureValuesFrom(sprite);
+        //    handled = true;
+        //}
+        else
+        {
+            if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
+            {
+                value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+                value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+            }
+
+            // see if an atlas exists:
+            //var atlasedTexture = loaderManager.TryLoadContent<AtlasedTexture>(value);
+
+            //if (atlasedTexture != null)
+            //{
+            //    graphicalUiElement.UpdateLayout();
+            //}
+            //else
+            {
+                // We used to check if the file exists. But internally something may
+                // alias a file. Ultimately the content loader should make that decision,
+                // not the GUE
+                try
+                {
+                    sprite.Texture = loaderManager.LoadContent<Texture2D>(value);
+                }
+                catch (Exception ex)
+                // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
+                // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
+                //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
+                {
+                    if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                    {
+                        string message = $"Error setting SourceFile on Sprite";
+
+                        if (graphicalUiElement.Tag != null)
+                        {
+                            message += $" in {graphicalUiElement.Tag}";
+                        }
+                        message += $"\n{value}";
+                        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                        message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+                        if (ObjectFinder.Self.GumProjectSave == null)
+                        {
+                            message += "\nNo Gum project has been loaded";
+                        }
+
+                        throw new System.IO.FileNotFoundException(message, ex);
+                    }
+                    sprite.Texture = null;
+                }
+                graphicalUiElement.UpdateLayout();
+            }
+        }
+        handled = true;
+        return handled;
+    }
+
 
 
     public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
