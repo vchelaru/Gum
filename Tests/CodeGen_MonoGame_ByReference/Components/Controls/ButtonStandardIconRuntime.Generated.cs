@@ -21,7 +21,7 @@ partial class ButtonStandardIconRuntime : ContainerRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandardIcon", typeof(ButtonStandardIconRuntime));
     }
-    public global::MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Button;
+    public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
     {
         Enabled,
@@ -88,7 +88,7 @@ partial class ButtonStandardIconRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Button(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;

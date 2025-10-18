@@ -9,7 +9,7 @@ namespace SkiaGum.GueDeriving;
 
 public abstract class SkiaShapeRuntime : BindableGue
 {
-    protected abstract RenderableBase ContainedRenderable { get; }
+    protected abstract Renderables.RenderableShapeBase ContainedRenderable { get; }
 
     #region Solid colors
 
@@ -47,46 +47,160 @@ public abstract class SkiaShapeRuntime : BindableGue
     #region Gradient Colors
 
 
-    int Blue1 { get;set; }
+    public int Blue1
+    {
+        get => ContainedRenderable.Blue1;
+        set => ContainedRenderable.Blue1 = value;
+    }
 
-    int Green1 { get; set; }
+    public int Green1
+    {
+        get => ContainedRenderable.Green1;
+        set => ContainedRenderable.Green1 = value;
+    }
 
-    int Red1 { get; set; }
+    public int Red1
+    {
+        get => ContainedRenderable.Red1;
+        set => ContainedRenderable.Red1 = value;
+    }
+
+    public int Alpha1
+    {
+        get => ContainedRenderable.Alpha1;
+        set => ContainedRenderable.Alpha1 = value;
+    }
+
+    public SKColor Color1
+    {
+        get => new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+        set
+        {
+            Red1 = value.Red;
+            Green1 = value.Green;
+            Blue1 = value.Blue;
+            Alpha1 = value.Alpha;
+        }
+    }
 
 
-    int Blue2 { get; set; }
+    public int Blue2
+    {
+        get => ContainedRenderable.Blue2;
+        set => ContainedRenderable.Blue2 = value;
+    }
 
-    int Green2 { get; set; }
+    public int Green2
+    {
+        get => ContainedRenderable.Green2;
+        set => ContainedRenderable.Green2 = value;
+    }
 
-    int Red2 { get; set; }
+    public int Red2
+    {
+        get => ContainedRenderable.Red2;
+        set => ContainedRenderable.Red2 = value;
+    }
 
-    float GradientX1 { get; set; }
-    GeneralUnitType GradientX1Units { get; set; }
+    public int Alpha2
+    {
+        get => ContainedRenderable.Alpha2;
+        set => ContainedRenderable.Alpha2 = value;
+    }
 
-    float GradientY1 { get; set; }
-    GeneralUnitType GradientY1Units { get; set; }
+    public SKColor Color2
+    {
+        get => new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
+        set
+        {
+            Red2 = value.Red;
+            Green2 = value.Green;
+            Blue2 = value.Blue;
+            Alpha2 = value.Alpha;
+        }
+    }
 
-    float GradientX2 { get; set; }
-    float GradientY2 { get; set; }
+    public float GradientX1
+    {
+        get => ContainedRenderable.GradientX1;
+        set => ContainedRenderable.GradientX1 = value;
+    }
+    public GeneralUnitType GradientX1Units
+    {
+        get => ContainedRenderable.GradientX1Units;
+        set => ContainedRenderable.GradientX1Units = value;
+    }
+    public float GradientY1
+    {
+        get => ContainedRenderable.GradientY1;
+        set => ContainedRenderable.GradientY1 = value;
+    }
+    public GeneralUnitType GradientY1Units
+    {
+        get => ContainedRenderable.GradientY1Units;
+        set => ContainedRenderable.GradientY1Units = value;
+    }
 
-    bool UseGradient { get; set; }
+    public float GradientX2
+    {
+        get => ContainedRenderable.GradientX2;
+        set => ContainedRenderable.GradientX2 = value;
+    }
+    public GeneralUnitType GradientX2Units
+    {
+        get => ContainedRenderable.GradientX2Units;
+        set => ContainedRenderable.GradientX2Units = value;
+    }
+    public float GradientY2
+    {
+        get => ContainedRenderable.GradientY2;
+        set => ContainedRenderable.GradientY2 = value;
+    }
+    public GeneralUnitType GradientY2Units
+    {
+        get => ContainedRenderable.GradientY2Units;
+        set => ContainedRenderable.GradientY2Units = value;
+    }
 
-    bool IsEndRounded { get; set; }
+    public bool UseGradient
+    {
+        get => ContainedRenderable.UseGradient;
+        set => ContainedRenderable.UseGradient = value;
+    }
 
-    GradientType GradientType { get; set; }
+    public GradientType GradientType
+    {
+        get => ContainedRenderable.GradientType;
+        set => ContainedRenderable.GradientType = value;
+    }
 
-    float GradientInnerRadius { get; set; }
+    public float GradientInnerRadius
+    {
+        get => ContainedRenderable.GradientInnerRadius;
+        set => ContainedRenderable.GradientInnerRadius = value;
+    }
 
-    DimensionUnitType GradientInnerRadiusUnits { get; set; }
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => ContainedRenderable.GradientInnerRadiusUnits;
+        set => ContainedRenderable.GradientInnerRadiusUnits = value;
+    }
 
-    float GradientOuterRadius { get; set; }
+    public float GradientOuterRadius
+    {
+        get => ContainedRenderable.GradientOuterRadius;
+        set => ContainedRenderable.GradientOuterRadius = value;
+    }
 
-    DimensionUnitType GradientOuterRadiusUnits { get; set; }
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => ContainedRenderable.GradientOuterRadiusUnits;
+        set => ContainedRenderable.GradientOuterRadiusUnits = value;
+    }
 
 
 
     #endregion
-
 
     #region Filled/Stroke
 

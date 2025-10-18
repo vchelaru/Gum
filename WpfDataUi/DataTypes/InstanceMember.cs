@@ -22,12 +22,17 @@ namespace WpfDataUi.DataTypes
     {
         public SetPropertyCommitType CommitType { get; set; }
         public object Value { get; set; }
+        /// <summary>
+        /// Can be assigned to mark that assignment was cancelled. This can be used
+        /// by views to react to a cancelled assignment, such as by preventing futher 
+        /// processing of a value.
+        /// </summary>
         public bool IsAssignmentCancelled { get; set; }
     }
 
     #endregion
 
-    public class InstanceMember : DependencyObject
+    public class InstanceMember : DependencyObject, INotifyPropertyChanged
     {
         #region Fields
 
@@ -168,6 +173,7 @@ namespace WpfDataUi.DataTypes
                 LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
             }
             OnPropertyChanged("Value");
+            OnPropertyChanged(nameof(IsDefault));
             return result;
         }
 
@@ -183,13 +189,25 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        bool _supportsMakeDefault = true;
         /// <summary>
         /// Controls whether this InstanceMember automatically adds a 
         /// "Make Default" menu item. This defaults to true. Set this to
         /// false if you do not want "Make Default" added automatically to
         /// the right-click menu.
         /// </summary>
-        public bool SupportsMakeDefault { get; set; } = true;
+        public bool SupportsMakeDefault 
+        {
+            get => _supportsMakeDefault;
+            set
+            {
+                if(value != _supportsMakeDefault)
+                {
+                    _supportsMakeDefault = value;
+                    OnPropertyChanged(nameof(SupportsMakeDefault));
+                }
+            }
+        } 
 
         public bool IsWriteOnly 
         {
@@ -427,6 +445,7 @@ namespace WpfDataUi.DataTypes
         public void SimulateValueChanged()
         {
             OnPropertyChanged("Value");
+            OnPropertyChanged(nameof(IsDefault));
         }
 
         protected virtual void OnPropertyChanged(string propertyName)

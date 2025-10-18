@@ -20,9 +20,9 @@ partial class ScrollBarRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ScrollBar", typeof(ScrollBarRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.ScrollBar)] = typeof(ScrollBarRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.ScrollBar)] = typeof(ScrollBarRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.ScrollBar FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.ScrollBar;
+    public global::Gum.Forms.Controls.ScrollBar FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ScrollBar;
     public enum ScrollBarCategory
     {
     }
@@ -72,7 +72,7 @@ partial class ScrollBarRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.ScrollBar(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.ScrollBar(this);
         }
         UpButtonInstance = this.GetGraphicalUiElementByName("UpButtonInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ButtonIconRuntime;
         DownButtonInstance = this.GetGraphicalUiElementByName("DownButtonInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ButtonIconRuntime;

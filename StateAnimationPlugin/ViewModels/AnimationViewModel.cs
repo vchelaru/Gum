@@ -17,11 +17,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Services;
 
 namespace StateAnimationPlugin.ViewModels;
 
-public class AnimationViewModel : ViewModel
+public partial class AnimationViewModel : ViewModel
 {
     #region Fields
 
@@ -29,8 +30,6 @@ public class AnimationViewModel : ViewModel
 
     BitmapFrame mLoopBitmap;
     BitmapFrame mPlayOnceBitmap;
-
-    bool mLoops = false;
     
     private readonly ISelectedState _selectedState;
 
@@ -59,22 +58,10 @@ public class AnimationViewModel : ViewModel
         }
     }
 
-    public bool Loops => mLoops;
-
-    public BitmapFrame ButtonBitmapFrame
+    public bool Loops
     {
-        get
-        {
-            if (mLoops)
-            {
-                return mLoopBitmap;
-            }
-            else
-            {
-                return mPlayOnceBitmap;
-            }
-
-        }
+        get => Get<bool>();
+        set => Set(value);
     }
 
     public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
@@ -161,7 +148,7 @@ public class AnimationViewModel : ViewModel
     {
         AnimationViewModel toReturn = new AnimationViewModel();
         toReturn.Name = save.Name;
-        toReturn.mLoops = save.Loops;
+        toReturn.Loops = save.Loops;
 
         foreach(var eventSave in save.Events)
         {
@@ -240,7 +227,7 @@ public class AnimationViewModel : ViewModel
     {
         AnimationSave toReturn = new AnimationSave();
         toReturn.Name = this.Name;
-        toReturn.Loops = this.mLoops;
+        toReturn.Loops = this.Loops;
 
         foreach(var state in this.Keyframes)
         {
@@ -409,13 +396,10 @@ public class AnimationViewModel : ViewModel
         }
     }
 
+    [RelayCommand]
     public void ToggleLoop()
     {
-        mLoops = !mLoops;
-
-        NotifyPropertyChanged("ButtonBitmapFrame");
-
-        NotifyPropertyChanged("Loops");
+        Loops = !Loops;
     }
 
     public void SetStateAtTime(double animationTime, ElementSave element, bool defaultIfNull)
@@ -518,7 +502,7 @@ public class AnimationViewModel : ViewModel
         }
         else if (stateVmBefore != null && stateVmAfter != null)
         {
-            if (stateVmAfter.CachedCumulativeState == null ||
+            if (stateVmBefore.CachedCumulativeState == null ||
                 stateVmAfter.CachedCumulativeState == null)
             {
                 if (element != null)

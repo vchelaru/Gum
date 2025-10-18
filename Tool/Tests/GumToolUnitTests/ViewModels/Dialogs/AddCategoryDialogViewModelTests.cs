@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.ViewModels.Dialogs;
-public class AddCategoryDialogViewModelTests
+public class AddCategoryDialogViewModelTests : BaseTestClass
 {
     private readonly AutoMocker mocker;
 

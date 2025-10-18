@@ -657,44 +657,43 @@ public class SetVariableLogic
         return whyInvalid;
     }
 
-    private static bool? AskIfShouldCopy(VariableSave variable, string value)
+    private bool? AskIfShouldCopy(VariableSave variable, string value)
     {
-        // Ask the user what to do - make it relative?
-        MultiButtonMessageBox mbmb = new
-            MultiButtonMessageBox();
-
-        mbmb.StartPosition = FormStartPosition.CenterParent;
-
-        mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
-        mbmb.AddButton("Reference the file in its current location", DialogResult.OK);
-        mbmb.AddButton("Copy the file relative to the Gum project and reference the copy", DialogResult.Yes);
-
-        var dialogResult = mbmb.ShowDialog();
-
         bool? shouldCopy = false;
 
-        string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-        string targetAbsoluteFile = directory + FileManager.RemovePath(value);
-
-        if (dialogResult == DialogResult.Yes)
+        // Ask the user what to do - make it relative?
+        string message = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
+        
+        DialogChoices<string> choices = new()
         {
+            ["reference-current"] = "Reference the file in its current location",
+            ["copy-relative"] = "Copy the file relative to the Gum project and reference the copy"
+        };
+
+        string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+        
+        if (result == "copy-relative")
+        {
+            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+
             shouldCopy = true;
 
             // If the destination already exists, we gotta ask the user what they want to do.
             if (System.IO.File.Exists(targetAbsoluteFile))
             {
-                mbmb = new MultiButtonMessageBox();
-                mbmb.MessageText = "The destination file already exists.  Would you like to overwrite it?";
-                mbmb.AddButton("Yes", DialogResult.Yes);
-                mbmb.AddButton("No, use the original file", DialogResult.No);
+                message = "The destination file already exists.  Would you like to overwrite it?";
+                choices.Clear();
+                choices["yes"] = "Yes, overwrite the file";
+                choices["no"] = "No, use the original file";
 
-                var overwriteResult = mbmb.ShowDialog();
+                result = _dialogService.ShowChoices(message, choices, canCancel:true);
 
-                if (overwriteResult == DialogResult.Yes)
+                if (result == "yes")
                 {
                     shouldCopy = true;
                 }
-                else if (overwriteResult == DialogResult.No)
+                else if (result == "no")
                 {
                     shouldCopy = false;
                 }
@@ -704,7 +703,7 @@ public class SetVariableLogic
                 }
             }
         }
-        else if (dialogResult == DialogResult.OK)
+        else if (result == "reference-current")
         {
             shouldCopy = false;
         }
@@ -712,6 +711,7 @@ public class SetVariableLogic
         {
             shouldCopy = null;
         }
+
         return shouldCopy;
     }
 

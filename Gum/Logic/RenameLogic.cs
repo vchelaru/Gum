@@ -137,32 +137,29 @@ public class RenameLogic : IRenameLogic
         }
         else
         {
-            CustomizableTextInputWindow tiw = new();
-            tiw.Message = "Enter new category name";
-            tiw.Title = "New Category";
-            tiw.Width = 600;
+            string message = "Enter new category name";
+            string title = "New Category";
 
-            tiw.Result = category.Name;
+            GetUserStringOptions options = new() { InitialValue = category.Name };
             string oldName = category.Name;
             var changes = GetVariableChangesForCategoryRename(elementSave, category, oldName);
 
             if (changes.Count > 0)
             {
-                tiw.Message += "\n\nThe following variables will be affected:";
+                message += "\n\nThe following variables will be affected:";
                 foreach (var change in changes)
                 {
                     var containerDisplay = change.Container is ElementSave changeElementSave
                         ? changeElementSave.Name
                         : change.Container.ToString();
 
-                    tiw.Message += $"\n  {change.Variable.Name} in {containerDisplay}";
+                    message += $"\n  {change.Variable.Name} in {containerDisplay}";
                 }
             }
 
 
-            if (tiw.ShowDialog() is true)
+            if (_dialogService.GetUserString(message, title, options) is { } newName)
             {
-                string newName = tiw.Result;
                 RenameCategory(elementSave, category, oldName, newName, changes);
             }
         }

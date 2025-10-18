@@ -1,29 +1,29 @@
 ﻿using System;
-using System.Windows.Forms;
+using System.Windows.Controls;
 
 namespace Gum.Managers
 {
     public class OutputManager : Singleton<OutputManager>
     {
-        RichTextBox mRichTextBox;
+        TextBox mTextBox;
 
         const int MaxCharacterLength = 50000;
 
-        public void Initialize(RichTextBox richTextBox)
+        public void Initialize(TextBox textBox)
         {
-            if(richTextBox == null)
+            if(textBox == null)
             {
-                throw new ArgumentNullException(nameof(richTextBox));
+                throw new ArgumentNullException(nameof(textBox));
             }
-            mRichTextBox = richTextBox;
+            mTextBox = textBox;
         }
 
 
         public void AddOutput(string whatToAdd)
         {
-            if (mRichTextBox == null) return;
+            if (mTextBox == null) return;
 
-            string text = mRichTextBox.Text;
+            string text = mTextBox.Text;
             text += "\n[" + DateTime.Now.ToShortTimeString() + "] " + whatToAdd;
 
             if (text.Length > MaxCharacterLength)
@@ -31,13 +31,13 @@ namespace Gum.Managers
                 text = text.Substring(MaxCharacterLength / 2);
             }
 
-            mRichTextBox.Text = text;
+            mTextBox.Text = text;
             ScrollToBottom();
         }
 
         public void AddError(string whatToAdd)
         {
-            string text = mRichTextBox.Text;
+            string text = mTextBox.Text;
             text += "\n[" + DateTime.Now.ToShortTimeString() + "] ERROR:  " + whatToAdd;
 
             if (text.Length > MaxCharacterLength)
@@ -45,18 +45,18 @@ namespace Gum.Managers
                 text = text.Substring(MaxCharacterLength / 2);
             }
 
-            mRichTextBox.Text = text;
+            mTextBox.Text = text;
             ScrollToBottom();
         }
 
 
         private void ScrollToBottom()
         {
-            mRichTextBox.Select(mRichTextBox.TextLength, 0);
+            mTextBox.Select(mTextBox.Text.Length, 0);
 
             try
             {
-                mRichTextBox.ScrollToCaret();
+                mTextBox.ScrollToEnd();
             }
             catch
             {

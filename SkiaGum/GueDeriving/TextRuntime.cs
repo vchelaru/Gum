@@ -138,7 +138,7 @@ public class TextRuntime : BindableGue
         set => ContainedText.MaximumNumberOfLines = value;
     }
 
-    public new bool IsBold
+    public bool IsBold
     {
         get => mContainedText.BoldWeight > 1;
         set
@@ -177,11 +177,7 @@ public class TextRuntime : BindableGue
     //    set => ContainedText.Font = value;
     //}
 
-    // Vic asks - why do we duplicate the properties here instead of just relying on the underlying GraphicalUiElement?
-    // June 15, 2023 - because it seems like we go directly to the Text object through TextRuntime rather than the underling
-    // GUE. We could shift to using the underlying GUE but then we'd have to get rid of all properties like max number of lines, etc,
-    // and have it all go through the GUE. For now, going to remove that to fix the bug.
-    public new int FontSize
+    public int FontSize
     {
         get => ContainedText.FontSize;
         // July 10, 2023 - This is causing problems
@@ -193,8 +189,72 @@ public class TextRuntime : BindableGue
         set
         {
             ContainedText.FontSize = value;
-            base.FontSize = value;
+            UpdateToFontValues();
         }
+    }
+
+    bool useCustomFont;
+    /// <summary>
+    /// Whether to use the CustomFontFile to determine the font value. 
+    /// If false, then the font is determiend by looking for an existing
+    /// font based on:
+    /// * Font
+    /// * FontSize
+    /// * IsItalic
+    /// * IsBold
+    /// * UseFontSmoothing
+    /// * OutlineThickness
+    /// </summary>
+    public bool UseCustomFont
+    {
+        get { return useCustomFont; }
+        set { useCustomFont = value; UpdateToFontValues(); }
+    }
+
+    string customFontFile;
+    /// <summary>
+    /// Specifies the name of the custom font. This can be specified relative to
+    /// FileManager.RelativeDirectory, which is the Content folder for code-only projects,
+    /// or the folder containing the .gumx project if loading a Gum project. This should
+    /// include the .fnt extension.
+    /// </summary>
+    public string CustomFontFile
+    {
+        get { return customFontFile; }
+        set { customFontFile = value; UpdateToFontValues(); }
+    }
+
+    string font;
+    /// <summary>
+    /// The font name, such as "Arial", which is used to load fonts from 
+    /// </summary>
+    public string Font
+    {
+        get { return font; }
+        set { font = value; UpdateToFontValues(); }
+    }
+
+    bool isItalic;
+    public bool IsItalic
+    {
+        get => isItalic;
+        set { isItalic = value; UpdateToFontValues(); }
+    }
+
+    //// Not sure if we need to make this a public value, but we do need to store it
+    //// Update - yes we do need this to be public so it can be assigned in codegen:
+    //bool useFontSmoothing = true;
+    //public bool UseFontSmoothing
+    //{
+    //    get { return useFontSmoothing; }
+    //    set { useFontSmoothing = value; UpdateToFontValues(); }
+    //}
+
+    int outlineThickness;
+    public int OutlineThickness
+    {
+        get { return outlineThickness; }
+        set { outlineThickness = value; UpdateToFontValues(); }
     }
 
     public TextRuntime (bool fullInstantiation = true)

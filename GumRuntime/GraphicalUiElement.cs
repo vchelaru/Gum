@@ -325,6 +325,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
+                VisibleChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }
@@ -494,7 +495,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (mContainedObjectAsIpso == null)
             {
                 throw new NullReferenceException("This GraphicalUiElemente has not had its visual set, so it does not have a blend operation. This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
@@ -515,12 +516,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         mContainedObjectAsIpso.Render(managers);
     }
 
+    public virtual string BatchKey => mContainedObjectAsIpso?.BatchKey ?? string.Empty;
+
+    public virtual void StartBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.StartBatch(systemManagers);
+    public virtual void EndBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.EndBatch(systemManagers);
 
     Layer mLayer;
 
     public Layer Layer => mLayer;
 
-    #endregion
+#endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
     public int Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
@@ -682,7 +687,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     float stackSpacing;
     /// <summary>
     /// The number of pixels spacing between each child if this has a ChildrenLayout of 
-    /// TopToBottomStack or LeftToRightStack.
+    /// TopToBottomStack or LeftToRightStack. This has no affect on other types of ChildrenLayout, 
+    /// including AutoGridHorizontal or AutoGridVertical.
     /// </summary>
     public float StackSpacing
     {
@@ -732,7 +738,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value) || float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
             {
                 throw new Exception($"Invalid Rotation value set: {value}");
@@ -773,7 +779,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mX != value && mContainedObjectAsIpso != null)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (float.IsNaN(value))
                 {
                     throw new ArgumentException("Not a Number (NAN) not allowed");
@@ -830,7 +836,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mY != value && mContainedObjectAsIpso != null)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (float.IsNaN(value))
                 {
                     throw new ArgumentException("Not a Number (NAN) not allowed");
@@ -898,7 +904,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get => mWidth;
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsPositiveInfinity(value) ||
                 float.IsNegativeInfinity(value) ||
                 float.IsNaN(value))
@@ -952,7 +958,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mHeight != value)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (float.IsPositiveInfinity(value) ||
                     float.IsNegativeInfinity(value) ||
                     float.IsNaN(value))
@@ -979,7 +985,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get { return mParent; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (value == this)
             {
                 throw new InvalidOperationException("Cannot attach an object to itself");
@@ -1348,6 +1354,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// The width scale to apply to the texture width when using TextureAddress.DimensionsBased.
+    /// If TextureAddress.DimensionsBased is not used, this value is ignored.
+    /// </summary>
     public float TextureWidthScale
     {
         get
@@ -1363,6 +1373,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+
+    /// <summary>
+    /// The height scale to apply to the texture width when using TextureAddress.DimensionsBased.
+    /// If TextureAddress.DimensionsBased is not used, this value is ignored.
+    /// </summary>
     public float TextureHeightScale
     {
         get
@@ -1480,7 +1495,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 #endif
 
-    #endregion
+#endregion
 
     #region Events
 
@@ -1496,6 +1511,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public event EventHandler SizeChanged;
     public event EventHandler PositionChanged;
+    public event EventHandler VisibleChanged;
     public event EventHandler<ParentChangedEventArgs> ParentChanged;
 
     public class ParentChangedEventArgs
@@ -1514,18 +1530,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public static Action<IText, GraphicalUiElement> UpdateFontFromProperties;
-    public static Action<GraphicalUiElement> ThrowExceptionsForMissingFiles;
-    public static Action<IRenderableIpso, ISystemManagers> RemoveRenderableFromManagers;
-    public static Action<IRenderableIpso, ISystemManagers, Layer> AddRenderableToManagers;
-    public static Action<string, GraphicalUiElement> ApplyMarkup;
+    public static Action<IText, GraphicalUiElement>? UpdateFontFromProperties;
+    public static Action<GraphicalUiElement>? ThrowExceptionsForMissingFiles;
+    public static Action<IRenderableIpso, ISystemManagers>? RemoveRenderableFromManagers;
+    public static Action<IRenderableIpso, ISystemManagers, Layer>? AddRenderableToManagers;
+    public static Action<string, GraphicalUiElement>? ApplyMarkup;
 
     public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable =
         // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide 
         // better performance.
         SetPropertyThroughReflection;
 
-    public static Func<IRenderable, IRenderable> CloneRenderableFunction;
+    public static Func<IRenderable, IRenderable>? CloneRenderableFunction;
 
 
     #endregion
@@ -1545,7 +1561,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         Width = 32;
         Height = 32;
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (containedObject is GraphicalUiElement)
         {
             throw new InvalidOperationException("GraphicalUiElements cannot contain other GraphicalUiElements as their renderable. " +
@@ -1708,14 +1724,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             ((parentUpdateType & ParentUpdateType.IfParentHasRatioSizedChildren) == ParentUpdateType.IfParentHasRatioSizedChildren && GetIfParentHasRatioChildren())
             ;
 
-        #region Early Out - Suspended
+        #region Early Out - Suspended or invisible
 
         var asIVisible = this as IVisible;
 
         var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
         if (!isSuspended)
         {
-            isSuspended = !AreUpdatesAppliedWhenInvisible && mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false;
+            isSuspended = !AreUpdatesAppliedWhenInvisible && 
+                (mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false && this.IsInRenderTargetRecursively() == false );
         }
 
         if (isSuspended)
@@ -1724,10 +1741,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return;
         }
 
-        if (!AreUpdatesAppliedWhenInvisible)
+        if (!AreUpdatesAppliedWhenInvisible && 
+            // If this is a render target, we still want to do updates when it is invisible because
+            // it may be used by something else:
+            !this.IsRenderTarget)
         {
             var parentAsIVisible = Parent as IVisible;
-            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false)
+            if (Visible == false && parentAsIVisible?.AbsoluteVisible == false && !this.IsInRenderTargetRecursively())
             {
                 return;
             }
@@ -2179,7 +2199,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var oldWidth = mContainedObjectAsIpso.Width;
                     if (WidthUnits == DimensionUnitType.RelativeToChildren)
                     {
-                        mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                        if(MaxWidth != null)
+                        {
+                            mContainedObjectAsIpso.Width = MaxWidth.Value;
+                        }
+                        else
+                        {
+                            mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                        }
                     }
                     maxHeight = asText.WrappedTextHeight;
                     mContainedObjectAsIpso.Width = oldWidth;
@@ -3006,7 +3033,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
         }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsPositiveInfinity(parentHeight))
         {
             throw new Exception();
@@ -3196,12 +3223,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         unitType == DimensionUnitType.PercentageOfSourceFile ||
         unitType == DimensionUnitType.MaintainFileAspectRatio ||
         unitType == DimensionUnitType.ScreenPixel;
-
-
-
-
-
-
 
     private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
     {
@@ -3643,7 +3664,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private void UpdatePosition(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, bool shouldWrap, XOrY? xOrY, float parentRotation)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsPositiveInfinity(parentHeight) || float.IsNegativeInfinity(parentHeight))
         {
             throw new ArgumentException(nameof(parentHeight));
@@ -3672,7 +3693,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
         AdjustOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, xOrY, ref unitOffsetX, ref unitOffsetY);
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsNaN(unitOffsetX))
         {
             throw new Exception("Invalid unitOffsetX after AdjustOffsetsByUnits - it's NaN");
@@ -3686,7 +3707,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
         AdjustOffsetsByOrigin(isParentFlippedHorizontally, ref unitOffsetX, ref unitOffsetY);
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsNaN(unitOffsetX))
         {
             throw new Exception("Invalid unitOffsetX after AdjustOffsetsByOrigin - it's NaN");
@@ -3776,7 +3797,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
         {
             throw new Exception("Rotation cannot be negative/positive infinity");
@@ -4110,7 +4131,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var siblingsAsIpsos = parentGue.Children;
                     for (int i = 0; i < siblingsAsIpsos.Count; i++)
                     {
-                        var siblingAsGraphicalUiElement = siblingsAsIpsos[i] as GraphicalUiElement;
+                        var siblingAsGraphicalUiElement = (GraphicalUiElement)siblingsAsIpsos[i];
                         if (siblingAsGraphicalUiElement.WidthUnits == DimensionUnitType.Ratio || siblingAsGraphicalUiElement.HeightUnits == DimensionUnitType.Ratio)
                         {
                             return true;
@@ -4191,15 +4212,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // of the currentDirtyState
     }
 
-    private GraphicalUiElement GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
+    private GraphicalUiElement? GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
     {
+        IPositionedSizedObject? whatToStackAfter = null;
+        whatToStackAfterX = 0;
+        whatToStackAfterY = 0;
+
         var parentGue = this.EffectiveParentGue;
+
+        ////////////////////////////////Early Out//////////////////////////////////
+        if(parentGue == null)
+        {
+            return null;
+        }
 
         int thisIndex = 0;
 
         // We used to have a static list we were populating, but that allocates memory so we
         // now use the actual list.
-        System.Collections.IList siblings = null;
+        System.Collections.IList? siblings = null;
 
         if (this.Parent == null)
         {
@@ -4209,11 +4240,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
         }
+
+        if(siblings == null)
+        {
+            return null;
+        }
+        /////////////////////////////End Early Out/////////////////////////////////
+
         thisIndex = siblings.IndexOf(this);
 
-        IPositionedSizedObject whatToStackAfter = null;
-        whatToStackAfterX = 0;
-        whatToStackAfterY = 0;
 
         if (parentGue.StackedRowOrColumnDimensions == null)
         {
@@ -4229,7 +4264,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var index = thisIndex - 1;
             while (index > -1)
             {
-                if ((siblings[index] as IVisible).Visible)
+                if (((IVisible)siblings[index]).Visible)
                 {
                     whatToStackAfter = siblings[index] as GraphicalUiElement;
                     break;
@@ -4946,7 +4981,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public virtual void AddToManagers(ISystemManagers managers, Layer layer = null)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (managers == null)
         {
             throw new ArgumentNullException("managers cannot be null");
@@ -5025,7 +5060,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             foreach (var newItem in e.NewItems)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (newItem == null)
                 {
                     throw new InvalidOperationException($"Attempting to add a null child to {this}");
@@ -5272,7 +5307,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="propertyName">The name of the variable on this object such as X or Height. If the property is a state, then the name should be "{CategoryName}State".</param>
     /// <param name="value">The value, casted to the correct type.</param>
-    public void SetProperty(string propertyName, object value)
+    public void SetProperty(string propertyName, object? value)
     {
 
         if (mExposedVariables.ContainsKey(propertyName))
@@ -5310,7 +5345,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (this.mContainedObjectAsIpso != null)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (SetPropertyOnRenderable == null)
             {
                 throw new Exception($"{nameof(SetPropertyOnRenderable)} must be set on GraphicalUiElement");
@@ -5567,7 +5602,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // am concerned there may be other exceptions
             // being swallowed, but maybe we should push those
             // errors up and let the callers handle it.
-#if DEBUG
+#if FULL_DIAGNOSTICS
             throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}", innerException);
 #endif
         }
@@ -5645,7 +5680,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public virtual void ApplyState(DataTypes.Variables.StateSave state)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         // Dynamic states can be applied in code. It is cumbersome for the user to
         // specify the ParentContainer, especially if the state is to be reused. 
         // I'm removing this to see if it causes problems:
@@ -5756,7 +5791,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void AddCategory(DataTypes.Variables.StateSaveCategory category)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (string.IsNullOrEmpty(category.Name))
         {
             throw new ArgumentException("The category must have its Name set before being added to this");
@@ -5772,8 +5807,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         foreach (var state in list)
         {
-#if DEBUG
-            if(state.Name == null)
+#if FULL_DIAGNOSTICS
+            if (state.Name == null)
             {
                 throw new ArgumentException("One of the states being added has a null name - be sure to set the name of all states");
             }
@@ -6228,6 +6263,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+#if FRB
+    //FRB doesn't yet have a native TextRuntime - it uses codegen to create a TextRuntime.
+    // Until it switches over, these properties must be here:
+
     bool useCustomFont;
     /// <summary>
     /// Whether to use the CustomFontFile to determine the font value. 
@@ -6305,6 +6344,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get { return outlineThickness; }
         set { outlineThickness = value; UpdateToFontValues(); }
     }
+
+#endif
 
     public void UpdateFontRecursive()
     {
@@ -6477,6 +6518,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endregion
 }
 
+#region GraphicalUiElementExtensions
 public static class GraphicalUiElementExtensions
 {
 #if !FRB
@@ -6590,10 +6632,10 @@ public static class GraphicalUiElementExtensions
         return graphicalUiElement.Animations?.FirstOrDefault(item => item.Name == animationName);
     }
 
-#endif
+        
+    #endif
 }
-
-
+#endregion
 
 #region Interfaces
 

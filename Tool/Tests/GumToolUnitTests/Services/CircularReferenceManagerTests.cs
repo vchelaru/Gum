@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Services;
-public class CircularReferenceManagerTests
+public class CircularReferenceManagerTests : BaseTestClass
 {
     private readonly IFixture _fixture;
 
@@ -45,7 +45,7 @@ public class CircularReferenceManagerTests
             Name = "Element1"
         };
 
-        _objectFinder.GumProjectSave.Components.Add(element1);
+        _objectFinder.GumProjectSave!.Components.Add(element1);
 
         _sut.CanTypeBeAddedToElement(element1, "SomeType").ShouldBeTrue();
     }
@@ -58,7 +58,7 @@ public class CircularReferenceManagerTests
             Name = "Element1"
         };
 
-        _objectFinder.GumProjectSave.Components.Add(element1);
+        _objectFinder.GumProjectSave!.Components.Add(element1);
 
 
         _sut.CanTypeBeAddedToElement(element1, "Element1").ShouldBeFalse();
@@ -76,7 +76,7 @@ public class CircularReferenceManagerTests
         {
             Name = "BaseType"
         };
-        _objectFinder.GumProjectSave.Components.Add(derivedType);
+        _objectFinder.GumProjectSave!.Components.Add(derivedType);
         _objectFinder.GumProjectSave.Components.Add(baseElement);
         _sut.CanTypeBeAddedToElement(derivedType, "BaseType").ShouldBeTrue();
     }
@@ -94,7 +94,7 @@ public class CircularReferenceManagerTests
             Name = "BaseType"
         };
 
-        _objectFinder.GumProjectSave.Components.Add(derivedType);
+        _objectFinder.GumProjectSave!.Components.Add(derivedType);
         _objectFinder.GumProjectSave.Components.Add(baseElement);
         _sut.CanTypeBeAddedToElement(baseElement, "DerviedType").ShouldBeFalse();
     }
@@ -116,7 +116,7 @@ public class CircularReferenceManagerTests
             BaseType = "Second"
         });
 
-        _objectFinder.GumProjectSave.Components.Add(first);
+        _objectFinder.GumProjectSave!.Components.Add(first);
         _objectFinder.GumProjectSave.Components.Add(second);
 
         _sut.CanTypeBeAddedToElement(first, "Second").ShouldBeTrue();
@@ -140,7 +140,7 @@ public class CircularReferenceManagerTests
             BaseType = "Second"
         });
 
-        _objectFinder.GumProjectSave.Components.Add(first);
+        _objectFinder.GumProjectSave!.Components.Add(first);
         _objectFinder.GumProjectSave.Components.Add(second);
 
         _sut.CanTypeBeAddedToElement(second, "First").ShouldBeFalse("because the second is already in the first");

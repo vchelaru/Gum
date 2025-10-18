@@ -204,7 +204,7 @@ namespace RenderingLibrary.Graphics
 
         private void PreRender(IList<IRenderableIpso> renderables)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (renderables == null)
             {
                 throw new ArgumentNullException("renderables");
@@ -231,7 +231,7 @@ namespace RenderingLibrary.Graphics
 
         private void PreRender(ObservableCollection<IRenderableIpso> renderables)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (renderables == null)
             {
                 throw new ArgumentNullException("renderables");

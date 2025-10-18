@@ -24,6 +24,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.Cut, "Cut");
             Add(_hotkeyManager.Undo, "Undo");
             Add(_hotkeyManager.Redo, "Redo");
+            Add(_hotkeyManager.RedoAlt, "Redo (Alternative)");
             Add(_hotkeyManager.ReorderUp, "Reorder Up");
             Add(_hotkeyManager.ReorderDown, "Reorder Down");
             Add(_hotkeyManager.GoToDefinition, "Go to Definition");

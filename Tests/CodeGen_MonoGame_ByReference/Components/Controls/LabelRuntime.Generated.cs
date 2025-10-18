@@ -20,7 +20,7 @@ partial class LabelRuntime : global::MonoGameGum.GueDeriving.TextRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Label", typeof(LabelRuntime));
     }
-    public global::MonoGameGum.Forms.Controls.Label FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Label;
+    public global::Gum.Forms.Controls.Label FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Label;
 
     public LabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
@@ -37,7 +37,7 @@ partial class LabelRuntime : global::MonoGameGum.GueDeriving.TextRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Label(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Label(this);
         }
         CustomInitialize();
     }

@@ -17,6 +17,8 @@ public class VisualTemplate
 
     static Type[] boolTypes = new Type[2];
 
+    string? diagnosticsInfo = null;
+
     static VisualTemplate()
     {
         boolTypes[0] = typeof(bool);
@@ -26,13 +28,16 @@ public class VisualTemplate
 
     public VisualTemplate(Type type)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (typeof(GraphicalUiElement).IsAssignableFrom(type) == false)
         {
             throw new ArgumentException(
                 $"The type {type} must be derived from GraphicalUiElement (Gum Runtime usually)");
         }
+
 #endif
+
+        diagnosticsInfo = "Returns new " + type.FullName;
 
         var foundConstructor = false;
 
@@ -58,7 +63,7 @@ public class VisualTemplate
 
             var constructor = type.GetConstructor(Type.EmptyTypes);
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (constructor == null)
             {
                 throw new ArgumentException(
@@ -94,5 +99,17 @@ public class VisualTemplate
     public GraphicalUiElement CreateContent(object bindingContext, bool createFormsInternally = false)
     {
         return creationFunc(bindingContext, createFormsInternally);
+    }
+
+    public override string ToString()
+    {
+        if(diagnosticsInfo != null)
+        {
+            return diagnosticsInfo;
+        }
+        else
+        {
+            return base.ToString();
+        }
     }
 }

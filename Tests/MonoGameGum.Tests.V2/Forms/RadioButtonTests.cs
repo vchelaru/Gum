@@ -11,7 +11,7 @@ public class RadioButtonTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var radioButton = new MonoGameGum.Forms.Controls.RadioButton();
+        var radioButton = new Gum.Forms.Controls.RadioButton();
         radioButton.Visual.ShouldNotBeNull();
         (radioButton.Visual is Gum.Forms.DefaultVisuals.RadioButtonVisual).ShouldBeTrue();
     }

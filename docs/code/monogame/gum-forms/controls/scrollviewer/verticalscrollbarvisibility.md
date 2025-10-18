@@ -12,6 +12,5 @@ VerticalScrollBarVisibility controls the visibility behavior of the vertical Scr
 
 The following code sets the visibility to never show:
 
-```csharp
-ScrollViewerInstance.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-```
+<pre class="language-csharp"><code class="lang-csharp"><strong>ScrollViewerInstance.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+</strong></code></pre>

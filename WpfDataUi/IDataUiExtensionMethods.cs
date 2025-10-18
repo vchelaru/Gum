@@ -8,7 +8,7 @@ namespace WpfDataUi;
 
 // This class lets us inspect the Click event for equality so we only have to replace items if they really do differ.
 // By doing this, Refresh calls can be much faster:
-class MenuItemExposedClick : MenuItem
+public class MenuItemExposedClick : MenuItem
 {
     public IDataUi Owner { get; set; }
 
@@ -290,12 +290,16 @@ public static class IDataUiExtensionMethods
 
     public static void ForceRefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
     {
-        contextMenu?.Items.Clear();
+        if(contextMenu == null)
+        {
+            return;
+        }
+        contextMenu.Items.Clear();
 
         var shouldAddMakeDefault = dataUi.InstanceMember == null ||
             dataUi.InstanceMember.SupportsMakeDefault;
 
-        if(shouldAddMakeDefault)
+        if(shouldAddMakeDefault  && contextMenu != null)
         {
             var makeDefault = new MenuItemExposedClick();
             makeDefault.Header = "Make Default";

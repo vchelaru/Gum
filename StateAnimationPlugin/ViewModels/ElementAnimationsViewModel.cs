@@ -317,61 +317,42 @@ public class ElementAnimationsViewModel : ViewModel
 
     private void HandleRenameAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
-        TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Enter new animation name:";
-        tiw.Result = SelectedAnimation.Name;
+        string message = "Enter new animation name:";
 
-        var dialogResult = tiw.ShowDialog();
-
-        if (dialogResult == System.Windows.Forms.DialogResult.OK)
+        GetUserStringOptions options = new()
         {
-            string whyInvalid;
-            if (!_nameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
-            {
-                _dialogService.ShowMessage(whyInvalid);
-            }
-            else
-            {
-                var oldAnimationName = SelectedAnimation.Name;
-                SelectedAnimation.Name = tiw.Result;
+            InitialValue = SelectedAnimation.Name,
+            Validator = v =>
+                _nameValidator.IsAnimationNameValid(v, Animations, out string whyInvalid) ? null : whyInvalid,
+        };
 
-                StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
-                    SelectedAnimation, 
-                    oldAnimationName, Animations, Element);   
-            }
+        if (_dialogService.GetUserString(message, null, options) is { } result)
+        {
+            var oldAnimationName = SelectedAnimation.Name;
+            SelectedAnimation.Name = result;
+
+            StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+                SelectedAnimation, 
+                oldAnimationName, Animations, Element);
         }
     }
 
     private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
     {
-        TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Set desired animation length (in seconds):";
-        tiw.Result = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture);
-
-        var dialogResult = tiw.ShowDialog();
-
-        if (dialogResult == System.Windows.Forms.DialogResult.OK)
+        string message = "Set desired animation length (in seconds):";
+        GetUserStringOptions options = new()
         {
-            float value = 0;
+            InitialValue = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture),
+            Validator = v =>
+                float.TryParse(v, out float value) && value > 0
+                    ? null
+                    : "Please enter a valid number greater than 0"
+        };
 
-            var didParse = float.TryParse(tiw.Result, out value);
-
-            string errorMessage = null;
-
-            if(!didParse)
-            {
-                errorMessage = "Please enter a valid number";
-            }
-            if(errorMessage == null && value < 0)
-            {
-                errorMessage = "Value must be greater than 0";
-            }
-
-            if(errorMessage != null)
-            {
-                _dialogService.ShowMessage(errorMessage);
-            }
-            else if(SelectedAnimation.Length != 0)
+        if (_dialogService.GetUserString(message, null, options) is { } result)
+        {
+            float value = float.Parse(result);
+            if(SelectedAnimation.Length != 0)
             {
                 var multiplier = value / SelectedAnimation.Length;
 
@@ -481,7 +462,7 @@ public class ElementAnimationsViewModel : ViewModel
                 }
                 else
                 {
-                    TogglePlayStop();
+                    IsPlaying = !IsPlaying;
                 }
             }
         }
@@ -489,30 +470,20 @@ public class ElementAnimationsViewModel : ViewModel
         DisplayedAnimationTime = newValue;
     }
 
-
-
-    internal void TogglePlayStop()
+    public bool IsPlaying
     {
-        lastPlayTimerTickTime = null;
-        mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
-
-        if(mPlayTimer.IsEnabled)
+        get => Get<bool>();
+        set
         {
-            DisplayedAnimationTime = 0;
-        }
-
-        NotifyPropertyChanged(nameof(ButtonBitmapFrame));
-    }
-
-    public void Stop()
-    {
-        if (mPlayTimer.IsEnabled)
-        {
-            lastPlayTimerTickTime = null;
-
-            mPlayTimer.Stop();
-            NotifyPropertyChanged(nameof(ButtonBitmapFrame));
-
+            if (Set(value))
+            {
+                lastPlayTimerTickTime = null;
+                mPlayTimer.IsEnabled = value;
+                if (value)
+                {
+                    DisplayedAnimationTime = 0;
+                }
+            }
         }
     }
 

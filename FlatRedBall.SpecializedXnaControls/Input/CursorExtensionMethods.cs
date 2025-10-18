@@ -53,11 +53,6 @@ namespace InputLibrary
 
         public static float GetWorldX(this Cursor cursor, SystemManagers managers)
         {
-            if (cursor.PrimaryDown)
-            {
-                int m = 3;
-            }
-
             Vector3 transformed = new Vector3(cursor.X, cursor.Y, 0);
             Matrix matrix = managers.Renderer.Camera.GetTransformationMatrix();
             Matrix.Invert(matrix, out matrix);

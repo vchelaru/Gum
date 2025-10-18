@@ -281,14 +281,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ControlLabel.Text</Name>
-      <Value xsi:type="xsd:string">Control Scheme</Value>
+      <Name>ControlLabel.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ControlLabel.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
+      <Name>ControlLabel.Text</Name>
+      <Value xsi:type="xsd:string">Control Scheme</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -412,6 +412,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>DemoSettingsMenu.WidthUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>DemoSettingsMenu.X</Name>
       <Value xsi:type="xsd:float">15</Value>
@@ -424,9 +430,9 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>DetectResolutionsButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Detect Resolutions</Value>
+      <Type>PositionUnitType</Type>
+      <Name>DemoSettingsMenu.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -439,6 +445,12 @@
       <Type>string</Type>
       <Name>DetectResolutionsButton.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>DetectResolutionsButton.Text</Name>
+      <Value xsi:type="xsd:string">Detect Resolutions</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -485,14 +497,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>DifficultyLabel.Text</Name>
-      <Value xsi:type="xsd:string">Difficulty</Value>
+      <Name>DifficultyLabel.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>DifficultyLabel.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
+      <Name>DifficultyLabel.Text</Name>
+      <Value xsi:type="xsd:string">Difficulty</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -900,26 +912,20 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>LabelInstance.Text</Name>
-      <Value xsi:type="xsd:string">New Profile Name</Value>
+      <Name>LabelInstance.Parent</Name>
+      <Value xsi:type="xsd:string">MarginContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>LabelInstance.Parent</Name>
-      <Value xsi:type="xsd:string">MarginContainer</Value>
+      <Name>LabelInstance.Text</Name>
+      <Value xsi:type="xsd:string">New Profile Name</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>LabelInstance.Y</Name>
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>LabelInstance1.Text</Name>
-      <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -932,6 +938,12 @@
       <Type>StyleCategory</Type>
       <Name>LabelInstance1.Style</Name>
       <Value xsi:type="xsd:string">Normal</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>LabelInstance1.Text</Name>
+      <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1260,14 +1272,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>MusicLabel.Text</Name>
-      <Value xsi:type="xsd:string">Music Volume</Value>
+      <Name>MusicLabel.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>MusicLabel.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
+      <Name>MusicLabel.Text</Name>
+      <Value xsi:type="xsd:string">Music Volume</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1614,20 +1626,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ResolutionLabel.Text</Name>
-      <Value xsi:type="xsd:string">Resolution</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
       <Name>ResolutionLabel.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ShowDialogButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Show Dialog Box</Value>
+      <Name>ResolutionLabel.Text</Name>
+      <Value xsi:type="xsd:string">Resolution</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1639,6 +1645,12 @@
     <Variable>
       <Type>string</Type>
       <Name>ShowDialogButton.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ShowDialogButton.Text</Name>
+      <Value xsi:type="xsd:string">Show Dialog Box</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1678,12 +1690,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>ShowToastButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Show Toast</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>ShowToastButton.Height</Name>
       <Value xsi:type="xsd:float">24</Value>
@@ -1692,6 +1698,12 @@
     <Variable>
       <Type>string</Type>
       <Name>ShowToastButton.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ShowToastButton.Text</Name>
+      <Value xsi:type="xsd:string">Show Toast</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1732,14 +1744,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>SoundLabel.Text</Name>
-      <Value xsi:type="xsd:string">Sound Volume</Value>
+      <Name>SoundLabel.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>SoundLabel.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
+      <Name>SoundLabel.Text</Name>
+      <Value xsi:type="xsd:string">Sound Volume</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

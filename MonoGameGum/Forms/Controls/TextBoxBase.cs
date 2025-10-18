@@ -43,7 +43,7 @@ public abstract class TextBoxBase :
 #if RAYLIB || FRB
     FrameworkElement,
 #else
-    MonoGameGum.Forms.Controls.FrameworkElement,
+    Gum.Forms.Controls.FrameworkElement,
 #endif
     IInputReceiver
 {
@@ -129,7 +129,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    protected abstract string DisplayedText { get; }
+    protected abstract string? DisplayedText { get; }
 
     TextWrapping textWrapping = TextWrapping.NoWrap;
     public TextWrapping TextWrapping
@@ -338,7 +338,7 @@ public abstract class TextBoxBase :
 
         placeholderComponent = base.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (textComponent == null) throw new Exception("Gum object must have an object called \"TextInstance\"");
         if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
 #endif
@@ -348,7 +348,7 @@ public abstract class TextBoxBase :
         placeholderTextObject = placeholderComponent?.RenderableComponent as
             global::RenderingLibrary.Graphics.Text;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
 #endif
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -379,7 +379,7 @@ public abstract class TextBoxBase :
         if (selectionInstance != null)
         {
             // We need to do an if-check to support older FRB games that don't have this
-            if (GraphicalUiElement.CloneRenderableFunction != null)
+            if (GraphicalUiElement.CloneRenderableFunction != null || selectionInstance?.RenderableComponent is ICloneable)
             { 
                 selectionTemplate = selectionInstance.Clone();
             }
@@ -638,179 +638,179 @@ public abstract class TextBoxBase :
     /// <param name="isCtrlDown"></param>
     public void HandleKeyDown(Microsoft.Xna.Framework.Input.Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
-        if (isFocused)
+        //////////////////////////Early Out////////////////////////
+        if (!isFocused) return;
+        /////////////////////////End Early Out/////////////////////
+        var oldIndex = caretIndex;
+
+        switch (key)
         {
-            var oldIndex = caretIndex;
-
-            switch (key)
-            {
-                case Microsoft.Xna.Framework.Input.Keys.Left:
-                    // todo - extract this so that we can also use CTRL for shift and delete/backspace...
-                    if (selectionLength != 0 && isShiftDown == false)
+            case Microsoft.Xna.Framework.Input.Keys.Left:
+                // todo - extract this so that we can also use CTRL for shift and delete/backspace...
+                if (selectionLength != 0 && isShiftDown == false)
+                {
+                    caretIndex = selectionStart;
+                    SelectionLength = 0;
+                }
+                else if (caretIndex > 0)
+                {
+                    int? letterToMoveToFromCtrl = null;
+                    if (isCtrlDown)
                     {
-                        caretIndex = selectionStart;
-                        SelectionLength = 0;
-                    }
-                    else if (caretIndex > 0)
-                    {
-                        int? letterToMoveToFromCtrl = null;
-                        if (isCtrlDown)
+                        // Both WPF (and visual Studio) Move to the beginning of the
+                        // current word. Discord works differently but we're going to 
+                        // match WPF behavior. For example:
+                        // 12 34
+                        // If the cursor is at 4, pressing left moves the cursor
+                        // before the 3 but after the space.
+                        letterToMoveToFromCtrl = GetCtrlBeforeTarget(caretIndex - 1);
+                        if (letterToMoveToFromCtrl != null)
                         {
-                            // Both WPF (and visual Studio) Move to the beginning of the
-                            // current word. Discord works differently but we're going to 
-                            // match WPF behavior. For example:
-                            // 12 34
-                            // If the cursor is at 4, pressing left moves the cursor
-                            // before the 3 but after the space.
-                            letterToMoveToFromCtrl = GetCtrlBeforeTarget(caretIndex - 1);
-                            if (letterToMoveToFromCtrl != null)
-                            {
 
-                                if (letterToMoveToFromCtrl == caretIndex - 1)
-                                {
-                                    letterToMoveToFromCtrl = null;
-                                }
-                            }
-                            else
+                            if (letterToMoveToFromCtrl == caretIndex - 1)
                             {
-                                letterToMoveToFromCtrl = 0;
+                                letterToMoveToFromCtrl = null;
                             }
-                        }
-
-                        caretIndex = letterToMoveToFromCtrl ?? (caretIndex - 1);
-                    }
-                    break;
-                case Keys.Home:
-                    {
-                        this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
-                        caretIndex = absoluteStartOfLine;
-                    }
-                    break;
-                case Keys.End:
-                    {
-                        if (string.IsNullOrEmpty(DisplayedText))
-                        {
-                            caretIndex = 0;
                         }
                         else
                         {
-                            this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
-                            if(lineNumber == coreTextObject.WrappedText.Count-1)
-                            {
-                                caretIndex = (DisplayedText?.Length ?? 0);
-                            }
-                            else
-                            {
-                                var startofIndex = GetAbsoluteCharacterIndexForLine(lineNumber + 1);
-                                caretIndex = startofIndex - 1;
-                            }
+                            letterToMoveToFromCtrl = 0;
                         }
                     }
-                    break;
-                case Keys.Back:
-                    if (!IsReadOnly)
-                    {
-                        HandleBackspace(isCtrlDown);
-                    }
-                    break;
-                case Microsoft.Xna.Framework.Input.Keys.Right:
-                    if (selectionLength != 0 && isShiftDown == false)
-                    {
-                        caretIndex = selectionStart + selectionLength;
-                        SelectionLength = 0;
-                    }
-                    else if (caretIndex < (DisplayedText?.Length ?? 0))
-                    {
-                        int? letterToMoveToFromCtrl = null;
 
-                        if (isCtrlDown)
+                    caretIndex = letterToMoveToFromCtrl ?? (caretIndex - 1);
+                }
+                break;
+            case Keys.Home:
+                {
+                    this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                    caretIndex = absoluteStartOfLine;
+                }
+                break;
+            case Keys.End:
+                {
+                    if (string.IsNullOrEmpty(DisplayedText))
+                    {
+                        caretIndex = 0;
+                    }
+                    else
+                    {
+                        this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                        if(lineNumber == coreTextObject.WrappedText.Count-1)
                         {
-                            letterToMoveToFromCtrl = GetSpaceIndexAfter(caretIndex + 1);
-                            if (letterToMoveToFromCtrl != null)
-                            {
-
-                                // match Visual Studio behavior, and go after the last space
-                                if (letterToMoveToFromCtrl != caretIndex + 1)
-                                {
-                                    letterToMoveToFromCtrl++;
-                                }
-                                else
-                                {
-                                    letterToMoveToFromCtrl = null;
-                                }
-                            }
-                            else
-                            {
-                                letterToMoveToFromCtrl = DisplayedText?.Length ?? 0;
-                            }
+                            caretIndex = (DisplayedText?.Length ?? 0);
                         }
-
-                        caretIndex = letterToMoveToFromCtrl ?? (caretIndex + 1);
-
-                    }
-                    break;
-                case Keys.Up:
-                    MoveCursorUpOneLine();
-                    break;
-                case Keys.Down:
-                    MoveCursorDownOneLine();
-                    break;
-                case Microsoft.Xna.Framework.Input.Keys.Delete:
-                    if (!IsReadOnly)
-                    {
-                        if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
+                        else
                         {
-                            HandleDelete();
+                            var startofIndex = GetAbsoluteCharacterIndexForLine(lineNumber + 1);
+                            caretIndex = startofIndex - 1;
                         }
                     }
-                    break;
-                case Keys.C:
-                    
+                }
+                break;
+            case Keys.Back:
+                if (!IsReadOnly)
+                {
+                    HandleBackspace(isCtrlDown);
+                }
+                break;
+            case Microsoft.Xna.Framework.Input.Keys.Right:
+                if (selectionLength != 0 && isShiftDown == false)
+                {
+                    caretIndex = selectionStart + selectionLength;
+                    SelectionLength = 0;
+                }
+                else if (caretIndex < (DisplayedText?.Length ?? 0))
+                {
+                    int? letterToMoveToFromCtrl = null;
+
                     if (isCtrlDown)
                     {
-                        HandleCopy();
-                    }
-                    break;
-                case Keys.X:
-                    if (!IsReadOnly)
-                    {
-                        if (isCtrlDown)
+                        letterToMoveToFromCtrl = GetSpaceIndexAfter(caretIndex + 1);
+                        if (letterToMoveToFromCtrl != null)
                         {
-                            HandleCut();
+
+                            // match Visual Studio behavior, and go after the last space
+                            if (letterToMoveToFromCtrl != caretIndex + 1)
+                            {
+                                letterToMoveToFromCtrl++;
+                            }
+                            else
+                            {
+                                letterToMoveToFromCtrl = null;
+                            }
+                        }
+                        else
+                        {
+                            letterToMoveToFromCtrl = DisplayedText?.Length ?? 0;
                         }
                     }
-                    break;
-                case Keys.V:
-                    if (!IsReadOnly)
+
+                    caretIndex = letterToMoveToFromCtrl ?? (caretIndex + 1);
+
+                }
+                break;
+            case Keys.Up:
+                MoveCursorUpOneLine();
+                break;
+            case Keys.Down:
+                MoveCursorDownOneLine();
+                break;
+            case Microsoft.Xna.Framework.Input.Keys.Delete:
+                if (!IsReadOnly)
+                {
+                    if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
                     {
-                        if (isCtrlDown)
-                        {
-                            HandlePaste();
-                        }
+                        HandleDelete();
                     }
-                    break;
-                case Keys.A:
-
-                    if(isCtrlDown)
+                }
+                break;
+            case Keys.C:
+                    
+                if (isCtrlDown)
+                {
+                    HandleCopy();
+                }
+                break;
+            case Keys.X:
+                if (!IsReadOnly)
+                {
+                    if (isCtrlDown)
                     {
-                        SelectAll();
+                        HandleCut();
                     }
-                    break;
-            }
+                }
+                break;
+            case Keys.V:
+                if (!IsReadOnly)
+                {
+                    if (isCtrlDown)
+                    {
+                        HandlePaste();
+                    }
+                }
+                break;
+            case Keys.A:
 
-
-            if (oldIndex != caretIndex)
-            {
-                UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
-                UpdateCaretPositionFromCaretIndex();
-                OffsetTextToKeepCaretInView();
-                CaretIndexChanged?.Invoke(this, EventArgs.Empty);
-            }
-
-            var keyEventArg = new KeyEventArgs();
-            keyEventArg.Key = key;
-            KeyDown?.Invoke(this, keyEventArg);
+                if(isCtrlDown)
+                {
+                    SelectAll();
+                }
+                break;
         }
+
+
+        if (oldIndex != caretIndex)
+        {
+            UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
+            UpdateCaretPositionFromCaretIndex();
+            OffsetTextToKeepCaretInView();
+            CaretIndexChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        var keyEventArg = new KeyEventArgs();
+        keyEventArg.Key = key;
+        KeyDown?.Invoke(this, keyEventArg);
     }
 
     private void MoveCursorUpOneLine()

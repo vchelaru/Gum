@@ -2,7 +2,6 @@
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<OutputType>WinExe</OutputType>
-		<BaseIntermediateOutputPath>objNetFramework\</BaseIntermediateOutputPath>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWindowsForms>true</UseWindowsForms>
@@ -12,6 +11,7 @@
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<Nullable>enable</Nullable>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<OutputPath>bin\Debug\</OutputPath>
@@ -79,7 +79,6 @@
 		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-		<ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
@@ -226,6 +225,15 @@
 		<None Update="Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<Content Include="Content\.gumfcs">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="GumIcon.ico">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="GumLogo64Light.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<EmbeddedResource Include="Content\BmfcTemplate.bmfc">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
@@ -248,6 +256,9 @@
 		</Content>
 		<Content Include="Content\Fonts\Font18Arial_o1_0.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="GumLogo64.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Resource Include="Content\Icons\folder.png" />
 		<Content Include="Content\Icons\Origins\Baseline.png">
@@ -288,7 +299,6 @@
 		<None Update="Content\Icons\WidthUnits\AbsoluteWidthMulitpliedByFontScale.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<Content Include="GumIcon.ico" />
 		<Content Include="Libraries\TargaImage.dll" />
 		<Content Include="Libraries\TargaImage.xml" />
 		<None Update="Content\InvalidTexture.png">
@@ -314,6 +324,10 @@
 		</PackageReference>
 
 			<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+
+			<PackageReference Include="FluentIcons.Wpf">
+			  <Version>1.1.308</Version>
+			</PackageReference>
 		
 		<PackageReference Include="Microsoft.AppCenter.Analytics">
 			<Version>4.2.0</Version>
@@ -334,6 +348,7 @@
 		<PackageReference Include="PixiEditor.ColorPicker">
 			<Version>3.4.1</Version>
 		</PackageReference>
+		<PackageReference Include="SharpVectors" Version="1.8.5" />
 		<PackageReference Include="SkiaSharp">
 			<Version>3.116.1</Version>
 		</PackageReference>
@@ -358,8 +373,10 @@
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
 		<PackageReference Include="System.Resources.Extensions" Version="9.0.5" />
+		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="objNetFramework\**" />
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />
@@ -374,70 +391,17 @@
 		<Compile Remove="Managers\ObjectFinder.cs" />
 		<Compile Remove="Managers\StandardElementsManager.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\CustomizableTextInputWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\CustomizableTextInputWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ListBoxMessageBox.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\ListBoxMessageBox.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\MainPanelControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Controls\MainPanelControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\GeneratedInternalTypeHelper.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\GeneratedInternalTypeHelper.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\CreateComponentWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\CreateComponentWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\DeleteOptionsWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gui\Windows\DeleteOptionsWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gum_Content.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Gum_Content.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\ImportPlugin\Views\ImportFileView.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\ImportPlugin\Views\ImportFileView.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AlignmentPluginControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AlignmentPluginControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AnchorControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\AnchorControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\DockControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\AlignmentButtons\DockControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Behaviors\BehaviorsControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Behaviors\BehaviorsControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorDisplay.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorDisplay.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorListEntry.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\ErrorListEntry.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\Views\ErrorTabHeader.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Errors\Views\ErrorTabHeader.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\FileWatchPlugin\FileWatchControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\FileWatchPlugin\FileWatchControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Hotkey\Views\HotkeyView.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Hotkey\Views\HotkeyView.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\LoadRecentWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\LoadRecentWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\TreeView\FlatSearchListBox.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\TreeView\FlatSearchListBox.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Undos\UndoDisplay.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\Undos\UndoDisplay.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\AddVariableWindow.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\AddVariableWindow.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.g.i.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.cs" />
-		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.i.cs" />
 		<Compile Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml.cs" />
 		<Compile Remove="RenderingLibrary\Blend.cs" />
 		<Compile Remove="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Remove="Wireframe\CustomSetPropertyOnRenderable.cs" />
 		<Compile Remove="Wireframe\ElementWithState.cs" />
 		<Compile Remove="Wireframe\RuntimeObjectCreator.cs" />
+		<None Remove="Content\.gumfcs" />
 		<None Remove="Content\BmfcTemplate.bmfc" />
+		<None Remove="GumIcon.ico" />
+		<None Remove="GumLogo64.png" />
+		<None Remove="GumLogo64Light.png" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
 </Project>

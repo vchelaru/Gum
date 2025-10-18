@@ -31,8 +31,8 @@ public class ComboBoxVisual : InteractiveGue
         get => listBoxInstance;
         set
         {
-#if DEBUG
-            if(value == null)
+#if FULL_DIAGNOSTICS
+            if (value == null)
             {
                 throw new NullReferenceException("ListBoxInstance cannot be set to a null ListBox");
             }

@@ -18,9 +18,9 @@ namespace FnaSample.Components
         public static void RegisterRuntimeType()
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
-            MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(MonoGameGum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+            Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
         }
-        public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
+        public Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as Gum.Forms.Controls.Button;
         public enum ButtonCategory
         {
             Enabled,
@@ -75,7 +75,7 @@ namespace FnaSample.Components
         {
             if (FormsControl == null)
             {
-                FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+                FormsControlAsObject = new Gum.Forms.Controls.Button(this);
             }
             Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
             TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;

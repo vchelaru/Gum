@@ -5,8 +5,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
@@ -22,6 +21,7 @@ using System.Xml.Linq;
 using ToolsUtilities;
 using Gum.Forms;
 using System.Collections.Specialized;
+using Gum.Threading;
 
 namespace MonoGameGum;
 
@@ -55,6 +55,8 @@ public class GumService
 
     public SystemManagers SystemManagers { get; private set; }
 
+    public DeferredActionQueue DeferredQueue { get; private set; }
+
     public float CanvasWidth
     {
         get => GraphicalUiElement.CanvasWidth;
@@ -75,6 +77,11 @@ public class GumService
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
+    public void UseKeyboardDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+    }
+
     Game _game;
 
     #region Initialize
@@ -89,6 +96,8 @@ public class GumService
         Root.HasEvents = false;
 
         Root.Children.CollectionChanged += (o,e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root,e);
+
+        DeferredQueue = new DeferredActionQueue();
     }
 
     /// <summary>
@@ -111,8 +120,6 @@ public class GumService
             Gum.Forms.DefaultVisualsVersion.V2);
     }
 
-    public void Initialize(Game game, MonoGameGum.Forms.DefaultVisualsVersion defaultVisualsVersion) =>
-        Initialize(game, (Gum.Forms.DefaultVisualsVersion)(int)defaultVisualsVersion);
 
     public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
     {
@@ -201,6 +208,13 @@ public class GumService
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
 
+        var mainLayer = SystemManagers.Renderer.MainLayer;
+        mainLayer.Remove(Root.RenderableComponent as IRenderableIpso);
+        mainLayer.Insert(0, Root.RenderableComponent as IRenderableIpso);
+
+        // make sure the Root is the first in the list:
+
+
         GumProjectSave? gumProject = null;
 
         if (!string.IsNullOrEmpty(gumProjectFile))
@@ -283,19 +297,26 @@ public class GumService
 
     }
 
-    public void Update(Game game, GameTime gameTime, Forms.Controls.FrameworkElement root) =>
+    public void Update(Game game, GameTime gameTime, FrameworkElement root) =>
         Update(game, gameTime, root.Visual);
 
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
     {
+        DeferredQueue.ProcessPending();
         GameTime = gameTime;
         Gum.Forms.FormsUtilities.Update(game, gameTime, root);
-        this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
+        // SystemManagers.Activity (as of Sept 13, 2025) only 
+        // performs Sprite animation internally. This is not a 
+        // critical system, but unit tests cannot initialize a SystemManagers
+        // because these require a graphics device. Therefore, we can tolerate
+        // a null SystemManagers to simplify unit tests.
+        this.SystemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
         root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
     }
 
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
+        DeferredQueue.ProcessPending();
         GameTime = gameTime;
         Gum.Forms.FormsUtilities.Update(game, gameTime, roots);
         this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
@@ -331,10 +352,6 @@ public static class GraphicalUiElementExtensionMethods
 
 
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
-    {
-        element.Children.Add(child.Visual);
-    }
-    public static void AddChild(this GraphicalUiElement element, MonoGameGum.Forms.Controls.FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }

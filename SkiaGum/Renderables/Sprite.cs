@@ -6,7 +6,7 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableBase, IAspectRatio, ITextureCoordinate
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate
 {
     public SKBitmap Texture 
     { 

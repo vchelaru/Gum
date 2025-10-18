@@ -584,18 +584,20 @@ namespace Gum.Managers
 
                     if (foundVariable != null && foundVariable.Value == stateSave.Name)
                     {
-                        MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-
-                        mbmb.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-
-                        mbmb.MessageText = "The state " + stateSave.Name + " is used in the element " +
+                        string message = "The state " + stateSave.Name + " is used in the element " +
                             elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
 
-                        mbmb.AddButton("Do nothing - project may be in an invalid state", System.Windows.Forms.DialogResult.No);
-                        mbmb.AddButton("Change variable to default", System.Windows.Forms.DialogResult.OK);
+                        DialogChoices<string> choices = new()
+                        {
+                            ["do-nothing"] = "Do nothing - project may be in an invalid state",
+                            ["make-default"] = "Change variable to default"
+                        };
+
+                        string? result = _dialogService.ShowChoices(message, choices);
+
                         // eventually will want to add a cancel option
 
-                        if (mbmb.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        if (result == "make-default")
                         {
                             foundVariable.Value = "Default";
                         }

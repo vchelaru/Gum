@@ -1,0 +1,61 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:dataTypes="clr-namespace:WpfDataUi.DataTypes"
+    xmlns:local="clr-namespace:WpfDataUi">
+
+    <!--  Brushes for consumers to override  -->
+    <SolidColorBrush
+        x:Key="{x:Static local:Keys.AlternatingRowBackgroundEvenKey}"
+        Opacity="0.10"
+        Color="Black" />
+    <SolidColorBrush
+        x:Key="{x:Static local:Keys.AlternatingRowBackgroundOddKey}"
+        Opacity="0.05"
+        Color="Black" />
+
+    <DataTemplate DataType="{x:Type dataTypes:InstanceMember}">
+        <Border x:Name="Container">
+            <local:SingleDataUiContainer DataContext="{Binding}" />
+        </Border>
+
+        <DataTemplate.Triggers>
+            <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                <Setter TargetName="Container" Property="Background" Value="{DynamicResource {x:Static local:Keys.AlternatingRowBackgroundEvenKey}}" />
+            </Trigger>
+
+            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                <Setter TargetName="Container" Property="Background" Value="{DynamicResource {x:Static local:Keys.AlternatingRowBackgroundOddKey}}" />
+            </Trigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate x:Key="DataUi.MemberCategoryTemplate" DataType="{x:Type dataTypes:MemberCategory}">
+        <Expander Header="{Binding Name}" IsExpanded="True">
+            <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
+        </Expander>
+    </DataTemplate>
+
+    <Style TargetType="{x:Type local:DataUiGrid}">
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="{Binding Orientation, RelativeSource={RelativeSource FindAncestor, AncestorType=local:DataUiGrid}}" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:DataUiGrid}">
+                    <ScrollViewer VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                        <ItemsPresenter />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemTemplate" Value="{StaticResource DataUi.MemberCategoryTemplate}" />
+    </Style>
+
+
+</ResourceDictionary>

@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Reflection;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using System;
@@ -418,7 +419,7 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.XamarinForms)
         {
-            switch (container.Name)
+            switch (container?.Name)
             {
                 case "Text":
                     className = "Label";
@@ -488,7 +489,7 @@ public class CodeGenerator
             {
                 if (string.IsNullOrEmpty(element.BaseType))
                 {
-                    inheritance = "MonoGameGum.Forms.Controls.FrameworkElement";
+                    inheritance = "global::Gum.Forms.Controls.FrameworkElement";
                 }
                 else
                 {
@@ -527,7 +528,7 @@ public class CodeGenerator
                     // if it inherits from a standard element that is not a container, and it doesn't have any Forms behaviors
                     if (element.BaseType == "Container")
                     {
-                        gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
+                        gumFormsType = "global::Gum.Forms.Controls.FrameworkElement";
                     }
                     // else it is something like a NineSlice-inheriting object, so don't return a forms inheritance
                     else if (ObjectFinder.Self.GetStandardElement(element.BaseType) != null)
@@ -630,10 +631,13 @@ public class CodeGenerator
 
         foreach (var exposedVariable in exposedVariables)
         {
-            // 
+            var instanceName = exposedVariable.SourceObject;
+            context.Instance = context.Element.GetInstance(instanceName);
             FillWithExposedVariable(exposedVariable, context);
             context.StringBuilder.AppendLine();
         }
+
+        context.Instance = null;
     }
 
     private void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
@@ -766,11 +770,14 @@ public class CodeGenerator
 
                 string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
                 string? sourceObjectCast = null;
+
+                ElementSave? sourceInstanceElement = null;
+
                 if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
                     // only if the object is not a standard element
-                    var element = ObjectFinder.Self.GetElementSave(foundInstance);
-                    if (element is not StandardElementSave)
+                    sourceInstanceElement = ObjectFinder.Self.GetElementSave(foundInstance);
+                    if (sourceInstanceElement is not StandardElementSave)
                     {
                         // We need to check if the variable should be on .Visual:
                         // It is on visual only if the instance 
@@ -786,7 +793,15 @@ public class CodeGenerator
                     }
                 }
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {name}");
+                var isOverride = GetIfExposedVariableIsOverride(exposedVariable, context);
+
+                string possibleVirtual = isOverride
+                    ? "override " 
+                    : string.Empty;
+
+
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleVirtual}{type} {name}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
                 //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
@@ -851,7 +866,32 @@ public class CodeGenerator
 
 
     }
-    
+
+    private bool GetIfExposedVariableIsOverride(VariableSave exposedVariable, CodeGenerationContext context)
+    {
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            GetGumFormsTypeFromBehaviors(context.Element, out string? formsType, out _);
+
+            if(formsType != null)
+            {
+                // eventually this will be Gum.Forms.Controls, but for now...
+                if(formsType.StartsWith("global::"))
+                {
+                    formsType = formsType.Substring("global::".Length);
+                }
+                var type = this.GetType().Assembly.GetType(formsType);
+                var property = type?.GetProperty(exposedVariable.ExposedAsName);
+                var setter = property?.GetSetMethod();
+                var isVirtual = setter?.IsVirtual == true && !setter.IsFinal;
+                var doTypesMatch = 
+                    TypeManager.Self.GetTypeFromString(exposedVariable.Type) == property?.PropertyType;
+                return isVirtual && doTypesMatch;
+            }
+        }
+        return false;
+    }
+
     #endregion
 
     #region Instance Properties (like ColoredRectangleInstance or ButtonInstance)
@@ -1034,7 +1074,7 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(isFullyInstantiatingInCode && !isDerived)
+        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.Skia)
         {
             //RefreshInternalVisualReferences
             context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
@@ -1095,7 +1135,7 @@ public class CodeGenerator
 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{ToCSharpName(context.Instance.Name)} = " +
-                    $"global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
+                    $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
             }
             else
             {
@@ -1257,7 +1297,7 @@ public class CodeGenerator
 
 
 
-            builder.AppendLine(context.Tabs + "var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
+            builder.AppendLine(context.Tabs + "var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
@@ -1275,6 +1315,11 @@ public class CodeGenerator
 
             builder.AppendLine(context.Tabs +
                 $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");
+
+            builder.AppendLine("#if DEBUG");
+            builder.AppendLine($"if(element == null) throw new System.InvalidOperationException(\"Could not find an element named {context.Element.Name} - did you forget to load a Gum project?\");");
+            builder.AppendLine("#endif");
+
 
             builder.AppendLine(context.Tabs +
                 $"element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);");
@@ -1298,7 +1343,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "});");
 
             builder.AppendLine(context.Tabs +
-                $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
+                $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
                 $"[typeof({className})] = template;");
 
             var element = context.Element;
@@ -1310,7 +1355,7 @@ public class CodeGenerator
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
-                        $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
+                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
                 }
             }
 
@@ -1355,7 +1400,7 @@ public class CodeGenerator
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
-                        $"global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
+                        $"global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
                 }
             }
 
@@ -1390,24 +1435,25 @@ public class CodeGenerator
 
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
     {
-        { "ButtonBehavior", "global::MonoGameGum.Forms.Controls.Button" },
-        { "CheckBoxBehavior", "global::MonoGameGum.Forms.Controls.CheckBox" },
-        { "ComboBoxBehavior", "global::MonoGameGum.Forms.Controls.ComboBox" },
-        { "LabelBehavior", "global::MonoGameGum.Forms.Controls.Label" },
-        { "ListBoxBehavior", "global::MonoGameGum.Forms.Controls.ListBox" },
-        { "ListBoxItemBehavior", "global::MonoGameGum.Forms.Controls.ListBoxItem" },
-        { "MenuBehavior", "global::MonoGameGum.Forms.Controls.Menu" },
-        { "MenuItemBehavior", "global::MonoGameGum.Forms.Controls.MenuItem" },
-        { "PanelBehavior", "global::MonoGameGum.Forms.Controls.Panel" },
-        { "PasswordBoxBehavior", "global::MonoGameGum.Forms.Controls.PasswordBox" },
-        { "RadioButtonBehavior", "global::MonoGameGum.Forms.Controls.RadioButton" },
-        { "ScrollBarBehavior", "global::MonoGameGum.Forms.Controls.ScrollBar" },
-        { "ScrollViewerBehavior", "global::MonoGameGum.Forms.Controls.ScrollViewer" },
-        { "SliderBehavior", "global::MonoGameGum.Forms.Controls.Slider" },
-        { "SplitterBehavior", "global::MonoGameGum.Forms.Controls.Splitter" },
-        { "StackPanelBehavior", "global::MonoGameGum.Forms.Controls.StackPanel" },
-        { "TextBoxBehavior", "global::MonoGameGum.Forms.Controls.TextBox" },
-        { "WindowBehavior", "global::MonoGameGum.Forms.Window" },
+        { "ButtonBehavior", "global::Gum.Forms.Controls.Button" },
+        { "CheckBoxBehavior", "global::Gum.Forms.Controls.CheckBox" },
+        { "ComboBoxBehavior", "global::Gum.Forms.Controls.ComboBox" },
+        { "ItemsControlBehavior", "global::Gum.Forms.Controls.ItemsControl" },
+        { "LabelBehavior", "global::Gum.Forms.Controls.Label" },
+        { "ListBoxBehavior", "global::Gum.Forms.Controls.ListBox" },
+        { "ListBoxItemBehavior", "global::Gum.Forms.Controls.ListBoxItem" },
+        { "MenuBehavior", "global::Gum.Forms.Controls.Menu" },
+        { "MenuItemBehavior", "global::Gum.Forms.Controls.MenuItem" },
+        { "PanelBehavior", "global::Gum.Forms.Controls.Panel" },
+        { "PasswordBoxBehavior", "global::Gum.Forms.Controls.PasswordBox" },
+        { "RadioButtonBehavior", "global::Gum.Forms.Controls.RadioButton" },
+        { "ScrollBarBehavior", "global::Gum.Forms.Controls.ScrollBar" },
+        { "ScrollViewerBehavior", "global::Gum.Forms.Controls.ScrollViewer" },
+        { "SliderBehavior", "global::Gum.Forms.Controls.Slider" },
+        { "SplitterBehavior", "global::Gum.Forms.Controls.Splitter" },
+        { "StackPanelBehavior", "global::Gum.Forms.Controls.StackPanel" },
+        { "TextBoxBehavior", "global::Gum.Forms.Controls.TextBox" },
+        { "WindowBehavior", "global::Gum.Forms.Window" },
     };
 
     static void AddGumFormsMembers(CodeGenerationContext context)
@@ -3765,7 +3811,7 @@ public class CodeGenerator
 
     private static void FillWithVariableListAssignments(CodeGenerationContext context, StringBuilder stringBuilder, VariableListSave[] variableListsToAssign)
     {
-        VisualApi visualApi = GetVisualApiForInstance(context.Instance, context.Element);
+        VisualApi visualApi = GetVisualApiForInstance(context.Instance!, context.Element);
 
         foreach (var variableList in variableListsToAssign)
         {
@@ -3796,7 +3842,7 @@ public class CodeGenerator
 
                 if (forceSetDirectlyOnInstance)
                 {
-                    return $"this.{ToCSharpName(context.Instance.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
+                    return $"this.{ToCSharpName(context.Instance!.Name)}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
                 }
                 else
                 {
@@ -3815,7 +3861,11 @@ public class CodeGenerator
         }
         else // xamarin forms
         {
-            var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+            string? fullLineReplacement = null;
+            if (context.Instance != null)
+            {
+                fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
+            }
             if (fullLineReplacement != null)
             {
                 return fullLineReplacement;
@@ -3887,7 +3937,10 @@ public class CodeGenerator
 
             string? formsType = null;
 
-            GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+            if(instanceElement != null)
+            {
+                GetGumFormsTypeFromBehaviors(instanceElement, out formsType, out _);
+            }
 
             // special case for now, need to handle this in a more generalized manner:
             if (formsType == BehaviorGumFormsTypes["LabelBehavior"])
@@ -3904,7 +3957,7 @@ public class CodeGenerator
         return forceSetDirectlyOnInstance;
     }
 
-    private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
     {
         var value = variable.Value;
         var rootName = variable.GetRootName();
@@ -3912,7 +3965,7 @@ public class CodeGenerator
         return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
     }
 
-    private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
     {
         var value = variable.ValueAsIList;
         var rootName = variable.GetRootName();
@@ -3933,11 +3986,11 @@ public class CodeGenerator
             {
                 var instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
                 isPolygon = (instanceType is StandardElementSave && instanceType.Name == "Polygon") ||
-                    ObjectFinder.Self.GetBaseElements(instanceType).Any(item => item is StandardElementSave && item.Name == "Polygon");
+                    (instanceType != null && ObjectFinder.Self.GetBaseElements(instanceType).Any(item => item is StandardElementSave && item.Name == "Polygon"));
 
                 if (isPolygon)
                 {
-                    context.StringBuilder.AppendLine(context.Tabs + $"this.{ToCSharpName(context.Instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
+                    context.StringBuilder.AppendLine(context.Tabs + $"this.{ToCSharpName(instance.Name)}.SetPoints(new System.Numerics.Vector2[]{{");
                     context.TabCount++;
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
@@ -3952,7 +4005,7 @@ public class CodeGenerator
         }
     }
 
-    private static string VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object forcedValue = null)
+    private static string? VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object forcedValue = null)
     {
         var value = forcedValue ?? variable.Value;
         var rootName = variable.GetRootName();
@@ -3961,7 +4014,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, categoryContainer, category, context.CodeOutputProjectSettings);
     }
 
-    private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object forcedValue = null)
+    private static string? VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object forcedValue = null)
     {
         var value = forcedValue ?? variable.ValueAsIList;
         var rootName = variable.GetRootName();
@@ -4059,7 +4112,7 @@ public class CodeGenerator
         }
     }
 
-    private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
     {
         if (value is float asFloat)
         {
@@ -4117,7 +4170,11 @@ public class CodeGenerator
             }
             else if (isState)
             {
-                var containerClassName = GetClassNameForType(categoryContainer, VisualApi.XamarinForms, context);
+
+                var containerClassName = categoryContainer == null 
+                    ? string.Empty
+                    : GetClassNameForType(categoryContainer, VisualApi.XamarinForms, context);
+
                 if (category == null)
                 {
                     return $"{containerClassName}.VariableState.{value}";
@@ -4275,7 +4332,7 @@ public class CodeGenerator
 
                 if (contextInstance != null)
                 {
-                    var standardizedParentName = ToCSharpName(parentName);
+                    var standardizedParentName = ToCSharpName(parentName!);
                     if (IsTabControl(parentInstance))
                     {
                         var stringBuilder = new StringBuilder();
@@ -4498,6 +4555,25 @@ public class CodeGenerator
                     // assign it:
                     context.StringBuilder.AppendLine($"{context.CodePrefix}.{ToCSharpName(variable.Name)} = {VariableValueToGumCodeValue(variable, context)};");
                 }
+
+            }
+        }
+
+        if(context.Element is ScreenSave && context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        {
+            // October 5, 2025
+            // Generate the screen
+            // size:
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                // children attached to the screen should behave as if they are attached to the entire root, so make the screen fully
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Width = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Height = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+            }
+            else
+            {
 
             }
         }

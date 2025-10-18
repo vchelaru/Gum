@@ -13,7 +13,7 @@ public interface IVisible
         get;
     }
 
-    IVisible Parent
+    IVisible? Parent
     {
         get;
     }

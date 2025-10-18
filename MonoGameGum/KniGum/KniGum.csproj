@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2025.8.19.1</Version>
+		<Version>2025.9.27.1</Version>
 
 
 
@@ -16,15 +16,20 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<LangVersion>12.0</LangVersion>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -61,6 +66,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="RenderingLibrary\SpriteBatchRenderableBase.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
@@ -99,6 +105,10 @@
 		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.AssemblyInfo.cs" />
 		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.GlobalUsings.g.cs" />
 		<Compile Remove="..\FnaGum\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="..\..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>

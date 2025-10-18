@@ -1,5 +1,8 @@
 //Code for Controls/PasswordBox (Container)
 using GumRuntime;
+using System.Linq;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -10,27 +13,31 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-namespace GumFormsSample.Components
+namespace GumFormsSample.Components;
+partial class PasswordBoxRuntime : ContainerRuntime
 {
-    public partial class PasswordBoxRuntime:ContainerRuntime
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    public static void RegisterRuntimeType()
     {
-        [System.Runtime.CompilerServices.ModuleInitializer]
-        public static void RegisterRuntimeType()
-        {
-            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/PasswordBox", typeof(PasswordBoxRuntime));
-        }
-        public MonoGameGum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.PasswordBox;
-        public enum PasswordBoxCategory
-        {
-            Enabled,
-            Disabled,
-            Highlighted,
-            Selected,
-        }
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/PasswordBox", typeof(PasswordBoxRuntime));
+    }
+    public global::Gum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.PasswordBox;
+    public enum PasswordBoxCategory
+    {
+        Enabled,
+        Disabled,
+        Highlighted,
+        Selected,
+    }
 
-        public PasswordBoxCategory PasswordBoxCategoryState
+    PasswordBoxCategory? _passwordBoxCategoryState;
+    public PasswordBoxCategory? PasswordBoxCategoryState
+    {
+        get => _passwordBoxCategoryState;
+        set
         {
-            set
+            _passwordBoxCategoryState = value;
+            if(value != null)
             {
                 if(Categories.ContainsKey("PasswordBoxCategory"))
                 {
@@ -40,51 +47,51 @@ namespace GumFormsSample.Components
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "PasswordBoxCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "PasswordBoxCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
             }
         }
-        public NineSliceRuntime Background { get; protected set; }
-        public NineSliceRuntime SelectionInstance { get; protected set; }
-        public TextRuntime TextInstance { get; protected set; }
-        public TextRuntime PlaceholderTextInstance { get; protected set; }
-        public NineSliceRuntime FocusedIndicator { get; protected set; }
-        public SpriteRuntime CaretInstance { get; protected set; }
-
-        public string PlaceholderText
-        {
-            get => PlaceholderTextInstance.Text;
-            set => PlaceholderTextInstance.Text = value;
-        }
-
-        public PasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-        {
-            if(fullInstantiation)
-            {
-                var element = ObjectFinder.Self.GetElementSave("Controls/PasswordBox");
-                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
-            }
-
-
-
-        }
-        public override void AfterFullCreation()
-        {
-            if (FormsControl == null)
-            {
-                FormsControlAsObject = new MonoGameGum.Forms.Controls.PasswordBox(this);
-            }
-            Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-            SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as NineSliceRuntime;
-            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-            PlaceholderTextInstance = this.GetGraphicalUiElementByName("PlaceholderTextInstance") as TextRuntime;
-            FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
-            CaretInstance = this.GetGraphicalUiElementByName("CaretInstance") as SpriteRuntime;
-            CustomInitialize();
-        }
-        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-        partial void CustomInitialize();
     }
+    public NineSliceRuntime Background { get; protected set; }
+    public NineSliceRuntime SelectionInstance { get; protected set; }
+    public TextRuntime TextInstance { get; protected set; }
+    public TextRuntime PlaceholderTextInstance { get; protected set; }
+    public NineSliceRuntime FocusedIndicator { get; protected set; }
+    public SpriteRuntime CaretInstance { get; protected set; }
+
+    public string PlaceholderText
+    {
+        get => PlaceholderTextInstance.Text;
+        set => PlaceholderTextInstance.Text = value;
+    }
+
+    public PasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    {
+        if(fullInstantiation)
+        {
+            var element = ObjectFinder.Self.GetElementSave("Controls/PasswordBox");
+            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+        }
+
+
+
+    }
+    public override void AfterFullCreation()
+    {
+        if (FormsControl == null)
+        {
+            FormsControlAsObject = new global::Gum.Forms.Controls.PasswordBox(this);
+        }
+        Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        PlaceholderTextInstance = this.GetGraphicalUiElementByName("PlaceholderTextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        CaretInstance = this.GetGraphicalUiElementByName("CaretInstance") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        CustomInitialize();
+    }
+    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    partial void CustomInitialize();
 }

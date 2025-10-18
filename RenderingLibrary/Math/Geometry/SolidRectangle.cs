@@ -10,7 +10,7 @@ using System;
 
 namespace RenderingLibrary.Graphics;
 
-public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
+public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisible, ICloneable
 {
     #region Fields
     
@@ -210,9 +210,10 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
         return texture;
     }
 
-    void IRenderable.Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
-        if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
+        // See NineSlice for explanation of this Visible check
+        if (this.Width > 0 && this.Height > 0)
         {
             Renderer renderer = null;
             if (managers == null)

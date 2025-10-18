@@ -1,10 +1,12 @@
 ﻿using FlatRedBall.SpecializedXnaControls;
 using Gum;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.BaseClasses;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -51,7 +53,15 @@ public class MainTextureCoordinatePlugin : PluginBase
     public MainTextureCoordinatePlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _controlLogic = new ControlLogic();
+        _controlLogic = new ControlLogic(
+            Locator.GetRequiredService<ISelectedState>(),
+            Locator.GetRequiredService<IUndoManager>(),
+            Locator.GetRequiredService<IGuiCommands>(),
+            Locator.GetRequiredService<IFileCommands>(),
+            Locator.GetRequiredService<SetVariableLogic>(),
+            Locator.GetRequiredService<ITabManager>(),
+            Locator.GetRequiredService<HotkeyManager>(),
+            new ScrollBarLogicWpf());
     }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)

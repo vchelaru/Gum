@@ -1,7 +1,7 @@
-﻿using Gum.Mvvm;
-using Gum.Wireframe;
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
 using Gum.Forms.Data;
+using Gum.Mvvm;
+using Gum.Wireframe;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using Shouldly;
@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TextCopy;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
@@ -106,6 +107,18 @@ public class TextBoxTests : BaseTestClass
         var textInstance = (TextRuntime)textBox.Visual.GetChildByNameRecursively("TextInstance")!;
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
         innerTextObject.WrappedText.Count.ShouldBeGreaterThan(1);
+    }
+
+    [Fact]
+    public void HandleKeyDown_Paste_ShouldReplaceSlashRSlashN_WithSlashN()
+    {
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("Line1\r\nLine2");
+
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.IsFocused = true;
+        textBox.HandleKeyDown(Microsoft.Xna.Framework.Input.Keys.V, false, false, isCtrlDown: true);
+        textBox.Text.ShouldBe("Line1\nLine2", "because TextBox expects a single-character newline for proper caret positioning");
     }
 
     [Fact]

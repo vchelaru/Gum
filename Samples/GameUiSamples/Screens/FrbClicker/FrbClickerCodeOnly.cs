@@ -1,8 +1,8 @@
 ﻿using GameUiSamples.Components.FrbClickerComponents;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms;
+using Gum.Forms.Controls;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;

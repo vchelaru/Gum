@@ -10,4 +10,4 @@ This value has no affect in the Gum tool and is only used at runtime.
 
 ## Has Events and Cursor.WindowOver
 
-If an instance has its `Has Events` value unchecked then it will not be eligible to be assigned to the Cursor's `WindowOver` property. For more information, see the [Cursor page](../../../code/gum-code-reference/cursor.md).
+If an instance has its `Has Events` value unchecked then it will not be eligible to be assigned to the Cursor's `WindowOver` property. For more information, see the [Cursor page](../../../code/gum-code-reference/cursor/).

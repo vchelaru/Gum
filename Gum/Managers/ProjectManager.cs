@@ -676,7 +676,7 @@ namespace Gum
             }
         }
 
-        internal void SaveProject(bool forceSaveContainedElements = false)
+        internal bool SaveProject(bool forceSaveContainedElements = false)
         {
             bool succeeded = false;
 
@@ -766,6 +766,8 @@ namespace Gum
                     }
                 }
             }
+
+            return succeeded;
         }
 
 
@@ -845,19 +847,19 @@ namespace Gum
 
         public static void ShowReadOnlyDialog(string fileName)
         {
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+            IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
 
-            mbmb.StartPosition = FormStartPosition.CenterParent;
-
-            mbmb.MessageText = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
+            string message = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
                 "What would you like to do?";
+            DialogChoices<string> choices = new()
+            {
+                ["nothing"] = "Nothing (file will not save, Gum will continue to work normally)",
+                ["open-folder"] = "Open folder containing file"
+            };
 
-            mbmb.AddButton("Nothing (file will not save, Gum will continue to work normally)", DialogResult.Cancel);
-            mbmb.AddButton("Open folder containing file", DialogResult.OK);
+            string? result = dialogService.ShowChoices(message, choices);
 
-            var dialogResult = mbmb.ShowDialog();
-
-            if (dialogResult == DialogResult.OK)
+            if (result == "open-folder")
             {
                 // Let's select the file instead of just opening the folder
                 //string folder = FileManager.GetDirectory(fileName);

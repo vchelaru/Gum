@@ -229,6 +229,7 @@ public class SelectedState : ISelectedState
             snapshot.SelectedBehavior = behavior;
             _guiCommands.RefreshStateTreeView();
 
+            // todo : this should be handled by plugins, and should not be explicitly handled here:
             WireframeObjectManager.Self.RefreshAll(false);
 
             SelectedStateSave = null;
@@ -487,6 +488,7 @@ public class SelectedState : ISelectedState
             }
         }
 
+        // todo - this should be handled by plugins and should not be explicitly called here
         if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
         {
             WireframeObjectManager.Self.RefreshAll(false);

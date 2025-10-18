@@ -10,9 +10,9 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework;
 using MonoGameGum;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms;
+using Gum.Forms.Controls;
 using System;
+using Gum.Forms;
 namespace GameUiSamples.Screens;
 
 partial class GameTitleScreen
@@ -27,7 +27,7 @@ partial class GameTitleScreen
         FrameworkElement.GamePadsForUiControl.AddRange(FormsUtilities.Gamepads);
     }
 
-    private void HandleExitClicked(object sender, EventArgs e)
+    private void HandleExitClicked(object? sender, EventArgs e)
     {
         GumService.Default.Root.Children.Clear();
         var mainMenu = new MainMenu();

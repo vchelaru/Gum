@@ -16,6 +16,9 @@ namespace WpfDataUi.Controls
     /// </summary>
     public partial class ToggleButtonOptionDisplay : UserControl, IDataUi
     {
+        public const string ContentTemplateKey = "ToggleButtonOptionDisplayOptionContentTemplate";
+        public const string GumIconTemplateKey = "ToggleButtonOptionDisplayOptionContentTemplateGumIcon";
+
         #region Internal Classes
 
         public class Option
@@ -25,6 +28,78 @@ namespace WpfDataUi.Controls
 
             public BitmapImage Image { get; set; }
             // todo: image
+            public string? IconName { get; set; }
+            public string? GumIconName { get; set; }
+        }
+
+        // DependencyProperty for WrapPanelRadius
+        public static readonly DependencyProperty WrapPanelRadiusProperty =
+            DependencyProperty.Register(
+                nameof(WrapPanelRadius),
+                typeof(CornerRadius),
+                typeof(ToggleButtonOptionDisplay),
+                new PropertyMetadata(new CornerRadius(0)));
+
+        public CornerRadius WrapPanelRadius
+        {
+            get => (CornerRadius)GetValue(WrapPanelRadiusProperty);
+            set => SetValue(WrapPanelRadiusProperty, value);
+        }
+
+        // DependencyProperty for WrapPanelBorderThickness
+        public static readonly DependencyProperty WrapPanelBorderThicknessProperty =
+            DependencyProperty.Register(
+                nameof(WrapPanelBorderThickness),
+                typeof(Thickness),
+                typeof(ToggleButtonOptionDisplay),
+                new PropertyMetadata(new Thickness(0)));
+
+        public Thickness WrapPanelBorderThickness
+        {
+            get => (Thickness)GetValue(WrapPanelBorderThicknessProperty);
+            set => SetValue(WrapPanelBorderThicknessProperty, value);
+        }
+
+        // DependencyProperty for WrapPanelBackground
+        public static readonly DependencyProperty WrapPanelBackgroundProperty =
+            DependencyProperty.Register(
+                nameof(WrapPanelBackground),
+                typeof(Brush),
+                typeof(ToggleButtonOptionDisplay),
+                new PropertyMetadata(null));
+
+        public Brush WrapPanelBackground
+        {
+            get => (Brush)GetValue(WrapPanelBackgroundProperty);
+            set => SetValue(WrapPanelBackgroundProperty, value);
+        }
+
+        // DependencyProperty for WrapPanelPadding
+        public static readonly DependencyProperty WrapPanelPaddingProperty =
+            DependencyProperty.Register(
+                nameof(WrapPanelPadding),
+                typeof(Thickness),
+                typeof(ToggleButtonOptionDisplay),
+                new PropertyMetadata(new Thickness(0)));
+
+        public Thickness WrapPanelPadding
+        {
+            get => (Thickness)GetValue(WrapPanelPaddingProperty);
+            set => SetValue(WrapPanelPaddingProperty, value);
+        }
+
+        // DependencyProperty for WrapPanelBorderBrush
+        public static readonly DependencyProperty WrapPanelBorderBrushProperty =
+            DependencyProperty.Register(
+                nameof(WrapPanelBorderBrush),
+                typeof(Brush),
+                typeof(ToggleButtonOptionDisplay),
+                new PropertyMetadata(null));
+
+        public Brush WrapPanelBorderBrush
+        {
+            get => (Brush)GetValue(WrapPanelBorderBrushProperty);
+            set => SetValue(WrapPanelBorderBrushProperty, value);
         }
 
         #endregion
@@ -129,16 +204,36 @@ namespace WpfDataUi.Controls
             ButtonWrapPanel.Children.Clear();
             toggleButtons.Clear();
 
+            DataTemplate? dataTemplate =
+                (TryFindResource(ContentTemplateKey) ??
+                 Application.Current.TryFindResource(ContentTemplateKey)) as DataTemplate;
+
+            DataTemplate? gumIconTemplate = (TryFindResource(GumIconTemplateKey) ??
+                 Application.Current.TryFindResource(GumIconTemplateKey)) as DataTemplate;
+
             foreach (var option in options)
             {
-                var toggleButton = new ToggleButton();
+                var toggleButton = new ToggleButton()
+                {
+                    DataContext = option
+                };
 
                 if (mUnmodifiedBrush == null)
                 {
                     mUnmodifiedBrush = toggleButton.Background;
                 }
 
-                if (option.Image != null)
+                if (gumIconTemplate is not null && option.GumIconName is not null)
+                {
+                    toggleButton.ContentTemplate = gumIconTemplate;
+                    toggleButton.Content = option;
+                }
+                else if (dataTemplate is not null && option.IconName is not null)
+                {
+                    toggleButton.ContentTemplate = dataTemplate;
+                    toggleButton.Content = option;
+                }
+                else if (option.Image != null)
                 {
                     //var stackPanel = new StackPanel();
 
@@ -150,13 +245,14 @@ namespace WpfDataUi.Controls
                     //stackPanel.Children.Add(label);
 
                     //toggleButton.Content = image;
-                    var image = new Image();
+                    var image = new Image()
+                    {
+                        
+                    };
 
                     image.Source = option.Image;
                     toggleButton.Content = image;
 
-                    toggleButton.Width = 35;
-                    toggleButton.Height = 35;
                 }
                 else
                 {
@@ -235,8 +331,17 @@ namespace WpfDataUi.Controls
 
         private void RefreshButtonAppearance()
         {
+            if (DataUiGrid.GetOverridesIsDefaultStyling(this))
+            {
+                return;
+            }
+
             foreach (var button in toggleButtons)
             {
+                if (button.Template is not null)
+                {
+                    break;
+                }
                 button.Background = DesiredBackgroundBrush;
                 const double smallSize = 30;
                 // 35 vs 30 is hard to tell when default, so let's

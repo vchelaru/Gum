@@ -34,12 +34,6 @@ Any other `Width Unit` can be used to make the text wrap. For example, setting `
 
 For a deeper dive into Width Units, see the [Width Units page](../general-properties/width-units.md).
 
-{% hint style="warning" %}
-The current version of Gum only wraps text on space and newline characters. Future versions of Gum will introduce support for breaking words apart if they extend beyond the bounds of the Text instance.
-
-![](<../../../.gitbook/assets/22_13 47 15.png>)
-{% endhint %}
-
 ## Using BBCode for Inline Styling
 
 Gum text supports inline styling using BBCode-like syntax. To add inline styling, surround text with variable assignment tags as shown in the following screenshot:
@@ -71,3 +65,37 @@ This [Color=Orange]is orange, [IsBold=true]bold[/IsBold], and [IsItalic=true]ita
 ```
 
 <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+
+### BBCode Color and Alpha
+
+Color values can be specified using named colors or individual Red, Green, and Blue values.
+
+Color values can be specified using any of the standard XNA color values, as listed here: [https://docs.monogame.net/api/Microsoft.Xna.Framework.Color.html](https://docs.monogame.net/api/Microsoft.Xna.Framework.Color.html)
+
+{% hint style="info" %}
+MonoGame adds `MonoGameOrange` which is not available in other XNA-likes such as KNI and FNA. Gum UI uses KNI for rendering, so this property is not available in the Gum UI tool, but is available at runtime if you are using MonoGame.
+{% endhint %}
+
+If you need precise color values, then you should use the individual Red, Green, and Blue values.
+
+Keep in mind that if a color value is not specified, then the default for that Text instance is used.&#x20;
+
+For example, a Text's Red may have Red, Green, Blue values of 255, 0, 0 as shown in the following image:
+
+<figure><img src="../../../.gitbook/assets/17_06 39 50.png" alt=""><figcaption><p>Text with explicitly set Red, Green, and Blue values</p></figcaption></figure>
+
+If its Green value is set in BBCode, the green value from BBCode overrides the Green variable value, but the Red and Blue values from its variables persist. BBCode values are applied after all variables.
+
+<figure><img src="../../../.gitbook/assets/17_06 41 38.png" alt=""><figcaption><p>Green value of 200 overriding the default value of 0</p></figcaption></figure>
+
+Similarly, if a Color tag is used, then the BBCode color specified overrides all color variable values. This includes Red, Green, Blue, and Alpha. The following image is a yellow text with an Alpha value of 15, resulting in text that is almost completely transparent:
+
+<figure><img src="../../../.gitbook/assets/17_06 45 00.png" alt=""><figcaption><p>Yellow text with an alpha of 15</p></figcaption></figure>
+
+By specifying a Color value in BBCode, the Alpha value is also overwritten, as shown in the following image:
+
+<figure><img src="../../../.gitbook/assets/17_06 46 18.png" alt=""><figcaption><p>Green overrides Alpha</p></figcaption></figure>
+
+To preserve alpha, the individual Red, Green, and Blue values must be specified.
+
+<figure><img src="../../../.gitbook/assets/17_06 48 13.png" alt=""><figcaption><p>Specifying only Red, Green, and Blue preserves the previously-set Alpha value</p></figcaption></figure>

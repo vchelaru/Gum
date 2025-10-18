@@ -2,7 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -150,10 +150,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             if(tryCreateFormsObject)
             {
-                FormsControlAsObject = new Controls.Slider(this);
+                FormsControlAsObject = new Gum.Forms.Controls.Slider(this);
             }
         }
 
-        public Controls.Slider FormsControl => FormsControlAsObject as Controls.Slider;
+        public Gum.Forms.Controls.Slider FormsControl => FormsControlAsObject as Gum.Forms.Controls.Slider;
     }
 }

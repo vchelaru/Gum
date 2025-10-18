@@ -20,7 +20,7 @@ partial class ButtonTabRuntime : ContainerRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonTab", typeof(ButtonTabRuntime));
     }
-    public global::MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Button;
+    public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
     {
         Enabled,
@@ -81,7 +81,7 @@ partial class ButtonTabRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Button(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TabText = this.GetGraphicalUiElementByName("TabText") as global::MonoGameGum.GueDeriving.TextRuntime;

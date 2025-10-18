@@ -10,7 +10,7 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 using System;
 using GameUiSamples.Screens.FrbClicker;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum;
 namespace GameUiSamples.Screens;
 

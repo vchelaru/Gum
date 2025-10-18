@@ -14,15 +14,18 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Screens;
-partial class Spaced_Screen : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Spaced_Screen : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Spaced Screen");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Spaced Screen - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Spaced_Screen(visual);
             visual.Width = 0;
@@ -31,7 +34,7 @@ partial class Spaced_Screen : MonoGameGum.Forms.Controls.FrameworkElement
             visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Spaced_Screen)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Spaced_Screen)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Spaced Screen", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -52,7 +55,7 @@ partial class Spaced_Screen : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Spaced_ComponentInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced ComponentInstance");
+        Spaced_ComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced ComponentInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

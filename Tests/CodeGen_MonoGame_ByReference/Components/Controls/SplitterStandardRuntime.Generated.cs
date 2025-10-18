@@ -19,9 +19,9 @@ partial class SplitterStandardRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/SplitterStandard", typeof(SplitterStandardRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.Splitter)] = typeof(SplitterStandardRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Splitter)] = typeof(SplitterStandardRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.Splitter FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Splitter;
+    public global::Gum.Forms.Controls.Splitter FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Splitter;
     public NineSliceRuntime NineSliceInstance { get; protected set; }
 
     public SplitterStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -39,7 +39,7 @@ partial class SplitterStandardRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Splitter(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Splitter(this);
         }
         NineSliceInstance = this.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();

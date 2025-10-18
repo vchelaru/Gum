@@ -1,5 +1,6 @@
 //Code for Elements/Icon (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using Gum.Converters;
@@ -13,20 +14,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Icon : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/Icon");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/Icon - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Icon(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Icon)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Icon)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Elements/Icon", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -125,7 +129,7 @@ partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "IconCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "IconCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -135,7 +139,9 @@ partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
     public SpriteRuntime IconSprite { get; protected set; }
 
 
-    public Icon(InteractiveGue visual) : base(visual) { }
+    public Icon(InteractiveGue visual) : base(visual)
+    {
+    }
     public Icon()
     {
 
@@ -145,7 +151,7 @@ partial class Icon : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        IconSprite = this.Visual?.GetGraphicalUiElementByName("IconSprite") as SpriteRuntime;
+        IconSprite = this.Visual?.GetGraphicalUiElementByName("IconSprite") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

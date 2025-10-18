@@ -16,7 +16,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\x86\Release\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DefineConstants>$(DefineConstants);INCLUDE_SVG;GUM</DefineConstants>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="SkiaInGumShared\obj\**" />
+    <EmbeddedResource Remove="SkiaInGumShared\obj\**" />
+    <None Remove="SkiaInGumShared\obj\**" />
+  </ItemGroup>
   <ItemGroup>
 	  <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
 	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
@@ -56,15 +62,6 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="SkiaInGumShared\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Debug\net6.0\SkiaInGum.AssemblyInfo.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Debug\net6.0\SkiaInGum.GlobalUsings.g.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Debug\net8.0\SkiaInGum.FNA.AssemblyInfo.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Debug\net8.0\SkiaInGum.FNA.GlobalUsings.g.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Release\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Release\net6.0\SkiaInGum.AssemblyInfo.cs" />
-    <Compile Remove="SkiaInGumShared\obj\Release\net6.0\SkiaInGum.GlobalUsings.g.cs" />
     <Compile Remove="SkiaInGumShared\Renderables\RenderableArc.cs" />
     <Compile Remove="SkiaInGumShared\Renderables\RenderableCanvas.cs" />
     <Compile Remove="SkiaInGumShared\Renderables\RenderableCircle.cs" />

@@ -83,12 +83,17 @@ public class FrameworkElement : INotifyPropertyChanged
 {
     #region Fields/Properties
 
+
 #if FRB
     public static Cursor MainCursor => GuiManager.Cursor;
+
+    public static FlatRedBall.Input.Keyboard MainKeyboard => FlatRedBall.Input.Keyboard.Main;
 
     public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
     public static ICursor MainCursor { get; set; }
+
+    public static IInputReceiverKeyboard MainKeyboard { get; set; }
 
 #if !FRB
     public Cursors? CustomCursor { get; set; }
@@ -213,7 +218,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get { return Visual.Height; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value))
             {
                 throw new Exception("NaN value not supported for FrameworkElement Height");
@@ -231,7 +236,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get { return Visual.Width; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value))
             {
                 throw new Exception("NaN value not supported for FrameworkElement Width");
@@ -354,7 +359,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get => visual;
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             // allow the visual to be un-assigned if it was assigned before, like if a forms control is getting removed.
             if (value == null && visual == null)
             {
@@ -364,8 +369,8 @@ public class FrameworkElement : INotifyPropertyChanged
             InteractiveGue oldVisual = visual;
             if (visual != value)
             {
-#if DEBUG
-                if(value?.FormsControlAsObject != null)
+#if FULL_DIAGNOSTICS
+                if (value?.FormsControlAsObject != null)
                 {
                     var message =
                         $"Cannot set the {this.GetType().Name}'s Visual to {value.Name} because the assigned Visual is already the Visual for another framework element of type {value.FormsControlAsObject}";
@@ -452,6 +457,12 @@ public class FrameworkElement : INotifyPropertyChanged
     [Obsolete("Use DefaultFormsTemplates")]
     public static Dictionary<Type, Type> DefaultFormsComponents { get; private set; } = new Dictionary<Type, Type>();
 
+    /// <summary>
+    /// Contains the default association from a Forms type (such as Button) to the visual template used
+    /// for that particular forms type (such as the V2 button style, or a Component loaded from the Gum tool).
+    /// This may contain standard Gum types such as Gum.Forms.Controls, as well as derived types, such as
+    /// forms types created from components in generated code.
+    /// </summary>
     public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; private set; } = new Dictionary<Type, VisualTemplate>();
 
     protected static InteractiveGue GetGraphicalUiElementFor(FrameworkElement element)
@@ -462,10 +473,11 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static InteractiveGue? GetGraphicalUiElementForFrameworkElement(Type type)
     {
-        if(DefaultFormsTemplates.ContainsKey(type))
+        if (DefaultFormsTemplates.ContainsKey(type))
         {
             return DefaultFormsTemplates[type].CreateContent(null, createFormsInternally:false) as InteractiveGue;
         }
+#pragma warning disable CS0618 // We need this in place to support existing code which uses DefaultFormsComponents
         else if (DefaultFormsComponents.ContainsKey(type))
         {
             var gumType = DefaultFormsComponents[type];
@@ -486,6 +498,7 @@ public class FrameworkElement : INotifyPropertyChanged
             }
 
         }
+#pragma warning restore CS0618 // Type or member is obsolete
         else
         {
             var baseType = type.BaseType;
@@ -621,13 +634,15 @@ public class FrameworkElement : INotifyPropertyChanged
     /// to a Gum screen in Gum will automatically be displayed when the Screen is created, and calling
     /// this will result in the object being added twice.</remarks>
     /// <param name="layer">The layer to add this to, can be null to add it directly to managers</param>
+    [Obsolete("Do not use this method. Either add this to the Root, to a Screen, or to a parent container")]
 #if FRB
     public void Show(FlatRedBall.Graphics.Layer layer = null)
 #else
+
     public void Show(Layer layer = null)
 #endif
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
             throw new InvalidOperationException("Visual must be set before calling Show");
@@ -640,7 +655,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             gumLayer = Gum.GumIdb.Self.GumLayersOnFrbLayer(layer).FirstOrDefault();
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if(gumLayer == null)
             {
                 throw new InvalidOperationException("Could not find a Gum layer on this FRB layer");
@@ -677,7 +692,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <returns>A task which will complete once this element is removed from managers.</returns>
     public async Task<bool?> ShowDialog(FlatRedBall.Graphics.Layer frbLayer = null)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
             throw new InvalidOperationException("Visual must be set before calling Show");
@@ -740,7 +755,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public void RepositionToKeepInScreen()
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (Visual == null)
         {
             throw new InvalidOperationException("Visual hasn't yet been set");
@@ -863,10 +878,10 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
     [Obsolete("Use OnBindingContextChanged")]
-    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
+    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) =>
+        OnBindingContextChanged(sender, args);
 
-    protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) =>
-        HandleVisualBindingContextChanged(sender, args);
+    protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
     protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
     {
@@ -1054,7 +1069,9 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         void UnFocusRequestingVisual()
         {
-            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement)
+            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
+                // this can happen if the only input receiver requests next tab and it loops back on itself.
+                InteractiveGue.CurrentInputReceiver != requestingFrameworkElement)
             {
                 requestingFrameworkElement.IsFocused = false;
             }
@@ -1275,7 +1292,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         var cursor = MainCursor;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (cursor == null)
         {
             throw new InvalidOperationException("MainCursor must be assigned before performing any UI logic");
@@ -1369,9 +1386,10 @@ public class FrameworkElement : INotifyPropertyChanged
             {
                 foreach (var combo in FrameworkElement.ClickCombos)
                 {
-                    if (combo.IsComboDown())
+                    if (combo.IsComboDown() && InteractiveGue.LastVisualPushed == this.Visual)
                     {
                         isPushInputHeldDown = true;
+                        break;
                     }
                 }
             }

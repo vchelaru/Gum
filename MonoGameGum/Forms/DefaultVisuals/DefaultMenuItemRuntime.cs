@@ -1,7 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -195,7 +195,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
         }
     }
 
-    VisualTemplate DefaultScrollVisualTemplate => new VisualTemplate(() =>
+    Gum.Forms.VisualTemplate DefaultScrollVisualTemplate => new (() =>
                 new DefaultScrollViewerRuntimeSizedToChildren(fullInstantiation: true, tryCreateFormsObject: false));
 
     public MenuItem FormsControl => FormsControlAsObject as MenuItem;

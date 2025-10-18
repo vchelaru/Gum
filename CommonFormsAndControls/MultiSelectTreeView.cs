@@ -1,75 +1,71 @@
 using System;
-using System.Timers;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace CommonFormsAndControls
 {
-    public class MultiSelectTreeView : TreeView, IEnumerable<TreeNode>
+    public partial class MultiSelectTreeView : TreeView, IEnumerable<TreeNode>
     {
-        #region Fields
+        #region Fields  
 
-		private Dictionary<TreeNode, Color> mOriginalColors;
-		private System.Timers.Timer mSearchTimer;
-		private string mSearchString;
-		private char mFirstSearchChar;
-		private char mLastSearchChar;
-		private const double TIMERVALUE = 750;
-		bool mNewKeyMatchesFirstKey;
-		private TreeNode mSelectedNode;
+        private Dictionary<TreeNode, Color> mOriginalColors;
+        private System.Timers.Timer mSearchTimer;
+        private string mSearchString;
+        private char mFirstSearchChar;
+        private char mLastSearchChar;
+        private const double TIMERVALUE = 750;
+        bool mNewKeyMatchesFirstKey;
+        private TreeNode mSelectedNode;
         private bool mSelectedNodeChanged = false;
         private List<TreeNode> mSelectedNodes = null;
         private ImageList ElementTreeImages;
+        private System.ComponentModel.IContainer components;
         private TreeNode nodeOnDragStart;
         public ImageList ElementTreeImageList => ElementTreeImages;
 
         #endregion
 
-        #region Properties
+        #region Properties  
 
-        public bool AlwaysHaveOneNodeSelected
-        {
-            get;
-            set;
-        }
+        public bool AlwaysHaveOneNodeSelected { get; set; }
 
         public List<TreeNode> SelectedNodes
-		{
-			get
-			{
-				return mSelectedNodes;
-			}
-			set
-			{
-				ClearSelectedNodes();
-				if( value != null )
-				{
-					foreach (TreeNode node in value)
-					{
-						SetNodeSelected(node, true);
-					}
-					OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
-				}
-			}
-		}
+        {
+            get { return mSelectedNodes; }
+            set
+            {
+                ClearSelectedNodes();
+                if (value != null)
+                {
+                    foreach (TreeNode node in value)
+                    {
+                        SetNodeSelected(node, true);
+                    }
 
-		// Note we use the new keyword to Hide the native treeview's SelectedNode property.
-		public new TreeNode SelectedNode
-		{
-			get
-            { 
-                // March 1, 2012
-                // This caches off
-                // mSelectedNode because
-                // we can't relyon the base
-                // TreeView to tell us the SelectedNode - 
-                // we've overidden that functionalty to get
-                // multi-selection.  However, this causes a problem
-                // when a TreeNode is removed.  The MultiSelectTreeView
-                // isn't notified so it still thinks it's selected.  Therefore
-                // we have to test the node to see if it's still part of the TreeView
-                // by checking its TreeView property.
+                    OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
+                }
+            }
+        }
+
+        // Note we use the new keyword to Hide the native treeview's SelectedNode property.  
+        public new TreeNode SelectedNode
+        {
+            get
+            {
+                // March 1, 2012  
+                // This caches off  
+                // mSelectedNode because  
+                // we can't relyon the base  
+                // TreeView to tell us the SelectedNode -   
+                // we've overidden that functionalty to get  
+                // multi-selection.  However, this causes a problem  
+                // when a TreeNode is removed.  The MultiSelectTreeView  
+                // isn't notified so it still thinks it's selected.  Therefore  
+                // we have to test the node to see if it's still part of the TreeView  
+                // by checking its TreeView property.  
                 if (mSelectedNode != null)
                 {
                     if (mSelectedNode.TreeView != null)
@@ -86,49 +82,45 @@ namespace CommonFormsAndControls
                     return mSelectedNode;
                 }
             }
-			set
-			{
-                // Don't do anything if it's the same selection
+            set
+            {
+                // Don't do anything if it's the same selection  
                 if (value == mSelectedNode)
                 {
                     return;
                 }
 
-				ClearSelectedNodes();
-				if (value != null)
-				{
-					ReactToClickedNode(value);
+                ClearSelectedNodes();
+                if (value != null)
+                {
+                    ReactToClickedNode(value);
 
-                    // ReactToClickedNode has event raising already, so this results in the event being raised twice:
-					//OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
-				}
-			}
+                    // ReactToClickedNode has event raising already, so this results in the event being raised twice:  
+                    //OnAfterSelect(new TreeViewEventArgs(mSelectedNode));  
+                }
+            }
         }
 
-        public MultiSelectBehavior MultiSelectBehavior
-        {
-            get;
-            set;
-        }
+        public MultiSelectBehavior MultiSelectBehavior { get; set; }
 
         #endregion
 
-        #region Events
+        #region Events  
 
 
         public event TreeViewEventHandler AfterClickSelect;
 
         #endregion
 
-        #region Event Methods
+        #region Event Methods  
 
         protected override void OnGotFocus(EventArgs e)
         {
-            // Make sure at least one node has a selection
-            // this way we can tab to the ctrl and use the 
-            // keyboard to select nodes
+            // Make sure at least one node has a selection  
+            // this way we can tab to the ctrl and use the   
+            // keyboard to select nodes  
 #if !DEBUG
-            try
+            try  
 #endif
             {
                 if (mSelectedNode == null && this.TopNode != null && AlwaysHaveOneNodeSelected)
@@ -139,23 +131,30 @@ namespace CommonFormsAndControls
                 base.OnGotFocus(e);
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
 #endif
         }
 
-        // If false, then only select on a click
+        // If false, then only select on a click  
         public bool IsSelectingOnPush { get; set; } = true;
+
+        private TreeNode? GetNodeAtRowY(int y)
+        {
+            // pick a safe X inside the client & left of label area  
+            // (1 px from client-left is usually fine)  
+            return GetNodeAt(1, y);
+        }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            // If the user clicks on a node that was not
-            // previously selected, select it now.
-//			BeginUpdate();
+            // If the user clicks on a node that was not  
+            // previously selected, select it now.  
+            //			BeginUpdate();  
 #if !DEBUG
-            try
+            try  
 #endif
             {
                 base.SelectedNode = null;
@@ -163,34 +162,25 @@ namespace CommonFormsAndControls
                 TreeNode previousSelectedNode = mSelectedNode;
                 var previousCount = SelectedNodes.Count;
 
-                TreeNode node = this.GetNodeAt(e.Location);
+                TreeNode node = this.GetNodeAtRowY(e.Location.Y);
                 if (node != null)
                 {
-                    int extraOnLeft = 0;
-
-                    if (node.ImageIndex != -1)
+                    if (mSelectedNodes.Contains(node) && e.Button == MouseButtons.Right &&
+                        EffectiveModifiers() != Keys.None)
                     {
-                        extraOnLeft = -20;
                     }
-
-                    int leftBound = node.Bounds.X + extraOnLeft; // Allow user to click on image
-                    int rightBound = node.Bounds.Right + 10; // Give a little extra room
-                    if (e.Location.X > leftBound && e.Location.X < rightBound)
+                    else if ((EffectiveModifiers() == Keys.None &&
+                              MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                             (mSelectedNodes.Contains(node)))
                     {
-                        if (mSelectedNodes.Contains(node) && e.Button == MouseButtons.Right && ModifierKeys != Keys.None)
-                        {
-                        }
-                        else if ((ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) && (mSelectedNodes.Contains(node)))
-                        {
-                            // Potential Drag Operation
-                            // Let Mouse Up do select
-                        }
-                        else if(IsSelectingOnPush || ModifierKeys == Keys.Shift || ModifierKeys == Keys.Control || 
-                            e.Button == MouseButtons.Right)
-                        {
-                            // For gum we want to prevent selection on a push. Should be on a click
-                            ReactToClickedNode(node);
-                        }
+                        // Potential Drag Operation  
+                        // Let Mouse Up do select  
+                    }
+                    else if (IsSelectingOnPush || EffectiveModifiers() == Keys.Shift || EffectiveModifiers() == Keys.Control ||
+                             e.Button == MouseButtons.Right)
+                    {
+                        // For gum we want to prevent selection on a push. Should be on a click  
+                        ReactToClickedNode(node);
                     }
                 }
                 else
@@ -202,97 +192,83 @@ namespace CommonFormsAndControls
 
                 mSelectedNodeChanged = previousSelectedNode != mSelectedNode;
 
-                if(!mSelectedNodeChanged)
+                if (!mSelectedNodeChanged)
                 {
-                    // If multiples are selected but no keys are held down, then we're going to deselect
-                    // back down to 1.
-                    if(mSelectedNodes.Count > 1 && ModifierKeys == Keys.None)
+                    // If multiples are selected but no keys are held down, then we're going to deselect  
+                    // back down to 1.  
+                    if (mSelectedNodes.Count > 1 && EffectiveModifiers() == Keys.None)
                     {
                         mSelectedNodeChanged = true;
                     }
                 }
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
 #endif
-//			EndUpdate();
+            //			EndUpdate();  
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            // If the clicked on a node that WAS previously
-            // selected then, reselect it now. This will clear
-            // any other selected nodes. e.g. A B C D are selected
-            // the user clicks on B, now A C & D are no longer selected.
-            // unless the user right clicked on a node that is already selected
-            // then they probably want the context menu for the selected items.
+            // If the clicked on a node that WAS previously  
+            // selected then, reselect it now. This will clear  
+            // any other selected nodes. e.g. A B C D are selected  
+            // the user clicks on B, now A C & D are no longer selected.  
+            // unless the user right clicked on a node that is already selected  
+            // then they probably want the context menu for the selected items.  
 #if !DEBUG
-            try
+            try  
 #endif
             {
+                if (MouseUpOverride())
+                {   // ClickSupressed
+                    // Do NOT select; just let listeners see MouseUp and bail.  
+                    base.OnMouseUp(e);
+                    return;
+                }
+
                 // Check to see if a node was clicked on 
-                TreeNode node = this.GetNodeAt(e.Location);
+                TreeNode node = this.GetNodeAtRowY(e.Location.Y);
                 if (node != null)
                 {
-                    var shouldSelect = (ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                    var shouldSelect =
+                        (EffectiveModifiers() == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
                         ((mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node)) || IsSelectingOnPush == false) &&
                         e.Button != MouseButtons.Right;
 
                     if (shouldSelect)
                     {
-                        int extraOnLeft = 0;
-
-                        if (node.ImageIndex != -1)
-                        {
-                            extraOnLeft = -20;
-                        }
-
-                        int leftBound = node.Bounds.X + extraOnLeft; // Allow user to click on image
-                        int rightBound = node.Bounds.Right + 10; // Give a little extra room
-                        if (e.Location.X > leftBound && e.Location.X < rightBound)
-                        {
-                            ReactToClickedNode(node);
-                        }
+                        ReactToClickedNode(node);
                     }
 
-                    if ((mSelectedNodeChanged || IsSelectingOnPush == false ) && AfterClickSelect != null)
+                    if ((mSelectedNodeChanged || IsSelectingOnPush == false) && AfterClickSelect != null)
                     {
                         AfterClickSelect(this, new TreeViewEventArgs(node));
                     }
                 }
 
-                // Not sure why the drag drop events are not raised automatically, trying to do so manually...
-                if(nodeOnDragStart != null)
-                {
-                    DragEventArgs dragEventArgs = new DragEventArgs(null, 0, Cursor.Position.X, Cursor.Position.Y, DragDropEffects.All, DragDropEffects.All);
-
-                    this.OnDragDrop(dragEventArgs);
-                }
-
-                nodeOnDragStart = null;
-
 
                 base.OnMouseUp(e);
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
 #endif
         }
 
         protected override void OnItemDrag(ItemDragEventArgs e)
         {
-            // If the user drags a node and the node being dragged is NOT
-            // selected, then clear the active selection, select the
-            // node being dragged and drag it. Otherwise if the node being
-            // dragged is selected, drag the entire selection.
+            // If the user drags a node and the node being dragged is NOT  
+            // selected, then clear the active selection, select the  
+            // node being dragged and drag it. Otherwise if the node being  
+            // dragged is selected, drag the entire selection.  
 #if !DEBUG
-            try
+            try  
 #endif
             {
                 TreeNode node = e.Item as TreeNode;
@@ -301,8 +277,8 @@ namespace CommonFormsAndControls
                 {
                     if (!mSelectedNodes.Contains(node))
                     {
-                        // These were commented out from hash 3e123616856be6717c66b49b4f5dfcd5f9136907
-                        // Uncommented because they appear to fix secondary issue in #1143
+                        // These were commented out from hash 3e123616856be6717c66b49b4f5dfcd5f9136907  
+                        // Uncommented because they appear to fix secondary issue in #1143  
                         SelectSingleNode(node);
                         SetNodeSelected(node, true);
                     }
@@ -313,10 +289,10 @@ namespace CommonFormsAndControls
                 base.OnItemDrag(e);
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
 #endif
         }
 
@@ -324,9 +300,9 @@ namespace CommonFormsAndControls
 
         protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
         {
-            // Never allow base.SelectedNode to be set!
+            // Never allow base.SelectedNode to be set!  
 #if !DEBUG
-            try
+            try  
 #endif
             {
                 base.SelectedNode = null;
@@ -335,45 +311,49 @@ namespace CommonFormsAndControls
                 base.OnBeforeSelect(e);
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
 #endif
         }
 
         protected override void OnAfterSelect(TreeViewEventArgs e)
         {
-            // Never allow base.SelectedNode to be set!
+            // Never allow base.SelectedNode to be set!  
 #if !DEBUG
-            try
+            try  
 #endif
             {
-                //if(mSelectedNodes.Count > 0)
-                //{
-                //    var firstNode = mSelectedNodes[0];
-                //    firstNode.EnsureVisible();
-                //}
-                // should we ensure all?
-                foreach(var node in mSelectedNodes)
+                //if(mSelectedNodes.Count > 0)  
+                //{  
+                //    var firstNode = mSelectedNodes[0];  
+                //    firstNode.EnsureVisible();  
+                //}  
+                // should we ensure all?  
+                foreach (var node in mSelectedNodes)
                 {
-                    node.EnsureVisible();
+                    if (!node.IsVisible)
+                    {
+                        node.EnsureVisible();
+                    }
                 }
+
                 base.OnAfterSelect(e);
                 base.SelectedNode = null;
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
 #endif
         }
 
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
 #if !DEBUG
-            try
+            try  
 #endif
             {
                 if (mSearchTimer.Enabled)
@@ -399,6 +379,7 @@ namespace CommonFormsAndControls
                     {
                         return;
                     }
+
                     return;
                 }
 
@@ -426,7 +407,7 @@ namespace CommonFormsAndControls
                 }
             }
 #if !DEBUG
-            finally
+            finally  
 #endif
             {
                 mLastSearchChar = e.KeyChar;
@@ -436,27 +417,27 @@ namespace CommonFormsAndControls
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            // Handle all possible key strokes for the control.
-            // including navigation, selection, etc.
+            // Handle all possible key strokes for the control.  
+            // including navigation, selection, etc.  
 
             if (e.KeyCode == Keys.ShiftKey) return;
             if (e.KeyCode == Keys.ControlKey) return;
 
-            //this.BeginUpdate();
+            //this.BeginUpdate();  
             bool bShift = (ModifierKeys == Keys.Shift);
 
 #if !DEBUG
-            try
+            try  
 #endif
             {
-                // Nothing is selected in the tree, this isn't a good state
-                // select the top node
+                // Nothing is selected in the tree, this isn't a good state  
+                // select the top node  
                 if (mSelectedNode == null && this.TopNode != null)
                 {
                     SetNodeSelected(this.TopNode, true);
                 }
 
-                // Nothing is still selected in the tree, this isn't a good state, leave.
+                // Nothing is still selected in the tree, this isn't a good state, leave.  
                 if (mSelectedNode == null) return;
 
                 var isAltDown = (e.Modifiers & Keys.Alt) == Keys.Alt;
@@ -466,12 +447,12 @@ namespace CommonFormsAndControls
                 {
                     if (mSelectedNode.IsExpanded && mSelectedNode.Nodes.Count > 0)
                     {
-                        // Collapse an expanded node that has children
+                        // Collapse an expanded node that has children  
                         mSelectedNode.Collapse();
                     }
                     else if (mSelectedNode.Parent != null)
                     {
-                        // Node is already collapsed, try to select its parent.
+                        // Node is already collapsed, try to select its parent.  
                         SelectSingleNode(mSelectedNode.Parent);
                     }
                 }
@@ -479,18 +460,18 @@ namespace CommonFormsAndControls
                 {
                     if (!mSelectedNode.IsExpanded)
                     {
-                        // Expand a collpased node's children
+                        // Expand a collpased node's children  
                         mSelectedNode.Expand();
                     }
                     else
                     {
-                        // Node was already expanded, select the first child
+                        // Node was already expanded, select the first child  
                         SelectSingleNode(mSelectedNode.FirstNode);
                     }
                 }
                 else if (e.KeyCode == Keys.Up && !isAltDown && !isControlDown)
                 {
-                    // Select the previous node
+                    // Select the previous node  
                     if (mSelectedNode.PrevVisibleNode != null)
                     {
                         ReactToClickedNode(mSelectedNode.PrevVisibleNode);
@@ -498,7 +479,7 @@ namespace CommonFormsAndControls
                 }
                 else if (e.KeyCode == Keys.Down && !isAltDown && !isControlDown)
                 {
-                    // Select the next node
+                    // Select the next node  
                     if (mSelectedNode.NextVisibleNode != null)
                     {
                         ReactToClickedNode(mSelectedNode.NextVisibleNode);
@@ -510,7 +491,7 @@ namespace CommonFormsAndControls
                     {
                         if (mSelectedNode.Parent == null)
                         {
-                            // Select all of the root nodes up to this point 
+                            // Select all of the root nodes up to this point   
                             if (this.Nodes.Count > 0)
                             {
                                 ReactToClickedNode(this.Nodes[0]);
@@ -518,13 +499,13 @@ namespace CommonFormsAndControls
                         }
                         else
                         {
-                            // Select all of the nodes up to this point under this nodes parent
+                            // Select all of the nodes up to this point under this nodes parent  
                             ReactToClickedNode(mSelectedNode.Parent.FirstNode);
                         }
                     }
                     else
                     {
-                        // Select this first node in the tree
+                        // Select this first node in the tree  
                         if (this.Nodes.Count > 0)
                         {
                             SelectSingleNode(this.Nodes[0]);
@@ -537,7 +518,7 @@ namespace CommonFormsAndControls
                     {
                         if (mSelectedNode.Parent == null)
                         {
-                            // Select the last ROOT node in the tree
+                            // Select the last ROOT node in the tree  
                             if (this.Nodes.Count > 0)
                             {
                                 ReactToClickedNode(this.Nodes[this.Nodes.Count - 1]);
@@ -545,7 +526,7 @@ namespace CommonFormsAndControls
                         }
                         else
                         {
-                            // Select the last node in this branch
+                            // Select the last node in this branch  
                             ReactToClickedNode(mSelectedNode.Parent.LastNode);
                         }
                     }
@@ -553,20 +534,21 @@ namespace CommonFormsAndControls
                     {
                         if (this.Nodes.Count > 0)
                         {
-                            // Select the last node visible node in the tree.
-                            // Don't expand branches incase the tree is virtual
+                            // Select the last node visible node in the tree.  
+                            // Don't expand branches incase the tree is virtual  
                             TreeNode ndLast = this.Nodes[0].LastNode;
                             while (ndLast.IsExpanded && (ndLast.LastNode != null))
                             {
                                 ndLast = ndLast.LastNode;
                             }
+
                             SelectSingleNode(ndLast);
                         }
                     }
                 }
                 else if (e.KeyCode == Keys.PageUp)
                 {
-                    // Select the highest node in the display
+                    // Select the highest node in the display  
                     int nCount = this.VisibleCount;
                     TreeNode ndCurrent = mSelectedNode;
                     while ((nCount) > 0 && (ndCurrent.PrevVisibleNode != null))
@@ -574,11 +556,12 @@ namespace CommonFormsAndControls
                         ndCurrent = ndCurrent.PrevVisibleNode;
                         nCount--;
                     }
+
                     SelectSingleNode(ndCurrent);
                 }
                 else if (e.KeyCode == Keys.PageDown)
                 {
-                    // Select the lowest node in the display
+                    // Select the lowest node in the display  
                     int nCount = this.VisibleCount;
                     TreeNode ndCurrent = mSelectedNode;
                     while ((nCount) > 0 && (ndCurrent.NextVisibleNode != null))
@@ -586,19 +569,21 @@ namespace CommonFormsAndControls
                         ndCurrent = ndCurrent.NextVisibleNode;
                         nCount--;
                     }
+
                     SelectSingleNode(ndCurrent);
                 }
                 else
                 {
                 }
+
                 base.OnKeyDown(e);
             }
 #if !DEBUG
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-            finally
+            catch (Exception ex)  
+            {  
+                HandleException(ex);  
+            }  
+            finally  
 #endif
 
             {
@@ -608,43 +593,49 @@ namespace CommonFormsAndControls
 
         #endregion
 
-        #region Methods
+        #region Methods  
 
-        #region Constructor
+        #region Constructor  
 
         public MultiSelectTreeView()
-		{
+        {
             InitializeComponent();
-			mSelectedNodes = new List<TreeNode>();
-			mOriginalColors = new Dictionary<TreeNode, Color>();
-			// Create a timer
-			mSearchTimer = new System.Timers.Timer(TIMERVALUE);
+            mSelectedNodes = new List<TreeNode>();
+            mOriginalColors = new Dictionary<TreeNode, Color>();
+            // Create a timer  
+            mSearchTimer = new System.Timers.Timer(TIMERVALUE);
 
-			mSearchTimer.AutoReset = false;
-	
-			// Hook up the Elapsed event for the timer.
-			mSearchTimer.Elapsed += new ElapsedEventHandler(TimerElapsed);
+            mSearchTimer.AutoReset = false;
 
-			mSearchString = "";
-			mFirstSearchChar = '\0';
-			mLastSearchChar = '\0';
-			//  assume the next key they are going to hit is the same as the first
-			mNewKeyMatchesFirstKey = true;
+            // Hook up the Elapsed event for the timer.  
+            mSearchTimer.Elapsed += new ElapsedEventHandler(TimerElapsed);
+
+            mSearchString = "";
+            mFirstSearchChar = '\0';
+            mLastSearchChar = '\0';
+            //  assume the next key they are going to hit is the same as the first  
+            mNewKeyMatchesFirstKey = true;
 
 
-				
-			base.SelectedNode = null;
+
+            base.SelectedNode = null;
+            ExtendedConstructor();
         }
+
+        partial void ExtendedConstructor();
+        private partial bool MouseUpOverride();
+        private partial bool BeforeWndProcBase(ref Message m);
+        private partial bool AfterWndProcBase(ref Message m);
 
         #endregion
 
-        #region Public Methods
+        #region Public Methods  
 
         public void Deselect(TreeNode node)
         {
             if (mSelectedNodes.Remove(node))
             {
-                node.BackColor = this.BackColor;
+                node.BackColor = Color.Empty;
                 node.ForeColor = mOriginalColors[node];
                 mOriginalColors.Remove(node);
             }
@@ -673,46 +664,63 @@ namespace CommonFormsAndControls
 
         #endregion
 
-		// Vic says - The short of it is this code stops flickering.
-		// Here's the long of it:  This class inherits from the MultiSelectTreeView
-		// class.  The base class doesn't support multiple selection of objects, so we
-		// have to implement our own selection logic for multiple selection by changing
-		// the color of TreeNodes when they are selected.  Unfortunately, changing the color
-		// of tree nodes causes the window to update, which makes the displayed text flicker.
-		// Well, the following code fixes it thanks to some really smart dude who posted here:
-		// http://www.codeguru.com/forum/archive/index.php/t-182326.html
-		private const int WM_ERASEBKGND = 0x0014;
-		protected override void WndProc(ref Message m)
-		{
-			if (m.Msg == WM_ERASEBKGND)
-			{
-				m.Result = IntPtr.Zero;
-				return;
-			}
-			base.WndProc(ref m);
-		}
+        // Vic says - The short of it is this code stops flickering.  
+        // Here's the long of it:  This class inherits from the MultiSelectTreeView  
+        // class.  The base class doesn't support multiple selection of objects, so we  
+        // have to implement our own selection logic for multiple selection by changing  
+        // the color of TreeNodes when they are selected.  Unfortunately, changing the color  
+        // of tree nodes causes the window to update, which makes the displayed text flicker.  
+        // Well, the following code fixes it thanks to some really smart dude who posted here:  
+        // http://www.codeguru.com/forum/archive/index.php/t-182326.html  
+        private const int WM_ERASEBKGND = 0x0014;
 
-        #region Private Methods
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_ERASEBKGND)
+            {
+                m.Result = IntPtr.Zero;
+                return;
+            }
 
-		private void ClearSelectedNodes()
-		{
-			foreach (TreeNode node in mSelectedNodes)
-			{
-				node.BackColor = this.BackColor;
-				node.ForeColor = mOriginalColors[node];
-			}
+            if (BeforeWndProcBase(ref m))
+            {
+                return;
+            }
 
-			mSelectedNodes.Clear();
-			mOriginalColors.Clear();
-			mSelectedNode = null;
-		}
+            base.WndProc(ref m);
+
+            if (AfterWndProcBase(ref m))
+            {
+                return;
+            }
+        }
+
+        public event EventHandler? StructureMutated; // fires on any add/remove (coalesced)  
+
+        private bool _mutateQueued;
+
+        #region Private Methods  
+
+        private void ClearSelectedNodes()
+        {
+            foreach (TreeNode node in mSelectedNodes)
+            {
+                node.BackColor = Color.Empty;
+                node.ForeColor = mOriginalColors[node];
+            }
+
+            mSelectedNodes.Clear();
+            mOriginalColors.Clear();
+            mSelectedNode = null;
+        }
 
         private bool FindAndSelectNode(TreeNode node)
         {
-            if(node == null)
+            if (node == null)
             {
                 throw new ArgumentNullException(nameof(node));
             }
+
             while ((node.NextVisibleNode != null))
             {
                 node = node.NextVisibleNode;
@@ -723,22 +731,23 @@ namespace CommonFormsAndControls
                     return true;
                 }
             }
+
             return false;
         }
-        
+
         protected static TreeNode GetNextTreeNodeCrawling(TreeNode treeNode)
         {
             const int maxNumberOfTries = 10;
             int numberTriedSoFar = 0;
 
-            // This may
-            // get called
-            // while another
-            // thread modifies
-            // the tree node.  The
-            // try/catch makes it so
-            // we try more times and don't
-            // fail if something has been modified.
+            // This may  
+            // get called  
+            // while another  
+            // thread modifies  
+            // the tree node.  The  
+            // try/catch makes it so  
+            // we try more times and don't  
+            // fail if something has been modified.  
             while (numberTriedSoFar < maxNumberOfTries)
             {
                 try
@@ -752,20 +761,21 @@ namespace CommonFormsAndControls
                     numberTriedSoFar++;
                 }
             }
+
             return treeNode;
         }
 
         private void HandleException(Exception ex)
         {
-            // Perform some error handling here. 
-            // We don't want to bubble errors to the CLR.  
+            // Perform some error handling here.   
+            // We don't want to bubble errors to the CLR.    
             MessageBox.Show(ex.Message);
         }
 
-        private void ReactToClickedNode( TreeNode node )
-		{
+        private void ReactToClickedNode(TreeNode node)
+        {
 #if !DEBUG
-            try
+            try  
 #endif
             {
 
@@ -779,6 +789,7 @@ namespace CommonFormsAndControls
                         {
                             Deselect(SelectedNodes[i]);
                         }
+
                         mSelectedNode = null;
                     }
                     else
@@ -786,25 +797,26 @@ namespace CommonFormsAndControls
                         shouldRaiseEvents = false;
                     }
                 }
-                else if (mSelectedNode == null || ModifierKeys == Keys.Control || MultiSelectBehavior == MultiSelectBehavior.RegularClick)
+                else if (mSelectedNode == null || EffectiveModifiers() == Keys.Control ||
+                         MultiSelectBehavior == MultiSelectBehavior.RegularClick)
                 {
-                    // Ctrl+Click selects an unselected node, or unselects a selected node.
+                    // Ctrl+Click selects an unselected node, or unselects a selected node.  
                     bool bIsSelected = mSelectedNodes.Contains(node);
                     SetNodeSelected(node, !bIsSelected);
                 }
-                else if (ModifierKeys == Keys.Shift)
+                else if (EffectiveModifiers() == Keys.Shift)
                 {
-                    // Shift+Click selects nodes between the selected node and here.
+                    // Shift+Click selects nodes between the selected node and here.  
                     TreeNode ndStart = mSelectedNode;
                     TreeNode ndEnd = node;
 
                     if (ndStart.Parent == ndEnd.Parent)
                     {
-                        // Selected node and clicked node have same parent, easy case.
+                        // Selected node and clicked node have same parent, easy case.  
                         if (ndStart.Index < ndEnd.Index)
                         {
-                            // If the selected node is beneath the clicked node walk down
-                            // selecting each Visible node until we reach the end.
+                            // If the selected node is beneath the clicked node walk down  
+                            // selecting each Visible node until we reach the end.  
                             while (ndStart != ndEnd)
                             {
                                 ndStart = ndStart.NextVisibleNode;
@@ -814,12 +826,12 @@ namespace CommonFormsAndControls
                         }
                         else if (ndStart.Index == ndEnd.Index)
                         {
-                            // Clicked same node, do nothing
+                            // Clicked same node, do nothing  
                         }
                         else
                         {
-                            // If the selected node is above the clicked node walk up
-                            // selecting each Visible node until we reach the end.
+                            // If the selected node is above the clicked node walk up  
+                            // selecting each Visible node until we reach the end.  
                             while (ndStart != ndEnd)
                             {
                                 ndStart = ndStart.PrevVisibleNode;
@@ -830,38 +842,38 @@ namespace CommonFormsAndControls
                     }
                     else
                     {
-                        // Selected node and clicked node have different parent, hard case.
-                        // We need to find a common parent to determine if we need
-                        // to walk down selecting, or walk up selecting.
+                        // Selected node and clicked node have different parent, hard case.  
+                        // We need to find a common parent to determine if we need  
+                        // to walk down selecting, or walk up selecting.  
 
                         TreeNode ndStartP = ndStart;
                         TreeNode ndEndP = ndEnd;
                         int startDepth = Math.Min(ndStartP.Level, ndEndP.Level);
 
-                        // Bring lower node up to common depth
+                        // Bring lower node up to common depth  
                         while (ndStartP.Level > startDepth)
                         {
                             ndStartP = ndStartP.Parent;
                         }
 
-                        // Bring lower node up to common depth
+                        // Bring lower node up to common depth  
                         while (ndEndP.Level > startDepth)
                         {
                             ndEndP = ndEndP.Parent;
                         }
 
-                        // Walk up the tree until we find the common parent
+                        // Walk up the tree until we find the common parent  
                         while (ndStartP.Parent != ndEndP.Parent)
                         {
                             ndStartP = ndStartP.Parent;
                             ndEndP = ndEndP.Parent;
                         }
 
-                        // Select the node
+                        // Select the node  
                         if (ndStartP.Index < ndEndP.Index)
                         {
-                            // If the selected node is beneath the clicked node walk down
-                            // selecting each Visible node until we reach the end.
+                            // If the selected node is beneath the clicked node walk down  
+                            // selecting each Visible node until we reach the end.  
                             while (ndStart != ndEnd)
                             {
                                 ndStart = ndStart.NextVisibleNode;
@@ -892,8 +904,8 @@ namespace CommonFormsAndControls
                         }
                         else
                         {
-                            // If the selected node is above the clicked node walk up
-                            // selecting each Visible node until we reach the end.
+                            // If the selected node is above the clicked node walk up  
+                            // selecting each Visible node until we reach the end.  
                             while (ndStart != ndEnd)
                             {
                                 ndStart = ndStart.PrevVisibleNode;
@@ -905,42 +917,44 @@ namespace CommonFormsAndControls
                 }
                 else
                 {
-                    // Just clicked a node, select it
+                    // Just clicked a node, select it  
                     SelectSingleNode(node);
                 }
 
-                // August 22, 2011
-                // Not sure why this
-                // is using mSelectedNode,
-                // but I think we should be
-                // using node, because that's
-                // the node that just got selected.
-                //OnAfterSelect(new TreeViewEventArgs(mSelectedNode));
+                // August 22, 2011  
+                // Not sure why this  
+                // is using mSelectedNode,  
+                // but I think we should be  
+                // using node, because that's  
+                // the node that just got selected.  
+                //OnAfterSelect(new TreeViewEventArgs(mSelectedNode));  
                 if (shouldRaiseEvents)
                 {
                     OnAfterSelect(new TreeViewEventArgs(node));
                 }
             }
 #if !DEBUG
-			finally
-			{
-
-			}
+			finally  
+			{  
+  
+			}  
 #endif
-		}
+        }
 
-		private void SelectSingleNode(TreeNode node)
-		{
-			if (node == null)
-				return;
+        private void SelectSingleNode(TreeNode node)
+        {
+            if (node == null)
+                return;
+            ClearSelectedNodes();
+            SetNodeSelected(node, true);
+            if (!node.IsVisible)
+            {
+                node.EnsureVisible();
+            }
+        }
 
-			ClearSelectedNodes();
-			SetNodeSelected(node, true);
-			node.EnsureVisible();
-		}
-
-		private void SetNodeSelected(TreeNode node, bool selected)
-		{
+        private void SetNodeSelected(TreeNode node, bool selected)
+        {
             if (node == null)
                 return;
 
@@ -948,7 +962,7 @@ namespace CommonFormsAndControls
                 AddNodeToSelected(node);
             else
                 Deselect(node);
-		}
+        }
 
 
         public void UpdateForeColorFor(TreeNode treeNode, ref Color color)
@@ -960,17 +974,17 @@ namespace CommonFormsAndControls
             }
         }
 
-		private void TimerElapsed(object source, ElapsedEventArgs e)
-		{
-			mSearchString = "";
-			mNewKeyMatchesFirstKey = true;
-		}
+        private void TimerElapsed(object source, ElapsedEventArgs e)
+        {
+            mSearchString = "";
+            mNewKeyMatchesFirstKey = true;
+        }
 
         #endregion
 
         #endregion
 
-        #region IEnumerable<TreeNode> Members
+        #region IEnumerable<TreeNode> Members  
 
         public IEnumerator<TreeNode> GetEnumerator()
         {
@@ -992,7 +1006,7 @@ namespace CommonFormsAndControls
 
         #endregion
 
-        #region IEnumerable Members
+        #region IEnumerable Members  
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
@@ -1016,8 +1030,9 @@ namespace CommonFormsAndControls
 
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
-            this.ElementTreeImages = new System.Windows.Forms.ImageList();
+            this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
             this.SuspendLayout();
             // 
             // ElementTreeImages
@@ -1025,10 +1040,10 @@ namespace CommonFormsAndControls
             this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
             this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
             this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
-            this.ElementTreeImages.Images.SetKeyName(1, "folder.png");
+            this.ElementTreeImages.Images.SetKeyName(1, "Folder.png");
             this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
             this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
-            this.ElementTreeImages.Images.SetKeyName(4, "screen.png");
+            this.ElementTreeImages.Images.SetKeyName(4, "Screen.png");
             this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
             this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
             this.ElementTreeImages.Images.SetKeyName(7, "state.png");
@@ -1039,19 +1054,19 @@ namespace CommonFormsAndControls
         }
     }
 
-    #region Tree Node Extension Methods
+    #region Tree Node Extension Methods  
 
     public static class TreeNodeExtensions
     {
         public static TreeNode NextNodeCrawlingTree(this TreeNode node)
         {
-            // return child?
+            // return child?  
             if (node.Nodes.Count != 0)
             {
                 return node.Nodes[0];
             }
 
-            // return sibling?
+            // return sibling?  
             TreeNode nextSibling = node.NextNode;
 
             if (nextSibling != null)
@@ -1087,4 +1102,3 @@ namespace CommonFormsAndControls
         RegularClick
     }
 }
-

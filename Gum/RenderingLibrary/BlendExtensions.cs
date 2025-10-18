@@ -13,8 +13,12 @@ namespace Gum.RenderingLibrary
     public static class BlendExtensions
     {
         #if !NO_XNA && !SKIA
-        public static BlendState ToBlendState(this Blend blend)
+        public static BlendState ToBlendState(this Blend blend, bool isUsingPremultipliedAlpha = false)
         {
+#if FRB
+            isUsingPremultipliedAlpha = true;
+#endif
+
             switch (blend)
             {
                 case Blend.Normal:
@@ -24,11 +28,11 @@ namespace Gum.RenderingLibrary
                 case Blend.Replace:
                     return BlendState.Opaque;
                 case Blend.SubtractAlpha:
-                    return BlendState.SubtractAlpha;
+                    return isUsingPremultipliedAlpha ? BlendState.SubtractAlphaPremultiplied : BlendState.SubtractAlpha;
                 case Blend.ReplaceAlpha:
-                    return BlendState.ReplaceAlpha;
+                    return isUsingPremultipliedAlpha ? BlendState.ReplaceAlphaPremultiplied : BlendState.ReplaceAlpha;
                 case Blend.MinAlpha:
-                    return BlendState.MinAlpha;
+                    return isUsingPremultipliedAlpha ? BlendState.MinAlphaPremultiplied : BlendState.MinAlpha;
             }
             return BlendState.NonPremultiplied;
         }

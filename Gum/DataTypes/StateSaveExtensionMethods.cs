@@ -1004,7 +1004,7 @@ public static class StateSaveExtensionMethods
     /// <exception cref="ArgumentNullException">If either of the argument states are null.</exception>
     public static void Merge(StateSave firstState, StateSave secondState, float secondRatio, List<VariableSaveValues> mergedValues)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (firstState == null || secondState == null)
         {
             throw new ArgumentNullException("States must not be null");
@@ -1065,7 +1065,7 @@ public static class StateSaveExtensionMethods
 
     public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (other == null)
         {
             throw new ArgumentNullException("other Statesave is null and it shouldn't be");
@@ -1254,6 +1254,10 @@ public static class StateSaveExtensionMethods
             int secondFloat = (int)secondValue;
 
             return (int)(.5f + firstFloat + (secondFloat - firstFloat) * interpolationValue);
+        }
+        if(firstValue is bool && secondValue is bool)
+        {
+            return interpolationValue >= 1 ? secondValue : firstValue;
         }
         else
         {

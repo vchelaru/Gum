@@ -1,29 +1,44 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CommonFormsAndControls;
-using System.Windows.Forms;
+using CommunityToolkit.Mvvm.Messaging;
+using FlatRedBall.Glue.Themes;
+using Gum.Commands;
+using Gum.Controls;
 using Gum.DataTypes;
-using Gum.ToolStates;
-using Gum.DataTypes.Variables;
-using System.IO;
-using ToolsUtilities;
-using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
-using Gum.Plugins;
-using System.ComponentModel;
-using Grid = System.Windows.Controls.Grid;
+using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Mvvm;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
-using Gum.Logic;
-using System.Drawing;
-using Gum.Commands;
-using Gum.Dialogs;
-using WpfInput = System.Windows.Input;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using Gum.Wireframe;
+using MaterialDesignThemes.Wpf;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Media;
+using ToolsUtilities;
+using Application = System.Windows.Application;
+using Binding = System.Windows.Data.Binding;
+using Color = System.Drawing.Color;
 using Cursors = System.Windows.Forms.Cursors;
+using DragDropEffects = System.Windows.Forms.DragDropEffects;
+using DragEventArgs = System.Windows.Forms.DragEventArgs;
+using Grid = System.Windows.Controls.Grid;
+using MessageBox = System.Windows.Forms.MessageBox;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
+using SystemColors = System.Drawing.SystemColors;
+using WpfInput = System.Windows.Input;
 
 namespace Gum.Managers;
 
@@ -107,7 +122,7 @@ class TreeNodeWrapper : ITreeNode
 
 #endregion
 
-public partial class ElementTreeViewManager
+public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, IRecipient<ApplicationStartupMessage>
 {
     #region Fields
 
@@ -263,6 +278,7 @@ public partial class ElementTreeViewManager
 
     private DragDropManager _dragDropManager;
     private CopyPasteLogic _copyPasteLogic;
+    private readonly IMessenger _messenger;
 
     public bool HasMouseOver
     {
@@ -286,6 +302,8 @@ public partial class ElementTreeViewManager
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
         _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+        _messenger.RegisterAll(this);
 
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
@@ -529,9 +547,9 @@ public partial class ElementTreeViewManager
 
         InitializeMenuItems();
 
-        //var panel = new Panel();
 
         var grid = new Grid();
+        grid.Margin = new Thickness(4);
         grid.RowDefinitions.Add(
             new System.Windows.Controls.RowDefinition() 
             { Height = System.Windows.GridLength.Auto });
@@ -545,9 +563,22 @@ public partial class ElementTreeViewManager
         _tabManager.AddControl(grid, "Project", TabLocation.Left);
 
         ObjectTreeView.Dock = DockStyle.Fill;
-        //panel.Controls.Add(ObjectTreeView);
+
         TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-        TreeViewHost.Child = ObjectTreeView;
+        TreeViewHost.Background = System.Windows.Media.Brushes.Transparent;
+
+        ThemedScrollContainer scrollContainer = new()
+        {
+            AutoComputeExtent = false,
+            Dock = DockStyle.Fill,
+            EnableHorizontalScroll = true
+        };
+        scrollContainer.AddContent(ObjectTreeView);
+        scrollContainer.WireTreeToScroller(ObjectTreeView);
+
+        TreeViewHost.Child = scrollContainer;
+        TreeViewHost.Margin = new Thickness(0,4,0,0);
+        
         Grid.SetRow(TreeViewHost, 2);
         grid.Children.Add(TreeViewHost);
 
@@ -557,12 +588,28 @@ public partial class ElementTreeViewManager
         grid.Children.Add(searchBarUi);
 
         var checkBoxUi = CreateSearchCheckBoxUi();
+        checkBoxUi.Visibility = Visibility.Collapsed;
+        checkBoxUi.Focusable = false;
+        checkBoxUi.Margin = new Thickness(0, 2, 0, 0);
+        searchBarUi.IsKeyboardFocusedChanged += (s, e) =>
+        {
+            if (e.NewValue is true)
+            {
+                checkBoxUi.Visibility = Visibility.Visible;
+            }
+            else if (!checkBoxUi.IsFocused)
+            {
+                checkBoxUi.Visibility = Visibility.Collapsed;
+            }
+        };
+        
         Grid.SetRow(checkBoxUi, 1);
         grid.Children.Add(checkBoxUi);
 
         FlatList = CreateFlatSearchList();
         FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
         FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
+        FlatList.Margin = new(0, 4, 0, 0);
 
         Grid.SetRow(FlatList, 2);
         grid.Children.Add(FlatList);
@@ -581,6 +628,7 @@ public partial class ElementTreeViewManager
         this.mMenuStrip = new System.Windows.Forms.ContextMenuStrip();
         this.mMenuStrip.Name = "ElementMenuStrip";
         this.mMenuStrip.Size = new System.Drawing.Size(61, 4);
+        this.mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
         this.ObjectTreeView.ContextMenuStrip = this.mMenuStrip;
     }
 
@@ -607,15 +655,25 @@ public partial class ElementTreeViewManager
         this.ObjectTreeView.KeyPress += this.ObjectTreeView_KeyPress;
         this.ObjectTreeView.PreviewKeyDown += this.ObjectTreeView_PreviewKeyDown;
         this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
+        this.ObjectTreeView.BackColor =
+            Application.Current.TryFindResource("Frb.Colors.SurfaceO1") is System.Windows.Media.Color color
+                ? System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B)
+                : System.Drawing.SystemColors.Window;
+        this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
+
         this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
         this.ObjectTreeView.FontChanged += (sender, _) =>
         {
-            if (sender is MultiSelectTreeView { Font.Size: var fontSize})
+            if (sender is MultiSelectTreeView { Font: { Size: var fontSize } font })
             {
-                const float defaultFontSize = 8.25f;
-                UpdateTreeviewIconScale(fontSize/defaultFontSize);
+                const float defaultFontSize = 9f;
+                UpdateTreeviewIcons(fontSize/defaultFontSize);
+                mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var _);
+                mMenuStrip.Font = font;
             }
         };
+        this.ObjectTreeView.BorderStyle = BorderStyle.None;
+
         ObjectTreeView.DragDrop += HandleDragDropEvent;
 
         ObjectTreeView.ItemDrag += (sender, e) =>
@@ -650,6 +708,47 @@ public partial class ElementTreeViewManager
         };
     }
 
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        if (System.Windows.Application.Current is { } current &&
+            current.TryFindResource("Frb.Brushes.Foreground") is SolidColorBrush { Color: var fg } &&
+            current.TryFindResource("Frb.Surface01") is SolidColorBrush { Color: var field } bgBrush)
+        {
+            Color foregroundColor = Color.FromArgb(fg.A, fg.R, fg.G, fg.B);
+            Color fieldColor = Color.FromArgb(field.A, field.R, field.G, field.B);
+            this.ObjectTreeView.ForeColor = mMenuStrip.ForeColor = foregroundColor;
+            this.ObjectTreeView.BackColor = mMenuStrip.BackColor = fieldColor;
+            this.ObjectTreeView.LineColor = ObjectTreeView.BackColor;
+            this.mMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
+            this.TreeViewHost.Background = bgBrush;
+            (TreeViewHost.Child as ThemedScrollContainer)!.BackColor = fieldColor;
+
+            if (current.TryFindResource("Frb.Brushes.Primary.Transparent") is SolidColorBrush
+                {
+                    Opacity: var primOpacity
+                } T &&
+                current.TryFindResource("Frb.Brushes.Primary") is SolidColorBrush { Color: var primColor })
+            {
+                this.ObjectTreeView.HoverBgColor =
+                    Color.FromArgb(Map01To255(primOpacity), primColor.R, primColor.G, primColor.B);
+                this.ObjectTreeView.SelectedBorderColor =
+                    Color.FromArgb(primColor.A, primColor.R, primColor.G, primColor.B);
+
+                const float defaultFontSize = 9f;
+                UpdateTreeviewIcons(ObjectTreeView.Font.Size / defaultFontSize);
+            }
+        }
+
+        static int Map01To255(double value)
+        {
+            // clamp just in case
+            if (value < 0) value = 0;
+            if (value > 1) value = 1;
+
+            return (int)Math.Round(value * 255);
+        }
+    }
+
     private ImageList CloneImageList(ImageList original)
     {
         // Create a new ImageList with matching properties
@@ -670,53 +769,129 @@ public partial class ElementTreeViewManager
         return copy;
     }
 
-    private void UpdateTreeviewIconScale(float scale = 1.0f)
+
+
+    private void UpdateTreeviewIcons(
+        float scale = 1.0f)
     {
-        int baseImageSize = 16;
+        float baseImageSize = 16;
 
-        // Then we can re-scale the images
-        ObjectTreeView.ImageList = ResizeImageListImages(
-            unmodifiableImageList
-            , new System.Drawing.Size(
-                (int)(baseImageSize * scale)
-                , (int)(baseImageSize * scale)));
-
-        ImageList ResizeImageListImages(ImageList originalImageList, Size newSize)
+        using (var g = ObjectTreeView.CreateGraphics())
         {
-            ImageList resizedImageList = new ImageList
+            baseImageSize *= (g.DpiX / 96f);
+        }
+        
+        var size = new Size((int)(baseImageSize * scale), (int)(baseImageSize * scale));
+
+        var keyedColors = GetCurrentColorMap();
+        Application app = Application.Current;
+        Color? defaultColor = null;
+        if (app.TryFindResource("Frb.Colors.Primary") is System.Windows.Media.Color dc)
+        {
+            defaultColor = Color.FromArgb(dc.A, dc.R, dc.G, dc.B);
+        }
+
+
+        ObjectTreeView.ImageList = BuildTintedImageList(unmodifiableImageList, size, keyedColors, defaultColor ?? Color.White);
+
+        ImageList BuildTintedImageList(
+            ImageList originalImageList,
+            Size newSize,
+            IDictionary<string, Color>? perKeyColors,
+            Color fallbackColor)
+        {
+            var outList = new ImageList
             {
                 ImageSize = newSize,
-                ColorDepth = originalImageList.ColorDepth // Preserve original color depth
+                ColorDepth = originalImageList.ColorDepth // preserve
             };
 
             foreach (string key in originalImageList.Images.Keys)
             {
-                Image originalImage = originalImageList.Images[key];
-                Image resizedImage = ResizeImageWithoutGraphics(originalImage, newSize); // Reuse ResizeImage method
-                resizedImageList.Images.Add(key, resizedImage);
+                var src = originalImageList.Images[key];
+
+                // pick the color for this key (fallback if none specified)
+                var tint = (perKeyColors != null && perKeyColors.TryGetValue(key, out var c)) ? c : fallbackColor;
+
+                // resize + tint in one pass
+                var tinted = ResizeAndTint(src, newSize, tint);
+
+                // ImageList takes ownership of the Image; don't dispose tinted here
+                outList.Images.Add(key, tinted);
             }
 
-            return resizedImageList;
+            return outList;
         }
 
-        Image ResizeImageWithoutGraphics(Image originalImage, Size newSize)
+        static Bitmap ResizeAndTint(Image original, Size newSize, Color tint)
         {
-            Bitmap resizedImage = new Bitmap(newSize.Width, newSize.Height);
+            // Normalize multipliers: white(1,1,1) * (r,g,b) => tint
+            float r = tint.R / 255f;
+            float g = tint.G / 255f;
+            float b = tint.B / 255f;
+            float a = tint.A / 255f; // scales source alpha; use 1.0f to keep original alpha
 
-            for (int x = 0; x < newSize.Width; x++)
+            var cm = new ColorMatrix(new float[][]
             {
-                for (int y = 0; y < newSize.Height; y++)
-                {
-                    // Calculate the position in the original image
-                    int originalX = x * originalImage.Width / newSize.Width;
-                    int originalY = y * originalImage.Height / newSize.Height;
+            new float[] { r, 0, 0, 0, 0 },
+            new float[] { 0, g, 0, 0, 0 },
+            new float[] { 0, 0, b, 0, 0 },
+            new float[] { 0, 0, 0, a, 0 },
+            new float[] { 0, 0, 0, 0, 1 }
+            });
 
-                    // Copy the pixel from the original image
-                    resizedImage.SetPixel(x, y, ((Bitmap)originalImage).GetPixel(originalX, originalY));
-                }
+            using var ia = new ImageAttributes();
+            ia.SetColorMatrix(cm, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+
+            // 32bpp ARGB ensures we keep transparency nice and crisp
+            var dest = new Bitmap(newSize.Width, newSize.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            using (var graphics = System.Drawing.Graphics.FromImage(dest))
+            {
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                var rect = new Rectangle(Point.Empty, newSize);
+                // Draw with the color matrix applied
+                graphics.DrawImage(original,
+                            destRect: rect,
+                            srcX: 0, srcY: 0, srcWidth: original.Width, srcHeight: original.Height,
+                            srcUnit: GraphicsUnit.Pixel,
+                            imageAttr: ia);
             }
 
-            return resizedImage;
+            return dest;
+        }
+
+        static Dictionary<string, Color> GetCurrentColorMap()
+        {
+            Application app = Application.Current;
+
+            var manillaColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Manilla");
+            var greenColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Green");
+            var blueColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Blue");
+            var redColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Red");
+            var purpleColor = (System.Windows.Media.Color)app.FindResource("Frb.Colors.Icon.Purple");
+
+            var manilla = System.Drawing.Color.FromArgb(manillaColor.A, manillaColor.R, manillaColor.G, manillaColor.B);
+            var green = System.Drawing.Color.FromArgb(greenColor.A, greenColor.R, greenColor.G, greenColor.B);
+            var blue = System.Drawing.Color.FromArgb(blueColor.A, blueColor.R, blueColor.G, blueColor.B);
+            var red = System.Drawing.Color.FromArgb(redColor.A, redColor.R, redColor.G, redColor.B);
+            var purple = System.Drawing.Color.FromArgb(purpleColor.A, purpleColor.R, purpleColor.G, purpleColor.B);
+
+            return new()
+            {
+                ["Folder.png"] = manilla,
+                ["Component.png"] = green,
+                ["Instance.png"] = blue,
+                ["Screen.png"] = red,
+                ["StandardElement.png"] = purple,
+                ["redExclamation.png"] = red,
+                ["state.png"] = blue,
+                ["behavior.png"] = manilla,
+            };
         }
     }
 
@@ -766,8 +941,8 @@ public partial class ElementTreeViewManager
                     // restore previous colors
                     if (mLastHoveredNode != null)
                     {
-                        mLastHoveredNode.BackColor = treeview.BackColor;
-                        mLastHoveredNode.ForeColor = treeview.ForeColor;
+                        mLastHoveredNode.BackColor = Color.Empty;
+                        mLastHoveredNode.ForeColor = Color.Empty;
                     }
 
                     // apply highlight colors
@@ -827,8 +1002,8 @@ public partial class ElementTreeViewManager
         // Make sure that we reset the Hovered items colors at the end of the drag
         if (mLastHoveredNode != null)
         {
-            mLastHoveredNode.BackColor = ObjectTreeView.BackColor;
-            mLastHoveredNode.ForeColor = ObjectTreeView.ForeColor;
+            mLastHoveredNode.BackColor = Color.Empty;
+            mLastHoveredNode.ForeColor = Color.Empty;
             mLastHoveredNode = null;
             hoverStartTime = null;
         }
@@ -2075,16 +2250,12 @@ public partial class ElementTreeViewManager
         FlatList.FlatList.Items.Add(vm);
     }
 
-    private Grid CreateSearchBoxUi()
+    private System.Windows.Controls.TextBox CreateSearchBoxUi()
     {
-        var grid = new Grid();
-        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
-            { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
-        { Width = System.Windows.GridLength.Auto});
-
-
         searchTextBox = new System.Windows.Controls.TextBox();
+        searchTextBox.SetValue(TextFieldAssist.HasClearButtonProperty, true);
+        searchTextBox.SetValue(HintAssist.HintProperty, "Search...");
+        searchTextBox.SetValue(HintAssist.IsFloatingProperty, false);
         searchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
         searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
         searchTextBox.KeyDown += (sender, args) =>
@@ -2134,18 +2305,7 @@ public partial class ElementTreeViewManager
             }
         };
 
-        grid.Children.Add(searchTextBox);
-
-        var xButton = new System.Windows.Controls.Button();
-        xButton.Content = " X "; // Spaces to force some padding automatically based on font size of space
-        xButton.Click += (not, used) => searchTextBox.Text = null;
-        xButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-        grid.Children.Add(xButton);
-
-        Grid.SetColumn(searchTextBox, 0);
-        Grid.SetColumn(xButton, 1);
-
-        return grid;
+        return searchTextBox;
     }
 
     private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
@@ -2154,7 +2314,7 @@ public partial class ElementTreeViewManager
         deepSearchCheckBox.IsChecked = false;
         deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
         deepSearchCheckBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-        deepSearchCheckBox.Content = "Search variables";
+        deepSearchCheckBox.Content = "Include Variables";
         deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
 
         return deepSearchCheckBox;
@@ -2218,6 +2378,13 @@ public partial class ElementTreeViewManager
         }
 
         PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+    }
+
+    void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)
+    {
+        ObjectTreeView.BackColor = Application.Current.TryFindResource("Frb.Colors.Surface01") is System.Windows.Media.Color c
+            ? Color.FromArgb(c.A, c.R, c.G, c.B)
+            : Color.Transparent;
     }
 }
 

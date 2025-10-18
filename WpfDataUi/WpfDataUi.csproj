@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;net6-windows</TargetFrameworks>
     <OutputType>Library</OutputType>
     <LangVersion>12.0</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -39,7 +39,6 @@
     <Resource Include="Content\Icons\OpenFolder.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Controls\EditableComboBoxDisplay.cs" />
     <Compile Remove="SampleProject\SampleProject\App.xaml.cs" />
     <Compile Remove="SampleProject\SampleProject\Character.cs" />
     <Compile Remove="SampleProject\SampleProject\MainWindow.xaml.cs" />

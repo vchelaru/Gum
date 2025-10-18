@@ -50,8 +50,6 @@ public class FileWatchManager : Singleton<FileWatchManager>
             // ... but it's needed for file names on PNG
             |NotifyFilters.FileName;
 
-
-
         fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
         fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
         // Gum files get deleted and then created, rather than changed
@@ -61,33 +59,55 @@ public class FileWatchManager : Singleton<FileWatchManager>
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
     {
-        FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
+        var gumProject = ProjectManager.Self.GumProjectSave;
+        if(gumProject == null)
+        {
+            return;
+        }
+        FilePath gumProjectFilePath = gumProject.FullFileName;
 
-        char gumProjectDrive = gumProjectFilePath.Standardized[0];
+        char? gumProjectDrive = gumProjectFilePath.Standardized[0];
 
         var rootmostDirectory = directories
-            .Where(item =>  FileManager.IsUrl(item.Original) == false)
+            .Where(item => item != null && FileManager.IsUrl(item.Original) == false)
             .OrderBy(item => item.FullPath.Length).FirstOrDefault();
 
         foreach (var path in directories)
         {
+            // be safe:
+            if(path == null)
+            {
+                continue;
+            }
             // make sure this is on the same drive as the gum project. If not, don't include it:
             if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
             {
-                while (rootmostDirectory.IsRootOf(path) == false && rootmostDirectory != path)
+                // This is finding a common root for all folders
+                // If the folders are in different directories, then
+                // no common root is possible, so this will ultimately
+                // result in a null value. We should tolerate this
+                // by not turning on file watch
+                while (rootmostDirectory != null && rootmostDirectory.IsRootOf(path) == false && rootmostDirectory != path)
                 {
                     rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
                 }
             }
         }
 
-        var filePathAsString = rootmostDirectory.StandardizedCaseSensitive;
-        // Gum standard is to have a trailing slash, 
-        // but FileSystemWatcher expects no trailing slash:
-        fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
-        CurrentFilePathWatching = fileSystemWatcher.Path;
+        if(rootmostDirectory != null)
+        {
+            var filePathAsString = rootmostDirectory.StandardizedCaseSensitive;
+            // Gum standard is to have a trailing slash, 
+            // but FileSystemWatcher expects no trailing slash:
+            fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
+            CurrentFilePathWatching = fileSystemWatcher.Path;
 
-        fileSystemWatcher.EnableRaisingEvents = true;
+            fileSystemWatcher.EnableRaisingEvents = true;
+        }
+        else
+        {
+            fileSystemWatcher.EnableRaisingEvents = false;
+        }
     }
 
     public void Disable()

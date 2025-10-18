@@ -10,6 +10,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using InputLibrary;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Math;
@@ -17,7 +18,7 @@ using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Windows.Threading;
+using System.Windows.Forms;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -42,7 +43,9 @@ public class ControlLogic
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
-    
+    private readonly HotkeyManager _hotkeyManager;
+    private readonly ScrollBarLogicWpf _scrollBarLogic;
+
     LineRectangle textureOutlineRectangle = null;
 
     MainControlViewModel ViewModel;
@@ -76,14 +79,23 @@ public class ControlLogic
         set => mainControl.InnerControl.CurrentTexture = value;
     }
 
-    public ControlLogic()
+    public ControlLogic(ISelectedState selectedState,
+        IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        SetVariableLogic setVariableLogic,
+        ITabManager tabManager,
+        HotkeyManager hotkeyManager,
+        ScrollBarLogicWpf scrollBarLogic)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
-        _tabManager = Locator.GetRequiredService<ITabManager>();
+        _selectedState = selectedState;
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
+        _tabManager = tabManager;
+        _hotkeyManager = hotkeyManager;
+        _scrollBarLogic = scrollBarLogic;
     }
 
     public PluginTab CreateControl()
@@ -112,6 +124,7 @@ public class ControlLogic
         innerControl.StartRegionChanged += HandleStartRegionChanged;
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
+        innerControl.KeyDown += HandleKeyDown;
 
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
@@ -120,6 +133,7 @@ public class ControlLogic
             HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
 
         ViewModel = new MainControlViewModel();
+        ViewModel.AvailableZoomLevels = innerControl.AvailableZoomLevels;
         mainControl.DataContext = ViewModel;
 
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
@@ -130,7 +144,70 @@ public class ControlLogic
 
         RefreshLineGrid();
 
+        InitializeScrollBarLogic();
+
         return pluginTab;
+    }
+
+    private void InitializeScrollBarLogic()
+    {
+        _scrollBarLogic.Initialize(mainControl.VerticalScrollBar, mainControl.HorizontalScrollBar, SystemManagers.Renderer.Camera);
+
+        mainControl.InnerControl.SizeChanged += (_, _) =>
+        {
+            UpdateScrollBarsToTexture();
+        };
+
+        mainControl.InnerControl.MouseWheelZoom += (_, _) =>
+        {
+            UpdateScrollBarsToTexture();
+            ViewModel.SelectedZoomLevel = mainControl.InnerControl.ZoomValue;
+        };
+
+        mainControl.InnerControl.Panning += () =>
+        {
+            UpdateScrollBarsToTexture();
+        };
+    }
+
+    private void HandleKeyDown(object sender, KeyEventArgs e)
+    {
+        var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
+        if (_hotkeyManager.MoveCameraRight.IsPressed(e))
+        {
+            camera.X += 10;
+        }
+        if (_hotkeyManager.MoveCameraLeft.IsPressed(e))
+        {
+            camera.X -= 10;
+        }
+        if (_hotkeyManager.MoveCameraUp.IsPressed(e))
+        {
+            camera.Y -= 10;
+        }
+        if (_hotkeyManager.MoveCameraDown.IsPressed(e))
+        {
+            camera.Y += 10;
+        }
+        if (_hotkeyManager.ZoomCameraIn.IsPressed(e) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(e))
+        {
+            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomIn, considerCursor: false);
+        }
+        if (_hotkeyManager.ZoomCameraOut.IsPressed(e) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(e))
+        {
+            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
+        }
+
+        UpdateScrollBarsToTexture();
+
+    }
+
+    private void UpdateScrollBarsToTexture()
+    {
+        var texture = mainControl.InnerControl.CurrentTexture;
+        var width = texture?.Width ?? 1024;
+        var height = texture?.Height ?? 1024;
+        _scrollBarLogic.UpdateScrollBarsToCamera(width, height);
     }
 
     private void CreateNineSliceLines()
@@ -196,6 +273,10 @@ public class ControlLogic
             case nameof(MainControlViewModel.SelectedSnapToGridValue):
                 RefreshSnappingGridSize();
                 RefreshLineGrid();
+                break;
+            case nameof(MainControlViewModel.SelectedZoomLevel):
+                mainControl.InnerControl.ZoomValue = ViewModel.SelectedZoomLevel;
+                UpdateScrollBarsToTexture();
                 break;
         }
     }
@@ -347,30 +428,25 @@ public class ControlLogic
             var cursorY = (int)control.XnaCursor.GetWorldY(control.SystemManagers);
 
 
-            int left = Math.Max(0, cursorX - 32);
-            int top = Math.Max(0, cursorY - 32);
-            int right = left + 64;
-            int bottom = top + 64;
+            var selectionRect = GetOptimalSelectionRectangle(cursorX, cursorY, graphicalUiElement.TextureWidth, graphicalUiElement.TextureHeight);
 
-            int width = right - left;
-            int height = bottom - top;
+            graphicalUiElement.TextureLeft = selectionRect.X;
+            graphicalUiElement.TextureTop = selectionRect.Y;
+            graphicalUiElement.TextureWidth = selectionRect.Width;
+            graphicalUiElement.TextureHeight = selectionRect.Height;
 
-            graphicalUiElement.TextureLeft = left;
-            graphicalUiElement.TextureTop = top;
-
-            graphicalUiElement.TextureWidth = width;
-            graphicalUiElement.TextureHeight = height;
-
-            state.SetValue($"{instancePrefix}TextureLeft", left, "int");
-            state.SetValue($"{instancePrefix}TextureTop", top, "int");
-            state.SetValue($"{instancePrefix}TextureWidth", width, "int");
-            state.SetValue($"{instancePrefix}TextureHeight", height, "int");
+            state.SetValue($"{instancePrefix}TextureLeft", selectionRect.X, "int");
+            state.SetValue($"{instancePrefix}TextureTop", selectionRect.Y, "int");
+            state.SetValue($"{instancePrefix}TextureWidth", selectionRect.Width, "int");
+            state.SetValue($"{instancePrefix}TextureHeight", selectionRect.Height, "int");
             state.SetValue($"{instancePrefix}TextureAddress",
                 Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
 
             RefreshOutline(control, ref textureOutlineRectangle);
 
             RefreshSelector(RefreshType.Force);
+
+            UpdateScrollBarsToTexture();
 
             // We should refresh the entire grid because we could be
             // changing this from Entire Texture to Custom, resulting in
@@ -379,7 +455,28 @@ public class ControlLogic
             _guiCommands.RefreshVariables();
 
         }
+    }
 
+    private Rectangle GetOptimalSelectionRectangle(int cursorX, int cursorY, int textureWidth, int textureHeight)
+    {
+        // Default to 64x64 size, centered on the cursor position
+        int left = Math.Max(0, cursorX - 32);
+        int top = Math.Max(0, cursorY - 32);
+
+        // If they are using the grid size, snap to it instead!
+        if (ViewModel.IsSnapToGridChecked)
+        {
+            var gridSize = ViewModel.SelectedSnapToGridValue;
+
+            // find the top left using division and floor
+            left = (cursorX / gridSize) * gridSize;
+            top = (cursorY / gridSize) * gridSize;
+
+            // send back the rectangle selection
+            return new Rectangle(left, top, ViewModel.SelectedSnapToGridValue, ViewModel.SelectedSnapToGridValue);
+        }
+
+        return new Rectangle(left, top, 64, 64);
 
     }
 
@@ -552,10 +649,7 @@ public class ControlLogic
                 selector.ShowHandles = true;
                 selector.ShowMoveCursorWhenOver = true;
 
-                control.SystemManagers.Renderer.Camera.X =
-                    selector.Left + selector.Width / 2.0f;
-                control.SystemManagers.Renderer.Camera.Y =
-                    selector.Top + selector.Height / 2.0f;
+                this.CenterCameraOnSelection();
 
             }
             else if (textureAddress == TextureAddress.DimensionsBased)
@@ -609,6 +703,7 @@ public class ControlLogic
         {
             camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
             camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
+            UpdateScrollBarsToTexture();
         }
 
     }

@@ -144,7 +144,7 @@ namespace Gum.Managers
                 {
                     var contents = FileManager.FromFileText(innerFile.Standardized);
 
-                    var font = new BitmapFont.ParsedFontFile(contents);
+                    var font = new ParsedFontFile(contents);
 
                     var pages = font.Pages;
 

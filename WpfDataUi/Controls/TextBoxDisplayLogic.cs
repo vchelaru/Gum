@@ -553,25 +553,36 @@ namespace WpfDataUi.Controls
 
         public void RefreshBackgroundColor()
         {
-            if (InstanceMember.IsDefault)
+            mAssociatedTextBox.Dispatcher.BeginInvoke(() =>
             {
-                mAssociatedTextBox.Background = DefaultValueBackground;
-            }
-            else if (InstanceMember.IsIndeterminate)
-            {
-                mAssociatedTextBox.Background = IndeterminateValueBackground;
-            }
-            else
-            {
-                if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
+                
+                if (DataUiGrid.GetOverridesIsDefaultStyling(mAssociatedTextBox))
                 {
-                    mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty, "Frb.Brushes.Field.Background");
+                    return;
+                }
+
+                if (InstanceMember.IsDefault)
+                {
+                    mAssociatedTextBox.Background = DefaultValueBackground;
+                }
+                else if (InstanceMember.IsIndeterminate)
+                {
+                    mAssociatedTextBox.Background = IndeterminateValueBackground;
                 }
                 else
                 {
-                    mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
+                    if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
+                    {
+                        mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty,
+                            "Frb.Brushes.Field.Background");
+                    }
+                    else
+                    {
+                        mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
+                    }
                 }
-            }
+            });
+
         }
     }
 }

@@ -10,7 +10,7 @@ using ToolsUtilitiesStandard.Helpers;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LinePolygon : IVisible, IRenderableIpso
+    public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
     {
         #region Fields
 
@@ -147,7 +147,6 @@ namespace RenderingLibrary.Math.Geometry
 
         bool IRenderableIpso.IsRenderTarget => false;
 
-
         #endregion
 
         #region Constructor
@@ -243,9 +242,10 @@ namespace RenderingLibrary.Math.Geometry
             mLinePrimitive.SetPointAt(point, index);
         }
 
-        void IRenderable.Render(ISystemManagers managers)
+        public override void Render(ISystemManagers managers)
         {
-            if (AbsoluteVisible)
+            // See NineSlice for explanation of this Visible check
+            //if (AbsoluteVisible)
             {
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();

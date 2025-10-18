@@ -75,8 +75,13 @@ public class VariableInCategoryPropagationLogic
                 }
             }
 
-            StateSaveCategory category;
-            var isState = defaultVariable.IsState(variableContainer, out _, out category);
+            StateSaveCategory category = null;
+            var isState = false;
+            
+            if(variableContainer != null)
+            {
+                isState = defaultVariable.IsState(variableContainer, out _, out category);
+            }
 
             if(isState)
             {

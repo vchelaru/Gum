@@ -1,0 +1,98 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:system="clr-namespace:System;assembly=mscorlib">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Palette.xaml" />
+    <ResourceDictionary>
+      <Color x:Key="Frb.Colors.Foreground">#e4000000</Color>
+      <Color x:Key="Frb.Colors.Foreground.Subtle">#9E000000</Color>
+
+      <Color x:Key="Frb.Colors.Border">#adadad</Color>
+      <Color x:Key="Frb.Colors.Border.Secondary">#80ffffff</Color>
+
+      <Color x:Key="Frb.Colors.Background">#eeeeee</Color>
+
+      <Color x:Key="Frb.Colors.Surface01">#f7f7f7</Color>
+      <Color x:Key="Frb.Colors.Surface.Fill">#0f000000</Color>
+
+      <Color x:Key="Frb.Colors.Field.Background">#eeeeee</Color>
+
+      <Color x:Key="Frb.Colors.Error">#C62828</Color>
+      <Color x:Key="Frb.Colors.Success">#2E7D32</Color>
+
+      <Color x:Key="Frb.Colors.ThemeContrast">Black</Color>
+
+      <Color x:Key="Frb.Colors.Icon.Manilla">#b17900</Color>
+      <Color x:Key="Frb.Colors.Icon.Green">#10900c</Color>
+      <Color x:Key="Frb.Colors.Icon.Blue">#006bbe</Color>
+      <Color x:Key="Frb.Colors.Icon.Red">#cb2b3c</Color>
+      <Color x:Key="Frb.Colors.Icon.Purple">#5b2d90</Color>
+    </ResourceDictionary>
+  </ResourceDictionary.MergedDictionaries>
+
+
+  <SolidColorBrush
+    x:Key="Darken"
+    Opacity="0.05"
+    Color="Black" />
+  <SolidColorBrush
+    x:Key="Darken02"
+    Opacity="0.1"
+    Color="Black" />
+  <SolidColorBrush
+    x:Key="Darken03"
+    Opacity="0.15"
+    Color="Black" />
+
+  <SolidColorBrush x:Key="MaterialDesign.Brush.Foreground" Color="{DynamicResource Frb.Colors.Foreground}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Foreground" Color="{StaticResource Frb.Colors.Foreground}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Foreground.Subtle" Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Foreground.Disabled"
+    Opacity="0.5"
+    Color="{StaticResource Frb.Colors.Foreground}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Border" Color="{StaticResource Frb.Colors.Border}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Background" Color="{StaticResource Frb.Colors.Background}" />
+
+  <SolidColorBrush x:Key="Frb.Surface01" Color="{StaticResource Frb.Colors.Surface01}" />
+
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Contrast.Subtle"
+    Opacity="0.05"
+    Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Contrast01"
+    Opacity="0.085"
+    Color="{StaticResource Frb.Colors.Foreground}" />
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Contrast02"
+    Opacity="0.3"
+    Color="{StaticResource Frb.Colors.Foreground}" />
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Contrast03"
+    Opacity="0.4"
+    Color="{StaticResource Frb.Colors.Foreground}" />
+  <SolidColorBrush
+    x:Key="Frb.Brushes.Contrast04"
+    Opacity="0.5"
+    Color="{StaticResource Frb.Colors.Foreground}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Error" Color="{StaticResource Frb.Colors.Error}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Success" Color="{StaticResource Frb.Colors.Success}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Field.Background" Color="{StaticResource Frb.Colors.Field.Background}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Border.Secondary" Color="{StaticResource Frb.Colors.Border.Secondary}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Surface.Fill" Color="{StaticResource Frb.Colors.Surface.Fill}" />
+  <SolidColorBrush x:Key="Frb.Brushes.ThemeContrast" Color="{StaticResource Frb.Colors.ThemeContrast}" />
+
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Manilla" Color="{StaticResource Frb.Colors.Icon.Manilla}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Green" Color="{StaticResource Frb.Colors.Icon.Green}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Blue" Color="{StaticResource Frb.Colors.Icon.Blue}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Red" Color="{StaticResource Frb.Colors.Icon.Red}" />
+  <SolidColorBrush x:Key="Frb.Brushes.Icon.Purple" Color="{StaticResource Frb.Colors.Icon.Purple}" />
+</ResourceDictionary>

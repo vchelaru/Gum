@@ -451,7 +451,7 @@ public class Text : IRenderableIpso, IVisible, IText
         catch(Exception e)
         {
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             throw new InvalidOperationException($"An internal exception has occurred: {e.ToString()} with the following information:" +
                 $"forcedWidth {forcedWidth}\n" +
                 $"FontName {FontName}\n" +
@@ -490,6 +490,14 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public void PreRender() { }
 
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
+
     #region IVisible Implementation
 
     public bool Visible
@@ -520,6 +528,8 @@ public class Text : IRenderableIpso, IVisible, IText
             return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
+
+    public string BatchKey => string.Empty;
 
     #endregion
 }

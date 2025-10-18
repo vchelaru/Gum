@@ -371,9 +371,17 @@ public class SpriteRenderer
         basicEffect.VertexColorEnabled = true;
     }
 
-    public void Begin()
+    public void Begin(bool createNewParameters = true)
     {
-        mSpriteBatch.Begin();
+        if(mSpriteBatch.BeginEndState != SpriteBatchStack.SpriteBatchBeginEndState.Began)
+        {
+            mSpriteBatch.Begin(createNewParameters);
+        }
+    }
+
+    public void ForceSetRenderStatesToCurrent()
+    {
+        mSpriteBatch.ForceSetRenderStatesToCurrent();
     }
 
     internal void End()
@@ -405,8 +413,8 @@ public class SpriteRenderer
         bool offsetPixel = true,
         DimensionSnapping dimensionSnapping = DimensionSnapping.SideSnapping)
     {
-#if DEBUG
-        if(float.IsPositiveInfinity(scale.X))
+#if FULL_DIAGNOSTICS
+        if (float.IsPositiveInfinity(scale.X))
         {
             throw new ArgumentException("scale.X cannot be positive infinity");
         }
@@ -509,32 +517,19 @@ public class SpriteRenderer
                 }
                 else // size snapping
                 {
-                    if (rotation == 0)
-                    {
-                        roundedWidth = MathFunctions.RoundToInt(worldWidth * CurrentZoom) / CurrentZoom;
-                        roundedHeight = MathFunctions.RoundToInt(worldHeight * CurrentZoom) / CurrentZoom;
-                    }
-                    else
-                    {
-                        // If rotated, don't attempt to snap
-                        roundedWidth = worldWidth;
-                        roundedHeight = worldHeight;
-                    }
+                    roundedWidth = MathFunctions.RoundToInt(worldWidth * CurrentZoom) / CurrentZoom;
+                    roundedHeight = MathFunctions.RoundToInt(worldHeight * CurrentZoom) / CurrentZoom;
                 }
 
-                if(rotation == 0)
+                if(flipVerticalHorizontal)
                 {
-                    if(flipVerticalHorizontal)
-                    {
-                        scale.X = roundedHeight / sourceWidth;
-                        scale.Y = roundedWidth / sourceHeight;
-                    }
-                    else
-                    {
-                        scale.X = roundedWidth / sourceWidth;
-                        scale.Y = roundedHeight / sourceHeight;
-
-                    }
+                    scale.X = roundedHeight / sourceHeight;
+                    scale.Y = roundedWidth / sourceWidth;
+                }
+                else
+                {
+                    scale.X = roundedWidth / sourceWidth;
+                    scale.Y = roundedHeight / sourceHeight;
                 }
             }
 

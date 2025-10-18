@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class ButtonTab : global::MonoGameGum.Forms.Controls.Button
+partial class ButtonTab : global::Gum.Forms.Controls.Button
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/ButtonTab");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ButtonTab - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonTab(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonTab)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ButtonTab)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/ButtonTab", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -129,7 +132,6 @@ partial class ButtonTab : global::MonoGameGum.Forms.Controls.Button
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -145,6 +147,7 @@ partial class ButtonTab : global::MonoGameGum.Forms.Controls.Button
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -162,9 +165,9 @@ partial class ButtonTab : global::MonoGameGum.Forms.Controls.Button
         this.TabText.SetProperty("ColorCategoryState", "White");
         this.TabText.SetProperty("StyleCategoryState", "Strong");
         this.TabText.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.TabText.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        ((TextRuntime)this.TabText).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         this.TabText.Text = @"Tab 1";
-        this.TabText.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TabText).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TabText.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         this.TabText.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         this.TabText.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;

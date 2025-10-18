@@ -19,7 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace RenderingLibrary.Graphics;
 
-public class NineSlice : IRenderableIpso, 
+public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso, 
     IVisible, ITextureCoordinate, IAnimatable, ICloneable
 {
     #region Fields
@@ -311,9 +311,9 @@ public class NineSlice : IRenderableIpso,
     {
         get { return Position.X; }
         set 
-        { 
-#if DEBUG
-            if(float.IsNaN(value))
+        {
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
             {
                 throw new Exception("NaN is not an acceptable value");
             }
@@ -327,7 +327,7 @@ public class NineSlice : IRenderableIpso,
         get { return Position.Y; }
         set 
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value))
             {
                 throw new Exception("NaN is not an acceptable value");
@@ -453,9 +453,15 @@ public class NineSlice : IRenderableIpso,
         RefreshSpriteDimensions();
     }
 
-    void IRenderable.Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
-        if (AbsoluteVisible && Width > 0 && Height > 0)
+        //if (AbsoluteVisible && Width > 0 && Height > 0)
+        // Why do we check absolute visible?
+        // This seems to have problems:
+        // 1. It's expensive
+        // 2. The caller should be responsible for this
+        // 3. This prevents render target rendering when the parent is invisible
+        if (Width > 0 && Height > 0)
         {
             RefreshSourceRectangles();
 
@@ -911,7 +917,7 @@ public class NineSlice : IRenderableIpso,
         }
     }
 
-    public void SetSingleTexture(Texture2D texture)
+    public void SetSingleTexture(Texture2D? texture)
     {
         foreach (var sprite in mSprites)
         {

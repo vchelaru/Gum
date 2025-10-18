@@ -324,6 +324,8 @@ namespace Gum.Managers
         /// as their BaseType.
         /// </summary>
         /// <param name="elementSave">The ElementSave to search for.</param>
+        /// <param name="list">An optional list to fill. If null, a new list will be created. This can help reduce allocation if this method is called frequently.</param>
+        /// <param name="foundInstances">An optional list of InstanceSaves to fill with the instances that reference the argument elementSave. If null, instances will not be recorded.</param>
         /// <returns>A List containing all Elements</returns>
         public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave> list = null, List<InstanceSave> foundInstances = null)
         {

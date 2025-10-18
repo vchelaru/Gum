@@ -32,6 +32,8 @@ The following animation shows how to use the `ChildrenLayout` variable to change
 
 <figure><img src="../../../.gitbook/assets/08_06 28 12.png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
 
+`Top to Bottom Stack` behaves similarly to `Left to Right Stack`. For a detailed discussion see the `Left to Right Stack` section below.
+
 ## Left to Right Stack
 
 `Left to Right Stack` results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks.
@@ -45,6 +47,10 @@ A container can stack its children and also have its size based on its children.
 For example, the following shows a container with its `Height Units` set to `Relative To Children` and its `Children Layout` set to **Top To Bottom Stack**. As more children are added the container grows vertically.
 
 <figure><img src="../../../.gitbook/assets/03_19 05 40.gif" alt=""><figcaption><p>Top To Bottom Stack can be used with Height Units of Relative To Children to grow the container as children are added</p></figcaption></figure>
+
+Invisible children are ignored in the stack, so toggling the Visible property removes a child from the stack.
+
+<figure><img src="../../../.gitbook/assets/01_04 31 05.gif" alt=""><figcaption><p>Visible set to false removes an item from stacking</p></figcaption></figure>
 
 ### Stacking and X/Y Values
 
@@ -126,6 +132,8 @@ For more information on ordering, see the [Order](../general-properties/order.md
 ## Auto Grid Horizontal and Auto Grid Vertical
 
 `Auto Grid Horizontal` and `Auto Grid Vertical` layouts result in each child of the container being placed in its own cell. All position and size values are relative to the entire cell, so children can expand to fill their cell or be positioned according to any side or corner.
+
+The following image shows a container with 4x4 auto grid. Each child is positioned relative to the top-left corner of each grid. In this case, each child has an `Absolute` `Width` and `Height` of `50` and the parent container is sized `256x256`. This results in each rectangle leaving a gap between itself and its neighbor.
 
 <figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal </p></figcaption></figure>
 

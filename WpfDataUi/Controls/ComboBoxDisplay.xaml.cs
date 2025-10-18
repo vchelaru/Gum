@@ -46,6 +46,12 @@ namespace WpfDataUi.Controls
                 {
                     mInstanceMember.PropertyChanged += HandlePropertyChange;
                 }
+
+                if (instanceMemberChanged)
+                {
+                    this.RefreshAllContextMenus(force: true);
+                }
+
                 Refresh();
             }
         }
@@ -104,8 +110,7 @@ namespace WpfDataUi.Controls
 
             //this.ComboBox.IsEditable = true;
 
-            this.RefreshContextMenu(ComboBox.ContextMenu);
-            this.RefreshContextMenu(TextBlock.ContextMenu);
+            RefreshAllContextMenus();
 
             this.ComboBox.IsKeyboardFocusWithinChanged += HandleIsKeyboardFocusChanged;
             this.ComboBox.PreviewKeyDown += HandlePreviewKeyDown;
@@ -276,9 +281,7 @@ namespace WpfDataUi.Controls
 
             SyncForegroundWithState();
 
-
-            this.RefreshContextMenu(ComboBox.ContextMenu);
-            this.RefreshContextMenu(TextBlock.ContextMenu);
+            RefreshAllContextMenus();
             
             this.TextBlock.Text = InstanceMember.DisplayName;
 
@@ -295,6 +298,20 @@ namespace WpfDataUi.Controls
             else
             {
                 this.IsEnabled = true;
+            }
+        }
+
+        private void RefreshAllContextMenus(bool force = false)
+        {
+            if (force)
+            {
+                this.ForceRefreshContextMenu(ComboBox.ContextMenu);
+                this.ForceRefreshContextMenu(TextBlock.ContextMenu);
+            }
+            else
+            {
+                this.RefreshContextMenu(ComboBox.ContextMenu);
+                this.RefreshContextMenu(TextBlock.ContextMenu);
             }
         }
 
@@ -477,14 +494,23 @@ namespace WpfDataUi.Controls
 
         private void SyncForegroundWithState()
         {
-            if (InstanceMember.IsDefault)
+            Dispatcher.BeginInvoke(() =>
             {
-                ComboBox.Foreground = Brushes.Green;
-            }
-            else
-            {
-                ComboBox.ClearValue(Control.ForegroundProperty);
-            }
+                if (DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+                    return;
+                }
+
+                if (InstanceMember.IsDefault)
+                {
+                    ComboBox.Foreground = Brushes.Green;
+                }
+                else
+                {
+                    ComboBox.ClearValue(Control.ForegroundProperty);
+                }
+            });
+
         }
     }
 }

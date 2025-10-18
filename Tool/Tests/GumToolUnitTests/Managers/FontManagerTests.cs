@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
-public class FontManagerTests
+public class FontManagerTests : BaseTestClass
 {
     private readonly AutoMocker mocker;
 
@@ -15,6 +15,7 @@ public class FontManagerTests
 
     public FontManagerTests()
     {
+        mocker = new AutoMocker();
         _fontManager = mocker.CreateInstance<FontManager>();
     }
 }

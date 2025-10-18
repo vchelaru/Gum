@@ -1,7 +1,6 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using Moq;
 using NVorbis.Ogg;
@@ -100,6 +99,43 @@ public class FrameworkElementTests : BaseTestClass
     // CustomCursor cannot be properly tested because it requires a concrete Cursor class.
 
     [Fact]
+    public void HandleTab_ShouldSelectNextItem_InSameContainer()
+    {
+        StackPanel stackPanel = new();
+        stackPanel.AddToRoot();
+
+        Button button1 = new();
+        stackPanel.AddChild(button1);
+        Button button2 = new();
+        stackPanel.AddChild(button2);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+        button1.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldSelectNextItem_InDifferentSameContainers()
+    {
+        StackPanel stackPanel1 = new();
+        stackPanel1.AddToRoot();
+
+        StackPanel stackPanel2 = new();
+        stackPanel2.AddToRoot();
+
+        Button button1 = new();
+        stackPanel1.AddChild(button1);
+        Button button2 = new();
+        stackPanel2.AddChild(button2);
+
+        button1.IsFocused = true;
+        button1.HandleTab();
+        button1.IsFocused.ShouldBeFalse();
+        button2.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
     public void HandleTab_ShouldLoopBackToFirstItem()
     {
         var stack1 = new StackPanel();
@@ -133,4 +169,35 @@ public class FrameworkElementTests : BaseTestClass
         stack2.Children[1].IsFocused.ShouldBeFalse();
         stack1.Children[0].IsFocused.ShouldBeTrue();
     }
+
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_OnTabOfOnlyElement()
+    {
+        Button playButton = new ();
+        playButton.AddToRoot();
+
+        playButton.IsFocused = true;
+
+        playButton.HandleTab(loop: true);
+
+        playButton.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotUnfocus_OnTabOfOnlyElementInStack()
+    {
+        StackPanel mainPanel = new ();
+        mainPanel.AddToRoot();
+
+        Button playButton = new ();
+        mainPanel.AddChild(playButton);
+
+        playButton.IsFocused = true;
+
+        playButton.HandleTab(loop: true);
+
+        playButton.IsFocused.ShouldBeTrue();
+    }
+
 }

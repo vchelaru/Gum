@@ -212,74 +212,77 @@ public class UndoManager : IUndoManager
             //_selectedState.SelectedStateSave != null &&
             UndoLocks.Count == 0;
 
-        if (canUndo)
+        ///////////////////////////////////////Early Out//////////////////////////////////////
+        if(!canUndo)
         {
-            StateSave newStateSave = _selectedState.SelectedStateSave;
-            var currentCategory = _selectedState.SelectedStateCategorySave;
-            ElementSave newElement = _selectedState.SelectedElement;
+            return;
+        }
+        /////////////////////////////////////End Early Out////////////////////////////////////
 
-            StateSave oldState = null;
+        StateSave newStateSave = _selectedState.SelectedStateSave;
+        var currentCategory = _selectedState.SelectedStateCategorySave;
+        ElementSave newElement = _selectedState.SelectedElement;
 
-            if (newStateSave != null)
+        StateSave oldState = null;
+
+        if (newStateSave != null)
+        {
+            if (currentCategory != null)
             {
-                if (currentCategory != null)
-                {
-                    var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
-                    oldState = category?.States.Find(item => item.Name == newStateSave.Name);
-                }
-                else
-                {
-                    var stateName = newStateSave.Name;
-                    oldState = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
-                }
+                var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
+                oldState = category?.States.Find(item => item.Name == newStateSave.Name);
             }
-
-            UndoSnapshot undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
-                recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
-
-            if (undoSnapshot != null)
+            else
             {
-                if(mUndos.ContainsKey(_selectedState.SelectedElement))
-                {
-                    var history = mUndos[_selectedState.SelectedElement];
-
-                    var isAtEndOfStack = history.UndoIndex == history.Actions.Count - 1;
-                    if (!isAtEndOfStack)
-                    {
-                        // If we're not at the end of the stack, then we need to remove all the items after the current index
-                        while (history.Actions.Count > history.UndoIndex + 1)
-                        {
-                            history.Actions.RemoveAt(history.Actions.Count - 1);
-                        }
-                    }
-
-                    var action = new HistoryAction { UndoState = undoSnapshot };
-
-                    history.Actions.Add(action);
-                    history.UndoIndex = history.Actions.Count - 1;
-
-                    var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
-
-                    if(redoSnapshot != null)
-                    {
-                        action.RedoState = redoSnapshot;
-                    }
-
-
-                    RecordState();
-
-                    InvokeUndosChanged(UndoOperation.HistoryAppended);
-                }
-                else
-                {
-                    // This can happen when copy/pasting a new element and selecting it, so let's record the state
-                    // so future work an be undone
-                    RecordState();
-
-                }
+                var stateName = newStateSave.Name;
+                oldState = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
             }
         }
 
+        UndoSnapshot undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
+            recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+
+        if (undoSnapshot != null)
+        {
+            if(mUndos.ContainsKey(_selectedState.SelectedElement))
+            {
+                var history = mUndos[_selectedState.SelectedElement];
+
+                var isAtEndOfStack = history.UndoIndex == history.Actions.Count - 1;
+                if (!isAtEndOfStack)
+                {
+                    // If we're not at the end of the stack, then we need to remove all the items after the current index
+                    while (history.Actions.Count > history.UndoIndex + 1)
+                    {
+                        history.Actions.RemoveAt(history.Actions.Count - 1);
+                    }
+                }
+
+                var action = new HistoryAction { UndoState = undoSnapshot };
+
+                history.Actions.Add(action);
+                history.UndoIndex = history.Actions.Count - 1;
+
+                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+
+                if(redoSnapshot != null)
+                {
+                    action.RedoState = redoSnapshot;
+                }
+
+
+                RecordState();
+
+                InvokeUndosChanged(UndoOperation.HistoryAppended);
+            }
+            else
+            {
+                // This can happen when copy/pasting a new element and selecting it, so let's record the state
+                // so future work an be undone
+                RecordState();
+
+            }
+        }
     }
 
     /// <summary>
@@ -411,71 +414,101 @@ public class UndoManager : IUndoManager
         return undoLock;
     }
 
-    public void PerformUndo()
+
+
+    
+    public bool CanUndo()
     {
-        ElementHistory elementHistory = null;
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
-        if (_selectedState.SelectedElement != null && mUndos.ContainsKey(_selectedState.SelectedElement))
-        {
-            elementHistory = mUndos[_selectedState.SelectedElement];
-        }
+        return CanUndo(elementHistory);
+    }
 
+    public bool CanUndo(ElementHistory? elementHistory)
+    {
         if (elementHistory != null && elementHistory.Actions.Count != 0 && elementHistory.UndoIndex > -1)
         {
-            var isLast = elementHistory.UndoIndex == elementHistory.Actions.Count - 1;
-
-            if(isLast)
-            {
-                elementHistory.FinalState = CloneWithFixedEnumerations(_selectedState.SelectedElement);
-            }
-
-            var undoSnapshot = elementHistory.Actions.ElementAt(elementHistory.UndoIndex);
-
-
-
-            ElementSave toApplyTo = _selectedState.SelectedElement;
-
-            ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, 
-                out bool shouldRefreshWireframe, 
-                out bool shouldRefreshStateTreeView,
-                out bool shouldRefreshBehaviorView);
-
-            //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
-            //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
-            //{
-
-            StateSave stateToSelect = null;
-            if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
-            {
-                var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
-                if(category != null)
-                {
-                    stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-                }
-            }
-            else
-            {
-                stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-            }
-            if (stateToSelect != null)
-            {
-                isRecordingUndos = false;
-                _selectedState.SelectedStateSave = stateToSelect;
-
-                isRecordingUndos = true;
-            }
-            //}
-
-            var newIndex = elementHistory.UndoIndex - 1;
-
-            //if (isLast)
-            //{
-            //    RecordUndo();
-            //}
-
-            elementHistory.UndoIndex = newIndex;
-            DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, shouldRefreshBehaviorView);
+            return true;
         }
+
+        return false;
+    }
+
+    private ElementHistory? GetValidUndosForElement(ElementSave? elementSave)
+    {
+        ElementHistory? elementHistory = null;
+
+        if (elementSave != null && mUndos.ContainsKey(elementSave))
+        {
+            elementHistory = mUndos[elementSave];
+        }
+
+        return elementHistory;
+    }
+
+    public void PerformUndo()
+    {
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
+
+        //////////////////////////////////////Early Out///////////////////////////////////////
+        if (!CanUndo(elementHistory))
+        {
+            return;
+        }
+        ////////////////////////////////////End Early Out/////////////////////////////////////
+
+        var isLast = elementHistory!.UndoIndex == elementHistory.Actions.Count - 1;
+
+        if(isLast)
+        {
+            elementHistory.FinalState = CloneWithFixedEnumerations(_selectedState.SelectedElement);
+        }
+
+        var undoSnapshot = elementHistory.Actions.ElementAt(elementHistory.UndoIndex);
+
+
+
+        ElementSave toApplyTo = _selectedState.SelectedElement;
+
+        ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, 
+            out bool shouldRefreshWireframe, 
+            out bool shouldRefreshStateTreeView,
+            out bool shouldRefreshBehaviorView);
+
+        //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
+        //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
+        //{
+
+        StateSave stateToSelect = null;
+        if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
+        {
+            var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
+            if(category != null)
+            {
+                stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
+            }
+        }
+        else
+        {
+            stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
+        }
+        if (stateToSelect != null)
+        {
+            isRecordingUndos = false;
+            _selectedState.SelectedStateSave = stateToSelect;
+
+            isRecordingUndos = true;
+        }
+
+        var newIndex = elementHistory.UndoIndex - 1;
+
+        //if (isLast)
+        //{
+        //    RecordUndo();
+        //}
+
+        elementHistory.UndoIndex = newIndex;
+        DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, shouldRefreshBehaviorView);
     }
 
     private void DoAfterUndoLogic(ElementSave toApplyTo,
@@ -519,15 +552,28 @@ public class UndoManager : IUndoManager
         //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
     }
 
-    public void PerformRedo()
+    public bool CanRedo()
     {
-        ElementHistory elementHistory = null;
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
-        if (_selectedState.SelectedElement != null && mUndos.ContainsKey(_selectedState.SelectedElement))
+        UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
+
+        return CanRedo(elementHistory, redoSnapshot);
+    }
+
+    public bool CanRedo(ElementHistory? elementHistory, UndoSnapshot? redoSnapshot)
+    {
+        if (redoSnapshot != null)
         {
-            elementHistory = mUndos[_selectedState.SelectedElement];
+            return true;
         }
-        UndoSnapshot redoSnapshot = null;
+
+        return false;
+    }
+
+    private UndoSnapshot? GetRedoSnapshot(ElementHistory elementHistory)
+    {
+        UndoSnapshot? redoSnapshot = null;
 
         if (elementHistory != null)
         {
@@ -540,41 +586,48 @@ public class UndoManager : IUndoManager
             }
         }
 
-        if(redoSnapshot != null)
+        return redoSnapshot;
+    }
+
+    public void PerformRedo()
+    {
+        var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
+
+        UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
+
+        //////////////////////////////////////Early Out//////////////////////////////////////////
+        if (!CanRedo(elementHistory, redoSnapshot))
         {
+            return;
+        }
+        ////////////////////////////////////End Early Out////////////////////////////////////////
 
+        ElementSave toApplyTo = _selectedState.SelectedElement;
 
-            ElementSave toApplyTo = _selectedState.SelectedElement;
+        ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, 
+            out bool shouldRefreshWireframe, 
+            out bool shouldRefreshStateTreeView,
+            out bool shouldRefreshBehaviorView);
 
-            ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, 
-                out bool shouldRefreshWireframe, 
-                out bool shouldRefreshStateTreeView,
-                out bool shouldRefreshBehaviorView);
+        if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
+            redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
+        {
+            var listOfStates = toApplyTo.States;
+            var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
 
-            if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
-                redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
+            if (state != null)
             {
-                var listOfStates = toApplyTo.States;
-                var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
+                isRecordingUndos = false;
+                _selectedState.SelectedStateSave = state;
 
-                if (state != null)
-                {
-                    isRecordingUndos = false;
-                    _selectedState.SelectedStateSave = state;
-
-                    isRecordingUndos = true;
-                }
+                isRecordingUndos = true;
             }
-
-            elementHistory.UndoIndex++;
-
-            DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, 
-                shouldRefreshBehaviorView);
-
-
         }
 
+        elementHistory.UndoIndex++;
 
+        DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, 
+            shouldRefreshBehaviorView);
     }
 
     public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)

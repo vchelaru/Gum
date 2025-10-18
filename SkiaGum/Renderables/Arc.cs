@@ -2,7 +2,7 @@
 
 namespace SkiaGum.Renderables;
 
-public class Arc : RenderableBase
+public class Arc : RenderableShapeBase
 {
     #region Fields/Properties
 

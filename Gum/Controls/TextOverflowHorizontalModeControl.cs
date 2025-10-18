@@ -20,13 +20,15 @@ namespace Gum.Controls
                     {
                         Name = "Truncate Word",
                         Value = TextOverflowHorizontalMode.TruncateWord,
-                        Image = truncateWordBitmap
+                        Image = truncateWordBitmap,
+                        GumIconName = "TextOverflowHorizontalTruncateWord"
                     },
                     new Option
                     {
                         Name = "Ellipsis Letter",
                         Value = TextOverflowHorizontalMode.EllipsisLetter,
-                        Image = ellipsisBitmap
+                        Image = ellipsisBitmap,
+                        GumIconName = "TextOverflowHorizontalEllipsisLetter"
                     }
                 };
             }

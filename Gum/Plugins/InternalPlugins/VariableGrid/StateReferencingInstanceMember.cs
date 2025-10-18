@@ -374,7 +374,7 @@ namespace Gum.PropertyGridHelpers
                 }
 
                 VariableListSave? definingVariableList = null;
-                if (standardElement != null)
+                if (standardElement != null && standardElement is StandardElementSave)
                 {
                     var defaultState = StandardElementsManager.Self.GetDefaultStateFor(standardElement.Name);
                     definingVariableList = defaultState?.VariableLists.FirstOrDefault(item => item.Name == standardVariableList.Name);

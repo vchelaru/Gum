@@ -39,7 +39,27 @@ namespace WpfDataUi.Controls
                 {
                     mInstanceMember.PropertyChanged += HandlePropertyChange;
                 }
+
+                if (instanceMemberChanged)
+                {
+                    this.RefreshAllContextMenus(force: true);
+                }
+
                 Refresh();
+            }
+        }
+
+        private void RefreshAllContextMenus(bool force = false)
+        {
+            if (force)
+            {
+                this.ForceRefreshContextMenu(CheckBox.ContextMenu);
+                this.ForceRefreshContextMenu(StackPanel.ContextMenu);
+            }
+            else
+            {
+                this.RefreshContextMenu(CheckBox.ContextMenu);
+                this.RefreshContextMenu(StackPanel.ContextMenu);
             }
         }
 
@@ -109,7 +129,14 @@ namespace WpfDataUi.Controls
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
 
-            SetForeground(DesiredForegroundBrush);
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+
+                    SetForeground(DesiredForegroundBrush);
+                }
+            });
 
             RefreshIsEnabled();
 
@@ -156,7 +183,11 @@ namespace WpfDataUi.Controls
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
                 this.Refresh();
+            }
 
+            else if (e.PropertyName == nameof(InstanceMember.SupportsMakeDefault))
+            {
+                this.RefreshContextMenu(CheckBox.ContextMenu);
             }
         }
 
@@ -166,7 +197,13 @@ namespace WpfDataUi.Controls
             {
                 this.TrySetValueOnInstance();
 
-                SetForeground(DesiredForegroundBrush);
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                    {
+                        SetForeground(DesiredForegroundBrush);
+                    }
+                });
             }
         }
 

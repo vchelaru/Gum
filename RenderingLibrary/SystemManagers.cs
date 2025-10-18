@@ -119,8 +119,8 @@ namespace RenderingLibrary
         /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
         public void Activity(double currentTime)
         {
-#if DEBUG
-            if(SpriteManager == null)
+#if FULL_DIAGNOSTICS
+            if (SpriteManager == null)
             {
                 throw new InvalidOperationException("The SpriteManager is null - did you remember to initialize the SystemManagers?");
             }
@@ -312,7 +312,6 @@ namespace RenderingLibrary
         ///     FnaGum.Font18Arial_0.png
         ///     MonoGameGum.Content.Font18Arial_0.png
         /// </summary>
-        /// <param name="graphicsDevice"></param>
         /// <param name="fontName">The filename without the extension</param>
         /// <returns></returns>
         private BitmapFont LoadEmbeddedFont(string fontName)
@@ -326,7 +325,9 @@ namespace RenderingLibrary
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
             // qualify for Android:
-            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont);
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", bitmapFont, 
+                // This allows unit tests, and can avoid confusiong errors
+                Content.LoaderManager.ExistingContentBehavior.Replace);
 
             return bitmapFont;
         }

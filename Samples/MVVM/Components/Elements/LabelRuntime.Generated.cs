@@ -1,5 +1,8 @@
 //Code for Elements/Label (Container)
 using GumRuntime;
+using System.Linq;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -10,14 +13,14 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class LabelRuntime:ContainerRuntime
+partial class LabelRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Elements/Label", typeof(LabelRuntime));
     }
-    public MonoGameGum.Forms.Controls.Label FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Label;
+    public global::Gum.Forms.Controls.Label FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Label;
     public TextRuntime TextInstance { get; protected set; }
 
     public string LabelColor
@@ -63,9 +66,9 @@ public partial class LabelRuntime:ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.Label(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Label(this);
         }
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

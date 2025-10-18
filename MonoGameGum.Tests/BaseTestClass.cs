@@ -10,7 +10,7 @@ using MonoGameGum.Input;
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
 {
-    public void Dispose()
+    public virtual void Dispose()
     {
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();

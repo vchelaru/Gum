@@ -1,4 +1,5 @@
-﻿using MonoGameGum.GueDeriving;
+﻿using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -7,12 +8,20 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
 public class TextRuntimeTests
 {
+
+    const string fontPattern =
+$"info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+$"common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\r\n" +
+$"chars count=223\r\n";
+
+
     [Fact]
     public void AbsoluteWidth_ShouldNotIncludeNewlines()
     {
@@ -31,6 +40,8 @@ public class TextRuntimeTests
 
         widthBefore.ShouldBe(widthAfter, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
     }
+
+    #region WrappedText
 
     [Fact]
     public void WrappedText_ShouldWrap_WithFixedWidth()
@@ -140,11 +151,211 @@ public class TextRuntimeTests
         text.WrappedText[3].ShouldNotBeEmpty("jkl");
     }
 
+    #endregion
+
+    #region GetStyledSubstrings
+
+    [Fact]
+    public void GetStyledSubstrings_ShouldReturnTwoEntries_IfTextHasCodeAtEnd()
+    {
+        // Arrange
+        var text = new Text();
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "IsBold",
+            Value = true,
+            StartIndex = 6,
+            CharacterCount = 5
+        });
+
+        // Act
+        var substrings = text.GetStyledSubstrings(0, "Hello World", System.Drawing.Color.White);
+        // Assert
+        substrings.Count.ShouldBe(2);
+        substrings[0].Substring.ShouldBe("Hello ");
+        substrings[0].Variables.Count.ShouldBe(0);
+
+        substrings[1].Substring.ShouldBe("World");
+        substrings[1].Variables.Count.ShouldBe(1);
+        substrings[1].Variables[0].VariableName.ShouldBe("IsBold");
+        substrings[1].Variables[0].Value.ShouldBe(true);
+    }
+
+
+    [Fact]
+    public void GetStyledSubstrings_ShouldReturnThreeEntries_IfTextHasCodeInMiddle()
+    {
+        // Arrange
+        var text = new Text();
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "IsBold",
+            Value = true,
+            StartIndex = 1,
+            CharacterCount = 1
+        });
+
+        // Act
+        var substrings = text.GetStyledSubstrings(0, "012", System.Drawing.Color.White);
+        // Assert
+        substrings.Count.ShouldBe(3);
+        substrings[0].Substring.ShouldBe("0");
+        substrings[0].Variables.Count.ShouldBe(0);
+
+        substrings[1].Substring.ShouldBe("1");
+        substrings[1].Variables.Count.ShouldBe(1);
+        substrings[1].Variables[0].VariableName.ShouldBe("IsBold");
+        substrings[1].Variables[0].Value.ShouldBe(true);
+
+        substrings[2].Substring.ShouldBe("2");
+        substrings[2].Variables.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetStyledSubstrings_ShouldRespectOverlappingCodes()
+    {
+        var text = new Text();
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "IsBold",
+            Value = true,
+            StartIndex = 1,
+            CharacterCount = 3
+        });
+
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "FontScale",
+            Value = 2,
+            StartIndex = 2,
+            CharacterCount = 1
+        });
+
+        // Act
+        var substrings = text.GetStyledSubstrings(0, "01234", System.Drawing.Color.White);
+        // Assert
+        substrings.Count.ShouldBe(5);
+
+        substrings[0].Substring.ShouldBe("0");
+        substrings[0].Variables.Count.ShouldBe(0);
+
+        substrings[1].Substring.ShouldBe("1");
+        substrings[1].Variables.Count.ShouldBe(1);
+        substrings[1].Variables[0].VariableName.ShouldBe("IsBold");
+        substrings[1].Variables[0].Value.ShouldBe(true);
+
+        substrings[2].Substring.ShouldBe("2");
+        substrings[2].Variables.Count.ShouldBe(2);
+        substrings[2].Variables[0].VariableName.ShouldBe("IsBold");
+        substrings[2].Variables[0].Value.ShouldBe(true);
+        substrings[2].Variables[1].VariableName.ShouldBe("FontScale");
+        substrings[2].Variables[1].Value.ShouldBe(2);
+
+        substrings[3].Substring.ShouldBe("3");
+        substrings[3].Variables.Count.ShouldBe(1);
+        substrings[3].Variables[0].VariableName.ShouldBe("IsBold");
+        substrings[3].Variables[0].Value.ShouldBe(true);
+
+        substrings[4].Substring.ShouldBe("4");
+        substrings[4].Variables.Count.ShouldBe(0);
+    }
+
+
+    [Fact]
+    public void GetStyledSubstrings_ShouldRespectOverlappingCodes_OfSameVariable()
+    {
+        var text = new Text();
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "FontScale",
+            Value = 2,
+            StartIndex = 1,
+            CharacterCount = 3
+        });
+
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "FontScale",
+            Value = 3,
+            StartIndex = 2,
+            CharacterCount = 1
+        });
+
+        // Act
+        var substrings = text.GetStyledSubstrings(0, "01234", System.Drawing.Color.White);
+        // Assert
+        substrings.Count.ShouldBe(5);
+
+        substrings[0].Substring.ShouldBe("0");
+        substrings[0].Variables.Count.ShouldBe(0);
+
+        substrings[1].Substring.ShouldBe("1");
+        substrings[1].Variables.Count.ShouldBe(1);
+        substrings[1].Variables[0].VariableName.ShouldBe("FontScale");
+        substrings[1].Variables[0].Value.ShouldBe(2);
+
+        substrings[2].Substring.ShouldBe("2");
+        substrings[2].Variables.Count.ShouldBe(1);
+        substrings[2].Variables[0].VariableName.ShouldBe("FontScale");
+        substrings[2].Variables[0].Value.ShouldBe(3);
+
+        substrings[3].Substring.ShouldBe("3");
+        substrings[3].Variables.Count.ShouldBe(1);
+        substrings[3].Variables[0].VariableName.ShouldBe("FontScale");
+        substrings[3].Variables[0].Value.ShouldBe(2);
+
+        substrings[4].Substring.ShouldBe("4");
+        substrings[4].Variables.Count.ShouldBe(0);
+    }
+
+    #endregion
+
+    [Fact]
+    public void MaxWidth_ShouldWrapText_IfTextExceedsMaxWidth()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Width = 0;
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        textRuntime.MaxWidth = 50; // Set a max width
+        textRuntime.Text = "a a a a a a a a a a a a a a a a a";
+
+        textRuntime.GetAbsoluteWidth().ShouldBeLessThanOrEqualTo(50);
+        var innerText = (Text)textRuntime.RenderableComponent;
+        innerText.WrappedText.Count.ShouldBeGreaterThan(1);
+        var lineCount = innerText.WrappedText.Count;
+
+        var absoluteHeight = textRuntime.GetAbsoluteHeight();
+        absoluteHeight.ShouldBe(lineCount * textRuntime.BitmapFont.LineHeightInPixels);
+    }
+
     [Fact]
     public void Clone_ShouldCreateClonedText()
     {
         Text sut = new();
         var clone = sut.Clone();
         clone.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UseCustomFont_ShouldChangeFont_OnFontPropertiesSet()
+    {
+        // file name is:
+        // FontCache\Font18SomeFont_Italic_Bold.fnt
+        var bitmapFont = new BitmapFont((Texture2D)null, fontPattern);
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase:true, makeAbsolute:true);
+        loaderManager.AddDisposable(fileName, bitmapFont);
+
+        TextRuntime sut = new();
+        sut.UseCustomFont = true;
+        // set up all the properties:
+        sut.FontSize = 18;
+        sut.Font = "SomeFont";
+        sut.IsBold = true;
+        sut.IsItalic = true;
+
+        sut.UseCustomFont = false;
+
+        sut.BitmapFont.ShouldBe(bitmapFont);
     }
 }

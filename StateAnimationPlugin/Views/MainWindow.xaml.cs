@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls;
+using CommonFormsAndControls;
 using Gum.ToolStates;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -24,6 +24,7 @@ using StateAnimationPlugin.Managers;
 using Gum;
 using SkiaSharp;
 using System.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using SkiaSharp.Views.WPF;
 using Gum.Logic;
 using ToolsUtilities;
@@ -72,78 +73,16 @@ namespace StateAnimationPlugin.Views
 
             InitializeTimer();
 
-            DataContextChanged += HandleDataContext;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _nameVerifier = Locator.GetRequiredService<INameVerifier>();
             _nameValidator = new NameValidator(_nameVerifier);
             _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
-        private void HandleDataContext(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if(e.OldValue is ElementAnimationsViewModel oldViewModel)
-            {
-                oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
-            }
-            if(e.NewValue is ElementAnimationsViewModel newViewModel)
-            {
-                newViewModel.PropertyChanged += HandleViewModelPropertyChanged;
-
-            }
-
-            SkiaElement.InvalidateVisual();
-            LeftSkiaElement.InvalidateVisual();
-        }
 
         AnimationViewModel animationViewModel;
 
-        private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch(e.PropertyName)
-            {
-                case nameof(ViewModel.SelectedAnimation):
 
-                    if(animationViewModel != null)
-                    {
-                        animationViewModel.PropertyChanged -= HandleAnimationViewModelPropertyChanged;
-                    }
-
-                    animationViewModel = ViewModel.SelectedAnimation;
-
-                    if (animationViewModel != null)
-                    {
-                        animationViewModel.PropertyChanged += HandleAnimationViewModelPropertyChanged;
-                    }
-
-                    SkiaElement.InvalidateVisual();
-                    LeftSkiaElement.InvalidateVisual();
-                    break;
-                case nameof(ViewModel.DisplayedAnimationTime):
-                    SkiaElement.InvalidateVisual();
-                    break;
-                case nameof(ViewModel.Animations):
-                    SkiaElement.InvalidateVisual();
-                    LeftSkiaElement.InvalidateVisual();
-                    break;
-            }
-        }
-
-        private void HandleAnimationViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch(e.PropertyName)
-            {
-                case nameof(AnimationViewModel.SelectedKeyframe):
-                    SkiaElement.InvalidateVisual();
-                    break;
-                case nameof(AnimationViewModel.Length):
-                    SkiaElement.InvalidateVisual();
-                    break;
-                case nameof(AnimationViewModel.Keyframes):
-                    SkiaElement.InvalidateVisual();
-                    LeftSkiaElement.InvalidateVisual();
-                    break;
-            }
-        }
 
         private void InitializeTimer()
         {
@@ -207,18 +146,14 @@ namespace StateAnimationPlugin.Views
             }
             /////////// End Early Out/////////
 
-            SubAnimationSelectionWindow window = new SubAnimationSelectionWindow();
+            SubAnimationSelectionDialogViewModel window = new();
 
             window.AnimationToExclude = this.ViewModel.SelectedAnimation;
 
             window.AnimationContainers = CreateAnimationContainers();
 
-            var result = window.ShowDialog();
-
-            if (result.HasValue && result.Value && window.SelectedAnimation != null)
+            if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
             {
-                var selectedAnimation = window.SelectedAnimation;
-
                 AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
                 if (selectedAnimation.ContainingInstance != null)
                 {
@@ -445,21 +380,6 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void HandlePlayStopClicked(object sender, RoutedEventArgs e)
-        {
-            if (this.ViewModel != null && _selectedState.SelectedElement != null && this.ViewModel.SelectedAnimation != null)
-            {
-                this.ViewModel.SelectedAnimation.RefreshCumulativeStates(_selectedState.SelectedElement);
-            }
-
-            ViewModel.TogglePlayStop();
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            ViewModel?.Stop();
-        }
-
         private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             AnimationColumnsResized?.Invoke();
@@ -475,40 +395,20 @@ namespace StateAnimationPlugin.Views
             ViewModel.IncreaseGameSpeed();
         }
 
-        private void SKElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
+        private void OnKeyframeMouseEnter(object sender, MouseEventArgs e)
         {
-            TimelineRenderer.DrawTimeline(ViewModel, e.Surface, e.Info);
+            if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
+            {
+                frame.IsTimelineVisualHovered = true;
+            }
         }
 
-        private void SkiaElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void OnKeyframeMouseLeave(object sender, MouseEventArgs e)
         {
-            /////////////Early Out/////////////////
-            if (ViewModel.SelectedAnimation == null || e.LeftButton != MouseButtonState.Pressed) return;
-            /////////////End Early Out///////////////////
-
-            UpdateTimeToMousePosition(sender, e);
-        }
-
-        private void SkiaElement_MouseMove(object sender, MouseEventArgs e)
-        {
-            /////////////Early Out/////////////////
-            if (ViewModel.SelectedAnimation == null || e.LeftButton != MouseButtonState.Pressed) return;
-            /////////////End Early Out///////////////////
-            UpdateTimeToMousePosition(sender, e);
-        }
-
-        private void UpdateTimeToMousePosition(object sender, MouseEventArgs e)
-        {
-            var element = sender as SKElement;
-            Point mousePos = e.GetPosition(element);
-            //SKPoint skMousePos = new SKPoint((float)(mousePos.X * dpiScale), (float)(mousePos.Y * dpiScale));
-            var time = TimelineRenderer.XToTime((float)mousePos.X, ViewModel.SelectedAnimation.Length);
-            ViewModel.DisplayedAnimationTime = time;
-        }
-
-        private void LeftSkiaElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
-        {
-            TimelineRenderer.DrawLeftSide(ViewModel, e.Surface, e.Info);
+            if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
+            {
+                frame.IsTimelineVisualHovered = false;
+            }
         }
     }
 }

@@ -68,7 +68,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BmfcSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\GradientType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RenderableCloneLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\HorizontalAlignment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IAnimatable.cs" />
@@ -92,6 +94,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\RendererSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SortableLayer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Sprite.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteBatchStack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteRenderer.cs" />

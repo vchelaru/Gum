@@ -1,0 +1,74 @@
+﻿<UserControl
+    mc:Ignorable="d"
+    x:Class="WpfDataUi.Controls.PlusMinusTextBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:WpfDataUi.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel>
+
+        <Grid x:Name="TopRowGrid">
+            <Grid.ContextMenu>
+                <ContextMenu />
+            </Grid.ContextMenu>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                MinWidth="100"
+                Padding="4,4,4,0"
+                TextWrapping="Wrap"
+                VerticalAlignment="Center"
+                x:Name="Label">
+                Property Label:
+            </TextBlock>
+
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Left"
+                Margin="3,0,3,0"
+                Orientation="Horizontal"
+                VerticalAlignment="Stretch">
+                <Button
+                    Click="MinusButtonClicked"
+                    Height="18"
+                    Width="18">
+                    -
+                </Button>
+                <TextBox
+                    GotFocus="TextBox_GotFocus"
+                    Height="20"
+                    HorizontalContentAlignment="Center"
+                    LostFocus="TextBox_LostFocus_1"
+                    VerticalContentAlignment="Center"
+                    Width="60"
+                    x:Name="TextBox">
+                    <TextBox.ContextMenu>
+                        <ContextMenu />
+                    </TextBox.ContextMenu>
+                </TextBox>
+                <Button
+                    Click="PlusButtonClicked"
+                    Height="18"
+                    Width="18">
+                    +
+                </Button>
+            </StackPanel>
+        </Grid>
+        <TextBlock
+            FontSize="10"
+            Grid.ColumnSpan="3"
+            Grid.Row="2"
+            HorizontalAlignment="Left"
+            Margin="0,0,-4,0"
+            MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+            Padding="8,1,0,4"
+            Text="This is a property description. But what if it is longer?"
+            TextWrapping="Wrap"
+            VerticalAlignment="Top"
+            x:Name="HintTextBlock" />
+    </StackPanel>
+</UserControl>

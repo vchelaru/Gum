@@ -169,6 +169,14 @@ internal class LottieAnimation : IRenderableIpso, IVisible
             Animation.Render(canvas, boundingRect);
         }
     }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
 #else
     public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
     {
@@ -215,5 +223,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
         }
     }
 
-#endregion
+    public string BatchKey => string.Empty;
+
+    #endregion
 }

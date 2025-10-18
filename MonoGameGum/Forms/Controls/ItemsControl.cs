@@ -255,11 +255,13 @@ public class ItemsControl : ScrollViewer
         {
             var listBoxItemGumType = ItemGumType;
 
+#pragma warning disable CS0618 // we need this to support old projects
             if (listBoxItemGumType == null && DefaultFormsComponents.ContainsKey(typeof(ListBoxItem)))
             {
                 listBoxItemGumType = DefaultFormsComponents[typeof(ListBoxItem)];
             }
-#if DEBUG
+#pragma warning restore CS0618 // Type or member is obsolete
+#if FULL_DIAGNOSTICS
             if (listBoxItemGumType == null)
             {
                 throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemGumType specified, " +
@@ -382,6 +384,12 @@ public class ItemsControl : ScrollViewer
                             // since they want to force a ListBoxItem. For
                             // now let's make it false, and revisit later.
                             newVisual = VisualTemplate.CreateContent(item, createFormsInternally:false);
+
+                            // the visual template should respect the item (BindingContext), but just in case it doesn't:
+                            if(newVisual is InteractiveGue interactivegue)
+                            {
+                                interactivegue.BindingContext = item;
+                            }
                         }
                         else
                         {

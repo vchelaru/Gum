@@ -14,21 +14,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
+partial class RadioButton : global::Gum.Forms.Controls.RadioButton
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/RadioButton - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new RadioButton(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.RadioButton)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.RadioButton)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/RadioButton", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -198,7 +201,6 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         RadioBackground = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         RadioBackground.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (RadioBackground.ElementSave != null) RadioBackground.AddStatesAndCategoriesRecursivelyToGue(RadioBackground.ElementSave);
@@ -216,6 +218,7 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -248,7 +251,7 @@ partial class RadioButton : global::MonoGameGum.Forms.Controls.RadioButton
         this.TextInstance.SetProperty("StyleCategoryState", "Normal");
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TextInstance.Text = @"Radio Label";
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.Width = -28f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;

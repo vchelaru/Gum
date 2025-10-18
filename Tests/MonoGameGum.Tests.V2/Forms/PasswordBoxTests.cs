@@ -11,7 +11,7 @@ public class PasswordBoxTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var passwordBox = new MonoGameGum.Forms.Controls.PasswordBox();
+        var passwordBox = new Gum.Forms.Controls.PasswordBox();
         passwordBox.Visual.ShouldNotBeNull();
         (passwordBox.Visual is Gum.Forms.DefaultVisuals.PasswordBoxVisual).ShouldBeTrue();
     }

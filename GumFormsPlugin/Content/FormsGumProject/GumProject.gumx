@@ -4,6 +4,7 @@
   <FontRanges>32-126,160-255</FontRanges>
   <FontSpacingVertical>1</FontSpacingVertical>
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
+  <UseFontCharacterFile>false</UseFontCharacterFile>
   <Version>1</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
@@ -101,6 +102,11 @@
   </ComponentReference>
   <ComponentReference>
     <Name>Controls/InputDeviceSelector</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>Controls/ItemsControl</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
@@ -331,6 +337,9 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>InputDeviceSelectorBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>ItemsControlBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
     <Name>LabelBehavior</Name>

@@ -74,16 +74,22 @@ namespace RenderingLibrary.Graphics
 
         public void Add(IRenderableIpso renderable)
         {
-            lock (mRenderables)
+            // September 14, 2025
+            // Why do we lock here?
+            // All UI logic should be
+            // on the primary thread. Are
+            // we ever doing something on a
+            // different thread? This has a cost
+            // so let's remove it:
+            //lock (mRenderables)
             {
                 mRenderables.Add(renderable);
             }
         }
 
-        public void Remove(IRenderableIpso renderable)
-        {
-            mRenderables.Remove(renderable);
-        }
+        public void Remove(IRenderableIpso renderable) => mRenderables.Remove(renderable);
+
+        public void Insert(int index, IRenderableIpso renderable) => mRenderables.Insert(index, renderable);
 
         /// <summary>
         /// This is a stable sort on Z.  It's incredibly fast on already-sorted lists so we'll do this over something like the built-in 

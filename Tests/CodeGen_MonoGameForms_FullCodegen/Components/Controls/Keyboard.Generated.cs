@@ -15,20 +15,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class Keyboard : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/Keyboard");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Keyboard - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Keyboard(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Keyboard)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Keyboard)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/Keyboard", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -151,7 +154,6 @@ partial class Keyboard : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Row1Keys = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         Row1Keys.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (Row1Keys.ElementSave != null) Row1Keys.AddStatesAndCategoriesRecursivelyToGue(Row1Keys.ElementSave);
@@ -295,6 +297,7 @@ partial class Keyboard : MonoGameGum.Forms.Controls.FrameworkElement
         IconInstance2.Name = "IconInstance2";
         IconInstance3 = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         IconInstance3.Name = "IconInstance3";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

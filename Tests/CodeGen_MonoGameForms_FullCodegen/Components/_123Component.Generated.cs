@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
-partial class _123Component : MonoGameGum.Forms.Controls.FrameworkElement
+partial class _123Component : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("123Component");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named 123Component - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new _123Component(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(_123Component)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(_123Component)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("123Component", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -79,7 +82,7 @@ partial class _123Component : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

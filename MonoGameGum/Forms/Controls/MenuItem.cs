@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Wireframe;
+using MonoGameGum;
 using RenderingLibrary;
 
 #if FRB
@@ -39,7 +40,7 @@ public class MenuItem : ItemsControl
 
                 if (isSelected)
                 {
-                    Selected?.Invoke(this, null);
+                    Selected?.Invoke(this, EventArgs.Empty);
                 }
                 // force it or else it won't revert to highlighted until the user moves the mouse
                 UpdateState(force: true);
@@ -65,12 +66,21 @@ public class MenuItem : ItemsControl
 
     internal bool SelectOnHighlight { get; set; } = false;
 
-    public string Header
+    public virtual string? Header
     {
-        get => coreText.RawText;
+        get
+        {
+#if FULL_DIAGNOSTICS
+            ReportMissingTextInstance();
+#endif
+            return coreText!.RawText;
+        }
         set
         {
-            if (value != coreText.RawText)
+#if FULL_DIAGNOSTICS
+            ReportMissingTextInstance();
+#endif
+            if (value != coreText!.RawText)
             {
                 coreText.RawText = value;
             }
@@ -149,11 +159,65 @@ public class MenuItem : ItemsControl
 #endif
         RefreshInternalVisualReferences();
 
+        UpdateMenuItems();   
+
         // Just in case it needs to set the state to "enabled"
         UpdateState();
-
-
         base.ReactToVisualChanged();
+    }
+
+    private void UpdateMenuItems()
+    {
+        var containerInstance = Visual.GetGraphicalUiElementByName(
+            "SubItemContainerInstance");
+
+        if (containerInstance != null)
+        {
+            foreach (var child in containerInstance.Children)
+            {
+                if (child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
+                {
+                    child.Parent = null;
+                    Items.Add(menuItem);
+                }
+            }
+
+            containerInstance.Children.CollectionChanged += HandleSubItemContainerChanged;
+
+            containerInstance.Parent = null;
+        }
+    }
+
+    private void HandleSubItemContainerChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        List<MenuItem> items = null;
+        if(e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+        {
+            items = new List<MenuItem>();
+
+            foreach (var item in e.NewItems)
+            {
+                if(item is InteractiveGue gue && gue.FormsControlAsObject is MenuItem menuitem)
+                {
+                    items.Add(menuitem);
+                }
+            }
+        }
+
+        if(items != null)
+        {
+#if FRB
+            _=FlatRedBall.Instructions.InstructionManager.DoOnMainThreadAsync(() =>
+#else
+            global::MonoGameGum.GumService.Default.DeferredQueue.Enqueue(() =>
+#endif
+            {
+                foreach (var item in items)
+                {
+                    this.Items.Add(item);
+                }
+            });
+        }
     }
 
     protected virtual void RefreshInternalVisualReferences()
@@ -204,7 +268,7 @@ public class MenuItem : ItemsControl
         //}
     }
 
-    #endregion
+#endregion
 
     #region Event Handlers
     private void HandleRollOn(object sender, EventArgs args)
@@ -374,6 +438,7 @@ public class MenuItem : ItemsControl
 
             // sometimes the Gum project includes children, so let's remove them:
             itemsPopup.InnerPanel.Children.Clear();
+            MenuItemsInternal.Clear();
 
             foreach (var item in Items)
             {
@@ -458,10 +523,10 @@ public class MenuItem : ItemsControl
                 itemsPopup.Visual.RemoveFromManagers();
 
                 Visual.EffectiveManagers.Renderer.MainLayer.Remove(itemsPopup.Visual);
-    #if FRB
-    #else
+#if FRB
+#else
                 itemsPopup.Visual.GetTopParent()?.Children.Remove(itemsPopup.Visual);
-    #endif
+#endif
                 itemsPopup = null;
 
             }
@@ -539,8 +604,25 @@ public class MenuItem : ItemsControl
 
     #endregion
 
+    #region Utilities
+
     public override string ToString()
     {
         return Header ?? base.ToString();
     }
+
+#if FULL_DIAGNOSTICS
+    private void ReportMissingTextInstance()
+    {
+        if (coreText == null)
+        {
+            throw new Exception(
+                $"This MenuItem was created with a Gum component ({Visual?.ElementSave}) " +
+                "that does not have an instance called 'TextInstance'. " +
+                "A 'TextInstance' instance must be added to modify the Menu's Header property.");
+        }
+    }
+#endif
+
+    #endregion
 }

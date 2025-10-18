@@ -19,10 +19,10 @@ The keyboard can be used to interact with controls. Keyboards can be used to:
 To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
 
 ```csharp
-FrameworkElement.KeyboardsForUiControl.Add(GumUI.Keyboard);
+GumUI.UseKeyboardDefaults();
 ```
 
-Keep in mind that a control must first be explicitly to receive keyboard input.&#x20;
+Keep in mind that a control must first be explicitly set to receive keyboard input.
 
 For example, the following code gives a Button focus assuming MyButton is a valid button:
 
@@ -41,4 +41,3 @@ MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
 {% hint style="info" %}
 Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
 {% endhint %}
-

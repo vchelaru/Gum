@@ -15,20 +15,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Controls;
-partial class Keyboard : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Keyboard : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/Keyboard");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Keyboard - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Keyboard(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Keyboard)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Keyboard)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/Keyboard", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -141,65 +144,65 @@ partial class Keyboard : MonoGameGum.Forms.Controls.FrameworkElement
         base.ReactToVisualChanged();
         Row1Keys = this.Visual?.GetGraphicalUiElementByName("Row1Keys") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         AllRows = this.Visual?.GetGraphicalUiElementByName("AllRows") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        Key1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key1");
-        KeyQ = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyQ");
-        KeyA = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyA");
-        KeyZ = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyZ");
-        KeyParenLeft = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyParenLeft");
-        KeyW = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyW");
-        KeyS = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyS");
-        KeyX = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyX");
-        KeyParenRight = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyParenRight");
-        KeyE = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyE");
-        KeyD = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyD");
-        KeyC = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyC");
-        KeySpace = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeySpace");
-        KeyR = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyR");
-        KeyF = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyF");
-        KeyV = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyV");
-        KeyT = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyT");
-        KeyG = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyG");
-        KeyB = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyB");
-        KeyY = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyY");
-        KeyH = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyH");
-        KeyN = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyN");
-        KeyU = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyU");
-        KeyJ = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyJ");
-        KeyM = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyM");
-        KeyI = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyI");
-        KeyK = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyK");
-        KeyComma = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyComma");
-        KeyQuestion = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyQuestion");
-        KeyO = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyO");
-        KeyL = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyL");
-        KeyPeriod = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyPeriod");
-        KeyBang = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyBang");
-        KeyP = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyP");
-        KeyUnderscore = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyUnderscore");
-        KeyHyphen = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyHyphen");
-        KeyAmpersand = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyAmpersand");
-        Key2 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key2");
-        Key3 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key3");
-        Key4 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key4");
-        Key5 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key5");
-        Key6 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key6");
-        Key7 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key7");
-        Key8 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key8");
-        Key9 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key9");
-        Key0 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key0");
+        Key1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key1");
+        KeyQ = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyQ");
+        KeyA = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyA");
+        KeyZ = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyZ");
+        KeyParenLeft = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyParenLeft");
+        KeyW = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyW");
+        KeyS = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyS");
+        KeyX = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyX");
+        KeyParenRight = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyParenRight");
+        KeyE = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyE");
+        KeyD = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyD");
+        KeyC = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyC");
+        KeySpace = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeySpace");
+        KeyR = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyR");
+        KeyF = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyF");
+        KeyV = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyV");
+        KeyT = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyT");
+        KeyG = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyG");
+        KeyB = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyB");
+        KeyY = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyY");
+        KeyH = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyH");
+        KeyN = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyN");
+        KeyU = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyU");
+        KeyJ = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyJ");
+        KeyM = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyM");
+        KeyI = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyI");
+        KeyK = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyK");
+        KeyComma = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyComma");
+        KeyQuestion = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyQuestion");
+        KeyO = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyO");
+        KeyL = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyL");
+        KeyPeriod = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyPeriod");
+        KeyBang = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyBang");
+        KeyP = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyP");
+        KeyUnderscore = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyUnderscore");
+        KeyHyphen = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyHyphen");
+        KeyAmpersand = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyAmpersand");
+        Key2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key2");
+        Key3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key3");
+        Key4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key4");
+        Key5 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key5");
+        Key6 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key6");
+        Key7 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key7");
+        Key8 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key8");
+        Key9 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key9");
+        Key0 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"Key0");
         Row2Keys = this.Visual?.GetGraphicalUiElementByName("Row2Keys") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         Row3Keys = this.Visual?.GetGraphicalUiElementByName("Row3Keys") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         Row4Keys = this.Visual?.GetGraphicalUiElementByName("Row4Keys") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         Row5Keys = this.Visual?.GetGraphicalUiElementByName("Row5Keys") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        KeyBackspace = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyBackspace");
-        KeyReturn = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyReturn");
-        KeyLeft = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyLeft");
-        KeyRight = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyRight");
+        KeyBackspace = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyBackspace");
+        KeyReturn = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyReturn");
+        KeyLeft = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyLeft");
+        KeyRight = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<KeyboardKey>(this.Visual,"KeyRight");
         HighlightRectangle = this.Visual?.GetGraphicalUiElementByName("HighlightRectangle") as global::MonoGameGum.GueDeriving.RectangleRuntime;
-        IconInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance");
-        IconInstance1 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance1");
-        IconInstance2 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance2");
-        IconInstance3 = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance3");
+        IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance");
+        IconInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance1");
+        IconInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance2");
+        IconInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance3");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

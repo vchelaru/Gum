@@ -30,6 +30,8 @@ namespace WpfDataUi.Controls
 
         public decimal? LabelDragValueRounding { get; set; } = 1;
 
+        public decimal LabelDragChangeMultiplier { get; set; } = 1;
+
         public bool EnableLabelDragValueChange { get; set; } = true;
 
         public InstanceMember InstanceMember
@@ -268,7 +270,10 @@ namespace WpfDataUi.Controls
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
                 this.Refresh();
-
+            }
+            else if(e.PropertyName == nameof(InstanceMember.SupportsMakeDefault))
+            {
+                this.RefreshAllContextMenus(force: true);
             }
         }
 
@@ -387,7 +392,7 @@ namespace WpfDataUi.Controls
 
                     if(difference != 0)
                     {
-                        unroundedValue += difference;
+                        unroundedValue += difference * (double)LabelDragChangeMultiplier;
                         var rounded = unroundedValue;
                         if(LabelDragValueRounding != null)
                         {
@@ -405,7 +410,7 @@ namespace WpfDataUi.Controls
 
                         if(getValueStatus == ApplyValueResult.Success)
                         {
-                            var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
+                            var newValue = mTextBoxLogic.GetValueInDirection(difference * (double)LabelDragChangeMultiplier, rounded);
                             TrySetValueOnUi(newValue);
                             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
                         }

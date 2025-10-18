@@ -1,5 +1,8 @@
 //Code for Controls/ButtonStandard (Container)
 using GumRuntime;
+using System.Linq;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -10,14 +13,15 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ButtonStandardRuntime:ContainerRuntime
+partial class ButtonStandardRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
     }
-    public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
+    public global::Gum.Forms.Controls.Button FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Button;
     public enum ButtonCategory
     {
         Enabled,
@@ -29,21 +33,27 @@ public partial class ButtonStandardRuntime:ContainerRuntime
         DisabledFocused,
     }
 
-    public ButtonCategory ButtonCategoryState
+    ButtonCategory? _buttonCategoryState;
+    public ButtonCategory? ButtonCategoryState
     {
+        get => _buttonCategoryState;
         set
         {
-            if(Categories.ContainsKey("ButtonCategory"))
+            _buttonCategoryState = value;
+            if(value != null)
             {
-                var category = Categories["ButtonCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
-            }
-            else
-            {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                if(Categories.ContainsKey("ButtonCategory"))
+                {
+                    var category = Categories["ButtonCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
             }
         }
     }
@@ -63,8 +73,6 @@ public partial class ButtonStandardRuntime:ContainerRuntime
         {
             var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
-
-            AfterFullCreation();
         }
 
 
@@ -74,11 +82,11 @@ public partial class ButtonStandardRuntime:ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Button(this);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
+        Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

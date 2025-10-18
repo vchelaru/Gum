@@ -40,7 +40,7 @@ public class ComboBox :
 #if RAYLIB || FRB
     FrameworkElement,
 #else
-    MonoGameGum.Forms.Controls.FrameworkElement, 
+    Gum.Forms.Controls.FrameworkElement, 
 #endif 
     IInputReceiver
 {
@@ -73,7 +73,7 @@ public class ComboBox :
         }
     }
 
-    public string Text
+    public string? Text
     {
         get => coreTextObject.RawText;
         set
@@ -112,7 +112,7 @@ public class ComboBox :
         get { return listBox.ListBoxItemGumType; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (listBox == null)
             {
                 throw new Exception("Visual must be set before assigning the ListBoxItemType");
@@ -127,7 +127,7 @@ public class ComboBox :
         get { return listBox.ListBoxItemFormsType; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (listBox == null)
             {
                 throw new Exception("Visual must be set before assigning the ListBoxItemType");
@@ -255,7 +255,7 @@ public class ComboBox :
         var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue;
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (listBoxInstance == null)
         {
             throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
@@ -282,7 +282,7 @@ public class ComboBox :
         {
             listBox = listBoxInstance.FormsControlAsObject as ListBox;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (listBox == null)
             {
                 var message = $"The ListBoxInstance Gum component inside the combo box {Visual.Name} is of type {listBoxInstance.FormsControlAsObject.GetType().Name}, but it should be of type ListBox";
@@ -696,6 +696,7 @@ public class ComboBox :
             }
             if(wasPushed)
             {
+                InteractiveGue.LastVisualPushed = this.Visual;
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 OpenAndFocusListBox();

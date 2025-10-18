@@ -193,7 +193,7 @@
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
       <Value xsi:type="xsd:string">Click Me</Value>
-      <ExposedAsName>ButtonDisplayText</ExposedAsName>
+      <ExposedAsName>Text</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

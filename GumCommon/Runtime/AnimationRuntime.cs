@@ -124,7 +124,7 @@ public class AnimationRuntime
 
     private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave element, ref StateSave stateToSet, bool defaultIfNull)
     {
-        var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName));
+        var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
 
         if(this.Loops)
         {

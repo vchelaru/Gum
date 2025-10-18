@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components;
-partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
+partial class LabelContainer : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("LabelContainer");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named LabelContainer - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new LabelContainer(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(LabelContainer)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(LabelContainer)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("LabelContainer", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -64,6 +67,7 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
     public Label LabelInstance { get; protected set; }
+    public ColoredRectangleRuntime NonLabelShouldAppearAfterLabel { get; protected set; }
 
     public string Text
     {
@@ -83,7 +87,8 @@ partial class LabelContainer : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        LabelInstance = global::MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
+        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
+        NonLabelShouldAppearAfterLabel = this.Visual?.GetGraphicalUiElementByName("NonLabelShouldAppearAfterLabel") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

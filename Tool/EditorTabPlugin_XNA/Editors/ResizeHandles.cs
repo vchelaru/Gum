@@ -9,6 +9,7 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector3 = System.Numerics.Vector3;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using EditorTabPlugin_XNA.Utilities;
 
 namespace Gum.Wireframe
 {
@@ -178,10 +179,12 @@ namespace Gum.Wireframe
             //    ipso = (gue.RenderableComponent as IRenderableIpso);
             //}
 
-            this.mX = ipso.GetAbsoluteX();
-            this.mY = ipso.GetAbsoluteY();
-            this.mWidth = ipso.Width;
-            this.mHeight = ipso.Height;
+            var bounds = ipso.GetBounds();
+
+            this.mX = bounds.left;
+            this.mY = bounds.top;
+            this.mWidth = bounds.right - bounds.left;
+            this.mHeight = bounds.bottom - bounds.top;
 
             this.mRotation = ipso.GetAbsoluteRotation();
 
@@ -209,18 +212,21 @@ namespace Gum.Wireframe
             {
                 var first = ipsoList.FirstOrDefault();
 
-                float minX = first.GetAbsoluteX();
-                float minY = first.GetAbsoluteY();
-                float maxX = first.GetAbsoluteX() + first.Width;
-                float maxY = first.GetAbsoluteY() + first.Height;
+                var firstBounds = first.GetBounds();
+                float minX = firstBounds.left;
+                float minY = firstBounds.top;
+                float maxX = firstBounds.right;
+                float maxY = firstBounds.bottom;
 
                 foreach(var item in ipsoList)
                 {
-                    minX = Math.Min(minX, item.GetAbsoluteX());
-                    minY = Math.Min(minY, item.GetAbsoluteY());
+                    var itemBounds = item.GetBounds();
 
-                    maxX = Math.Max(maxX, item.GetAbsoluteX() + item.Width);
-                    maxY = Math.Max(maxY, item.GetAbsoluteY() + item.Height);
+                    minX = Math.Min(minX, itemBounds.left);
+                    minY = Math.Min(minY, itemBounds.top);
+
+                    maxX = Math.Max(maxX, itemBounds.right);
+                    maxY = Math.Max(maxY, itemBounds.bottom);
                 }
 
                 mX = minX;
@@ -238,6 +244,7 @@ namespace Gum.Wireframe
 
             UpdateToProperties();
         }
+
 
         public void UpdateHandleSizes()
         {
