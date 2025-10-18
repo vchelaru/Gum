@@ -134,16 +134,29 @@ public class FileCommands : IFileCommands
 
     public void ForceSaveProject(bool forceSaveContainedElements = false)
     {
-        if (!ProjectManager.Self.HaveErrorsOccurredLoadingProject)
-        {
-            ProjectManager.Self.SaveProject(forceSaveContainedElements);
-            OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
-            CreateDefaultFontCharacterFile();
-        }
-        else
+        if (ProjectManager.Self.HaveErrorsOccurredLoadingProject)
         {
             _dialogService.ShowMessage("Cannot save project because of earlier errors");
+            return;
         }
+
+        var succeeded = ProjectManager.Self.SaveProject(forceSaveContainedElements);
+
+        if (string.IsNullOrEmpty(ProjectState.Self.GumProjectSave.FullFileName))
+        {
+            // The user most likely canceled the save, as such, we have no filename
+            // Do nothing, do not error.
+            return;
+        }
+
+        if (!succeeded)
+        {
+            _dialogService.ShowMessage("Cannot save project because of earlier errors");
+            return;
+        }
+
+        OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
+        CreateDefaultFontCharacterFile();
     }
 
     /// <summary>
