@@ -27,4 +27,7 @@ public interface IUndoManager
     void PerformUndo();
 
     void PerformRedo();
+
+    bool CanUndo();
+    bool CanRedo();
 }

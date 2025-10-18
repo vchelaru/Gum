@@ -55,6 +55,8 @@ namespace Gum.Managers
         private ToolStripMenuItem findFileReferencesToolStripMenuItem;
         private ToolStripMenuItem pluginsToolStripMenuItem;
         private ToolStripMenuItem managePluginsToolStripMenuItem;
+        private ToolStripMenuItem undoMenuItem;
+        private ToolStripMenuItem redoMenuItem;
 
 
         #endregion
@@ -119,11 +121,15 @@ namespace Gum.Managers
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Text = "Edit";
 
-            var undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
+            undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
             undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+            undoMenuItem.Enabled = false;
 
-            var redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
+            redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
             redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
+            redoMenuItem.Enabled = false;
+
+            _undoManager.UndosChanged += (_, __) => UpdateUndoRedoEnabled();
 
             AddSeparator(editToolStripMenuItem);
 
@@ -356,6 +362,12 @@ namespace Gum.Managers
             RefreshUI();
             _menuStrip.Font = new Font("Segoe UI", DefaultFontSize);
             return this._menuStrip;
+        }
+
+        private void UpdateUndoRedoEnabled()
+        {
+            if (undoMenuItem != null) undoMenuItem.Enabled = _undoManager.CanUndo();
+            if (redoMenuItem != null) redoMenuItem.Enabled = _undoManager.CanRedo();
         }
 
         private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
