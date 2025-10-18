@@ -13,7 +13,7 @@ using static Raylib_cs.Raylib;
 namespace Gum.Renderables;
 public class NineSlice : InvisibleRenderable, ITextureCoordinate
 {
-    public Texture2D Texture { get; set; }
+    public Texture2D? Texture { get; set; }
 
     public Raylib_cs.Rectangle? SourceRectangle
     {
@@ -21,9 +21,9 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
         set;
     }
 
-    public float? TextureWidth => Texture.Width;
+    public float? TextureWidth => Texture?.Width;
 
-    public float? TextureHeight => Texture.Height;
+    public float? TextureHeight => Texture?.Height;
 
     System.Drawing.Rectangle? ITextureCoordinate.SourceRectangle
     {
@@ -61,6 +61,8 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
         }
     }
 
+    // This exists to satisfy the same syntax as MonoGame
+    internal void SetSingleTexture(Texture2D? texture) => Texture = texture;
 
     bool ITextureCoordinate.Wrap 
     { 
@@ -75,7 +77,9 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
 
     public override void Render(ISystemManagers managers)
     {
-        if (!Visible) return;
+        if (!Visible || Texture == null) return;
+
+        var nonNullText = Texture.Value;
 
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
@@ -86,11 +90,11 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
 
         var nPatchInfo = new NPatchInfo
         {
-            Source = SourceRectangle ?? new Raylib_cs.Rectangle(0, 0, Texture.Width, Texture.Height),
-            Left = Texture.Width/3,
-            Top = Texture.Height/3,
-            Right = Texture.Width - Texture.Width/3,
-            Bottom = Texture.Height - Texture.Height/3,
+            Source = SourceRectangle ?? new Raylib_cs.Rectangle(0, 0, nonNullText.Width, nonNullText.Height),
+            Left = nonNullText.Width/3,
+            Top = nonNullText.Height/3,
+            Right = nonNullText.Width - nonNullText.Width/3,
+            Bottom = nonNullText.Height - nonNullText.Height/3,
             Layout = NPatchLayout.NinePatch
         };
 
@@ -104,7 +108,7 @@ public class NineSlice : InvisibleRenderable, ITextureCoordinate
         }
 
         DrawTextureNPatch(
-            Texture,
+            nonNullText,
             nPatchInfo,
             destinationRectangle,
             Vector2.Zero,

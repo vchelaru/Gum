@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 using static Raylib_cs.Raylib;
 using Gum.Renderables;
+using RenderingLibrary.Content;
 
 
 namespace RenderingLibrary;
@@ -51,6 +52,8 @@ public class SystemManagers : ISystemManagers
 
         if(fullInstantiation)
         {
+            LoaderManager.Self.ContentLoader = new ContentLoader();
+
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
             GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
 

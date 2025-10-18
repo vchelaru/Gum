@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Renderables;
 using Gum.Wireframe;
+using MonoGameGum.Localization;
 using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -14,21 +15,168 @@ using System.Threading.Tasks;
 namespace RaylibGum.Renderables;
 internal static class CustomSetPropertyOnRenderable
 {
-    public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    public static ILocalizationService LocalizationService { get; set; }
+
+    public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
-        if (mContainedObjectAsIpso is Text asText)
+        // First try special-casing.  
+
+        if (renderableIpso is Text asText)
         {
             handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
+        }
+        else if (renderableIpso is NineSlice)
+        {
+            handled = TrySetPropertyOnNineSlice(renderableIpso, graphicalUiElement, propertyName, value, handled);
         }
 
         if (!handled)
         {
-            GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
+            GraphicalUiElement.SetPropertyThroughReflection(renderableIpso, graphicalUiElement, propertyName, value);
             //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
         }
     }
+
+
+    private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
+    {
+        var nineSlice = renderableIpso as NineSlice;
+
+        if (propertyName == "SourceFile")
+        {
+            AssignSourceFileOnNineSlice(value as string, graphicalUiElement, nineSlice);
+            handled = true;
+        }
+        //else if (propertyName == "Blend")
+        //{
+        //    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+        //    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+        //    nineSlice.BlendState = valueAsXnaBlend;
+
+        //    handled = true;
+        //}
+        //else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
+        //{
+        //    var asFloat = value as float?;
+
+        //    nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+
+        //    handled = true;
+        //}
+        //else if (propertyName == "Color")
+        //{
+        //    if (value is System.Drawing.Color drawingColor)
+        //    {
+        //        nineSlice.Color = drawingColor;
+        //    }
+        //    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+        //    {
+        //        nineSlice.Color = xnaColor.ToSystemDrawing();
+
+        //    }
+        //    handled = true;
+        //}
+        //else if (propertyName == "Red")
+        //{
+        //    nineSlice.Red = (int)value;
+        //    handled = true;
+        //}
+        //else if (propertyName == "Green")
+        //{
+        //    nineSlice.Green = (int)value;
+        //    handled = true;
+        //}
+        //else if (propertyName == "Blue")
+        //{
+        //    nineSlice.Blue = (int)value;
+        //    handled = true;
+        //}
+        else if (propertyName == "Texture")
+        {
+            nineSlice.SetSingleTexture((Texture2D)value);
+            handled = true;
+        }
+
+        // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
+        // are handled by GraphicalUiElement so we don't have to handle it here
+
+        return handled;
+    }
+
+    private static void AssignSourceFileOnNineSlice(string value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)
+    {
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (string.IsNullOrEmpty(value))
+        {
+            nineSlice.SetSingleTexture(null);
+        }
+        // not yet supported:
+        //else if (value.EndsWith(".achx"))
+        //{
+        //    AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+
+        //    nineSlice.AnimationChains = animationChainList;
+
+        //    nineSlice.RefreshCurrentChainToDesiredName();
+
+        //    nineSlice.UpdateToCurrentAnimationFrame();
+
+        //    graphicalUiElement.UpdateTextureValuesFrom(nineSlice);
+
+        //}
+        else
+        {
+            if (ToolsUtilities.FileManager.IsRelative(value))
+            {
+                value = ToolsUtilities.FileManager.RelativeDirectory + value;
+                value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+            }
+
+            //check if part of atlas
+            //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+            //var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
+            //if (atlasedTexture != null)
+            //{
+            //    nineSlice.LoadAtlasedTexture(value, atlasedTexture);
+            //}
+            //else
+            {
+                //if (NineSliceExtensions.GetIfShouldUsePattern(value))
+                //{
+                //    nineSlice.SetTexturesUsingPattern(value, SystemManagers.Default, false);
+                //}
+                //else
+                {
+
+                    //Texture2D? texture = Sprite.InvalidTexture;
+                    Texture2D? texture = null;
+
+                    try
+                    {
+                        texture =
+                            loaderManager.LoadContent<Texture2D>(value);
+                    }
+                    catch (Exception e)
+                    {
+                        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                        {
+                            string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
+                            throw new System.IO.FileNotFoundException(message);
+                        }
+                        // do nothing?
+                    }
+                    nineSlice.SetSingleTexture(texture);
+
+                }
+            }
+        }
+    }
+
 
     private static bool TrySetPropertyOnText(Text asText, GraphicalUiElement gue, string propertyName, object value)
     {

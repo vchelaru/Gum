@@ -37,7 +37,7 @@ public class NineSliceRuntime : InteractiveGue
         }
     }
 
-    public Texture2D Texture
+    public Texture2D? Texture
     {
         get => ContainedNineSlice.Texture;
         set => ContainedNineSlice.Texture = value;
