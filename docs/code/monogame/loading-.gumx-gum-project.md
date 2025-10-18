@@ -36,6 +36,7 @@ To add the files to your .csproj:
     Your .csproj may look like this:
 
     <figure><img src="../../.gitbook/assets/WildcardInCsproj.png" alt=""><figcaption><p>Example of wildcard pattern in .csproj</p></figcaption></figure>
+
 ```xml
   <ItemGroup>
     <None Update="Content\GumProject\**\*.*">
@@ -43,6 +44,7 @@ To add the files to your .csproj:
     </None>
   </ItemGroup>
 ```
+
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\\
 
     <figure><img src="../../.gitbook/assets/VerifyCopyIfNewer.png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
@@ -74,22 +76,21 @@ The steps to do this are:
 To load a Gum Project:
 
 1. Open Game1.cs
-2. Modify the Initialize method it calls Initialize with the name of your .gumx file:
+2. Modify the Initialize method with the name of your .gumx file:
 
-```csharp
-protected override void Initialize()
+<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
 {
-    var gumProject = GumUI.Initialize(
-        this, 
-        "GumProject/GumProject.gumx");
-
-    // This assumes that your project has at least 1 screen
-    var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
-    screenRuntime.AddToRoot();
-    
+<strong>    var gumProject = GumUI.Initialize(
+</strong><strong>        this, 
+</strong><strong>        "GumProject/GumProject.gumx");
+</strong>
+<strong>    // This assumes that your project has at least 1 screen
+</strong><strong>    var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
+</strong><strong>    screenRuntime.AddToRoot();
+</strong>    
     base.Initialize();
 }
-```
+</code></pre>
 
 The code above loads the Gum project using the file path `"GumProject/GumProject.gumx"`. By default this path is relative to your game's Content folder. If your Gum project is not part of the Content folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
