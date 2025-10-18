@@ -38,8 +38,9 @@ jobs:
         #if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+          $dir = ".\.sonar\scanner"
+          if (-not (Test-Path $dir)) { New-Item -Path $dir -ItemType Directory | Out-Null }
+          dotnet tool update dotnet-sonarscanner --tool-path $dir
       - name: Install dotnet-coverage
         run: dotnet tool install --global dotnet-coverage
       - name: Build and analyze
