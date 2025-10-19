@@ -9,7 +9,7 @@ public class MultiplyConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
 
-        if (value is double d && parameter is string s && double.TryParse(s, out double factor))
+        if (value is double d && parameter is string s && double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out double factor))
         {
             return d * factor;
 
@@ -26,7 +26,7 @@ public class MultiplyConverter : IValueConverter
                     canParse = false;
                     if(isParameterString)
                     {
-                        canParse = double.TryParse(asString, out _);
+                        canParse = double.TryParse(asString, out _, CultureInfo.InvariantCulture);
                     }
                 }
 
