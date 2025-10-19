@@ -483,21 +483,43 @@ public class ElementSaveDisplayer
 
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
+        SetSubtext(stateSave, propertyDescriptor, srim, variableName);
+
+        if(stateSave != null)
+        {
+            if (_subtextLogic.HasSubtextFunctionFor(stateSave, variableName))
+            {
+                srim.PropertyChanged += (sender, args) =>
+                {
+                    if (args.PropertyName == "Value")
+                    {
+                        SetSubtext(stateSave, propertyDescriptor, srim, variableName);
+                    }
+                };
+            }
+        }
+
+        return srim;
+    }
+
+    private void SetSubtext(StateSave stateSave, InstanceSavePropertyDescriptor propertyDescriptor, StateReferencingInstanceMember srim, string variableName)
+    {
         srim.DetailText = propertyDescriptor.Subtext;
         string? extraDetail = null;
         if (stateSave != null)
         {
             extraDetail = _subtextLogic.GetSubtextForCurrentState(stateSave, variableName);
+
+
         }
-        if(!string.IsNullOrEmpty(extraDetail))
+        if (!string.IsNullOrEmpty(extraDetail))
         {
-            if(!string.IsNullOrEmpty(srim.DetailText))
+            if (!string.IsNullOrEmpty(srim.DetailText))
             {
                 srim.DetailText += "\n";
             }
             srim.DetailText += extraDetail;
         }
-        return srim;
     }
 
     private static StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)

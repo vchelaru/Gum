@@ -104,7 +104,16 @@ namespace WpfDataUi
 
             if (InstanceMember.PreferredDisplayer != null)
             {
-                controlToAdd = (UserControl)Activator.CreateInstance(InstanceMember.PreferredDisplayer);
+                var preferredDisplayer = InstanceMember.PreferredDisplayer;
+                if(this.UserControl != null && this.UserControl.GetType() == preferredDisplayer)
+                {
+                    // reuse the existing control for speed, and to fix a potential bug when losing focus:
+                    controlToAdd = this.UserControl;
+                }
+                else
+                {
+                    controlToAdd = (UserControl)Activator.CreateInstance(preferredDisplayer);
+                }
             }
 
             // give preference to CustomOptions...:
@@ -144,6 +153,16 @@ namespace WpfDataUi
             if(controlToAdd is IDataUi display)
             {
                 display.InstanceMember = InstanceMember;
+
+                InstanceMember.PropertyChanged += (sender, args) =>
+                {
+                    switch (args.PropertyName)
+                    {
+                        case nameof(InstanceMember.DetailText):
+                            display.Refresh();
+                            break;
+                    }
+                };
             }
             else
             {

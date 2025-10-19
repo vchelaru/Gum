@@ -26,8 +26,32 @@ using Gum.Undo;
 
 namespace Gum.PropertyGridHelpers;
 
+public enum VariableRefreshType
+{
+    FullGridRefresh,
+    FullGridValueRefresh,
+    ThisVariableRefresh
+}
+
 public class SetVariableLogic
 {
+    Dictionary<string, VariableRefreshType> VariablesRequiringRefresh = new ()
+    {
+        {"Parent",                                                 VariableRefreshType.FullGridRefresh   },
+        {"Name",                                                   VariableRefreshType.FullGridRefresh   },
+        {"UseCustomFont",                                          VariableRefreshType.FullGridRefresh   },
+        {"TextureAddress",                                         VariableRefreshType.FullGridRefresh   },
+        {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
+        {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
+        {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
+        // These are handled in the SubtextLogic
+        //{"XUnits",                                                 VariableRefreshType.FullGridRefresh   },
+        //{ "YUnits",                                                 VariableRefreshType.FullGridRefresh }
+
+    };
+
+
+
     private readonly VariableReferenceLogic _variableReferenceLogic;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly FontManager _fontManager;
@@ -205,12 +229,24 @@ public class SetVariableLogic
         InstanceSave instance, string qualifiedName)
     {
 
-        var needsToRefreshEntireElement = ExclusionsPlugin.VariablesRequiringRefresh.Contains(unqualifiedMember);
+        var needsToRefreshEntireElement = VariablesRequiringRefresh.ContainsKey(unqualifiedMember);
 
         if (needsToRefreshEntireElement)
         {
-            _guiCommands.RefreshElementTreeView(parentElement);
-            _guiCommands.RefreshVariables(force: true);
+            var refreshType = VariablesRequiringRefresh[unqualifiedMember];
+            if(refreshType == VariableRefreshType.FullGridRefresh)
+            {
+                _guiCommands.RefreshElementTreeView(parentElement);
+            }
+
+            if(refreshType == VariableRefreshType.FullGridValueRefresh || refreshType == VariableRefreshType.ThisVariableRefresh)
+            {
+                _guiCommands.RefreshVariableValues();
+            }
+            else
+            {
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 

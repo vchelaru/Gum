@@ -14,30 +14,6 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 [Export(typeof(PluginBase))]
 public class ExclusionsPlugin : InternalPlugin
 {
-
-    // These properties may require some changes to the grid, so we refresh the tree view
-    // and entire grid.
-    // There's lots of work that can/should be done here:
-    // 1. We should have the plugins that handle excluding variables also
-    //    report whether a variable requires refreshing
-    // 2. We could only refresh the grid for some variables like UseCustomFont
-    // 3. We could have only certain variable refresh themselves instead of the entire 
-    //    grid.
-    public static HashSet<string> VariablesRequiringRefresh = new HashSet<string>
-    {
-        "Parent",
-        "Name",
-        "UseCustomFont",
-        "TextureAddress",
-        "BaseType",
-        "IsRenderTarget",
-        "TextOverflowVerticalMode",
-
-        // these have special subtext depending on their values:
-        "XUnits", 
-        "YUnits"
-
-    };
     private readonly ISelectedState _selectedState;
     private ObjectFinder _objectFinder;
 
