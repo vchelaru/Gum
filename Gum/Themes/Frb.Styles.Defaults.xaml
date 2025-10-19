@@ -1091,6 +1091,7 @@
       </ControlTemplate>
     </Style.Resources>
 
+    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="HasDropShadow" Value="True" />
     <Setter Property="OverridesDefaultStyle" Value="True" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
