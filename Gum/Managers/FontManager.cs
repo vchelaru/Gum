@@ -212,30 +212,32 @@ public class FontManager
 
         if(response.Succeeded == false)
         {
+            var prefix = "Error creating font " + bmfcSave.FontName + " size " + bmfcSave.FontSize + ". ";
+
             if(!string.IsNullOrEmpty(response.Message))
             {
-                _guiCommands.PrintOutput("Error creating font: " + response.Message);
+                _guiCommands.PrintOutput($"{prefix}" + response.Message);
             }
             else
             {
-                _guiCommands.PrintOutput("Error creating font. Unknown error.");
+                _guiCommands.PrintOutput($"{prefix}Unknown error.");
             }
         }
 
         return response;
     }
 
-    async Task<GeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
+    async Task<OptionallyAttemptedGeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
     {
 
         var fntFileName = bmfcSave.FontCacheFileName;
         FilePath desiredFntFile = _fileCommands.ProjectDirectory + fntFileName;
 
-        var toReturn = GeneralResponse.UnsuccessfulWith("Unknown error");
+        var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
 
         if(_fileCommands.ProjectDirectory == null)
         {
-            return GeneralResponse.UnsuccessfulWith("Project directory is null");
+            return OptionallyAttemptedGeneralResponse.UnsuccessfulWith("Project directory is null");
         }
 
         Window? spinner = null;
@@ -306,8 +308,16 @@ public class FontManager
                     process.WaitForExit();
                 }
 
-                toReturn.Succeeded = true;
-                toReturn.Message = string.Empty;
+                if(desiredFntFile.Exists())
+                {
+                    toReturn.Succeeded = true;
+                    toReturn.Message = string.Empty;
+                }
+                else
+                {
+                    toReturn.Succeeded = false;
+                    toReturn.Message = "Waited for font to be created, but expected file was not created by bmfont.exe";
+                }
 
             }
         }
