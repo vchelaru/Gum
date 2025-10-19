@@ -15,7 +15,6 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 using MonoGameGum;
-using Microsoft.Xna.Framework;
 
 namespace Gum.Forms.DefaultVisuals;
 
