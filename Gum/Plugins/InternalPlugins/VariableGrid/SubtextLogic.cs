@@ -100,6 +100,19 @@ public class SubtextLogic
         }
     }
 
+
+    Dictionary<string, Func<StateSave, string, string>> GetSubtextCalls = new()
+    {
+        {"XUnits", GetXUnitsSubtext },
+        {"YUnits", GetYUnitsSubtext }
+    };
+
+    public bool HasSubtextFunctionFor(StateSave stateSave, string variableName)
+    {
+        var root = ObjectFinder.Self.GetRootVariable(variableName, stateSave.ParentContainer);
+        return root != null && GetSubtextCalls.ContainsKey(root.Name);
+    }
+
     public string GetSubtextForCurrentState(StateSave stateSave, string variableName)
     {
 #if DEBUG
@@ -109,30 +122,43 @@ public class SubtextLogic
         }
 #endif
         var root = ObjectFinder.Self.GetRootVariable(variableName, stateSave.ParentContainer);
-        if(root?.Name == "YUnits")
+
+        if(root != null && GetSubtextCalls.ContainsKey(root.Name))
         {
-            var rfv = new RecursiveVariableFinder(stateSave);
-            var value = rfv.GetValue< PositionUnitType?>(variableName);
-
-            if(value is PositionUnitType.PercentageHeight)
-            {
-                return "Parents with a Height Units of Depends on Children will ignore this instance";
-
-            }
+            return GetSubtextCalls[root.Name](stateSave, variableName);
         }
-        if (root?.Name == "XUnits")
-        {
-            var rfv = new RecursiveVariableFinder(stateSave);
-            var value = rfv.GetValue<PositionUnitType?>(variableName);
-
-            if (value is PositionUnitType.PercentageWidth)
-            {
-                return "Parents with a Width Units of Depends on Children will ignore this instance";
-
-            }
-        }
-
 
         return "";
+    }
+
+    private static string GetXUnitsSubtext(StateSave stateSave, string variableName)
+    {
+        var rfv = new RecursiveVariableFinder(stateSave);
+        var value = rfv.GetValue<PositionUnitType?>(variableName);
+
+        if (value is PositionUnitType.PercentageWidth)
+        {
+            return "Parents with a Width Units of Depends on Children will ignore this instance";
+
+        }
+        else
+        {
+            return string.Empty;
+        }
+    }
+
+    private static string GetYUnitsSubtext(StateSave stateSave, string variableName)
+    {
+        var rfv = new RecursiveVariableFinder(stateSave);
+        var value = rfv.GetValue<PositionUnitType?>(variableName);
+
+        if (value is PositionUnitType.PercentageHeight)
+        {
+            return "Parents with a Height Units of Depends on Children will ignore this instance";
+        }
+        else
+        {
+            return string.Empty;
+        }
     }
 }
