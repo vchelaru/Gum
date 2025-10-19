@@ -97,6 +97,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<DragDropManager>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();
+        services.AddSingleton<MainOutputViewModel>();
+        services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
 
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();

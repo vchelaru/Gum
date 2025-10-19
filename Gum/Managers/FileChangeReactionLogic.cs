@@ -18,6 +18,7 @@ namespace Gum.Managers
         private readonly WireframeCommands _wireframeCommands;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
+        private readonly IOutputManager _outputManager;
         
         public FileChangeReactionLogic()
         {
@@ -25,6 +26,7 @@ namespace Gum.Managers
             _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
+            _outputManager = Locator.GetRequiredService<IOutputManager>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -58,7 +60,7 @@ namespace Gum.Managers
             }
             else if(extension == "ganx")
             {
-                OutputManager.Self.AddOutput($"Gum detected a changed animation file: \n{file}" +
+                _outputManager.AddOutput($"Gum detected a changed animation file: \n{file}" +
                     $"Gum does not currently support reloading animation files, so you should restart Gum to reload this file.");
             }
             else if(extension == "behx")

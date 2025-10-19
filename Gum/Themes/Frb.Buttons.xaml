@@ -42,9 +42,15 @@
         <Setter Property="Width" Value="Auto" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
       </Style>
+      <Style TargetType="{x:Type wpf:FluentIcon}">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+      </Style>
     </ControlTemplate.Resources>
     <Border
       Padding="{TemplateBinding Padding}"
+      HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+      VerticalAlignment="{TemplateBinding VerticalAlignment}"
       Background="{TemplateBinding Background}"
       BorderBrush="{TemplateBinding BorderBrush}"
       BorderThickness="{TemplateBinding BorderThickness}"
@@ -54,8 +60,7 @@
         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
         RenderTransformOrigin="0.5,0.5"
-        SnapsToDevicePixels="True"
-        TextElement.FontSize="{Binding Body, Source={StaticResource Scale}}" />
+        SnapsToDevicePixels="True" />
     </Border>
   </ControlTemplate>
 
@@ -68,6 +73,7 @@
     <Setter Property="Template" Value="{StaticResource IconButtonBaseTemplate}" />
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="themes:FrbButton.BorderCornerRadius" Value="2" />
+    <Setter Property="FontSize" Value="{Binding IconButton, Source={StaticResource Scale}}"></Setter>
     <Style.Triggers>
       <Trigger Property="IsEnabled" Value="False">
         <Setter Property="Opacity" Value="0.5" />
