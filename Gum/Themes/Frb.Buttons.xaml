@@ -63,7 +63,6 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="Focusable" Value="False" />
     <Setter Property="KeyboardNavigation.TabNavigation" Value="Once" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="Template" Value="{StaticResource IconButtonBaseTemplate}" />
