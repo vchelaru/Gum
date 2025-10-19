@@ -15,6 +15,7 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 using MonoGameGum;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Forms.DefaultVisuals;
 
@@ -75,6 +76,8 @@ public class WindowVisual : InteractiveGue
         BorderTopLeftInstance = new Panel();
         BorderTopLeftInstance.Name = "BorderTopLeftInstance";
         BorderTopLeftInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);
+        BorderTopLeftInstance.X = -BorderSize;
+        BorderTopLeftInstance.Y = -BorderSize;
         BorderTopLeftInstance.Width = BorderSize;
         BorderTopLeftInstance.Height = BorderSize;
         this.AddChild(BorderTopLeftInstance);
@@ -82,6 +85,8 @@ public class WindowVisual : InteractiveGue
         BorderTopRightInstance = new Panel();
         BorderTopRightInstance.Name = "BorderTopRightInstance";
         BorderTopRightInstance.Anchor(Gum.Wireframe.Anchor.TopRight);
+        BorderTopRightInstance.X = BorderSize;
+        BorderTopRightInstance.Y = -BorderSize;
         BorderTopRightInstance.Width = BorderSize;
         BorderTopRightInstance.Height = BorderSize;
         this.AddChild(BorderTopRightInstance);
@@ -89,6 +94,8 @@ public class WindowVisual : InteractiveGue
         BorderBottomLeftInstance = new Panel();
         BorderBottomLeftInstance.Name = "BorderBottomLeftInstance";
         BorderBottomLeftInstance.Anchor(Gum.Wireframe.Anchor.BottomLeft);
+        BorderBottomLeftInstance.X = -BorderSize;
+        BorderBottomLeftInstance.Y = BorderSize;
         BorderBottomLeftInstance.Width = BorderSize;
         BorderBottomLeftInstance.Height = BorderSize;
         this.AddChild(BorderBottomLeftInstance);
@@ -96,6 +103,8 @@ public class WindowVisual : InteractiveGue
         BorderBottomRightInstance = new Panel();
         BorderBottomRightInstance.Name = "BorderBottomRightInstance";
         BorderBottomRightInstance.Anchor(Gum.Wireframe.Anchor.BottomRight);
+        BorderBottomRightInstance.X = BorderSize;
+        BorderBottomRightInstance.Y = BorderSize;
         BorderBottomRightInstance.Width = BorderSize;
         BorderBottomRightInstance.Height = BorderSize;
         this.AddChild(BorderBottomRightInstance);
@@ -103,39 +112,95 @@ public class WindowVisual : InteractiveGue
         BorderTopInstance = new Panel();
         BorderTopInstance.Name = "BorderTopInstance";
         BorderTopInstance.Dock(Gum.Wireframe.Dock.Top);
+        BorderTopInstance.Y = -BorderSize;
         BorderTopInstance.Height = BorderSize;
-        BorderTopInstance.Width = -BorderSize * 2;
+        BorderTopInstance.Width = 0;
         this.AddChild(BorderTopInstance);
 
         BorderBottomInstance = new Panel();
         BorderBottomInstance.Name = "BorderBottomInstance";
         BorderBottomInstance.Dock(Gum.Wireframe.Dock.Bottom);
+        BorderBottomInstance.Y = BorderSize;
         BorderBottomInstance.Height = BorderSize;
-        BorderBottomInstance.Width = -BorderSize * 2;
+        BorderBottomInstance.Width = 0;
         this.AddChild(BorderBottomInstance);
 
         BorderLeftInstance = new Panel();
         BorderLeftInstance.Name = "BorderLeftInstance";
         BorderLeftInstance.Dock(Gum.Wireframe.Dock.Left);
-        BorderLeftInstance.Width = BorderSize*6;
-        BorderLeftInstance.Height = -BorderSize * 2;
-        BorderLeftInstance.X = -35;
-        this.RaiseChildrenEventsOutsideOfBounds = true;
-
+        BorderLeftInstance.X = -BorderSize;
+        BorderLeftInstance.Width = BorderSize;
+        BorderLeftInstance.Height = 0;
         this.AddChild(BorderLeftInstance);
-
-        var coloredRectangle = new ColoredRectangleRuntime();
-        BorderLeftInstance.AddChild(coloredRectangle);
-        coloredRectangle.Color = Microsoft.Xna.Framework.Color.Red;
-        coloredRectangle.Alpha = 100;
-        coloredRectangle.Dock(Wireframe.Dock.Fill);
-
 
         BorderRightInstance = new Panel();
         BorderRightInstance.Name = "BorderRightInstance";
         BorderRightInstance.Dock(Gum.Wireframe.Dock.Right);
+        BorderRightInstance.X = BorderSize;
         BorderRightInstance.Width = BorderSize;
-        BorderRightInstance.Height = -BorderSize * 2;
+        BorderRightInstance.Height = 0;
+
+        // Testing the border position for the drag feature
+        //var col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.White;
+        //BorderTopLeftInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.White;
+        //BorderTopRightInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.White;
+        //BorderBottomLeftInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.White;
+        //BorderBottomRightInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.Red;
+        //BorderTopInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.Red;
+        //BorderBottomInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.Blue;
+        //BorderLeftInstance.AddChild(col);
+        //col = new ColoredRectangleRuntime();
+        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
+        //col.Width = 0;
+        //col.Height = 0;
+        //col.Color = Color.Blue;
+        //BorderRightInstance.AddChild(col);
+
+        // Allow the Border drag effect to work outside of this container
+        this.RaiseChildrenEventsOutsideOfBounds = true; 
+
         SetCustomCursorForResizing();
 
         this.AddChild(BorderRightInstance);
