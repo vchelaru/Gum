@@ -117,9 +117,19 @@ public class WindowVisual : InteractiveGue
         BorderLeftInstance = new Panel();
         BorderLeftInstance.Name = "BorderLeftInstance";
         BorderLeftInstance.Dock(Gum.Wireframe.Dock.Left);
-        BorderLeftInstance.Width = BorderSize;
+        BorderLeftInstance.Width = BorderSize*6;
         BorderLeftInstance.Height = -BorderSize * 2;
+        BorderLeftInstance.X = -35;
+        this.RaiseChildrenEventsOutsideOfBounds = true;
+
         this.AddChild(BorderLeftInstance);
+
+        var coloredRectangle = new ColoredRectangleRuntime();
+        BorderLeftInstance.AddChild(coloredRectangle);
+        coloredRectangle.Color = Microsoft.Xna.Framework.Color.Red;
+        coloredRectangle.Alpha = 100;
+        coloredRectangle.Dock(Wireframe.Dock.Fill);
+
 
         BorderRightInstance = new Panel();
         BorderRightInstance.Name = "BorderRightInstance";
