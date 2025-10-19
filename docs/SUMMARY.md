@@ -319,3 +319,4 @@
   * [Setup](code/skiagum/setup/README.md)
     * [WPF](code/skiagum/setup/wpf.md)
   * [SkiaGum Platform Support](code/skiagum/skiagum-platform-support.md)
+  * [Content Using Embedded Resources](code/skiagum/content-using-embedded-resources.md)
