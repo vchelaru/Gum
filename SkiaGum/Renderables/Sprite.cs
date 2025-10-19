@@ -8,7 +8,7 @@ namespace SkiaGum.Renderables;
 
 public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate
 {
-    public SKBitmap Texture 
+    public SKBitmap? Texture 
     { 
         get => _texture;
         set
@@ -25,13 +25,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate
         }
     }
 
-    public SKImage Image { get; set; }
+    public SKImage? Image { get; set; }
 
     public float? TextureWidth => Texture?.Width;
     public float? TextureHeight => Texture?.Height;
 
     public Rectangle? SourceRectangle;
-    private SKBitmap _texture;
+    private SKBitmap? _texture;
 
     public Rectangle? EffectiveRectangle => SourceRectangle;
 

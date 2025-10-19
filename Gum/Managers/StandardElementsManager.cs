@@ -97,9 +97,15 @@ namespace Gum.Managers
 
         #endregion
 
+        bool hasInitialized = false;
+
         public void Initialize()
         {
-            RefreshDefaults();
+            if(!hasInitialized)
+            {
+                hasInitialized = true;
+                RefreshDefaults();
+            }
         }
 
         public void RefreshDefaults()
