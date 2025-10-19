@@ -33,14 +33,13 @@ public class WindowVisual : InteractiveGue
     public Panel BorderLeftInstance { get; private set; }
     public Panel BorderRightInstance { get; private set; }
 
-    public float BorderSize { get; set; } = 10f;
-
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        const float borderSize = 10f;
         Width = 256;
         Height = 256;
-        MinHeight = BorderSize;
-        MinWidth = BorderSize;
+        MinHeight = borderSize;
+        MinWidth = borderSize;
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
@@ -76,127 +75,69 @@ public class WindowVisual : InteractiveGue
         BorderTopLeftInstance = new Panel();
         BorderTopLeftInstance.Name = "BorderTopLeftInstance";
         BorderTopLeftInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);
-        BorderTopLeftInstance.X = -BorderSize;
-        BorderTopLeftInstance.Y = -BorderSize;
-        BorderTopLeftInstance.Width = BorderSize;
-        BorderTopLeftInstance.Height = BorderSize;
+        BorderTopLeftInstance.X = -borderSize;
+        BorderTopLeftInstance.Y = -borderSize;
+        BorderTopLeftInstance.Width = borderSize;
+        BorderTopLeftInstance.Height = borderSize;
         this.AddChild(BorderTopLeftInstance);
 
         BorderTopRightInstance = new Panel();
         BorderTopRightInstance.Name = "BorderTopRightInstance";
         BorderTopRightInstance.Anchor(Gum.Wireframe.Anchor.TopRight);
-        BorderTopRightInstance.X = BorderSize;
-        BorderTopRightInstance.Y = -BorderSize;
-        BorderTopRightInstance.Width = BorderSize;
-        BorderTopRightInstance.Height = BorderSize;
+        BorderTopRightInstance.X = borderSize;
+        BorderTopRightInstance.Y = -borderSize;
+        BorderTopRightInstance.Width = borderSize;
+        BorderTopRightInstance.Height = borderSize;
         this.AddChild(BorderTopRightInstance);
 
         BorderBottomLeftInstance = new Panel();
         BorderBottomLeftInstance.Name = "BorderBottomLeftInstance";
         BorderBottomLeftInstance.Anchor(Gum.Wireframe.Anchor.BottomLeft);
-        BorderBottomLeftInstance.X = -BorderSize;
-        BorderBottomLeftInstance.Y = BorderSize;
-        BorderBottomLeftInstance.Width = BorderSize;
-        BorderBottomLeftInstance.Height = BorderSize;
+        BorderBottomLeftInstance.X = -borderSize;
+        BorderBottomLeftInstance.Y = borderSize;
+        BorderBottomLeftInstance.Width = borderSize;
+        BorderBottomLeftInstance.Height = borderSize;
         this.AddChild(BorderBottomLeftInstance);
 
         BorderBottomRightInstance = new Panel();
         BorderBottomRightInstance.Name = "BorderBottomRightInstance";
         BorderBottomRightInstance.Anchor(Gum.Wireframe.Anchor.BottomRight);
-        BorderBottomRightInstance.X = BorderSize;
-        BorderBottomRightInstance.Y = BorderSize;
-        BorderBottomRightInstance.Width = BorderSize;
-        BorderBottomRightInstance.Height = BorderSize;
+        BorderBottomRightInstance.X = borderSize;
+        BorderBottomRightInstance.Y = borderSize;
+        BorderBottomRightInstance.Width = borderSize;
+        BorderBottomRightInstance.Height = borderSize;
         this.AddChild(BorderBottomRightInstance);
 
         BorderTopInstance = new Panel();
         BorderTopInstance.Name = "BorderTopInstance";
         BorderTopInstance.Dock(Gum.Wireframe.Dock.Top);
-        BorderTopInstance.Y = -BorderSize;
-        BorderTopInstance.Height = BorderSize;
+        BorderTopInstance.Y = -borderSize;
+        BorderTopInstance.Height = borderSize;
         BorderTopInstance.Width = 0;
         this.AddChild(BorderTopInstance);
 
         BorderBottomInstance = new Panel();
         BorderBottomInstance.Name = "BorderBottomInstance";
         BorderBottomInstance.Dock(Gum.Wireframe.Dock.Bottom);
-        BorderBottomInstance.Y = BorderSize;
-        BorderBottomInstance.Height = BorderSize;
+        BorderBottomInstance.Y = borderSize;
+        BorderBottomInstance.Height = borderSize;
         BorderBottomInstance.Width = 0;
         this.AddChild(BorderBottomInstance);
 
         BorderLeftInstance = new Panel();
         BorderLeftInstance.Name = "BorderLeftInstance";
         BorderLeftInstance.Dock(Gum.Wireframe.Dock.Left);
-        BorderLeftInstance.X = -BorderSize;
-        BorderLeftInstance.Width = BorderSize;
+        BorderLeftInstance.X = -borderSize;
+        BorderLeftInstance.Width = borderSize;
         BorderLeftInstance.Height = 0;
         this.AddChild(BorderLeftInstance);
 
         BorderRightInstance = new Panel();
         BorderRightInstance.Name = "BorderRightInstance";
         BorderRightInstance.Dock(Gum.Wireframe.Dock.Right);
-        BorderRightInstance.X = BorderSize;
-        BorderRightInstance.Width = BorderSize;
+        BorderRightInstance.X = borderSize;
+        BorderRightInstance.Width = borderSize;
         BorderRightInstance.Height = 0;
-
-        // Testing the border position for the drag feature
-        //var col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.White;
-        //BorderTopLeftInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.White;
-        //BorderTopRightInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.White;
-        //BorderBottomLeftInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.White;
-        //BorderBottomRightInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.Red;
-        //BorderTopInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.Red;
-        //BorderBottomInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.Blue;
-        //BorderLeftInstance.AddChild(col);
-        //col = new ColoredRectangleRuntime();
-        //col.WidthUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.HeightUnits = DataTypes.DimensionUnitType.RelativeToParent;
-        //col.Width = 0;
-        //col.Height = 0;
-        //col.Color = Color.Blue;
-        //BorderRightInstance.AddChild(col);
 
         // Allow the Border drag effect to work outside of this container
         this.RaiseChildrenEventsOutsideOfBounds = true; 
