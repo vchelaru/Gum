@@ -23,13 +23,15 @@ public class FileCommands : IFileCommands
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
+    private readonly IOutputManager _outputManager;
 
 
     public FileCommands(ISelectedState selectedState, 
         Lazy<IUndoManager> undoManager, 
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager)
+        LocalizationManager localizationManager,
+        IOutputManager outputManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -37,6 +39,7 @@ public class FileCommands : IFileCommands
         _guiCommands = guiCommands;
         _localizationManager = localizationManager;
         _fileWatchManager = FileWatchManager.Self;
+        _outputManager = outputManager;
     }
 
     /// <summary>
@@ -155,7 +158,7 @@ public class FileCommands : IFileCommands
             return;
         }
 
-        OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
+        _outputManager.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
         CreateDefaultFontCharacterFile();
     }
 
@@ -275,7 +278,7 @@ public class FileCommands : IFileCommands
                 }
                 if (succeeded)
                 {
-                    OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
+                    _outputManager.AddOutput("Saved " + elementSave + " to " + fileName);
                     PluginManager.Self.AfterElementSave(elementSave);
                 }
             }
@@ -387,7 +390,7 @@ public class FileCommands : IFileCommands
                 }
                 if (succeeded)
                 {
-                    OutputManager.Self.AddOutput("Saved " + behavior + " to " + fileName);
+                    _outputManager.AddOutput("Saved " + behavior + " to " + fileName);
                     //PluginManager.Self.AfterBehaviorSave(behavior);
                 }
             }

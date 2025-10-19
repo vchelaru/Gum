@@ -37,14 +37,20 @@ public class GuiCommands : IGuiCommands
     
     private readonly Lazy<ISelectedState> _lazySelectedState;
     private readonly IDispatcher _dispatcher;
+    private readonly IOutputManager _outputManager;
+
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
     #endregion
 
-    public GuiCommands(Lazy<ISelectedState> lazySelectedState, IDispatcher dispatcher)
+    public GuiCommands(
+        Lazy<ISelectedState> lazySelectedState, 
+        IDispatcher dispatcher, 
+        IOutputManager outputManager)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
+        _outputManager = outputManager;
     }
     
     public void BroadcastRefreshBehaviorView()
@@ -87,7 +93,7 @@ public class GuiCommands : IGuiCommands
 
     public void PrintOutput(string output)
     {
-        _dispatcher.Invoke(() => OutputManager.Self.AddOutput(output));
+        _dispatcher.Invoke(() => _outputManager.AddOutput(output));
     }
 
     #region Show/Hide Tools

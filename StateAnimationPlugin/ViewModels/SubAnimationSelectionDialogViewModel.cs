@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Services;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.ViewModels;
@@ -16,6 +17,7 @@ namespace StateAnimationPlugin.ViewModels;
 public class SubAnimationSelectionDialogViewModel : DialogViewModel
 {
     private readonly AnimationFilePathService _animationFilePathService = new();
+    private readonly IOutputManager _outputManager;
 
     public List<AnimationContainerViewModel>? AnimationContainers { get; set; }
     public AnimationContainerViewModel? SelectedContainer
@@ -51,6 +53,11 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 
     public override bool CanExecuteAffirmative() => SelectedAnimation is not null;
 
+    public SubAnimationSelectionDialogViewModel()
+    {
+        _outputManager = Locator.GetRequiredService<IOutputManager>();
+    }
+
 
     private IEnumerable<AnimationViewModel> GetAnimationsForContainer(AnimationContainerViewModel container)
     {
@@ -67,7 +74,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
             }
             catch (Exception exception)
             {
-                OutputManager.Self.AddError(exception.ToString());
+                _outputManager.AddError(exception.ToString());
 
             }
 

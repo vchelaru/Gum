@@ -4,6 +4,8 @@ using System.ComponentModel.Composition;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
+using Gum.Plugins.InternalPlugins.Output;
+using Gum.Services;
 
 namespace Gum.Plugins.Output
 {
@@ -12,32 +14,9 @@ namespace Gum.Plugins.Output
     {
         public override void StartUp()
         {
-            InitializeOutputTextBox();
-
-        }
-
-        private void InitializeOutputTextBox()
-        {
-            var outputTextBox = new TextBox();
-
-            // 
-            // OutputTextBox
-            // 
-            outputTextBox.HorizontalAlignment = HorizontalAlignment.Stretch;
-            outputTextBox.VerticalAlignment = VerticalAlignment.Stretch;
-            outputTextBox.VerticalContentAlignment = VerticalAlignment.Top;
-            outputTextBox.IsReadOnly = true;
-            outputTextBox.Name = "OutputTextBox";
-            outputTextBox.TabIndex = 0;
-            outputTextBox.Margin = new Thickness(4);
-            outputTextBox.Text = "";
-            outputTextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-            outputTextBox.TextWrapping = TextWrapping.Wrap;
-            outputTextBox.Style = Application.Current.TryFindResource("Frb.Styles.Textbox.Readonly") as Style;
-
-            PluginTab tab = _tabManager.AddControl(outputTextBox, "Output", TabLocation.RightBottom);
-            tab.GotFocus += () => outputTextBox.ScrollToEnd();
-            OutputManager.Self.Initialize(outputTextBox);
+            MainOutputViewModel viewmodel = Locator.GetRequiredService<MainOutputViewModel>();
+            MainOutputPluginView view = new() { DataContext = viewmodel, Margin = new(4)};
+            _tabManager.AddControl(view, "Output", TabLocation.RightBottom);
         }
     }
 }

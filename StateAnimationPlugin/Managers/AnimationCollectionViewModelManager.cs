@@ -22,12 +22,14 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
+    private readonly IOutputManager _outputManager;
 
     public AnimationCollectionViewModelManager()
     {
         _animationFilePathService = new AnimationFilePathService();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        _outputManager = Locator.GetRequiredService<IOutputManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
         _animationVmFactory = () => new(_nameVerifier, dialogService);
     }
@@ -67,7 +69,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
             }
             catch (Exception exception)
             {
-                OutputManager.Self.AddError(exception.ToString());
+                _outputManager.AddError(exception.ToString());
             }
         }
 

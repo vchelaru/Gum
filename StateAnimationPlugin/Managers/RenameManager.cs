@@ -19,11 +19,13 @@ namespace StateAnimationPlugin.Managers
     {
         private readonly AnimationFilePathService _animationFilePathService;
         private readonly ISelectedState _selectedState;
+        private readonly IOutputManager _outputManager;
 
         public RenameManager()
         {
             _animationFilePathService = new AnimationFilePathService();
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _outputManager = Locator.GetRequiredService<IOutputManager>();
         }
 
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
@@ -192,7 +194,7 @@ namespace StateAnimationPlugin.Managers
                     }
                     catch (Exception e)
                     {
-                        OutputManager.Self.AddError(e.ToString());
+                        _outputManager.AddError(e.ToString());
                     }
                 }
             }
