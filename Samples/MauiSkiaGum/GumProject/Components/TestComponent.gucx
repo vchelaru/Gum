@@ -189,7 +189,7 @@
       <IsFile>true</IsFile>
       <Type>string</Type>
       <Name>SvgInstance.SourceFile</Name>
-      <Value xsi:type="xsd:string">gum-logo-reverse.svg</Value>
+      <Value xsi:type="xsd:string">Resources\gum-logo-reverse.svg</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

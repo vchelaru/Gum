@@ -90,7 +90,7 @@ partial class TestComponentRuntime : SkiaGum.GueDeriving.ContainerRuntime
         this.ColoredCircleInstance.Y = 84f;
 
         this.SvgInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
-        this.SvgInstance.SourceFile = @"gum-logo-reverse.svg";
+        this.SvgInstance.SourceFile = @"Resources\gum-logo-reverse.svg";
         this.SvgInstance.Width = 158f;
         this.SvgInstance.X = 214f;
         this.SvgInstance.Y = 72f;

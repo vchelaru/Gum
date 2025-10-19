@@ -5,7 +5,7 @@
   <FontSpacingVertical>1</FontSpacingVertical>
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
   <UseFontCharacterFile>false</UseFontCharacterFile>
-  <Version>0</Version>
+  <Version>1</Version>
   <DefaultCanvasWidth>800</DefaultCanvasWidth>
   <DefaultCanvasHeight>600</DefaultCanvasHeight>
   <ShowOutlines>true</ShowOutlines>
@@ -25,51 +25,6 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <StandardElementReference>
-    <Name>Text</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Sprite</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Container</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>ColoredRectangle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Circle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Rectangle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Polygon</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>NineSlice</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Component</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
     <Name>Arc</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -80,7 +35,27 @@
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
   <StandardElementReference>
+    <Name>Circle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
     <Name>ColoredCircle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>ColoredRectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Component</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Container</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
@@ -90,12 +65,37 @@
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
   <StandardElementReference>
+    <Name>NineSlice</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Polygon</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Rectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
     <Name>RoundedRectangle</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
   <StandardElementReference>
+    <Name>Sprite</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
     <Name>Svg</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Text</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>

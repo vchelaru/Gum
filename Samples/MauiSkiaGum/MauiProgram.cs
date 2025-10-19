@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using RenderingLibrary;
+using SkiaGum.Content;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace MauiSkiaGum
@@ -20,6 +22,12 @@ namespace MauiSkiaGum
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+
+            SkiaResourceManager.CustomResourceAssembly = typeof(MauiProgram).Assembly;
+            SkiaResourceManager.AdjustContentName = (contentName) =>
+            {
+                return "MauiSkiaGum.GumProject." + contentName;
+            };
 
             return builder.Build();
         }

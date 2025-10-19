@@ -10,12 +10,6 @@
       <Category>States and Visibility</Category>
       <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <Category>States and Visibility</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
   </State>
   <Behaviors />
 </StandardElementSave>

@@ -772,7 +772,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
         if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
         {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
 
             string message = "What do you want to do with the file " + fileName;
             DialogChoices<string> choices = new()
@@ -823,7 +823,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
         if (instance != null)
         {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
 
             string message = "What do you want to do with the file " + fileName;
             DialogChoices<string> choices = new()
