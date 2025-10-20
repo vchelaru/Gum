@@ -53,8 +53,8 @@
     <TextBlock
       x:Name="HintTextBlock"
       Grid.Row="1"
-      Margin="0,0,-4,0"
-      Padding="8,0,0,0"
+      Grid.ColumnSpan="2"
+      Margin="8,0,0,0"
       FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButtonOptionDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
       TextWrapping="Wrap">
       This is a property description.
