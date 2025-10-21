@@ -1,29 +1,31 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Gum.DataTypes;
-using System.Windows.Forms;
-using Gum.Wireframe;
-using ToolsUtilities;
-using RenderingLibrary.Content;
-using RenderingLibrary;
-using CommonFormsAndControls.Forms;
-using Gum.ToolStates;
-using Gum.DataTypes.Variables;
-using Gum.ToolCommands;
-using RenderingLibrary.Graphics;
-using Gum.PropertyGridHelpers;
-using System.Drawing;
 using CommonFormsAndControls;
+using CommonFormsAndControls.Forms;
 using Gum.Commands;
 using Gum.Converters;
-using Gum.Logic;
-using Gum.Plugins.ImportPlugin.Manager;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
-using Gum.Undo;
+using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Plugins;
+using Gum.Plugins.ImportPlugin.Manager;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolCommands;
+using Gum.ToolStates;
+using Gum.Undo;
+using Gum.Wireframe;
+using RenderingLibrary;
+using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Windows.Forms;
+using System.Windows.Navigation;
+using ToolsUtilities;
 
 namespace Gum.Managers;
 
@@ -57,6 +59,7 @@ public class DragDropManager
     private readonly SetVariableLogic _setVariableLogic;
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly ImportLogic _importLogic;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     #endregion
 
@@ -80,7 +83,8 @@ public class DragDropManager
         IFileCommands fileCommands,
         SetVariableLogic setVariableLogic, 
         CopyPasteLogic copyPasteLogic,
-        ImportLogic importLogic)
+        ImportLogic importLogic,
+        WireframeObjectManager wireframeObjectManager)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -93,6 +97,7 @@ public class DragDropManager
         _setVariableLogic = setVariableLogic;
         _copyPasteLogic = copyPasteLogic;
         _importLogic = importLogic;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     #region Drag+drop File (from windows explorer)
@@ -156,12 +161,12 @@ public class DragDropManager
                 HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode);
 
                 // HandleDroppingInstanceOnTarget internally calls 
-                // WireframeObjectManager.Self.RefreshAll, but since
+                // _wireframeObjectManager.RefreshAll, but since
                 // the Parent is set in HandleDroppedElementInElement,
                 // then HandleDroppingInstanceOnTarget does not report the
                 // parent as having changed. We need to still force a refresh
                 // to make the parenting apply in the wireframe display.
-                WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures: false);
+                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: false);
             }
 
         }
@@ -562,6 +567,109 @@ public class DragDropManager
 
     internal bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
+        if (targetNode == null) return false;
+
+        var toReturn = draggedNodes.All(item => ValidateDrop(item.Tag, targetNode));
+
+        return toReturn;
+    }
+
+    bool ValidateDrop(object draggedObject, ITreeNode targetTreeNode)
+    {
+        var target = targetTreeNode.Tag;
+
+        if (draggedObject == null) return false;
+
+        if(target is StandardElementSave)
+        {
+            // nothing can be dropped on standard elements:
+            return false;
+        }
+        if(targetTreeNode.IsTopStandardElementTreeNode())
+        {
+            // nothing can be dropped on the standard elements folder:
+            return false;
+        }
+        if(targetTreeNode.IsTopComponentContainerTreeNode())
+        {
+            if(draggedObject is StandardElementSave || draggedObject is BehaviorSave)
+            {
+                return false;
+            }
+        }
+        if(draggedObject is ScreenSave && !targetTreeNode.IsScreensFolderTreeNode() && !targetTreeNode.IsTopScreenContainerTreeNode())
+        {
+            // screens cannot be added to anything else:
+            return false;
+        }
+
+        ElementSave? targetElement = target as ElementSave;
+        BehaviorSave? targetBehavior = target as BehaviorSave;
+
+
+
+        if (target is InstanceSave targetInstance)
+        {
+            targetElement = ObjectFinder.Self.GetElementContainerOf(targetInstance);
+            targetBehavior = ObjectFinder.Self.GetBehaviorContainerOf(targetInstance);
+        }
+
+        if(draggedObject is BehaviorSave behavior)
+        {
+            // behaviors cannot be added to screens currently:
+            return targetElement is ComponentSave;
+        }
+
+        if(draggedObject is ElementSave draggedElement)
+        {
+            if(targetElement != null)
+            {
+                return _circularReferenceManager.CanTypeBeAddedToElement(
+                    targetElement, draggedElement.Name);
+            }
+            else if(
+                ( (targetTreeNode.IsComponentsFolderTreeNode() || targetTreeNode.IsTopComponentContainerTreeNode()) && draggedElement is ComponentSave) ||
+                ( (targetTreeNode.IsScreensFolderTreeNode() || targetTreeNode.IsTopScreenContainerTreeNode()) && draggedElement is ScreenSave)
+                )
+            {
+                var fullFolderPath = targetTreeNode.GetFullFilePath();
+
+                var fullElementFilePath = draggedElement.GetFullPathXmlFile().GetDirectoryContainingThis();
+
+                // If not equal, it was moved to a different folder, which is allowed:
+                return fullFolderPath != fullElementFilePath;
+            }
+            else if(targetBehavior != null)
+            {
+                return draggedObject is StandardElementSave ||
+                    draggedObject is ComponentSave;
+            }
+        }
+
+        if(draggedObject is InstanceSave draggedInstance)
+        {
+            if (targetElement != null)
+            {
+                bool isSameElement = targetElement == draggedInstance.ParentContainer;
+
+                if(isSameElement)
+                {
+                    return true;
+                }
+                else
+                {
+                    // do circular reference checks:
+                    return _circularReferenceManager.CanTypeBeAddedToElement(
+                        targetElement, draggedInstance.BaseType);
+                }
+            }
+            else if(targetBehavior != null)
+            {
+                // Instances can always be added to behaviors:
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -687,7 +795,7 @@ public class DragDropManager
         if (Cursor.IsInWindow)
         {   
             ElementSave draggedAsElementSave = draggedObject as ElementSave;                    
-            ElementSave target = Wireframe.WireframeObjectManager.Self.ElementShowing;
+            ElementSave target = _wireframeObjectManager.ElementShowing;
 
             // Depending on how fast the user clicks the UI may think they dragged an instance rather than 
             // an element, so let's protect against that with this null check.
@@ -714,35 +822,21 @@ public class DragDropManager
         }
     }
 
-    private bool CanDrop()
-    {
-        return _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
-               _selectedState.SelectedElement != null &&            // An element must be selected
-               _selectedState.SelectedStateSave != null;            // A state must be selected
-    }
-
     public void HandleFileDragEnter(object sender, DragEventArgs e)
     {
-        UpdateEffectsForDragging(e);
+        UpdateEffectsForFileDragDrop(e);
     }
 
-    internal void HandleDragOver(object sender, DragEventArgs e)
+    private void UpdateEffectsForFileDragDrop(DragEventArgs e)
     {
-        UpdateEffectsForDragging(e);
-    }
+        var canDropFile =         
+            _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
+            _selectedState.SelectedElement != null &&            // An element must be selected
+            _selectedState.SelectedStateSave != null;            // A state must be selected
 
-    private void UpdateEffectsForDragging(DragEventArgs e)
-    {
-        if (CanDrop())
+        if (canDropFile && e.Data.GetDataPresent(DataFormats.FileDrop))
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                e.Effect = DragDropEffects.Copy;
-            }
-            else if (mDraggedItem != null)
-            {
-                e.Effect = DragDropEffects.Copy;
-            }
+            e.Effect = DragDropEffects.Copy;
         }
     }
 
@@ -752,7 +846,7 @@ public class DragDropManager
         _guiCommands.RefreshVariables();
         _guiCommands.RefreshElementTreeView();
 
-        WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     internal void HandleKeyDown(System.Windows.Forms.KeyEventArgs e)
@@ -778,7 +872,7 @@ public class DragDropManager
 
         if (component != null)
         {
-            var runtime = Wireframe.WireframeObjectManager.Self.GetRepresentation(component);
+            var runtime = _wireframeObjectManager.GetRepresentation(component);
             containerLeft = runtime.GetAbsoluteLeft();
             containerTop = runtime.GetAbsoluteTop();
 

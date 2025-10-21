@@ -2546,7 +2546,12 @@ public static class TreeNodeExtensionMethods
         }
     }
 
-
+    /// <summary>
+    /// Returns whether this node is a folder inside the Screens tree structure. This does not 
+    /// return true for the top-level screen node.
+    /// </summary>
+    /// <param name="treeNode">The tree node</param>
+    /// <returns>Whether this is a folder inside the screens folder structure</returns>
     public static bool IsScreensFolderTreeNode(this ITreeNode treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsScreensFolderTreeNode()
