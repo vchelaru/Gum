@@ -14,6 +14,7 @@ using Gum.ToolCommands;
 using RenderingLibrary.Graphics;
 using Gum.PropertyGridHelpers;
 using System.Drawing;
+using CommonFormsAndControls;
 using Gum.Commands;
 using Gum.Converters;
 using Gum.Logic;
@@ -559,29 +560,33 @@ public class DragDropManager
 
     #region General Functions
 
-    internal void HandleDragDropEvent(object sender, DragEventArgs e)
+    internal bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    {
+        return false;
+    }
+
+    internal void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    {
+        IEnumerable<object> tags = draggedNodes
+            .Where(n => n.Tag != null)
+            .Select(n => n.Tag);
+
+        foreach (object draggedObject in tags)
+        {
+            HandleDroppedItemOnTreeView(draggedObject, targetNode, index);
+        }
+    }
+
+    internal void OnFilesDroppedInTreeView(string[] files)
     {
         var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
-        var treeNodesToDrop = GetTreeNodesToDrop();
-        mDraggedItem = null;
-        foreach(var draggedTreeNode in treeNodesToDrop )
-        {
-            object draggedObject = draggedTreeNode.Tag;
 
-            if (targetTreeNode != draggedTreeNode && targetTreeNode?.Tag !=  draggedTreeNode?.Tag )
-            {
-                HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
-            }
-        }
-
-        string[] files = (string[])e.Data?.GetData(DataFormats.FileDrop);
-
-        if(files != null)
+        if (files != null)
         {
             var isTargetRootScreenTreeNode = targetTreeNode.IsTopScreenContainerTreeNode();
-            foreach(FilePath file in files)
+            foreach (FilePath file in files)
             {
-                if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
+                if (file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
                 {
                     _importLogic.ImportScreen(file);
                 }
@@ -653,7 +658,7 @@ public class DragDropManager
         return treeNodesToDrop;
     }
 
-    private void HandleDroppedItemOnTreeView(object draggedObject, ITreeNode treeNodeDroppedOn)
+    private void HandleDroppedItemOnTreeView(object draggedObject, ITreeNode treeNodeDroppedOn, int index)
     {
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
         if (treeNodeDroppedOn != null)
