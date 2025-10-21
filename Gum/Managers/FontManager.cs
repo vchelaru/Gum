@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;

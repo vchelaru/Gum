@@ -17,7 +17,6 @@ using Gum.DataTypes.Variables;
 using System.Linq;
 using System.Reflection;
 using System.ComponentModel;
-using System.Management.Instrumentation;
 using Gum.ToolCommands;
 using System.Threading.Tasks;
 using Gum.Commands;
