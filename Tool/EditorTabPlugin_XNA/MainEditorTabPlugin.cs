@@ -31,7 +31,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Drawing;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Numerics;
 using System.Runtime;
 using System.Security.AccessControl;
