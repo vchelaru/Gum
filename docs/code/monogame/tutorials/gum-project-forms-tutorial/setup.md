@@ -20,7 +20,7 @@ Before writing any code, we must add the Gum NuGet package. Add the `Gum.MonoGam
 
 Once you are finished, your game project should reference the `Gum.MonoGame` project.
 
-<figure><img src="../../../../.gitbook/assets/image (175).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/NuGetGum.png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ## Creating a new Gum Project
 
@@ -52,7 +52,7 @@ Next, add default Forms components to the Gum project. Forms components are prem
 
 To add Gum Forms components in Gum, select **Content** -> **Add Forms Components**.
 
-<figure><img src="../../../../.gitbook/assets/image (181).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/AddForms.png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
 
 Later tutorials will reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**. Don't worry, you can delete this screen later as you develop your game.
 
@@ -60,11 +60,11 @@ Later tutorials will reference the demo screen, so check the **Include DemoScree
 
 If asked, click **Yes** when asked about overwriting the default standards.
 
-<figure><img src="../../../../.gitbook/assets/image (183).png" alt=""><figcaption><p>Click, Yes to modify standards with the default Forms styling</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, Yes to modify standards with the default Forms styling</p></figcaption></figure>
 
 Your project now includes Forms components.
 
-<figure><img src="../../../../.gitbook/assets/image (184).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/Components.png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
 
 ## Modifying the Game .csproj
 
@@ -80,24 +80,24 @@ First, we'll set up our project so all Gum files are copied when the project is 
 2.  Select the Properties item\
 
 
-    <figure><img src="../../../../.gitbook/assets/image (185).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (11).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
 3.  Set the file to Copy if Newer. If using Android, see instructions below.\
 
 
-    <figure><img src="../../../../.gitbook/assets/image (186).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (12).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>
 4.  Double click your game's csproj file to open it in the text editor and find the entry for the file that you marked as Copy if newer.\
 
 
-    <figure><img src="../../../../.gitbook/assets/image (187).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (13).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
 5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\
 
 
-    <figure><img src="../../../../.gitbook/assets/image (188).png" alt=""><figcaption><p>Wildcard entry for all files in the GumProject folder</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (14).png" alt=""><figcaption><p>Wildcard entry for all files in the GumProject folder</p></figcaption></figure>
 
     Now all files in your Gum project will be copied to the output folder whenever your project is built, including any files added later as you continue working in Gum.\
 
 
-    <figure><img src="../../../../.gitbook/assets/image (189).png" alt=""><figcaption><p>All Gum files automatically are marked as Copy if newer.</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (15).png" alt=""><figcaption><p>All Gum files automatically are marked as Copy if newer.</p></figcaption></figure>
 {% endtab %}
 
 {% tab title="Visual Studio Code" %}
@@ -259,6 +259,6 @@ GumUI.Draw();
 
 If you've followed along, your project is now a fully-functional Gum project. We haven't added any screens to the Gum project yet, so if you run the game you'll still see a blank (cornflower blue) screen.
 
-<figure><img src="../../../../.gitbook/assets/image (190).png" alt=""><figcaption><p>Empty MonoGame project</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (16).png" alt=""><figcaption><p>Empty MonoGame project</p></figcaption></figure>
 
 The next tutorial adds our first screen.

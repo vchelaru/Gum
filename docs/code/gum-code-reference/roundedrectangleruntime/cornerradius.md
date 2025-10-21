@@ -17,7 +17,7 @@ roundedRectangle.Color = SKColors.Blue;
 roundedRectangle.CornerRadius = 20;
 ```
 
-<figure><img src="../../../.gitbook/assets/blueRect (1).png" alt=""><figcaption><p>CornerRadius of 20 pixels</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/blueRect.png" alt=""><figcaption><p>CornerRadius of 20 pixels</p></figcaption></figure>
 
 For information about the relationship between CornerRadius and the size of the RoundedRectangleRuntime, see the Gum Tool RoundedRectangle [Corner Radius](../../../gum-tool/gum-elements/skia-standard-elements/roundedrectangle/corner-radius.md) page.
 
