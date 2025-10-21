@@ -147,9 +147,6 @@ namespace Gum.Logic
 
             _guiCommands.RefreshElementTreeView(element);
 
-
-            WireframeObjectManager.Self.RefreshAll(true);
-
             _fileCommands.TryAutoSaveCurrentElement();
 
             PluginManager.Self.InstanceReordered(instance);

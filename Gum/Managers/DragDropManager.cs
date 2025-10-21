@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Reflection.Metadata;
 using System.Windows.Forms;
 using System.Windows.Navigation;
@@ -131,7 +132,7 @@ public class DragDropManager
 
     #region Drop Element (like components) on TreeView
 
-    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode)
+    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, int index)
     {
         ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
@@ -158,7 +159,7 @@ public class DragDropManager
             if(newInstance != null)
             {
                 // Since the user dropped on another instance, let's try to parent it:
-                HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode);
+                HandleDroppingInstanceOnTarget(targetInstance, newInstance, targetInstance.ParentContainer, targetTreeNode, index);
 
                 // HandleDroppingInstanceOnTarget internally calls 
                 // _wireframeObjectManager.RefreshAll, but since
@@ -439,14 +440,14 @@ public class DragDropManager
 
     #region Drop Instance on TreeNode
 
-    private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode)
+    private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode, int index)
     {
         object targetObject = targetTreeNode.Tag;
 
-        InstanceSave draggedAsInstanceSave = draggedObject as InstanceSave;
+        InstanceSave draggedAsInstanceSave = (InstanceSave)draggedObject;
 
-        ElementSave targetElementSave = targetObject as ElementSave;
-        InstanceSave targetInstanceSave = targetObject as InstanceSave;
+        var targetElementSave = targetObject as ElementSave;
+        var targetInstanceSave = targetObject as InstanceSave;
         if (targetElementSave == null && targetInstanceSave != null)
         {
             targetElementSave = targetInstanceSave.ParentContainer;
@@ -473,7 +474,7 @@ public class DragDropManager
 
             else if (isSameElement)
             {
-                HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode);
+                HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode, index);
 
             }
             else
@@ -506,7 +507,7 @@ public class DragDropManager
 
     }
 
-    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, ITreeNode targetTreeNode)
+    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, ITreeNode targetTreeNode, int index)
     {
         var instanceDefinedByBase = dragDroppedInstance.DefinedByBase;
 
@@ -518,6 +519,9 @@ public class DragDropManager
         {
             string parentName;
             string variableName = dragDroppedInstance.Name + ".Parent";
+
+            var siblings = new List<InstanceSave>();
+
             if (targetObject is InstanceSave targetInstance)
             {
                 // setting the parent:
@@ -529,12 +533,56 @@ public class DragDropManager
                     parentName += "." + defaultChild;
                 }
 
+                foreach(var instance in targetElementSave.Instances)
+                {
+                    var instanceParent = targetElementSave.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
+
+                    if (instanceParent is string instanceParentAsString && 
+                        (instanceParentAsString == parentName || instanceParentAsString?.StartsWith($"{parentName}.") == true))
+                    {
+                        siblings.Add(instance);
+                    }
+                }
             }
             else
             {
                 // drag+drop on the container, so detach:
                 parentName = null;
+                foreach (var instance in targetElementSave.Instances)
+                {
+                    var instanceParent = targetElementSave.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
+
+                    if (instanceParent == null || (instanceParent is string instanceParentAsString && string.IsNullOrWhiteSpace(instanceParentAsString)))
+                    {
+                        siblings.Add(instance);
+                    }
+                }
             }
+
+            // in case there's some error here:
+            var siblingAfter = index > 0 && index - 1 < siblings.Count ? siblings[index - 1] : null;
+
+            int indexToAddAt = 0;
+
+            if(siblingAfter != null)
+            {
+                indexToAddAt = targetElementSave.Instances.IndexOf(siblingAfter) + 1;
+            }
+
+            var droppedInstanceIndexBeforeMove = targetElementSave.Instances.IndexOf(dragDroppedInstance);
+
+            if(droppedInstanceIndexBeforeMove != -1 && droppedInstanceIndexBeforeMove != indexToAddAt)
+            {
+                if(indexToAddAt > droppedInstanceIndexBeforeMove)
+                {
+                    indexToAddAt -= 1;
+                }
+                targetElementSave.Instances.RemoveAt(droppedInstanceIndexBeforeMove);
+                targetElementSave.Instances.Insert(indexToAddAt, dragDroppedInstance);
+
+                PluginManager.Self.InstanceReordered(dragDroppedInstance);
+            }
+
             // Since the Parent property can only be set in the default state, we will
             // set the Parent variable on that instead of the _selectedState.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
@@ -775,11 +823,11 @@ public class DragDropManager
 
             if (draggedObject is ElementSave)
             {
-                HandleDroppedElementSave(draggedObject, treeNodeDroppedOn, targetTag, treeNodeDroppedOn);
+                HandleDroppedElementSave(draggedObject, treeNodeDroppedOn, targetTag, treeNodeDroppedOn, index);
             }
             else if (draggedObject is InstanceSave)
             {
-                HandleDroppedInstance(draggedObject, treeNodeDroppedOn);
+                HandleDroppedInstance(draggedObject, treeNodeDroppedOn, index);
             }
             else if(draggedObject is BehaviorSave behaviorSave)
             {

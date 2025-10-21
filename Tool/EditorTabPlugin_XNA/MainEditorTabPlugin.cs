@@ -224,6 +224,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         this.GetSelectedIpsos += HandleGetSelectedIpsos;
 
         this.AfterUndo += HandleAfterUndo;
+
     }
 
     private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
@@ -357,6 +358,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleInstanceReordered(InstanceSave save)
     {
         _selectionManager.Refresh();
+
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     private void HandleWireframePropertyChanged(string name)
