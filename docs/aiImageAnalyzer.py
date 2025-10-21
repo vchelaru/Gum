@@ -384,3 +384,21 @@ def validate_relative_links():
 
 # Run it
 validate_relative_links()
+
+
+def find_orphans(docs_dir):
+    summary = docs_dir / "SUMMARY.md"
+    if not summary.exists(): return []
+    summary_text = summary.read_text(encoding="utf-8", errors="ignore")
+    refs = {Path(m.split("#")[0]).resolve() for m in re.findall(r'\(([^)]+\.md)\)', summary_text)}
+    orphans = [p for p in docs_dir.rglob("*.md")
+               if p.name != "SUMMARY.md" and p.resolve() not in refs]
+    if orphans:
+        print("🟡 Orphaned pages:")
+        for p in orphans: print(" ", p.relative_to(docs_dir))
+    else:
+        print("✅ No orphaned pages.")
+    return orphans
+
+# use it like:
+find_orphans(Path(DOCS_DIR))
