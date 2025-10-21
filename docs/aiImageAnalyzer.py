@@ -292,3 +292,95 @@ for path in DOCS_DIR.rglob("*.md"):
 
 if total_bad_links == 0:
     print("✅ No broken links found.")
+
+
+# Markdown: [text](url) and ![alt](url), supports <angle-wrapped> URLs
+MD_URL = re.compile(
+    r'!?\[[^\]]*\]\(\s*(?:<(?P<ang>[^>]+)>|(?P<plain>[^)]+))\s*\)',
+    re.IGNORECASE,
+)
+# HTML (basic): <img src="..."> or <a href="...">
+HTML_URL = re.compile(
+    r'<(?:img|a)[^>]+(?:src|href)=["\'](?P<html>[^"\']+)["\'][^>]*>',
+    re.IGNORECASE,
+)
+
+SKIP_SCHEMES = ("http://", "https://", "mailto:", "tel:")
+
+FENCE = re.compile(r"^```")   # start/end of fenced block
+INLINE_CODE = re.compile(r"`[^`]*`")  # inline code spans
+
+def iter_links(md_path: Path):
+    lines = md_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    in_code_block = False
+    for i, line in enumerate(lines, start=1):
+        if FENCE.match(line.strip()):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue  # skip entire fenced block
+
+        # Strip inline code before scanning
+        clean_line = INLINE_CODE.sub("", line)
+
+        for m in MD_URL.finditer(clean_line):
+            url = (m.group("ang") or m.group("plain") or "").strip()
+            yield i, url
+        for m in HTML_URL.finditer(clean_line):
+            url = (m.group("html") or "").strip()
+            yield i, url
+
+# def iter_links(md_path: Path):
+#     text = md_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+#     for i, line in enumerate(text, start=1):
+#         for m in MD_URL.finditer(line):
+#             url = (m.group("ang") or m.group("plain") or "").strip()
+#             yield i, url
+#         for m in HTML_URL.finditer(line):
+#             url = (m.group("html") or "").strip()
+#             yield i, url
+
+def target_exists(src_file: Path, url: str) -> bool:
+    # Drop query/anchor
+    main = url.split("#", 1)[0].split("?", 1)[0].strip()
+    if not main or main.startswith(SKIP_SCHEMES) or main.startswith("#"):
+        return True  # external or anchor-only: skip
+    # Absolute site-root URLs are not resolvable locally → mark missing
+    if main.startswith("/"):
+        return False
+
+    # Resolve relative to the source file
+    tgt = (src_file.parent / main).resolve()
+    # Keep validation inside docs/
+    try:
+        tgt.relative_to(DOCS_DIR)
+    except ValueError:
+        return False
+
+    if tgt.exists():
+        return True
+    # GitBook-style folder link → README.md
+    if tgt.is_dir():
+        for readme in ("README.md", "readme.md"):
+            if (tgt / readme).exists():
+                return True
+    return False
+
+def validate_relative_links():
+    broken = []
+    for md in DOCS_DIR.rglob("*.md"):
+        for line_no, url in iter_links(md):
+            if url.startswith(SKIP_SCHEMES) or url.startswith("#"):
+                continue
+            if not target_exists(md, url):
+                broken.append((md.relative_to(DOCS_DIR), line_no, url))
+    if not broken:
+        print("✅ All relative links/images resolve.")
+    else:
+        print(f"❌ Broken relative links/images: {len(broken)}")
+        for path, line, url in broken:
+            print(f"  {path}:{line}: {url}")
+    return broken
+
+# Run it
+validate_relative_links()
