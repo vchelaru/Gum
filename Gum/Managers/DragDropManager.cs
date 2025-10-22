@@ -61,6 +61,7 @@ public class DragDropManager
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly ImportLogic _importLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly PluginManager _pluginManager;
 
     #endregion
 
@@ -85,7 +86,8 @@ public class DragDropManager
         SetVariableLogic setVariableLogic, 
         CopyPasteLogic copyPasteLogic,
         ImportLogic importLogic,
-        WireframeObjectManager wireframeObjectManager)
+        WireframeObjectManager wireframeObjectManager,
+        PluginManager pluginManager)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -99,6 +101,7 @@ public class DragDropManager
         _copyPasteLogic = copyPasteLogic;
         _importLogic = importLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _pluginManager = pluginManager;
     }
 
     #region Drag+drop File (from windows explorer)
@@ -142,7 +145,7 @@ public class DragDropManager
 
         if (targetTag is ElementSave)
         {
-            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, out handled);
+            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, index, out handled);
         }
         else if (targetTag is InstanceSave)
         {
@@ -154,7 +157,7 @@ public class DragDropManager
             // When a parent is set, we normally raise an event for that. This is a tricky situation because
             // we need to set the parent before adding the object.
 
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, out handled);
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, index, out handled);
 
             if(newInstance != null)
             {
@@ -284,7 +287,7 @@ public class DragDropManager
         return newInstance;
     }
 
-    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, out bool handled)
+    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, int index, out bool handled)
     {
         InstanceSave newInstance = null;
 
@@ -313,7 +316,7 @@ public class DragDropManager
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
             _selectedState.SelectedElement = target;
 
-            newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name);
+            newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name, index);
             handled = true;
         }
 
@@ -580,7 +583,7 @@ public class DragDropManager
                 targetElementSave.Instances.RemoveAt(droppedInstanceIndexBeforeMove);
                 targetElementSave.Instances.Insert(indexToAddAt, dragDroppedInstance);
 
-                PluginManager.Self.InstanceReordered(dragDroppedInstance);
+                _pluginManager.InstanceReordered(dragDroppedInstance);
             }
 
             // Since the Parent property can only be set in the default state, we will
@@ -735,7 +738,7 @@ public class DragDropManager
 
     internal void OnFilesDroppedInTreeView(string[] files)
     {
-        var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
+        var targetTreeNode = _pluginManager.GetTreeNodeOver();
 
         if (files != null)
         {
@@ -849,11 +852,12 @@ public class DragDropManager
             // an element, so let's protect against that with this null check.
             if (draggedAsElementSave != null)
             {
-                var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, out handled);
+                var index = target.Instances.Count;
+                var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, index, out handled);
 
                 float worldX, worldY;
 
-                var position = PluginManager.Self.GetWorldCursorPosition(Cursor);
+                var position = _pluginManager.GetWorldCursorPosition(Cursor);
 
                 worldX = position?.X ?? 0;
                 worldY = position?.Y ?? 0;

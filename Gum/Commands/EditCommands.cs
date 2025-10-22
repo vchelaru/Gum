@@ -35,6 +35,7 @@ public class EditCommands
     private readonly IDialogService _dialogService;
     private readonly ProjectCommands _projectCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly PluginManager _pluginManager;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
@@ -44,7 +45,8 @@ public class EditCommands
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
         IGuiCommands guiCommands,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -55,6 +57,7 @@ public class EditCommands
         _projectCommands = projectCommands;
         _guiCommands = guiCommands;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
+        _pluginManager = pluginManager;
     }
 
     #region State
@@ -95,7 +98,7 @@ public class EditCommands
 
         if (deleteResponse.ShouldDelete)
         {
-            deleteResponse = PluginManager.Self.GetDeleteStateResponse(stateSave, stateContainer);
+            deleteResponse = _pluginManager.GetDeleteStateResponse(stateSave, stateContainer);
         }
 
 
@@ -206,7 +209,7 @@ public class EditCommands
             }
         }
 
-        PluginManager.Self.StateMovedToCategory(stateToMove, newCategory, oldCategory);
+        _pluginManager.StateMovedToCategory(stateToMove, newCategory, oldCategory);
 
         if (stateContainer is BehaviorSave behavior)
         {
@@ -318,7 +321,7 @@ public class EditCommands
             ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
             ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            PluginManager.Self.BehaviorCreated(behavior);
+            _pluginManager.BehaviorCreated(behavior);
 
             _selectedState.SelectedBehavior = behavior;
 
@@ -343,7 +346,7 @@ public class EditCommands
         {
             _dialogService.ShowMessage("Standard Elements cannot be duplicated");
         }
-        else if (element is ScreenSave)
+        else if (element is ScreenSave elementAsScreen)
         {
             string message = "Enter new Screen name:";
             string title = "Duplicate Screen";
@@ -361,17 +364,17 @@ public class EditCommands
 
             if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                var newScreen = (element as ScreenSave).Clone();
+                var newScreen = elementAsScreen.Clone();
                 newScreen.Name = name;
                 newScreen.Initialize(null);
                 StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
 
                 _projectCommands.AddScreen(newScreen);
 
-                PluginManager.Self.ElementDuplicate(element, newScreen);
+                _pluginManager.ElementDuplicate(element, newScreen);
             }
         }
-        else if (element is ComponentSave)
+        else if (element is ComponentSave elementAsComponent)
         {
             string message = "Enter new Component name:";
             string title = "Duplicate Component";
@@ -396,7 +399,7 @@ public class EditCommands
 
             if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                var newComponent = (element as ComponentSave).Clone();
+                var newComponent = elementAsComponent.Clone();
                 if (!string.IsNullOrEmpty(folder))
                 {
                     folder += "/";
@@ -407,7 +410,7 @@ public class EditCommands
 
                 _projectCommands.AddComponent(newComponent);
 
-                PluginManager.Self.ElementDuplicate(element, newComponent);
+                _pluginManager.ElementDuplicate(element, newComponent);
             }
         }
 
