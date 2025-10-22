@@ -1012,6 +1012,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         if (mLastHoveredNode != hoveredNode)
         {
             hoverStartTime = DateTime.Now;
+            mLastHoveredNode = hoveredNode;
 
             // If partially off the screen, make it visible
             if (!hoveredNode.IsVisible)
