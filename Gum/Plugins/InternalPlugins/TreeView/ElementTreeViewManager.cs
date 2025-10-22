@@ -17,6 +17,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using MaterialDesignThemes.Wpf;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -31,6 +32,7 @@ using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
 using Color = System.Drawing.Color;
 using Cursors = System.Windows.Forms.Cursors;
+using DragAction = System.Windows.Forms.DragAction;
 using DragDropEffects = System.Windows.Forms.DragDropEffects;
 using DragEventArgs = System.Windows.Forms.DragEventArgs;
 using Grid = System.Windows.Controls.Grid;
@@ -638,6 +640,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         this.ObjectTreeView.IsSelectingOnPush = false;
         this.ObjectTreeView.AllowDrop = true;
         this.ObjectTreeView.AlwaysHaveOneNodeSelected = false;
+        // External drag/drop logic is provided; disable native reorder for this host
+        this.ObjectTreeView.EnableNativeReorder = true;
         this.ObjectTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
         this.ObjectTreeView.HotTracking = true;
         this.ObjectTreeView.ImageIndex = 0;
@@ -674,26 +678,94 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         };
         this.ObjectTreeView.BorderStyle = BorderStyle.None;
 
-        ObjectTreeView.DragDrop += HandleDragDropEvent;
+        ObjectTreeView.DragOver += (sender, e) =>
+        {
+            // allow file drops
+            if (e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
 
-        ObjectTreeView.ItemDrag += (sender, e) =>
+            // auto expand hovered nodes when they're collapsed
+            var treeview = (MultiSelectTreeView)sender;
+            Point pointWithinTreeview = treeview.PointToClient(new Point(e.X, e.Y));
+            if (treeview.GetNodeAt(pointWithinTreeview) is { } hovered)
+            {
+                DelayExpandHoveredNode(hovered);
+            }
+        };
+
+        ObjectTreeView.DragDrop += (_, e) =>
+        {
+            if (e.Data?.GetData(System.Windows.Forms.DataFormats.FileDrop) is string[] files)
+            {
+                _dragDropManager.OnFilesDroppedInTreeView(files);
+            }
+        };
+
+        ObjectTreeView.ItemDrag += (_, e) =>
         {
             var treeNode = (TreeNode)e.Item;
-
             _dragDropManager.OnItemDrag(new TreeNodeWrapper(treeNode));
-            System.Diagnostics.Debug.WriteLine("ItemDrag");
-
-            ObjectTreeView.DoDragDrop(e.Item, DragDropEffects.Move | DragDropEffects.Copy);
         };
 
-        ObjectTreeView.DragEnter += (sender, e) =>
+        // this fixes a bug with the wireframe editor picking up false drops
+        // after a drop has been canceled outside of the treeview
+        ObjectTreeView.QueryContinueDrag += (_, e) =>
         {
-            e.Effect = DragDropEffects.All;
-
+            if (e.Action != DragAction.Continue)
+            {
+                // posting gives the wireframe a chance to process if the drop was on it
+                // this is kind of a hack around how the editor currently "accepts drop"
+                // it would be better to wire it up to handle its own drop events
+                Locator.GetRequiredService<IDispatcher>().Post(_dragDropManager.ClearDraggedItem);
+            }
         };
 
-        ObjectTreeView.DragOver += HandleDragOverEvent;
+        ObjectTreeView.ValidateSortingDrop += (_, e) =>
+        {
+            // --- Early return example of existing behavior ---
+            //e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
+            //    ? MultiSelectTreeView.DropKind.None
+            //    : MultiSelectTreeView.DropKind.Into;
+            //e.Allow = e.Kind != MultiSelectTreeView.DropKind.None;
+            //return;
 
+            e.Allow = false; // Probably best to default to false?
+
+            if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
+            {
+                IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
+                ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
+                
+                e.Allow = _dragDropManager.ValidateNodeSorting(wrappedNodes, wrappedTarget, drop.index);
+            }
+        };
+
+        ObjectTreeView.NodeSortingDropped += (_, e) =>
+        {
+            // --- Early return example of existing behavior ---
+            //e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
+            //    ? MultiSelectTreeView.DropKind.None
+            //    : MultiSelectTreeView.DropKind.Into;
+            //_dragDropManager.OnNodeSortingDropped(e.DraggedNodes.Select(n => new TreeNodeWrapper(n)), new TreeNodeWrapper(e.TargetNode), e.TargetNode.GetNodeCount(false));
+            //e.PerformNativeReorder = false;
+            //return;
+
+            if (ProcessDrop(e.TargetNode, e.Kind) is { } drop)
+            {
+                IEnumerable<ITreeNode> wrappedNodes = e.DraggedNodes.Select(n => new TreeNodeWrapper(n));
+                ITreeNode wrappedTarget = new TreeNodeWrapper(drop.target);
+
+                e.Kind = e.Kind == MultiSelectTreeView.DropKind.None
+                    ? MultiSelectTreeView.DropKind.None
+                    : MultiSelectTreeView.DropKind.Into;
+
+                _dragDropManager.OnNodeSortingDropped(wrappedNodes, wrappedTarget, drop.index);
+                
+            }
+            e.PerformNativeReorder = false;
+        };
 
         ObjectTreeView.GiveFeedback += (sender, e) =>
         {
@@ -706,6 +778,32 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 System.Windows.Forms.Cursor.Current = AddCursor;
             }
         };
+
+        static (int index, TreeNode target)? ProcessDrop(TreeNode? originalTarget, MultiSelectTreeView.DropKind kind)
+        {
+            int? index = kind switch
+            {
+                MultiSelectTreeView.DropKind.Into => originalTarget.GetNodeCount(false),
+                MultiSelectTreeView.DropKind.After => originalTarget.Index + 1,
+                MultiSelectTreeView.DropKind.Before => originalTarget.Index,
+                MultiSelectTreeView.DropKind.IntoFirst => 0,
+                _ => null
+            };
+            TreeNode? target = kind switch
+            {
+                MultiSelectTreeView.DropKind.Into => originalTarget,
+                MultiSelectTreeView.DropKind.After => originalTarget.Parent,
+                MultiSelectTreeView.DropKind.Before => originalTarget.Parent,
+                MultiSelectTreeView.DropKind.IntoFirst => originalTarget,
+                _ => null
+            };
+            if (target != null && index != null)
+            {
+                return (index.Value, target);
+            }
+
+            return null;
+        } 
     }
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
@@ -905,114 +1003,38 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _dragDropManager.HandleKeyPress(e);
     }
 
-    private void HandleDragOverEvent(object sender, DragEventArgs e)
+    private void DelayExpandHoveredNode(TreeNode hoveredNode)
     {
-        var treeview = (MultiSelectTreeView)sender;
-        Point pointWithinTreeview = treeview.PointToClient(new Point(e.X, e.Y));
-        const int scrollBufferZone = 20;
+        // Can't do this, it seems to interfere with the Undo History
+        //treeview.SelectedNode = hoveredNode;
 
-        if (pointWithinTreeview.Y < scrollBufferZone)
+        // So...lets fake it with backcolor/forecolor instead?
+        if (mLastHoveredNode != hoveredNode)
         {
-            if (treeview.TopNode?.PrevVisibleNode != null)
-            {
-                treeview.TopNode = treeview.TopNode.PrevVisibleNode;
-            }
-        }
-        else if (pointWithinTreeview.Y > treeview.ClientSize.Height - scrollBufferZone)
-        {
-            if (treeview.TopNode?.NextVisibleNode != null)
-            {
-                treeview.TopNode = treeview.TopNode.NextVisibleNode;
-            }
+            hoverStartTime = DateTime.Now;
+
+            // If partially off the screen, make it visible
+            if (!hoveredNode.IsVisible)
+                hoveredNode.EnsureVisible();
         }
         else
         {
-            var hoveredNode = treeview.GetNodeAt(pointWithinTreeview);
-            if (hoveredNode != null)
+            // Make it so that we can EXPAND folders or nodes/items if we hover for half a second
+            if (hoveredNode.Nodes.Count > 0 && !hoveredNode.IsExpanded)
             {
-                // Can't do this, it seems to interfere with the Undo History
-                //treeview.SelectedNode = hoveredNode;
-
-                // So...lets fake it with backcolor/forecolor instead?
-                if (mLastHoveredNode != hoveredNode)
+                if (hoverStartTime == null)
                 {
                     hoverStartTime = DateTime.Now;
-
-                    // restore previous colors
-                    if (mLastHoveredNode != null)
-                    {
-                        mLastHoveredNode.BackColor = Color.Empty;
-                        mLastHoveredNode.ForeColor = Color.Empty;
-                    }
-
-                    // apply highlight colors
-                    mLastHoveredNode = hoveredNode;
-                    if (mLastHoveredNode != null)
-                    {
-                        mLastHoveredNode.BackColor = SystemColors.Highlight;
-                        mLastHoveredNode.ForeColor = SystemColors.HighlightText;
-                    }
-
-                    // If partially off the screen, make it visible
-                    if (!hoveredNode.IsVisible)
-                        hoveredNode.EnsureVisible();
-                }
-                else
-                {
-                    // Make it so that we can EXPAND folders or nodes/items if we hover for half a second
-                    if (hoveredNode.Nodes.Count > 0 && !hoveredNode.IsExpanded)
-                    {
-                        if (hoverStartTime == null)
-                        {
-                            hoverStartTime = DateTime.Now;
-                        }
-
-                        TimeSpan duration = (TimeSpan)(DateTime.Now - hoverStartTime);
-                        int hoverDelayMiliseconds = 500;
-                        if (duration.TotalMilliseconds > hoverDelayMiliseconds)
-                        {
-                            hoveredNode.Expand();
-                        }
-                    }
                 }
 
-                // for selected nodes, we need to make sure we reset them 
-                // back to show they are highlighted once we are off them
-                foreach (var node in treeview.SelectedNodes)
+                TimeSpan duration = (TimeSpan)(DateTime.Now - hoverStartTime);
+                int hoverDelayMiliseconds = 500;
+                if (duration.TotalMilliseconds > hoverDelayMiliseconds)
                 {
-                    if (node == hoveredNode)
-                    {
-                        node.BackColor = Color.DarkBlue;
-                        node.ForeColor = treeview.BackColor;
-                    }
-                    else
-                    {
-                        node.BackColor = SystemColors.Highlight;
-                        node.ForeColor = SystemColors.HighlightText;
-                    }
+                    hoveredNode.Expand();
                 }
             }
         }
-
-        e.Effect = DragDropEffects.Move;
-    }
-
-    private void HandleDragDropEvent(object sender, DragEventArgs e)
-    {
-        // Make sure that we reset the Hovered items colors at the end of the drag
-        if (mLastHoveredNode != null)
-        {
-            mLastHoveredNode.BackColor = Color.Empty;
-            mLastHoveredNode.ForeColor = Color.Empty;
-            mLastHoveredNode = null;
-            hoverStartTime = null;
-        }
-
-        if (e.Data != null)
-        {
-            _dragDropManager.HandleDragDropEvent(sender, e);
-        }
-        _dragDropManager.ClearDraggedItem();
     }
 
     private void AddAndRemoveFolderNodes()
@@ -2524,7 +2546,12 @@ public static class TreeNodeExtensionMethods
         }
     }
 
-
+    /// <summary>
+    /// Returns whether this node is a folder inside the Screens tree structure. This does not 
+    /// return true for the top-level screen node.
+    /// </summary>
+    /// <param name="treeNode">The tree node</param>
+    /// <returns>Whether this is a folder inside the screens folder structure</returns>
     public static bool IsScreensFolderTreeNode(this ITreeNode treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsScreensFolderTreeNode()
