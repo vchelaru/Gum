@@ -10,10 +10,6 @@ on:
         options: [release, prerelease, test]   # test = draft
         default: test
         required: true
-      notes:
-        description: 'Optional extra notes'
-        type: string
-        required: false
 
 permissions:
   contents: write
@@ -31,6 +27,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: master
           submodules: recursive
           #fetch-depth: 0
 
