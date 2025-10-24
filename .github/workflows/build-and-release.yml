@@ -1,0 +1,98 @@
+name: Build and Release
+
+# When to execute (This means manual trigger only)
+on:
+  workflow_dispatch:
+    inputs:
+      release_kind:
+        description: 'Type'
+        type: choice
+        options: [release, prerelease, test]   # test = draft
+        default: test
+        required: true
+      notes:
+        description: 'Optional extra notes'
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+# Define the jobs to run
+jobs:
+  build:
+    # Which OS to run on
+    runs-on: windows-latest
+
+    # A list of "named" steps
+    steps:
+
+      # Pull down the source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          #fetch-depth: 0
+
+      # Install .net dependency
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      # Restore NuGet packages once
+      - name: Restore
+        run: dotnet restore Gum.sln
+      
+      # Build GUM TOOL
+      - name: Build Gum Tool
+        run: dotnet build Gum.sln -c Release --no-restore
+      
+      # 1) Package the entire directory exactly as-is
+      - name: Package entire Release folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $zip = "dist/Gum.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path "Gum/bin/Release/*" -DestinationPath $zip
+
+      # 2) Compute tag + title depending on the kind of release
+      - name: Compute tag + title
+        id: meta
+        shell: pwsh
+        run: |
+          $kind = "${{ github.event.inputs.release_kind }}"
+          switch ($kind) {
+            'release'    { $prefix='Release';    $prerelease='false'; $draft='false' }
+            'prerelease' { $prefix='PreRelease'; $prerelease='true';  $draft='false' }
+            'test'       { $prefix='Test';       $prerelease='true';  $draft='true'  }
+          }
+          $title = "$prefix " + (Get-Date).ToString('MMMM d, yyyy')
+          $tag   = "${prefix}_" + (Get-Date).ToString('MMMM_dd_yyyy')
+          if ($kind -eq 'test') { $tag = "$tag-$($env:GITHUB_RUN_NUMBER)" }
+          "tag=$tag"               >> $env:GITHUB_OUTPUT
+          "title=$title"           >> $env:GITHUB_OUTPUT
+          "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
+          "draft=$draft"           >> $env:GITHUB_OUTPUT
+
+      # 3) Create and push the annotated tag
+      - name: Create & push tag
+        if: github.event.inputs.release_kind == 'release'
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}"
+          git push origin "${{ steps.meta.outputs.tag }}"
+
+      # 4) Create GitHub Release and attach the zip
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name:     ${{ steps.meta.outputs.title }}
+          generate_release_notes: true
+          prerelease: ${{ steps.meta.outputs.prerelease }}
+          draft:      ${{ steps.meta.outputs.draft }}
+          files: |
+            dist/Gum.zip
