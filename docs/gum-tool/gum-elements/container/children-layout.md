@@ -77,12 +77,6 @@ For example, if a container stacks its children using a `Top to Bottom Stack`, t
 
 <figure><img src="../../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption><p>Changing horizontal layout values does not affect siblings in a Top to Bottom Stack</p></figcaption></figure>
 
-An object stacks only if its position unit values are top or left for vertical or horizontal stacks. For example, if a child is part of a `Top to Bottom Stack`, it only stacks if its `Y Units` is set to `Pixels from Top`. Otherwise it ignores its parents stacking behavior.
-
-<figure><img src="../../../.gitbook/assets/04_19 41 43.gif" alt=""><figcaption><p>Top to Bottom Stack is only respected if the child has its Y Units set to Pixels from Top</p></figcaption></figure>
-
-In general this can cause unexpected behavior, especially if additional siblings follow the child which is not using the default `Pixels from Top` or `Pixels from Left`, so changing this value on the primary stacking direction is not recommended.
-
 ### Stack Spacing
 
 `Top to Bottom Stack` and `Left to Right Stack` separate their children using the `Stack Spacing` value. For more information, see the [Stack Spacing](stack-spacing.md) page.
