@@ -27,9 +27,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: master
+          # REF is not needed when using workflow_dispatch
+          #ref: ${{ github.ref_name }}
           submodules: recursive
-          #fetch-depth: 0
+          # Supposedly needed for tags
+          fetch-depth: 0
 
       # Install .net dependency
       - name: Install .NET SDK
@@ -40,7 +42,21 @@ jobs:
       # Restore NuGet packages once
       - name: Restore
         run: dotnet restore Gum.sln
-      
+
+      # Update AssemblyInfo.cs version dynamically to current date
+      - name: Update AssemblyInfo.cs version
+        shell: pwsh
+        run: |
+          $version = (Get-Date).ToString('yyyy.MM.dd')
+          $file = "Gum/Properties/AssemblyInfo.cs"
+
+          Write-Host "Updating version in $file to $version"
+          (Get-Content $file) -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
+                              -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" |
+            Set-Content $file
+
+          Write-Host "Updated AssemblyInfo.cs to version $version"
+
       # Build GUM TOOL
       - name: Build Gum Tool
         run: dotnet build Gum.sln -c Release --no-restore
@@ -73,13 +89,20 @@ jobs:
           "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
           "draft=$draft"           >> $env:GITHUB_OUTPUT
 
-      # 3) Create and push the annotated tag
-      - name: Create & push tag
+      # 3) Create and push the version bump and the annotated tag
+      - name: Commit version bump and push tag
         if: github.event.inputs.release_kind == 'release'
         run: |
           git config user.name  "github-actions"
           git config user.email "actions@github.com"
+
+          echo "Committing version bump..."
+          git add Gum/Properties/AssemblyInfo.cs
+          git commit -m "Bump version to ${{ steps.meta.outputs.tag }}" || echo "No changes to commit"
+
+          echo "Creating and pushing tag..."
           git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}"
+          git push origin ${{ github.ref_name }}
           git push origin "${{ steps.meta.outputs.tag }}"
 
       # 4) Create GitHub Release and attach the zip
