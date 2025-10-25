@@ -31,7 +31,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Drawing;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Numerics;
 using System.Runtime;
 using System.Security.AccessControl;
@@ -225,6 +224,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         this.GetSelectedIpsos += HandleGetSelectedIpsos;
 
         this.AfterUndo += HandleAfterUndo;
+
     }
 
     private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
@@ -358,6 +358,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleInstanceReordered(InstanceSave save)
     {
         _selectionManager.Refresh();
+
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     private void HandleWireframePropertyChanged(string name)

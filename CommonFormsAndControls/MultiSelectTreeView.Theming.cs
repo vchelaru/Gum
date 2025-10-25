@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace CommonFormsAndControls;
 #nullable enable
@@ -62,7 +63,18 @@ public partial class MultiSelectTreeView
 
     private ImageAttributes ImageAttributes;
 
-    private enum DropKind { None, Before, Into, After }
+    /// <summary>
+    /// Describes how a potential drop would be applied relative to a target node.
+    /// </summary>
+    public enum DropKind { None, Before, Into, IntoFirst, After }
+
+    /// <summary>
+    /// When true, the control will perform native reordering (moving) of dragged nodes
+    /// if no external drag logic is desired. Host code that supplies its own drag/drop
+    /// logic (like Gum's ElementTreeViewManager) can set this to false to suppress
+    /// automatic reordering.
+    /// </summary>
+    public bool EnableNativeReorder { get; set; } = true;
 
     private const int TVS_HASBUTTONS = 0x0001;
 
@@ -279,18 +291,65 @@ public partial class MultiSelectTreeView
         if (_hotDropNode == e.Node && _dropKind != DropKind.None)
         {
             // Keep this light – thin pen only, no AA
-            var pen = GetPen(SelectedBorderColor, Math.Max(2f, DpiScaleF(2f)));
+            var pen = GetPen(SelectedBorderColor, 2f);
             switch (_dropKind)
             {
                 case DropKind.Into:
-                    using (var pThin = new Pen(Color.FromArgb(160, SelectedBorderColor), 1f))
+                case DropKind.IntoFirst:
                     {
-                        Rectangle rr = Rectangle.Inflate(new Rectangle(0, e.Bounds.Top, ClientSize.Width, e.Bounds.Height), -1, -1);
-                        g.DrawRectangle(pThin, rr);
+                        // Indent rectangle to the child insertion level (node.Level + 1)
+                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level + 1) * Indent);
+                        Rectangle rr = new Rectangle(leftIndent, e.Bounds.Top + 1, Math.Max(0, ClientSize.Width - leftIndent - 2), e.Bounds.Height - 2);
+                        g.DrawRectangle(pen, rr);
                     }
                     break;
-                    // Before/After visuals removed per your comment
+                case DropKind.Before:
+                    {
+                        var prev = e.Node.PrevNode; // boundary between prev & current
+                        int y = prev != null && !prev.IsExpanded ? prev.Bounds.Bottom -1 : e.Bounds.Top + 1;
+                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level +1) * Indent);
+                        g.DrawLine(pen, leftIndent, y, ClientSize.Width - 3, y);
+                    }
+                    break;
+                case DropKind.After:
+                    {
+                        // Draw lower half of split boundary inside this row so next row won't overwrite
+                        int y = e.Bounds.Bottom - 1;
+                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level +1) * Indent);
+                        g.DrawLine(pen, leftIndent, y, ClientSize.Width - 3, y);
+                    }
+                    break;
+
+
             }
+        }
+
+        ////  --- Originally I wanted this, but it's also kind of noisy, keeping for reference.
+        // Parent highlight for insertion (Before/After): draw a subtle dashed rectangle around parent row
+        //if (_hotDropNode != null && (_dropKind == DropKind.Before || _dropKind == DropKind.After))
+        //{
+        //    var parent = _hotDropNode.Parent;
+        //    if (parent != null && parent == e.Node)
+        //    {
+        //        int leftIndentParent = Math.Max(0, DisplayRectangle.Left + (parent.Level) * Indent);
+        //        Rectangle parentRow = new Rectangle(leftIndentParent, parent.Bounds.Top, Math.Max(0, ClientSize.Width - leftIndentParent), parent.Bounds.Height);
+        //        using (var pParent = new Pen(Color.FromArgb(180, SelectedBorderColor), 1f))
+        //        {
+        //            pParent.DashStyle = DashStyle.Dash;
+        //            var rr = Rectangle.Inflate(parentRow, -1, -1);
+        //            g.DrawRectangle(pParent, rr);
+        //        }
+        //    }
+        //}
+
+        // Draw upper half of AFTER boundary line in the next sibling row (so line spans both rows)
+        if (_dropKind == DropKind.After && _hotDropNode != null && _hotDropNode.NextNode == e.Node)
+        {
+            // Use same pen thickness
+            var pen = GetPen(SelectedBorderColor, 2f);
+            int yTop = e.Bounds.Top -1; // top boundary of this (next) row
+            int leftIndent = Math.Max(0, DisplayRectangle.Left + (_hotDropNode.Level + 1) * Indent);
+            g.DrawLine(pen, leftIndent, yTop, ClientSize.Width - 3, yTop);
         }
     }
 
@@ -489,6 +548,24 @@ public partial class MultiSelectTreeView
 
             // This invokes your ObjectTreeView.ItemDrag handler  
             OnItemDrag(new ItemDragEventArgs(MouseButtons.Left, nodeToDrag));
+
+            // If native reordering is enabled, kick off the drag operation ourselves.
+            // External hosts that want custom behavior can set EnableNativeReorder = false
+            // and perform their own DoDragDrop in an ItemDrag handler.
+            if (EnableNativeReorder)
+            {
+                object dragData = SelectedNodes.Count > 1
+                    ? SelectedNodes.ToArray()
+                    : (object)nodeToDrag;
+                try
+                {
+                    DoDragDrop(dragData, DragDropEffects.Move | DragDropEffects.Copy);
+                }
+                catch
+                {
+                    // Swallow exceptions to avoid destabilizing host app
+                }
+            }
         }
 
     }
@@ -524,6 +601,24 @@ public partial class MultiSelectTreeView
         (TreeNode? node, DropKind kind) result = GetDropAt(pt, dragged);
         TreeNode? node = result.node;
         DropKind kind = result.kind;
+
+        // Allow consumer to validate / adjust drop target & kind
+        if (node != null && kind != DropKind.None && ValidateSortingDrop != null)
+        {
+            var args = new ValidateDropEventArgs(dragged, node, kind);
+            ValidateSortingDrop(this, args);
+            if (!args.Allow)
+            {
+                node = null;
+                kind = DropKind.None;
+            }
+            else
+            {
+                // consumer may have modified node or kind
+                node = args.TargetNode;
+                kind = args.Kind;
+            }
+        }
 
         bool valid = node != null && kind != DropKind.None;
 
@@ -563,8 +658,29 @@ public partial class MultiSelectTreeView
                 base.OnDragDrop(e);
                 return;
             }
+            
+            // Give consumer chance to intercept / cancel / adjust
+            bool performNative = EnableNativeReorder; // capture current
+            if (NodeSortingDropped != null)
+            {
+                var args = new DroppingEventArgs(dragged, node, kind) { PerformNativeReorder = performNative };
+                NodeSortingDropped(this, args);
+                if (args.Cancel)
+                {
+                    ClearDropAdornment();
+                    base.OnDragDrop(e);
+                    return;
+                }
+                node = args.TargetNode;
+                kind = args.Kind;
+                performNative = args.PerformNativeReorder;
+            }
 
             // Reparent/insert logic lives elsewhere.
+            if (performNative && node != null && kind != DropKind.None)
+            {
+                PerformNativeReorder(dragged, node, kind);
+            }
         }
         finally
         {
@@ -573,13 +689,136 @@ public partial class MultiSelectTreeView
         }
     }
 
+    private void PerformNativeReorder(TreeNode[] dragged, TreeNode target, DropKind kind)
+    {
+        if (target == null || kind == DropKind.None) return;
+
+        // Avoid invalid moves (dragging onto itself)
+        dragged = dragged.Where(d => d != null && !ReferenceEquals(d, target)).ToArray();
+        if (dragged.Length == 0) return;
+
+        // Preserve original order as they appear currently (top to bottom). This helps multi-select drags.
+        var allNodes = new List<TreeNode>();
+        foreach (TreeNode root in Nodes)
+        {
+            CollectVisible(root, allNodes);
+        }
+        dragged = allNodes.Where(n => dragged.Contains(n)).ToArray();
+
+        switch (kind)
+        {
+            case DropKind.Into:
+                foreach (var d in dragged)
+                {
+                    if (IsDescendantOf(d, target)) continue; // prevent cycles
+                    d.Remove();
+                    target.Nodes.Add(d); // append at end
+                }
+                target.Expand();
+                break;
+            case DropKind.IntoFirst:
+                {
+                    var filtered = dragged.Where(d => d != target && !IsDescendantOf(target, d)).ToList();
+                    foreach (var d in filtered)
+                        d.Remove();
+                    int idx = 0;
+                    foreach (var d in filtered)
+                    {
+                        target.Nodes.Insert(idx++, d); // insert at front preserving order
+                    }
+                    target.Expand();
+                }
+                break;
+            case DropKind.Before:
+            case DropKind.After:
+                var parent = target.Parent;
+                TreeNodeCollection siblings = parent != null ? parent.Nodes : Nodes;
+                int insertIndex = siblings.IndexOf(target);
+                if (insertIndex < 0) insertIndex = siblings.Count;
+                if (kind == DropKind.After) insertIndex++;
+
+                // Capture original indices of dragged nodes relative to siblings before removals
+                var draggedOriginalIndices = new List<int>();
+                foreach (var d in dragged)
+                {
+                    int idx = siblings.IndexOf(d);
+                    if (idx >= 0)
+                    {
+                        draggedOriginalIndices.Add(idx);
+                    }
+                }
+                // Count how many dragged nodes are positioned before the insertion index; those removals shift the insertion index left
+                int removalOffset = draggedOriginalIndices.Count(i => i < insertIndex);
+
+                // When moving between parents, remove first, then insert in order.
+                foreach (var d in dragged)
+                {
+                    if (IsDescendantOf(target, d)) continue; // prevent inserting ancestor below descendant
+                }
+
+                // Remove all dragged nodes prior to insert to get stable indices.
+                foreach (var d in dragged)
+                {
+                    d.Remove();
+                }
+
+                // Adjust insertion index after removals so we insert at the visualized spot
+                insertIndex -= removalOffset;
+                if (insertIndex < 0) insertIndex = 0;
+
+                // Insert maintaining relative order.
+                int currentIndex = insertIndex;
+                foreach (var d in dragged)
+                {
+                    if (currentIndex > siblings.Count) currentIndex = siblings.Count; // clamp
+                    siblings.Insert(currentIndex, d);
+                    currentIndex++;
+                }
+                break;
+        }
+
+        // Refresh selection adornment
+        Invalidate();
+    }
+
+    private static void CollectVisible(TreeNode node, List<TreeNode> list)
+    {
+        list.Add(node);
+        foreach (TreeNode child in node.Nodes)
+        {
+            CollectVisible(child, list);
+        }
+    }
+
     private void UpdateDropAdornment(TreeNode? node, DropKind kind)
     {
         if (ReferenceEquals(_hotDropNode, node) && _dropKind == kind) return;
 
+        var set = new HashSet<TreeNode>();
+        if (_hotDropNode != null)
+        {
+            set.Add(_hotDropNode);
+            if (_hotDropNode.PrevNode != null) set.Add(_hotDropNode.PrevNode);
+            if (_hotDropNode.NextNode != null) set.Add(_hotDropNode.NextNode);
+            // Invalidate old parent if its dashed border may have been shown
+            if ((_dropKind == DropKind.Before || _dropKind == DropKind.After) && _hotDropNode.Parent != null)
+                set.Add(_hotDropNode.Parent);
+        }
+        if (node != null)
+        {
+            set.Add(node);
+            if (node.PrevNode != null) set.Add(node.PrevNode);
+            if (node.NextNode != null) set.Add(node.NextNode);
+            // Invalidate new parent so dashed border can appear when appropriate
+            if ((kind == DropKind.Before || kind == DropKind.After) && node.Parent != null)
+                set.Add(node.Parent);
+        }
+
         Rectangle inv = Rectangle.Empty;
-        if (_hotDropNode != null) inv = Rectangle.Union(inv, RowRect(_hotDropNode));
-        if (node != null) inv = inv.IsEmpty ? RowRect(node) : Rectangle.Union(inv, RowRect(node));
+        foreach (var n in set)
+        {
+            inv = inv.IsEmpty ? RowRect(n) : Rectangle.Union(inv, RowRect(n));
+        }
 
         _hotDropNode = node;
         _dropKind = kind;
@@ -591,10 +830,27 @@ public partial class MultiSelectTreeView
     {
         if (_hotDropNode != null)
         {
-            Rectangle r = RowRect(_hotDropNode);
+            Rectangle inv = RowRect(_hotDropNode);
+            if (_dropKind == DropKind.Before)
+            {
+                var prev = _hotDropNode.PrevNode;
+                if (prev != null)
+                    inv = Rectangle.Union(inv, RowRect(prev));
+            }
+            else if (_dropKind == DropKind.After)
+            {
+                var next = _hotDropNode.NextNode;
+                if (next != null)
+                    inv = Rectangle.Union(inv, RowRect(next));
+            }
+            // Also invalidate parent row if it was highlighted
+            if ((_dropKind == DropKind.Before || _dropKind == DropKind.After) && _hotDropNode.Parent != null)
+            {
+                inv = Rectangle.Union(inv, RowRect(_hotDropNode.Parent));
+            }
             _hotDropNode = null;
             _dropKind = DropKind.None;
-            Invalidate(r);
+            Invalidate(inv);
         }
     }
 
@@ -631,13 +887,20 @@ public partial class MultiSelectTreeView
         int bottomZone = r.Bottom - r.Height / 4;
 
         if (clientPt.Y < topZone) return (over, DropKind.Before);
-        if (clientPt.Y > bottomZone) return (over, DropKind.After);
+        if (clientPt.Y > bottomZone)
+        {
+            // If dropping "after" an expanded node, treat as inserting as first child (IntoFirst)
+            if (over.IsExpanded && over.Nodes.Count > 0)
+                return (over, DropKind.IntoFirst);
+            return (over, DropKind.After);
+        }
 
         if (CanDropInto(over, dragged)) return (over, DropKind.Into);
 
-        return (clientPt.Y - topZone < bottomZone - clientPt.Y)
-            ? (over, DropKind.Before)
-            : (over, DropKind.After);
+        var midKind = (clientPt.Y - topZone < bottomZone - clientPt.Y) ? DropKind.Before : DropKind.After;
+        if (midKind == DropKind.After && over.IsExpanded && over.Nodes.Count > 0)
+            return (over, DropKind.IntoFirst);
+        return (over, midKind);
     }
 
     private static bool CanDropInto(TreeNode target, TreeNode[] dragged)
@@ -952,6 +1215,59 @@ public partial class MultiSelectTreeView
             return new[] { (TreeNode)data.GetData(typeof(TreeNode)) };
         return Array.Empty<TreeNode>();
     }
+
+    #region Drop Validation / Interception Events
+    /// <summary>
+    /// Arguments for <see cref="MultiSelectTreeView.ValidateSortingDrop"/> allowing a consumer to allow / deny or adjust a pending drag-over adornment.
+    /// </summary>
+    public sealed class ValidateDropEventArgs : EventArgs
+    {
+        internal ValidateDropEventArgs(TreeNode[] dragged, TreeNode target, DropKind kind)
+        {
+            DraggedNodes = dragged;
+            TargetNode = target;
+            Kind = kind;
+            Allow = true;
+        }
+        public TreeNode[] DraggedNodes { get; }
+        /// <summary>The proposed target node (can be reassigned).</summary>
+        public TreeNode? TargetNode { get; set; }
+        /// <summary>The proposed drop kind (can be reassigned).</summary>
+        public DropKind Kind { get; set; }
+        /// <summary>Set to false to disallow the drop at this location.</summary>
+        public bool Allow { get; set; }
+    }
+
+    /// <summary>
+    /// Raised during drag-over to let consumer validate / modify the potential drop target / kind.
+    /// </summary>
+    public event EventHandler<ValidateDropEventArgs>? ValidateSortingDrop;
+
+    /// <summary>
+    /// Arguments for <see cref="MultiSelectTreeView.NodeSortingDropped"/> allowing interception before native reorder occurs.
+    /// </summary>
+    public sealed class DroppingEventArgs : EventArgs
+    {
+        internal DroppingEventArgs(TreeNode[] dragged, TreeNode target, DropKind kind)
+        {
+            DraggedNodes = dragged;
+            TargetNode = target;
+            Kind = kind;
+        }
+        public TreeNode[] DraggedNodes { get; }
+        public TreeNode TargetNode { get; set; }
+        public DropKind Kind { get; set; }
+        /// <summary>Set true to cancel the drop entirely.</summary>
+        public bool Cancel { get; set; }
+        /// <summary>If true (default = current control setting) native reorder will be performed after the event unless canceled.</summary>
+        public bool PerformNativeReorder { get; set; }
+    }
+
+    /// <summary>
+    /// Raised just before a drop is committed. Handlers can modify target/kind, cancel, or suppress native reordering.
+    /// </summary>
+    public event EventHandler<DroppingEventArgs>? NodeSortingDropped;
+    #endregion
 
     private static void DrawChevronRightFast(Graphics g, Pen pen, Rectangle r)
     {

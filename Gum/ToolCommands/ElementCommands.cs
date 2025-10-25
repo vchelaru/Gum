@@ -28,6 +28,7 @@ public class ElementCommands : IElementCommands
     private readonly IFileCommands _fileCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly PluginManager _pluginManager;
 
     #endregion
 
@@ -35,35 +36,44 @@ public class ElementCommands : IElementCommands
         IGuiCommands guiCommands, 
         IFileCommands fileCommands,
         VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        WireframeObjectManager wireframeObjectManager)
+        WireframeObjectManager wireframeObjectManager,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _pluginManager = pluginManager;
     }
 
     #region Instance
 
-    public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string type = null, string parentName = null)
+    public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null)
     {
         InstanceSave instanceSave = new InstanceSave();
         instanceSave.Name = name;
         instanceSave.ParentContainer = elementToAddTo;
         instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
 
-        return AddInstance(elementToAddTo, instanceSave, parentName);
+        return AddInstance(elementToAddTo, instanceSave, parentName, desiredIndex);
     }
 
-    public InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string parentName = null)
+    public InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null)
     {
         if (elementToAddTo == null)
         {
             throw new Exception("Could not add instance named " + instanceSave.Name + " because no element is selected");
         }
 
-        elementToAddTo.Instances.Add(instanceSave);
+        if(desiredIndex == null)
+        {
+            elementToAddTo.Instances.Add(instanceSave);
+        }
+        else
+        {
+            elementToAddTo.Instances.Insert(desiredIndex.Value, instanceSave);
+        }
 
         _guiCommands.RefreshElementTreeView(elementToAddTo);
 
@@ -77,7 +87,7 @@ public class ElementCommands : IElementCommands
         }
 
         // We need to call InstanceAdd before we select the new object - the Undo manager expects it
-        PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+        _pluginManager.InstanceAdd(elementToAddTo, instanceSave);
 
         // a plugin may have removed this instance. If so, we need to refresh the tree node again:
         if (elementToAddTo.Instances.Contains(instanceSave) == false)
@@ -121,7 +131,7 @@ public class ElementCommands : IElementCommands
         elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
 
 
-        PluginManager.Self.InstanceDelete(elementToRemoveFrom, instanceToRemove);
+        _pluginManager.InstanceDelete(elementToRemoveFrom, instanceToRemove);
 
         if (_selectedState.SelectedInstance == instanceToRemove)
         {
@@ -139,7 +149,7 @@ public class ElementCommands : IElementCommands
         }
 
 
-        PluginManager.Self.InstancesDelete(elementToRemoveFrom, instances.ToArray());
+        _pluginManager.InstancesDelete(elementToRemoveFrom, instances.ToArray());
 
         var newSelection = _selectedState.SelectedInstances.ToList()
             .Except(instances);
@@ -181,7 +191,7 @@ public class ElementCommands : IElementCommands
         }
 
 
-        PluginManager.Self.StateAdd(stateSave);
+        _pluginManager.StateAdd(stateSave);
 
         _guiCommands.RefreshStateTreeView();
 
@@ -661,7 +671,7 @@ public class ElementCommands : IElementCommands
 
         _guiCommands.RefreshStateTreeView();
 
-        PluginManager.Self.CategoryAdd(category);
+        _pluginManager.CategoryAdd(category);
 
         _fileCommands.TryAutoSaveCurrentObject();
 
@@ -698,7 +708,7 @@ public class ElementCommands : IElementCommands
         //}
 
         // We need to call InstanceAdd before we select the new object - the Undo manager expects it
-        //PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+        //_pluginManager.InstanceAdd(elementToAddTo, instanceSave);
 
         // a plugin may have removed this instance. If so, we need to refresh the tree node again:
         //if (elementToAddTo.Instances.Contains(instanceSave) == false)
@@ -740,7 +750,7 @@ public class ElementCommands : IElementCommands
 
             AddCategoriesFromBehavior(behaviorSave, componentSave);
 
-            PluginManager.Self.BehaviorReferencesChanged(componentSave);
+            _pluginManager.BehaviorReferencesChanged(componentSave);
 
             _guiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
 

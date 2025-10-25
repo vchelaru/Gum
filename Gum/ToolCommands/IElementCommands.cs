@@ -11,9 +11,9 @@ namespace Gum.ToolCommands;
 public interface IElementCommands
 {
     #region Instance
-    InstanceSave AddInstance(ElementSave elementToAddTo, string name, string type = null, string parentName = null);
+    InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null);
 
-    InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string parentName = null);
+    InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null);
 
     void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
 

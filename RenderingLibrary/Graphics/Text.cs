@@ -14,6 +14,7 @@ using System.Linq;
 using ToolsUtilitiesStandard.Helpers;
 using System.Drawing;
 using System.Text;
+using RenderingLibrary.Math;
 
 namespace RenderingLibrary.Graphics;
 
@@ -817,9 +818,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
         string? stringToUse = string.IsNullOrEmpty(mRawText)
             ? null
             : stringToUse = mRawText.Replace("\r\n", "\n");
-        
 
-        float wrappingWidth = System.Math.Max(0, mWidth / mFontScale ?? float.PositiveInfinity); 
+
+        int wrappingWidth = int.MaxValue;
+        if (mWidth != null && !float.IsPositiveInfinity(mWidth.Value))
+        {
+            wrappingWidth =  MathFunctions.RoundToInt(System.Math.Ceiling( mWidth.Value / mFontScale));
+        }
+
+        wrappingWidth = System.Math.Max(0, wrappingWidth);
+
 
         // This allocates like crazy but we're
         // on the PC and prob won't be calling this

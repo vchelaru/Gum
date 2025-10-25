@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
+		<TargetFrameworks>net472;net8-windows</TargetFrameworks>
+
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -20,6 +21,7 @@
 	<ItemGroup>
 		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.0-rc.2.25502.107" />
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>Libraries\TargaImage.dll</HintPath>
