@@ -60,6 +60,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             "CurrentChainName",
             "ChildrenLayout",
             "FlipHorizontal",
+            "Font",
             "FontSize",
             "Green",
             "Height",
