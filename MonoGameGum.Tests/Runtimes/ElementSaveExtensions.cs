@@ -1,6 +1,8 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -61,6 +63,31 @@ public class ElementSaveExtensionsTests : IDisposable
 
         var runtime = ElementSaveExtensions.CreateGueForElement(element);
         runtime.Name.ShouldBe("Registered Gue Type");
+    }
+
+    [Fact]
+    public void RegisterGueInstantiation_ShouldConsiderInheritance()
+    {
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Text",
+            () => new TextRuntime());
+
+        var element = new ComponentSave { Name = "Label" };
+        element.BaseType = "Text";
+
+        var gumProject = new GumProjectSave();
+
+        ObjectFinder.Self.GumProjectSave = gumProject;
+
+        gumProject.Components.Add(element);
+        gumProject.StandardElements.Add(new StandardElementSave
+        {
+            Name = "Text"
+        });
+
+        var createdElement = ElementSaveExtensions.CreateGueForElement(element);
+
+        createdElement.ShouldBeOfType<TextRuntime>();
     }
 
 

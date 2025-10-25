@@ -60,14 +60,37 @@ namespace GumRuntime
             {
                 throw new ArgumentNullException(nameof(elementSave));
             }
-            if(elementSave.Name == null)
+            if (elementSave.Name == null)
             {
                 throw new InvalidOperationException("The argument ElementSave must have a name");
             }
 
 #endif
-            GraphicalUiElement toReturn = null;
+            GraphicalUiElement? toReturn = null;
 
+            toReturn = TryCreateStrongTypeForElement(elementSave, fullInstantiation, genericType);
+
+            if (toReturn == null)
+            {
+                if (TemplateFunc != null)
+                {
+                    toReturn = TemplateFunc();
+                }
+            }
+
+            if (toReturn == null)
+            {
+                toReturn = new GraphicalUiElement();
+            }
+
+
+            toReturn.ElementSave = elementSave;
+            return toReturn;
+        }
+
+        private static GraphicalUiElement? TryCreateStrongTypeForElement(ElementSave elementSave, bool fullInstantiation, string genericType)
+        {
+            GraphicalUiElement? toReturn = null;
             var elementName = elementSave.Name;
             var attemptedGenericLookup = false;
             if (!string.IsNullOrEmpty(genericType))
@@ -127,16 +150,20 @@ namespace GumRuntime
 
             if (toReturn == null)
             {
-                if (TemplateFunc != null)
+                // try inheritance:
+                var baseTypeName = elementSave.BaseType;
+
+                if(!string.IsNullOrEmpty(baseTypeName))
                 {
-                    toReturn = TemplateFunc();
-                }
-                else
-                {
-                    toReturn = new GraphicalUiElement();
+                    var baseElement = ObjectFinder.Self.GetElementSave(baseTypeName);
+
+                    if(baseElement != null)
+                    {
+                        toReturn = TryCreateStrongTypeForElement(baseElement, fullInstantiation, genericType);
+                    }
                 }
             }
-            toReturn.ElementSave = elementSave;
+
             return toReturn;
         }
 
