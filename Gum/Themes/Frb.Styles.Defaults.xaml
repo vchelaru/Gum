@@ -326,30 +326,52 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type RadioButton}">
-          <Grid Background="Transparent">
+          <Grid
+            Background="Transparent"
+            SnapsToDevicePixels="True"
+            UseLayoutRounding="True">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Grid VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
-              <Ellipse
-                x:Name="OuterEllipse"
-                Width="13"
-                Height="13"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Fill="Transparent"
-                Stroke="{DynamicResource Frb.Brushes.Foreground}"
-                StrokeThickness="1" />
-              <Ellipse
-                x:Name="InnerEllipse"
-                Width="8"
-                Height="8"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Fill="Transparent"
-                StrokeThickness="1" />
+            <Grid
+              Width="12"
+              Height="12"
+              VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+              <Path x:Name="OuterDisc" Fill="Transparent">
+                <Path.Data>
+                  <EllipseGeometry
+                    Center="6,6"
+                    RadiusX="6"
+                    RadiusY="6" />
+                </Path.Data>
+              </Path>
+
+              <Path x:Name="OuterRing" Fill="{DynamicResource Frb.Brushes.Foreground}">
+                <Path.Data>
+                  <GeometryGroup FillRule="EvenOdd">
+                    <EllipseGeometry
+                      Center="6,6"
+                      RadiusX="6"
+                      RadiusY="6" />
+                    <EllipseGeometry
+                      Center="6,6"
+                      RadiusX="5"
+                      RadiusY="5" />
+                  </GeometryGroup>
+                </Path.Data>
+              </Path>
+
+              <Path x:Name="InnerDot" Fill="Transparent">
+                <Path.Data>
+                  <EllipseGeometry
+                    Center="6,6"
+                    RadiusX="4"
+                    RadiusY="4" />
+                </Path.Data>
+              </Path>
             </Grid>
+
             <ContentPresenter
               Grid.Column="1"
               Margin="4,0,0,0"
@@ -357,16 +379,16 @@
               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
               ContentSource="Content" />
           </Grid>
+
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="OuterEllipse" Property="Stroke" Value="{StaticResource Frb.Brushes.Primary}" />
-              <Setter TargetName="OuterEllipse" Property="Fill" Value="{StaticResource Frb.Brushes.Primary.Transparent}" />
+              <Setter TargetName="OuterRing" Property="Fill" Value="{StaticResource Frb.Brushes.Primary}" />
+              <Setter TargetName="OuterDisc" Property="Fill" Value="{StaticResource Frb.Brushes.Primary.Transparent}" />
             </Trigger>
 
             <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="InnerEllipse" Property="Fill" Value="{StaticResource Frb.Brushes.Primary}" />
+              <Setter TargetName="InnerDot" Property="Fill" Value="{StaticResource Frb.Brushes.Primary}" />
             </Trigger>
-
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
