@@ -86,7 +86,8 @@ public class ControlLogic
         SetVariableLogic setVariableLogic,
         ITabManager tabManager,
         HotkeyManager hotkeyManager,
-        ScrollBarLogicWpf scrollBarLogic)
+        ScrollBarLogicWpf scrollBarLogic,
+        MainControlViewModel mainControlViewModel)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -96,6 +97,8 @@ public class ControlLogic
         _tabManager = tabManager;
         _hotkeyManager = hotkeyManager;
         _scrollBarLogic = scrollBarLogic;
+
+        ViewModel = mainControlViewModel;
     }
 
     public PluginTab CreateControl()
@@ -132,7 +135,6 @@ public class ControlLogic
         innerControl.DoubleClick += (not, used) =>
             HandleRegionDoubleClicked(innerControl, ref textureOutlineRectangle);
 
-        ViewModel = new MainControlViewModel();
         ViewModel.AvailableZoomLevels = innerControl.AvailableZoomLevels;
         mainControl.DataContext = ViewModel;
 
