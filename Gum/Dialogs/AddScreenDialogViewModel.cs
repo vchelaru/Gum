@@ -52,6 +52,9 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
         
         string relativeToScreens = FileManager.MakeRelative(path, FileLocations.Self.ScreensFolder);
 
+        // Prevent issues with any code that's looking for a '/' instead of a '\' slash
+        relativeToScreens = relativeToScreens.Replace('\\', '/');
+
         ScreenSave screenSave = _projectCommands.AddScreen(relativeToScreens + Value);
         
         _guiCommands.RefreshElementTreeView();
