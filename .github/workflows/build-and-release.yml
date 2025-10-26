@@ -48,11 +48,14 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Date).ToString('yyyy.MM.dd')
+          $currentYear = (Get-Date).Year
+          $copyrightLine = "Copyright © FlatRedBall 2017-$currentYear."
           $file = "Gum/Properties/AssemblyInfo.cs"
 
           Write-Host "Updating version in $file to $version"
           (Get-Content $file) -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
-                              -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" |
+                              -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
+                              -replace 'AssemblyCopyright\(".*"\)', "AssemblyCopyright(`"$copyrightLine`")" |
             Set-Content $file
 
           Write-Host "Updated AssemblyInfo.cs to version $version"
