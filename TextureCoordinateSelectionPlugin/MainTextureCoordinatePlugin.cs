@@ -2,7 +2,9 @@
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
+using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.BaseClasses;
@@ -23,6 +25,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TextureCoordinateSelectionPlugin.Logic;
+using TextureCoordinateSelectionPlugin.ViewModels;
 
 namespace TextureCoordinateSelectionPlugin;
 
@@ -34,6 +37,7 @@ public class MainTextureCoordinatePlugin : PluginBase
     PluginTab textureCoordinatePluginTab;
     ISelectedState _selectedState;
     ControlLogic _controlLogic;
+    MainControlViewModel _viewModel;
 
     public override string FriendlyName
     {
@@ -53,6 +57,13 @@ public class MainTextureCoordinatePlugin : PluginBase
     public MainTextureCoordinatePlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+
+        _viewModel = new (
+            ProjectManager.Self,
+            Locator.GetRequiredService<IFileCommands>(),
+            FileWatchManager.Self,
+            Locator.GetRequiredService<IGuiCommands>());
+
         _controlLogic = new ControlLogic(
             Locator.GetRequiredService<ISelectedState>(),
             Locator.GetRequiredService<IUndoManager>(),
@@ -61,7 +72,8 @@ public class MainTextureCoordinatePlugin : PluginBase
             Locator.GetRequiredService<SetVariableLogic>(),
             Locator.GetRequiredService<ITabManager>(),
             Locator.GetRequiredService<HotkeyManager>(),
-            new ScrollBarLogicWpf());
+            new ScrollBarLogicWpf(),
+            _viewModel);
     }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -95,6 +107,13 @@ public class MainTextureCoordinatePlugin : PluginBase
         this.VariableSetLate += HandleVariableSet;
         // This is needed for when undos happen
         this.WireframeRefreshed += HandleWireframeRefreshed;
+
+        this.ProjectLoad += HandleProjectLoaded;
+    }
+
+    private void HandleProjectLoaded(GumProjectSave save)
+    {
+        _viewModel.LoadSettings();
     }
 
     private void HandleWireframeRefreshed()
