@@ -38,7 +38,7 @@
           CaptionHeight="24"
           CornerRadius="16"
           GlassFrameThickness="0"
-          ResizeBorderThickness="6" />
+          ResizeBorderThickness="8" />
       </Setter.Value>
     </Setter>
   </Style>
