@@ -30,33 +30,20 @@
   <Border
     Background="{DynamicResource Frb.Brushes.Background}"
     BorderBrush="{DynamicResource Frb.Brushes.Border}"
-    BorderThickness="1"
-    ClipToBounds="True"
-    CornerRadius="10">
+    ClipToBounds="True">
     <Border.Style>
       <Style TargetType="Border">
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="BorderThickness" Value="1" />
         <Style.Triggers>
           <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
-            <!--
-              On maximized we do -7 and then +7 below to compensate for oddities with custom chrome:
-              https://stackoverflow.com/questions/13422666/wpf-borderless-window-issues-aero-snap-maximizing
-              https://www.programmersought.com/article/82767298877/
-            -->
-            <Setter Property="Margin" Value="-7" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="BorderThickness" Value="0" />
           </DataTrigger>
         </Style.Triggers>
       </Style>
     </Border.Style>
     <Grid>
-      <Grid.Style>
-        <Style TargetType="Grid">
-          <Style.Triggers>
-            <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
-              <Setter Property="Margin" Value="7" />
-            </DataTrigger>
-          </Style.Triggers>
-        </Style>
-      </Grid.Style>
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
@@ -91,8 +78,8 @@
             <StackPanel
               Grid.Column="4"
               VerticalAlignment="Center"
-              Orientation="Horizontal"
-              WindowChrome.IsHitTestVisibleInChrome="True">
+              Background="Transparent"
+              Orientation="Horizontal">
               <StackPanel.Resources>
                 <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
                   <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
@@ -102,6 +89,7 @@
                   <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0" />
                   <Setter Property="BorderThickness" Value="0" />
                   <Setter Property="Background" Value="Transparent" />
+                  <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
                   <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
                       <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
@@ -137,18 +125,57 @@
                   </Style>
                 </Button.Style>
               </Button>
-              <Button Click="OnCloseButtonClick">
-                <materialDesign:PackIcon Height="16" Kind="Close" />
-                <Button.Style>
-                  <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                    <Style.Triggers>
-                      <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
+              <ContentControl>
+                <ContentControl.Template>
+                  <ControlTemplate>
+
+                    <Grid>
+                      <Border
+                        x:Name="CloseBorder"
+                        Width="48"
+                        Height="32"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch" />
+                      <Button
+                        x:Name="CloseButton"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        Click="OnCloseButtonClick">
+                        <materialDesign:PackIcon Height="16" Kind="Close" />
+                        <Button.Style>
+                          <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                            <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0,8,0,0" />
+                            <Setter Property="Height" Value="28" />
+                            <Setter Property="Width" Value="44" />
+                            <Setter Property="Padding" Value="4,0,0,4" />
+                            <Style.Triggers>
+                              <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
+                              </Trigger>
+                              <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                                <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0" />
+                              </DataTrigger>
+
+                            </Style.Triggers>
+                          </Style>
+                        </Button.Style>
+                      </Button>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                      <Trigger SourceName="CloseButton" Property="IsMouseOver" Value="True">
+                        <Setter TargetName="CloseBorder" Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
                       </Trigger>
-                    </Style.Triggers>
-                  </Style>
-                </Button.Style>
-              </Button>
+                      <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                        <Setter TargetName="CloseBorder" Property="Visibility" Value="Collapsed" />
+                        <Setter TargetName="CloseButton" Property="Width" Value="48" />
+                        <Setter TargetName="CloseButton" Property="Height" Value="32" />
+                        <Setter TargetName="CloseButton" Property="Padding" Value="0" />
+                      </DataTrigger>
+                    </ControlTemplate.Triggers>
+                  </ControlTemplate>
+                </ContentControl.Template>
+              </ContentControl>
+
             </StackPanel>
 
           </Grid>
