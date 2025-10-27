@@ -106,6 +106,10 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     private void ApplyDefaultVariables()
     {
+        this.Visual.Width = 0f;
+        this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.Visual.Height = 0f;
+        this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         ((TextRuntime)this.LabelInstance.Visual).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         ((TextRuntime)this.LabelInstance.Visual).MaxLettersToShow = 55;
         ((TextRuntime)this.LabelInstance.Visual).MaxNumberOfLines = 3;
