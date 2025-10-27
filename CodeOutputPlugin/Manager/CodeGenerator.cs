@@ -4068,9 +4068,9 @@ public class CodeGenerator
                 return $"@\"{asString}\"";
             }
         }
-        else if (value is bool)
+        else if (value is bool asBool)
         {
-            return value.ToString().ToLowerInvariant();
+            return asBool.ToString().ToLowerInvariant();
         }
         else if (value?.GetType().IsEnum == true)
         {
@@ -4188,9 +4188,9 @@ public class CodeGenerator
                 return "\"" + asString.Replace("\n", "\\n").Replace("\"", "\\\"") + "\"";
             }
         }
-        else if (value is bool)
+        else if (value is bool asBool)
         {
-            return value.ToString().ToLowerInvariant();
+            return asBool.ToString().ToLowerInvariant();
         }
         else if (value.GetType().IsEnum)
         {
