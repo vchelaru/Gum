@@ -8,6 +8,7 @@
   xmlns:gum="clr-namespace:Gum"
   xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
   xmlns:themes="clr-namespace:FlatRedBall.Glue.Themes"
   xmlns:viewModels="clr-namespace:Gum.ViewModels"
   xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
@@ -19,6 +20,7 @@
   AllowsTransparency="False"
   Background="{DynamicResource Frb.Brushes.Border}"
   Left="{Binding Left, Mode=TwoWay}"
+  ResizeMode="CanResize"
   SizeToContent="Manual"
   SnapsToDevicePixels="True"
   Top="{Binding Top, Mode=TwoWay}"
@@ -27,6 +29,14 @@
   WindowState="{Binding WindowState, Mode=TwoWay}"
   WindowStyle="None"
   mc:Ignorable="d">
+  <shell:WindowChrome.WindowChrome>
+    <shell:WindowChrome
+      CaptionHeight="32"
+      CornerRadius="8"
+      GlassFrameThickness="0"
+      ResizeBorderThickness="7"
+      UseAeroCaptionButtons="False" />
+  </shell:WindowChrome.WindowChrome>
   <Border
     Background="{DynamicResource Frb.Brushes.Background}"
     BorderBrush="{DynamicResource Frb.Brushes.Border}"
