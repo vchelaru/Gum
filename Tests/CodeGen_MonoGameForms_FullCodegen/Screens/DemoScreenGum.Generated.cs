@@ -363,6 +363,10 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     private void ApplyDefaultVariables()
     {
+        this.Visual.Width = 0f;
+        this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.Visual.Height = 0f;
+        this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
         this.DemoSettingsMenu.Height = 16f;
         this.DemoSettingsMenu.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
