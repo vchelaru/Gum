@@ -170,6 +170,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     float mX;
     float mY;
+    // Since these are protected, we can't change them to _width and _height 
+    // FRB already uses mWidth and mHeight in its codegen
     protected float mWidth;
     protected float mHeight;
     float mRotation;
@@ -904,17 +906,36 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get => mWidth;
         set
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsPositiveInfinity(value) ||
-                float.IsNegativeInfinity(value) ||
-                float.IsNaN(value))
-            {
-                throw new ArgumentException();
-            }
-#endif
             if (mWidth != value)
             {
-                mWidth = value; UpdateLayout();
+#if FULL_DIAGNOSTICS
+                if (float.IsPositiveInfinity(value) ||
+                    float.IsNegativeInfinity(value) ||
+                    float.IsNaN(value))
+                {
+                    throw new ArgumentException();
+                }
+#endif
+                mWidth = value;
+
+                if(Rotation == 0)
+                {
+                    UpdateLayout(
+                        ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                        ParentUpdateType.IfParentStacks |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
+                        int.MaxValue / 2, XOrY.X
+                        );
+                }
+                else
+                {
+                    UpdateLayout(
+                        ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                        ParentUpdateType.IfParentStacks |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
+                        int.MaxValue / 2
+                        );
+                }
             }
         }
     }
@@ -953,7 +974,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public float Height
     {
-        get { return mHeight; }
+        get => mHeight; 
         set
         {
             if (mHeight != value)
@@ -968,6 +989,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endif
                 mHeight = value; 
 
+                // If this height changes, then we should only update the parent if the height change can actually affect the parent:
                 if(Rotation == 0)
                 {
                     // only update Y if unrotated:
@@ -987,8 +1009,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         int.MaxValue / 2
                         );
                 }
-                // If this height changes, then we should only update the parent if the height change can actually affect the parent:
-                //UpdateLayout();
             }
         }
     }
