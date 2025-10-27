@@ -399,7 +399,7 @@ public class ElementCommands : IElementCommands
 
             float currentValue = (float)currentValueAsObject;
 
-            string unitsVariableName = baseVariableName + " Units";
+            string unitsVariableName = baseVariableName + "Units";
             string unitsNameWithInstance;
             object unitsVariableAsObject;
             GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
