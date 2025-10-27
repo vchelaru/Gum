@@ -83,69 +83,108 @@
               controlzex:NonClientControlProperties.HitTestResult="CLIENT"
               controlzex:WindowChrome.IsHitTestVisibleInChrome="True"
               FullPath="{Binding Title}" />
-            <StackPanel
-              Grid.Column="4"
-              VerticalAlignment="Center"
-              Background="Transparent"
-              Orientation="Horizontal">
-              <StackPanel.Resources>
-                <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                  <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
-                  <Setter Property="Padding" Value="0" />
-                  <Setter Property="Height" Value="32" />
-                  <Setter Property="Width" Value="48" />
-                  <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0" />
-                  <Setter Property="BorderThickness" Value="0" />
-                  <Setter Property="controlzex:NonClientControlProperties.HitTestResult" Value="CLIENT" />
-                  <Setter Property="Background" Value="Transparent" />
-                  <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                      <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
-                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-                    </Trigger>
-                    <DataTrigger Binding="{Binding IsActive, ElementName=Root}" Value="False">
-                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
-                    </DataTrigger>
-                  </Style.Triggers>
-                </Style>
-              </StackPanel.Resources>
-              <Button Click="OnMinimizeButtonClick">
-                <materialDesign:PackIcon Height="14" Kind="Minus" />
-              </Button>
+            <Grid Grid.Column="4">
 
-              <Button Click="OnMaximizeButtonClick">
-                <Button.Style>
+              <StackPanel
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Orientation="Horizontal">
+                <StackPanel.Resources>
                   <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                    <Setter Property="Content">
-                      <Setter.Value>
-                        <materialDesign:PackIcon Height="14" Kind="Maximize" />
-                      </Setter.Value>
-                    </Setter>
+                    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Height" Value="32" />
+                    <Setter Property="Width" Value="48" />
+                    <Setter Property="themes:FrbButton.BorderCornerRadius" Value="0" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="controlzex:NonClientControlProperties.HitTestResult" Value="CLIENT" />
+                    <Setter Property="Background" Value="Transparent" />
                     <Style.Triggers>
-                      <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
-                        <Setter Property="Content">
-                          <Setter.Value>
-                            <materialDesign:PackIcon Height="16" Kind="WindowRestore" />
-                          </Setter.Value>
-                        </Setter>
+                      <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Contrast01}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+                      </Trigger>
+                      <DataTrigger Binding="{Binding IsActive, ElementName=Root}" Value="False">
+                        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Disabled}" />
                       </DataTrigger>
                     </Style.Triggers>
                   </Style>
-                </Button.Style>
-              </Button>
-              <Button Click="OnCloseButtonClick">
-                <materialDesign:PackIcon Height="16" Kind="Close" />
-                <Button.Style>
-                  <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                </StackPanel.Resources>
+                <Button Click="OnMinimizeButtonClick">
+                  <materialDesign:PackIcon Height="14" Kind="Minus" />
+                </Button>
+
+                <Button Click="OnMaximizeButtonClick">
+                  <Button.Style>
+                    <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                      <Setter Property="Content">
+                        <Setter.Value>
+                          <materialDesign:PackIcon Height="14" Kind="Maximize" />
+                        </Setter.Value>
+                      </Setter>
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                          <Setter Property="Content">
+                            <Setter.Value>
+                              <materialDesign:PackIcon Height="16" Kind="WindowRestore" />
+                            </Setter.Value>
+                          </Setter>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Button.Style>
+                </Button>
+                <Grid>
+                  <Button Click="OnCloseButtonClick">
+                    <materialDesign:PackIcon Height="16" Kind="Close" />
+                    <Button.Style>
+                      <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
+                        <Style.Triggers>
+                          <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
+                          </Trigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Button.Style>
+                  </Button>
+                </Grid>
+              </StackPanel>
+
+              <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Grid.Style>
+                  <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Visible" />
                     <Style.Triggers>
-                      <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Error}" />
-                      </Trigger>
+                      <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                      </DataTrigger>
                     </Style.Triggers>
                   </Style>
-                </Button.Style>
-              </Button>
-            </StackPanel>
+                </Grid.Style>
+                <Grid
+                  Height="4"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top"
+                  controlzex:NonClientControlProperties.HitTestResult="TOP"
+                  Background="Transparent" />
+
+                <Grid
+                  Width="4"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Stretch"
+                  controlzex:NonClientControlProperties.HitTestResult="RIGHT"
+                  Background="Transparent" />
+                <Grid
+                  Width="5"
+                  Height="5"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Top"
+                  controlzex:NonClientControlProperties.HitTestResult="TOPRIGHT"
+                  Background="Transparent" />
+              </Grid>
+
+
+            </Grid>
 
           </Grid>
         </Border>
