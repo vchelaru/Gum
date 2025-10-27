@@ -3,6 +3,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:controls="clr-namespace:WpfDataUi.Controls;assembly=WpfDataUi"
   xmlns:controls2="clr-namespace:Gum.Controls"
+  xmlns:controlzex="urn:controlzex"
   xmlns:converters="clr-namespace:Gum.Converters"
   xmlns:converters1="clr-namespace:Gum.Themes.Converters"
   xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
@@ -22,7 +23,7 @@
     <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Styles.Variants.xaml" />
   </ResourceDictionary.MergedDictionaries>
 
-  <Style TargetType="{x:Type Window}">
+  <Style TargetType="{x:Type controlzex:WindowChromeWindow}">
     <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="FontFamily" Value="Segoe UI" />
@@ -32,15 +33,6 @@
     <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
     <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
     <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
-    <Setter Property="WindowChrome.WindowChrome">
-      <Setter.Value>
-        <WindowChrome
-          CaptionHeight="24"
-          CornerRadius="16"
-          GlassFrameThickness="0"
-          ResizeBorderThickness="8" />
-      </Setter.Value>
-    </Setter>
   </Style>
 
   <Style TargetType="WindowsFormsHost">
@@ -60,10 +52,9 @@
     <Setter Property="UseLayoutRounding" Value="True" />
   </Style>
 
-  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type dialogs:DialogWindow}" />
-  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type gum:MainWindow}" />
-  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type windows:DeleteOptionsWindow}" />
-  <Style BasedOn="{StaticResource {x:Type Window}}" TargetType="{x:Type controls2:Spinner}" />
+  <Style BasedOn="{StaticResource {x:Type controlzex:WindowChromeWindow}}" TargetType="{x:Type dialogs:DialogWindow}" />
+  <Style BasedOn="{StaticResource {x:Type controlzex:WindowChromeWindow}}" TargetType="{x:Type gum:MainWindow}" />
+  <Style BasedOn="{StaticResource {x:Type controlzex:WindowChromeWindow}}" TargetType="{x:Type windows:DeleteOptionsWindow}" />
 
   <DataTemplate x:Key="ToggleButtonOptionDisplayOptionContentTemplate" DataType="{x:Type controls:ToggleButtonOptionDisplay+Option}">
     <wpf:FluentIcon
