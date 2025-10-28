@@ -1,15 +1,17 @@
-using System;
 using Gum.Controls;
+using SharpDX.XInput;
+using System;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Application = System.Windows.Application;
 using System.Windows.Media;
+using ControlzEx;
+using Application = System.Windows.Application;
 
 namespace Gum.Services.Dialogs;
 
-public partial class DialogWindow : Window
+public partial class DialogWindow : WindowChromeWindow
 {
     public DialogWindow()
     {
