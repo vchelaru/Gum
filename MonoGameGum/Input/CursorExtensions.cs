@@ -37,11 +37,11 @@ public static class CursorExtensions
 
         if(interactiveGue.Visible == false)
         {
-            return "The argument InteractiveGue is invisible so it will not raise events";
+            return $"The argument {NameOrType(interactiveGue)} is invisible so it will not raise events";
         }
         if (GetInvisibleParent(interactiveGue) is GraphicalUiElement invisibleParent)
         {
-            return $"The parent {invisibleParent} is invisible, preventing this InteractiveGue from raising events";
+            return $"The parent {invisibleParent} is invisible, preventing {interactiveGue} from raising events";
         }
         if (interactiveGue.IsEnabled == false)
         {
@@ -49,7 +49,7 @@ public static class CursorExtensions
         }
         if(GetDisabledParent(interactiveGue) is GraphicalUiElement disabledParent)
         {
-            return $"The parent {disabledParent} is disabled, preventing this InteractiveGue from raising events";
+            return $"The parent {disabledParent} is disabled, preventing {interactiveGue} from raising events";
         }
         if(interactiveGue.HasEvents == false)
         {
@@ -57,7 +57,7 @@ public static class CursorExtensions
         }
         if(GetNotExposedChildrenEventsParent(interactiveGue) is GraphicalUiElement)
         {
-            return $"The parent {interactiveGue} does not raise its children's events, preventing this InteractiveGue from raising events";
+            return $"The parent {interactiveGue} does not raise its children's events, preventing {interactiveGue} from raising events";
         }
         if (interactiveGue.GetAbsoluteWidth() == 0)
         {
@@ -79,63 +79,61 @@ public static class CursorExtensions
             }
         }
 
-        if(interactiveGue.HasCursorOver(cursor) == false)
+
+        List<GraphicalUiElement> inheritanceChain = new List<GraphicalUiElement>();
+
+        GraphicalUiElement? current = interactiveGue;
+        while(current != null)
         {
-            List<GraphicalUiElement> inheritanceChain = new List<GraphicalUiElement>();
+            inheritanceChain.Insert(0, current);
 
-            GraphicalUiElement current = interactiveGue;
-            while(current != null)
+            current = current.Parent as GraphicalUiElement;
+        }
+
+        for(int i = 0; i < inheritanceChain.Count; i++)
+        {
+            var item = inheritanceChain[i];
+
+            if(item is InteractiveGue itemAsInteractiveGue)
             {
-                inheritanceChain.Insert(0, current);
-
-                current = current.Parent as GraphicalUiElement;
+                if(!itemAsInteractiveGue.HasCursorOver(cursor))
+                {
+                    return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(itemAsInteractiveGue) + "\n" + GetStack(itemAsInteractiveGue);
+                }
+            }
+            else
+            {
+                if(!item.HasCursorOver(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds()))
+                {
+                    return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(item) + "\n" + GetStack(item);
+                }
             }
 
-            for(int i = 0; i < inheritanceChain.Count; i++)
+
+            string GetNotOverBoundsInformation(GraphicalUiElement gue)
             {
-                var item = inheritanceChain[i];
-
-                if(item is InteractiveGue itemAsInteractiveGue)
+                var absoluteX = gue.GetAbsoluteX();
+                var absoluteY = gue.GetAbsoluteY();
+                var absoluteWidth = gue.GetAbsoluteWidth();
+                var absoluteHeight = gue.GetAbsoluteHeight();
+                if(cursor.XRespectingGumZoomAndBounds() < absoluteX)
                 {
-                    if(!itemAsInteractiveGue.HasCursorOver(cursor))
-                    {
-                        return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(itemAsInteractiveGue);
-                    }
+                    return $"The cursor X={cursor.XRespectingGumZoomAndBounds()} is to the left of the element which starts at X={absoluteX}";
                 }
-                else
+                else if(cursor.XRespectingGumZoomAndBounds() > absoluteX + absoluteWidth)
                 {
-                    if(!item.HasCursorOver(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds()))
-                    {
-                        return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(item);
-                    }
+                    return $"The cursor X={cursor.XRespectingGumZoomAndBounds()} is to the right of the element which ends at X={absoluteX + absoluteWidth}";
                 }
-
-
-                string GetNotOverBoundsInformation(GraphicalUiElement gue)
+                else if(cursor.YRespectingGumZoomAndBounds() < absoluteY)
                 {
-                    var absoluteX = gue.GetAbsoluteX();
-                    var absoluteY = gue.GetAbsoluteY();
-                    var absoluteWidth = gue.GetAbsoluteWidth();
-                    var absoluteHeight = gue.GetAbsoluteHeight();
-                    if(cursor.XRespectingGumZoomAndBounds() < absoluteX)
-                    {
-                        return $"The cursor is to the left of the element which starts at X={absoluteX}";
-                    }
-                    else if(cursor.XRespectingGumZoomAndBounds() > absoluteX + absoluteWidth)
-                    {
-                        return $"The cursor is to the right of the element which ends at X={absoluteX + absoluteWidth}";
-                    }
-                    else if(cursor.YRespectingGumZoomAndBounds() < absoluteY)
-                    {
-                        return $"The cursor is above the element which starts at Y={absoluteY}";
-                    }
-                    else // cursor.Y > absoluteY + absoluteHeight
-                    {
-                        return $"The cursor is below the element which ends at Y={absoluteY + absoluteHeight}";
-                    }
+                    return $"The cursor Y={cursor.YRespectingGumZoomAndBounds()} is above the element which starts at Y={absoluteY}";
                 }
-
+                else // cursor.Y > absoluteY + absoluteHeight
+                {
+                    return $"The cursor Y={cursor.YRespectingGumZoomAndBounds()} is below the element which ends at Y={absoluteY + absoluteHeight}";
+                }
             }
+
         }
 
         if(cursor.WindowOver != null && cursor.WindowOver != interactiveGue)
@@ -158,6 +156,37 @@ public static class CursorExtensions
         }
 
         return null;
+
+        string GetStack(GraphicalUiElement itemInStack)
+        {
+            List<GraphicalUiElement> inheritanceChain = new List<GraphicalUiElement>();
+
+            GraphicalUiElement? current = interactiveGue;
+            while (current != null)
+            {
+                inheritanceChain.Insert(0, current);
+
+                current = current.Parent as GraphicalUiElement;
+            }
+
+            string toReturn = "";
+
+            for(int i = 0; i < inheritanceChain.Count; i++)
+            {
+                var item = inheritanceChain[i];
+                if(item == itemInStack)
+                {
+                    toReturn += new string(' ', i * 2) + "└-" + NameOrType(item) + " <---- THIS";
+                }
+                else
+                {
+                    toReturn += new string(' ', i * 2) + "└-" + NameOrType(item);
+                }
+                toReturn += "\n";
+            }
+
+            return toReturn;
+        }
     }
 
     static string NameOrType(GraphicalUiElement gue)
