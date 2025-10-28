@@ -1,4 +1,5 @@
 ﻿using Gum.Forms;
+using Gum.Forms.Controls;
 using Gum.Wireframe;
 using RenderingLibrary;
 using System;
@@ -12,19 +13,23 @@ namespace MonoGameGum.Input;
 
 public static class CursorExtensions 
 {
+    /// <summary>
+    /// Returns information about why events may not be happening for the argument FrameworkElement.
+    /// </summary>
+    /// <param name="cursor">A reference to the cursor, such as GumService.Default.Cursor</param>
+    /// <param name="frameworkElement">The FrameworkElement such as a Button.</param>
+    /// <returns>A string explaining why events are not being raised, or null if events should be happening.</returns>
+    public static string? GetEventFailureReason(this ICursor cursor, FrameworkElement frameworkElement) =>
+        GetEventFailureReason(cursor, frameworkElement.Visual);
+
+    /// <summary>
+    /// Returns information about why events may not be happening for the argument InteractiveGue.
+    /// </summary>
+    /// <param name="cursor">A reference to the cursor, such as GumService.Default.Cursor</param>
+    /// <param name="interactiveGue">The InteractiveGue, which is usually a Visual for a Forms control.</param>
+    /// <returns>A string explaining why events are not being raised, or null if events should be happening.</returns>
     public static string? GetEventFailureReason(this ICursor cursor, InteractiveGue interactiveGue)
     {
-        /*
-         * 
-            Recursive visibility
-            Recursive enabled
-            Recursive ExposeChildrenEvents
-            Recursive bounds checks
-            Size (is anything 0 width or height)
-            Is covered by other UI
-            Is not added to a root
-            Modal popup exists
-         */
         if(interactiveGue == null)
         {
             return "No InteractiveGue was passed, so events cannot be detected";
@@ -94,22 +99,48 @@ public static class CursorExtensions
                 {
                     if(!itemAsInteractiveGue.HasCursorOver(cursor))
                     {
-                        return $"Item {item} does not have the cursor over it";
+                        return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(itemAsInteractiveGue);
                     }
                 }
                 else
                 {
                     if(!item.HasCursorOver(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds()))
                     {
-                        return $"Item {item} does not have the cursor over it";
+                        return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(item);
                     }
                 }
+
+
+                string GetNotOverBoundsInformation(GraphicalUiElement gue)
+                {
+                    var absoluteX = gue.GetAbsoluteX();
+                    var absoluteY = gue.GetAbsoluteY();
+                    var absoluteWidth = gue.GetAbsoluteWidth();
+                    var absoluteHeight = gue.GetAbsoluteHeight();
+                    if(cursor.XRespectingGumZoomAndBounds() < absoluteX)
+                    {
+                        return $"The cursor is to the left of the element which starts at X={absoluteX}";
+                    }
+                    else if(cursor.XRespectingGumZoomAndBounds() > absoluteX + absoluteWidth)
+                    {
+                        return $"The cursor is to the right of the element which ends at X={absoluteX + absoluteWidth}";
+                    }
+                    else if(cursor.YRespectingGumZoomAndBounds() < absoluteY)
+                    {
+                        return $"The cursor is above the element which starts at Y={absoluteY}";
+                    }
+                    else // cursor.Y > absoluteY + absoluteHeight
+                    {
+                        return $"The cursor is below the element which ends at Y={absoluteY + absoluteHeight}";
+                    }
+                }
+
             }
         }
 
-        if(cursor.WindowOver != interactiveGue)
+        if(cursor.WindowOver != null && cursor.WindowOver != interactiveGue)
         {
-            return $"The cursor is over {cursor.WindowOver} instead of {interactiveGue}";
+            return $"The cursor is over {NameOrType(cursor.WindowOver)} instead of {interactiveGue}";
         }
 
         var rootParent = interactiveGue.GetTopParent();
@@ -127,6 +158,18 @@ public static class CursorExtensions
         }
 
         return null;
+    }
+
+    static string NameOrType(GraphicalUiElement gue)
+    {
+        if(string.IsNullOrEmpty(gue.Name))
+        {
+            return gue.GetType().Name;
+        }
+        else
+        {
+            return $"{gue.GetType().Name} named {gue.Name}";
+        }
     }
 
 
