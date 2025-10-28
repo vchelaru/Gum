@@ -25,7 +25,7 @@ If you have followed the Setup steps, then you should have a game which referenc
 
 To replace this package with source references:
 
-1. Clone the Gum repository
+1. Clone the Gum repository [https://github.com/vchelaru/Gum](https://github.com/vchelaru/Gum)
 2. Remove the NuGet package by selecting your Gum.MonoGame and pressing the Delete key.
 3. Right-click on your Solution in the Solution Explorer and select **Add** -> **Existing Project...**
 4. Select \<Gum Root>/MonoGameGum/MonoGameGum.csproj
@@ -46,7 +46,7 @@ If you have followed the Setup steps, then you should have a game which referenc
 
 To replace this package with source references:
 
-1. Clone the Gum repository
+1. Clone the Gum repository [https://github.com/vchelaru/Gum](https://github.com/vchelaru/Gum)
 2. Remove the NuGet package by selecting your Gum.raylib and pressing the Delete key. If you are using VSCode, you can also edit the .csproj to remove this package reference
 3. Right-click on your Solution in the Solution Explorer and select **Add** -> **Existing Project...**
 4. Select \<Gum Root>/Runtimes/RaylibGum/RaylibGum.csproj
