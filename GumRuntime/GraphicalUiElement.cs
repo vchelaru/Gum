@@ -170,6 +170,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     float mX;
     float mY;
+    // Since these are protected, we can't change them to _width and _height 
+    // FRB already uses mWidth and mHeight in its codegen
     protected float mWidth;
     protected float mHeight;
     float mRotation;
@@ -904,17 +906,36 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         get => mWidth;
         set
         {
-#if FULL_DIAGNOSTICS
-            if (float.IsPositiveInfinity(value) ||
-                float.IsNegativeInfinity(value) ||
-                float.IsNaN(value))
-            {
-                throw new ArgumentException();
-            }
-#endif
             if (mWidth != value)
             {
-                mWidth = value; UpdateLayout();
+#if FULL_DIAGNOSTICS
+                if (float.IsPositiveInfinity(value) ||
+                    float.IsNegativeInfinity(value) ||
+                    float.IsNaN(value))
+                {
+                    throw new ArgumentException();
+                }
+#endif
+                mWidth = value;
+
+                if(Rotation == 0)
+                {
+                    UpdateLayout(
+                        ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                        ParentUpdateType.IfParentStacks |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
+                        int.MaxValue / 2, XOrY.X
+                        );
+                }
+                else
+                {
+                    UpdateLayout(
+                        ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                        ParentUpdateType.IfParentStacks |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
+                        int.MaxValue / 2
+                        );
+                }
             }
         }
     }
@@ -953,7 +974,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public float Height
     {
-        get { return mHeight; }
+        get => mHeight; 
         set
         {
             if (mHeight != value)
@@ -969,13 +990,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mHeight = value; 
 
                 // If this height changes, then we should only update the parent if the height change can actually affect the parent:
-                //UpdateLayout();
-                UpdateLayout(
-                    ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                    ParentUpdateType.IfParentStacks |
-                    ParentUpdateType.IfParentHasRatioSizedChildren,
-                    int.MaxValue/2, XOrY.Y
-                    );
+                if(Rotation == 0)
+                {
+                    // only update Y if unrotated:
+                    UpdateLayout(
+                        ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                        ParentUpdateType.IfParentStacks |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
+                        int.MaxValue/2, XOrY.Y
+                        );
+                }
+                else
+                {
+                    UpdateLayout(
+                        ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                        ParentUpdateType.IfParentStacks |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
+                        int.MaxValue / 2
+                        );
+                }
             }
         }
     }
@@ -2162,303 +2195,311 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         float pixelHeightToSet = mHeight;
 
-
-        #region AbsoluteMultipliedByFontScale
-
-        if (mHeightUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
+        switch(mHeightUnit)
         {
-            pixelHeightToSet *= GlobalFontScale;
-        }
 
-        #endregion
+            #region AbsoluteMultipliedByFontScale
 
-        #region ScreenPixel
-
-        else if (mHeightUnit == DimensionUnitType.ScreenPixel)
-        {
-            var effectiveManagers = this.EffectiveManagers;
-            if (effectiveManagers != null)
+            case DimensionUnitType.AbsoluteMultipliedByFontScale:
             {
-                pixelHeightToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                pixelHeightToSet *= GlobalFontScale;
             }
-        }
+                break;
 
-        #endregion
+            #endregion
 
-        #region RelativeToChildren
+            #region ScreenPixel
 
-        if (mHeightUnit == DimensionUnitType.RelativeToChildren)
-        {
-            float maxHeight = 0;
-
-
-            if (this.mContainedObjectAsIpso != null)
+            case DimensionUnitType.ScreenPixel:
             {
-                if (mContainedObjectAsIpso is IText asText)
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
                 {
-                    var oldWidth = mContainedObjectAsIpso.Width;
-                    if (WidthUnits == DimensionUnitType.RelativeToChildren)
-                    {
-                        if(MaxWidth != null)
-                        {
-                            mContainedObjectAsIpso.Width = MaxWidth.Value;
-                        }
-                        else
-                        {
-                            mContainedObjectAsIpso.Width = float.PositiveInfinity;
-                        }
-                    }
-                    maxHeight = asText.WrappedTextHeight;
-                    mContainedObjectAsIpso.Width = oldWidth;
+                    pixelHeightToSet /= effectiveManagers.Renderer.Camera.Zoom;
                 }
+            }
+                break;
 
-                if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
+            #endregion
+
+            #region RelativeToChildren
+
+            case DimensionUnitType.RelativeToChildren:
+            {
+                float maxHeight = 0;
+
+
+                if (this.mContainedObjectAsIpso != null)
                 {
-                    var element = Children[0] as GraphicalUiElement;
+                    if (mContainedObjectAsIpso is IText asText)
+                    {
+                        var oldWidth = mContainedObjectAsIpso.Width;
+                        if (WidthUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            if(MaxWidth != null)
+                            {
+                                mContainedObjectAsIpso.Width = MaxWidth.Value;
+                            }
+                            else
+                            {
+                                mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                            }
+                        }
+                        maxHeight = asText.WrappedTextHeight;
+                        mContainedObjectAsIpso.Width = oldWidth;
+                    }
 
-                    maxHeight = element.GetRequiredParentHeight();
-                    var elementHeight = element.GetAbsoluteHeight();
-                    maxHeight += (StackSpacing + elementHeight) * (Children.Count - 1);
+                    if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
+                    {
+                        var element = Children[0] as GraphicalUiElement;
+
+                        maxHeight = element.GetRequiredParentHeight();
+                        var elementHeight = element.GetAbsoluteHeight();
+                        maxHeight += (StackSpacing + elementHeight) * (Children.Count - 1);
+                    }
+                    else
+                    {
+                        float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight);
+
+                        maxHeight = maxCellHeight;
+
+                        if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                        {
+                            var numberOfVerticalCells =
+                                this.AutoGridVerticalCells;
+
+                            if (this.AutoGridHorizontalCells > 0)
+                            {
+                                var requiredRowCount = (int)Math.Ceiling((float)Children.Count / this.AutoGridHorizontalCells);
+                                numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
+                            }
+
+                            // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
+                            // at least that same size, so we multiply the size by the number of cells tall
+                            maxHeight *= numberOfVerticalCells;
+                        }
+
+                    }
                 }
                 else
                 {
-                    float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight);
-
-                    maxHeight = maxCellHeight;
-
-                    if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    for (int i = 0; i < mWhatThisContains.Count; i++)
                     {
-                        var numberOfVerticalCells =
-                            this.AutoGridVerticalCells;
+                        var element = mWhatThisContains[i];
+                        var childLayout = element.GetChildLayoutType(XOrY.Y, this);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
-                        if (this.AutoGridHorizontalCells > 0)
+                        if (considerChild && element.Visible)
                         {
-                            var requiredRowCount = (int)Math.Ceiling((float)Children.Count / this.AutoGridHorizontalCells);
-                            numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
-                        }
-
-                        // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
-                        // at least that same size, so we multiply the size by the number of cells tall
-                        maxHeight *= numberOfVerticalCells;
-                    }
-
-                }
-            }
-            else
-            {
-                for (int i = 0; i < mWhatThisContains.Count; i++)
-                {
-                    var element = mWhatThisContains[i];
-                    var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                    var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
-
-                    if (considerChild && element.Visible)
-                    {
-                        var elementHeight = element.GetRequiredParentHeight();
-                        if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
-                        {
-                            // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                            if (i != 0)
+                            var elementHeight = element.GetRequiredParentHeight();
+                            if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                             {
-                                maxHeight += StackSpacing;
+                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                if (i != 0)
+                                {
+                                    maxHeight += StackSpacing;
+                                }
+                                maxHeight += elementHeight;
                             }
-                            maxHeight += elementHeight;
-                        }
-                        else
-                        {
-                            maxHeight = System.Math.Max(maxHeight, elementHeight);
+                            else
+                            {
+                                maxHeight = System.Math.Max(maxHeight, elementHeight);
+                            }
                         }
                     }
                 }
+
+                pixelHeightToSet = maxHeight + mHeight;
             }
+                break;
 
-            pixelHeightToSet = maxHeight + mHeight;
-        }
+            #endregion
 
-        #endregion
+            #region Percentage (of parent)
 
-        #region Percentage (of parent)
-
-        else if (mHeightUnit == DimensionUnitType.PercentageOfParent)
-        {
-            pixelHeightToSet = parentHeight * mHeight / 100.0f;
-        }
-
-        #endregion
-
-        #region PercentageOfSourceFile
-
-        else if (mHeightUnit == DimensionUnitType.PercentageOfSourceFile)
-        {
-            bool wasSet = false;
-
-            if (mTextureHeight > 0)
+            case DimensionUnitType.PercentageOfParent:
             {
-                pixelHeightToSet = mTextureHeight * mHeight / 100.0f;
-                wasSet = true;
+                pixelHeightToSet = parentHeight * mHeight / 100.0f;
             }
+                break;
+            #endregion
 
-            if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
+            #region PercentageOfSourceFile
+
+            case DimensionUnitType.PercentageOfSourceFile:
             {
-                if (iTextureCoordinate.TextureHeight != null)
+                bool wasSet = false;
+
+                if (mTextureHeight > 0)
                 {
-                    pixelHeightToSet = iTextureCoordinate.TextureHeight.Value * mHeight / 100.0f;
+                    pixelHeightToSet = mTextureHeight * mHeight / 100.0f;
                     wasSet = true;
                 }
 
-                // If the address is dimension based, then that means texture coords depend on dimension...but we
-                // can't make dimension based on texture coords as that would cause a circular reference
-                if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
                 {
-                    pixelHeightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
-                    wasSet = true;
-                }
-            }
+                    if (iTextureCoordinate.TextureHeight != null)
+                    {
+                        pixelHeightToSet = iTextureCoordinate.TextureHeight.Value * mHeight / 100.0f;
+                        wasSet = true;
+                    }
 
-            if (!wasSet)
-            {
-                pixelHeightToSet = 64 * mHeight / 100.0f;
-            }
-        }
-
-        #endregion
-
-        #region MaintainFileAspectRatio
-
-        else if (mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
-        {
-            bool wasSet = false;
-
-
-            if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
-            {
-                //if(sprite.AtlasedTexture != null)
-                //{
-                //    throw new NotImplementedException();
-                //}
-                //else 
-                pixelHeightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
-                wasSet = true;
-
-                if (wasSet && mContainedObjectAsIpso is ITextureCoordinate textureCoordinate)
-                {
                     // If the address is dimension based, then that means texture coords depend on dimension...but we
                     // can't make dimension based on texture coords as that would cause a circular reference
-                    if (textureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                    if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
-                        var scale = 1f;
-                        if (textureCoordinate.SourceRectangle.Value.Width != 0)
-                        {
-                            scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
-                        }
-                        pixelHeightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
-                    }
-                }
-            }
-            if (!wasSet)
-            {
-                pixelHeightToSet = 64 * mHeight / 100.0f;
-            }
-        }
-
-        #endregion
-
-        #region RelativeToParent (in pixels)
-
-        else if (mHeightUnit == DimensionUnitType.RelativeToParent)
-        {
-            pixelHeightToSet = parentHeight + mHeight;
-        }
-
-        #endregion
-
-        #region PercentageOfOtherDimension
-
-        else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
-        {
-            pixelHeightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
-        }
-
-        #endregion
-
-        #region Ratio
-        else if (mHeightUnit == DimensionUnitType.Ratio)
-        {
-            if (this.Height == 0)
-            {
-                pixelHeightToSet = 0;
-            }
-            else
-            {
-                var heightToSplit = parentHeight;
-
-                var numberOfVisibleChildren = 0;
-
-                if (mParent != null)
-                {
-                    for (int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue && gue.Visible)
-                        {
-                            if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                            {
-                                heightToSplit -= gue.Height;
-                            }
-                            else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
-                            {
-                                var childAbsoluteWidth = parentHeight + gue.Height;
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
-                            {
-                                var childAbsoluteWidth = (parentHeight * gue.Height)/100f;
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            // this depends on the sibling being updated before this:
-                            else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren || 
-                                gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                gue.HeightUnits == DimensionUnitType.PercentageOfSourceFile ||
-                                gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                                gue.HeightUnits == DimensionUnitType.ScreenPixel)
-                            {
-                                var childAbsoluteWidth = gue.GetAbsoluteHeight();
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            numberOfVisibleChildren++;
-                        }
+                        pixelHeightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
+                        wasSet = true;
                     }
                 }
 
-                if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                if (!wasSet)
                 {
-                    var numberOfSpaces = numberOfVisibleChildren;
-                    heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    pixelHeightToSet = 64 * mHeight / 100.0f;
                 }
+            }
+                break;
+            #endregion
 
-                float totalRatio = 0;
-                if (mParent != null)
+            #region MaintainFileAspectRatio
+
+            case DimensionUnitType.MaintainFileAspectRatio:
+            {
+                bool wasSet = false;
+
+
+                if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                 {
-                    for (int i = 0; i < mParent.Children.Count; i++)
+                    //if(sprite.AtlasedTexture != null)
+                    //{
+                    //    throw new NotImplementedException();
+                    //}
+                    //else 
+                    pixelHeightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
+                    wasSet = true;
+
+                    if (wasSet && mContainedObjectAsIpso is ITextureCoordinate textureCoordinate)
                     {
-                        var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                        // If the address is dimension based, then that means texture coords depend on dimension...but we
+                        // can't make dimension based on texture coords as that would cause a circular reference
+                        if (textureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
-                            totalRatio += gue.Height;
+                            var scale = 1f;
+                            if (textureCoordinate.SourceRectangle.Value.Width != 0)
+                            {
+                                scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
+                            }
+                            pixelHeightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
                         }
                     }
                 }
-                if (totalRatio > 0)
+                if (!wasSet)
                 {
-                    pixelHeightToSet = heightToSplit * (this.Height / totalRatio);
+                    pixelHeightToSet = 64 * mHeight / 100.0f;
+                }
+            }
+                break;
+            #endregion
+
+            #region RelativeToParent (in pixels)
+
+            case DimensionUnitType.RelativeToParent:
+            {
+                pixelHeightToSet = parentHeight + mHeight;
+            }
+                break;
+            #endregion
+
+            #region PercentageOfOtherDimension
+
+            case DimensionUnitType.PercentageOfOtherDimension:
+            {
+                pixelHeightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
+            }
+                break;
+            #endregion
+
+            #region Ratio
+            case DimensionUnitType.Ratio:
+            {
+                if (this.Height == 0)
+                {
+                    pixelHeightToSet = 0;
                 }
                 else
                 {
-                    pixelHeightToSet = heightToSplit;
+                    var heightToSplit = parentHeight;
+
+                    var numberOfVisibleChildren = 0;
+
+                    if (mParent != null)
+                    {
+                        for (int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child != this && child is GraphicalUiElement gue && gue.Visible)
+                            {
+                                if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                                {
+                                    heightToSplit -= gue.Height;
+                                }
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
+                                {
+                                    var childAbsoluteWidth = parentHeight + gue.Height;
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
+                                {
+                                    var childAbsoluteWidth = (parentHeight * gue.Height)/100f;
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                // this depends on the sibling being updated before this:
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren || 
+                                    gue.HeightUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                    gue.HeightUnits == DimensionUnitType.PercentageOfSourceFile ||
+                                    gue.HeightUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                                    gue.HeightUnits == DimensionUnitType.ScreenPixel)
+                                {
+                                    var childAbsoluteWidth = gue.GetAbsoluteHeight();
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                numberOfVisibleChildren++;
+                            }
+                        }
+                    }
+
+                    if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                    {
+                        var numberOfSpaces = numberOfVisibleChildren;
+                        heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    }
+
+                    float totalRatio = 0;
+                    if (mParent != null)
+                    {
+                        for (int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                            {
+                                totalRatio += gue.Height;
+                            }
+                        }
+                    }
+                    if (totalRatio > 0)
+                    {
+                        pixelHeightToSet = heightToSplit * (this.Height / totalRatio);
+                    }
+                    else
+                    {
+                        pixelHeightToSet = heightToSplit;
+                    }
                 }
             }
+                break;
+            #endregion
         }
-        #endregion
+
 
         if (pixelHeightToSet > _maxHeight)
         {
@@ -2507,313 +2548,319 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         float pixelWidthToSet = mWidth;
 
-        #region AbsoluteMultipliedByFontScale
-
-        if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
+        switch (mWidthUnit)
         {
-            pixelWidthToSet *= GlobalFontScale;
-        }
 
-        #endregion
+            #region AbsoluteMultipliedByFontScale
 
-        #region ScreenPixel
-
-        else if (mWidthUnit == DimensionUnitType.ScreenPixel)
-        {
-            var effectiveManagers = this.EffectiveManagers;
-            if (effectiveManagers != null)
+            case DimensionUnitType.AbsoluteMultipliedByFontScale:
             {
-                pixelWidthToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                pixelWidthToSet *= GlobalFontScale;
             }
-        }
+                break;
+            #endregion
 
-        #endregion
+            #region ScreenPixel
 
-        #region RelativeToChildren
-
-        else if (mWidthUnit == DimensionUnitType.RelativeToChildren)
-        {
-            float maxWidth = 0;
-
-            List<GraphicalUiElement> childrenToUse = mWhatThisContains;
-
-            if (this.mContainedObjectAsIpso != null)
+            case DimensionUnitType.ScreenPixel:
             {
-                if (mContainedObjectAsIpso is IText asText)
+                var effectiveManagers = this.EffectiveManagers;
+                if (effectiveManagers != null)
                 {
-
-                    // Sometimes this crashes in Skia.
-                    // Not sure why, but I think it is some kind of internal error. We can tolerate it instead of blow up:
-                    try
-                    {
-                        // It's possible that the text has itself wrapped, but the dimensions changed.
-                        if (
-                            // Skia text doesn't have a wrapped text, but we can just check if the text itself is not null or empty
-                            //asText.WrappedText.Count > 0 &&
-                            !string.IsNullOrEmpty(asText.RawText) && asText.Width != null)
-                        {
-                            // this could be either because it wrapped, or because the raw text
-                            // actually has newlines. Vic says - this difference could maybe be tested
-                            // but I'm not sure it's worth the extra code for the minor savings here, so just
-                            // set the wrap width to positive infinity and refresh the text
-                            asText.Width = null;
-                        }
-
-                        maxWidth = asText.WrappedTextWidth;
-                    }
-                    catch (BadImageFormatException)
-                    {
-                        // not sure why but let's tolerate:
-                        // https://appcenter.ms/orgs/Mtn-Green-Engineering/apps/BioCheck-2/crashes/errors/738313670/overview
-                        maxWidth = 64;
-
-                        //        // It's possible that the text has itself wrapped, but the dimensions changed.
-                        //        if (asText.WrappedText.Count > 0 &&
-                        //            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
-                        //        {
-                        //            // this could be either because it wrapped, or because the raw text
-                        //            // actually has newlines. Vic says - this difference could maybe be tested
-                        //            // but I'm not sure it's worth the extra code for the minor savings here, so just
-                        //            // set the wrap width to positive infinity and refresh the text
-                        //            asText.Width = float.PositiveInfinity;
-                        //        }
-
-                        //        maxWidth = asText.WrappedTextWidth;
-                    }
-                }
-
-                float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth);
-
-                maxWidth = maxCellWidth;
-
-                if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
-                {
-                    var numberOfHorizontalCells =
-                        this.AutoGridHorizontalCells;
-
-                    if (this.AutoGridVerticalCells > 0)
-                    {
-                        var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
-                        numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
-                    }
-                    // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
-                    // at least that same size, so we multiply the size by the number of cells wide
-                    maxWidth *= numberOfHorizontalCells;
+                    pixelWidthToSet /= effectiveManagers.Renderer.Camera.Zoom;
                 }
             }
-            else
+                break;
+            #endregion
+
+            #region RelativeToChildren
+
+            case DimensionUnitType.RelativeToChildren:
             {
-                for (int i = 0; i < mWhatThisContains.Count; i++)
+                float maxWidth = 0;
+
+                List<GraphicalUiElement> childrenToUse = mWhatThisContains;
+
+                if (this.mContainedObjectAsIpso != null)
                 {
-                    var element = mWhatThisContains[i];
-                    var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                    var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
-
-                    if (considerChild && element.Visible)
+                    if (mContainedObjectAsIpso is IText asText)
                     {
-                        var elementWidth = element.GetRequiredParentWidth();
 
-                        if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                        // Sometimes this crashes in Skia.
+                        // Not sure why, but I think it is some kind of internal error. We can tolerate it instead of blow up:
+                        try
                         {
-                            // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                            if (i != 0)
+                            // It's possible that the text has itself wrapped, but the dimensions changed.
+                            if (
+                                // Skia text doesn't have a wrapped text, but we can just check if the text itself is not null or empty
+                                //asText.WrappedText.Count > 0 &&
+                                !string.IsNullOrEmpty(asText.RawText) && asText.Width != null)
                             {
-                                maxWidth += StackSpacing;
+                                // this could be either because it wrapped, or because the raw text
+                                // actually has newlines. Vic says - this difference could maybe be tested
+                                // but I'm not sure it's worth the extra code for the minor savings here, so just
+                                // set the wrap width to positive infinity and refresh the text
+                                asText.Width = null;
                             }
-                            maxWidth += elementWidth;
+
+                            maxWidth = asText.WrappedTextWidth;
                         }
-                        else
+                        catch (BadImageFormatException)
                         {
-                            maxWidth = System.Math.Max(maxWidth, elementWidth);
+                            // not sure why but let's tolerate:
+                            // https://appcenter.ms/orgs/Mtn-Green-Engineering/apps/BioCheck-2/crashes/errors/738313670/overview
+                            maxWidth = 64;
+
+                            //        // It's possible that the text has itself wrapped, but the dimensions changed.
+                            //        if (asText.WrappedText.Count > 0 &&
+                            //            (asText.Width != 0 && float.IsPositiveInfinity(asText.Width) == false))
+                            //        {
+                            //            // this could be either because it wrapped, or because the raw text
+                            //            // actually has newlines. Vic says - this difference could maybe be tested
+                            //            // but I'm not sure it's worth the extra code for the minor savings here, so just
+                            //            // set the wrap width to positive infinity and refresh the text
+                            //            asText.Width = float.PositiveInfinity;
+                            //        }
+
+                            //        maxWidth = asText.WrappedTextWidth;
                         }
                     }
-                }
-            }
 
-            pixelWidthToSet = maxWidth + mWidth;
-        }
-        #endregion
+                    float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth);
 
-        #region Percentage (of parent)
+                    maxWidth = maxCellWidth;
 
-        else if (mWidthUnit == DimensionUnitType.PercentageOfParent)
-        {
-            pixelWidthToSet = parentWidth * mWidth / 100.0f;
-        }
-
-        #endregion
-
-        #region PercentageOfSourceFile
-
-        else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
-        {
-            bool wasSet = false;
-
-            if (mTextureWidth > 0)
-            {
-                pixelWidthToSet = mTextureWidth * mWidth / 100.0f;
-                wasSet = true;
-            }
-
-            if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
-            {
-                var width = iTextureCoordinate.TextureWidth;
-                if (width != null)
-                {
-                    pixelWidthToSet = width.Value * mWidth / 100.0f;
-                    wasSet = true;
-                }
-
-                // If the address is dimension based, then that means texture coords depend on dimension...but we
-                // can't make dimension based on texture coords as that would cause a circular reference
-                if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                {
-                    pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
-                    wasSet = true;
-                }
-            }
-
-            if (!wasSet)
-            {
-                pixelWidthToSet = 64 * mWidth / 100.0f;
-            }
-        }
-
-        #endregion
-
-        #region MaintainFileAspectRatio
-
-        else if (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio)
-        {
-            bool wasSet = false;
-
-            if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
-            {
-                // mWidth is a percent where 100 means maintain aspect ratio
-                pixelWidthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
-                wasSet = true;
-
-                if (wasSet && mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
-                {
-                    if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                    if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                     {
-                        var scale = 1f;
-                        if (iTextureCoordinate.SourceRectangle.Value.Height != 0)
+                        var numberOfHorizontalCells =
+                            this.AutoGridHorizontalCells;
+
+                        if (this.AutoGridVerticalCells > 0)
                         {
-                            scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
+                            var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
+                            numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
                         }
-                        pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
+                        // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
+                        // at least that same size, so we multiply the size by the number of cells wide
+                        maxWidth *= numberOfHorizontalCells;
                     }
-                }
-            }
-            if (!wasSet)
-            {
-                pixelWidthToSet = 64 * mWidth / 100.0f;
-            }
-        }
-
-        #endregion
-
-        #region RelativeToParent (in pixels)
-
-        else if (mWidthUnit == DimensionUnitType.RelativeToParent)
-        {
-            pixelWidthToSet = parentWidth + mWidth;
-        }
-
-        #endregion
-
-        #region PercentageOfOtherDimension
-
-        else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension)
-        {
-            pixelWidthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
-        }
-
-        #endregion
-
-        #region Ratio
-
-        else if (mWidthUnit == DimensionUnitType.Ratio)
-        {
-            if (this.Width == 0)
-            {
-                pixelWidthToSet = 0;
-            }
-            else
-            {
-                var widthToSplit = parentWidth;
-
-                var numberOfVisibleChildren = 0;
-
-                if (mParent != null)
-                {
-                    for (int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue && gue.Visible)
-                        {
-                            if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                            {
-                                widthToSplit -= gue.Width;
-                            }
-                            else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
-                            {
-                                var childAbsoluteWidth = parentWidth + gue.Width;
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
-                            {
-                                var childAbsoluteWidth = (parentWidth * gue.Width)/100f;
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            // this depends on the sibling being updated before this:
-                            else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren || 
-                                gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
-                                gue.WidthUnits == DimensionUnitType.PercentageOfSourceFile ||
-                                gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
-                                gue.WidthUnits == DimensionUnitType.ScreenPixel)
-                            {
-                                var childAbsoluteWidth = gue.GetAbsoluteWidth();
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            numberOfVisibleChildren++;
-                        }
-                    }
-                }
-
-                if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
-                {
-                    var numberOfSpaces = numberOfVisibleChildren;
-
-                    widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                }
-
-                float totalRatio = 0;
-                if (mParent != null)
-                {
-                    for (int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
-                        {
-                            totalRatio += gue.Width;
-                        }
-                    }
-                }
-                if (totalRatio > 0)
-                {
-                    pixelWidthToSet = widthToSplit * (this.Width / totalRatio);
-
                 }
                 else
                 {
-                    pixelWidthToSet = widthToSplit;
+                    for (int i = 0; i < mWhatThisContains.Count; i++)
+                    {
+                        var element = mWhatThisContains[i];
+                        var childLayout = element.GetChildLayoutType(XOrY.X, this);
+                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
+
+                        if (considerChild && element.Visible)
+                        {
+                            var elementWidth = element.GetRequiredParentWidth();
+
+                            if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                            {
+                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                                if (i != 0)
+                                {
+                                    maxWidth += StackSpacing;
+                                }
+                                maxWidth += elementWidth;
+                            }
+                            else
+                            {
+                                maxWidth = System.Math.Max(maxWidth, elementWidth);
+                            }
+                        }
+                    }
+                }
+
+                pixelWidthToSet = maxWidth + mWidth;
+            }
+                break;
+            #endregion
+
+            #region Percentage (of parent)
+
+            case DimensionUnitType.PercentageOfParent:
+            {
+                pixelWidthToSet = parentWidth * mWidth / 100.0f;
+            }
+                break;
+            #endregion
+
+            #region PercentageOfSourceFile
+
+            case DimensionUnitType.PercentageOfSourceFile:
+            {
+                bool wasSet = false;
+
+                if (mTextureWidth > 0)
+                {
+                    pixelWidthToSet = mTextureWidth * mWidth / 100.0f;
+                    wasSet = true;
+                }
+
+                if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
+                {
+                    var width = iTextureCoordinate.TextureWidth;
+                    if (width != null)
+                    {
+                        pixelWidthToSet = width.Value * mWidth / 100.0f;
+                        wasSet = true;
+                    }
+
+                    // If the address is dimension based, then that means texture coords depend on dimension...but we
+                    // can't make dimension based on texture coords as that would cause a circular reference
+                    if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                    {
+                        pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
+                        wasSet = true;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    pixelWidthToSet = 64 * mWidth / 100.0f;
                 }
             }
+                break;
+            #endregion
+
+            #region MaintainFileAspectRatio
+
+            case DimensionUnitType.MaintainFileAspectRatio:
+            {
+                bool wasSet = false;
+
+                if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
+                {
+                    // mWidth is a percent where 100 means maintain aspect ratio
+                    pixelWidthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
+                    wasSet = true;
+
+                    if (wasSet && mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
+                    {
+                        if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
+                        {
+                            var scale = 1f;
+                            if (iTextureCoordinate.SourceRectangle.Value.Height != 0)
+                            {
+                                scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
+                            }
+                            pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
+                        }
+                    }
+                }
+                if (!wasSet)
+                {
+                    pixelWidthToSet = 64 * mWidth / 100.0f;
+                }
+            }
+                break;
+            #endregion
+
+            #region RelativeToParent (in pixels)
+
+            case DimensionUnitType.RelativeToParent:
+            {
+                pixelWidthToSet = parentWidth + mWidth;
+            }
+                break;
+            #endregion
+
+            #region PercentageOfOtherDimension
+
+            case DimensionUnitType.PercentageOfOtherDimension:
+            {
+                pixelWidthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
+            }
+                break;
+            #endregion
+
+            #region Ratio
+
+            case DimensionUnitType.Ratio:
+            {
+                if (this.Width == 0)
+                {
+                    pixelWidthToSet = 0;
+                }
+                else
+                {
+                    var widthToSplit = parentWidth;
+
+                    var numberOfVisibleChildren = 0;
+
+                    if (mParent != null)
+                    {
+                        for (int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child != this && child is GraphicalUiElement gue && gue.Visible)
+                            {
+                                if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                                {
+                                    widthToSplit -= gue.Width;
+                                }
+                                else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
+                                {
+                                    var childAbsoluteWidth = parentWidth + gue.Width;
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
+                                {
+                                    var childAbsoluteWidth = (parentWidth * gue.Width)/100f;
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                // this depends on the sibling being updated before this:
+                                else if (gue.WidthUnits == DimensionUnitType.RelativeToChildren || 
+                                    gue.WidthUnits == DimensionUnitType.PercentageOfOtherDimension ||
+                                    gue.WidthUnits == DimensionUnitType.PercentageOfSourceFile ||
+                                    gue.WidthUnits == DimensionUnitType.MaintainFileAspectRatio ||
+                                    gue.WidthUnits == DimensionUnitType.ScreenPixel)
+                                {
+                                    var childAbsoluteWidth = gue.GetAbsoluteWidth();
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                numberOfVisibleChildren++;
+                            }
+                        }
+                    }
+
+                    if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+                    {
+                        var numberOfSpaces = numberOfVisibleChildren;
+
+                        widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    }
+
+                    float totalRatio = 0;
+                    if (mParent != null)
+                    {
+                        for (int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
+                            {
+                                totalRatio += gue.Width;
+                            }
+                        }
+                    }
+                    if (totalRatio > 0)
+                    {
+                        pixelWidthToSet = widthToSplit * (this.Width / totalRatio);
+
+                    }
+                    else
+                    {
+                        pixelWidthToSet = widthToSplit;
+                    }
+                }
+            }
+                break;
+            #endregion
         }
 
-        #endregion
 
         if (pixelWidthToSet > _maxWidth)
         {

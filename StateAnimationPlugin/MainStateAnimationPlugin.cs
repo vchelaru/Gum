@@ -502,15 +502,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (sender is ElementAnimationsViewModel)
         {
-            if (variableName == nameof(ElementAnimationsViewModel.SelectedAnimation) ||
-                variableName == nameof(ElementAnimationsViewModel.OverLengthTime))
-            {
-                shouldSave = false;
-            }
-            else if (variableName == nameof(ElementAnimationsViewModel.DisplayedAnimationTime))
-            {
-                shouldSave = false;
-            }
+            shouldSave = variableName == "Animations";
         }
 
         if (sender is AnimationViewModel)
@@ -527,11 +519,15 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (sender is AnimatedKeyframeViewModel)
         {
-            if (variableName == nameof(AnimatedKeyframeViewModel.DisplayString) ||
-                variableName == nameof(AnimatedKeyframeViewModel.AvailableStates))
-            {
-                shouldSave = false;
-            }
+            shouldSave =
+                variableName == nameof(AnimatedKeyframeViewModel.StateName) ||
+                variableName == nameof(AnimatedKeyframeViewModel.AnimationName) ||
+                variableName == nameof(AnimatedKeyframeViewModel.EventName) ||
+                variableName == nameof(AnimatedKeyframeViewModel.SubAnimationViewModel) ||
+                variableName == nameof(AnimatedKeyframeViewModel.Time) ||
+                variableName == nameof(AnimatedKeyframeViewModel.InterpolationType) ||
+                variableName == nameof(AnimatedKeyframeViewModel.Easing);
+
         }
 
         if (shouldSave)

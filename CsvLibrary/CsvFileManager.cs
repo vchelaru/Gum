@@ -274,14 +274,21 @@ namespace CsvLibrary
         }
 
 
-        public static void CsvDeserializeDictionary<KeyType, ValueType>(string fileName, Dictionary<KeyType, ValueType> dictionaryToPopulate, out RuntimeCsvRepresentation rcr)
+        public static void CsvDeserializeDictionary<KeyType, ValueType>(string fileName, Dictionary<KeyType, ValueType> dictionaryToPopulate, 
+            out RuntimeCsvRepresentation rcr)
         {
             rcr = CsvDeserializeToRuntime(fileName);
 
             rcr.FillObjectDictionary<KeyType, ValueType>(dictionaryToPopulate, "Global");
         }
 
+        public static void CsvDeserializeDictionary<KeyType, ValueType>(string fileName, Dictionary<KeyType, ValueType> dictionaryToPopulate, 
+            DuplicateDictionaryEntryBehavior duplicateDictionaryEntryBehavior, out RuntimeCsvRepresentation rcr)
+        {
+            rcr = CsvDeserializeToRuntime(fileName);
 
+            rcr.FillObjectDictionary<KeyType, ValueType>(dictionaryToPopulate, "Global", duplicateDictionaryEntryBehavior);
+        }
 
     }
 }

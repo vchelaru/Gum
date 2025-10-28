@@ -618,6 +618,26 @@ public class StandardWireframeEditor : WireframeEditor
         return hasChangeOccurred;
     }
 
+    private void RefreshSideOver()
+    {
+        var worldX = Cursor.GetWorldX();
+        var worldY = Cursor.GetWorldY();
+
+        if (mResizeHandles.Visible == false)
+        {
+            SideOver = ResizeSide.None;
+        }
+        else
+        {
+            // If the user is already dragging then there's
+            // no need to re-check which side the user is over
+            if (Cursor.PrimaryPush || (!Cursor.PrimaryDown && !Cursor.PrimaryClick))
+            {
+                SideOver = mResizeHandles.GetSideOver(worldX, worldY);
+            }
+        }
+    }
+
     #endregion
 
     #region Moving (Changing X and Y)
@@ -777,26 +797,6 @@ public class StandardWireframeEditor : WireframeEditor
     }
 
     #endregion
-
-    private void RefreshSideOver()
-    {
-        var worldX = Cursor.GetWorldX();
-        var worldY = Cursor.GetWorldY();
-
-        if (mResizeHandles.Visible == false)
-        {
-            SideOver = ResizeSide.None;
-        }
-        else
-        {
-            // If the user is already dragging then there's
-            // no need to re-check which side the user is over
-            if (Cursor.PrimaryPush || (!Cursor.PrimaryDown && !Cursor.PrimaryClick))
-            {
-                SideOver = mResizeHandles.GetSideOver(worldX, worldY);
-            }
-        }
-    }
 
     private void CalculateMultipliers(InstanceSave instanceSave, List<ElementWithState> elementStack, out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier)
     {

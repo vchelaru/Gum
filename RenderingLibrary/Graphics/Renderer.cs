@@ -368,17 +368,29 @@ public class Renderer : IRenderer
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;
             mRenderStateVariables.Wrap = false;
 
-            // todo - need to handle more advanced filtering here, but for now let's hook
-            // in to linear to make it work:
-            mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
-
-            if(layer.IsLinearFilteringEnabled != null)
+            if (layer.IsLinearFilteringEnabled != null)
             {
                 mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
-
+            }
+            else
+            {
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
             }
 
-            RenderLayer(managers, layer);
+            PreRender(layer.Renderables);
+
+            PreRenderWithSourceRenderTargets(layer.Renderables);
+
+            if (layer.IsLinearFilteringEnabled != null)
+            {
+                mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
+            }
+            else
+            {
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+            }
+
+            RenderLayer(managers, layer, prerender:false);
 
             if (oldSampler != null)
             {
