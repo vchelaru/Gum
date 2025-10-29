@@ -303,7 +303,7 @@ public class SetVariableLogic
             {
                 var parentElement = instanceContainer as ElementSave;
 
-                if(_circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
+                if(parentElement != null && _circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
                 {
                     _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
                     //stateSave.SetValue("BaseType", oldValue, instance);
