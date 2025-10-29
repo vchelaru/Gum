@@ -65,6 +65,7 @@ public class SetVariableLogic
     private readonly IGuiCommands _guiCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IDialogService _dialogService;
+    private readonly PluginManager _pluginManager;
 
     public SetVariableLogic(ISelectedState selectedState, 
         INameVerifier nameVerifier, 
@@ -78,7 +79,8 @@ public class SetVariableLogic
         IFileCommands fileCommands,
         CircularReferenceManager circularReferenceManager,
         VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -93,6 +95,7 @@ public class SetVariableLogic
         _circularReferenceManager = circularReferenceManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _dialogService = dialogService;
+        _pluginManager = pluginManager;
     }
 
     public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -202,7 +205,7 @@ public class SetVariableLogic
             // see comment by ReactToChangedMember about why we make this call here
             // Also this should happen after we update the wireframe so that plugins like
             // the texture window which depend on the wireframe will have the correct values
-            PluginManager.Self.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
+            _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
 
             // This used to only check if values have changed. However, this can cause problems
             // because an intermediary value may change the value, then it gets a full commit. On
@@ -210,7 +213,7 @@ public class SetVariableLogic
             // Update July 22, 2025
             // Plugins may make modifications
             // to the element, so save *after*
-            // calling PluginManager.Self.VariableSet
+            // calling _pluginManager.VariableSet
             if (trySave)
             {
                 _fileCommands.TryAutoSaveElement(parentElement);
@@ -667,7 +670,7 @@ public class SetVariableLogic
 
         if (!isValidExtension)
         {
-            var fromPluginManager = PluginManager.Self.GetIfExtensionIsValid(extension, parentElement, instance, changedMember);
+            var fromPluginManager = _pluginManager.GetIfExtensionIsValid(extension, parentElement, instance, changedMember);
             if (fromPluginManager == true)
             {
                 isValidExtension = true;
