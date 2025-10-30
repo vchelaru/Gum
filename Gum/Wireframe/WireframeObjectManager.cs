@@ -46,7 +46,7 @@ public partial class WireframeObjectManager
 
     public List<GraphicalUiElement> AllIpsos { get; private set; } = new List<GraphicalUiElement>();
 
-    public ElementSave ElementShowing
+    public ElementSave? ElementShowing
     {
         get;
         private set;

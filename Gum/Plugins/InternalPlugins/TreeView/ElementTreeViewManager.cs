@@ -703,25 +703,18 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         };
 
-        ObjectTreeView.ItemDrag += (_, e) =>
-        {
-            var treeNode = (TreeNode)e.Item;
-            _dragDropManager.OnItemDrag(new TreeNodeWrapper(treeNode));
-        };
-
-        // this fixes a bug with the wireframe editor picking up false drops
-        // after a drop has been canceled outside of the treeview
+        
         ObjectTreeView.QueryContinueDrag += (_, e) =>
         {
             if (e.Action != DragAction.Continue)
             {
-                // posting gives the wireframe a chance to process if the drop was on it
-                // this is kind of a hack around how the editor currently "accepts drop"
-                // it would be better to wire it up to handle its own drop events
                 Locator.GetRequiredService<IDispatcher>().Post(() =>
                 {
+                    // When a node is dragged, it becomes internally selected in the treeview.
+                    // In the case a drop fails, is cancelled, or a successful drop doesn't result
+                    // in a selection change, we use this as a safety-net to ensure the selection-manager
+                    // is in-sync with the treeview selection.
                     OnSelect(ObjectTreeView.SelectedNode);
-                    _dragDropManager.ClearDraggedItem();
                 });
             }
         };
@@ -2134,7 +2127,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
     {
         HandleKeyDown(e);
-        _dragDropManager.HandleKeyDown(e);
     }
 
 
