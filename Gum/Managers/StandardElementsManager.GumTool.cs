@@ -43,7 +43,10 @@ namespace Gum.Managers
         {
             foreach (var variable in state.Variables)
             {
-                if (variable.Type == "float" && variable.Name == "Rotation")
+                if (variable.Type == "float" && 
+                    (variable.Name == "Rotation"
+                     || variable.Name == "StartAngle"
+                     || variable.Name == "SweepAngle"))
                 {
                     MakeDegreesAngle(variable);
                 }
@@ -116,7 +119,16 @@ namespace Gum.Managers
                 else if (variable.Name == "Red" ||
                     variable.Name == "Green" ||
                     variable.Name == "Blue" ||
-                    variable.Name == "Alpha")
+                    variable.Name == "Alpha"||
+                    variable.Name == "Red1" ||
+                    variable.Name == "Green1" ||
+                    variable.Name == "Blue1" ||
+                    variable.Name == "Alpha1" ||
+                    variable.Name == "Red2" ||
+                    variable.Name == "Green2" ||
+                    variable.Name == "Blue2" ||
+                    variable.Name == "Alpha2" 
+                    )
                 {
                     variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
                     variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
