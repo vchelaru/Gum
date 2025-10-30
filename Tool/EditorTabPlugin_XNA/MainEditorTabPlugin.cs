@@ -6,6 +6,7 @@ using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Extensions;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -38,6 +39,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using System.Windows.Markup;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
@@ -640,8 +642,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         this._wireframeControl.MouseDown += wireframeControl1_MouseDown;
 
 
-        this._wireframeControl.DragDrop += HandleFileDragDrop;
-        this._wireframeControl.DragEnter += _dragDropManager.HandleFileDragEnter;
+        this._wireframeControl.DragDrop += OnWireframeDrop;
+        this._wireframeControl.DragEnter += _dragDropManager.OnWireframeDragEnter;
         this._wireframeControl.DragOver += (sender, e) =>
         {
             //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
@@ -682,8 +684,28 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         Renderer.Self.Camera.Zoom = _wireframeEditControl.PercentageValue / 100.0f;
     }
 
-    internal void HandleFileDragDrop(object sender, DragEventArgs e)
+    internal void OnWireframeDrop(object sender, DragEventArgs e)
     {
+        // Handle node drops
+        List<TreeNode>? droppedNodes = e switch
+        {
+            _ when e.GetData<List<TreeNode>>() is { } nodes => nodes,
+            _ when e.GetData<TreeNode>() is { } singleNode => [singleNode],
+            _ => null,
+        };
+
+        if (droppedNodes is not null)
+        {
+            foreach (var draggedObject in droppedNodes.Select(x => x.Tag))
+            {
+                _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject);
+            }
+
+            return;
+        }
+
+        // Handle file drops
+
         if (!CanDrop())
             return;
 
