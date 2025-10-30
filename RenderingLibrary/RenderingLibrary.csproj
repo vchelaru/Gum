@@ -54,6 +54,7 @@
 		<Compile Remove="Content\IContentLoader.cs" />
 		<Compile Remove="Content\LoaderManager.cs" />
 		<Compile Remove="Graphics\Fonts\BmfcSave.cs" />
+		<Compile Remove="Graphics\Fonts\ParsedFontFile.cs" />
 		<Compile Remove="Graphics\GradientType.cs" />
 		<Compile Remove="Graphics\HorizontalAlignment.cs" />
 		<Compile Remove="Graphics\IAnimatable.cs" />
