@@ -299,7 +299,6 @@ public class WireframeControl : GraphicsDeviceControl
 
                     _selectionManager.LateActivity();
                 }
-                _dragDropManager.Activity();
 
                 InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
             }

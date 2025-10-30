@@ -26,6 +26,7 @@ using System.Management.Instrumentation;
 using System.Reflection.Metadata;
 using System.Windows.Forms;
 using System.Windows.Navigation;
+using Gum.Extensions;
 using ToolsUtilities;
 
 namespace Gum.Managers;
@@ -141,11 +142,10 @@ public class DragDropManager
 
         // User dragged an element save - so they want to take something like a
         // text object and make an instance in another element like a Screen
-        bool handled;
 
         if (targetTag is ElementSave)
         {
-            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, index, out handled);
+            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, index);
         }
         else if (targetTag is InstanceSave)
         {
@@ -157,7 +157,7 @@ public class DragDropManager
             // When a parent is set, we normally raise an event for that. This is a tricky situation because
             // we need to set the parent before adding the object.
 
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, index, out handled);
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, index);
 
             if(newInstance != null)
             {
@@ -176,16 +176,16 @@ public class DragDropManager
         }
         else if (treeNodeDroppedOn.IsTopComponentContainerTreeNode())
         {
-            HandleDroppedElementOnTopComponentTreeNode(draggedAsElementSave, out handled);
+            HandleDroppedElementOnTopComponentTreeNode(draggedAsElementSave);
 
         }
         else if (draggedAsElementSave is ComponentSave && treeNodeDroppedOn.IsPartOfComponentsFolderStructure())
         {
-            HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
+            HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn);
         }
         else if(draggedAsElementSave is ScreenSave && treeNodeDroppedOn.IsPartOfScreensFolderStructure())
         {
-            HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn, out handled);
+            HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn);
         }
         else if(draggedAsElementSave is ScreenSave == false && targetTag is BehaviorSave targetBehavior)
         {
@@ -201,20 +201,17 @@ public class DragDropManager
         }
     }
 
-    private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, ITreeNode treeNodeDroppedOn, out bool handled)
+    private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, ITreeNode treeNodeDroppedOn)
     {
         if(draggedAsElementSave is StandardElementSave)
         {
             _dialogService.ShowMessage("Cannot move standard elements to different folders");
-            handled = true;
         }
         else
         {
             var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
 
             var fullElementFilePath = draggedAsElementSave.GetFullPathXmlFile().GetDirectoryContainingThis();
-
-            handled = false;
 
             if(fullFolderPath != fullElementFilePath)
             {
@@ -226,17 +223,14 @@ public class DragDropManager
                 string oldName = draggedAsElementSave.Name;
                 draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
                 _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
-
-                handled = true;
             }
 
         }
 
     }
 
-    private void HandleDroppedElementOnTopComponentTreeNode(ElementSave draggedAsElementSave, out bool handled)
+    private void HandleDroppedElementOnTopComponentTreeNode(ElementSave draggedAsElementSave)
     {
-        handled = false;
         string name = draggedAsElementSave.Name;
 
         string currentDirectory = FileManager.GetDirectory(draggedAsElementSave.Name);
@@ -246,8 +240,6 @@ public class DragDropManager
             // It's in a directory, we're going to move it out
             draggedAsElementSave.Name = FileManager.RemovePath(name);
             _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
-
-            handled = true;
         }
     }
 
@@ -287,13 +279,11 @@ public class DragDropManager
         return newInstance;
     }
 
-    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, int index, out bool handled)
+    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, int index)
     {
         InstanceSave newInstance = null;
 
         string errorMessage = null;
-
-        handled = false;
 
         errorMessage = GetDropElementErrorMessage(draggedAsElementSave, target, errorMessage);
 
@@ -317,7 +307,6 @@ public class DragDropManager
             _selectedState.SelectedElement = target;
 
             newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name, index);
-            handled = true;
         }
 
         return newInstance;
@@ -753,70 +742,6 @@ public class DragDropManager
         }
     }
 
-    public void OnItemDrag(ITreeNode item)
-    {
-        mDraggedItem = item;
-    }
-
-    public void Activity()
-    {
-        if (mDraggedItem != null)
-        {
-            // May 11, 2021
-            // I thought that
-            // we had to manually
-            // set the cursor here
-            // if drag+dropping a tree
-            // node. It turns out that this
-            // is handled by HandleFileDragEnter
-            //if (InputLibrary.Cursor.Self.IsInWindow)
-            //{
-            //    InputLibrary.Cursor.Self.SetWinformsCursor(
-            //        System.Windows.Forms.Cursors.Arrow);
-
-            //}
-
-
-            if (!Cursor.PrimaryDownIgnoringIsInWindow)
-            {
-                var treeNodesToDrop = GetTreeNodesToDrop();
-
-                foreach (var draggedTreeNode in treeNodesToDrop)
-                {
-                    object draggedObject = draggedTreeNode.Tag;
-
-                    HandleDroppedItemInWireframe(draggedObject, out bool handled);
-
-                    if(handled)
-                    {
-                        mDraggedItem = null;
-                    }
-                }
-            }
-        }
-    }
-
-    private List<ITreeNode> GetTreeNodesToDrop()
-    {
-        List<ITreeNode> treeNodesToDrop = new();
-
-        if(mDraggedItem != null && ((ITreeNode)mDraggedItem).Tag != null)
-        {
-            treeNodesToDrop.Add((ITreeNode)mDraggedItem);
-        }
-
-        // SelectedTreeNodes does not contain any nodes when only a single node is dragged/dropped
-        // but this will not cause errors because the addRange will just add nothing
-        var whatToAdd = _selectedState.SelectedTreeNodes.Where(
-                item => item != mDraggedItem 
-                && item.FullPath != mDraggedItem?.FullPath
-                && item != null 
-                && item.Tag != null);
-        treeNodesToDrop.AddRange(whatToAdd);
-
-        return treeNodesToDrop;
-    }
-
     private void HandleDroppedItemOnTreeView(object draggedObject, ITreeNode treeNodeDroppedOn, int index)
     {
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
@@ -839,54 +764,46 @@ public class DragDropManager
         }
     }
 
-    private void HandleDroppedItemInWireframe(object draggedObject, out bool handled)
+    public void OnNodeObjectDroppedInWireframe(object draggedObject)
     {
-        handled = false;
+        ElementSave draggedAsElementSave = draggedObject as ElementSave;                    
+        ElementSave? target = _wireframeObjectManager.ElementShowing;
 
-        if (Cursor.IsInWindow)
-        {   
-            ElementSave draggedAsElementSave = draggedObject as ElementSave;                    
-            ElementSave target = _wireframeObjectManager.ElementShowing;
+        // Depending on how fast the user clicks the UI may think they dragged an instance rather than 
+        // an element, so let's protect against that with this null check.
+        if (draggedAsElementSave != null && target is not null)
+        {
+            var index = target.Instances.Count;
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, index);
 
-            // Depending on how fast the user clicks the UI may think they dragged an instance rather than 
-            // an element, so let's protect against that with this null check.
-            if (draggedAsElementSave != null)
+            float worldX, worldY;
+
+            var position = _pluginManager.GetWorldCursorPosition(Cursor);
+
+            worldX = position?.X ?? 0;
+            worldY = position?.Y ?? 0;
+
+            if(newInstance != null)
             {
-                var index = target.Instances.Count;
-                var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, index, out handled);
 
-                float worldX, worldY;
+                SetInstanceToPosition(worldX, worldY, newInstance);
 
-                var position = _pluginManager.GetWorldCursorPosition(Cursor);
-
-                worldX = position?.X ?? 0;
-                worldY = position?.Y ?? 0;
-
-                if(newInstance != null)
-                {
-
-                    SetInstanceToPosition(worldX, worldY, newInstance);
-
-                    SaveAndRefresh();
-                }
-                mDraggedItem = null;
+                SaveAndRefresh();
             }
         }
     }
 
-    public void HandleFileDragEnter(object sender, DragEventArgs e)
+    public void OnWireframeDragEnter(object sender, DragEventArgs e)
     {
-        UpdateEffectsForFileDragDrop(e);
-    }
-
-    private void UpdateEffectsForFileDragDrop(DragEventArgs e)
-    {
-        var canDropFile =         
+        var canDropFile =
             _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
             _selectedState.SelectedElement != null &&            // An element must be selected
-            _selectedState.SelectedStateSave != null;            // A state must be selected
+            _selectedState.SelectedStateSave != null &&
+            e.Data.GetDataPresent(DataFormats.FileDrop);            // A state must be selected
 
-        if (canDropFile && e.Data.GetDataPresent(DataFormats.FileDrop))
+        var isNodes = e.HasData<List<TreeNode>>() || e.HasData<TreeNode>();
+
+        if (canDropFile || isNodes)
         {
             e.Effect = DragDropEffects.Copy;
         }
@@ -899,14 +816,6 @@ public class DragDropManager
         _guiCommands.RefreshElementTreeView();
 
         _wireframeObjectManager.RefreshAll(true);
-    }
-
-    internal void HandleKeyDown(System.Windows.Forms.KeyEventArgs e)
-    {
-        if(e.KeyCode == Keys.Escape)
-        {
-            mDraggedItem = null;
-        }
     }
 
     public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
