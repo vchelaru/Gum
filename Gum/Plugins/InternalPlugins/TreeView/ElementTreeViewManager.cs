@@ -718,7 +718,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 // posting gives the wireframe a chance to process if the drop was on it
                 // this is kind of a hack around how the editor currently "accepts drop"
                 // it would be better to wire it up to handle its own drop events
-                Locator.GetRequiredService<IDispatcher>().Post(_dragDropManager.ClearDraggedItem);
+                Locator.GetRequiredService<IDispatcher>().Post(() =>
+                {
+                    OnSelect(ObjectTreeView.SelectedNode);
+                    _dragDropManager.ClearDraggedItem();
+                });
             }
         };
 
