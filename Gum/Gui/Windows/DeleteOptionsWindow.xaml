@@ -60,7 +60,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
-              <Label x:Name="LabelInstance">Are you sure you want to delete {0}?</Label>
+              <TextBlock x:Name="LabelInstance">Are you sure you want to delete {0}?</TextBlock>
               <StackPanel x:Name="StackPanelInstance" Grid.Row="1" />
               <StackPanel
                 Grid.Row="2"

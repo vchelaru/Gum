@@ -22,8 +22,8 @@ namespace Gum.Gui.Windows
 
         public string Message
         {
-            get => (string)LabelInstance.Content;
-            set => LabelInstance.Content = value;
+            get => (string)LabelInstance.Text;
+            set => LabelInstance.Text = value;
         }
 
         public Array ObjectsToDelete { get; set; }
