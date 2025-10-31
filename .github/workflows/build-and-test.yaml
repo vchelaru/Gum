@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 
 on:
   pull_request:
