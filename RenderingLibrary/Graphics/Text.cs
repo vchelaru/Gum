@@ -821,7 +821,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
 
 
         int wrappingWidth = int.MaxValue;
-        if (mWidth != null && !float.IsPositiveInfinity(mWidth.Value))
+        if (mWidth != null && !float.IsPositiveInfinity(mWidth.Value) && mFontScale > 0)
         {
             wrappingWidth =  MathFunctions.RoundToInt(System.Math.Ceiling( mWidth.Value / mFontScale));
         }
