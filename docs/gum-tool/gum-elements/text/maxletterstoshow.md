@@ -16,8 +16,8 @@ For example, by default a Text object displays all of its letters. Note that the
 
 Setting Max Letters To Show value to 30 restricts the Text object to displaying its first 30 characters, but the size and line wrapping do not change.
 
-![](<../../../.gitbook/assets/MaxLettersToShow30 (1).png>)
+![](<../../../.gitbook/assets/MaxLettersToShow30.png>)
 
 Max Letters To Show applies after all layout and text positioning has been applied. Therefore, centered text may appear off-center. The following text would appear centered if Max Letters To Show allowed the entire text to be displayed, but since it is cut-off, it appears off-center.
 
-![](<../../../.gitbook/assets/MaxLettersToShowCentered (1).png>)
+![](<../../../.gitbook/assets/MaxLettersToShowCentered.png>)

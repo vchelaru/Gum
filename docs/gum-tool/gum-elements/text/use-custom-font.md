@@ -22,7 +22,7 @@ To set a custom font
 2. Navigate to the location of the desired .fnt file
 3. Select the file and click **Open**
 
-![](<../../../.gitbook/assets/CustomFontInGum (1).png>)
+![](<../../../.gitbook/assets/CustomFontInGum.png>)
 
 Custom font files are .fnt files created by BitmapFontGenerator. Gum automatically creates .fnt files whenever a font value changes when UseCustomFonts is unchecked.&#x20;
 

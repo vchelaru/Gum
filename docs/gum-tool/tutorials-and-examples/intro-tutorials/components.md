@@ -93,7 +93,7 @@ Now let's make it centered on the Y as well:
 3. Change the `Y Origin` to `Center`
 4. Change `Y` to `0`
 
-![](<../../../.gitbook/assets/Gum_rL5aAQWKVB (1).png>)
+![](<../../../.gitbook/assets/Gum_rL5aAQWKVB.png>)
 
 Finally, let's make the width of the text match the width of the button. For the Text we'll actually leave a border around the edge so the Text doesn't line wrap right against the edge of the button. To do this:
 

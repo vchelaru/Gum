@@ -153,7 +153,7 @@ If a parent sets its `Height Units` to `Relative to Children`, then it resizes i
 
 For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an `Absolute` `Width` and `Height` of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
 
-<figure><img src="../../../.gitbook/assets/11_15 30 38 (1).png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
 
 The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent height adjusts in response.
 

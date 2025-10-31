@@ -1187,8 +1187,16 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(textRuntime.CustomFontFile))
                     {
-                        font = new BitmapFont(textRuntime.CustomFontFile);
-                        loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                        try
+                        {
+                            font = new BitmapFont(textRuntime.CustomFontFile);
+                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+
+                        }
+                        catch(System.Text.DecoderFallbackException exception)
+                        {
+                            throw new Exception($"Error trying to load font from file {textRuntime.CustomFontFile}:\n" + exception, exception);
+                        }
                     }
 #endif
                 }
@@ -1253,10 +1261,15 @@ public class CustomSetPropertyOnRenderable
                             loaderManager.Dispose(fullFileName);
                         }
 
-                        font = new BitmapFont(fullFileName);
-
-
-                        loaderManager.AddDisposable(fullFileName, font);
+                        try
+                        {
+                            font = new BitmapFont(fullFileName);
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                        catch (System.Text.DecoderFallbackException exception)
+                        {
+                            throw new Exception($"Error trying to load font from file {fullFileName}:\n" + exception, exception);
+                        }
                     }
 #endif
                 }
