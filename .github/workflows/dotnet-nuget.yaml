@@ -1,4 +1,4 @@
-name: Build and Publish NuGet Packages
+name: Build and Publish Runtime NuGet Packages
 
 on:
   workflow_dispatch:

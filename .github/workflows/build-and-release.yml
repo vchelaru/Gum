@@ -1,4 +1,4 @@
-name: Build and Release
+name: Build and Release Gum Tool
 
 # When to execute (This means manual trigger only)
 on:
