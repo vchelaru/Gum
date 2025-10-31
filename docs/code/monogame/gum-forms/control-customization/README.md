@@ -188,7 +188,7 @@ var radioButton = new RadioButton();
 panel.AddChild(radioButton);
 ```
 
-<figure><img src="../../../../.gitbook/assets/14_17 34 26 (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/14_17 34 26 (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 All colors used by the default controls come from the the Styling object unless these values are changed explicitly as shown in the sections above.
 

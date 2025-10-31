@@ -56,7 +56,7 @@ Stacks can be centered horizontally or vertically. To center a stack of objects,
 
 A centered stack might look like this:
 
-<figure><img src="../../../.gitbook/assets/20_04 47 47 (2).png" alt=""><figcaption><p>Centered stacking ColoredRectangles</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/20_04 47 47 (2) (2).png" alt=""><figcaption><p>Centered stacking ColoredRectangles</p></figcaption></figure>
 
 For this example, we'll begin with a Container and a background ColoredRectangle. The background is not necessary, but it helps visualize the main Container's size.
 
@@ -85,7 +85,7 @@ For this example I modified each child rectangle to have
 * Height = 32
 * Color = Green
 
-<figure><img src="../../../.gitbook/assets/20_05 01 04 (1).png" alt=""><figcaption><p>Adjusted rectangle sizes and colors</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/20_05 01 04 (1) (1).png" alt=""><figcaption><p>Adjusted rectangle sizes and colors</p></figcaption></figure>
 
 Finally, we mark the inner container to be sized according to its children. Since it remains centered, whenever its size adjusts (by adding or removing children), the inner container adjusts to remain centered.
 

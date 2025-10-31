@@ -101,6 +101,6 @@ Variables can be removed from states, but this removal must be done at the categ
 2. Click the "X" button next to the variable
 3. Confirm that you would like to remove the variable. Warning: this will remove the variable from all contained states.
 
-![](../../../.gitbook/assets/removevariablefromcategory.png)
+![](<../../../.gitbook/assets/removevariablefromcategory (1).png>)
 
 This will remove the assignment of the variable from all states in the category.

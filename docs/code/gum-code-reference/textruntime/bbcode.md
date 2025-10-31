@@ -144,4 +144,4 @@ protected override void Initialize()
 }
 ```
 
-<figure><img src="../../../.gitbook/assets/01_07 39 37 (1).gif" alt=""><figcaption><p>Button adding gold and resetting the grow shirnk time.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/01_07 39 37 (1) (1).gif" alt=""><figcaption><p>Button adding gold and resetting the grow shirnk time.</p></figcaption></figure>

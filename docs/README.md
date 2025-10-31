@@ -1,6 +1,6 @@
 # Introduction
 
-<figure><picture><source srcset=".gitbook/assets/gum-logo-reverse-512.png" media="(prefers-color-scheme: dark)"><img src=".gitbook/assets/gum-logo-normal-512.png" alt=""></picture><figcaption></figcaption></figure>
+<figure><picture><source srcset="broken-reference" media="(prefers-color-scheme: dark)"><img src=".gitbook/assets/gum-logo-normal-512.png" alt=""></picture><figcaption></figcaption></figure>
 
 Gum is the best Game UI Layout tool available. It provides a flexible, efficient layout engine capable of producing virtually any layout. Gum can be used in a variety of contexts including in the [FlatRedBall game engine](https://docs.flatredball.com/gum/), [MonoGame](code/monogame/), [Meadow](code/meadow.md), and more. Gum can also be rendered on Skia so it can be used in any environment that supports Skia such as [WPF](code/skiagum/setup/wpf.md), [Silk.NET](code/silk.net/), and Avalonia.
 

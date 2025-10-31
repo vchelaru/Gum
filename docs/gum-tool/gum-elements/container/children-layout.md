@@ -66,10 +66,10 @@ This effect is easy to notice when dragging an object inside a stack, as shown i
 
 ### Stacking and Units
 
-If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack.&#x20;
+If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack.
 
-* `Top to Bottom Stack` containers control the Y value of their children.&#x20;
-* `Left to Right Stack` containers control the X value of their children.&#x20;
+* `Top to Bottom Stack` containers control the Y value of their children.
+* `Left to Right Stack` containers control the X value of their children.
 
 The position value which is not controlled by the stack can be changed freely without any impact on the stacking.
 
@@ -115,7 +115,7 @@ Children of a container which uses the `Top To Bottom Stack` or `Left To Right S
 
 Children can be reordered using the right-click menu on an instance.
 
-![](<../../../.gitbook/assets/ReorderStackedChildren (1).gif>)
+![](<../../../.gitbook/assets/ReorderStackedChildren (1) (1).gif>)
 
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 
@@ -129,7 +129,7 @@ For more information on ordering, see the [Order](../general-properties/order.md
 
 The following image shows a container with 4x4 auto grid. Each child is positioned relative to the top-left corner of each grid. In this case, each child has an `Absolute` `Width` and `Height` of `50` and the parent container is sized `256x256`. This results in each rectangle leaving a gap between itself and its neighbor.
 
-<figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal </p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal</p></figcaption></figure>
 
 The following shows a container with an `Auto Grid Horizontal` and `Vertical Cells` of 2, resulting in a 2x2 grid. As children are added to the container through copy/paste, each child is placed in its own cell.
 

@@ -143,7 +143,7 @@ Children are in control of their own layouts using "unit" values, but parent ele
 
 Children can still control their position values relative to the stacking, so a child can change its X and Y value. If a child changes its Y or Height value in a Top to Bottom Stack, then subsequent children are adjusted react to this change immediately.
 
-<figure><img src="../../.gitbook/assets/25_06 47 31 (1).gif" alt=""><figcaption><p>Changing position and size affects all children later in the stack</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/25_06 47 31 (1) (1).gif" alt=""><figcaption><p>Changing position and size affects all children later in the stack</p></figcaption></figure>
 
 Stacking can be combined with wrapping and stack spacing to create list boxes and inventory grids quickly.
 

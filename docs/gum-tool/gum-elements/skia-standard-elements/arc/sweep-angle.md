@@ -6,7 +6,7 @@ Sweep Angle defines the angle that the arc covers. This is a signed value, with 
 
 The following shows an arc with a positive Sweep Angle of 135 degrees.
 
-<figure><img src="../../../../.gitbook/assets/29_15 16 48 (1).png" alt=""><figcaption><p>An arc with a Sweep Angle of 135</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/29_15 16 48 (1) (1).png" alt=""><figcaption><p>An arc with a Sweep Angle of 135</p></figcaption></figure>
 
 Changing the Sweep Angle changes the length of the arc. If the value is negative, then the Sweep Angle increases the size clockwise.
 

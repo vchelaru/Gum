@@ -8,7 +8,7 @@ Lottie files can be downloaded from various sites or created in application such
 
 The following shows a Lottie animation playing in Gum. Source file: [https://lottiefiles.com/free-animation/city-skyline-HFnJYQZLPP](https://lottiefiles.com/free-animation/city-skyline-HFnJYQZLPP)
 
-<figure><img src="../../../.gitbook/assets/30_05 38 06 (1).gif" alt=""><figcaption><p>LottieAnimation in Gum</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_05 38 06 (1) (1).gif" alt=""><figcaption><p>LottieAnimation in Gum</p></figcaption></figure>
 
 ### Source File
 

@@ -14,11 +14,11 @@ If you would like to try the new styling, see the latest preview release on Gith
 
 Before customizing controls you should add the default set of forms components to your project. You can check if these components exist by looking in the Components folder.
 
-<figure><img src="../../../.gitbook/assets/Components.png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/Components (1).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
 
 If you do not have these components you can add them by clicking Content -> Add Forms Components
 
-<figure><img src="../../../.gitbook/assets/AddForms.png" alt=""><figcaption><p>Add Forms Components if you do not already have them</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/AddForms (2).png" alt=""><figcaption><p>Add Forms Components if you do not already have them</p></figcaption></figure>
 
 ## Creating New Variants
 

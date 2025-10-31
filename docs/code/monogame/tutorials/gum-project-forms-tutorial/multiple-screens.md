@@ -8,13 +8,12 @@ This tutorial introduces how to work with multiple Gum screens. For this tutoria
 
 ## Creating Multiple Screens
 
-Before we write any code, we'll create two screens. As mentioned above, a full game might have many screens.  For this tutorial we'll create two simple screens, each with a single button and a label.
+Before we write any code, we'll create two screens. As mentioned above, a full game might have many screens. For this tutorial we'll create two simple screens, each with a single button and a label.
 
 First we'll create Screen1:
 
 1. Right-click on the Screens folder to add a new screen named Screen1
-2.  Drag+drop a Components/Controls/Label component into Screen1\
-
+2.  Drag+drop a Components/Controls/Label component into Screen1\\
 
     <figure><img src="../../../../.gitbook/assets/10_06 06 33.png" alt=""><figcaption><p>Add a Label to Screen1</p></figcaption></figure>
 3. Set the **Label Text** property on the newly created LabelInstance to **Screen 1** so that you can tell that you are on Screen1 when running your game
@@ -200,7 +199,7 @@ partial class Screen2
 
 Each screen clears the root (removes the previous screen) when its button is clicked, then creates and adds the next screen to the root.
 
-<figure><img src="../../../../.gitbook/assets/10_06 34 29 (1).gif" alt=""><figcaption><p>Switching Screens with Buttons</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_06 34 29 (1) (1).gif" alt=""><figcaption><p>Switching Screens with Buttons</p></figcaption></figure>
 
 ### Showing No Screen
 

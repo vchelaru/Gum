@@ -22,12 +22,12 @@ Red: 0 Green: 255 Blue: 0
 
 Red: 0 Green: 0 Blue: 255
 
-![](../../../.gitbook/assets/BlueColorGum.png)
+![](<../../../.gitbook/assets/BlueColorGum (1).png>)
 
 Red: 128 Green: 128 Blue: 128
 
-![](../../../.gitbook/assets/DarkColorGum.png)
+![](<../../../.gitbook/assets/DarkColorGum (1).png>)
 
 Red: 0 Green: 0 Blue: 0
 
-![](../../../.gitbook/assets/BlackColorGum.png)
+![](<../../../.gitbook/assets/BlackColorGum (1).png>)
