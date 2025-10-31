@@ -114,7 +114,7 @@ public class MainControlViewModel : ViewModel
     {
         get
         {
-            if (_projectManager.GumProjectSave != null)
+            if (!string.IsNullOrEmpty(_projectManager.GumProjectSave?.FullFileName))
             {
                 var directory = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
                 return directory + "TextureCoordinateSettings.tcsj";
