@@ -18,7 +18,7 @@ public struct VariableSaveValues
 [System.Diagnostics.DebuggerDisplay("{Name} = {Value}")]
 public class VariableSave
 {
-    object mValue;
+    object? mValue;
 
     public bool IsFile
     {
@@ -84,7 +84,7 @@ public class VariableSave
     
     public string StandardizedName { get; set; }
 
-    public object Value
+    public object? Value
     {
         get => mValue; 
         set => mValue = value;
