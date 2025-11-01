@@ -143,6 +143,7 @@ public class AnimationRuntimeTests : BaseTestClass
         StateSave at0_5 = animation.GetStateToSet(0.5f, element, defaultIfNull: true);
 
         at0_5.Variables.First(item => item.Name == "Alpha").Value.ShouldBe(0.5f);
+        at0_5.Variables.First(item => item.Name == "X").Value.ShouldBe(0f);
 
         StateSave at1_0 = animation.GetStateToSet(1.0f, element, defaultIfNull: true);
 
@@ -150,6 +151,40 @@ public class AnimationRuntimeTests : BaseTestClass
         at1_0.Variables.First(item => item.Name == "X").Value.ShouldBe(50f);
     }
 
+    [Fact]
+    public void RefreshCumulativeStates_ShouldSetAllValues_BeforeKeyframe()
+    {
+        ComponentSave element = new();
+        element.States.Add(new StateSave()); // give it a default state
+        element.Name = "Animated component";
+
+        StateSaveCategory category = new();
+        element.Categories.Add(category);
+        category.Name = "Category1";
+
+        StateSave state = new();
+        category.States.Add(state);
+        state.Name = "State1";
+        state.Variables.Add(new()
+        {
+            Name = "X",
+            Value = 44f
+        });
+
+        KeyframeRuntime keyframe = new();
+        keyframe.StateName = "Category1/State1";
+        keyframe.Time = 1;
+
+        AnimationRuntime animation = new();
+        animation.Keyframes.Add(keyframe);
+
+        animation.RefreshCumulativeStates(element);
+
+        StateSave at0 = animation.GetStateToSet(0f, element, defaultIfNull: true);
+        at0.Variables.Count.ShouldBe(1);
+        at0.Variables[0].Name.ShouldBe("X");
+        at0.Variables[0].Value.ShouldBe(44f);
+    }
 
     [Fact]
     public void GetStateToSet_ShouldThrowException_IfRefreshCmulativeStatesIsntCalled()
@@ -211,6 +246,8 @@ public class AnimationRuntimeTests : BaseTestClass
 
         didThrow.ShouldBeTrue();
     }
+
+
 
     [Fact]
     public void ComponentAnimation_ShouldContainAnimations()

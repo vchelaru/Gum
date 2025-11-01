@@ -1227,7 +1227,7 @@ public static class StateSaveExtensionMethods
     /// <param name="secondValue">The second value as a numeric value.</param>
     /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
     /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
-    private static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
+    public static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
     {
         if (firstValue == null || secondValue == null)
         {

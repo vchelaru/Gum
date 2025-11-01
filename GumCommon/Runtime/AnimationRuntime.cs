@@ -5,6 +5,7 @@ using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 
 namespace Gum.StateAnimation.Runtime;
@@ -32,43 +33,15 @@ public class AnimationRuntime
 
     public void RefreshCumulativeStates(ElementSave element, bool useDefaultAsStarting = true)
     {
-        StateSave previous = null;
+        RefreshCumulativeStatesForStateKeyframes(element, useDefaultAsStarting);
 
-        if (useDefaultAsStarting)
+        foreach (var subAnimation in this.Keyframes.Where(item => !string.IsNullOrEmpty(item.AnimationName)))
         {
-            previous = element.DefaultState;
-        }
-
-        foreach(var animatedState in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.StateName)))
-        {
-            var originalState = GetStateFromCategorizedName(animatedState.StateName, element);
-
-            if (originalState != null)
-            {
-                if (previous == null)
-                {
-                    previous = originalState;
-                    animatedState.CachedCumulativeState = originalState.Clone();
-                }
-                else
-                {
-                    var combined = previous.Clone();
-                    combined.MergeIntoThis(originalState);
-                    combined.Name = originalState.Name;
-                    animatedState.CachedCumulativeState = combined;
-
-                    previous = combined;
-                }
-            }
-        }
-
-        foreach(var subAnimation in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.AnimationName)))
-        {
-            InstanceSave instance = null;
+            InstanceSave? instance = null;
 
             string name = subAnimation.AnimationName;
 
-            if(name.Contains('.'))
+            if (name.Contains('.'))
             {
                 int indexOfDot = name.IndexOf('.');
 
@@ -89,6 +62,132 @@ public class AnimationRuntime
                     subAnimation.SubAnimation.RefreshCumulativeStates(instanceElement, false);
                 }
             }
+        }
+    }
+
+
+    private void RefreshCumulativeStatesForStateKeyframes(ElementSave element, bool useDefaultAsStarting)
+    {
+        // This allocates a bit for simplicity and debugging. If it's a problem, can do some work to reuse (ThreadLocal<T>?)
+        Dictionary<string, HashSet<string>> categoryVariableAssignments = new ();
+        Dictionary<string, List<KeyframeRuntime>> categorizedKeyframes = new();
+
+        var keyframesWithStates = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName)).ToList();
+        HashSet<string> allVariables = new();
+
+        foreach (var keframeRuntime in keyframesWithStates)
+        {
+            // This is going to be the case almost all the time:
+            if(keframeRuntime.StateName.Contains("/"))
+            {
+                var names = keframeRuntime.StateName.Split('/');
+
+                string categoryName = names[0];
+                string stateName = names[1];
+
+                if (!categoryVariableAssignments.ContainsKey(categoryName))
+                {
+                    categoryVariableAssignments[categoryName] = new HashSet<string>();
+                }
+                var state = element
+                    .Categories.FirstOrDefault(item => item.Name == categoryName)
+                    ?.States.FirstOrDefault(item => item.Name == stateName);
+                if(state != null)
+                {
+                    foreach(var variable in state.Variables)
+                    {
+                        categoryVariableAssignments[categoryName].Add(variable.Name);
+                        allVariables.Add(variable.Name);
+                    }
+                }
+
+                if (!categorizedKeyframes.ContainsKey(categoryName))
+                {
+                    categorizedKeyframes[categoryName] = new List<KeyframeRuntime>();
+                }
+                categorizedKeyframes[categoryName].Add(keframeRuntime);
+            }
+        }
+
+        StateSave previous = null;
+
+        if (useDefaultAsStarting)
+        {
+            previous = element.DefaultState;
+        }
+
+
+        foreach (var animatedState in keyframesWithStates)
+        {
+            var originalState = GetStateFromCategorizedName(animatedState.StateName, element);
+            
+            if(originalState != null)
+            {
+                foreach(var variable in originalState.Variables)
+                {
+                    allVariables.Add(variable.Name);
+                }
+            }
+
+            StateSave combinedState = new StateSave();
+            combinedState.Name = animatedState.StateName;
+            animatedState.CachedCumulativeState = combinedState;
+
+            foreach(var variableName in allVariables)
+            {
+                var categoryName = categoryVariableAssignments.FirstOrDefault(
+                    item => item.Value.Contains(variableName)).Key;
+
+                if(!string.IsNullOrEmpty(categoryName) && 
+                    categorizedKeyframes.TryGetValue(categoryName, out var keyframesInCategory))
+                {
+                    var beforeKeyframe = keyframesInCategory.LastOrDefault(item => item.Time <= animatedState.Time);
+                    var afterKeyframe = keyframesInCategory.FirstOrDefault(item => item.Time > animatedState.Time);
+
+                    if (beforeKeyframe == afterKeyframe)
+                    {
+                        afterKeyframe = null;
+                    }
+
+                    StateSave? beforeState = beforeKeyframe != null
+                        ? GetStateFromCategorizedName(beforeKeyframe.StateName, element)
+                        : null;
+                    StateSave? afterState = afterKeyframe != null
+                        ? GetStateFromCategorizedName(afterKeyframe.StateName, element)
+                        : null;
+
+                    object? value = null;
+
+                    if(beforeState != null && afterState == null)
+                    {
+                        value = beforeState.GetValue(variableName);
+                    }
+                    else if(beforeState == null && afterState != null)
+                    {
+                        value = afterState.GetValue(variableName);
+                    }
+                    else if(beforeState != null && afterState != null)
+                    {
+                        double linearRatio = GetLinearRatio(animatedState.Time, beforeKeyframe, afterKeyframe);
+                        var processedRatio = 
+                            (float)ProcessRatio(beforeKeyframe.InterpolationType, beforeKeyframe.Easing, linearRatio);
+                        var beforeValue = beforeState.GetValue(variableName);
+                        var afterValue = afterState.GetValue(variableName);
+
+                        value = StateSaveExtensionMethods.GetValueConsideringInterpolation(
+                            beforeValue,
+                            afterValue,
+                            processedRatio);
+                    }
+
+                    combinedState.Variables.Add(new VariableSave()
+                    {
+                        Name = variableName,
+                        Value = value
+                    });
+                }
+            }
+
         }
     }
 
