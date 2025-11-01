@@ -2330,7 +2330,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 bool wasSet = false;
 
-                if (mTextureHeight > 0)
+                if (mTextureHeight > 0 && TextureAddress != TextureAddress.EntireTexture)
                 {
                     pixelHeightToSet = mTextureHeight * mHeight / 100.0f;
                     wasSet = true;
@@ -2694,7 +2694,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 bool wasSet = false;
 
-                if (mTextureWidth > 0)
+                if (mTextureWidth > 0 && TextureAddress != TextureAddress.EntireTexture)
                 {
                     pixelWidthToSet = mTextureWidth * mWidth / 100.0f;
                     wasSet = true;
