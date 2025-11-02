@@ -255,23 +255,6 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
     }
 
-    public StateSave CachedCumulativeState
-    {
-        get => KeyframeRuntime?.CachedCumulativeState;
-        set
-        {
-            if(value != null && KeyframeRuntime == null)
-            {
-                KeyframeRuntime = new KeyframeRuntime();
-            }
-
-            if(KeyframeRuntime != null)
-            {
-                KeyframeRuntime.CachedCumulativeState = value;
-            }
-        }
-    }
-
     public AnimatedKeyframeViewModel Clone()
     {
         var newInstance = new AnimatedKeyframeViewModel();
@@ -292,8 +275,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
         // do we assign this?
         newInstance.KeyframeRuntime = new KeyframeRuntime();
-        newInstance.KeyframeRuntime.CachedCumulativeState = KeyframeRuntime?.CachedCumulativeState;
-
+    
         return newInstance;
     }
 
@@ -408,7 +390,6 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         runtime.InterpolationType = this.InterpolationType;
         runtime.Easing = this.Easing;
         runtime.SubAnimation = this.SubAnimationViewModel?.ToAnimationRuntime();
-        runtime.CachedCumulativeState = this.CachedCumulativeState;
         return runtime;
     }
 

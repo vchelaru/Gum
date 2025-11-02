@@ -14,6 +14,9 @@ public class AnimationRuntime
     public string Name { get; set; }
     public bool Loops { get; set; }
 
+    Dictionary<string, List<KeyframeRuntime>> _tracks = new();
+
+
     public float Length
     {
         get
@@ -70,7 +73,6 @@ public class AnimationRuntime
     {
         // This allocates a bit for simplicity and debugging. If it's a problem, can do some work to reuse (ThreadLocal<T>?)
         Dictionary<string, HashSet<string>> categoryVariableAssignments = new ();
-        Dictionary<string, List<KeyframeRuntime>> categorizedKeyframes = new();
 
         var keyframesWithStates = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName)).ToList();
         HashSet<string> allVariables = new();
@@ -101,93 +103,12 @@ public class AnimationRuntime
                     }
                 }
 
-                if (!categorizedKeyframes.ContainsKey(categoryName))
+                if (!_tracks.ContainsKey(categoryName))
                 {
-                    categorizedKeyframes[categoryName] = new List<KeyframeRuntime>();
+                    _tracks[categoryName] = new List<KeyframeRuntime>();
                 }
-                categorizedKeyframes[categoryName].Add(keframeRuntime);
+                _tracks[categoryName].Add(keframeRuntime);
             }
-        }
-
-        StateSave previous = null;
-
-        if (useDefaultAsStarting)
-        {
-            previous = element.DefaultState;
-        }
-
-
-        foreach (var animatedState in keyframesWithStates)
-        {
-            var originalState = GetStateFromCategorizedName(animatedState.StateName, element);
-            
-            if(originalState != null)
-            {
-                foreach(var variable in originalState.Variables)
-                {
-                    allVariables.Add(variable.Name);
-                }
-            }
-
-            StateSave combinedState = new StateSave();
-            combinedState.Name = animatedState.StateName;
-            animatedState.CachedCumulativeState = combinedState;
-
-            foreach(var variableName in allVariables)
-            {
-                var categoryName = categoryVariableAssignments.FirstOrDefault(
-                    item => item.Value.Contains(variableName)).Key;
-
-                if(!string.IsNullOrEmpty(categoryName) && 
-                    categorizedKeyframes.TryGetValue(categoryName, out var keyframesInCategory))
-                {
-                    var beforeKeyframe = keyframesInCategory.LastOrDefault(item => item.Time <= animatedState.Time);
-                    var afterKeyframe = keyframesInCategory.FirstOrDefault(item => item.Time > animatedState.Time);
-
-                    if (beforeKeyframe == afterKeyframe)
-                    {
-                        afterKeyframe = null;
-                    }
-
-                    StateSave? beforeState = beforeKeyframe != null
-                        ? GetStateFromCategorizedName(beforeKeyframe.StateName, element)
-                        : null;
-                    StateSave? afterState = afterKeyframe != null
-                        ? GetStateFromCategorizedName(afterKeyframe.StateName, element)
-                        : null;
-
-                    object? value = null;
-
-                    if(beforeState != null && afterState == null)
-                    {
-                        value = beforeState.GetValue(variableName);
-                    }
-                    else if(beforeState == null && afterState != null)
-                    {
-                        value = afterState.GetValue(variableName);
-                    }
-                    else if(beforeState != null && afterState != null)
-                    {
-                        double linearRatio = GetLinearRatio(animatedState.Time, beforeKeyframe, afterKeyframe);
-                        var processedRatio = 
-                            (float)ProcessRatio(beforeKeyframe.InterpolationType, beforeKeyframe.Easing, linearRatio);
-                        var beforeValue = beforeState.GetValue(variableName);
-                        var afterValue = afterState.GetValue(variableName);
-
-                        value = StateSaveExtensionMethods.GetValueConsideringInterpolation(
-                            beforeValue,
-                            afterValue,
-                            processedRatio);
-                    }
-
-                    combinedState.Variables.Add(new VariableSave()
-                    {
-                        Name = variableName,
-                        Value = value
-                    });
-                }
-            }
-
         }
     }
 
@@ -223,80 +144,11 @@ public class AnimationRuntime
 
     private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave element, ref StateSave stateToSet, bool defaultIfNull)
     {
-        var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
+        //var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
 
         if(this.Loops)
         {
             animationTime = animationTime % this.Length;
-        }
-
-        var keyframeBefore = stateKeyframes.LastOrDefault(item => item.Time <= animationTime);
-        var keyframeAfter = stateKeyframes.FirstOrDefault(item => item.Time >= animationTime);
-
-        if (keyframeBefore == null && keyframeAfter != null)
-        {
-            // The custom state can be null if the animation window references states which don't exist:
-            if (keyframeAfter.CachedCumulativeState == null)
-            {
-                if (element != null)
-                {
-                    RefreshCumulativeStates(element);
-                }
-                else
-                {
-                    throw new InvalidOperationException("The animation has not had its RefreshCumulativeStates called, " +
-                        "and GetStateToSetFromStateKeyframes is being called without a valid element. One or the other is required");
-                }
-            }
-
-            stateToSet = keyframeAfter.CachedCumulativeState!.Clone();
-        }
-        else if (keyframeBefore != null && keyframeAfter == null)
-        {
-            if (keyframeBefore.CachedCumulativeState == null)
-            {
-                if (element != null)
-                {
-                    RefreshCumulativeStates(element);
-                }
-                else
-                {
-                    throw new InvalidOperationException("The animation has not had its RefreshCumulativeStates called, " +
-                        "and GetStateToSetFromStateKeyframes is being called without a valid element. One or the other is required");
-                }
-            }
-
-            stateToSet = keyframeBefore.CachedCumulativeState!.Clone();
-        }
-        else if (keyframeBefore != null && keyframeAfter != null)
-        {
-            if (keyframeAfter.CachedCumulativeState == null ||
-                keyframeAfter.CachedCumulativeState == null)
-            {
-                if (element != null)
-                {
-                    RefreshCumulativeStates(element);
-                }
-                else
-                {
-                    throw new InvalidOperationException("The animation has not had its RefreshCumulativeStates called, " +
-                        "and GetStateToSetFromStateKeyframes is being called without a valid element. One or the other is required");
-                }
-
-            }
-            double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
-            var stateBefore = keyframeBefore.CachedCumulativeState;
-            var stateAfter = keyframeAfter.CachedCumulativeState;
-
-            if (stateBefore != null && stateAfter != null)
-            {
-                double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
-
-
-                var combined = stateBefore.Clone();
-                combined.MergeIntoThis(stateAfter, (float)processedRatio);
-                stateToSet = combined;
-            }
         }
 
         if (stateToSet == null && defaultIfNull)
@@ -307,6 +159,49 @@ public class AnimationRuntime
         {
             stateToSet = new StateSave();
         }
+
+        if(_tracks.Count == 0)
+        {
+            RefreshCumulativeStates(element);
+        }
+
+        foreach (var track in _tracks)
+        {
+            StateSave? stateForTrack = null;
+            var keyframeBefore = track.Value.LastOrDefault(item => item.Time <= animationTime);
+            var keyframeAfter = track.Value.FirstOrDefault(item => item.Time >= animationTime);
+
+            if (keyframeBefore == null && keyframeAfter != null)
+            {
+                stateForTrack = GetStateFromCategorizedName(keyframeAfter.StateName, element);
+            }
+            else if (keyframeBefore != null && keyframeAfter == null)
+            {
+                stateForTrack = GetStateFromCategorizedName(keyframeBefore.StateName, element);
+            }
+            else if (keyframeBefore != null && keyframeAfter != null)
+            {
+                double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
+                var stateBefore = GetStateFromCategorizedName(keyframeBefore.StateName, element);
+                var stateAfter = GetStateFromCategorizedName(keyframeAfter.StateName, element);
+
+                if (stateBefore != null && stateAfter != null)
+                {
+                    double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
+
+
+                    var combined = stateBefore.Clone();
+                    combined.MergeIntoThis(stateAfter, (float)processedRatio);
+                    stateForTrack = combined;
+                }
+            }
+
+            if(stateForTrack != null)
+            {
+                stateToSet.MergeIntoThis(stateForTrack, 1);
+            }
+        }
+
         return stateToSet;
     }
 

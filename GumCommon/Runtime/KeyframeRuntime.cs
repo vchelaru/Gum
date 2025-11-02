@@ -7,12 +7,6 @@ using System.Text;
 namespace Gum.StateAnimation.Runtime;
 public class KeyframeRuntime
 {
-    public StateSave? CachedCumulativeState
-    {
-        get;
-        set;
-    }
-
     public string? StateName
     {
         get;

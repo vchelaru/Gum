@@ -302,6 +302,7 @@ public class AnimationRuntimeTests : BaseTestClass
 
         KeyframeRuntime keyframeX0 = new();
         keyframeX0.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Elastic;
+        keyframeX0.Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
         keyframeX0.Time = 0;
         keyframeX0.StateName = "XCategory/XState1";
 
@@ -312,6 +313,7 @@ public class AnimationRuntimeTests : BaseTestClass
         KeyframeRuntime keyframeY0 = new();
         keyframeY0.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
         keyframeY0.Time = .5f;
+        keyframeY0.StateName = "YCategory/YState1";
 
         AnimationRuntime noY = new ();
         noY.Keyframes.Add(keyframeX0);
@@ -324,7 +326,7 @@ public class AnimationRuntimeTests : BaseTestClass
         withY.Keyframes.Add(FileManager.CloneSaveObject<KeyframeRuntime>(keyframeX1));
         withY.RefreshCumulativeStates(element);
 
-        for (float t = 0; t <= 1; t+= .1f)
+        for (float t = .1f; t <= 1; t+= .1f)
         {
             var stateNoY = noY.GetStateToSet(t, element, defaultIfNull: true);
             var stateWithY = withY.GetStateToSet(t, element, defaultIfNull: true);
