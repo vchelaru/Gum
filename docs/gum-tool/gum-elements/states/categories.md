@@ -62,7 +62,7 @@ Doing so results in this value automatically being selected on new instances of 
 
 ## States Set by Other States
 
-As mentioned above, once a state is created, it adds a variable to the component. This variable behaves like any other variable including being able to be set by other states.
+Once a category is created, it adds a variable to the component. This variable behaves like any other variable including being able to be set by other states.
 
 For example, consider a component with the following categories and states:
 

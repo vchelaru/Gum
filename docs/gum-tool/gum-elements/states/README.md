@@ -15,3 +15,16 @@ Every element automatically includes a Default state which cannot be removed. Th
 
 Additional states can be created in Screens, Components, and Standard elements. These states must be created in Categories. For more information, see the [Categories page](categories.md).
 
+## Adding States to a Category
+
+To add states to a category:
+
+1. Right-click on the desired category
+2.  Select Add State\
+
+
+    <figure><img src="../../../.gitbook/assets/05_21 45 50 (1).png" alt=""><figcaption><p>Right click Add State item</p></figcaption></figure>
+3. Enter a name for the new state
+
+Once the state has been created it can be selected and variables can be changed to add them to the new state.
+
