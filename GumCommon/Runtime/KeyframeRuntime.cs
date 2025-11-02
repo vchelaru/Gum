@@ -7,26 +7,26 @@ using System.Text;
 namespace Gum.StateAnimation.Runtime;
 public class KeyframeRuntime
 {
-    public StateSave CachedCumulativeState
+    public StateSave? CachedCumulativeState
     {
         get;
         set;
     }
 
-    public string StateName
+    public string? StateName
     {
         get;
         set;
     }
 
-    public string AnimationName
+    public string? AnimationName
     {
         get;
         set;
     }
-    public string EventName { get; set; }
+    public string? EventName { get; set; }
 
-    public AnimationRuntime SubAnimation
+    public AnimationRuntime? SubAnimation
     {
         get;
         set;
@@ -58,11 +58,11 @@ public class KeyframeRuntime
         }
         else if(!string.IsNullOrEmpty(AnimationName))
         {
-            return AnimationName;
+            return AnimationName!;
         }
         else
         {
-            return EventName;
+            return EventName ?? string.Empty;
         }
     }
 }

@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using Gum.Services;
+using Gum.StateAnimation.Runtime;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -336,64 +337,27 @@ public partial class AnimationViewModel : ViewModel
     /// </summary>
     public void RefreshCumulativeStates(ElementSave element, bool useDefaultAsStarting = true)
     {
-        StateSave previous = null;
+        var animationRuntime = this.ToAnimationRuntime();
 
-        if (useDefaultAsStarting)
+        animationRuntime.RefreshCumulativeStates(element, useDefaultAsStarting);
+
+        for(int i = 0; i < this.Keyframes.Count; i++)
         {
-            previous = element.DefaultState;
+            this.Keyframes[i].CachedCumulativeState = animationRuntime.Keyframes[i].CachedCumulativeState;
+            this.Keyframes[i].CachedCumulativeState.ParentContainer = element;
         }
+    }
 
-        foreach(var animatedState in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.StateName)))
+    internal AnimationRuntime ToAnimationRuntime()
+    {
+        AnimationRuntime animationRuntime = new AnimationRuntime();
+        animationRuntime.Name = this.Name;
+        animationRuntime.Loops = this.Loops;
+        foreach(var keyframe in this.Keyframes)
         {
-            var originalState = GetStateFromCategorizedName(animatedState.StateName, element);
-
-            if (originalState != null)
-            {
-                if (previous == null)
-                {
-                    previous = originalState;
-                    animatedState.CachedCumulativeState = originalState.Clone();
-                }
-                else
-                {
-                    var combined = previous.Clone();
-                    combined.MergeIntoThis(originalState);
-                    combined.Name = originalState.Name;
-                    animatedState.CachedCumulativeState = combined;
-
-                    previous = combined;
-                }
-            }
+            animationRuntime.Keyframes.Add(keyframe.ToKeyframeRuntime());
         }
-
-        foreach(var subAnimation in this.Keyframes.Where(item=>!string.IsNullOrEmpty(item.AnimationName)))
-        {
-            InstanceSave instance = null;
-
-            string name = subAnimation.AnimationName;
-
-            if(name.Contains('.'))
-            {
-                int indexOfDot = name.IndexOf('.');
-
-                string instanceName = name.Substring(0, indexOfDot);
-
-                instance = element.Instances.FirstOrDefault(item => item.Name == instanceName);
-            }
-            if (instance == null)
-            {
-                // Null check in case the referenced instance was removed
-                subAnimation.SubAnimationViewModel?.RefreshCumulativeStates(element, false);
-            }
-            else
-            {
-                var instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
-                if (instanceElement != null)
-                {
-                    subAnimation.SubAnimationViewModel.RefreshCumulativeStates(instanceElement, false);
-                }
-            }
-        }
+        return animationRuntime;
     }
 
     [RelayCommand]

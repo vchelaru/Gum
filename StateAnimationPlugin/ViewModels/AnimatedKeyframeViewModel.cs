@@ -398,5 +398,19 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         }
     }
 
+    internal KeyframeRuntime ToKeyframeRuntime()
+    {
+        KeyframeRuntime runtime = new KeyframeRuntime();
+        runtime.StateName = this.StateName;
+        runtime.AnimationName = this.AnimationName;
+        runtime.EventName = this.EventName;
+        runtime.Time = this.Time;
+        runtime.InterpolationType = this.InterpolationType;
+        runtime.Easing = this.Easing;
+        runtime.SubAnimation = this.SubAnimationViewModel?.ToAnimationRuntime();
+        runtime.CachedCumulativeState = this.CachedCumulativeState;
+        return runtime;
+    }
+
     #endregion
 }

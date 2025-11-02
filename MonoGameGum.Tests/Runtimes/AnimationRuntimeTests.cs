@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -247,7 +248,91 @@ public class AnimationRuntimeTests : BaseTestClass
         didThrow.ShouldBeTrue();
     }
 
+    [Fact]
+    public void GetStateToSet_ShouldRespectVariableSpecificInterpolationType()
+    {
+        ComponentSave element = new();
+        element.States.Add(new StateSave()); // give it a default state
+        element.Name = "Animated component";
 
+        StateSaveCategory xCategory = new StateSaveCategory();
+        element.Categories.Add(xCategory);
+        xCategory.Name = "XCategory";
+
+        var xState1 = new StateSave();
+        xCategory.States.Add(xState1);
+        xState1.Name = "XState1";
+        xState1.Variables.Add(new VariableSave()
+        {
+            Name = "X",
+            Value = 0f
+        });
+
+        var xState2 = new StateSave();
+        xCategory.States.Add(xState2);
+        xState2.Name = "XState2";
+        xState2.Variables.Add(new VariableSave()
+        {
+            Name = "X",
+            Value = 100f
+        });
+
+        StateSaveCategory yCategory = new StateSaveCategory();
+        element.Categories.Add(yCategory);
+        yCategory.Name = "YCategory";
+
+        var yState1 = new StateSave();
+        yCategory.States.Add(yState1);
+        yState1.Name = "YState1";
+        yState1.Variables.Add(new VariableSave()
+        {
+            Name = "Y",
+            Value = 0f
+        });
+
+        var yState2 = new StateSave();
+        yCategory.States.Add(yState2);
+        yState2.Name = "YState2";
+        yState2.Variables.Add(new VariableSave()
+        {
+            Name = "Y",
+            Value = 100f
+        });
+
+
+        KeyframeRuntime keyframeX0 = new();
+        keyframeX0.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Elastic;
+        keyframeX0.Time = 0;
+        keyframeX0.StateName = "XCategory/XState1";
+
+        KeyframeRuntime keyframeX1 = new();
+        keyframeX1.Time = 1;
+        keyframeX1.StateName = "XCategory/XState2";
+
+        KeyframeRuntime keyframeY0 = new();
+        keyframeY0.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear;
+        keyframeY0.Time = .5f;
+
+        AnimationRuntime noY = new ();
+        noY.Keyframes.Add(keyframeX0);
+        noY.Keyframes.Add(keyframeX1);
+        noY.RefreshCumulativeStates(element);
+
+        AnimationRuntime withY = new ();
+        withY.Keyframes.Add(FileManager.CloneSaveObject<KeyframeRuntime>(keyframeX0));
+        withY.Keyframes.Add(FileManager.CloneSaveObject<KeyframeRuntime>(keyframeY0));
+        withY.Keyframes.Add(FileManager.CloneSaveObject<KeyframeRuntime>(keyframeX1));
+        withY.RefreshCumulativeStates(element);
+
+        for (float t = 0; t <= 1; t+= .1f)
+        {
+            var stateNoY = noY.GetStateToSet(t, element, defaultIfNull: true);
+            var stateWithY = withY.GetStateToSet(t, element, defaultIfNull: true);
+            var xNoY = (float)stateNoY.Variables.First(item => item.Name == "X").Value;
+            var xWithY = (float)stateWithY.Variables.First(item => item.Name == "X").Value;
+            xNoY.ShouldBe(xWithY, $"At time {t}, expected X values to match");
+        }
+    }
 
     [Fact]
     public void ComponentAnimation_ShouldContainAnimations()
