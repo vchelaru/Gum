@@ -122,7 +122,7 @@ public partial class AnimationViewModel : ViewModel
     public AnimationViewModel()
     {
         Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
-        Keyframes.CollectionChanged += HandleCollectionChanged;
+        Keyframes.CollectionChanged += HandleKeyframeCollectionChanged;
 
         mLoopBitmap = BitmapLoader.Self.LoadImage("LoopIcon.png");
 
@@ -251,7 +251,7 @@ public partial class AnimationViewModel : ViewModel
         return toReturn;
     }
 
-    private void HandleCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void HandleKeyframeCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && !mIsInMiddleOfSort)
         {
@@ -266,27 +266,41 @@ public partial class AnimationViewModel : ViewModel
         NotifyPropertyChanged(nameof(Length));
 
         NotifyPropertyChanged(nameof(Keyframes));
-        
+
+        if (_selectedState.SelectedElement != null)
+        {
+            RefreshCumulativeStates(_selectedState.SelectedElement);
+        }
+
     }
 
     private void HandleAnimatedKeyframePropertyChange(object sender, PropertyChangedEventArgs e)
     {
-
-        if (e.PropertyName == nameof(AnimatedKeyframeViewModel.Time))
+        switch(e.PropertyName)
         {
-            SortList();
+            case nameof(AnimatedKeyframeViewModel.Time):
 
-            NotifyPropertyChanged(nameof(Length));
+                SortList();
 
+                NotifyPropertyChanged(nameof(Length));
+
+                if (_selectedState.SelectedElement != null)
+                {
+                    RefreshCumulativeStates(_selectedState.SelectedElement);
+                }
+                break;
+            case nameof(AnimatedKeyframeViewModel.StateName):
+            case nameof(AnimatedKeyframeViewModel.InterpolationType):
+            case nameof(AnimatedKeyframeViewModel.Easing):
+                if(_selectedState.SelectedElement != null)
+                {
+                    RefreshCumulativeStates(_selectedState.SelectedElement);
+                }
+                break;
+
+            default:
+                return;
         }
-        else if (e.PropertyName == nameof(AnimatedKeyframeViewModel.StateName))
-        {
-            if(_selectedState.SelectedElement != null)
-            {
-                RefreshCumulativeStates(_selectedState.SelectedElement);
-            }
-        }
-
 
         FramePropertyChanged?.Invoke(sender, e);
     }
@@ -342,6 +356,8 @@ public partial class AnimationViewModel : ViewModel
         _cachedAnimationRuntime = this.ToAnimationRuntime();
 
         _cachedAnimationRuntime.RefreshCumulativeStates(element, useDefaultAsStarting);
+
+        System.Diagnostics.Debug.WriteLine("Updated cumulative states for animation " + this.Name + " at " + DateTime.Now);
     }
 
     internal AnimationRuntime ToAnimationRuntime()
