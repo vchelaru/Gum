@@ -143,4 +143,12 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
     {
         message.OnTearDown(SaveLayoutSettings);
     }
+
+    internal void EnsureMinimumWidth()
+    {
+        const int minWidth = 20;
+        LeftColumnWidth = Math.Max(LeftColumnWidth, minWidth);
+        CenterColumnWidth = Math.Max(CenterColumnWidth, minWidth);
+        BottomRightHeight = Math.Max(BottomRightHeight, minWidth);
+    }
 }
