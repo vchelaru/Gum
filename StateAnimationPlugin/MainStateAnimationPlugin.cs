@@ -491,7 +491,10 @@ public class MainStateAnimationPlugin : PluginBase
         var animation = _viewModel.SelectedAnimation;
         var element = _selectedState.SelectedElement;
 
-        animation.SetStateAtTime(animationTime, element, defaultIfNull: true);
+        if(element != null)
+        {
+            animation.SetStateAtTime(animationTime, element, defaultIfNull: true);
+        }
     }
 
     private void HandleDataChange(object sender, System.ComponentModel.PropertyChangedEventArgs e)
