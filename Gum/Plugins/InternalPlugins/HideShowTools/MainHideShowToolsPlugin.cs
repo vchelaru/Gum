@@ -14,7 +14,7 @@ namespace Gum.Plugins.InternalPlugins.HideShowTools;
 [Export(typeof(PluginBase))]
 internal class MainHideShowToolsPlugin : InternalPlugin
 {
-    private ToolStripMenuItem menuItem;
+    private ToolStripMenuItem _hideShowMenuItem;
     private readonly MainPanelViewModel _mainPanelViewModel;
 
     public MainHideShowToolsPlugin()
@@ -24,13 +24,19 @@ internal class MainHideShowToolsPlugin : InternalPlugin
     
     public override void StartUp()
     {
-        menuItem = AddMenuItem("View", "Hide Tools");
-        menuItem.Click += HandleMenuItemClick;
+        _hideShowMenuItem = AddMenuItem("View", "Hide Tools");
+        _hideShowMenuItem.Click += HandleMenuItemClick;
     }
 
     private void HandleMenuItemClick(object sender, EventArgs e)
     {
         _mainPanelViewModel.IsToolsVisible = !_mainPanelViewModel.IsToolsVisible;
-        menuItem.Text = _mainPanelViewModel.IsToolsVisible ? "Hide Tools" : "Show Tools";
+
+        if(_mainPanelViewModel.IsToolsVisible)
+        {
+            _mainPanelViewModel.EnsureMinimumWidth();
+        }
+
+        _hideShowMenuItem.Text = _mainPanelViewModel.IsToolsVisible ? "Hide Tools" : "Show Tools";
     }
 }
