@@ -1117,6 +1117,7 @@
     <Setter Property="HasDropShadow" Value="True" />
     <Setter Property="OverridesDefaultStyle" Value="True" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
+    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type ContextMenu}">
@@ -1129,6 +1130,10 @@
             BorderBrush="{DynamicResource Frb.Brushes.Contrast03}"
             BorderThickness="1"
             CornerRadius="2">
+            <Border.LayoutTransform>
+              <ScaleTransform ScaleX="{Binding Source={StaticResource Scale}, Path=Ui}" ScaleY="{Binding Source={StaticResource Scale}, Path=Ui}" />
+
+            </Border.LayoutTransform>
             <StackPanel
               ClipToBounds="True"
               IsItemsHost="True"
