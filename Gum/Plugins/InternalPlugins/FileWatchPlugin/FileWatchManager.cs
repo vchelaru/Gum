@@ -119,8 +119,10 @@ public class FileWatchManager : Singleton<FileWatchManager>
     {
         var fileName = new FilePath(e.FullPath);
         // for now only do texture files like PNG:
+        // Update November 3, 2025 - Open Office renames
+        // so allow CSV too:
         var extension = fileName.Extension;
-        if(extension == "png")
+        if(extension == "png" || extension == "csv")
         {
             HandleFileSystemChange(fileName);
         }
