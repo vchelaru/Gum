@@ -165,6 +165,12 @@
     <Setter Property="Background" Value="{DynamicResource Frb.Surface01}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Contrast02}" />
     <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=Body}" />
+    <Setter Property="LayoutTransform">
+      <Setter.Value>
+        <ScaleTransform ScaleX="{Binding Source={StaticResource Scale}, Path=Ui}" ScaleY="{Binding Source={StaticResource Scale}, Path=Ui}" />
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!--  Popup  -->
