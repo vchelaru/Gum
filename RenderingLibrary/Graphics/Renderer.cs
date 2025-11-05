@@ -693,7 +693,10 @@ public class Renderer : IRenderer
     }
 
 
-    Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
+    Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null)
+    {
+        Name = "RenderTarget Renderable Sprite"
+    };
 
     string currentBatchKey = string.Empty;
     IRenderable? lastBatchOwner;
@@ -724,9 +727,18 @@ public class Renderer : IRenderer
                     renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
                     renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
                     renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
+                    var rotationInDegrees = renderable.Rotation;
+
+                    //if(NormalBlendState == BlendState.NonPremultiplied)
+                    //{
+                    //    // this forces premult which is what the render target uses:
+                    //    // This addresses this bug: https://github.com/vchelaru/Gum/issues/1696
+                    //    //renderTargetRenderableSprite.BlendState = BlendState.AlphaBlend;
+                    //    //AdjustRenderStates(mRenderStateVariables, layer, renderTargetRenderableSprite);
+                    //}
 
 
-                    Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
+                    Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:rotationInDegrees, objectCausingRendering: renderable);
                 }
             }
             else
@@ -837,14 +849,12 @@ public class Renderer : IRenderer
 
     private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable)
     {
-        BlendState renderBlendState = renderable.BlendState;
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
 
-        if (renderBlendState == null)
-        {
-            renderBlendState = Renderer.NormalBlendState;
-        }
+        BlendState renderBlendState = renderable.BlendState ?? 
+            Renderer.NormalBlendState;
+
         if (renderState.BlendState != renderBlendState)
         {
             // This used to set this, but not sure why...I think it should set the renderBlendState:

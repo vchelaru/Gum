@@ -33,6 +33,8 @@ namespace Gum.RenderingLibrary
                     return isUsingPremultipliedAlpha ? BlendState.ReplaceAlphaPremultiplied : BlendState.ReplaceAlpha;
                 case Blend.MinAlpha:
                     return isUsingPremultipliedAlpha ? BlendState.MinAlphaPremultiplied : BlendState.MinAlpha;
+                case Blend.AddAlpha:
+                    return BlendState.AddAlpha;
             }
             return BlendState.NonPremultiplied;
         }
@@ -65,6 +67,10 @@ namespace Gum.RenderingLibrary
             else if(blendState == BlendState.MinAlpha)
             {
                 return Blend.MinAlpha;
+            }
+            else if(blendState == BlendState.AddAlpha)
+            {
+                return Blend.AddAlpha;
             }
             else
             {

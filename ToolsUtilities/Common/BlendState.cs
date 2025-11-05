@@ -108,6 +108,8 @@ namespace Gum
         public static readonly BlendState MinAlpha;
         public static readonly BlendState MinAlphaPremultiplied;
 
+        public static readonly BlendState AddAlpha;
+
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
@@ -178,6 +180,11 @@ namespace Gum
                 SubtractAlphaPremultiplied.ColorWriteChannels3 = ColorWriteChannels.All;
 
             }
+
+            AddAlpha = AlphaBlend.Clone();
+            AddAlpha.AlphaBlendFunction = BlendFunction.Add;
+            AddAlpha.AlphaDestinationBlend = Blend.One;
+            AddAlpha.AlphaSourceBlend = Blend.One;
 
             ReplaceAlpha = new BlendState();
             ReplaceAlpha.ColorSourceBlend = Blend.Zero;

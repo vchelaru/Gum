@@ -182,6 +182,8 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "FontScale", Category = "Font" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "LineHeightMultiplier", Category = "Font" });
 
+                stateSave.Variables.Add(CreateBlendVariable());
+
                 AddRotationVariable(stateSave);
 
                 AddEventVariables(stateSave);
