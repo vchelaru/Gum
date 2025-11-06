@@ -32,7 +32,6 @@
   UseLayoutRounding="True"
   WindowStartupLocation="CenterScreen"
   WindowState="{Binding WindowState, Mode=TwoWay}"
-  WindowStyle="None"
   mc:Ignorable="d">
   <Border
     Background="{DynamicResource Frb.Brushes.Background}"
