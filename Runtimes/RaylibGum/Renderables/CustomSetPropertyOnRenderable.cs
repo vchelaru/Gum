@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace RaylibGum.Renderables;
+
 internal static class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
@@ -188,72 +189,86 @@ internal static class CustomSetPropertyOnRenderable
         bool handled = false;
         var sprite = renderableIpso as Sprite;
 
-        if (propertyName == "SourceFile")
+        switch (propertyName)
         {
-            var asString = value as String;
-            handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
 
+            case "SourceFile":
+                var asString = value as String;
+                handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
+                break;
+            case nameof(Sprite.Alpha):
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Alpha = valueAsInt;
+                    handled = true;
+                    break;
+                }
+            case nameof(Sprite.Red):
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Red = valueAsInt;
+                    handled = true;
+                    break;
+
+                }
+            case nameof(Sprite.Green):
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Green = valueAsInt;
+                    handled = true;
+                    break;
+                }
+            case nameof(Sprite.Blue):
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Blue = valueAsInt;
+                    handled = true;
+                    break;
+                }
+            //else if (propertyName == nameof(Sprite.Color))
+            //{
+            //    if (value is System.Drawing.Color drawingColor)
+            //    {
+            //        sprite.Color = drawingColor;
+            //    }
+            //    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            //    {
+            //        sprite.Color = xnaColor.ToSystemDrawing();
+
+            //    }
+            //    handled = true;
+            //}
+
+            //else if (propertyName == "Blend")
+            //{
+            //    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+            //    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            //    sprite.BlendState = valueAsXnaBlend;
+
+            //    handled = true;
+            //}
+            //else if (propertyName == nameof(Sprite.Animate))
+            //{
+            //    sprite.Animate = (bool)value;
+            //    handled = true;
+            //}
+            //else if (propertyName == nameof(Sprite.CurrentChainName))
+            //{
+            //    sprite.CurrentChainName = (string)value;
+            //    graphicalUiElement.UpdateTextureValuesFrom(sprite);
+            //    graphicalUiElement.UpdateLayout();
+            //    handled = true;
+            //}
+            case nameof(Sprite.Texture):
+                {
+                    sprite.Texture = (Texture2D)value;
+                    handled = true;
+                    break;
+                }
         }
-        else if (propertyName == nameof(Sprite.Alpha))
-        {
-            int valueAsInt = (int)value;
-            sprite.Alpha = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Red))
-        {
-            int valueAsInt = (int)value;
-            sprite.Red = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Green))
-        {
-            int valueAsInt = (int)value;
-            sprite.Green = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Blue))
-        {
-            int valueAsInt = (int)value;
-            sprite.Blue = valueAsInt;
-            handled = true;
-        }
-        //else if (propertyName == nameof(Sprite.Color))
-        //{
-        //    if (value is System.Drawing.Color drawingColor)
-        //    {
-        //        sprite.Color = drawingColor;
-        //    }
-        //    else if (value is Microsoft.Xna.Framework.Color xnaColor)
-        //    {
-        //        sprite.Color = xnaColor.ToSystemDrawing();
 
-        //    }
-        //    handled = true;
-        //}
-
-        //else if (propertyName == "Blend")
-        //{
-        //    var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-        //    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-        //    sprite.BlendState = valueAsXnaBlend;
-
-        //    handled = true;
-        //}
-        //else if (propertyName == nameof(Sprite.Animate))
-        //{
-        //    sprite.Animate = (bool)value;
-        //    handled = true;
-        //}
-        //else if (propertyName == nameof(Sprite.CurrentChainName))
-        //{
-        //    sprite.CurrentChainName = (string)value;
-        //    graphicalUiElement.UpdateTextureValuesFrom(sprite);
-        //    graphicalUiElement.UpdateLayout();
-        //    handled = true;
-        //}
 
         return handled;
     }
@@ -281,14 +296,14 @@ internal static class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
-        else if(propertyName == "Font")
+        else if (propertyName == "Font")
         {
-            if(value is Font font)
+            if (value is Font font)
             {
                 asText.Font = font;
                 handled = true;
             }
-            else if(value is string fontString)
+            else if (value is string fontString)
             {
                 var fontFromGum = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Font>(fontString);
                 asText.Font = fontFromGum;
