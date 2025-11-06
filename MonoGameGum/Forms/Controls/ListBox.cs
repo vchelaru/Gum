@@ -426,22 +426,39 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 item = CreateNewListBoxItem(visual);
             }
-            if(!string.IsNullOrEmpty(DisplayMemberPath))
-            {
-                var display = o.GetType()
-                    .GetProperty(DisplayMemberPath)
-                    .GetValue(o, null) as string;
-                item.UpdateToObject(display);
 
-            }
-            else
-            {
-                item.UpdateToObject(o);
-            }
+            CallUpdateToObject(o, item);
+
             item.BindingContext = o;
         }
 
         return item;
+    }
+
+    protected override void HandleCreatedItemVisual(GraphicalUiElement newVisual, object item)
+    {
+        var listBoxItem = (newVisual as InteractiveGue)?.FormsControlAsObject as ListBoxItem;
+
+        if(listBoxItem != null)
+        {
+            CallUpdateToObject(item, listBoxItem);
+        }
+    }
+
+    private void CallUpdateToObject(object objectToUpdateTo, ListBoxItem listBoxItem)
+    {
+        if (!string.IsNullOrEmpty(DisplayMemberPath))
+        {
+            var display = objectToUpdateTo.GetType()
+                .GetProperty(DisplayMemberPath)
+                .GetValue(objectToUpdateTo, null) as string;
+            listBoxItem.UpdateToObject(display);
+
+        }
+        else
+        {
+            listBoxItem.UpdateToObject(objectToUpdateTo);
+        }
     }
 
     private ListBoxItem CreateNewListBoxItem(InteractiveGue visual)

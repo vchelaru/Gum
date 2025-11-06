@@ -390,6 +390,8 @@ public class ItemsControl : ScrollViewer
                             {
                                 interactivegue.BindingContext = item;
                             }
+
+                            HandleCreatedItemVisual(newVisual, item);
                         }
                         else
                         {
@@ -461,6 +463,11 @@ public class ItemsControl : ScrollViewer
         }
 
         ItemsCollectionChanged?.Invoke(sender, e);
+    }
+
+    protected virtual void HandleCreatedItemVisual(GraphicalUiElement newVisual, object item)
+    {
+
     }
 
     protected virtual void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex) { }

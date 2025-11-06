@@ -4856,6 +4856,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     #region Misc. Methods
 
     public bool IsFullyCreated { get; private set; }
+    /// <summary>
+    /// Method which is called after a control is fully created when it is created from a FrameworkElement 
+    /// when ToGraphicalUiElement or SetGraphicalUiElement are called. 
+    /// </summary>
     public virtual void AfterFullCreation()
     {
         IsFullyCreated = true;
