@@ -456,7 +456,7 @@ public partial class MultiSelectTreeView
     {
         base.OnFontChanged(e);
         _cachedFontHeight = Font.Height;
-        Indent = DpiScaleI(ChevronBoxSize);
+        Indent = ChevronBoxSize;
     }
 
     // If you support per-monitor DPI, also recompute _dpiScale on WM_DPICHANGED.
@@ -933,7 +933,7 @@ public partial class MultiSelectTreeView
     private void LayoutNodeRow(TreeNode node, Rectangle row, out Rectangle chevron, out Rectangle state, out Rectangle image, out Rectangle text)
     {
         int spacing = 0;// DpiScaleI(3);
-        int chevronBox = DpiScaleI(ChevronBoxSize);
+        int chevronBox = ChevronBoxSize;
 
         int left = DisplayRectangle.Left + node.Level * Indent;
 
