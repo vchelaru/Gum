@@ -25,13 +25,14 @@ namespace Gum.Plugins.InternalPlugins.TreeView
             InitializeComponent();
         }
 
-        private void FlatList_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void FlatList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             var objectPushed = e.OriginalSource;
             var frameworkElementPushed = (objectPushed as FrameworkElement);
 
             var searchNodePushed = frameworkElementPushed?.DataContext as SearchItemViewModel;
             SelectSearchNode(searchNodePushed);
+            e.Handled = true;
         }
     }
 

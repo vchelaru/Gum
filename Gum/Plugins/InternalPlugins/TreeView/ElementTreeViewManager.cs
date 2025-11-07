@@ -27,6 +27,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ToolsUtilities;
 using Application = System.Windows.Application;
 using Binding = System.Windows.Data.Binding;
@@ -593,17 +594,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         checkBoxUi.Visibility = Visibility.Collapsed;
         checkBoxUi.Focusable = false;
         checkBoxUi.Margin = new Thickness(0, 2, 0, 0);
-        searchBarUi.IsKeyboardFocusedChanged += (s, e) =>
-        {
-            if (e.NewValue is true)
-            {
-                checkBoxUi.Visibility = Visibility.Visible;
-            }
-            else if (!checkBoxUi.IsFocused)
-            {
-                checkBoxUi.Visibility = Visibility.Collapsed;
-            }
-        };
         
         Grid.SetRow(checkBoxUi, 1);
         grid.Children.Add(checkBoxUi);
@@ -612,11 +602,25 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
         FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
         FlatList.Margin = new(0, 4, 0, 0);
+        FlatList.Visibility = Visibility.Collapsed;
 
         Grid.SetRow(FlatList, 2);
         grid.Children.Add(FlatList);
 
         //_guiCommands.AddControl(panel, "Project", TabLocation.Left);
+
+        searchBarUi.GotKeyboardFocus += (_, _) => UpdateCheckBoxVisibility();
+        searchBarUi.LostKeyboardFocus += (_, _) => UpdateCheckBoxVisibility();
+        FlatList.IsVisibleChanged += (_, _) => UpdateCheckBoxVisibility();
+        void UpdateCheckBoxVisibility()
+        {
+            bool textBoxFocused = searchTextBox.IsKeyboardFocusWithin;
+            bool listViewVisible = FlatList.Visibility == Visibility.Visible;
+
+            checkBoxUi.Visibility = (textBoxFocused || listViewVisible)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
     }
 
 
@@ -2277,7 +2281,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         searchTextBox.SetValue(HintAssist.IsFloatingProperty, false);
         searchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
         searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
-        searchTextBox.KeyDown += (sender, args) =>
+        searchTextBox.PreviewKeyDown += (sender, args) =>
         {
             bool isCtrlDown = WpfInput.Keyboard.IsKeyDown(WpfInput.Key.LeftCtrl) || WpfInput.Keyboard.IsKeyDown(WpfInput.Key.RightCtrl);
 
@@ -2298,6 +2302,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 if(FlatList.FlatList.SelectedIndex < FlatList.FlatList.Items.Count -1)
                 {
                     FlatList.FlatList.SelectedIndex++;
+                    BringSelectedIntoView();
                 }
                 args.Handled = true;
             }
@@ -2306,6 +2311,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 if (FlatList.FlatList.SelectedIndex > 0)
                 {
                     FlatList.FlatList.SelectedIndex--;
+                    BringSelectedIntoView();
                 }
                 args.Handled = true;
             }
@@ -2325,6 +2331,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         };
 
         return searchTextBox;
+
+        void BringSelectedIntoView()
+        {
+            if (FlatList.FlatList.SelectedItem is { } selected)
+            {
+                FlatList.Dispatcher.BeginInvoke(() => FlatList.FlatList.ScrollIntoView(selected),
+                    DispatcherPriority.Loaded);
+            }
+        }
     }
 
     private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
