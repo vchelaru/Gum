@@ -1,4 +1,5 @@
 ﻿using StateAnimationPlugin.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -13,6 +14,8 @@ namespace StateAnimationPlugin.Controls;
 
 public partial class TimelineControl : UserControl
 {
+    const string DefaultCategoryName = "Default";
+
     public TimelineControl()
     {
         InitializeComponent();
@@ -35,7 +38,37 @@ public partial class TimelineControl : UserControl
         var ctl = (TimelineControl)d;
         ctl.WireKeyframeTracking();
         ctl.RebuildSubRows();
-        ctl.RefreshStateEventView(); // reapply filter
+        ctl.RebuildStateEventRows();
+
+        if (e.OldValue is AnimationViewModel old)
+        {
+            old.PropertyChanged -= ctl.OnAnimationPropertyChanged;
+        }
+
+        if (e.NewValue is AnimationViewModel newAnimation)
+        {
+            newAnimation.PropertyChanged += ctl.OnAnimationPropertyChanged;
+        }
+    }
+
+    private void OnAnimationPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AnimationViewModel.SelectedKeyframe) && sender is AnimationViewModel
+            {
+                SelectedKeyframe: { } frame
+            })
+        {
+            FrameworkElement? row = null;
+            if (SubRows.FirstOrDefault(r => r.Name == RowName(frame)) is { } subRow)
+            {
+                row = SubAnimationsItemsControl.ItemContainerGenerator.ContainerFromItem(subRow) as FrameworkElement;
+            }
+            else if (StateEventRows.FirstOrDefault(r => r.Name == RowName(frame)) is { } kfRow)
+            {
+                row = StateEventItemsControl.ItemContainerGenerator.ContainerFromItem(kfRow) as FrameworkElement;
+            }
+            row?.BringIntoView();
+        }
     }
 
     public static readonly DependencyProperty CurrentTimeProperty =
@@ -51,6 +84,8 @@ public partial class TimelineControl : UserControl
 
     public ObservableCollection<SubRow> SubRows { get; } = new();
 
+    public ObservableCollection<KeyframeGroupRow> StateEventRows { get; } = new();
+
     private void RebuildSubRows()
     {
         SubRows.Clear();
@@ -63,6 +98,47 @@ public partial class TimelineControl : UserControl
         {
             SubRows.Add(new SubRow(k.AnimationName!, [k]));
         }
+    }
+
+    private void RebuildStateEventRows()
+    {
+        StateEventRows.Clear();
+
+        if (Animation?.Keyframes is not { } frames)
+        {
+            return;
+        }
+
+        
+
+        // Only state + event keyframes
+        var stateEventFrames = frames
+            .Where(k => !string.IsNullOrEmpty(k.StateName) ||
+                        !string.IsNullOrEmpty(k.EventName));
+
+        var grouped = stateEventFrames
+            .GroupBy(RowName)
+            .OrderBy(g => g.Key == DefaultCategoryName ? 0 : 1)
+            .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in grouped)
+        {
+            var ordered = group.OrderBy(k => k.Time).ToList();
+            StateEventRows.Add(new KeyframeGroupRow(group.Key, ordered));
+        }
+
+        
+    }
+
+    static string RowName(AnimatedKeyframeViewModel kf)
+    {
+        if (kf is { AnimationName.Length: > 0 })
+        {
+            return kf.AnimationName;
+        }
+        return kf.DisplayName.IndexOf('/') is var i and > 0
+            ? kf.DisplayName.Substring(0, i)
+            : DefaultCategoryName;
     }
 
     private void WireKeyframeTracking()
@@ -99,7 +175,7 @@ public partial class TimelineControl : UserControl
         }
 
         RebuildSubRows();
-        RefreshStateEventView();
+        RebuildStateEventRows();
     }
 
     private void OnKeyframePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -110,37 +186,32 @@ public partial class TimelineControl : UserControl
             e.PropertyName is nameof(AnimatedKeyframeViewModel.Time) ||
             e.PropertyName is nameof(AnimatedKeyframeViewModel.Length))
         {
-            // animation name changes can move items between rows
+            // name/time changes can move items between rows or within them
             RebuildSubRows();
-            RefreshStateEventView();
-        }
-    }
-
-    private void RefreshStateEventView()
-    {
-        if (Resources["StateEventView"] is CollectionViewSource cvs)
-        {
-            cvs.View?.Refresh();
+            RebuildStateEventRows();
         }
     }
 
     private ObservableCollection<AnimatedKeyframeViewModel>? _currentHooked;
 
-    // XAML Filter handler (for the State+Event row)
-    private void OnStateEventFilter(object sender, FilterEventArgs e)
-    {
-        if (e.Item is AnimatedKeyframeViewModel kf)
-        {
-            e.Accepted = !string.IsNullOrEmpty(kf.StateName) || !string.IsNullOrEmpty(kf.EventName);
-        }
-        else e.Accepted = false;
-    }
 
     public class SubRow
     {
         public string Name { get; }
         public IReadOnlyList<AnimatedKeyframeViewModel> Items { get; }
         public SubRow(string name, IReadOnlyList<AnimatedKeyframeViewModel> items)
+        {
+            Name = name;
+            Items = items;
+        }
+    }
+
+    public class KeyframeGroupRow
+    {
+        public string Name { get; }
+        public IReadOnlyList<AnimatedKeyframeViewModel> Items { get; }
+
+        public KeyframeGroupRow(string name, IReadOnlyList<AnimatedKeyframeViewModel> items)
         {
             Name = name;
             Items = items;
