@@ -89,6 +89,9 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// The currently-loaded GumProjectSave.
+        /// </summary>
         public GumProjectSave? GumProjectSave
         {
             get;
@@ -148,6 +151,13 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// Disables the in-memory cache for dictionary lookups, releasing any cached data if no other cache enables
+        /// remain active. This should be called every time EnableCache is called.
+        /// </summary>
+        /// <remarks>If multiple cache enable calls have been made, the cache will only be disabled after
+        /// all corresponding disables have been called. Once disabled, subsequent lookups will not use cached data
+        /// until the cache is re-enabled.</remarks>
         public void DisableCache()
         {
             if(cacheEnableCount > 0)

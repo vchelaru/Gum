@@ -18,10 +18,22 @@ public class ErrorChecker
 
         if(element != null)
         {
-            var asComponent = element as ComponentSave;
+            ObjectFinder.Self.EnableCache();
+            try
+            {
+                var asComponent = element as ComponentSave;
+                if(asComponent != null)
+                {
+                    list.AddRange(GetBehaviorErrorsFor(asComponent, project));
+                }
+                list.AddRange(GetMissingBaseTypeErrorsFor(element));
 
-            list.AddRange(GetBehaviorErrorsFor(asComponent, project));
-            list.AddRange(GetParentErrorsFor(element));
+                list.AddRange(GetParentErrorsFor(element));
+            }
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
+            }
         }
 
         return list.ToArray();
@@ -33,23 +45,20 @@ public class ErrorChecker
     {
         List<ErrorViewModel> toReturn = new List<ErrorViewModel>();
 
-        if(component != null)
+        foreach(var behaviorReference in component.Behaviors)
         {
-            foreach(var behaviorReference in component.Behaviors)
-            {
-                var behavior = project.Behaviors.FirstOrDefault(item => item.Name == behaviorReference.BehaviorName);
+            var behavior = project.Behaviors.FirstOrDefault(item => item.Name == behaviorReference.BehaviorName);
 
-                if(behavior == null)
+            if(behavior == null)
+            {
+                toReturn.Add(new ErrorViewModel
                 {
-                    toReturn.Add(new ErrorViewModel
-                    {
-                        Message = $"Missing reference to behavior {behaviorReference.BehaviorName}"
-                    });
-                }
-                else
-                {
-                    AddBehaviorErrors(component, toReturn, behavior);
-                }
+                    Message = $"Missing reference to behavior {behaviorReference.BehaviorName}"
+                });
+            }
+            else
+            {
+                AddBehaviorErrors(component, toReturn, behavior);
             }
         }
 
@@ -180,7 +189,7 @@ public class ErrorChecker
 
                     if(!string.IsNullOrEmpty(value))
                     {
-                        var instanceName = value;
+                        var instanceName = value!;
                         if(value?.Contains('.') == true)
                         {
                             instanceName = value.Substring(0, value.IndexOf('.'));
@@ -200,6 +209,30 @@ public class ErrorChecker
             }
         }
 
+        return toReturn;
+    }
+
+    #endregion
+
+    #region Instance BaseType Errors
+
+    List<ErrorViewModel> GetMissingBaseTypeErrorsFor(ElementSave elementSave)
+    {
+        var toReturn = new List<ErrorViewModel>();
+
+        foreach(var instance in elementSave.Instances)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+
+            if(instanceElement == null)
+            {
+                var error = new ErrorViewModel
+                {
+                    Message = $"{instance.Name} references {instance.BaseType} which is an invalid element"
+                };
+                toReturn.Add(error);
+            }
+        }
         return toReturn;
     }
 
