@@ -115,7 +115,7 @@ Children of a container which uses the `Top To Bottom Stack` or `Left To Right S
 
 Children can be reordered using the right-click menu on an instance.
 
-![](<../../../.gitbook/assets/ReorderStackedChildren (1) (1).gif>)
+![](<../../../.gitbook/assets/ReorderStackedChildren (1) (2).gif>)
 
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 

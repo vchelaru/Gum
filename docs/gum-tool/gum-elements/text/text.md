@@ -16,7 +16,7 @@ Text will wrap according to the Text object's Width.
 
 The enter key can be used to add new lines to text.
 
-![](<../../../.gitbook/assets/NewlinesGum (1).png>)
+![](<../../../.gitbook/assets/NewlinesGum (2).png>)
 
 ## Text Wrapping
 

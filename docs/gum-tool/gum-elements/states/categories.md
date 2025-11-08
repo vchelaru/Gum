@@ -15,12 +15,9 @@ To create a new category:
 
 1. Select a Screen, Component, or Standard element which should contain the new category
 2. Right-click in the States tab in an empty space
-3.  Select the Add Category item\
-
+3.  Select the Add Category item\\
 
     <figure><img src="../../../.gitbook/assets/05_21 39 23.png" alt=""><figcaption><p>Right click Add Category item</p></figcaption></figure>
-
-
 4. Enter a name for the new category
 
 After the new category is created it appears in the States tab as a folder.
@@ -32,8 +29,7 @@ After the new category is created it appears in the States tab as a folder.
 To add states to a category:
 
 1. Right-click on the desired category
-2.  Select Add State\
-
+2.  Select Add State\\
 
     <figure><img src="../../../.gitbook/assets/05_21 45 50 (1).png" alt=""><figcaption><p>Right click Add State item</p></figcaption></figure>
 3. Enter a name for the new state
@@ -101,6 +97,6 @@ Variables can be removed from states, but this removal must be done at the categ
 2. Click the "X" button next to the variable
 3. Confirm that you would like to remove the variable. Warning: this will remove the variable from all contained states.
 
-![](<../../../.gitbook/assets/removevariablefromcategory (1).png>)
+![](<../../../.gitbook/assets/removevariablefromcategory (2).png>)
 
 This will remove the assignment of the variable from all states in the category.

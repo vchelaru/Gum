@@ -19,7 +19,7 @@ To understand how components work, we'll create a simple Button component. To do
 3. Drag+drop a ColoredRectangle standard element into the Button component
 4. Drag+drop a Text standard element into the Button component
 
-![A single Button Component with ColoredRectangle and Text. Note that the text is white.](../../../.gitbook/assets/Gum_HeL31coO2B.png)
+![A single Button Component with ColoredRectangle and Text. Note that the text is white.](<../../../.gitbook/assets/GumButton1 (1).PNG>)
 
 Since ColoredRectangleInstance and TextInstance are both white you may not be able to see the Text. Let's change the ColoredRectangleInstance's color:
 

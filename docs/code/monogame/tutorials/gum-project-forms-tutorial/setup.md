@@ -20,7 +20,7 @@ Before writing any code, we must add the Gum NuGet package. Add the `Gum.MonoGam
 
 Once you are finished, your game project should reference the `Gum.MonoGame` project.
 
-<figure><img src="../../../../.gitbook/assets/NuGetGum (2).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/NuGetGum (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ## Creating a new Gum Project
 
@@ -52,7 +52,7 @@ Next, add default Forms components to the Gum project. Forms components are prem
 
 To add Gum Forms components in Gum, select **Content** -> **Add Forms Components**.
 
-<figure><img src="../../../../.gitbook/assets/AddForms (3).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/AddForms (1).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
 
 Later tutorials will reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**. Don't worry, you can delete this screen later as you develop your game.
 
@@ -64,7 +64,7 @@ If asked, click **Yes** when asked about overwriting the default standards.
 
 Your project now includes Forms components.
 
-<figure><img src="../../../../.gitbook/assets/Components (2).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/Components (1).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
 
 ## Modifying the Game .csproj
 
@@ -77,7 +77,7 @@ First, we'll set up our project so all Gum files are copied when the project is 
 1. Right-click on any Gum file in your project, such as GumProject.gumx
 2.  Select the Properties item\\
 
-    <figure><img src="../../../../.gitbook/assets/image (11) (3).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/image (11) (1).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
 3.  Set the file to Copy if Newer. If using Android, see instructions below.\\
 
     <figure><img src="../../../../.gitbook/assets/image (12) (1).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>

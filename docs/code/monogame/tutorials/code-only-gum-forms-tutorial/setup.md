@@ -16,7 +16,7 @@ Before writing any code, we must add the Gum NuGet package. Add the Gum.MonoGame
 
 Once you are finished, your game project should reference the `Gum.MonoGame` project.
 
-<figure><img src="../../../../.gitbook/assets/NuGetGum.png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/NuGetGum (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ## Adding Gum to Your Game
 
@@ -115,7 +115,7 @@ public class Game1 : Game
 The code above includes the following sections:
 
 * Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Note that `DefaultVisualsVersion.V2` is passed as a second parameter, indicating that Version 2 of visuals are used. All new projects should use Version 2 rather than Version 1 as of July 2025.
-* Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls.  By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
+* Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls. By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
 ```csharp
 GumUI.Initialize(this, DefaultVisualsVersion.V2);

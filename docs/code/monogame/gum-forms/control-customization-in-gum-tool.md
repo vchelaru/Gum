@@ -18,7 +18,7 @@ Before customizing controls you should add the default set of forms components t
 
 If you do not have these components you can add them by clicking Content -> Add Forms Components
 
-<figure><img src="../../../.gitbook/assets/AddForms (2).png" alt=""><figcaption><p>Add Forms Components if you do not already have them</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/AddForms (1).png" alt=""><figcaption><p>Add Forms Components if you do not already have them</p></figcaption></figure>
 
 ## Creating New Variants
 
@@ -28,16 +28,13 @@ Any component can be copied and modified without changing the original.
 
 First we can create a duplicate of an existing component:
 
-1.  Select the button component you would like to copy. For example select Controls/ButtonStandard\
-
+1.  Select the button component you would like to copy. For example select Controls/ButtonStandard\\
 
     <figure><img src="../../../.gitbook/assets/ButtonStandard.png" alt=""><figcaption><p>ButtonStandard in Gum</p></figcaption></figure>
-2.  Duplicate the component by right-clicking and selecting the Duplicate item\
-
+2.  Duplicate the component by right-clicking and selecting the Duplicate item\\
 
     <figure><img src="../../../.gitbook/assets/Duplicate.png" alt=""><figcaption><p>Right-click duplicate item</p></figcaption></figure>
-3.  Enter a new name for the component, such as OrangeButton\
-
+3.  Enter a new name for the component, such as OrangeButton\\
 
     <figure><img src="../../../.gitbook/assets/08_06 35 38.png" alt=""><figcaption><p>Enter component name</p></figcaption></figure>
 
@@ -58,10 +55,3 @@ Repeat these steps for each of the states, adjusting the color as desired. Also,
 After you are finished, you can use this new component in any other screen or component.
 
 <figure><img src="../../../.gitbook/assets/08_06 56 26.png" alt=""><figcaption><p>Standard and orange button in a screen called GameScreen</p></figcaption></figure>
-
-
-
-
-
-
-
