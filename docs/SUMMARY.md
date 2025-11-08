@@ -222,6 +222,7 @@
     * [FontScale](code/gum-code-reference/textruntime/fontscale.md)
     * [FontSize](code/gum-code-reference/textruntime/fontsize.md)
     * [HorizontalAlignment](code/gum-code-reference/textruntime/horizontalalignment.md)
+    * [MaxLettersToShow](code/gum-code-reference/textruntime/maxletterstoshow.md)
     * [Text Wrapping](code/gum-code-reference/textruntime/text-wrapping.md)
     * [VerticalAlignment](code/gum-code-reference/textruntime/verticalalignment.md)
   * [VariableSave](code/gum-code-reference/variablesave.md)
