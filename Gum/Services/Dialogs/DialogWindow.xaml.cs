@@ -24,9 +24,13 @@ public partial class DialogWindow : WindowChromeWindow
     // when you want your window to size to content and center itself
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        SizeToContent = SizeToContent.WidthAndHeight;
-        Left = Application.Current.MainWindow.Left + ((Application.Current.MainWindow.ActualWidth / 2) - Width / 2);
-        Top = Application.Current.MainWindow.Top + ((Application.Current.MainWindow.ActualHeight / 2) - Height / 2);
+        var mainWindow = Application.Current.MainWindow;
+        if(mainWindow != null)
+        {
+            SizeToContent = SizeToContent.WidthAndHeight;
+            Left = mainWindow.Left + ((mainWindow.ActualWidth / 2) - Width / 2);
+            Top = mainWindow.Top + ((mainWindow.ActualHeight / 2) - Height / 2);
+        }
         Loaded -= OnLoaded;
     }
 
