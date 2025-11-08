@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Security.RightsManagement;
 using Gum.Mvvm;
 
 namespace Gum.Plugins.Errors
