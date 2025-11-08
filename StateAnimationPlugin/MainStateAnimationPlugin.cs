@@ -464,7 +464,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
-    private void HandlePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void HandlePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         var variableName = e.PropertyName;
 
@@ -497,7 +497,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
-    private void HandleDataChange(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void HandleDataChange(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         var variableName = e.PropertyName;
 
@@ -551,24 +551,28 @@ public class MainStateAnimationPlugin : PluginBase
         var response = new DeleteResponse();
         response.ShouldDelete = true;
 
-        List<AnimationSave> animatedStatesReferencingState = GetAnimationsReferencingState(state, container as ElementSave);
-
-        if (animatedStatesReferencingState?.Count > 0)
+        if(container is ElementSave elementSave)
         {
-            string message = "Are you sure you want to delete this state? It is used by the following animations. Deleting this state may break the animation:\n\n";
+            List<AnimationSave> animatedStatesReferencingState = GetAnimationsReferencingState(state, elementSave);
 
-            foreach (var animation in animatedStatesReferencingState)
+            if (animatedStatesReferencingState?.Count > 0)
             {
-                message += animation.Name;
-            }
+                string message = "Are you sure you want to delete this state? It is used by the following animations. Deleting this state may break the animation:\n\n";
 
-            if (!_dialogService.ShowYesNoMessage(message, "Delete state?"))
-            {
-                response.ShouldDelete = false;
-                response.Message = null;
-                response.ShouldShowMessage = false; // user said 'no', no need to show a message...S
+                foreach (var animation in animatedStatesReferencingState)
+                {
+                    message += animation.Name;
+                }
+
+                if (!_dialogService.ShowYesNoMessage(message, "Delete state?"))
+                {
+                    response.ShouldDelete = false;
+                    response.Message = null;
+                    response.ShouldShowMessage = false; // user said 'no', no need to show a message...S
+                }
             }
         }
+
 
         return response;
     }

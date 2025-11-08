@@ -135,6 +135,12 @@ namespace Gum
 
             PluginManager.Self.XnaInitialized();
 
+
+            MigrateAppSettings(services);
+            services.GetRequiredService<IThemingService>().ApplyInitialTheme();
+
+            // ProjectManager.Initialize loads a project. We want to do that *after* styling
+            // has applied, otherwise we will have the app display as unstyled when we show messages
             await ProjectManager.Self.Initialize();
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
@@ -148,9 +154,6 @@ namespace Gum
             };
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
-
-            MigrateAppSettings(services);
-            services.GetRequiredService<IThemingService>().ApplyInitialTheme();
         }
 
         private static void MigrateAppSettings(IServiceProvider services)
