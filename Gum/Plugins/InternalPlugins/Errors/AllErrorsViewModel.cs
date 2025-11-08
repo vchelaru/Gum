@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Security.RightsManagement;
 using Gum.Mvvm;
 
 namespace Gum.Plugins.Errors
@@ -8,6 +9,11 @@ namespace Gum.Plugins.Errors
     {
         public ObservableCollection<ErrorViewModel> Errors { get; } = [];
 
+        public ErrorViewModel SelectedItem
+        {
+            get => Get<ErrorViewModel>();
+            set => Set(value);
+        }
 
         public string CountDescription => Errors.Count switch
         {
