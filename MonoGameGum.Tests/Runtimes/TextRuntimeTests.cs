@@ -358,4 +358,22 @@ $"chars count=223\r\n";
 
         sut.BitmapFont.ShouldBe(bitmapFont);
     }
+
+    [Fact]
+    public void MaxNumberOfLetters_ShouldNotChangeDimensions()
+    {
+        TextRuntime textRuntime = new TextRuntime();
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        textRuntime.Width = 0;
+        textRuntime.Text = "This is some sample text";
+
+        textRuntime.GetAbsoluteWidth().ShouldBeGreaterThan(0);
+        var absoluteWidth = textRuntime.GetAbsoluteWidth();
+
+        textRuntime.MaxLettersToShow = 0;
+
+        textRuntime.GetAbsoluteWidth().ShouldBe(absoluteWidth);
+
+
+    }
 }
