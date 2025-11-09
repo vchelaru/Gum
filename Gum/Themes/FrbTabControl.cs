@@ -40,15 +40,7 @@ public class FrbTabControl
 
     public static double? GetMaxTabWidth(TabControl obj)
     {
-        var valueAsObjct = obj.GetValue(MaxTabWidthProperty); 
-        if(valueAsObjct is double asDouble)
-        {
-            return asDouble;
-        }
-        else
-        {
-            return null;
-        }
+        return (double?)obj.GetValue(MaxTabWidthProperty);
     }
 
     public static void SetMaxTabWidth(TabControl obj, double? value)

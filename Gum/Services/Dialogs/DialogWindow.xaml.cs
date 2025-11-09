@@ -25,9 +25,9 @@ public partial class DialogWindow : WindowChromeWindow
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         var mainWindow = Application.Current.MainWindow;
+        SizeToContent = SizeToContent.WidthAndHeight;
         if(mainWindow != null)
         {
-            SizeToContent = SizeToContent.WidthAndHeight;
             Left = mainWindow.Left + ((mainWindow.ActualWidth / 2) - Width / 2);
             Top = mainWindow.Top + ((mainWindow.ActualHeight / 2) - Height / 2);
         }
