@@ -71,6 +71,10 @@ public class SystemManagers : ISystemManagers
 
     public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
     {
+        if(IsWindowReady() == false)
+        {
+            throw new InvalidOperationException("Cannot attempt to load a texture because IsWindowReady() is false - did you remember to call InitWindow first?");
+        }
         // tolerate nulls for unit tests:
         //if (Renderer.GraphicsDevice == null) return null;
 
