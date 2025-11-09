@@ -103,6 +103,9 @@ namespace Gum
 
             // This has to happen before plugins are loaded since they may depend on settings...
             ProjectManager.Self.LoadSettings();
+            MigrateAppSettings(services);
+            services.GetRequiredService<IThemingService>().ApplyInitialTheme();
+
 
             ElementTreeViewManager.Self.Initialize();
 
@@ -131,10 +134,12 @@ namespace Gum
             // moved it down because it may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-
-
+            // XnaInitialize is where wireframe controls are initialized.
             PluginManager.Self.XnaInitialized();
 
+
+            // ProjectManager.Initialize loads a project. We want to do that *after* styling
+            // has applied, otherwise we will have the app display as unstyled when we show messages
             await ProjectManager.Self.Initialize();
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
@@ -148,9 +153,6 @@ namespace Gum
             };
 
             fileWatchTimer.Start(TimeSpan.FromSeconds(2));
-
-            MigrateAppSettings(services);
-            services.GetRequiredService<IThemingService>().ApplyInitialTheme();
         }
 
         private static void MigrateAppSettings(IServiceProvider services)

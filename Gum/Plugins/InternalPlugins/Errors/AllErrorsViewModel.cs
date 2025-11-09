@@ -8,6 +8,11 @@ namespace Gum.Plugins.Errors
     {
         public ObservableCollection<ErrorViewModel> Errors { get; } = [];
 
+        public ErrorViewModel SelectedItem
+        {
+            get => Get<ErrorViewModel>();
+            set => Set(value);
+        }
 
         public string CountDescription => Errors.Count switch
         {
