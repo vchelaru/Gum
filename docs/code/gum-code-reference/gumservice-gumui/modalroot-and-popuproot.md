@@ -56,7 +56,7 @@ void ShowPopup(string text, bool isModal)
 }
 ```
 
-<figure><img src="../../../../../.gitbook/assets/13_09 00 24.gif" alt=""><figcaption><p>Modal popup button blocks all other UI when it is shown</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_09 00 24.gif" alt=""><figcaption><p>Modal popup button blocks all other UI when it is shown</p></figcaption></figure>
 
 ### Example - Adding a Popup from Gum Element
 
