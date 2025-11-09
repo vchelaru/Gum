@@ -516,20 +516,31 @@ public class SelectedState : ISelectedState
         }
     }
 
+    // Selected categories in animations vs treeview can "fight" and we want to avoid infinite recursion
+    bool _isHandlingCategoryAssigment = false;
     private void HandleSelectedStateCategorySave(StateSaveCategory value)
     {
-        var categoryBefore = SelectedStateCategorySave;
-
-        if(value != null)
+        if (_isHandlingCategoryAssigment) return;
+        _isHandlingCategoryAssigment = true;
+        try
         {
-            snapshot.SelectedStateSave = null;
-            PluginManager.Self.ReactToStateSaveSelected(null);
+            var categoryBefore = SelectedStateCategorySave;
+
+            if(value != null)
+            {
+                snapshot.SelectedStateSave = null;
+                PluginManager.Self.ReactToStateSaveSelected(null);
+            }
+            UpdateToSetSelectedStateSaveCategory(value);
+
+            if (categoryBefore != SelectedStateCategorySave)
+            {
+                PluginManager.Self.ReactToStateSaveCategorySelected(SelectedStateCategorySave);
+            }
         }
-        UpdateToSetSelectedStateSaveCategory(value);
-
-        if (categoryBefore != value)
+        finally
         {
-            PluginManager.Self.ReactToStateSaveCategorySelected(value);
+            _isHandlingCategoryAssigment = false;
         }
     }
 

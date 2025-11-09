@@ -418,7 +418,7 @@ public class GumProjectSave
 
 
     /// <summary>
-    /// shortcu function to fetch a specific component from your gum project
+    /// shortcut function to fetch a specific component from your gum project
     ///
     /// <code ang="csharp">
     /// //same as :
