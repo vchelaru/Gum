@@ -1159,7 +1159,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element, only direct children. 
     /// </summary>
 
-    public ObservableCollection<IRenderableIpso> Children
+    public ObservableCollection<IRenderableIpso>? Children
     {
         get
         {
@@ -1168,7 +1168,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     object mTagIfNoContainedObject;
-    public object Tag
+    public object? Tag
     {
         get
         {
@@ -1194,7 +1194,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IPositionedSizedObject Component { get { return mContainedObjectAsIpso; } }
+    public IPositionedSizedObject? Component => mContainedObjectAsIpso;
 
     /// <summary>
     /// Returns the absolute (screen space) X of the origin of the GraphicalUiElement. Note that

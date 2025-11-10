@@ -17,7 +17,7 @@ namespace RenderingLibrary
         float Width { get; set; }
         float Height { get; set; }
         string Name { get; set; }
-        object Tag { get; set; }
+        object? Tag { get; set; }
     }
 
     public static class IPositionedSizedObjectExtensionMethods
