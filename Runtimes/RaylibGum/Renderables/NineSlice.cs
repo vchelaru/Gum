@@ -168,12 +168,14 @@ public class NineSlice : RenderableBase, ITextureCoordinate
             nPatchInfo.Bottom = (int)(rect.Height / 3);
         }
 
+        var absoluteRotation = this.GetAbsoluteRotation();
+
         DrawTextureNPatch(
             nonNullText,
             nPatchInfo,
             destinationRectangle,
             Vector2.Zero,
-            0,
+            -absoluteRotation,
             Color);
     }
 
