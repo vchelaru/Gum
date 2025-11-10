@@ -92,11 +92,11 @@ namespace RenderingLibrary.Content
             }
         }
 
-        private Texture2D LoadTexture2D(string fileName, SystemManagers managers)
+        private Texture2D? LoadTexture2D(string fileName, SystemManagers managers)
         {
             string fileNameStandardized = StandardizeCaseSensitive(fileName);
 
-            Texture2D toReturn = null;
+            Texture2D? toReturn = null;
 
             if (LoaderManager.Self.CacheTextures)
             {
