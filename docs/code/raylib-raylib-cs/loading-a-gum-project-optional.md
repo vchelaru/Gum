@@ -36,9 +36,11 @@ To add the files to your .csproj:
 2. Add a line to copy all files in the Gum project folder including the .gumx file itself. For example, your csproj might look like this:
 
 ```xml
-<None Update="resources\GumProject\**\*.*">
+<ItemGroup>
+    <None Update="resources\GumProject\**\*.*">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-</None>
+  </None>
+</ItemGroup>
 ```
 
 If using Visual Studio, you can verify that files are set to copy by selecting a random file in your Gum project and looking at the properties to see if it is marked as copied.
@@ -49,16 +51,23 @@ If using Visual Studio, you can verify that files are set to copy by selecting a
 
 To load a Gum Project:
 
-1. Open your file that has your Gum initialization code, such as Project.cs
-2. Modify the Initialize method by passing it a Gum project
+1. Make sure that your Gum project has at least one Screen
+2. Open your file that has your Gum initialization code, such as Project.cs
+3. Modify the Initialize method by passing it a Gum project
 
 ```csharp
 GumUI.Initialize(
     "resources/GumProject/raylibGumProject.gumx");
 
 var screen = ObjectFinder.Self.GumProjectSave.Screens
-    .First()
+    .FirstOrDefault()
     .ToGraphicalUiElement();
+
+if(screen == null)
+{
+    throw new Exception(
+        "No screen found in the Gum project, did you add a Screen in the Gum tool?");
+}
 screen.AddToRoot();
 
 ```
@@ -72,3 +81,64 @@ Once a Gum project is loaded, all of its screens and components can be accessed 
 The code in the previous section creates a `GraphicalUiElement` from the first screen in the project.
 
 Calling AddToRoot adds the screen to the root Gum object and makes a fully-functional Gum screen, including any Forms instances, such as instances of the Button type.
+
+## Working With Forms Controls
+
+Gum projects with Forms controls can be used in raylib projects. To add Forms controls to your project:
+
+1. Open your Gum project in the Gum tool
+2. Select the Content -> Add Forms Components menu. This adds Forms components to the Components folder.
+3. Drag+drop controls into your screen. As a test, add at least one of the following:
+   1. ButtonStandard
+   2. CheckBox
+   3. ComboBox
+   4. ListBox
+   5. Slider
+
+<figure><img src="../../.gitbook/assets/09_17 31 56.png" alt=""><figcaption><p>Forms controls in Gum tool</p></figcaption></figure>
+
+These controls can be interacted with. To do this, add the following code to your project after creating the first screen:
+
+<pre class="language-csharp"><code class="lang-csharp">GumUI.Initialize(
+    "resources/GumProject/gumProject.gumx");
+
+var screen = ObjectFinder.Self.GumProjectSave.Screens
+    .FirstOrDefault()
+    .ToGraphicalUiElement();
+
+if(screen == null)
+{
+    throw new Exception(
+        "No screen found in the Gum project, did you add a Screen in the Gum tool?");
+}
+screen.AddToRoot();
+
+
+<strong>var button = screen.GetFrameworkElementByName&#x3C;Button>("ButtonStandardInstance");
+</strong><strong>button.Click += (_, _) => button.Text = $"Clicked at {DateTime.Now}";
+</strong><strong>
+</strong><strong>var checkBox = screen.GetFrameworkElementByName&#x3C;CheckBox>("CheckBoxInstance");
+</strong><strong>checkBox.Text = "Button Visible";
+</strong><strong>checkBox.Click += (_, _) => button.IsVisible = checkBox.IsChecked == true;
+</strong><strong>
+</strong><strong>var comboBox = screen.GetFrameworkElementByName&#x3C;ComboBox>("ComboBoxInstance");
+</strong><strong>for(int i = 0; i &#x3C; 10; i++)
+</strong><strong>{
+</strong><strong>    comboBox.Items.Add(i);
+</strong><strong>}
+</strong><strong>
+</strong><strong>var listBox = screen.GetFrameworkElementByName&#x3C;ListBox>("ListBoxInstance");
+</strong><strong>for(int i = 0; i &#x3C; 20; i++)
+</strong><strong>{
+</strong><strong>    listBox.Items.Add($"Item {i}");
+</strong><strong>}
+</strong><strong>
+</strong><strong>var slider = screen.GetFrameworkElementByName&#x3C;Slider>("SliderInstance");
+</strong><strong>slider.Minimum = 0;
+</strong><strong>slider.Maximum = 100;
+</strong><strong>slider.ValueChanged += (_, _) =>
+</strong><strong>{
+</strong><strong>    listBox.X = (float)slider.Value;
+</strong><strong>};
+</strong>
+</code></pre>
