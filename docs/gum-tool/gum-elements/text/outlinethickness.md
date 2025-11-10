@@ -8,7 +8,7 @@
 
 The `Outline Thickness` can be set on a Text object like any other variable.
 
-![](<../../../.gitbook/assets/OutlineThicknessGum (2).png>)
+![](<../../../.gitbook/assets/OutlineThicknessGum (1).png>)
 
 `Outline Thickness` changes appear in the Gum window.
 

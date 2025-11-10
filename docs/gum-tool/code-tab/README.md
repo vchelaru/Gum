@@ -118,11 +118,32 @@ using {YourProjectNamespace}.Components;
 
 ### Root Namespace
 
-Enter the project's Root Namespace, such as `MyGame`.
+Enter the project's Root Namespace, such as `MyGame`. Gum prefixes the generated code namespace with this entered namespace.
+
+### Append Folder to Namespace
+
+This option controls whether the folder names of screens and components should be added to a namespace.
+
+For example, consider a component named ButtonStandard inside the Components/Controls folder. If this option is checked (recommended), then the class is generated with the `Contrlos` folder included in the namespace:
+
+```csharp
+namespace MyProject.Components.Controls;
+```
+
+If this option is unchecked, then folders are not included in the namespace, so the generated code would include the following namespace:
+
+```csharp
+namespace MyProject.Components;
+```
 
 ### Default Screen Base
 
-Enter the type that you would like all Screen runtimes to inherit from. If you're not sure what to enter, then use `GraphicalUiElement`. If your game uses a custom class that you have written for all Screens, then use the name of that class. You can switch to custom classes later as your project grows.
+Enter the type that you would like all screen runtimes to inherit from. If you're not sure what to enter, then use `Gum.Wireframe.BindableGue`. If your game uses a custom class that you have written for all screens, then use the name of that class. You can switch to custom classes later as your project grows.
+
+Note that Gum may choose to override this base class in certain conditions including:
+
+* If your project is using Forms
+* If your screen inherits from another screen
 
 ### Generation Behavior
 

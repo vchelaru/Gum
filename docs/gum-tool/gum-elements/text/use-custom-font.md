@@ -10,7 +10,7 @@ The **Use Custom Font** variable controls whether a Text object uses a premade .
 
 If **Use Custom Font** is set to true, then Gum displays the **Custom Font File** variable, which can point to a .fnt file created by Bitmap Font Generator.
 
-![](<../../../.gitbook/assets/UseCustomFontGum (2).png>)
+![](<../../../.gitbook/assets/UseCustomFontGum (1).png>)
 
 If **Use Custom Font** is set to true, then the **Font**, **Font Size**, and **Outline Thickness** variables can no longer be set - as they are part of the font file itself.
 

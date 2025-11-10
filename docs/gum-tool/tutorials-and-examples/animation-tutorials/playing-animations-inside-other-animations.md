@@ -62,4 +62,4 @@ Next we'll be adding animations to animate the TextComponent instances to visibl
 
 Now the animation can be played or previewed with the slider bar:
 
-![](<../../../.gitbook/assets/PreviewAndPlayingSubAnimations (2).gif>)
+![](<../../../.gitbook/assets/PreviewAndPlayingSubAnimations (1).gif>)
