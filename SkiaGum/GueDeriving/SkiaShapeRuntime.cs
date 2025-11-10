@@ -212,8 +212,8 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     public float StrokeWidth
     {
-        get;
-        set;
+        get => ContainedRenderable.StrokeWidth;
+        set => ContainedRenderable.StrokeWidth = value;
     }
 
     public DimensionUnitType StrokeWidthUnits
