@@ -30,10 +30,14 @@ Next, add the needed NuGet packages:
 
 1. Expand your game project in the Solution Explorer
 2. Right-click on **Dependencies** and select **Manage NuGet Packages**
-3. Search for and install `Raylib-cs` . As of August 2025 the newest version is 7.0.1.
-4. Search for and install `Gum.raylib`. As of August 2025 the newest version is 2025.8.4.1
+3. Search for and install `Raylib-cs` . As of November 2025 the newest version is 7.0.2.
+4. Search for and install `Gum.raylib`. As of November 2025 the newest version is 2025.11.6.1
 {% endtab %}
 {% endtabs %}
+
+{% hint style="warning" %}
+If you name your project RaylibGum (with any capitalization) you may get a runtime error about not being able to access the GumService type. Use any other name for your project to avoid this problem.
+{% endhint %}
 
 Once you have your project set up, modify the Program.cs file so it contains the following code:
 
