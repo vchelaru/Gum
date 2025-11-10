@@ -59,17 +59,17 @@
         });
     </script>
 
-    <script src="_content/nkast.Wasm.Dom/js/JSObject.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Window.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Document.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Navigator.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Gamepad.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Media.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.XHR/js/XHR.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Canvas/js/Canvas.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Canvas/js/CanvasGLContext.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.Audio/js/Audio.8.0.5.js"></script>
-    <script src="_content/nkast.Wasm.XR/js/XR.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.JSInterop/js/JSObject.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Window.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Document.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Navigator.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Gamepad.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Media.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.XHR/js/XHR.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Canvas/js/Canvas.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Canvas/js/CanvasGLContext.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.Audio/js/Audio.8.0.11.js"></script>
+    <script src="_content/nkast.Wasm.XR/js/XR.8.0.11.js"></script>
 
     <script>
         function tickJS()
@@ -94,20 +94,19 @@
             window.requestAnimationFrame(tickJS);
         };
 
-        window.onkeydown = function(event)
+        window.addEventListener("keydown", function(event)
         {
             // Prevent Arrows Keys and Spacebar scrolling the outer page
             // when running inside an iframe. e.g: itch.io embedding.
             if ([32, 37, 38, 39, 40].indexOf(event.keyCode) > -1)
                 event.preventDefault();
-        };
-		function preventScroll(event) {
-			// Prevent Mousewheel scrolling the outer page
-			// when running inside an iframe. e.g: itch.io embedding.
-			event.preventDefault();
-		}
-		window.onmousewheel = preventScroll;      // optional fallback for old browsers
-		window.addEventListener('wheel', preventScroll, { passive: false });
+        });
+        window.addEventListener("wheel", function(event)
+        {
+            // Prevent Mousewheel scrolling the outer page
+            // when running inside an iframe. e.g: itch.io embedding.
+            event.preventDefault();
+        }, { passive: false });
     </script>
 </body>
 
