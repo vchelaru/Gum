@@ -4519,7 +4519,7 @@ public class CodeGenerator
                 var variableRoot = variable.GetRootName();
 
                 var matchingExposed = instanceElement?.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
-                if (matchingExposed != null)
+                if (matchingExposed != null && matchingExposed.SourceObject != null)
                 {
                     var instanceInInstanceElement = instanceElement!.GetInstance(matchingExposed.SourceObject);
 
@@ -5000,7 +5000,7 @@ public class CodeGenerator
 
         foreach (var variable in element.DefaultState.Variables)
         {
-            if (!string.IsNullOrEmpty(variable.ExposedAsName))
+            if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject != null)
             {
                 var instanceName = ToCSharpName(variable.SourceObject);
                 // make sure this instance is a XamForms object otherwise we don't need to set the binding
