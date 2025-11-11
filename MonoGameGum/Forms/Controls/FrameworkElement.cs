@@ -62,6 +62,15 @@ public enum TabbingFocusBehavior
     FocusableIfInputReceiver,
     SkipOnTab
 }
+
+
+public enum SizeMode
+{
+    Fixed,
+    Auto
+}
+
+
 #endregion
 
 #region Events
