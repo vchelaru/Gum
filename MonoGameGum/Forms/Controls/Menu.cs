@@ -117,12 +117,12 @@ public class Menu : ItemsControl
 
         for (int i = 0; i < MenuItemsInternal.Count; i++)
         {
-            var listBoxItem = MenuItemsInternal[i];
-            if (listBoxItem != sender && listBoxItem.IsSelected)
+            var menuItem = MenuItemsInternal[i];
+            if (menuItem != sender && menuItem.IsSelected)
             {
-                var deselectedItem = listBoxItem.BindingContext ?? listBoxItem;
+                var deselectedItem = menuItem.BindingContext ?? menuItem;
                 args.RemovedItems.Add(deselectedItem);
-                listBoxItem.IsSelected = false;
+                menuItem.IsSelected = false;
             }
         }
 
