@@ -489,16 +489,16 @@ public class SpriteRenderer
                 var worldWidth = sourceWidth * scale.X;
                 var worldHeight = sourceHeight * scale.Y;
 
-                var worldRight = position.X + worldWidth;
-                var worldBottom = position.Y + worldHeight;
+                var worldRightAfterRotation = position.X + worldWidth;
+                var worldBottomAfterRotation = position.Y + worldHeight;
 
                 var flipVerticalHorizontal =
                     quarterRotations == 1 || quarterRotations == 3;
                 if (flipVerticalHorizontal)
                 {
                     // invert X/Y width/Heights:
-                    worldRight = position.X + worldHeight;
-                    worldBottom = position.Y + worldWidth;
+                    worldRightAfterRotation = position.X + worldHeight;
+                    worldBottomAfterRotation = position.Y + worldWidth;
                 }
 
                 // See above where float x and y are rounded for information on why we do this:
@@ -509,8 +509,8 @@ public class SpriteRenderer
 
                 if (dimensionSnapping == DimensionSnapping.SideSnapping)
                 {
-                    worldRightRounded = MathFunctions.RoundToInt(worldRight * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
-                    worldBottomRounded = MathFunctions.RoundToInt(worldBottom * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+                    worldRightRounded = MathFunctions.RoundToInt(worldRightAfterRotation * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
+                    worldBottomRounded = MathFunctions.RoundToInt(worldBottomAfterRotation * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
                     
                     roundedWidth = worldRightRounded - x;
                     roundedHeight = worldBottomRounded - y;
@@ -523,8 +523,13 @@ public class SpriteRenderer
 
                 if(flipVerticalHorizontal)
                 {
-                    scale.X = roundedHeight / sourceHeight;
-                    scale.Y = roundedWidth / sourceWidth;
+                    //scale.X = roundedHeight / sourceHeight;
+                    //scale.Y = roundedWidth / sourceWidth;
+                    // Since it's rotated, the roundedHeight is after rotation, so that would be 
+                    // width before rotation. Therefore roundedHeight/sourceWidth is the proper scale
+                    scale.X = roundedHeight / sourceWidth;
+                    scale.Y = roundedWidth / sourceHeight;
+
                 }
                 else
                 {
