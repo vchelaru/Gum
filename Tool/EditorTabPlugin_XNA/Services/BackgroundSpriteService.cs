@@ -80,6 +80,9 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
             new System.Drawing.Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
 
         systemManagers.SpriteManager.Add(BackgroundSprite);
+
+        var themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
+        ApplyThemingSettings(themeSettings);
     }
 
     public void Activity()
@@ -87,10 +90,15 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
         BackgroundSprite.Visible =
                 _wireframeCommands.IsBackgroundGridVisible;
     }
+
+    private void ApplyThemingSettings(IEffectiveThemeSettings settings)
+    {
+        BackgroundSolidColor.Color = settings.CheckerA;
+        BackgroundSprite.Color = settings.CheckerB;
+    }
     
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
-        BackgroundSolidColor.Color = message.settings.CheckerA;
-        BackgroundSprite.Color = message.settings.CheckerB;
+        ApplyThemingSettings(message.settings);
     }
 }

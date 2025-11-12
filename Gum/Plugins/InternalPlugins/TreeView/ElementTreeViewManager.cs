@@ -621,6 +621,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
+        ApplyThemeColors();
     }
 
 
@@ -807,7 +808,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         } 
     }
 
-    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    private void ApplyThemeColors()
     {
         if (System.Windows.Application.Current is { } current &&
             current.TryFindResource("Frb.Brushes.Foreground") is SolidColorBrush { Color: var fg } &&
@@ -846,6 +847,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             return (int)Math.Round(value * 255);
         }
+    }
+
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        ApplyThemeColors();
     }
 
     private ImageList CloneImageList(ImageList original)

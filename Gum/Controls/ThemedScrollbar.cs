@@ -93,41 +93,23 @@ public sealed class ThemedScrollBar : Control
         TabStop = false;
         Width = Thickness; Height = 100;
         MouseWheel += OnMouseWheel;
+
+        bool isDarkMode = Locator.GetRequiredService<IThemingService>().EffectiveSettings.IsSystemInDarkMode;
+        ApplyTheme(isDarkMode);
         Locator.GetRequiredService<IMessenger>().Register<ThemeChangedMessage>(this, (recipient, message) =>
         {
             bool dark = message.settings.Mode is ThemeMode.Dark;
             ApplyTheme(dark);
+            Invalidate();
         });
     }
 
     public void ApplyTheme(bool isDarkMode)
     {
-
-
         BackColor = (System.Windows.Application.Current.TryFindResource("Frb.Surface01") as
                         System.Windows.Media.SolidColorBrush) is { Color: { } c }
                         ? Color.FromArgb(c.A, c.R, c.G, c.B)
                         : Color.Transparent;
-
-        Invalidate();
-        //if (isDarkMode)
-        //{
-        //    TrackColor = Color.FromArgb(64, 255, 255, 255);
-        //    TrackHoverColor = Color.FromArgb(96, 255, 255, 255);
-        //    ThumbColor = Color.FromArgb(160, 200, 200, 200);
-        //    ThumbHoverColor = Color.FromArgb(200, 220, 220, 220);
-        //    ThumbActiveColor = Color.FromArgb(220, 240, 240, 240);
-        //}
-        //else
-        //{
-        //    // Light mode
-        //    TrackColor = Color.FromArgb(32, 0, 0, 0);
-        //    TrackHoverColor = Color.FromArgb(48, 0, 0, 0);
-        //    ThumbColor = Color.FromArgb(160, 120, 120, 120);
-        //    ThumbHoverColor = Color.FromArgb(200, 120, 120, 120);
-        //    ThumbActiveColor = Color.FromArgb(220, 120, 120, 120);
-        //}
-        //Invalidate();
     }
 
     protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); _hover = true; Invalidate(); }
