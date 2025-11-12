@@ -350,8 +350,6 @@ public class Sprite : SpriteBatchRenderableBase,
 
     #endregion
 
-    #region Methods
-
     public Sprite(Texture2D? texture)
     {
         this.Visible = true;
@@ -362,26 +360,6 @@ public class Sprite : SpriteBatchRenderableBase,
         mChildren = new ObservableCollection<IRenderableIpso>();
 
         Texture = texture;
-    }
-
-    public void AnimationActivity(double currentTime)
-    {
-        if (Animate)
-        {
-            Animation.AnimationActivity(currentTime);
-
-            SourceRectangle = Animation.SourceRectangle;
-            Texture = Animation.CurrentTexture;
-            FlipHorizontal = Animation.FlipHorizontal;
-            FlipVertical = Animation.FlipVertical;
-
-            // Right now we'll just default this to resize the Sprite, but eventually we may want more control over it
-            if (SourceRectangle.HasValue)
-            {
-                this.Width = SourceRectangle.Value.Width;
-                this.Height = SourceRectangle.Value.Height;
-            }
-        }
     }
 
     public override void Render(ISystemManagers managers)
@@ -404,13 +382,33 @@ public class Sprite : SpriteBatchRenderableBase,
                 var oldX = this.X;
                 var oldY = this.Y;
 
+                var absoluteRotationDegrees = this.GetAbsoluteRotation();
+
                 if (this.CurrentFrameIndex < CurrentChain?.Count)
                 {
-                    this.X += CurrentChain[this.CurrentFrameIndex].RelativeX;
-                    this.Y -= CurrentChain[this.CurrentFrameIndex].RelativeY;
+
+                    var absoluteRotationRadians = MathHelper.ToRadians(absoluteRotationDegrees);
+
+                    var offsetVector = new System.Numerics.Vector2(
+                        CurrentChain[this.CurrentFrameIndex].RelativeX,
+                        CurrentChain[this.CurrentFrameIndex].RelativeY);
+
+                    if(absoluteRotationDegrees != 0 && (offsetVector.X != 0 || offsetVector.Y != 0))
+                    {
+                        var length = offsetVector.Length();
+                        var offsetAngleRadians = System.Math.Atan2(offsetVector.Y, offsetVector.X);
+                        offsetAngleRadians += absoluteRotationRadians;
+
+                        offsetVector = new Vector2(
+                            (float)(length * System.Math.Cos(offsetAngleRadians)), 
+                            (float)(length * System.Math.Sin(offsetAngleRadians)));
+                    }
+
+                    this.X += offsetVector.X;
+                    this.Y -= offsetVector.Y;
                 }
 
-                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
+                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, absoluteRotationDegrees);
 
                 this.X = oldX;
                 this.Y = oldY;
@@ -849,14 +847,33 @@ public class Sprite : SpriteBatchRenderableBase,
         return Name + " (Sprite)";
     }
 
-    #endregion
-
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
         mParent = parent;
     }
 
     void IRenderable.PreRender() { }
+
+
+    public void AnimationActivity(double currentTime)
+    {
+        if (Animate)
+        {
+            Animation.AnimationActivity(currentTime);
+
+            SourceRectangle = Animation.SourceRectangle;
+            Texture = Animation.CurrentTexture;
+            FlipHorizontal = Animation.FlipHorizontal;
+            FlipVertical = Animation.FlipVertical;
+
+            // Right now we'll just default this to resize the Sprite, but eventually we may want more control over it
+            if (SourceRectangle.HasValue)
+            {
+                this.Width = SourceRectangle.Value.Width;
+                this.Height = SourceRectangle.Value.Height;
+            }
+        }
+    }
 
     public bool AnimateSelf(double secondDifference)
     {
