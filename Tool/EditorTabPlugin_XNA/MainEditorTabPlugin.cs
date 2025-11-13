@@ -6,6 +6,7 @@ using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Extensions;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -677,6 +678,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeControl.DesiredFramesPerSecond = frameRate;
 
         UpdateWireframeControlSizes();
+
+        IEffectiveThemeSettings themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
+        ApplyThemeSettings(themeSettings);
     }
 
     private void HandleControlZoomChange(object sender, EventArgs e)
@@ -1003,15 +1007,18 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeEditControl.PercentageValue = 100;
         _wireframeEditControl.TabIndex = 1;
         _defaultWireframeEditControlHeight = _wireframeEditControl.Height;
+    }
 
+    private void ApplyThemeSettings(IEffectiveThemeSettings settings)
+    {
+        this._wireframeControl.BackgroundColor = ToXna(settings.CheckerA);
+        this._wireframeControl.SetGuideColors(settings.GuideLine, settings.GuideText);
+        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
+        static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
     }
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
-        this._wireframeControl.BackgroundColor = ToXna(message.settings.CheckerA);
-        this._wireframeControl.SetGuideColors(message.settings.GuideLine, message.settings.GuideText);
-        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
-
-        static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
+        ApplyThemeSettings(message.settings);
     }
 }
