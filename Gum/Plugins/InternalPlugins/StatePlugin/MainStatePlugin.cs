@@ -18,6 +18,7 @@ using Gum.Commands;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
+using Gum.Logic;
 
 namespace Gum.Plugins.StatePlugin;
 
@@ -37,21 +38,30 @@ public class MainStatePlugin : InternalPlugin
     private readonly ISelectedState _selectedState;
     private readonly ObjectFinder _objectFinder;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly CopyPasteLogic _copyPasteLogic;
 
     #endregion
 
     #region Initialize
 
-    public MainStatePlugin()
+    [ImportingConstructor]
+    public MainStatePlugin(ISelectedState selectedState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         var elementCommands = Locator.GetRequiredService<IElementCommands>();
-        var editCommands = Locator.GetRequiredService<EditCommands>();
+        var editCommands = Locator.GetRequiredService<IEditCommands>();
         var dialogService = Locator.GetRequiredService<IDialogService>();
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, elementCommands, editCommands, dialogService, _guiCommands, _fileCommands);
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(
+            _selectedState, 
+            elementCommands, 
+            editCommands, 
+            dialogService, 
+            _guiCommands, 
+            _fileCommands);
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _objectFinder = ObjectFinder.Self;
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+        _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
     }
 
     public override void StartUp()
@@ -70,8 +80,6 @@ public class MainStatePlugin : InternalPlugin
 
     private void AssignEvents()
     {
-        this.StateWindowTreeNodeSelected += HandleStateSelected;
-        
         this.TreeNodeSelected += HandleTreeNodeSelected;
         
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
@@ -100,7 +108,12 @@ public class MainStatePlugin : InternalPlugin
 
     private void CreateNewStateTab()
     {
-        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager, _selectedState);
+        stateTreeView = new StateTreeView(
+            stateTreeViewModel, 
+            _stateTreeViewRightClickService, 
+            _hotkeyManager, 
+            _selectedState,
+            _copyPasteLogic);
         _stateTreeViewRightClickService.SetMenuStrip(stateTreeView.TreeViewContextMenu, stateTreeView);
         
         newPluginTab = _tabManager.AddControl(stateTreeView, "States", TabLocation.CenterTop);
@@ -166,6 +179,20 @@ public class MainStatePlugin : InternalPlugin
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
         stateTreeViewModel.SetSelectedState(state);
+        var currentCategory = _selectedState.SelectedStateCategorySave;
+        var currentState = _selectedState.SelectedStateSave;
+
+        if (currentCategory != null && currentState != null)
+        {
+            PropagateVariableForCategorizedState(currentState);
+        }
+        else if (currentCategory != null)
+        {
+            foreach (var item in currentCategory.States)
+            {
+                PropagateVariableForCategorizedState(item);
+            }
+        }
     }
 
     private void HandleStateSaveCategorySelected(StateSaveCategory stateSaveCategory)
@@ -202,26 +229,6 @@ public class MainStatePlugin : InternalPlugin
         }
 
         newPluginTab.Title = desiredTitle;
-    }
-
-    private void HandleStateSelected(TreeNode stateTreeNode)
-    {
-        var currentCategory = _selectedState.SelectedStateCategorySave;
-        var currentState = _selectedState.SelectedStateSave;
-
-        if (currentCategory != null && currentState != null)
-        {
-            PropagateVariableForCategorizedState(currentState);
-        }
-        else if (currentCategory != null)
-        {
-            foreach (var state in currentCategory.States)
-            {
-                PropagateVariableForCategorizedState(state);
-            }
-        }
-
-
     }
 
     private void HandleVariableSet(ElementSave elementSave, InstanceSave instance, string variableName, object oldValue)

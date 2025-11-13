@@ -1,10 +1,12 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
 using Moq.AutoMock;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +35,7 @@ public class CopyPasteLogicTests : BaseTestClass
     [Fact]
     public void OnPaste_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
-        var selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
         selectedState
             .Setup(x => x.SelectedInstances)
             .Returns(new List<InstanceSave>
@@ -48,7 +50,7 @@ public class CopyPasteLogicTests : BaseTestClass
                 }
             });
 
-        var undoManager = mocker.GetMock<IUndoManager>();
+        Mock<IUndoManager> undoManager = mocker.GetMock<IUndoManager>();
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
@@ -56,6 +58,131 @@ public class CopyPasteLogicTests : BaseTestClass
 
         undoManager
             .Verify(x => x.RequestLock(), Times.Once);
+    }
+
+    [Fact]
+    public void OnPaste_State_ShouldAddStateToCategory()
+    {
+        StateSaveCategory category = new StateSaveCategory();
+        StateSave selectedStateSave = new StateSave();
+        ComponentSave component = new ComponentSave();
+
+        var selectedState = mocker.GetMock<ISelectedState>();
+
+        selectedState
+            .Setup(x => x.SelectedStateCategorySave)
+            .Returns(category);
+
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(selectedStateSave);
+
+        selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(component);
+
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+        category.States.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void OnPaste_State_ShouldSelectNewState()
+    {
+        StateSaveCategory category = new ();
+        StateSave selectedStateSave = new ();
+        selectedStateSave.Name = "CopiedState";
+        ComponentSave component = new ();
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+
+        selectedState
+            .Setup(x => x.SelectedStateCategorySave)
+            .Returns(category);
+
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(selectedStateSave);
+
+        selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(component);
+
+        StateSave existingState = new();
+        existingState.Name = "ExistingState";
+        existingState.SetValue("X", 10f, "float");
+        category.States.Add(existingState);
+
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        var wasCalled = false;
+        selectedState
+            .SetupSet(x => x.SelectedStateSave = It.IsAny<StateSave>())
+            .Callback((StateSave newState) =>
+            {
+                newState.Name.ShouldBe("CopiedState");
+                wasCalled = true;
+            });
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+
+        wasCalled.ShouldBeTrue();
+        // We cannot check if variables have propagated on new state because
+        // the plugin handles that. See unit tests for MainStatePlugin
+
+    }
+
+    [Fact]
+    public void OnPaste_State_ShouldNotPaste_IfCopiedStateHasExtraVariables()
+    {
+        StateSaveCategory category = new();
+        StateSave selectedStateSave = new();
+        selectedStateSave.Name = "CopiedState";
+        selectedStateSave.SetValue("Y", 5f, "float");
+        ComponentSave component = new();
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+
+        selectedState
+            .Setup(x => x.SelectedStateCategorySave)
+            .Returns(category);
+
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(selectedStateSave);
+
+        selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(component);
+
+        StateSave existingState = new();
+        existingState.Name = "ExistingState";
+        existingState.SetValue("X", 10f, "float");
+        category.States.Add(existingState);
+
+
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+        category.States.Count.ShouldBe(1, 
+            "because the paste should not be allowed since the pasted state " +
+            "sets the Y value which is not already set in other states in the " +
+            "target category.");
+    }
+
+    [Fact]
+    public void OnPaste_State_ShouldNotPaste_IfCopiedStateHasUnsupportedVariables()
+    {
+        throw new NotImplementedException();
+    }
+
+    [Fact]
+    public void OnPaste_ShouldPaste_IfCopiedStateHasExtraVariables_InEmptyCategory()
+    {
+        throw new NotImplementedException();
     }
 
     [Fact(Skip ="need to inject plugin manager first")]

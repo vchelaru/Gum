@@ -25,7 +25,7 @@ public class StateTreeViewRightClickService
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
-    private readonly EditCommands _editCommands;
+    private readonly IEditCommands _editCommands;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
@@ -34,7 +34,7 @@ public class StateTreeViewRightClickService
 
     public StateTreeViewRightClickService(ISelectedState selectedState, 
         IElementCommands elementCommands, 
-        EditCommands editCommands,
+        IEditCommands editCommands,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands)

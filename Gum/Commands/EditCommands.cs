@@ -24,7 +24,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
-public class EditCommands
+public class EditCommands : IEditCommands
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -36,6 +36,7 @@ public class EditCommands
     private readonly ProjectCommands _projectCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly PluginManager _pluginManager;
+    private readonly DeleteLogic _deleteLogic;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
@@ -58,6 +59,8 @@ public class EditCommands
         _guiCommands = guiCommands;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _pluginManager = pluginManager;
+
+        _deleteLogic = DeleteLogic.Self;
     }
 
     #region State
@@ -113,12 +116,12 @@ public class EditCommands
         {
             if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
             {
-                DeleteLogic.Self.Remove(stateSave);
+                _deleteLogic.Remove(stateSave);
             }
         }
     }
 
-    internal void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
+    public void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
     {
         var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
 
@@ -148,6 +151,11 @@ public class EditCommands
             }
         }
     }
+
+
+    #endregion
+
+    #region Category
 
     public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
     {
@@ -222,18 +230,13 @@ public class EditCommands
         }
     }
 
-
-    #endregion
-
-    #region Category
-
     public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
-        DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
+        _deleteLogic.RemoveStateCategory(category, stateCategoryListContainer);
     }
 
 
-    internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
     {
         using var undoLock = _undoManager.RequestLock();
         _renameLogic.AskToRenameStateCategory(category, elementSave);
@@ -270,7 +273,7 @@ public class EditCommands
 
             if (elementCategory != null)
             {
-                var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
+                var allBehaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(elementCategory, componentSave);
 
                 foreach (var behavior in allBehaviorsNeedingCategory)
                 {
@@ -507,6 +510,6 @@ public class EditCommands
 
     public void DeleteSelection()
     {
-        DeleteLogic.Self.HandleDeleteCommand();
+        _deleteLogic.HandleDeleteCommand();
     }
 }

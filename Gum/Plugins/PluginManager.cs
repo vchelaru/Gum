@@ -760,9 +760,14 @@ namespace Gum.Plugins
                 currentDomain.AssemblyResolve += reh;
                 AggregateCatalog catalog = instance.CreateCatalog();
 
-
+                var batch = new CompositionBatch();
+                batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
+                
 
                 var container = new CompositionContainer(catalog);
+
+                container.Compose(batch);
+
                 container.ComposeParts(instance);
             }
             catch (Exception e)

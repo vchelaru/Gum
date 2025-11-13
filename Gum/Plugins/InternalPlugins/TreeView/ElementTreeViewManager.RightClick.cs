@@ -106,7 +106,7 @@ public partial class ElementTreeViewManager
 
     void HandleDeleteObjectClick(object sender, EventArgs e)
     {
-        DeleteLogic.Self.HandleDeleteCommand();
+        _deleteLogic.HandleDeleteCommand();
     }
 
     void HandleDuplicateElementClick(object sender, EventArgs e)
