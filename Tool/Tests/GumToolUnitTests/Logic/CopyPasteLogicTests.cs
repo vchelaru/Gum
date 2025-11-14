@@ -1,6 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.Managers;
+using Gum.Plugins;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -20,6 +22,10 @@ public class CopyPasteLogicTests : BaseTestClass
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IElementCommands> _elementCommands;
 
+    StateSaveCategory selectedCategory = new();
+    StateSave selectedStateSave = new();
+    ComponentSave selectedComponent = new();
+
     private readonly AutoMocker mocker;
     public CopyPasteLogicTests()
     {
@@ -30,9 +36,58 @@ public class CopyPasteLogicTests : BaseTestClass
         _selectedState = mocker.GetMock<ISelectedState>();
         _elementCommands = mocker.GetMock<IElementCommands>();
 
+
+        selectedStateSave.Name = "CopiedState";
+        selectedComponent.BaseType = "Sprite";
+        selectedComponent.States.Add(new StateSave
+        {
+            Name = "Default",
+            ParentContainer = selectedComponent
+        });
+
+        Mock<PluginManager> pluginManager = mocker.GetMock<PluginManager>();
+        pluginManager
+            .Setup(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()))
+            .Callback(() =>
+            {
+
+            });
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+
+        selectedState
+            .Setup(x => x.SelectedStateCategorySave)
+            .Returns(selectedCategory);
+
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(selectedStateSave);
+
+        selectedState
+            .Setup(x => x.SelectedElement)
+            .Returns(selectedComponent);
+
+        selectedState
+            .Setup(x => x.SelectedElements)
+            .Returns(new List<ElementSave>() { selectedComponent });
+
+        var gumProject = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = gumProject;
+
+        StandardElementSave spriteElement = new StandardElementSave();
+        spriteElement.Name = "Sprite";
+
+        StateSave spriteDefaultState = new()
+        {
+            Name = "Default",
+            ParentContainer = spriteElement
+        };
+
+        spriteElement.States.Add(spriteDefaultState);
+        gumProject.StandardElements.Add(spriteElement);
     }
 
-    [Fact]
+    [Fact(Skip = "Need WireframeObjectManager to take dependencies in constructor")]
     public void OnPaste_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
         Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
@@ -137,37 +192,18 @@ public class CopyPasteLogicTests : BaseTestClass
     [Fact]
     public void OnPaste_State_ShouldNotPaste_IfCopiedStateHasExtraVariables()
     {
-        StateSaveCategory category = new();
-        StateSave selectedStateSave = new();
-        selectedStateSave.Name = "CopiedState";
         selectedStateSave.SetValue("Y", 5f, "float");
-        ComponentSave component = new();
-
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
-
-        selectedState
-            .Setup(x => x.SelectedStateCategorySave)
-            .Returns(category);
-
-        selectedState
-            .Setup(x => x.SelectedStateSave)
-            .Returns(selectedStateSave);
-
-        selectedState
-            .Setup(x => x.SelectedElement)
-            .Returns(component);
-
         StateSave existingState = new();
         existingState.Name = "ExistingState";
         existingState.SetValue("X", 10f, "float");
-        category.States.Add(existingState);
+        selectedCategory.States.Add(existingState);
 
 
         _copyPasteLogic.OnCopy(CopyType.State);
 
         _copyPasteLogic.OnPaste(CopyType.State);
 
-        category.States.Count.ShouldBe(1, 
+        selectedCategory.States.Count.ShouldBe(1, 
             "because the paste should not be allowed since the pasted state " +
             "sets the Y value which is not already set in other states in the " +
             "target category.");
@@ -176,16 +212,54 @@ public class CopyPasteLogicTests : BaseTestClass
     [Fact]
     public void OnPaste_State_ShouldNotPaste_IfCopiedStateHasUnsupportedVariables()
     {
-        throw new NotImplementedException();
+        selectedStateSave.SetValue("BadVariable", 5f, "float");
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+        selectedCategory.States.Count.ShouldBe(0,
+            "because the paste should not be allowed since the pasted state " +
+            "sets the BadVariable which doesn't exist on the component");
+
+    }
+
+    [Fact]
+    public void OnPaste_ShouldPaste_IfExposedVariableIsSet()
+    {
+        var variable = new VariableSave
+        {
+            Name = "Instance.X",
+            ExposedAsName = "InstanceX",
+            Type = "float"
+        };
+        selectedComponent.DefaultState.Variables.Add(variable);
+
+        selectedCategory.States.Clear();
+
+        selectedStateSave.SetValue("InstanceX", 5f, "float");
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+        selectedCategory.States.Count.ShouldBe(1);
     }
 
     [Fact]
     public void OnPaste_ShouldPaste_IfCopiedStateHasExtraVariables_InEmptyCategory()
     {
-        throw new NotImplementedException();
+        selectedCategory.States.Clear();
+
+        selectedStateSave.SetValue("BadVariable", 5f, "float");
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+        selectedCategory.States.Count.ShouldBe(0,
+            "because the paste should not be allowed since the pasted state " +
+            "sets the BadVariable which doesn't exist on the component");
     }
 
-    [Fact(Skip ="need to inject plugin manager first")]
+    [Fact(Skip = "Need WireframeObjectManager to inject its ISelectedState")]
     public void OnPaste_ShouldSortVariables()
     {
         var element = new ScreenSave();

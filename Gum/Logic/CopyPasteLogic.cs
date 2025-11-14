@@ -59,6 +59,8 @@ public class CopyPasteLogic
     private readonly ProjectCommands _projectCommands;
     private readonly IUndoManager _undoManager;
     private readonly DeleteLogic _deleteLogic;
+    private readonly PluginManager _pluginManager;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -83,9 +85,12 @@ public class CopyPasteLogic
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
         IUndoManager undoManager,
-        DeleteLogic deleteLogic
+        DeleteLogic deleteLogic,
+        PluginManager pluginManager,
+        WireframeObjectManager wireframeObjectManager
         )
     {
+        _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _dialogService = dialogService;
@@ -94,6 +99,7 @@ public class CopyPasteLogic
         _projectCommands = projectCommands;
         _undoManager = undoManager;
         _deleteLogic = deleteLogic;
+        _pluginManager = pluginManager;
 
     }
 
@@ -400,8 +406,11 @@ public class CopyPasteLogic
             {
                 toReturn.Succeeded = false;
 
+                string variableVariables = newVariablesNotPresentInTarget.Length == 1 ? "variable" : "variables";
+                string isAre = newVariablesNotPresentInTarget.Length == 1 ? "is" : "are";
+
                 toReturn.Message = $"The state {newState.Name} can not be pasted in {targetCategory.Name} because " +
-                    $"the state has the following variable(s) which is/are not already set in the category:\n";
+                    $"the state has the following {variableVariables} which {isAre} not already set in the category:\n";
 
                 foreach (var item in newVariablesNotPresentInTarget)
                 {
@@ -677,12 +686,11 @@ public class CopyPasteLogic
                 newInstance.ParentContainer = targetElement;
                 // We need to call InstanceAdd before we select the new object - the Undo manager expects it
                 // This includes before other managers refresh
-                PluginManager.Self.InstanceAdd(targetElement, newInstance);
+                _pluginManager.InstanceAdd(targetElement, newInstance);
             }
         }
 
-
-        WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
         _guiCommands.RefreshElementTreeView(targetElement);
         _fileCommands.TryAutoSaveElement(targetElement);
         _selectedState.SelectedInstances = newInstances;

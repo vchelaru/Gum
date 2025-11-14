@@ -417,7 +417,7 @@ namespace Gum.Plugins
         internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
 
-        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
+        public virtual void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
 
 
