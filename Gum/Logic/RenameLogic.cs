@@ -79,14 +79,15 @@ public class RenameLogic : IRenameLogic
         INameVerifier nameVerifier, 
         IDialogService dialogService, 
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        DeleteLogic deleteLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
-        _deleteLogic = DeleteLogic.Self;
+        _deleteLogic = deleteLogic;
     }
 
     #region StateSave

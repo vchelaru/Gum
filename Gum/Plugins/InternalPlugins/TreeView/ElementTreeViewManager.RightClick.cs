@@ -106,6 +106,7 @@ public partial class ElementTreeViewManager
 
     void HandleDeleteObjectClick(object sender, EventArgs e)
     {
+        using var undoLock = _undoManager.RequestLock();
         _deleteLogic.HandleDeleteCommand();
     }
 

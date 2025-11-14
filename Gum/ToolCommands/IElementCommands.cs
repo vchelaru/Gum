@@ -15,10 +15,6 @@ public interface IElementCommands
 
     InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null);
 
-    void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
-
-    void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
-
     #endregion
 
     #region State
@@ -26,8 +22,6 @@ public interface IElementCommands
     StateSave AddState(IStateContainer stateContainer, StateSaveCategory category, string name);
 
     void AddState(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null);
-
-    void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
 
     #endregion
 
@@ -66,5 +60,4 @@ public interface IElementCommands
 
     #endregion
 
-    void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
 }

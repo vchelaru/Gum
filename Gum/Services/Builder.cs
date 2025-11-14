@@ -89,6 +89,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<INameVerifier, NameVerifier>();
         services.AddSingleton<IUndoManager, UndoManager>();
+        services.AddSingleton<DeleteLogic>();
         services.AddSingleton<CopyPasteLogic>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();

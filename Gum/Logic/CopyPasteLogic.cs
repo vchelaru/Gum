@@ -58,6 +58,7 @@ public class CopyPasteLogic
     private readonly IFileCommands _fileCommands;
     private readonly ProjectCommands _projectCommands;
     private readonly IUndoManager _undoManager;
+    private readonly DeleteLogic _deleteLogic;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -81,7 +82,8 @@ public class CopyPasteLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
-        IUndoManager undoManager
+        IUndoManager undoManager,
+        DeleteLogic deleteLogic
         )
     {
         _selectedState = selectedState;
@@ -91,6 +93,7 @@ public class CopyPasteLogic
         _fileCommands = fileCommands;
         _projectCommands = projectCommands;
         _undoManager = undoManager;
+        _deleteLogic = deleteLogic;
 
     }
 
@@ -250,7 +253,7 @@ public class CopyPasteLogic
                 var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
                 if (sourceElement.Instances.Contains(originalForCopy))
                 {
-                    _elementCommands.RemoveInstance(originalForCopy, sourceElement);
+                    _deleteLogic.RemoveInstance(originalForCopy, sourceElement);
                 }
             }
 

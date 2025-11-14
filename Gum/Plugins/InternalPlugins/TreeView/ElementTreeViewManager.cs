@@ -14,6 +14,7 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using MaterialDesignThemes.Wpf;
 using System;
@@ -283,6 +284,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private CopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly DeleteLogic _deleteLogic;
+    private readonly IUndoManager _undoManager;
 
     public bool HasMouseOver
     {
@@ -308,7 +310,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _messenger.RegisterAll(this);
-        _deleteLogic = DeleteLogic.Self;
+        _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
 
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();

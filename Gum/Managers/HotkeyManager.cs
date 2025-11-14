@@ -215,7 +215,8 @@ public class HotkeyManager
         SetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
         CopyPasteLogic copyPasteLogic,
-        IUndoManager undoManager)
+        IUndoManager undoManager,
+        DeleteLogic deleteLogic)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -226,7 +227,7 @@ public class HotkeyManager
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
         _undoManager = undoManager;
-        _deleteLogic = DeleteLogic.Self;
+        _deleteLogic = deleteLogic;
     }
 
     #region App Wide Keys
@@ -343,6 +344,7 @@ public class HotkeyManager
     {
         if (Delete.IsPressed(e))
         {
+            using var undoLock = _undoManager.RequestLock();
             _deleteLogic.HandleDeleteCommand();
 
             e.Handled = true;

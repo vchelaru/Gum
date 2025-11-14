@@ -111,50 +111,7 @@ public class ElementCommands : IElementCommands
         return instanceSave;
     }
 
-    /// <summary>
-    /// Removes the argument instance from the argument elementToRemoveFrom, and detaches any
-    /// object that was attached to this parent.
-    /// </summary>
-    /// <param name="instanceToRemove">The instance to remove.</param>
-    /// <param name="elementToRemoveFrom">The element to remove from.</param>
-    public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
-    {
-        if (!elementToRemoveFrom.Instances.Contains(instanceToRemove))
-        {
-            throw new Exception("Could not find the instance " + instanceToRemove.Name + " in " + elementToRemoveFrom.Name);
-        }
 
-        elementToRemoveFrom.Instances.Remove(instanceToRemove);
-
-        RemoveParentReferencesToInstance(instanceToRemove, elementToRemoveFrom);
-
-        elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
-
-
-        _pluginManager.InstanceDelete(elementToRemoveFrom, instanceToRemove);
-
-        if (_selectedState.SelectedInstance == instanceToRemove)
-        {
-            _selectedState.SelectedInstance = null;
-        }
-    }
-
-    public void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom)
-    {
-        foreach(var instance in instances)
-        {
-            elementToRemoveFrom.Instances.Remove(instance);
-            RemoveParentReferencesToInstance(instance, elementToRemoveFrom);
-            elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-        }
-
-
-        _pluginManager.InstancesDelete(elementToRemoveFrom, instances.ToArray());
-
-        var newSelection = _selectedState.SelectedInstances.ToList()
-            .Except(instances);
-        _selectedState.SelectedInstances = newSelection;
-    }
 
     #endregion
 
@@ -233,25 +190,6 @@ public class ElementCommands : IElementCommands
         }
     }
 
-    public void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom)
-    {
-        
-        elementToRemoveFrom.UncategorizedStates.Remove(stateSave);
-
-        foreach (var category in elementToRemoveFrom.Categories.Where(item => item.States.Contains(stateSave)))
-        {
-            category.States.Remove(stateSave);
-        }
-
-        if(elementToRemoveFrom is BehaviorSave behaviorSave)
-        {
-            _fileCommands.TryAutoSaveBehavior(behaviorSave);
-        }
-        else if(elementToRemoveFrom is ElementSave elementSave)
-        {
-            _fileCommands.TryAutoSaveElement(elementSave);
-        }
-    }
     #endregion
 
     #region Variables
@@ -799,35 +737,5 @@ public class ElementCommands : IElementCommands
 
     #endregion
 
-    public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
-    {
-        foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
-        {
-            for (int i = stateSave.Variables.Count - 1; i > -1; i--)
-            {
-                var variable = stateSave.Variables[i];
-
-                if (variable.SourceObject == instanceToRemove.Name)
-                {
-                    // this is a variable that assigns a value on the removed object. The object
-                    // is gone, so the variable should be removed too.
-                    stateSave.Variables.RemoveAt(i);
-                }
-                else if (variable.GetRootName() == "Parent" && variable.Value as string == instanceToRemove.Name)
-                {
-                    // This is a variable that assigns the Parent to the removed object. Since the object is
-                    // gone, the parent value shouldn't be assigned anymore.
-                    stateSave.Variables.RemoveAt(i);
-                }
-            }
-            for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
-            {
-                if (stateSave.VariableLists[i].SourceObject == instanceToRemove.Name)
-                {
-                    stateSave.VariableLists.RemoveAt(i);
-                }
-            }
-        }
-    }
 
 }

@@ -47,7 +47,8 @@ public class EditCommands : IEditCommands
         ProjectCommands projectCommands,
         IGuiCommands guiCommands,
         VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        PluginManager pluginManager)
+        PluginManager pluginManager, 
+        DeleteLogic deleteLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -60,7 +61,7 @@ public class EditCommands : IEditCommands
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _pluginManager = pluginManager;
 
-        _deleteLogic = DeleteLogic.Self;
+        _deleteLogic = deleteLogic;
     }
 
     #region State
@@ -116,6 +117,7 @@ public class EditCommands : IEditCommands
         {
             if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
             {
+                using var undoLock = _undoManager.RequestLock();
                 _deleteLogic.Remove(stateSave);
             }
         }
@@ -232,6 +234,7 @@ public class EditCommands : IEditCommands
 
     public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
+        using var undoLock = _undoManager.RequestLock();
         _deleteLogic.RemoveStateCategory(category, stateCategoryListContainer);
     }
 
@@ -510,6 +513,7 @@ public class EditCommands : IEditCommands
 
     public void DeleteSelection()
     {
+        using var undoLock = _undoManager.RequestLock();
         _deleteLogic.HandleDeleteCommand();
     }
 }
