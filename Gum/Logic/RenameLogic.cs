@@ -73,18 +73,21 @@ public class RenameLogic : IRenameLogic
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly DeleteLogic _deleteLogic;
 
     public RenameLogic(ISelectedState selectedState, 
         INameVerifier nameVerifier, 
         IDialogService dialogService, 
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        DeleteLogic deleteLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _deleteLogic = deleteLogic;
     }
 
     #region StateSave
@@ -121,7 +124,7 @@ public class RenameLogic : IRenameLogic
     public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
     {
         // This category can only be renamed if no behaviors require it
-        var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
+        var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
 
         if (behaviorsNeedingCategory.Any())
         {

@@ -417,7 +417,7 @@ namespace Gum.Plugins
         internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
 
-        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
+        public virtual void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
 
 
@@ -760,9 +760,14 @@ namespace Gum.Plugins
                 currentDomain.AssemblyResolve += reh;
                 AggregateCatalog catalog = instance.CreateCatalog();
 
-
+                var batch = new CompositionBatch();
+                batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
+                
 
                 var container = new CompositionContainer(catalog);
+
+                container.Compose(batch);
+
                 container.ComposeParts(instance);
             }
             catch (Exception e)

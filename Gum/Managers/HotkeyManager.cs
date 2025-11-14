@@ -203,9 +203,10 @@ public class HotkeyManager
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
+    private readonly DeleteLogic _deleteLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
-    
+
     public HotkeyManager(IGuiCommands guiCommands, 
         ISelectedState selectedState, 
         IElementCommands elementCommands,
@@ -214,7 +215,8 @@ public class HotkeyManager
         SetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
         CopyPasteLogic copyPasteLogic,
-        IUndoManager undoManager)
+        IUndoManager undoManager,
+        DeleteLogic deleteLogic)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -225,6 +227,7 @@ public class HotkeyManager
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
         _undoManager = undoManager;
+        _deleteLogic = deleteLogic;
     }
 
     #region App Wide Keys
@@ -341,7 +344,8 @@ public class HotkeyManager
     {
         if (Delete.IsPressed(e))
         {
-            DeleteLogic.Self.HandleDeleteCommand();
+            using var undoLock = _undoManager.RequestLock();
+            _deleteLogic.HandleDeleteCommand();
 
             e.Handled = true;
             e.SuppressKeyPress = true;

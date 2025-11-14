@@ -89,6 +89,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<INameVerifier, NameVerifier>();
         services.AddSingleton<IUndoManager, UndoManager>();
+        services.AddSingleton<DeleteLogic>();
         services.AddSingleton<CopyPasteLogic>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
@@ -108,7 +109,7 @@ file static class ServiceCollectionExtensions
 
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
-        services.AddSingleton<EditCommands>();
+        services.AddSingleton<IEditCommands, EditCommands>();
         services.AddSingleton<VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();

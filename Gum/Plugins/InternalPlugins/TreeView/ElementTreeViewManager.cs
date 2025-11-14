@@ -14,6 +14,7 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using MaterialDesignThemes.Wpf;
 using System;
@@ -130,7 +131,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     #region Fields
 
     private readonly ISelectedState _selectedState;
-    private readonly EditCommands _editCommands;
+    private readonly IEditCommands _editCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
@@ -282,6 +283,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private DragDropManager _dragDropManager;
     private CopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
+    private readonly DeleteLogic _deleteLogic;
+    private readonly IUndoManager _undoManager;
 
     public bool HasMouseOver
     {
@@ -298,7 +301,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public ElementTreeViewManager()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _editCommands = Locator.GetRequiredService<EditCommands>();
+        _editCommands = Locator.GetRequiredService<IEditCommands>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
@@ -307,6 +310,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _messenger.RegisterAll(this);
+        _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
+        _undoManager = Locator.GetRequiredService<IUndoManager>();
 
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();

@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.Logic;
+using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using Gum.ToolStates;
 using System;
@@ -29,6 +30,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
         private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
         private readonly HotkeyManager _hotkeyManager;
         private readonly ISelectedState _selectedState;
+        private readonly CopyPasteLogic _copyPasteLogic;
 
         #endregion
 
@@ -45,11 +47,14 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
 
         public StateTreeView(StateTreeViewModel viewModel, 
             StateTreeViewRightClickService stateTreeViewRightClickService,
-            HotkeyManager hotkeyManager, ISelectedState selectedState)
+            HotkeyManager hotkeyManager, 
+            ISelectedState selectedState,
+            CopyPasteLogic copyPasteLogic)
         {
             _stateTreeViewRightClickService = stateTreeViewRightClickService;
             _hotkeyManager = hotkeyManager;
             _selectedState = selectedState;
+            _copyPasteLogic = copyPasteLogic;
             InitializeComponent();
             TreeViewInstance.ContextMenu = new ContextMenu();
             this.DataContext = viewModel;
@@ -125,6 +130,25 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
                     e.Handled = true;
 
                 }
+            }
+            else if(_hotkeyManager.Copy.IsPressed(e))
+            {
+                if(_selectedState.SelectedStateSave != null)
+                {
+                    var isDefault = _selectedState.SelectedElement?.DefaultState == _selectedState.SelectedStateSave;
+
+                    if(!isDefault)
+                    {
+                        _copyPasteLogic.OnCopy(CopyType.State);
+                    }
+
+                    e.Handled = true;
+                }
+            }
+            else if(_hotkeyManager.Paste.IsPressed(e))
+            {
+                _copyPasteLogic.OnPaste(CopyType.State);
+                e.Handled = true;
             }
         }
 

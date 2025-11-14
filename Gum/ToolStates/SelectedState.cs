@@ -1,23 +1,25 @@
+using Gum.Commands;
+using Gum.Controls;
+using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
+using Gum.Debug;
+using Gum.Events;
+using Gum.Managers;
+using Gum.Plugins;
+using Gum.Services;
+using Gum.Wireframe;
+using Newtonsoft.Json.Linq;
+using RenderingLibrary;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
-using Gum.DataTypes;
-using Gum.Managers;
-using Gum.DataTypes.Variables;
 using System.Windows.Forms;
-using Gum.Commands;
-using Gum.Wireframe;
-using Gum.Plugins;
-using Gum.Debug;
-using RenderingLibrary;
-using Gum.DataTypes.Behaviors;
-using Gum.Controls;
-using Newtonsoft.Json.Linq;
-using Gum.Events;
-using Gum.Services;
 
 namespace Gum.ToolStates;
 
+[Export(typeof(ISelectedState))]
 public class SelectedState : ISelectedState
 {
     #region Fields
@@ -298,6 +300,7 @@ public class SelectedState : ISelectedState
     }
 
     #endregion
+
 
     public SelectedState(IGuiCommands guiCommands)
     {
