@@ -175,17 +175,22 @@ namespace Gum.Managers
                     }
                 }
             }
-            else if (selectedBehavior != null)
+            else if (_selectedState.SelectedBehaviors.Count() > 0)
             {
-                var array = new[] { selectedBehavior };
+                var array = _selectedState.SelectedBehaviors.ToArray();
+
                 var result = ShowDeleteDialog(array, out optionsWindow);
 
                 if (result == true)
                 {
                     objectsDeleted = array;
-                    // We need to remove the reference
-                    var behavior = _selectedState.SelectedBehavior;
-                    _projectCommands.RemoveBehavior(behavior);
+                    foreach(var item in array)
+                    {
+                        // We need to remove the reference
+                        var behavior = item;
+                        _projectCommands.RemoveBehavior(behavior);
+
+                    }
                 }
             }
 

@@ -25,7 +25,8 @@ public class SelectedState : ISelectedState
     #region Fields
     
     private readonly IGuiCommands _guiCommands;
-
+    private readonly PluginManager _pluginManager;
+    private readonly WireframeObjectManager _wireframeObjectManager;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -145,7 +146,7 @@ public class SelectedState : ISelectedState
 
         if (differ || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
         {
-            PluginManager.Self.ElementSelected(SelectedElement);
+            _pluginManager.ElementSelected(SelectedElement);
         }
     }
 
@@ -180,7 +181,7 @@ public class SelectedState : ISelectedState
 
     #region Behavior
 
-    public BehaviorSave SelectedBehavior
+    public BehaviorSave? SelectedBehavior
     {
         get
         {
@@ -188,7 +189,26 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            HandleBehaviorSelected(value);
+            if (value == null)
+            {
+                SelectedBehaviors = new List<BehaviorSave>();
+            }
+            else
+            {
+                SelectedBehaviors = new List<BehaviorSave> { value };
+            }
+        }
+    }
+
+    public IEnumerable<BehaviorSave> SelectedBehaviors
+    {
+        get
+        {
+            return snapshot.SelectedBehaviors;
+        }
+        set
+        {
+            HandleBehaviorsSelected(value?.ToList());
         }
     }
 
@@ -202,44 +222,61 @@ public class SelectedState : ISelectedState
     {
         snapshot.SelectedBehaviorReference = behaviorReference;
 
-        PluginManager.Self.BehaviorReferenceSelected(behaviorReference, SelectedElement);
+        _pluginManager.BehaviorReferenceSelected(behaviorReference, SelectedElement);
     }
 
-    private void HandleBehaviorSelected(BehaviorSave behavior)
+    private void HandleBehaviorsSelected(List<BehaviorSave>? value)
     {
-        var behaviorBefore = SelectedBehavior;
+        var behaviorBefore = SelectedBehaviors.ToList();
         var instancesBefore = SelectedInstances.ToList();
 
-        if (behavior != null && SelectedInstance != null)
+        if (value?.Count > 0 && SelectedInstance != null)
         {
             SelectedInstance = null;
         }
-        SelectedBehaviorReference = null;
 
-        UpdateToSelectedBehavior(behavior);
+        var differ = behaviorBefore.Count != (value?.Count ?? 0);
 
-        if (behavior != behaviorBefore || instancesBefore.Count != 0 && SelectedInstances.Count() == 0)
+        if (!differ && value != null)
         {
-            PluginManager.Self.BehaviorSelected(SelectedBehavior);
+            for (int i = 0; i < behaviorBefore.Count; i++)
+            {
+                if (behaviorBefore[i] != value[i])
+                {
+                    differ = true;
+                    break;
+                }
+            }
+        }
+
+        if(differ)
+        {
+            SelectedBehaviorReference = null;
+
+            UpdateToSelectedBehaviors(value);
+        }
+
+
+        if (differ || instancesBefore.Count != 0 && SelectedInstances.Count() == 0)
+        {
+            _pluginManager.BehaviorSelected(SelectedBehavior);
         }
     }
 
-    private void UpdateToSelectedBehavior(BehaviorSave behavior)
+    private void UpdateToSelectedBehaviors(List<BehaviorSave> behaviors)
     {
-        if (behavior != snapshot.SelectedBehavior)
+        snapshot.SelectedBehaviors = behaviors;
+
+        _guiCommands.RefreshStateTreeView();
+
+        // todo : this should be handled by plugins, and should not be explicitly handled here:
+        _wireframeObjectManager.RefreshAll(false);
+
+        SelectedStateSave = null;
+        SelectedStateCategorySave = null;
+        if (SelectedBehavior != null)
         {
-            snapshot.SelectedBehavior = behavior;
-            _guiCommands.RefreshStateTreeView();
-
-            // todo : this should be handled by plugins, and should not be explicitly handled here:
-            WireframeObjectManager.Self.RefreshAll(false);
-
-            SelectedStateSave = null;
-            SelectedStateCategorySave = null;
-            if (SelectedBehavior != null)
-            {
-                SelectedElement = null;
-            }
+            SelectedElement = null;
         }
     }
 
@@ -277,7 +314,7 @@ public class SelectedState : ISelectedState
     public ITreeNode SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
 
     public IEnumerable<ITreeNode> SelectedTreeNodes =>
-        PluginManager.Self.GetSelectedNodes();
+        _pluginManager.GetSelectedNodes();
 
     public RecursiveVariableFinder SelectedRecursiveVariableFinder
     {
@@ -296,15 +333,19 @@ public class SelectedState : ISelectedState
 
     public IPositionedSizedObject? SelectedIpso
     {
-        get => PluginManager.Self.GetSelectedIpsos()?.FirstOrDefault();
+        get => _pluginManager.GetSelectedIpsos()?.FirstOrDefault();
     }
 
     #endregion
 
 
-    public SelectedState(IGuiCommands guiCommands)
+    public SelectedState(IGuiCommands guiCommands,
+        PluginManager pluginManager,
+        WireframeObjectManager wireframeObjectManager)
     {
         _guiCommands = guiCommands;
+        _pluginManager = pluginManager;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     #region Instance
@@ -385,19 +426,19 @@ public class SelectedState : ISelectedState
 
         if (!AreSame(value, instancesBefore))
         {
-            PluginManager.Self.InstanceSelected(element, newInstance);
+            _pluginManager.InstanceSelected(element, newInstance);
 
             if(newInstance == null)
             {
                 // If we forcefully set null instances, let's forcefully select the current element or behavior:
                 if(SelectedElement != null || elementBefore != null)
                 {
-                    PluginManager.Self.ElementSelected(SelectedElement);
+                    _pluginManager.ElementSelected(SelectedElement);
                 }
 
                 if(SelectedBehavior != null)
                 {
-                    PluginManager.Self.BehaviorSelected(SelectedBehavior);
+                    _pluginManager.BehaviorSelected(SelectedBehavior);
                 }
             }
         }
@@ -446,7 +487,7 @@ public class SelectedState : ISelectedState
         {
             var stateContainerBefore = snapshot.SelectedStateContainer;
 
-            ElementSave parent = snapshot.SelectedInstance.ParentContainer;
+            var parent = snapshot.SelectedInstance!.ParentContainer;
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
 
@@ -492,9 +533,9 @@ public class SelectedState : ISelectedState
         }
 
         // todo - this should be handled by plugins and should not be explicitly called here
-        if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
+        if (_wireframeObjectManager.ElementShowing != this.SelectedElement)
         {
-            WireframeObjectManager.Self.RefreshAll(false);
+            _wireframeObjectManager.RefreshAll(false);
         }
 
         // This is needed for the wireframe manager, but this should be moved to a plugin
@@ -507,7 +548,7 @@ public class SelectedState : ISelectedState
     #region StateSaveCategory
 
 
-    public StateSaveCategory SelectedStateCategorySave
+    public StateSaveCategory? SelectedStateCategorySave
     {
         get
         {
@@ -521,7 +562,7 @@ public class SelectedState : ISelectedState
 
     // Selected categories in animations vs treeview can "fight" and we want to avoid infinite recursion
     bool _isHandlingCategoryAssigment = false;
-    private void HandleSelectedStateCategorySave(StateSaveCategory value)
+    private void HandleSelectedStateCategorySave(StateSaveCategory? value)
     {
         if (_isHandlingCategoryAssigment) return;
         _isHandlingCategoryAssigment = true;
@@ -532,13 +573,13 @@ public class SelectedState : ISelectedState
             if(value != null)
             {
                 snapshot.SelectedStateSave = null;
-                PluginManager.Self.ReactToStateSaveSelected(null);
+                _pluginManager.ReactToStateSaveSelected(null);
             }
             UpdateToSetSelectedStateSaveCategory(value);
 
             if (categoryBefore != SelectedStateCategorySave)
             {
-                PluginManager.Self.ReactToStateSaveCategorySelected(SelectedStateCategorySave);
+                _pluginManager.ReactToStateSaveCategorySelected(SelectedStateCategorySave);
             }
         }
         finally
@@ -581,11 +622,11 @@ public class SelectedState : ISelectedState
     {
         snapshot.CustomCurrentStateSave = value;
 
-        PluginManager.Self.ReactToCustomStateSaveSelected(value);
+        _pluginManager.ReactToCustomStateSaveSelected(value);
 
     }
 
-    public StateSave SelectedStateSave
+    public StateSave? SelectedStateSave
     {
         get
         {
@@ -613,9 +654,9 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void HandleStateSaveSelected(StateSave stateSave)
+    private void HandleStateSaveSelected(StateSave? stateSave)
     {
-        StateSaveCategory category = null;
+        StateSaveCategory? category = null;
         var elementContainer =
             ObjectFinder.Self.GetStateContainerOf(stateSave);
 
@@ -634,7 +675,7 @@ public class SelectedState : ISelectedState
                 snapshot.CustomCurrentStateSave = null;
             }
             TakeSnapshot(stateSave);
-            PluginManager.Self.ReactToStateSaveSelected(stateSave);
+            _pluginManager.ReactToStateSaveSelected(stateSave);
         }
 
     }
@@ -672,7 +713,7 @@ public class SelectedState : ISelectedState
 
 
 
-        PluginManager.Self.VariableSelected(SelectedStateContainer, value);
+        _pluginManager.VariableSelected(SelectedStateContainer, value);
 
     }
 
@@ -693,7 +734,7 @@ public class SelectedState : ISelectedState
     {
         UpdateToSelectedBehaviorVariable(value);
 
-        PluginManager.Self.BehaviorVariableSelected(value);
+        _pluginManager.BehaviorVariableSelected(value);
     }
 
     /// <summary>
@@ -806,7 +847,38 @@ class SelectedStateSnapshot
         }
     }
 
-    public BehaviorSave? SelectedBehavior { get; set; }
+    public BehaviorSave? SelectedBehavior 
+    { 
+        get => selectedBehaviors.FirstOrDefault();
+        set
+        {
+            selectedBehaviors.Clear();
+            if (value != null)
+            {
+                selectedBehaviors.Add(value);
+            }
+        }
+    }
+
+    List<BehaviorSave> selectedBehaviors = new List<BehaviorSave>();
+    public IEnumerable<BehaviorSave> SelectedBehaviors
+    {
+        get => selectedBehaviors;
+        set
+        {
+            selectedBehaviors.Clear();
+            if (value?.Count() > 0)
+            {
+                selectedBehaviors.AddRange(value);
+            }
+
+            var behavirs = value == null ? "null" : value.Count().ToString();
+
+            System.Diagnostics.Debug.WriteLine($"Selected {behavirs} behaviors");
+        }
+    }
+
+
     public ElementBehaviorReference? SelectedBehaviorReference { get; set; }
 
     public StateSave? CustomCurrentStateSave { get; set; }
@@ -814,7 +886,7 @@ class SelectedStateSnapshot
 
     public StateSave? SelectedStateSaveOrDefault { get; set; }
 
-    public StateSaveCategory SelectedStateCategorySave { get; set; }
+    public StateSaveCategory? SelectedStateCategorySave { get; set; }
     public ComponentSave SelectedComponent
     {
         get => SelectedElement as ComponentSave;
@@ -852,9 +924,9 @@ class SelectedStateSnapshot
         }
     }
 
-    public string SelectedVariableName { get; set; }
+    public string? SelectedVariableName { get; set; }
 
-    public StandardElementSave SelectedStandardElement
+    public StandardElementSave? SelectedStandardElement
     {
         get => SelectedElement as StandardElementSave;
         set
@@ -862,10 +934,10 @@ class SelectedStateSnapshot
             SelectedElement = value;
         }
     }
-    public VariableSave SelectedVariableSave { get; set; }
-    public VariableSave SelectedBehaviorVariable { get; set; }
+    public VariableSave? SelectedVariableSave { get; set; }
+    public VariableSave? SelectedBehaviorVariable { get; set; }
 
-    public TreeNode SelectedTreeNode { get; set; }
+    public TreeNode? SelectedTreeNode { get; set; }
 
     public IEnumerable<TreeNode> SelectedTreeNodes { get; set; }
 

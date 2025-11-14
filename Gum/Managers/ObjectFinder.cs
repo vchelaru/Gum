@@ -1221,8 +1221,10 @@ namespace Gum.Managers
             return toReturn;
         }
 
-        public ElementSave GetElementContainerOf(StateSave stateSave)
+        public ElementSave? GetElementContainerOf(StateSave? stateSave)
         {
+            if(stateSave == null) return null;
+
             if (GumProjectSave != null)
             {
                 foreach (var screen in GumProjectSave.Screens)
@@ -1251,8 +1253,10 @@ namespace Gum.Managers
             return null;
         }
 
-        public IStateContainer? GetStateContainerOf(StateSave stateSave)
+        public IStateContainer? GetStateContainerOf(StateSave? stateSave)
         {
+            if (stateSave == null) return null;
+
             var element = GetElementContainerOf(stateSave);
 
             if(element != null)

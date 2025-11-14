@@ -2054,7 +2054,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 _selectedState.SelectedInstance = null;
                 var elements = this.SelectedNodes
                     .Where(item => item.Tag is ElementSave)
-                    .Select(item => item.Tag as ElementSave);
+                    .Select(item => (ElementSave)item.Tag);
 
                 _selectedState.SelectedElements = elements;
             }
@@ -2062,14 +2062,18 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 var instances = this.SelectedNodes.Select(item => item.Tag)
                     .Where(item => item is InstanceSave)
-                    .Select(item => item as InstanceSave);
+                    .Select(item => (InstanceSave)item);
 
                 //_selectedState.SelectedInstance = selectedInstance;
                 _selectedState.SelectedInstances = instances;
             }
             else if(selectedObject is BehaviorSave behavior)
             {
-                _selectedState.SelectedBehavior = behavior;
+                var behaviors = this.SelectedNodes.Select(item => item.Tag)
+                    .Where(item => item is BehaviorSave)
+                    .Select(item => (BehaviorSave)item);
+
+                _selectedState.SelectedBehaviors = behaviors;
             }
 
             PluginManager.Self.TreeNodeSelected(selectedTreeNode);

@@ -4021,7 +4021,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, null, null, codeOutputProjectSettings);
     }
 
-    private static string? VariableValueToGumCode(object value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeOutputProjectSettings settings)
+    private static string? VariableValueToGumCode(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeOutputProjectSettings settings)
     {
         if (value is float asFloat)
         {
