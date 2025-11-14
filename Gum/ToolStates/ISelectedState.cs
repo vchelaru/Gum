@@ -11,27 +11,28 @@ namespace Gum.ToolStates;
 
 public interface ISelectedState
 {
-    ScreenSave SelectedScreen { get; set; }
+    ScreenSave? SelectedScreen { get; set; }
     ElementSave? SelectedElement { get; set; }
     IEnumerable<ElementSave> SelectedElements { get; set; }
-    IStateContainer SelectedStateContainer { get; }
-    BehaviorSave SelectedBehavior { get; set; }
-    ElementBehaviorReference SelectedBehaviorReference { get; set; }
-    StateSave CustomCurrentStateSave{ get; set; }
+    IStateContainer? SelectedStateContainer { get; }
+    BehaviorSave? SelectedBehavior { get; set; }
+    IEnumerable<BehaviorSave> SelectedBehaviors { get; set; }
+    ElementBehaviorReference? SelectedBehaviorReference { get; set; }
+    StateSave? CustomCurrentStateSave{ get; set; }
     StateSave? SelectedStateSave { get; set; }
     StateSave SelectedStateSaveOrDefault { get;}
 
-    StateSaveCategory SelectedStateCategorySave { get; set; }
-    ComponentSave SelectedComponent { get; set; }
-    InstanceSave SelectedInstance { get; set; }
+    StateSaveCategory? SelectedStateCategorySave { get; set; }
+    ComponentSave? SelectedComponent { get; set; }
+    InstanceSave? SelectedInstance { get; set; }
     IPositionedSizedObject? SelectedIpso { get; }
 
     IEnumerable<InstanceSave> SelectedInstances { get; set;  }
-    string SelectedVariableName { get; }
-    StandardElementSave SelectedStandardElement { get; set; }
-    VariableSave SelectedVariableSave { get; set;  }
-    VariableSave SelectedBehaviorVariable { get; set; }
-    ITreeNode SelectedTreeNode { get; }
+    string? SelectedVariableName { get; }
+    StandardElementSave? SelectedStandardElement { get; set; }
+    VariableSave? SelectedVariableSave { get; set;  }
+    VariableSave? SelectedBehaviorVariable { get; set; }
+    ITreeNode? SelectedTreeNode { get; }
     IEnumerable<ITreeNode> SelectedTreeNodes { get; }
     RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
 

@@ -325,7 +325,7 @@ namespace Gum.Plugins
         internal void CategoryDelete(StateSaveCategory category) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
-        internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
+        internal void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
             CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
         internal void VariableAdd(ElementSave elementSave, string variableName) =>
@@ -400,7 +400,7 @@ namespace Gum.Plugins
             return toReturn ?? Enumerable.Empty<ITreeNode>();
         }
 
-        internal void BehaviorSelected(BehaviorSave behaviorSave) =>
+        internal void BehaviorSelected(BehaviorSave? behaviorSave) =>
             CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 
         internal void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>

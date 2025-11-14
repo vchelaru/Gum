@@ -81,7 +81,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSaveCategory>? CategoryAdd;
         public event Action<StateSaveCategory>? CategoryDelete;
         public event Action<string, StateSaveCategory>? VariableRemovedFromCategory;
-        public event Action<StateSaveCategory>? ReactToStateSaveCategorySelected;
+        public event Action<StateSaveCategory?>? ReactToStateSaveCategorySelected;
 
         public event Action<VariableSave, List<Attribute>>? FillVariableAttributes;
         public event Action<string, StateSave>? AddAndRemoveVariablesForType;
@@ -138,7 +138,7 @@ namespace Gum.Plugins.BaseClasses
         public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
         public event Action? FocusSearch;
 
-        public event Action<BehaviorSave>? BehaviorSelected;
+        public event Action<BehaviorSave?>? BehaviorSelected;
         public event Action<BehaviorSave>? BehaviorCreated;
         public event Action<BehaviorSave>? BehaviorDeleted;
         public event Action<VariableSave>? BehaviorVariableSelected;
@@ -378,7 +378,7 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallReactToStateSaveSelected(StateSave? stateSave) => ReactToStateSaveSelected?.Invoke(stateSave);
         public void CallReactToCustomStateSaveSelected(StateSave stateSave) => ReactToCustomStateSaveSelected?.Invoke(stateSave);
-        public void CallReactToStateSaveCategorySelected(StateSaveCategory category) => ReactToStateSaveCategorySelected?.Invoke(category);
+        public void CallReactToStateSaveCategorySelected(StateSaveCategory? category) => ReactToStateSaveCategorySelected?.Invoke(category);
         public void CallStateCategoryRename(StateSaveCategory category, string oldName) => CategoryRename?.Invoke(category, oldName);
 
         public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
@@ -417,7 +417,7 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallStateWindowTreeNodeSelected(TreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
 
-        public void CallBehaviorSelected(BehaviorSave behavior) => BehaviorSelected?.Invoke(behavior);
+        public void CallBehaviorSelected(BehaviorSave? behavior) => BehaviorSelected?.Invoke(behavior);
 
         public void CallBehaviorCreated(BehaviorSave behavior) => BehaviorCreated?.Invoke(behavior);
 
