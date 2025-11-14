@@ -209,51 +209,7 @@ public partial class ElementTreeViewManager
 
         if (treeNode != null)
         {
-            string fullFile = treeNode.GetFullFilePath().FullPath;
-
-            // Initially we won't allow deleting of the entire
-            // folder because the user may have to make decisions
-            // about what to do with Screens or Components contained
-            // in the folder.
-
-            if (!Directory.Exists(fullFile))
-            {
-                // It doesn't exist, so let's just refresh the UI for this and it will go away
-                _guiCommands.RefreshElementTreeView();
-            }
-            else
-            {
-                string[] files = Directory.GetFiles(fullFile);
-                string[] directories = Directory.GetDirectories(fullFile);
-
-                if (files != null && files.Length > 0)
-                {
-                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + files.Length + " files.");
-                }
-                else if (directories != null && directories.Length > 0)
-                {
-                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
-                }
-
-                else
-                {
-                    bool result = _dialogService.ShowYesNoMessage("Delete folder " + treeNode.Text + "?", "Delete");
-
-                    if (result)
-                    {
-                        try
-                        {
-                            FileManager.DeleteDirectory(fullFile);
-                            _guiCommands.RefreshElementTreeView();
-                        }
-                        catch(Exception exception)
-                        {
-                            _guiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
-                            _dialogService.ShowMessage("Could not delete folder\nSee the output tab for more info");
-                        }
-                    }
-                }
-            }
+            _deleteLogic.DeleteFolder(treeNode);
         }
     }
 
