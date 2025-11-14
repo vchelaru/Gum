@@ -445,7 +445,7 @@ public partial class ElementTreeViewManager
     {
         _dialogService.Show<RenameFolderDialogViewModel>(vm =>
         {
-            vm.FolderNode = (SelectedNode as TreeNodeWrapper)?.Node;
+            vm.FolderNode = SelectedNode;
         });
     }
 

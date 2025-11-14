@@ -19,7 +19,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IRenameLogic _renameLogic;
     private readonly IGuiCommands _guiCommands;
-    public TreeNode? FolderNode { get; set; }
+    public ITreeNode? FolderNode { get; set; }
     
     public RenameFolderDialogViewModel(
         INameVerifier nameVerifier, 
@@ -66,7 +66,11 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         var oldFullPath = FolderNode.GetFullFilePath();
 
         string oldPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
-        FolderNode.Text = Value;
+        var folderNodeAsTreeNode = FolderNode as TreeNode;
+        if(folderNodeAsTreeNode != null)
+        {
+            folderNodeAsTreeNode.Text = Value;
+        }
         string newPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
 
         if (FolderNode.IsScreensFolderTreeNode())

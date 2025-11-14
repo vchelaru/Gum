@@ -163,7 +163,7 @@ namespace Gum.DataTypes
         /// </remarks>
         /// <param name="name">The case-sensitive name of the instance.</param>
         /// <returns>The found instance, or null if no matches are found.</returns>
-        public InstanceSave GetInstance(string name)
+        public InstanceSave? GetInstance(string? name)
         {
             if(string.IsNullOrEmpty(name))
             {

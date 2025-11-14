@@ -193,6 +193,11 @@ namespace Gum.Managers
                     }
                 }
             }
+            else if(_selectedState.SelectedTreeNode?.IsScreensFolderTreeNode() == true ||
+                _selectedState.SelectedTreeNode?.IsComponentsFolderTreeNode() == true)
+            {
+                DeleteFolder(_selectedState.SelectedTreeNode);
+            }
 
             var shouldDelete = objectsDeleted?.Length > 0;
 
