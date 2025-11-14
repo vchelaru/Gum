@@ -337,7 +337,7 @@ public class CopyPasteLogic
 
         StateSave newStateSave = CopiedData.CopiedStates.First().Clone();
 
-        var validationResponse = ValidateStatePaste(targetCategory, newStateSave);
+        var validationResponse = ValidateStatePaste(targetCategory, container, newStateSave);
 
         if (validationResponse.Succeeded == false)
         {
