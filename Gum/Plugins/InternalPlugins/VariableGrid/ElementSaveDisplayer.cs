@@ -181,19 +181,15 @@ public class ElementSaveDisplayer
         {
             if (instanceOwner != null)
             {
-                foreach (var variable in instanceOwner.DefaultState.Variables)
+                var exposedVariablesOnThisInstance = instanceOwner.DefaultState.Variables
+                    .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instanceSave.Name);
+                foreach (var variable in exposedVariablesOnThisInstance)
                 {
-                    if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instanceSave.Name)
+                    var definingVariable = effectiveElementSave.GetVariableFromThisOrBase(variable.GetRootName()) ??
+                        ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
+                    if (definingVariable != null)
                     {
-                        //defaultState.GetVariableRecursive()
-                        //var rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
-                        var definingVariable = effectiveElementSave.GetVariableFromThisOrBase(variable.GetRootName()) ??
-                            ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
-                        //var variable = effectiveElementSave
-                        if (definingVariable != null)
-                        {
-                            exposedVariables.Add(definingVariable.Name, variable.ExposedAsName);
-                        }
+                        exposedVariables.Add(definingVariable.Name, variable.ExposedAsName);
                     }
                 }
             }
@@ -209,7 +205,7 @@ public class ElementSaveDisplayer
 
             string variableName = defaultVariable.Name;
             var isReadonly = false;
-            string subtext = null;
+            string? subtext = null;
             var isSetByReference = variablesSetThroughReference.ContainsKey(variableName);
             if (isSetByReference)
             {
