@@ -807,6 +807,10 @@ class SelectedStateSnapshot
     }
 
     public BehaviorSave? SelectedBehavior { get; set; }
+
+
+
+
     public ElementBehaviorReference? SelectedBehaviorReference { get; set; }
 
     public StateSave? CustomCurrentStateSave { get; set; }
@@ -814,7 +818,7 @@ class SelectedStateSnapshot
 
     public StateSave? SelectedStateSaveOrDefault { get; set; }
 
-    public StateSaveCategory SelectedStateCategorySave { get; set; }
+    public StateSaveCategory? SelectedStateCategorySave { get; set; }
     public ComponentSave SelectedComponent
     {
         get => SelectedElement as ComponentSave;
@@ -852,9 +856,9 @@ class SelectedStateSnapshot
         }
     }
 
-    public string SelectedVariableName { get; set; }
+    public string? SelectedVariableName { get; set; }
 
-    public StandardElementSave SelectedStandardElement
+    public StandardElementSave? SelectedStandardElement
     {
         get => SelectedElement as StandardElementSave;
         set
@@ -862,10 +866,10 @@ class SelectedStateSnapshot
             SelectedElement = value;
         }
     }
-    public VariableSave SelectedVariableSave { get; set; }
-    public VariableSave SelectedBehaviorVariable { get; set; }
+    public VariableSave? SelectedVariableSave { get; set; }
+    public VariableSave? SelectedBehaviorVariable { get; set; }
 
-    public TreeNode SelectedTreeNode { get; set; }
+    public TreeNode? SelectedTreeNode { get; set; }
 
     public IEnumerable<TreeNode> SelectedTreeNodes { get; set; }
 
