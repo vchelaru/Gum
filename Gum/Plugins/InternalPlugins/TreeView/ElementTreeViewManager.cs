@@ -2584,11 +2584,14 @@ public static class TreeNodeExtensionMethods
         ? wrapper.Node.IsScreensFolderTreeNode()
         : false;
 
-    public static bool IsScreensFolderTreeNode(this TreeNode treeNode)
+
+    static bool IsScreensFolderTreeNode(this TreeNode treeNode)
     {
         return treeNode.Tag == null &&
             treeNode.Parent != null &&
-            (treeNode.Parent.IsScreensFolderTreeNode() || treeNode.Parent.IsTopScreenContainerTreeNode());
+            (treeNode.Parent.IsScreensFolderTreeNode() ||
+            // If the parent is the top screen container and this has no tag, then this is a folder:
+            treeNode.Parent.IsTopScreenContainerTreeNode());
     }
 
     public static bool IsPartOfScreensFolderStructure(this ITreeNode treeNode) =>
@@ -2630,16 +2633,24 @@ public static class TreeNodeExtensionMethods
         return treeNode.Parent.IsPartOfStandardElementsFolderStructure();
     }
 
+    /// <summary>
+    /// Returns whether this node is a folder node inside the Components tree structure. This does not
+    /// return true for the top-level components node.
+    /// </summary>
+    /// <param name="treeNode">The tree node</param>
+    /// <returns>Whether this is a folder inside the screens folder structure</returns>
     public static bool IsComponentsFolderTreeNode(this ITreeNode treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsComponentsFolderTreeNode()
         : false;
 
-    public static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
+    static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
     {
         return treeNode.Tag == null &&
             treeNode.Parent != null &&
-            (treeNode.Parent.IsComponentsFolderTreeNode() || treeNode.Parent.IsTopComponentContainerTreeNode());
+            (treeNode.Parent.IsComponentsFolderTreeNode() ||
+            // If the parent is the top component container and this has no tag, then this is a folder:
+            treeNode.Parent.IsTopComponentContainerTreeNode());
     }
 
     public static void SortByName(this TreeNodeCollection treeNodeCollection, bool recursive = false)
