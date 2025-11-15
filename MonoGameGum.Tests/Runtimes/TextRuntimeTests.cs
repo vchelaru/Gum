@@ -260,7 +260,6 @@ $"chars count=223\r\n";
         substrings[4].Variables.Count.ShouldBe(0);
     }
 
-
     [Fact]
     public void GetStyledSubstrings_ShouldRespectOverlappingCodes_OfSameVariable()
     {
@@ -306,6 +305,30 @@ $"chars count=223\r\n";
 
         substrings[4].Substring.ShouldBe("4");
         substrings[4].Variables.Count.ShouldBe(0);
+    }
+
+
+    #endregion
+
+    #region Text (including bbcode)
+
+    [Fact]
+    public void Text_WithSlashRSlashN_ShouldSetBbCodeCorrectly()
+    {
+        var text = $"[Color=Green]0[/Color]1\r\n[Color=Green]0[/Color]1";
+
+        var textRuntime = new TextRuntime();
+        textRuntime.Text = text;
+
+        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        var inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(2);
+        inlineVariables[0].StartIndex.ShouldBe(0);
+        inlineVariables[0].CharacterCount.ShouldBe(1);
+
+        inlineVariables[1].StartIndex.ShouldBe(3, "Because \\r character should not be included, so the newline 0 character starts at index 3");
+        inlineVariables[1].CharacterCount.ShouldBe(1);
     }
 
     #endregion
