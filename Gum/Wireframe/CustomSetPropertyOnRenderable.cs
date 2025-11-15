@@ -734,7 +734,11 @@ public class CustomSetPropertyOnRenderable
         // be explicitly added for textboxes
         // with multiple lines:
         //bbcode?.Replace("\n", "");
-        bbcode;
+        // Update November 15, 2025
+        // The rendering code ignores
+        // the \r character so we need
+        // to remove that:
+        bbcode?.Replace("\r\n", "\n");
 
         var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
         var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
