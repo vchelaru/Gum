@@ -29,3 +29,4 @@ sudo apt remove --purge winehq-* wine-*
 echo "Finished!  Wine and GUM have been removed from your system."
 echo "Leftover installers may be purged with sudo apt autoremove && sudo apt clean."
 echo "If you wish to reinstall GUM, please run setup_gum_linux.sh again."
+
