@@ -40,9 +40,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SkiaSharp" Version="3.119.0" />
-		<PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.0" />
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
 		<PackageReference Include="Topten.RichTextKit" Version="0.4.167" />
 	</ItemGroup>

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SkiaGum.Wpf\SkiaGum.Wpf.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj" />
   </ItemGroup>
 
 </Project>
