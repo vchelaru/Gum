@@ -155,7 +155,7 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 ################################################################################
 echo "Installing GUM Tool..."
 GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
-wget -O "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
+wget -O "$GUM_ZIP_FILE" "https://github.com/vchelaru/gum/releases/latest/download/gum.zip" \
     && echo "Download completed." || { echo "Download failed."; exit 1; }
 
 ################################################################################
@@ -228,3 +228,4 @@ fi
 echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
 echo "Pro Tip: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
 echo "You may need to close and reopen the terminal if it doesn't work at first, due to the update to your PATH."
+
