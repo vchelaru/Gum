@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="2.88.2" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\SkiaGum\SkiaGum.csproj" />
   </ItemGroup>
 
 </Project>
