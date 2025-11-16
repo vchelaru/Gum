@@ -235,7 +235,15 @@ public class CustomSetPropertyOnRenderable
             switch (propertyName)
             {
                 case nameof(RoundedRectangleRuntime.StrokeWidth):
-                    ((RoundedRectangleRuntime)graphicalUiElement).StrokeWidth = (float)value;
+                    if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
+                    {
+                        asRoundedRectangleRuntime.StrokeWidth = (float)value;
+
+                    }
+                    else
+                    {
+                        asRoundedRectangle.StrokeWidth = (float)value;
+                    }
                     handled = true;
                     break;
             }
