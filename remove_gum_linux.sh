@@ -23,6 +23,8 @@ rm -rf $GUM_WINE_PREFIX_PATH
 sudo apt remove --purge winetricks
 sudo apt remove --purge winehq-* wine-* 
 
+sudo rm /etc/apt/keyrings/winehq-archive.key
+
 ################################################################################
 ### Finished
 ################################################################################
