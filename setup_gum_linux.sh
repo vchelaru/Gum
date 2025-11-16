@@ -18,7 +18,7 @@ case "$choice" in
   * ) echo "Invalid option. Exiting."; exit 1;;
 esac
 
-echo "Verifying that WINE is installed..."
+echo -e "\nVerifying that WINE is installed..."
 WINE_VERSION=$(wine --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
 INSTALL_OR_UPGRADE_NEEDED="N"
 if [[ ! "${WINE_VERSION}" ]]; then
@@ -31,8 +31,12 @@ else
     echo "Wine version [${WINE_VERSION}] found!" 
 fi
 
+DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[0-9\.]/}" 2>/dev/null || name ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
+VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[A-Za-z]/}" 2>/dev/null | cut -d '.' -f1 || sw_vers --productVersion ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
+
 # Install or update wine
 if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
+    echo ""
     read -p "Do you wish to install the latest version of wine? (Y/n): " choice
     case "$choice" in
         ""|y|Y ) echo "INFO: Installing latest Wine";;
@@ -40,9 +44,6 @@ if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
           * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
     esac
     
-    DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
-    VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
-
     case "$DISTRO" in
         ubuntu)
             if [[ "$VERSION" == "22" ]]; then
@@ -90,10 +91,34 @@ if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
             ;;
 
         darwin)
-            echo "Detected macOS"
-            echo "Please install Wine-stable manually:"
-            echo "brew install --cask --no-quarantine wine-stable"
-            exit 1
+            echo -e "\nDetected macOS Version ${VERSION}"
+
+            echo -e "\nVerifying that BREW is installed..."
+            BREW_VERSION=$(brew --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
+            BREW_INSTALL_REQUIRED="N"
+            if [[ ! "${BREW_VERSION}" ]]; then
+                echo "Brew is not installed!"
+                BREW_INSTALL_REQUIRED="Y"
+            else
+                echo "Brew version [${BREW_VERSION}] found!" 
+            fi
+
+            if [[ "${BREW_INSTALL_REQUIRED}" == "Y" ]]; then
+                read -p "Do you wish to install brew (home brew)? (Y/n): " choice
+                case "$choice" in
+                    ""|y|Y ) echo "INFO: Installing brew";;
+                    n|N ) echo "WARN: Unable to continue, GUM requires Wine on Mac which is installed with brew!"; exit 0;;
+                    * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
+                esac
+
+                echo -e "\nAttempting to install brew..."
+
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+
+
+            echo -e "\nAttempting to install Wine-stable"
+            brew install --cask --no-quarantine wine-stable
             ;;
 
         *)
@@ -109,7 +134,7 @@ fi
 ### Check if winetricks is installed
 ################################################################################
 if ! winetricks --version &> /dev/null; then
-    echo "Winetricks is not installed. Attempting to install..."
+    echo -e "\nWinetricks is not installed. Attempting to install..."
 
     case "$DISTRO" in
         ubuntu|linuxmint)
@@ -119,12 +144,10 @@ if ! winetricks --version &> /dev/null; then
             sudo dnf install -y winetricks
             ;;
         darwin)
-            echo "Please install Winetricks manually:"
-            echo "brew install winetricks"
-            exit 1
+            brew install winetricks
             ;;
         *)
-            echo "Unsupported distribution for automated winetricks install."
+            echo "Unsupported distribution [${DISTRO}] for automated winetricks install."
             exit 1
             ;;
     esac
@@ -155,8 +178,15 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 ################################################################################
 echo "Installing GUM Tool..."
 GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
-wget -O "$GUM_ZIP_FILE" "https://github.com/vchelaru/gum/releases/latest/download/gum.zip" \
-    && echo "Download completed." || { echo "Download failed."; exit 1; }
+GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
+
+if ! curl --version &> /dev/null; then
+    wget -O "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
+        && echo "Download completed." || { echo "Download failed using WGET."; exit 1; }
+else
+    curl -L -o "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
+        && echo "Download completed." || { echo "Download failed using CURL."; exit 1; }
+fi
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
