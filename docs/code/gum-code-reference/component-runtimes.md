@@ -9,7 +9,7 @@ Components in a Gum project can be instantiated in custom code. Custom component
 
 ## Code Example - Instantiating a Component
 
-Before instantiating a component from a Gum project, you must first have your Gum project loaded. For more information see the [Loading a Gum Project page](../monogame/loading-.gumx-gum-project.md).
+Before instantiating a component from a Gum project, you must first have your Gum project loaded. For more information see the [Loading a Gum Project page](broken-reference).
 
 Once you have instantiated your project, you can create a component as shown in the following code:
 
@@ -110,7 +110,7 @@ newComponentRuntime.RemoveFromRoot();
 
 ## Troubleshooting Component Creation
 
-If your component is not visible, this may be a file issue. By default Gum project loading will not throw exceptions on missing files, and it will attempt to re-create missing file components. For more information, see the [Troubleshooting section in the Loading .gumx page](../monogame/loading-.gumx-gum-project.md#troubleshooting-gum-project-loading).
+If your component is not visible, this may be a file issue. By default Gum project loading will not throw exceptions on missing files, and it will attempt to re-create missing file components. For more information, see the [Troubleshooting section in the Loading .gumx page](broken-reference).
 
 ## SetProperty
 

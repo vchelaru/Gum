@@ -4,7 +4,7 @@
 
 GumBatch is an object which supports _immediate mode_ rendering, similar to MonoGame's SpriteBatch. GumBatch can support rendering text with DrawString as well as any IRenderableIpso.
 
-For information on getting your project set up to use GumBatch, see the [Setup for GumBatch](setup-for-gumbatch.md) page.
+For information on getting your project set up to use GumBatch, see the [Setup for GumBatch](../getting-started/setup/setup-for-gumbatch.md) page.
 
 ### Rendering Strings
 

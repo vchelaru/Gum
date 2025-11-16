@@ -54,7 +54,7 @@ Projects should be backed up or committed to source control before enabling auto
 
 To set up code generation, either click the **Auto Setup Code Generation** button, or modify the values in the Code tab for code generation.
 
-* For MonoGame/KNI/FNA projects, see the [tutorial on setting up code generation](../../code/monogame/tutorials/gum-project-forms-tutorial/gum-screens.md).
+* For MonoGame/KNI/FNA projects, see the [tutorial on setting up code generation](../../code/getting-started/tutorials/gum-project-forms-tutorial/gum-screens.md).
 * For FlatRedBall projects, code generation is automatically handled by the FlatRedBall Editor.
 
 See the sections below for information about each code generation option.

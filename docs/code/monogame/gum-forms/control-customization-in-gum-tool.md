@@ -7,7 +7,7 @@ Gum Forms controls can be fully customized in Gum. Customization using the Gum t
 {% hint style="warning" %}
 As of April 2025 Gum Forms is undergoing a change which will simplify how styling is performed. This document is kept here for while the next version of Gum is being built.
 
-If you would like to try the new styling, see the latest preview release on Github and read through the new [Gum Project Forms Tutorial](../tutorials/gum-project-forms-tutorial/).
+If you would like to try the new styling, see the latest preview release on Github and read through the new [Gum Project Forms Tutorial](../../getting-started/tutorials/gum-project-forms-tutorial/).
 {% endhint %}
 
 ## Setup

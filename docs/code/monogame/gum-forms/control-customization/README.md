@@ -17,7 +17,7 @@ Whether you use a direct property assignment or whether you use a state depends 
 This document covers both approaches.
 
 {% hint style="info" %}
-Note that all code in this document assumes that Gum Forms has already been initialized. For more information on setting up a code-only Gum Forms project, see the [Code-Only Setup Tutorial](../../tutorials/code-only-gum-forms-tutorial/setup.md).
+Note that all code in this document assumes that Gum Forms has already been initialized. For more information on setting up a code-only Gum Forms project, see the [Code-Only Setup Tutorial](../../../getting-started/tutorials/code-only-gum-forms-tutorial/setup.md).
 {% endhint %}
 
 ## Accessing Strongly Typed Visuals
@@ -28,7 +28,7 @@ This document uses strongly-typed visuals wherever possible. Keep in mind that t
 
 * Your project is using Version 2 of the visuals. The version is specified in the GumServices.Initialize call.
 * Your project has not replaced the default visuals with its own visual type. This topic is discussed later in the document.
-* Your project is not using generated code for custom visuals, such as ButtonStandard.&#x20;
+* Your project is not using generated code for custom visuals, such as ButtonStandard.
 
 Every type of control has a corresponding visual, where the name "Visual" is appended to the control type. For example, the following code shows how to obtain the Visual from a Button instance:
 
@@ -55,13 +55,13 @@ customizedButton.AddToRoot();
 
 The code above access the TextInstance visual which is of type TextRuntime. Components, such as Button, are ultimately made out of the following visual types:
 
-* [CircleRuntime](../../../gum-code-reference/circleruntime.md)
-* [ColoredRectangleRuntime](../../../gum-code-reference/coloredrectangleruntime.md)
-* [ContainerRuntime](../../../gum-code-reference/containerruntime.md)
-* [NineSliceRuntime](../../../gum-code-reference/ninesliceruntime.md)
-* [RectangleRuntime](../../../gum-code-reference/rectangleruntime.md)
-* [SpriteRuntime](../../../gum-code-reference/spriteruntime/)
-* [TextRuntime](../../../gum-code-reference/textruntime/)
+* [CircleRuntime](../../../standard-elements/circleruntime.md)
+* [ColoredRectangleRuntime](../../../standard-elements/coloredrectangleruntime.md)
+* [ContainerRuntime](../../../standard-elements/containerruntime.md)
+* [NineSliceRuntime](../../../standard-elements/ninesliceruntime.md)
+* [RectangleRuntime](../../../standard-elements/rectangleruntime.md)
+* [SpriteRuntime](../../../standard-elements/spriteruntime/)
+* [TextRuntime](../../../standard-elements/textruntime/)
 
 For information on working with the individual visual types, click the links in the list above.
 
@@ -267,4 +267,4 @@ background.TextureWidth = 41;
 background.TextureHeight = 42;
 ```
 
-For more information on working with NineSliceRuntime (the background type), see the [NineSliceRuntime page](../../../gum-code-reference/ninesliceruntime.md).
+For more information on working with NineSliceRuntime (the background type), see the [NineSliceRuntime page](../../../standard-elements/ninesliceruntime.md).
