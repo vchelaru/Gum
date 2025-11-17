@@ -436,12 +436,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>float</Type>
-      <Name>DetectResolutionsButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>string</Type>
       <Name>DetectResolutionsButton.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
@@ -1637,12 +1631,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>float</Type>
-      <Name>ShowDialogButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>string</Type>
       <Name>ShowDialogButton.Parent</Name>
       <SetsValue>true</SetsValue>
@@ -1687,12 +1675,6 @@
       <Type>PositionUnitType</Type>
       <Name>ShowDialogButton.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ShowToastButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
