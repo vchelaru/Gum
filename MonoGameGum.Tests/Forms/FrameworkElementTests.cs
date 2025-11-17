@@ -200,4 +200,47 @@ public class FrameworkElementTests : BaseTestClass
         playButton.IsFocused.ShouldBeTrue();
     }
 
+    [Fact]
+    public void PositionValues_ShouldApplyToVisual()
+    {
+        Button button = new ();
+
+        button.X = 12;
+        button.Y = 14;
+
+        button.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        button.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+
+        button.Visual.X.ShouldBe(12);
+        button.Visual.Y.ShouldBe(14);
+        button.Visual.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        button.Visual.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+    }
+
+    [Fact]
+    public void SizeValues_ShouldApplyToVisual()
+    {
+        Button button = new();
+
+        button.Width = 123;
+        button.Height = 456;
+
+        button.MinWidth = 12;
+        button.MaxWidth = 2345;
+
+        button.MinHeight = 14;
+        button.MaxHeight = 3456;
+
+        button.WidthUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        button.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+
+        button.Visual.Width.ShouldBe(123);
+        button.Visual.Height.ShouldBe(456);
+        button.Visual.MinWidth.ShouldBe(12);
+        button.Visual.MaxWidth.ShouldBe(2345);
+        button.Visual.MinHeight.ShouldBe(14);
+        button.Visual.MaxHeight.ShouldBe(3456);
+        button.Visual.WidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.Ratio);
+        button.Visual.HeightUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.RelativeToParent);
+    }
 }

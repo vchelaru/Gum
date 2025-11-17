@@ -41,6 +41,8 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using Gum.Converters;
+
 #endif
 
 
@@ -222,46 +224,6 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public float AbsoluteTop => Visual.AbsoluteTop;
 
-    public float Height
-    {
-        get { return Visual.Height; }
-        set
-        {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new Exception("NaN value not supported for FrameworkElement Height");
-            }
-            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
-            {
-                throw new Exception();
-            }
-#endif
-            Visual.Height = value;
-        }
-    }
-    public float Width
-    {
-        get { return Visual.Width; }
-        set
-        {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new Exception("NaN value not supported for FrameworkElement Width");
-            }
-            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
-            {
-                throw new Exception();
-            }
-            if(Visual == null)
-            {
-                throw new NullReferenceException($"Cannot set Width because Visual hasn't yet been set on this {GetType()}");
-            }
-#endif
-            Visual.Width = value;
-        }
-    }
 
 #if FRB
     /// <summary>
@@ -279,13 +241,116 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public float X
     {
-        get { return Visual.X; }
-        set { Visual.X = value; }
+        get => Visual.X; 
+        set => Visual.X = value;
     }
+
+    public Gum.Converters.GeneralUnitType XUnits
+    {
+        get => Visual.XUnits;
+        set => Visual.XUnits = value;
+    }
+
     public float Y
     {
-        get { return Visual.Y; }
-        set { Visual.Y = value; }
+        get => Visual.Y;
+        set => Visual.Y = value;
+    }
+
+    public Gum.Converters.GeneralUnitType YUnits
+    {
+        get => Visual.YUnits;
+        set => Visual.YUnits = value;
+    }
+
+    public HorizontalAlignment XOrigin
+    {
+        get => Visual.XOrigin;
+        set => Visual.XOrigin = value;
+    }
+
+    public VerticalAlignment YOrigin
+    {
+        get => Visual.YOrigin;
+        set => Visual.YOrigin = value;
+    }
+
+
+    public float Height
+    {
+        get => Visual.Height;
+        set
+        {
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
+            {
+                throw new Exception("NaN value not supported for FrameworkElement Height");
+            }
+            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
+            {
+                throw new Exception();
+            }
+#endif
+            Visual.Height = value;
+        }
+    }
+    public DataTypes.DimensionUnitType HeightUnits
+    {
+        get => Visual.HeightUnits;
+        set => Visual.HeightUnits = value;
+    }
+
+    public float? MinHeight
+    {
+        get => Visual.MinHeight;
+        set => Visual.MinHeight = value;
+    }
+
+    public float? MaxHeight
+    {
+        get => Visual.MaxHeight;
+        set => Visual.MaxHeight = value;
+    }
+
+    public float Width
+    {
+        get => Visual.Width;
+        set
+        {
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
+            {
+                throw new Exception("NaN value not supported for FrameworkElement Width");
+            }
+            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
+            {
+                throw new Exception();
+            }
+            if (Visual == null)
+            {
+                throw new NullReferenceException($"Cannot set Width because Visual hasn't yet been set on this {GetType()}");
+            }
+#endif
+            Visual.Width = value;
+        }
+    }
+
+    public DataTypes.DimensionUnitType WidthUnits
+    {
+        get => Visual.WidthUnits;
+        set => Visual.WidthUnits = value;
+    }
+
+    public float? MinWidth
+    {
+        get => Visual.MinWidth;
+        set => Visual.MinWidth = value;
+    }
+
+    public float? MaxWidth
+    {
+        get => Visual.MaxWidth;
+        set => Visual.MaxWidth = value;
     }
 
     public void Anchor(Anchor anchor) => Visual.Anchor(anchor);
@@ -787,6 +852,8 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
+    #region Visual Changed Methods
+
     protected virtual void ReactToVisualChanged() { }
 
     protected virtual void RefreshInternalVisualReferences() { }
@@ -799,6 +866,10 @@ public class FrameworkElement : INotifyPropertyChanged
     {
 
     }
+
+    #endregion
+
+    #region GetVisual Methods
 
     public T? GetVisual<T>(string? name = null) where T : GraphicalUiElement
     {
@@ -855,7 +926,7 @@ public class FrameworkElement : INotifyPropertyChanged
     public GraphicalUiElement? GetVisual(string name) =>
         Visual.GetGraphicalUiElementByName(name) as GraphicalUiElement;
 
-
+    #endregion
 
     public StateSave GetState(string stateName)
     {
