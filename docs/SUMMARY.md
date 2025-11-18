@@ -220,6 +220,8 @@
 * [Layout](code/layout/README.md)
   * [Introduction to Gum Layout](code/layout/introduction-to-gum-layout.md)
   * [Anchor and Dock](code/layout/anchor-and-dock.md)
+  * [Stacking](code/layout/stacking.md)
+  * [Grid](code/layout/grid.md)
 * [Standard Elements](code/standard-elements/README.md)
   * [CircleRuntime](code/standard-elements/circleruntime.md)
   * [ColoredRectangleRuntime](code/standard-elements/coloredrectangleruntime.md)

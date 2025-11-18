@@ -234,6 +234,52 @@ We can resolve this by bringing back the code to make `panel` be sized with abso
 
 ### Bottom-Up Dependencies
 
-We can invert the dependencies by giving the bottom-most children (`button` and `button2`) absolute size values, then sizing their parents according to children. For example, the following code sizes the entire container according to its children.
+We can invert the dependencies by giving the bottom-most children (`button` and `button2`) absolute size values, then sizing their parents according to children. For example, the following code sizes the entire `Panel` according to its children.
 
-UNDER CONSTRUCTION
+<pre class="language-csharp"><code class="lang-csharp">float buttonMargin = 8;
+
+var panel = new Panel();
+panel.AddToRoot();
+panel.Anchor(Gum.Wireframe.Anchor.Center);
+panel.Dock(Gum.Wireframe.Dock.SizeToChildren);
+<strong>// Since the panel now depends on its children, the panel
+</strong><strong>// is the one in charge of bottom and right margins.
+</strong><strong>// Top margin is handled by the first button.
+</strong><strong>panel.Width = buttonMargin * 2;
+</strong><strong>panel.Height = buttonMargin;
+</strong>
+var background = new ColoredRectangleRuntime();
+panel.AddChild(background);
+background.Color = Color.DarkBlue;
+background.Dock(Gum.Wireframe.Dock.Fill);
+
+var button = new Button();
+panel.AddChild(button);
+<strong>button.Anchor(Gum.Wireframe.Anchor.Top);
+</strong><strong>// the button adjusts its Y value to produce a top margin:
+</strong><strong>button.Y = buttonMargin;
+</strong><strong>button.Width = 200;
+</strong>button.Text = "Top Docked Button";
+<strong>button.Click += (_, _) => button.Width += 20;
+</strong>
+var button2 = new Button();
+panel.AddChild(button2);
+<strong>button2.Anchor(Gum.Wireframe.Anchor.Top);
+</strong><strong>button2.Y = 200;
+</strong><strong>button2.Width = 200;
+</strong>button2.Text = "Bottom Docked Button";
+<strong>// this button makes the panel shorter:
+</strong><strong>button2.Click += (_, _) => button2.Y -= 20;
+</strong></code></pre>
+
+<figure><img src="../../.gitbook/assets/17_18 32 01.gif" alt=""><figcaption><p>Buttons now deciding the parent's size</p></figcaption></figure>
+
+## Bottom-Up and Top-Down Mixed Dependencies
+
+Although the section above focuses on bottom-up dependencies, the control is actually using both bottom-up and top-down dependencies. The relationships are as follows:
+
+* `button` and `button2` are using absolute `Width` and `Y` values
+* `panel` depends on its children, so it sizes itself according to `button` and `button2`
+* `background` is sized according to its parent (`panel`), so it resolves its size after the parent `panel` determines its own size
+
+In situations where dependencies go both-ways, Gum attempts to resolve absolute positions and widths first, then performs layout logic in order of dependencies.
