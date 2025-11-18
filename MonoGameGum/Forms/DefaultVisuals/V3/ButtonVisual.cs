@@ -107,6 +107,7 @@ public class ButtonVisual : InteractiveGue
         TextInstance.Width = 0;
         TextInstance.Height = 5;
         TextInstance.Name = "TextInstance";
+        TextInstance.Text = "Click Me";
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         TextInstance.XOrigin = HorizontalAlignment.Center;
@@ -154,6 +155,12 @@ public class ButtonVisual : InteractiveGue
     // the BackgroundColor and the ForegroundColor
     private void DefineDynamicStyleChanges()
     {
+        // Some named constants vs magic values
+        const float darker = -0.25f;
+        const float lighter = 0.25f;
+        const float greyScaleDarker = -0.30f;
+        const float greyScaleLighter = 0.30f;
+
         ButtonCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
@@ -165,15 +172,15 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            Background.Color = BackgroundColor.ToGreyscale().Adjust(-0.30f);
-            TextInstance.Color = ForegroundColor.ToGreyscale().Adjust(-0.30f);
+            Background.Color = BackgroundColor.ToGreyscale().Adjust(greyScaleDarker);
+            TextInstance.Color = ForegroundColor.ToGreyscale().Adjust(greyScaleDarker);
             FocusedIndicator.Visible = false;
         };
 
         ButtonCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            Background.Color = BackgroundColor.Adjust(0.25f);
+            Background.Color = BackgroundColor.Adjust(lighter);
             TextInstance.Color = ForegroundColor;
             FocusedIndicator.Visible = false;
         };
@@ -181,7 +188,7 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            Background.Color = BackgroundColor.Adjust(-0.25f);
+            Background.Color = BackgroundColor.Adjust(darker);
             TextInstance.Color = ForegroundColor;
             FocusedIndicator.Visible = false;
         };
@@ -189,23 +196,7 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            Background.Color = BackgroundColor.Adjust(0.25f);
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = true;
-        };
-
-        ButtonCategory.States.Add(States.HighlightedFocused);
-        States.HighlightedFocused.Apply = () =>
-        {
-            Background.Color = BackgroundColor.Adjust(0.25f);
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = true;
-        };
-
-        ButtonCategory.States.Add(States.HighlightedFocused);
-        States.HighlightedFocused.Apply = () =>
-        {
-            Background.Color = BackgroundColor.Adjust(0.25f);
+            Background.Color = BackgroundColor.Adjust(lighter);
             TextInstance.Color = ForegroundColor;
             FocusedIndicator.Visible = true;
         };
@@ -221,8 +212,8 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            Background.Color = BackgroundColor.ToGreyscale().Adjust(-0.30f);
-            TextInstance.Color = ForegroundColor.ToGreyscale().Adjust(-0.30f);
+            Background.Color = BackgroundColor.ToGreyscale().Adjust(greyScaleDarker);
+            TextInstance.Color = ForegroundColor.ToGreyscale().Adjust(greyScaleDarker);
             FocusedIndicator.Visible = true;
         };
     }

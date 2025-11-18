@@ -58,18 +58,48 @@ public class CheckBoxVisual : InteractiveGue
 
     public StateSaveCategory CheckboxCategory { get; private set; }
 
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                _foregroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        Height = 32;
         Width = 128;
+        Height = 24;
 
         States = new CheckBoxCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
+
         CheckBoxBackground = new NineSliceRuntime();
         CheckBoxBackground.Width = 24;
         CheckBoxBackground.Height = 24;
-        CheckBoxBackground.Color = Styling.ActiveStyle.Colors.Warning;
+        CheckBoxBackground.Color = BackgroundColor;
         CheckBoxBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         CheckBoxBackground.YOrigin = VerticalAlignment.Center;
         CheckBoxBackground.Name = "CheckBoxBackground";
@@ -87,10 +117,10 @@ public class CheckBoxVisual : InteractiveGue
         InnerCheck.XOrigin = HorizontalAlignment.Center;
         InnerCheck.YOrigin = VerticalAlignment.Center;
         InnerCheck.Name = "InnerCheck";
-        InnerCheck.Color = Styling.ActiveStyle.Colors.White;
+        InnerCheck.Color = ForegroundColor;
         InnerCheck.Texture = uiSpriteSheetTexture;
         InnerCheck.ApplyState(Styling.ActiveStyle.Icons.Check);
-        CheckBoxBackground.Children.Add(InnerCheck);
+        CheckBoxBackground.Children?.Add(InnerCheck);
 
         TextInstance = new TextRuntime();
         TextInstance.X = 0;
@@ -102,6 +132,8 @@ public class CheckBoxVisual : InteractiveGue
         TextInstance.Width = -28;
         TextInstance.Height = 0;
         TextInstance.Name = "TextInstance";
+        TextInstance.Text = "Label";
+        TextInstance.Color = ForegroundColor;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
@@ -129,68 +161,166 @@ public class CheckBoxVisual : InteractiveGue
         CheckboxCategory.Name = "CheckBoxCategory";
         this.AddCategory(CheckboxCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
-
-        void AddVariablesFromIconVisual(StateSave state, string parentObject, StateSave iconSaveState )
-        {
-            foreach( var variable in iconSaveState.Variables )
-            {
-                AddVariable(state, $"{parentObject}.{variable.Name}", variable.Value);
-            }
-        }
-
-        void AddState(StateSave state, Color checkboxBackgroundColor,
-            Color textColor, Color checkColor, bool isFocused, bool checkVisible, StateSave iconSaveState)
-        {
-            CheckboxCategory.States.Add(state);
-            AddVariable(state, "InnerCheck.Visible", checkVisible);
-            AddVariable(state, "InnerCheck.Color", checkColor);
-            AddVariable(state, "CheckBoxBackground.Color", checkboxBackgroundColor);
-            AddVariable(state, "FocusedIndicator.Visible", isFocused);
-            AddVariable(state, "TextInstance.Color", textColor);
-            AddVariablesFromIconVisual(state, "InnerCheck", iconSaveState);
-        }
-
-        AddState(States.EnabledOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.EnabledOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.EnabledIndeterminate, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true, Styling.ActiveStyle.Icons.Dash);
-
-        AddState(States.DisabledOn, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.DisabledOff, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.DisabledIndeterminate, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, true, Styling.ActiveStyle.Icons.Dash);
-
-        AddState(States.DisabledFocusedOn, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.DisabledFocusedOff, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.DisabledFocusedIndeterminate, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, true, Styling.ActiveStyle.Icons.Dash);
-
-        AddState(States.FocusedOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.FocusedOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.FocusedIndeterminate, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true, Styling.ActiveStyle.Icons.Dash);
-
-        AddState(States.HighlightedOn, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.HighlightedOff, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.HighlightedIndeterminate, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true, Styling.ActiveStyle.Icons.Dash);
-
-        AddState(States.HighlightedFocusedOn, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.HighlightedFocusedOff, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.HighlightedFocusedIndeterminate, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true, Styling.ActiveStyle.Icons.Dash);
-
-        // PER V1 comment: // dark looks weird so staying with normal primary. This matches the default template
-        AddState(States.PushedOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true, Styling.ActiveStyle.Icons.Check);
-        AddState(States.PushedOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false, Styling.ActiveStyle.Icons.Check);
-        AddState(States.PushedIndeterminate, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true, Styling.ActiveStyle.Icons.Dash);
+        DefineDynamicStyleChanges();
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new CheckBox(this);
         }
+    }
+
+    private void DefineDynamicStyleChanges()
+    {
+        // Some named constants vs magic values
+        const float darker = -0.25f;
+        const float lighter = 0.25f;
+        const float greyScaleDarker = -0.30f;
+        const float greyScaleLighter = 0.30f;
+        const float greyScaleSuperDark = -0.50f;
+
+        // Enabled (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.EnabledOn);
+        States.EnabledOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, false, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.EnabledOff);
+        States.EnabledOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, false, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.EnabledIndeterminate);
+        States.EnabledIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, false, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+        // Disabled (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.DisabledOn);
+        States.DisabledOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), false, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.DisabledOff);
+        States.DisabledOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), false, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.DisabledIndeterminate);
+        States.DisabledIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), false, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+        // Disabled Focused (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.DisabledFocusedOn);
+        States.DisabledFocusedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), true, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.DisabledFocusedOff);
+        States.DisabledFocusedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), true, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.DisabledFocusedIndeterminate);
+        States.DisabledFocusedIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), ForegroundColor.ToGreyscale().Adjust(greyScaleSuperDark), true, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+        // Focused (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.FocusedOn);
+        States.FocusedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, true, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.FocusedOff);
+        States.FocusedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, true, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.FocusedIndeterminate);
+        States.FocusedIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, true, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+        // Highlighted (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.HighlightedOn);
+        States.HighlightedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, ForegroundColor, false, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.HighlightedOff);
+        States.HighlightedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, ForegroundColor, false, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.HighlightedIndeterminate);
+        States.HighlightedIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, ForegroundColor, false, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+        // Highlighted Focused (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.HighlightedFocusedOn);
+        States.HighlightedFocusedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, ForegroundColor, true, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.HighlightedFocusedOff);
+        States.HighlightedFocusedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, ForegroundColor, true, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.HighlightedFocusedIndeterminate);
+        States.HighlightedFocusedIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, ForegroundColor, true, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+        // Pushed (On/Off/Indeterminate)
+        CheckboxCategory.States.Add(States.PushedOn);
+        States.PushedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(darker), ForegroundColor, ForegroundColor, false, true, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.PushedOff);
+        States.PushedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(darker), ForegroundColor, ForegroundColor, false, false, Styling.ActiveStyle.Icons.Check);
+        };
+
+        CheckboxCategory.States.Add(States.PushedIndeterminate);
+        States.PushedIndeterminate.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(darker), ForegroundColor, ForegroundColor, false, true, Styling.ActiveStyle.Icons.Dash);
+        };
+
+    }
+
+    private void SetValuesForState(Color checkboxBackgroundColor, Color textColor, Color checkColor, bool isFocused, bool checkVisible, StateSave iconSaveState)
+    {
+        CheckBoxBackground.Color = checkboxBackgroundColor;
+        TextInstance.Color = textColor;
+        InnerCheck.Color = checkColor;
+        InnerCheck.Visible = checkVisible;
+        FocusedIndicator.Visible = isFocused;
+        InnerCheck.ApplyState(iconSaveState);
     }
 
     public CheckBox FormsControl => FormsControlAsObject as CheckBox;
