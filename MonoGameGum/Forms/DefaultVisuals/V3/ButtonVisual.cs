@@ -164,58 +164,51 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            Background.Color = BackgroundColor;
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = false;
+            SetValuesForState(BackgroundColor, ForegroundColor, false);
         };
 
         ButtonCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            Background.Color = BackgroundColor.ToGreyscale().Adjust(greyScaleDarker);
-            TextInstance.Color = ForegroundColor.ToGreyscale().Adjust(greyScaleDarker);
-            FocusedIndicator.Visible = false;
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), false);
         };
 
         ButtonCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            Background.Color = BackgroundColor.Adjust(lighter);
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = false;
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, false);
         };
 
         ButtonCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            Background.Color = BackgroundColor.Adjust(darker);
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = false;
+            SetValuesForState(BackgroundColor.Adjust(darker), ForegroundColor, false);
         };
 
         ButtonCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            Background.Color = BackgroundColor.Adjust(lighter);
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = true;
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, true);
         };
 
         ButtonCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            Background.Color = BackgroundColor;
-            TextInstance.Color = ForegroundColor;
-            FocusedIndicator.Visible = true;
+            SetValuesForState(BackgroundColor, ForegroundColor, true);
         };
 
         ButtonCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            Background.Color = BackgroundColor.ToGreyscale().Adjust(greyScaleDarker);
-            TextInstance.Color = ForegroundColor.ToGreyscale().Adjust(greyScaleDarker);
-            FocusedIndicator.Visible = true;
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), true);
         };
+    }
+
+    private void SetValuesForState(Color backgroundColor, Color foregroundColor, bool isFocused)
+    {
+        Background.Color = backgroundColor;
+        TextInstance.Color = foregroundColor;
+        FocusedIndicator.Visible = isFocused;
     }
 
     public Button FormsControl => FormsControlAsObject as Button;
