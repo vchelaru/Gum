@@ -4,7 +4,7 @@
 
 Custom runtimes allow the creation of custom classes which are created when loading your Gum project. The use of custom runtimes is especially important if you are developing UI which should respond to user interactions such as clicks or if you are using Gum Forms.
 
-In the context of Gum, a _runtime_ is a class which handles interaction with a Gum component or screen while your game is running. The term _runtime_ is used to distinguish between an object used at runtime (such as a [TextRuntime](../standard-elements/textruntime/)), or the Gum element (such as [Text](../../gum-tool/gum-elements/text/)).
+In the context of Gum, a _runtime_ is a class which handles interaction with a Gum component or screen while your game is running. The term _runtime_ is used to distinguish between an object used at runtime (such as a [TextRuntime](../standard-visuals/textruntime/)), or the Gum element (such as [Text](../../gum-tool/gum-elements/text/)).
 
 Custom runtimes can encapsulate functionality and can be used to build any time of UI including simple UI such as Buttons and Checkboxes, or more complex UI such as ListBoxes or ComboBoxes.
 

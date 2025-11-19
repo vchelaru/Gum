@@ -191,7 +191,7 @@ Notice that `background` is styled by setting its `Texture` property and calling
 
 <figure><img src="../../../../.gitbook/assets/20_07 33 32.png" alt=""><figcaption><p>The background uses the entire sprite sheet if the ApplyState method is not called</p></figcaption></figure>
 
-For more information on working with NineSliceRuntime, see the [NineSliceRuntime page](../../../standard-elements/ninesliceruntime.md).
+For more information on working with NineSliceRuntime, see the [NineSliceRuntime page](../../../standard-visuals/ninesliceruntime.md).
 
 ## Prompt Label
 
