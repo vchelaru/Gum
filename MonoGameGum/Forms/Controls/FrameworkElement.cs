@@ -245,7 +245,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set => Visual.X = value;
     }
 
-    public Gum.Converters.GeneralUnitType XUnits
+    public global::Gum.Converters.GeneralUnitType XUnits
     {
         get => Visual.XUnits;
         set => Visual.XUnits = value;
@@ -257,7 +257,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set => Visual.Y = value;
     }
 
-    public Gum.Converters.GeneralUnitType YUnits
+    public global::Gum.Converters.GeneralUnitType YUnits
     {
         get => Visual.YUnits;
         set => Visual.YUnits = value;
@@ -294,7 +294,7 @@ public class FrameworkElement : INotifyPropertyChanged
             Visual.Height = value;
         }
     }
-    public DataTypes.DimensionUnitType HeightUnits
+    public global::Gum.DataTypes.DimensionUnitType HeightUnits
     {
         get => Visual.HeightUnits;
         set => Visual.HeightUnits = value;
@@ -335,7 +335,7 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
-    public DataTypes.DimensionUnitType WidthUnits
+    public global::Gum.DataTypes.DimensionUnitType WidthUnits
     {
         get => Visual.WidthUnits;
         set => Visual.WidthUnits = value;
