@@ -20,7 +20,7 @@ You can clone the repository and open the projects in your favorite IDE (like Vi
 
 The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/master/Samples](https://github.com/vchelaru/Gum/tree/master/Samples)
 
-For more information about the Sample projects, see the [Samples page](samples/).
+For more information about the Sample projects, see the [Samples page](broken-reference).
 
 ### What is the Gum UI Tool?
 

@@ -68,7 +68,7 @@ customText.AddToManagers(SystemManagers.Default, null);
 
 For information on creating your own .fnt file with Bitmap Font Generator, see the [Use Custom Font](../../../gum-tool/gum-elements/text/use-custom-font.md) page.
 
-This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](./#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../../monogame/file-loading.md) page for more information about loading files in general.
+This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](./#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../../files-and-fonts/file-loading.md) page for more information about loading files in general.
 
 Note that .fnt files reference one or more image files, so the image file must also be added to the correct folder. In this case, the WhitePeaberryOutline.fnt file references a WhitePeaberryOutline.png file, so both files are in the same folder.
 
@@ -113,7 +113,7 @@ text.FontSize = 24;
 
 This results in the TextRuntime object searching for a font named `FontArial24.fnt`.
 
-As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../../monogame/file-loading.md) page.
+As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../../files-and-fonts/file-loading.md) page.
 
 The following additional suffixes (in order listed below) are added to the font name.
 

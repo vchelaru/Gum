@@ -8,12 +8,13 @@ LastFrameDrawStates is an IEnumerable for the draw states used in the previous d
 
 The following code can be used to output state changes to the Output window in Visual Studio
 
-<pre class="language-csharp"><code class="lang-csharp">// It's best to use some condition rather than reporting
+```csharp
+// It's best to use some condition rather than reporting
 // this ever frame to avoid spamming the output window:
 if(someCondition)
 {
-<strong>    foreach (var item in SystemManagers.Default.Renderer.SpriteRenderer.LastFrameDrawStates)
-</strong>    {
+    foreach (var item in SystemManagers.Default.Renderer.SpriteRenderer.LastFrameDrawStates)
+    {
         foreach (var changeRecord in item.ChangeRecord)
         {
                 System.Diagnostics.Debug.Output.Write(
@@ -22,4 +23,4 @@ if(someCondition)
     }
 }
 
-</code></pre>
+```

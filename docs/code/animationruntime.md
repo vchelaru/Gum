@@ -1,10 +1,10 @@
-# AnimationRuntime
+# Animation
 
 ## Introduction
 
 `AnimationRuntime` is a class containing a list of keyframes (of type KeyframeRuntimeInstance). `AnimationRuntime` instances can be used to modify variables on a `GraphicalUiElement` over time .
 
-AnimationRuntime instances can be created from animations defined in the Gum tool or by hand in code. For information on how to create an animation in the Gum Tool, see the [Animation Tutorials](../../gum-tool/tutorials-and-examples/animation-tutorials/) section.
+AnimationRuntime instances can be created from animations defined in the Gum tool or by hand in code. For information on how to create an animation in the Gum Tool, see the [Animation Tutorials](../gum-tool/tutorials-and-examples/animation-tutorials/) section.
 
 {% hint style="warning" %}
 As of April 2025 animation support at runtime is considered a preview feature and the syntax for working with animations is likely to change in response to community feedback.
@@ -160,4 +160,4 @@ protected override void Initialize()
 
 ```
 
-<figure><img src="../../.gitbook/assets/06_11 02 23.gif" alt=""><figcaption><p>Button reacting to hover</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/06_11 02 23.gif" alt=""><figcaption><p>Button reacting to hover</p></figcaption></figure>

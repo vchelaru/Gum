@@ -2,10 +2,10 @@
 
 ## Introduction
 
-RoundedRectangleRuntime can be used to draw a solid (filled) or outlined rectangle of any color. As the name suggests, it supports rounded corners.&#x20;
+RoundedRectangleRuntime can be used to draw a solid (filled) or outlined rectangle of any color. As the name suggests, it supports rounded corners.
 
 {% hint style="warning" %}
-RoundedRectangleRuntime requires using SkiaGum. For more information on platform support, see the [SkiaGum Platform Support](../../skiagum/skiagum-platform-support.md) page.
+RoundedRectangleRuntime requires using SkiaGum. For more information on platform support, see the [SkiaGum Platform Support](broken-reference) page.
 {% endhint %}
 
 ## Code Example

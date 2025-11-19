@@ -9,7 +9,7 @@ The SpriteRuntime object can be used to draw a Texture2D to screen. It supports 
 The following code can be used to instantiate a Sprite which uses a Texture (png file) named BearTexture.png.
 
 {% hint style="info" %}
-**NOTE:** The BeatTexture.png file must have the `Copy to Output Directory` set to either `Copy always` or `Copy if newer`.  Otherwise you will get an error: System.IO.IOException 'Could not get the stream for the file C:\path\to\file\BearTexture.png'
+**NOTE:** The BeatTexture.png file must have the `Copy to Output Directory` set to either `Copy always` or `Copy if newer`. Otherwise you will get an error: System.IO.IOException 'Could not get the stream for the file C:\path\to\file\BearTexture.png'
 {% endhint %}
 
 ```csharp
@@ -36,7 +36,7 @@ This code assumes that the file is relative to the project's Content folder, as 
 
 <figure><img src="../../../.gitbook/assets/BearTexturePngInSolution.png" alt=""><figcaption><p>BearTexture.png in the Content folder</p></figcaption></figure>
 
-For more information on working with files at runtime, see the [File Loading](../../monogame/file-loading.md) page.
+For more information on working with files at runtime, see the [File Loading](../../files-and-fonts/file-loading.md) page.
 
 Assigning Texture
 
