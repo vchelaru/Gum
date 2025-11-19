@@ -49,6 +49,33 @@ public class ComboBoxVisual : InteractiveGue
     public SpriteRuntime DropdownIndicator { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                _foregroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public class ComboBoxCategoryStates
     {
         public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
@@ -71,6 +98,9 @@ public class ComboBoxVisual : InteractiveGue
 
         States = new ComboBoxCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";
@@ -168,13 +198,15 @@ public class ComboBoxVisual : InteractiveGue
             AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
         }
 
-        AddState(States.Enabled, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, false);
-        AddState(States.Disabled, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false);
-        AddState(States.DisabledFocused, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true);
-        AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
+        //AddState(States.Enabled, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, false);
+        //AddState(States.Disabled, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false);
+        //AddState(States.DisabledFocused, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true);
+        //AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
         AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
         AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
         AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
+
+        DefineDynamicStyleChanges();
 
         if (tryCreateFormsObject)
         {
@@ -182,7 +214,63 @@ public class ComboBoxVisual : InteractiveGue
         }
     }
 
-    private void PositionAndAttachListBox(ListBoxVisual listBoxVisual)
+    private void DefineDynamicStyleChanges()
+    {
+        // Some named constants vs magic values
+        const float darker = -0.25f;
+        const float lighter = 0.25f;
+        const float greyScaleDarker = -0.30f;
+        const float greyScaleLighter = 0.30f;
+        const float greyScaleSuperDark = -0.50f;
+
+        Color _backgroundColor = BackgroundColor.ToGreyscale().Adjust(greyScaleSuperDark);
+
+        ComboBoxCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () =>
+        {
+            SetValuesForState(_backgroundColor, BackgroundColor, ForegroundColor, false);
+        };
+
+        ComboBoxCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () =>
+        {
+            SetValuesForState(_backgroundColor, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), false);
+        };
+
+        ComboBoxCategory.States.Add(States.DisabledFocused);
+        States.DisabledFocused.Apply = () =>
+        {
+            SetValuesForState(_backgroundColor, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), true);
+        };
+
+        ComboBoxCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(_backgroundColor, ForegroundColor, ForegroundColor, true);
+        };
+
+        ComboBoxCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(_backgroundColor, ForegroundColor, ForegroundColor, true);
+        };
+
+        //AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
+        //AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
+        //AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
+        //AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
+
+    }
+
+    private void SetValuesForState(Color backgroundColor, Color ddIndicatorColor, Color foregroundColor, bool isFocused)
+    {
+        Background.Color = backgroundColor;
+        DropdownIndicator.Color = ddIndicatorColor;
+        TextInstance.Color = foregroundColor;
+        FocusedIndicator.Visible = isFocused;
+    }
+
+private void PositionAndAttachListBox(ListBoxVisual listBoxVisual)
     {
         listBoxVisual.Name = "ListBoxInstance";
         listBoxVisual.Y = 28f;
