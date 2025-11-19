@@ -19,8 +19,21 @@ public static class CursorExtensions
     /// <param name="cursor">A reference to the cursor, such as GumService.Default.Cursor</param>
     /// <param name="frameworkElement">The FrameworkElement such as a Button.</param>
     /// <returns>A string explaining why events are not being raised, or null if events should be happening.</returns>
-    public static string? GetEventFailureReason(this ICursor cursor, FrameworkElement frameworkElement) =>
-        GetEventFailureReason(cursor, frameworkElement.Visual);
+    public static string? GetEventFailureReason(this ICursor cursor, FrameworkElement frameworkElement)
+    {
+        if(frameworkElement == null)
+        {
+            return "The argument framework element is null, so it cannot raise events";
+        }
+        else if(frameworkElement.Visual == null)
+        {
+            return $"The {frameworkElement.GetType()} has a null Visual, so it will not be able to raise events";
+        }
+        else
+        {
+            return GetEventFailureReason(cursor, frameworkElement.Visual);
+        }
+    }
 
     /// <summary>
     /// Returns information about why events may not be happening for the argument InteractiveGue.
@@ -77,6 +90,11 @@ public static class CursorExtensions
             {
                 return $"The parent {parentWith0WidthOrHeight} has an AbsoluteWidth of 0";
             }
+        }
+
+        if(interactiveGue.EffectiveManagers == null)
+        {
+            return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers, which means it was not added to a root object, and it was not added as a descendant of a root object.";
         }
 
 
