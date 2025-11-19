@@ -1,0 +1,77 @@
+# Troubleshooting Events
+
+## Introduction
+
+Gum forms controls provide built-in responses to user actions such as clicks, typing, and dragging. These responses may be purely visual, such as a `Button` highlighting when the cursor moves over it, or they may raise events.
+
+If a control is not responding to input, its events may be disabled for a variety of reasons.
+
+## GetEventFailureReason
+
+Controls may fail to raise events for many reasons. To help diagnose the problem, the `Cursor` class includes a diagnostic extension method `GetFailureReason` which can be called to identify why an object is not raising its events.
+
+Since event failure may be caused by `Cursor` and control position, it's best to call this method in an Update call while attempting to interact with the element with the cursor.
+
+The following example shows how to use `GetEventFailureReason`:
+
+```csharp
+Button button;
+protected override void Initialize()
+{
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+
+    button = new Button();
+    button.AddToRoot();
+    button.IsVisible = false;
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    var failureReason =
+        GumUI.Cursor.GetEventFailureReason(button);
+    System.Diagnostics.Debug.WriteLine(failureReason);
+
+    base.Update(gameTime);
+}
+```
+
+In this case, the button has its `IsVisible` property set to false. The output for this provides a hint as to how to solve the problem:
+
+```
+The argument ButtonVisual is invisible so it will not raise events
+```
+
+Improved diagnostics can be provided if names are given to controls. For example, changing the Button's name changes the output as shown in the following code block:
+
+<pre class="language-csharp"><code class="lang-csharp">Button button;
+protected override void Initialize()
+{
+    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+
+    button = new Button();
+    button.AddToRoot();
+<strong>    button.Name = "TestButton";
+</strong>    button.IsVisible = false;
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    var failureReason =
+        GumUI.Cursor.GetEventFailureReason(button);
+    System.Diagnostics.Debug.WriteLine(failureReason);
+
+    base.Update(gameTime);
+}
+</code></pre>
+
+```
+The argument ButtonVisual named TestButton is invisible so it will not raise events
+```

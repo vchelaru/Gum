@@ -1,14 +1,10 @@
-# Keyboard Support
+# Tabbing (Moving Focus)
 
 ## Introduction
 
-Gum Forms can use the keyboard to interact with various controls. Controls receive keyboard input if they are focused and if keyboard actions have been enabled. Note that TextBoxes always receive input if they are focused even if keyboards have not been added to FrameworkElement.KeyboardsForUiControl.
+Gum supports tabbing focus between controls. Tabbing can be performed with the keyboard or gamepad.
 
-## TextBox Input
-
-TextBoxes receive input from the keyboard if they are focused. A TextBox's focus can be set in code by setting IsFocused to true, or through the UI by clicking on the TextBox or by tabbing to the TextBox. For more information see the TextBox page.
-
-## Tabbing and UI Interaction
+## Keyboard Tabbing
 
 The keyboard can be used to interact with controls. Keyboards can be used to:
 
@@ -41,3 +37,24 @@ MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
 {% hint style="info" %}
 Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
 {% endhint %}
+
+## Gamepad Tabbing
+
+To enable gamepad support in your game:
+
+1. Be sure to have a gamepad plugged in. Any gamepad that is usable in MonoGame will also work as a gamepad in Gum Forms
+2. Add the gamepad to the FrameworkElement.GamepadsForUiControl. You can add multiple gamepads for multiplayer games.
+3. Set the initial control to have focus by setting its `IsFocused = true`
+
+For example, the following code enables gamepad control for a game assuming MyButton is a valid button:
+
+```csharp
+// The first gamepad:
+var gamepad = GumUI.Gamepads[0];
+// If this code is run multiple times then the gamepad
+// may get added multiple times as well. To be safe, clear
+// the list:
+FrameworkElement.GamePadsForUiControl.Clear();
+FrameworkElement.GamePadsForUiControl.Add(gamepad);
+MyButton.IsFocused = true;
+```

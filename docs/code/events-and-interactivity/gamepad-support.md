@@ -43,7 +43,7 @@ BottomButton.Click += (_, _) =>
 
 Pressing the A button raises the focused button's Click event.
 
-<figure><img src="../../../.gitbook/assets/09_09 57 16.gif" alt=""><figcaption><p>Pressing the A button clicks the highlighted Button</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/09_09 57 16.gif" alt=""><figcaption><p>Pressing the A button clicks the highlighted Button</p></figcaption></figure>
 
 Handling buttons specifically can be handled by subscribing to ControllerButtonPushed.
 
@@ -52,7 +52,7 @@ TopButton.ControllerButtonPushed += (button) =>
     TextInstance.Text = $"Top button button pushed: {button} @ {DateTime.Now}";
 ```
 
-<figure><img src="../../../.gitbook/assets/09_10 01 14.gif" alt=""><figcaption><p>Buttons can respond to any gamepad button push</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/09_10 01 14.gif" alt=""><figcaption><p>Buttons can respond to any gamepad button push</p></figcaption></figure>
 
 The Click event may be raised with InputEventArgs containing the gamepad. Remember, clicks can happen a variety of ways including the mouse or even being directly invoked, so you need to check whether the second parameter is of type `InputEventArgs` and if the device is a GamePad.
 
@@ -73,7 +73,7 @@ private void HandleClick(object sender, EventArgs args)
 }
 ```
 
-<figure><img src="../../../.gitbook/assets/10_05 38 36.png" alt=""><figcaption><p>Output from clicking on a button with a gamepad</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/10_05 38 36.png" alt=""><figcaption><p>Output from clicking on a button with a gamepad</p></figcaption></figure>
 
 If additional flexibility is needed, gamepad events can be polled in an Update method.
 
@@ -97,4 +97,4 @@ for (int i = 0; i < gamepads.Count; i++)
 }
 ```
 
-<figure><img src="../../../.gitbook/assets/09_10 56 13.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/09_10 56 13.png" alt=""><figcaption></figcaption></figure>
