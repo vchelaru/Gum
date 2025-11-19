@@ -75,3 +75,18 @@ protected override void Update(GameTime gameTime)
 ```
 The argument ButtonVisual named TestButton is invisible so it will not raise events
 ```
+
+## Detecting Which Control is Under the Cursor
+
+You can check the Cursor.WindowOver property to see what the Cursor believes it is over. This can tell you if the Cursor is over the object that you expect it to be over. The following code can be used to output the CursorOver to Visual Studio's output window:
+
+```csharp
+string windowOver = "<null>";
+var cursor = GumUI.Cursor;
+if(cursor.WindowOver != null)
+{
+    windowOver = 
+        $"{cursor.WindowOver.GetType().Name} with name {cursor.WindowOver.Name}";
+}
+System.Diagnostics.Debug.WriteLine($"Window over: {windowOver}");
+```

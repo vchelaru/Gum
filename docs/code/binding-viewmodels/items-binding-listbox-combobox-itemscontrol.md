@@ -53,7 +53,7 @@ addButton.Click += (_, _) =>
 };
 ```
 
-<figure><img src="../../../../.gitbook/assets/19_06 21 40.gif" alt=""><figcaption><p>Items added through binding</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/19_06 21 40.gif" alt=""><figcaption><p>Items added through binding</p></figcaption></figure>
 
 The `FrameworkElementTemplate` template can be modified to support creating custom FrameworkElement types as shown in the following code block:
 
@@ -95,7 +95,7 @@ addButton.Click += (_, _) =>
 
 </code></pre>
 
-<figure><img src="../../../../.gitbook/assets/19_06 55 10.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/19_06 55 10.gif" alt=""><figcaption></figcaption></figure>
 
 Each item created through the `FrameworkElementTemplate` is bound to a corresponding item in the Items collection. This means that each `FrameworkElement` can be further customized through its own binding.
 
@@ -211,5 +211,4 @@ viewModel.Weapons.Add(new WeaponViewModel
 });
 ```
 
-<figure><img src="../../../../.gitbook/assets/19_08 26 46.gif" alt=""><figcaption><p>ItemsControl displaying weapons using a customized Button</p></figcaption></figure>
-
+<figure><img src="../../.gitbook/assets/19_08 26 46.gif" alt=""><figcaption><p>ItemsControl displaying weapons using a customized Button</p></figcaption></figure>

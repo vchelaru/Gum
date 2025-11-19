@@ -1,4 +1,4 @@
-# Binding (ViewModels)
+# Binding and MVVM
 
 ## Introduction
 
@@ -67,7 +67,7 @@ public class OptionsScreenViewModel : ViewModel
 
 The `BindingContext` property exists on `FrameworkElement` types as well as all visuals which inherit from `BindableGue` such as TextRuntime and ContainerRuntime.
 
-This property is used to assign the view model that a control should use. The assignment of `BindingContext` cascades from parent to all children recursively, so typically the BindingContext is only assigned at the top level, such as on a screen or `StackPanel`.&#x20;
+This property is used to assign the view model that a control should use. The assignment of `BindingContext` cascades from parent to all children recursively, so typically the BindingContext is only assigned at the top level, such as on a screen or `StackPanel`.
 
 Once `BindingContext` is assigned, individual UI properties can be bound to properties on the view model. To bind to a property, a reference to a UI control is needed. This reference can be obtained by using properties in generated code, by casting the Visual to its specific visual class (such as `ButtonVisual`), or by getting an instance of a FrameworkElement by calling `GetFrameworkElementByName`.
 
@@ -108,7 +108,7 @@ stackPanel.BindingContext = viewModel;
 
 Once a FrameworkElement is assigned a BindingContext, either directly or indirectly through its parent, it can bind any of its properties to a property on the view model. Usually binding is performed using the `nameof` keyword for compile time safety.
 
-For example, the following code shows how to bind a `Button` instance's `Text` property to a view model's `ButtonText` property.&#x20;
+For example, the following code shows how to bind a `Button` instance's `Text` property to a view model's `ButtonText` property.
 
 ```csharp
 buttonInstance.SetBinding(
@@ -207,7 +207,7 @@ void CustomInitialize()
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/13_08 51 15.gif" alt=""><figcaption><p>Two buttons updating money</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/13_08 51 15.gif" alt=""><figcaption><p>Two buttons updating money</p></figcaption></figure>
 
 ## Binding Visual Properties
 
@@ -244,9 +244,9 @@ text.SetBinding(
 
 If your project uses the Gum tool and code generation, then each component and screen has a _custom code_ file which can contain converter properties that can be bound. This allows ViewModels to avoid adding view-specific properties.
 
-For example, consider a screen named `GameScreenHud` which contains a single label named `HealthLabel`.&#x20;
+For example, consider a screen named `GameScreenHud` which contains a single label named `HealthLabel`.
 
-<figure><img src="../../../../.gitbook/assets/23_10 58 42.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/23_10 58 42.png" alt=""><figcaption></figcaption></figure>
 
 The ViewModel may contain general properties such as `CurrentHealth` and `IsLowHealth`, but the view will process these to display the health with a prefix, and to modify the Label property.
 
