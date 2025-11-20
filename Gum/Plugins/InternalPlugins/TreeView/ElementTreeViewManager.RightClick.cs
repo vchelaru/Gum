@@ -189,7 +189,12 @@ public partial class ElementTreeViewManager
                             System.IO.Directory.CreateDirectory(fullFile);
                         }
                     }
-                    Process.Start(fullFile);
+                    var startInfo = new ProcessStartInfo 
+                    { 
+                        UseShellExecute = true ,
+                        FileName = fullFile
+                    };
+                    Process.Start(startInfo );
                 }
                 catch (Exception exc)
                 {

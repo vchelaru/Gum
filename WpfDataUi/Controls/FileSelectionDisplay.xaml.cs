@@ -211,15 +211,6 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
             {
                 Process.Start("explorer.exe", "/select," + fileToOpen);
             }
-
-            //if (isFile)
-            {
-            }
-            //else
-            //{
-            //    Process.Start("explorer.exe", "/root," + locationToShow);
-            //}
-
         }
     }
 
