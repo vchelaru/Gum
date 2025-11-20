@@ -639,9 +639,13 @@ namespace WpfDataUi
             {
                 foreach (var category in instance)
                 {
-                    var newCategory = new MemberCategory();
-                    newCategory.Name = category.Name;
-                    effectiveCategory.Add(newCategory);
+                    var currentCategory = effectiveCategory.FirstOrDefault(existing => existing.Name == category.Name);
+                    if(currentCategory == null)
+                    {
+                        currentCategory = new MemberCategory();
+                        currentCategory.Name = category.Name;
+                        effectiveCategory.Add(currentCategory);
+                    }
 
                     foreach (var member in category.Members)
                     {
@@ -652,7 +656,7 @@ namespace WpfDataUi
                             var multiSelectInstanceMember = TryCreateMultiGroup(listOfCategoryLists, member);
                             if (multiSelectInstanceMember != null)
                             {
-                                newCategory.Members.Add(multiSelectInstanceMember);
+                                currentCategory.Members.Add(multiSelectInstanceMember);
                             }
                         }
                     }
