@@ -1,6 +1,7 @@
 ﻿using Gum.Mvvm;
 using Gum.Wireframe;
 using MonoGameGum.Forms;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -38,6 +39,26 @@ public class BindableGueTests
         viewModel.TestViewModel.IntPropertyOnVm = 1234;
 
         sut.IntPropertyOnGue.ShouldBe(1234);
+    }
+
+    [Fact]
+    public async Task RemoveFromParent_ShouldUnsubscribeViewModelPropertyChange()
+    {
+        TestViewModel testViewModel = new();
+
+        ContainerRuntime parentContainer = new();
+        parentContainer.BindingContext = testViewModel;
+
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+
+        for(int i = 0; i < 10; i++)
+        {
+            ContainerRuntime child = new();
+            parentContainer.AddChild(child);
+            testViewModel.GetPropertyChangeCount().ShouldBe(2);
+            child.Parent = null;
+            testViewModel.GetPropertyChangeCount().ShouldBe(1);
+        }
     }
 
     class TestViewModel : ViewModel

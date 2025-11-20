@@ -24,6 +24,8 @@ namespace Gum.Mvvm
         Dictionary<string, List<string>> notifyRelationships = new Dictionary<string, List<string>>();
         private Dictionary<string, object> propertyDictionary = new Dictionary<string, object>();
 
+        public int GetPropertyChangeCount() => PropertyChanged?.GetInvocationList().Length ?? 0;
+
         protected T Get<T>([CallerMemberName]string propertyName = null)
         {
             T toReturn = default(T);
