@@ -3589,7 +3589,7 @@ public class CodeGenerator
 
         foreach (var group in variableGroups)
         {
-            InstanceSave instance = null;
+            InstanceSave? instance = null;
             var instanceName = group.Key;
 
             if (instanceName != null)
@@ -3619,14 +3619,14 @@ public class CodeGenerator
 
             #endregion
 
-            ElementSave baseElement = null;
+            ElementSave? baseElement = null;
             if (instance == null)
             {
                 baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(context.Element.BaseType) ?? context.Element;
             }
             else
             {
-                baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
+                baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType ?? string.Empty);
             }
 
             // could be null if the element references an element that doesn't exist.
@@ -3718,7 +3718,7 @@ public class CodeGenerator
         var defaultState = element.DefaultState;
 
         var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
-        RecursiveVariableFinder recursiveVariableFinder = null;
+        RecursiveVariableFinder? recursiveVariableFinder = null;
 
         // This is null if it's a screen, or there's some bad reference
         if (baseElement != null)
@@ -3791,6 +3791,11 @@ public class CodeGenerator
 
     private void FillWithNonParentVariableAssignments(CodeGenerationContext context)
     {
+        if(context.Instance == null)
+        {
+            throw new InvalidOperationException("context.Instance should not be null");
+        }
+
         #region Get variables to consider
 
         var variablesToAssignValues = GetVariablesForValueAssignmentCode(context.Instance, context.Element)
@@ -4110,7 +4115,7 @@ public class CodeGenerator
         }
     }
 
-    private static string? VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
+    private static string? VariableValueToXamarinFormsCodeValue(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
     {
         if (value is float asFloat)
         {
@@ -5009,8 +5014,11 @@ public class CodeGenerator
                 if (isXamForms)
                 {
                     var instance = element.GetInstance(instanceName);
-                    var instanceType = GetClassNameForType(instance, VisualApi.XamarinForms, context);
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
+                    if(instance != null)
+                    {
+                        var instanceType = GetClassNameForType(instance, VisualApi.XamarinForms, context);
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
+                    }
                 }
             }
 

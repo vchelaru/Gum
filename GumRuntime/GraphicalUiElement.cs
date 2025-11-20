@@ -5729,8 +5729,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    HashSet<StateSave> statesInStack = new HashSet<StateSave>();
     public virtual void ApplyState(DataTypes.Variables.StateSave state)
     {
+        if(statesInStack.Contains(state))
+        {
+            return; // don't do anything, this would cause infinite recursion
+        }
 #if FULL_DIAGNOSTICS
         // Dynamic states can be applied in code. It is cumbersome for the user to
         // specify the ParentContainer, especially if the state is to be reused. 
@@ -5740,6 +5745,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //    throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
         //}
 #endif
+        statesInStack.Add(state);
 
         if (state.Apply != null)
         {
@@ -5811,6 +5817,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             }
         }
+
+        statesInStack.Remove(state);
+
     }
 
     private int GetOrderedIndexForParentVariable(VariableSave item)

@@ -296,7 +296,7 @@ public class FontManager
                 System.Diagnostics.Debug.WriteLine($"Running: {filenameAndArgs}");
                 _guiCommands.PrintOutput(filenameAndArgs);
 
-
+                // This is okay on .NET 8 because it doesn't use the shell - it's a direct exe call
                 Process process = Process.Start(info);
                 if (createTask)
                 {
