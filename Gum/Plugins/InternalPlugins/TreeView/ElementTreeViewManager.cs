@@ -901,8 +901,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             defaultColor = Color.FromArgb(dc.A, dc.R, dc.G, dc.B);
         }
 
-
         ObjectTreeView.ImageList = BuildTintedImageList(unmodifiableImageList, size, keyedColors, defaultColor ?? Color.White);
+
+        // for some reason, after the .net upgrade, the indent doesn't auto-adjust to account
+        // for the size of the images on first load, so we just force it here every time, despite
+        // it playing nice with follow-up size changes.
+        ObjectTreeView.Indent = (int)baseImageSize;
 
         ImageList BuildTintedImageList(
             ImageList originalImageList,
