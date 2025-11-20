@@ -55,7 +55,11 @@ public class BindableGueTests
         {
             ContainerRuntime child = new();
             parentContainer.AddChild(child);
-            testViewModel.GetPropertyChangeCount().ShouldBe(2);
+
+            ContainerRuntime grandChild = new();
+            child.AddChild(grandChild);
+            testViewModel.GetPropertyChangeCount().ShouldBe(3);
+
             child.Parent = null;
             testViewModel.GetPropertyChangeCount().ShouldBe(1);
         }
