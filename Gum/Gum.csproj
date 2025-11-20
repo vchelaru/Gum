@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
+		<TargetFramework>net8-windows</TargetFramework>
 		<OutputType>WinExe</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -28,13 +28,13 @@
 	</PropertyGroup>
 
 	<!-- Custom output paths only for net472 -->
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)|$(TargetFramework)' == 'Debug|AnyCPU|net472' ">
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<OutputPath>bin\Debug\</OutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)|$(TargetFramework)' == 'Release|AnyCPU|net472' ">
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<OutputPath>bin\Release\</OutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)|$(TargetFramework)' == 'UnitTest|AnyCPU|net472'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|AnyCPU'">
 		<OutputPath>bin\UnitTest\</OutputPath>
 	</PropertyGroup>
 	<PropertyGroup>
@@ -45,8 +45,6 @@
 		<BaseOutputPath></BaseOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Design" />
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>Libraries\TargaImage.dll</HintPath>
@@ -361,22 +359,20 @@
 		</PackageReference>
 		<PackageReference Include="SharpVectors" Version="1.8.5" />
 		<PackageReference Include="SkiaSharp">
-			<Version>3.116.1</Version>
+			<Version>3.119.1</Version>
 		</PackageReference>
 		<PackageReference Include="SkiaSharp.Extended">
 			<Version>1.60.0</Version>
 		</PackageReference>
 		<PackageReference Include="SkiaSharp.Skottie">
-			<Version>3.116.1</Version>
-		</PackageReference>
-		<PackageReference Include="SkiaSharp.Views.WPF">
-			<Version>3.116.1</Version>
+			<Version>3.119.1</Version>
 		</PackageReference>
 		<PackageReference Include="Svg.Skia">
 			<Version>0.5.18</Version>
 		</PackageReference>
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
 		<PackageReference Include="System.Management" Version="9.0.3" />
 
 		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />

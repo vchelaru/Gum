@@ -912,7 +912,7 @@ namespace Gum.Plugins
                 List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
                 string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
 
-                dllFiles.Add(executablePath + "Gum.exe");
+                //dllFiles.Add(executablePath + "Gum.exe");
                 foreach (string dll in dllFiles)
                 {
                     try
@@ -929,11 +929,8 @@ namespace Gum.Plugins
                 }
             }
 
-            if (mGlobal)
-            {
-                returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
-            }
-
+            returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
+            
             return returnValue;
         }
 
