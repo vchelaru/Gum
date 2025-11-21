@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11012.119 d18.0
+VisualStudioVersion = 18.0.11012.119
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XnaAndWinforms", "XnaAndWinforms\XnaAndWinforms.csproj", "{C39A973C-66D6-4A6C-82B5-AE0042F210F8}"
 EndProject
@@ -13,17 +13,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvLibrary", "Gum\CsvLibrar
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateAnimationPlugin", "StateAnimationPlugin\StateAnimationPlugin.csproj", "{991D5E91-45C6-44DE-AA07-9A3FF695AB9E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateAnimationPlugin", "Gum\StateAnimationPlugin\StateAnimationPlugin.csproj", "{991D5E91-45C6-44DE-AA07-9A3FF695AB9E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceMeasurementPlugin", "PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj", "{8D388562-F5F6-4000-9489-33761112B974}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceMeasurementPlugin", "Gum\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj", "{8D388562-F5F6-4000-9489-33761112B974}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureCoordinateSelectionPlugin", "TextureCoordinateSelectionPlugin\TextureCoordinateSelectionPlugin.csproj", "{C6157099-F5FD-4632-8097-4071FE2BD982}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureCoordinateSelectionPlugin", "Gum\TextureCoordinateSelectionPlugin\TextureCoordinateSelectionPlugin.csproj", "{C6157099-F5FD-4632-8097-4071FE2BD982}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlatRedBall.SpecializedXnaControls", "FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj", "{8C80BA7B-1CBA-4579-9382-D9DC6C365070}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventOutputPlugin", "Gum\EventOutputPlugin\EventOutputPlugin.csproj", "{645E1916-35B9-4BC8-8949-C88301838296}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaPlugin", "SvgPlugin\SkiaPlugin.csproj", "{0FEE460B-616C-45AC-86D5-087B7E32546E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaPlugin", "Gum\SvgPlugin\SkiaPlugin.csproj", "{0FEE460B-616C-45AC-86D5-087B7E32546E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeOutputPlugin", "Gum\CodeOutputPlugin\CodeOutputPlugin.csproj", "{517D2748-414E-42F7-8523-516E59CE994C}"
 EndProject
@@ -169,7 +169,7 @@ Global
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{0fee460b-616c-45ac-86d5-087b7e32546e}*SharedItemsImports = 5
+		Gum\SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{0fee460b-616c-45ac-86d5-087b7e32546e}*SharedItemsImports = 5
 		SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{ee3c8564-6cb2-411c-a43c-19d33c819b90}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
