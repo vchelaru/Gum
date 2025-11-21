@@ -99,6 +99,8 @@ To load a Gum Project:
 {% tabs %}
 {% tab title="MonoGame/KNI/FNA" %}
 ```csharp
+GumService GumUI => GumService.Default;
+
 protected override void Initialize()
 {
     GumUI.Initialize(
@@ -106,18 +108,15 @@ protected override void Initialize()
         "GumProject/GumProject.gumx");
 
     // This assumes that your project has at least 1 screen
-    var screen = ObjectFinder.Self.GumProjectSave.Screens
-        .FirstOrDefault()
-        ?.ToGraphicalUiElement();
-        
-    if(screen == null)
+    if(ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
     {
         throw new Exception(
             "No screen found in the Gum project, " + 
             "did you add a Screen in the Gum tool?");
     }
-            
-    screenRuntime.AddToRoot();
+    var screen = ObjectFinder.Self.GumProjectSave.Screens[0]
+        .ToGraphicalUiElement();          
+    screen.AddToRoot();
     
     base.Initialize();
 }
@@ -135,20 +134,27 @@ GumUI.Initialize(
 
 {% tab title="raylib" %}
 ```csharp
-GumUI.Initialize(
-    "resources/GumProject/raylibGumProject.gumx");
+static GumService GumUI => GumService.Default;
 
-var screen = ObjectFinder.Self.GumProjectSave.Screens
-    .FirstOrDefault()
-    ?.ToGraphicalUiElement();
-
-if(screen == null)
+public static void Main()
 {
-    throw new Exception(
-        "No screen found in the Gum project, " + 
-        "did you add a Screen in the Gum tool?");
+    // Additional code needed to initialize your raylib project goes here
+    GumUI.Initialize(
+        "resources/GumProject/raylibGumProject.gumx");
+    
+    // This assumes that your project has at least 1 screen
+    if(ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
+    {
+        throw new Exception(
+            "No screen found in the Gum project, " + 
+            "did you add a Screen in the Gum tool?");
+    }    
+    var screen = ObjectFinder.Self.GumProjectSave.Screens[0]
+        .ToGraphicalUiElement();
+    screen.AddToRoot();
+    
+    // Additional initialization logic goes here
 }
-screen.AddToRoot();
 ```
 {% endtab %}
 
@@ -173,13 +179,12 @@ You can get a reference to elements within the screen by calling `GetGraphicalUi
 
 ```csharp
 // Load the gum project (see code above)
-var screenRuntime = ObjectFinder.Self.GumProject.Screens
-    .First()
+var screenRuntime = ObjectFinder.Self.GumProject.Screens[0]
     .ToGraphicalUiElement();
 screenRuntime.AddToRoot();
 
 // Items in the screen can be accessed using the GetGraphicalUiElementByName method:
-var child = screenRuntime .GetGraphicalUiElementByName("TitleInstance");
+var child = screenRuntime.GetGraphicalUiElementByName("TitleInstance");
 
 // All GraphicalUiElements have common properties, like X:
 child.X += 30;

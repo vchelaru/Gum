@@ -4,7 +4,7 @@
 
 NineSlice is a standard component which can be used to create visual objects which can stretch to any size without creating distortion on the source image. For example, consider the following image:
 
-![](<../../../../Samples/KniGumFromFile/KniGumFromFileContent/metalpanel_blue (1).png>)
+![](<../../../.gitbook/assets/metalpanel_blue (1).png>)
 
 This image could be used to create nine slices of various sizes without any distortion:
 
