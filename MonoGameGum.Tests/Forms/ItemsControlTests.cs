@@ -61,8 +61,21 @@ public class ItemsControlTests : BaseTestClass
         itemsControl.FrameworkElementTemplate = 
             new Gum.Forms.FrameworkElementTemplate(typeof(Button));
 
+        itemsControl.InnerPanel.Children.Count.ShouldBe(0);
+
         itemsControl.Items.Add(1);
-        itemsControl.InnerPanel.Children.Count.ShouldBe(1);
+
+        var childrenCount = itemsControl.InnerPanel.Children.Count;
+        if (childrenCount != 1)
+        {
+            var message = $"Expected 1 child, but got {childrenCount}:\n";
+            for (int i = 0; i < childrenCount; i++)
+            {
+                message += $"Child {i}: {itemsControl.InnerPanel.Children[i].GetType().FullName}\n";
+            }
+            throw new Exception(message);
+        }
+
         IRenderableIpso child = itemsControl.InnerPanel.Children[0];
         (child is InteractiveGue).ShouldBeTrue();
         Button? button = ((InteractiveGue)child).FormsControlAsObject as Button;
