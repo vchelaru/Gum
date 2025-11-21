@@ -387,6 +387,7 @@
 		<Compile Remove="CommonFormsAndControls\**" />
 		<Compile Remove="CsvLibrary\**" />
 		<Compile Remove="EventOutputPlugin\**" />
+		<Compile Remove="GumFigmaIconRipper\**" />
 		<Compile Remove="GumFormsPlugin\**" />
 		<Compile Remove="objNetFramework\**" />
 		<Compile Remove="PerformanceMeasurementPlugin\**" />
@@ -397,6 +398,7 @@
 		<EmbeddedResource Remove="CommonFormsAndControls\**" />
 		<EmbeddedResource Remove="CsvLibrary\**" />
 		<EmbeddedResource Remove="EventOutputPlugin\**" />
+		<EmbeddedResource Remove="GumFigmaIconRipper\**" />
 		<EmbeddedResource Remove="GumFormsPlugin\**" />
 		<EmbeddedResource Remove="PerformanceMeasurementPlugin\**" />
 		<EmbeddedResource Remove="StateAnimationPlugin\**" />
@@ -406,6 +408,7 @@
 		<None Remove="CommonFormsAndControls\**" />
 		<None Remove="CsvLibrary\**" />
 		<None Remove="EventOutputPlugin\**" />
+		<None Remove="GumFigmaIconRipper\**" />
 		<None Remove="GumFormsPlugin\**" />
 		<None Remove="PerformanceMeasurementPlugin\**" />
 		<None Remove="StateAnimationPlugin\**" />
@@ -415,6 +418,7 @@
 		<Page Remove="CommonFormsAndControls\**" />
 		<Page Remove="CsvLibrary\**" />
 		<Page Remove="EventOutputPlugin\**" />
+		<Page Remove="GumFigmaIconRipper\**" />
 		<Page Remove="GumFormsPlugin\**" />
 		<Page Remove="PerformanceMeasurementPlugin\**" />
 		<Page Remove="StateAnimationPlugin\**" />
