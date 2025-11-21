@@ -59,7 +59,13 @@ public class ItemsControlTests : BaseTestClass
     {
         var itemsControl = new ItemsControl();
         itemsControl.FrameworkElementTemplate = 
-            new Gum.Forms.FrameworkElementTemplate(typeof(Button));
+            new Gum.Forms.FrameworkElementTemplate(() =>
+            {
+                var button = new Button();
+                button.Name = "Button @ " + DateTime.Now + " total milliseconds: " + DateTime.Now.TimeOfDay.TotalMilliseconds;
+
+                return button;
+            });
 
         itemsControl.InnerPanel.Children.Count.ShouldBe(0);
 
@@ -71,7 +77,7 @@ public class ItemsControlTests : BaseTestClass
             var message = $"Expected 1 child, but got {childrenCount}:\n";
             for (int i = 0; i < childrenCount; i++)
             {
-                message += $"Child {i}: {itemsControl.InnerPanel.Children[i].GetType().FullName}\n";
+                message += $"Child {i}: {itemsControl.InnerPanel.Children[i].GetType().FullName} {itemsControl.InnerPanel.Children[i].Name}\n";
             }
             throw new Exception(message);
         }
