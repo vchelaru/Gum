@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureCoordinateSelectionP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlatRedBall.SpecializedXnaControls", "FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj", "{8C80BA7B-1CBA-4579-9382-D9DC6C365070}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventOutputPlugin", "EventOutputPlugin\EventOutputPlugin.csproj", "{645E1916-35B9-4BC8-8949-C88301838296}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventOutputPlugin", "Gum\EventOutputPlugin\EventOutputPlugin.csproj", "{645E1916-35B9-4BC8-8949-C88301838296}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaPlugin", "SvgPlugin\SkiaPlugin.csproj", "{0FEE460B-616C-45AC-86D5-087B7E32546E}"
 EndProject
