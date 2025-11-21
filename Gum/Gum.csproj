@@ -383,7 +383,11 @@
 		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="CodeOutputPlugin\**" />
 		<Compile Remove="objNetFramework\**" />
+		<EmbeddedResource Remove="CodeOutputPlugin\**" />
+		<None Remove="CodeOutputPlugin\**" />
+		<Page Remove="CodeOutputPlugin\**" />
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />
