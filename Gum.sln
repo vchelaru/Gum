@@ -25,7 +25,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventOutputPlugin", "EventO
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaPlugin", "SvgPlugin\SkiaPlugin.csproj", "{0FEE460B-616C-45AC-86D5-087B7E32546E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeOutputPlugin", "CodeOutputPlugin\CodeOutputPlugin.csproj", "{517D2748-414E-42F7-8523-516E59CE994C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeOutputPlugin", "Gum\CodeOutputPlugin\CodeOutputPlugin.csproj", "{517D2748-414E-42F7-8523-516E59CE994C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SkiaPlugins", "SkiaPlugins", "{F918B134-23D9-4541-A885-0A522475D492}"
 EndProject
