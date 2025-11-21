@@ -366,6 +366,72 @@ public class GraphicalUiElementTests
         child2.AbsoluteTop.ShouldBe(100);
     }
 
+    [Fact]
+    public void MaxHeight_ShouldNotWrapVerticalStack_UntilExceeded()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.MaxHeight = 300;
+        parent.WrapsChildren = true;
+
+        for(int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new ();
+            child.Height = 100;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+        }
+
+        parent.GetAbsoluteHeight().ShouldBe(200);
+    }
+
+    [Fact]
+    public void MaxHeight_ShouldWrapVerticalStack_IfExceeded()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.Name = "Parent";
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.MaxHeight = 150;
+        parent.WrapsChildren = true;
+
+        for (int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new();
+            child.Name = "Child " + i;
+            child.Height = 100;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+        }
+
+        parent.GetAbsoluteHeight().ShouldBe(100);
+    }
+
+    [Fact]
+    public void MaxWidth_ShouldWrapHorizontalStack_IfExceeded()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.Name = "Parent";
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 150;
+        parent.WrapsChildren = true;
+
+        for (int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new();
+            child.Name = "Child " + i;
+            child.Width = 100;
+            child.WidthUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+        }
+
+        parent.GetAbsoluteWidth().ShouldBe(100);
+    }
 
     #endregion
 

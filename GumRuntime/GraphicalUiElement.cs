@@ -2516,9 +2516,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
         float maxCellHeight = maxHeight;
-        for (int i = 0; i < Children.Count; i++)
+        for (int i = 0; i < Children!.Count; i++)
         {
-            var element = Children[i] as GraphicalUiElement;
+            var element = (GraphicalUiElement)Children[i];
             var childLayout = element.GetChildLayoutType(XOrY.Y, this);
             var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
             if (considerChild && element.Visible)
@@ -2530,9 +2530,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
                     if (i != 0)
                     {
-                        maxCellHeight += StackSpacing;
+                        var maxHeightWithSpacing = maxCellHeight + StackSpacing;
+
+                        if(maxHeightWithSpacing > this.MaxHeight)
+                        {
+                            // don't do anything, we can't expand any further so leave the height wherever it was before
+                            // because this item should wrap:
+                            //maxCellHeight = this.MaxHeight.Value;
+                            break;
+                        }
+                        else
+                        {
+                            maxCellHeight = maxHeightWithSpacing;
+                        }
                     }
-                    maxCellHeight += elementHeight;
+
+                    var maxHeightWithElement = maxCellHeight + elementHeight;
+                    if(maxHeightWithElement > this.MaxHeight)
+                    {
+                        // don't do anything, we can't expand any further so leave the height wherever it was before
+                        // because this item should wrap:
+                        //maxCellHeight = this.MaxHeight.Value;
+                        break;
+                    }
+                    else
+                    {
+                        maxCellHeight = maxHeightWithElement;
+                    }
                 }
                 else
                 {
@@ -2879,9 +2903,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
     {
         float maxCellWidth = maxWidth;
-        for (int i = 0; i < this.Children.Count; i++)
+        for (int i = 0; i < this.Children!.Count; i++)
         {
-            var element = this.Children[i] as GraphicalUiElement;
+            var element = (GraphicalUiElement)this.Children[i];
             var childLayout = element.GetChildLayoutType(XOrY.X, this);
             var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
@@ -2894,9 +2918,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
                     if (i != 0)
                     {
-                        maxCellWidth += StackSpacing;
+                        var maxWidthWithSpacing = maxCellWidth + StackSpacing;
+
+                        if(maxWidthWithSpacing > this.MaxWidth)
+                        {
+                            // don't do anything, we can't expand any further so leave the width wherever it was before
+                            // because this item should wrap:
+                            //maxCellWidth = this.MaxWidth.Value;
+                            break;
+                        }
+                        else
+                        {
+                            maxCellWidth = maxWidthWithSpacing;
+                        }
                     }
-                    maxCellWidth += elementWidth;
+
+                    var maxWidthWithElement = maxCellWidth + elementWidth;
+                    if(maxWidthWithElement > this.MaxWidth)
+                    {
+                        // don't do anything, we can't expand any further so leave the width wherever it was before
+                        // because this item should wrap:
+                        //maxCellWidth = this.MaxWidth.Value;
+                        break;
+                    }
+                    else
+                    {
+                        maxCellWidth = maxWidthWithElement;
+                    }
                 }
                 else
                 {

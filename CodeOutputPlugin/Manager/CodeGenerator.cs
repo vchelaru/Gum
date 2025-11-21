@@ -3276,11 +3276,12 @@ public class CodeGenerator
         var isXamarinForms = GetVisualApiForElement(context.Element) == VisualApi.XamarinForms;
         var containerClassName = GetClassNameForType(context.Element, GetVisualApiForElement(context.Element), context);
 
-
-        foreach (var category in context.Element.Categories)
+        if(containerClassName != null)
         {
-            FillWithStatePropertiesForCategory(context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings, isXamarinForms, containerClassName, category);
-
+            foreach (var category in context.Element.Categories)
+            {
+                FillWithStatePropertiesForCategory(context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings, isXamarinForms, containerClassName, category);
+            }
         }
     }
 
@@ -3632,7 +3633,7 @@ public class CodeGenerator
             // could be null if the element references an element that doesn't exist.
             if (baseElement != null)
             {
-                var baseDefaultState = baseElement?.DefaultState;
+                var baseDefaultState = baseElement.DefaultState;
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
 
@@ -4197,7 +4198,7 @@ public class CodeGenerator
         {
             return asBool.ToString().ToLowerInvariant();
         }
-        else if (value.GetType().IsEnum)
+        else if (value?.GetType().IsEnum == true)
         {
             var textAlignmentPrefix = "Xamarin.Forms";
 
@@ -4864,7 +4865,7 @@ public class CodeGenerator
         return new VariableSave[0];
     }
 
-    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder)
+    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder)
     {
         var shouldInclude =
                                 item.Value != null &&
