@@ -37,14 +37,15 @@ public class ItemsControlTests : BaseTestClass
         });
 
         itemsControl.Items.Add(1);
-        itemsControl.InnerPanel.Children.Count.ShouldBe(1);
+        itemsControl.InnerPanel.Children!.Count.ShouldBe(1);
         IRenderableIpso child = itemsControl.InnerPanel.Children[0];
         ColoredRectangleRuntime? coloredRectangle = child as ColoredRectangleRuntime;
         coloredRectangle.ShouldNotBeNull();
     }
 
+
     [Fact]
-    public void ItemsControl_Items_ShouldRespectFormsTemplate()
+    public void ItemsControl_Items_ShouldRespectFrameworkElementTemplate()
     {
         var itemsControl = new ItemsControl();
         itemsControl.FrameworkElementTemplate = 
@@ -55,6 +56,23 @@ public class ItemsControlTests : BaseTestClass
         IRenderableIpso child = itemsControl.InnerPanel.Children[0];
         (child is InteractiveGue).ShouldBeTrue();
         Button? button = ((InteractiveGue)child).FormsControlAsObject as Button;
+        button.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ItemsControl_FrameworkElementTemplate_ShouldRecreateAllItems()
+    {
+        var itemsControl = new ItemsControl();
+
+        itemsControl.Items.Add(1);
+
+        itemsControl.FrameworkElementTemplate =
+            new Gum.Forms.FrameworkElementTemplate(typeof(Button));
+
+        itemsControl.InnerPanel.Children.Count.ShouldBe(1);
+        
+        Button? button = ((InteractiveGue)itemsControl.InnerPanel.Children[0])
+            .FormsControlAsObject as Button;
         button.ShouldNotBeNull();
     }
 
