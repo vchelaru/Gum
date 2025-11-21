@@ -19,7 +19,17 @@ public class ItemsControlTests : BaseTestClass
     {
         ItemsControl itemsControl = new ();
         itemsControl.Items.Add(1);
-        itemsControl.InnerPanel.Children.Count.ShouldBe(1);
+        var childrenCount = itemsControl.InnerPanel.Children.Count;
+        if(childrenCount != 1)
+        {
+            var message = $"Expected 1 child, but got {childrenCount}:\n";
+            for(int i = 0; i < childrenCount; i++)
+            {
+                message += $"Child {i}: {itemsControl.InnerPanel.Children[i].GetType().FullName}\n";
+            }
+            throw new Exception(message);
+
+        }
         (itemsControl.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
         (itemsControl.InnerPanel.Children[0] as InteractiveGue).FormsControlAsObject
             .ShouldBeOfType<Label>();
