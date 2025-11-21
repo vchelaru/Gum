@@ -83,8 +83,8 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
-		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
+		<ProjectReference Include="CommonFormsAndControls\CommonFormsAndControls.csproj" />
+		<ProjectReference Include="CsvLibrary\CsvLibrary.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
@@ -384,10 +384,18 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Remove="CodeOutputPlugin\**" />
+		<Compile Remove="CommonFormsAndControls\**" />
+		<Compile Remove="CsvLibrary\**" />
 		<Compile Remove="objNetFramework\**" />
 		<EmbeddedResource Remove="CodeOutputPlugin\**" />
+		<EmbeddedResource Remove="CommonFormsAndControls\**" />
+		<EmbeddedResource Remove="CsvLibrary\**" />
 		<None Remove="CodeOutputPlugin\**" />
+		<None Remove="CommonFormsAndControls\**" />
+		<None Remove="CsvLibrary\**" />
 		<Page Remove="CodeOutputPlugin\**" />
+		<Page Remove="CommonFormsAndControls\**" />
+		<Page Remove="CsvLibrary\**" />
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />

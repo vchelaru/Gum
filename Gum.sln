@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderingLibrary", "Renderi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InputLibrary", "InputLibrary\InputLibrary.csproj", "{938D9A00-8529-4CE8-9077-E0A3994A73EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvLibrary", "CsvLibrary\CsvLibrary.csproj", "{277A9E05-C5DF-4A30-AD43-F7C16A6893ED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvLibrary", "Gum\CsvLibrary\CsvLibrary.csproj", "{277A9E05-C5DF-4A30-AD43-F7C16A6893ED}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}"
 EndProject
@@ -45,7 +45,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StateAnimation", "StateAnim
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "GumCommon\GumCommon.csproj", "{6F20DA16-FDC2-485E-B6ED-433EE2A97E59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonFormsAndControls", "CommonFormsAndControls\CommonFormsAndControls.csproj", "{B7ABE8DF-EE36-42AB-B371-78195C614A61}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonFormsAndControls", "Gum\CommonFormsAndControls\CommonFormsAndControls.csproj", "{B7ABE8DF-EE36-42AB-B371-78195C614A61}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EditorTabPlugins", "EditorTabPlugins", "{3E451941-5A67-42CD-931E-5DB8C0666178}"
 EndProject
