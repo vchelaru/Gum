@@ -118,7 +118,36 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    public FrameworkElementTemplate FrameworkElementTemplate { get; set; }
+    FrameworkElementTemplate? _frameworkElementTemplate;
+    public FrameworkElementTemplate? FrameworkElementTemplate 
+    {
+        get => _frameworkElementTemplate;
+        set
+        {
+            if(value != _frameworkElementTemplate)
+            {
+                _frameworkElementTemplate = value;
+                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+                GraphicalUiElement.IsAllLayoutSuspended = true;
+
+                ClearVisualsInternal();
+
+                if (items?.Count > 0)
+                {
+                    // refresh!
+                    var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                        items, startingIndex: 0);
+                    HandleItemsCollectionChanged(this, args);
+                }
+
+                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+                if (!wasSuppressed)
+                {
+                    Visual.ResumeLayout(recursive: true);
+                }
+            }
+        }
+    }
 
     VisualTemplate visualTemplate;
     public VisualTemplate VisualTemplate
@@ -483,7 +512,7 @@ public class ItemsControl : ScrollViewer
     {
         if (InnerPanel != null)
         {
-            InnerPanel.Children.Clear();
+            InnerPanel.Children!.Clear();
 
             for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
             {
