@@ -73,27 +73,27 @@
 	  <EmbeddedResource Remove="Content\FormsGumProject\Screens\DemoScreenGumAnimations.ganx" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
+		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
 			<Project>{8c80ba7b-1cba-4579-9382-d9dc6c365070}</Project>
 			<Name>FlatRedBall.SpecializedXnaControls</Name>
 		</ProjectReference>
-		<ProjectReference Include="..\Gum\Gum.csproj">
+		<ProjectReference Include="..\Gum.csproj">
 			<Project>{121ac5a5-8f6a-42b2-8863-debc45b052bc}</Project>
 			<Name>Gum</Name>
 		</ProjectReference>
-		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
+		<ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj">
 			<Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
 			<Name>InputLibrary</Name>
 		</ProjectReference>
-		<ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
+		<ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj">
 			<Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
 			<Name>RenderingLibrary</Name>
 		</ProjectReference>
-		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
+		<ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj">
 			<Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
 			<Name>WpfDataUi</Name>
 		</ProjectReference>
-		<ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
+		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj">
 			<Project>{c39a973c-66d6-4a6c-82b5-ae0042f210f8}</Project>
 			<Name>XnaAndWinforms</Name>
 		</ProjectReference>

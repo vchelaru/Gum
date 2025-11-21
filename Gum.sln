@@ -31,7 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SkiaPlugins", "SkiaPlugins"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SkiaInGumShared", "SvgPlugin\SkiaInGumShared\SkiaInGumShared.shproj", "{EE3C8564-6CB2-411C-A43C-19D33C819B90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumFormsPlugin", "GumFormsPlugin\GumFormsPlugin.csproj", "{0CD0E816-A3DE-4FB5-BCB8-4D80D542CBE6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumFormsPlugin", "Gum\GumFormsPlugin\GumFormsPlugin.csproj", "{0CD0E816-A3DE-4FB5-BCB8-4D80D542CBE6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{C66AD07F-C683-4C24-8E6B-20638ACC3A25}"
 EndProject
