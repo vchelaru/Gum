@@ -62,10 +62,8 @@ public class ItemsControlTests : BaseTestClass
             new Gum.Forms.FrameworkElementTemplate(() =>
             {
                 var button = new Button();
-                var callstack = Environment.StackTrace;
 
-                button.Name = "Button @ " + DateTime.Now + " total milliseconds: " + DateTime.Now.TimeOfDay.TotalMilliseconds + "\n" + 
-                    callstack;
+                button.Name = "Button @ " + DateTime.Now + " total milliseconds: " + DateTime.Now.TimeOfDay.TotalMilliseconds;
 
                 return button;
             });

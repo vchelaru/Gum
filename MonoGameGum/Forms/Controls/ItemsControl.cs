@@ -132,7 +132,13 @@ public class ItemsControl : ScrollViewer
 
                 ClearVisualsInternal();
 
-                ForceUpdateToItems();
+                if (items?.Count > 0)
+                {
+                    // refresh!
+                    var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                        items, startingIndex: 0);
+                    HandleItemsCollectionChanged(this, args);
+                }
 
                 GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                 if (!wasSuppressed)
