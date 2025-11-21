@@ -761,104 +761,113 @@ public class CodeGenerator
                     }
                 }
 
-                if (shouldSetStateByString)
+                // if there is no root variable, then this could be an orphan variable assignment which can happen if the user changes
+                // the type of an instance:
+                if(rootVariable == null)
                 {
-                    type = "string";
+                    stringBuilder.AppendLine(context.Tabs + $"// Could not generate variable {exposedVariable} because it references a variable that doesn't exist");
                 }
-
-                string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
-                string? sourceObjectCast = null;
-
-                ElementSave? sourceInstanceElement = null;
-
-                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                else //if (rootVariable != null)
                 {
-                    // only if the object is not a standard element
-                    sourceInstanceElement = ObjectFinder.Self.GetElementSave(foundInstance);
-                    if (sourceInstanceElement is not StandardElementSave)
+                    if (shouldSetStateByString)
                     {
-                        // We need to check if the variable should be on .Visual:
-                        // It is on visual only if the instance 
-                        var setDirect = GetIfShouldSetDirectlyOnInstance(exposedVariable, context.Element, context);
-                        if(!setDirect)
+                        type = "string";
+                    }
+
+                    string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
+                    string? sourceObjectCast = null;
+
+                    ElementSave? sourceInstanceElement = null;
+
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    {
+                        // only if the object is not a standard element
+                        sourceInstanceElement = ObjectFinder.Self.GetElementSave(foundInstance);
+                        if (sourceInstanceElement is not StandardElementSave)
                         {
-                            if (isState == false || isStateOnVisual)
+                            // We need to check if the variable should be on .Visual:
+                            // It is on visual only if the instance 
+                            var setDirect = GetIfShouldSetDirectlyOnInstance(exposedVariable, context.Element, context);
+                            if (!setDirect)
                             {
-                                sourceObjectName += ".Visual";
+                                if (isState == false || isStateOnVisual)
+                                {
+                                    sourceObjectName += ".Visual";
+                                }
                             }
+                            sourceObjectCast = GetVisualCast(exposedVariable, context.Element, context);
                         }
-                        sourceObjectCast = GetVisualCast(exposedVariable, context.Element, context);
                     }
-                }
 
-                var isOverride = GetIfExposedVariableIsOverride(exposedVariable, context);
+                    var isOverride = GetIfExposedVariableIsOverride(exposedVariable, context);
 
-                string possibleVirtual = isOverride
-                    ? "override " 
-                    : string.Empty;
-
+                    string possibleVirtual = isOverride
+                        ? "override "
+                        : string.Empty;
 
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleVirtual}{type} {name}");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
 
-                var hasGetter = true;
-                if (isState)
-                {
-                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"public {possibleVirtual}{type} {name}");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                    tabCount++;
+                    //TryWriteExposedVariableGetter(exposedVariable, context, stringBuilder, tabCount, isState, rootVariable);
+
+                    var hasGetter = true;
+                    if (isState)
                     {
-                        hasGetter = false;
+                        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                        {
+                            hasGetter = false;
+                        }
                     }
-                }
-                if (rootVariable?.Name == "SourceFile")
-                {
-                    // SourceFileName has no getter by default
-                    hasGetter = false;
-                }
-
-                if (hasGetter)
-                {
-                    if(sourceObjectCast != null)
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectName}).{rootVariable?.Name};");
-                    }
-                    else
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
-                    }
-                }
-
-
-                if (shouldSetStateByString)
-                {
-                    var rightSide = $"{sourceObjectName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
-                }
-                else
-                {
                     if (rootVariable?.Name == "SourceFile")
                     {
-                        var variableName = sourceObjectName + ".SourceFileName";
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
+                        // SourceFileName has no getter by default
+                        hasGetter = false;
                     }
-                    else
+
+                    if (hasGetter)
                     {
-                        if(sourceObjectCast != null)
+                        if (sourceObjectCast != null)
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectName}).{rootVariable?.Name} = value;");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectName}).{rootVariable?.Name};");
                         }
                         else
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
                         }
                     }
+
+
+                    if (shouldSetStateByString)
+                    {
+                        var rightSide = $"{sourceObjectName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                    }
+                    else
+                    {
+                        if (rootVariable?.Name == "SourceFile")
+                        {
+                            var variableName = sourceObjectName + ".SourceFileName";
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
+                        }
+                        else
+                        {
+                            if (sourceObjectCast != null)
+                            {
+                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectName}).{rootVariable?.Name} = value;");
+                            }
+                            else
+                            {
+                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                            }
+                        }
+                    }
+
+                    tabCount--;
+
+                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 }
-
-                tabCount--;
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
         }
 
