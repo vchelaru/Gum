@@ -24,7 +24,7 @@ namespace RenderingLibrary.Math.Geometry
 
         bool mVisible;
 
-        ObservableCollection<IRenderableIpso> mChildren;
+        ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
         CircleOrigin mCircleOrigin;
 
@@ -181,7 +181,7 @@ namespace RenderingLibrary.Math.Geometry
         public LineCircle(SystemManagers managers)
         {
 
-            mChildren = new ObservableCollection<IRenderableIpso>();
+            mChildren = new ();
 
             mRadius = 32;
             Visible = true;

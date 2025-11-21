@@ -28,7 +28,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     public BlendState BlendState { get; set; } = BlendState.NonPremultiplied;
 
-    protected ObservableCollection<IRenderableIpso> _children = new ObservableCollection<IRenderableIpso>();
+    protected ObservableCollectionNoReset<IRenderableIpso> _children = new ();
     public ObservableCollection<IRenderableIpso> Children => _children;
     ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
     // If a GUE uses this, it needs to support storing the values.

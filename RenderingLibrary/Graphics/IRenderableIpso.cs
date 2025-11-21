@@ -4,7 +4,10 @@ using SkiaGum.Renderables;
 using SkiaSharp;
 #endif
 using Gum;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace RenderingLibrary.Graphics;
 
@@ -39,5 +42,25 @@ public static class IRenderableIpsoExtensions
         {
             return false;
         }
+    }
+}
+
+public class ObservableCollectionNoReset<T> : ObservableCollection<T>
+{
+    protected override void ClearItems()
+    {
+        List<T> removed = new List<T>(this);
+        base.ClearItems();
+        var args = new NotifyCollectionChangedEventArgs(
+            NotifyCollectionChangedAction.Remove, 
+            removed,
+            0);
+        base.OnCollectionChanged(args);
+    }
+
+    protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action != NotifyCollectionChangedAction.Reset)
+            base.OnCollectionChanged(e);
     }
 }

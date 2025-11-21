@@ -23,7 +23,7 @@ namespace RenderingLibrary.Math.Geometry
 
         LinePrimitive mLinePrimitive;
 
-        ObservableCollection<IRenderableIpso> mChildren;
+        ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
 
         IRenderableIpso mParent;
@@ -221,7 +221,7 @@ namespace RenderingLibrary.Math.Geometry
 
             mManagers = managers;
 
-            mChildren = new ObservableCollection<IRenderableIpso>();
+            mChildren = new ();
 
             Visible = true;
             Renderer renderer;

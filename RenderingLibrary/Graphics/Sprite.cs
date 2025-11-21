@@ -267,7 +267,7 @@ public class Sprite : SpriteBatchRenderableBase,
         set;
     }
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -357,7 +357,7 @@ public class Sprite : SpriteBatchRenderableBase,
         // the sprite will render using the default blendop, which may differ
         // depending on whether the game uses premult or standard
         //BlendState = BlendState.NonPremultiplied;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         Texture = texture;
     }
@@ -1062,7 +1062,7 @@ public class Sprite : SpriteBatchRenderableBase,
     {
         var newInstance = (Sprite)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

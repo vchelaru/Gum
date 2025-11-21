@@ -5165,11 +5165,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     throw new InvalidOperationException($"Attempting to add a null child to {this}");
                 }
 #endif
-                var ipso = newItem as IRenderableIpso;
-                if (ipso == null)
-                {
-                    int m = 3;
-                }
+                var ipso = (IRenderableIpso)newItem;
+
                 if (ipso.Parent != this)
                 {
                     ipso.Parent = this;
@@ -5190,6 +5187,29 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     ipso.Parent = null;
                 }
+            }
+        }
+        else if(e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            if(e.OldItems != null)
+            {
+                foreach (IRenderableIpso ipso in e.OldItems)
+                {
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+            }
+            else
+            {
+#if FULL_DIAGNOSTICS
+                var message = "STOP!!! The GraphicalUiElement " + this + " has been reset, but the Children ObservableCollection " +
+                    "did not include e.OldItems, so the old children cannot have their Parent set to null. This can cause memory leaks through " +
+                    "events, and other references. You should consider implementing a Children backing field that instead loops through and removes each child through a .Remove call.";
+
+                System.Diagnostics.Debug.WriteLine(message);
+#endif
             }
         }
         else if (e.Action == NotifyCollectionChangedAction.Replace)

@@ -124,7 +124,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             get;
             private set;
-        } = new ObservableCollection<IRenderableIpso>();
+        } = new ObservableCollectionNoReset<IRenderableIpso>();
 
         BlendState IRenderable.BlendState
         {

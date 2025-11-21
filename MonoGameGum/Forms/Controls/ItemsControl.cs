@@ -319,17 +319,20 @@ public class ItemsControl : ScrollViewer
             case NotifyCollectionChangedAction.Remove:
                 {
                     int absoluteIndex = e.OldStartingIndex;
-
-                    foreach (var item in e.OldItems)
+                    if(e.OldItems != null)
                     {
-                        var asGue = item as InteractiveGue;
-                        var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
-                        if (newFrameworkItem != null)
+                        var topIndex = e.OldStartingIndex + e.OldItems.Count;
+                        // Reverse order this so that as we are removing, the internal list count change doesn't
+                        // cause an out of bounds exception
+                        for(int i = e.OldItems.Count - 1; i > -1; i--)
                         {
-                            HandleCollectionItemRemoved(absoluteIndex);
+                            var asGue = e.OldItems[i] as InteractiveGue;
+                            var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
+                            if (newFrameworkItem != null)
+                            {
+                                HandleCollectionItemRemoved(i);
+                            }
                         }
-
-                        absoluteIndex++;
                     }
                 }
                 break;
