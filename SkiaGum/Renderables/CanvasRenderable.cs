@@ -20,7 +20,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public bool IsRenderTarget => false;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -104,7 +104,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public CanvasRenderable()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         Visible = true;
         Width = 100;

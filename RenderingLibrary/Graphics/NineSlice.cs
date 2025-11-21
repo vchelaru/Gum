@@ -25,7 +25,7 @@ public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso,
     #region Fields
 
 
-    ObservableCollection<IRenderableIpso> mChildren = new ObservableCollection<IRenderableIpso>();
+    ObservableCollectionNoReset<IRenderableIpso> mChildren = new ();
 
     //Sprites which make up NineSlice indexed by NineSliceSections enum
     private Sprite[] mSprites;
@@ -980,7 +980,7 @@ public class NineSlice : SpriteBatchRenderableBase, IRenderableIpso,
     {
         var newInstance = (NineSlice)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

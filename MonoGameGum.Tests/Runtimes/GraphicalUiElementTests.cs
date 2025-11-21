@@ -215,6 +215,21 @@ public class GraphicalUiElementTests
 
     }
 
+    [Fact]
+    public void ChildrenClear_ShouldSetChildParentsToNull()
+    {
+        ContainerRuntime parent = new ();
+
+        ContainerRuntime child1 = new ();
+        parent.AddChild(child1);
+
+        child1.Parent.ShouldBe(parent);
+
+        parent.Children!.Clear();
+
+        child1.Parent.ShouldBeNull();
+    }
+
     #endregion
 
     #region Layout-related
