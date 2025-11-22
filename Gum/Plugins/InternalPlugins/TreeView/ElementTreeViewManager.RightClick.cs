@@ -104,13 +104,13 @@ public partial class ElementTreeViewManager
 
 
 
-    void HandleDeleteObjectClick(object sender, EventArgs e)
+    void HandleDeleteObjectClick(object? sender, EventArgs e)
     {
         using var undoLock = _undoManager.RequestLock();
         _deleteLogic.HandleDeleteCommand();
     }
 
-    void HandleDuplicateElementClick(object sender, EventArgs e)
+    void HandleDuplicateElementClick(object? sender, EventArgs e)
     {
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
@@ -119,7 +119,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void OnGoToDefinitionClick(object sender, EventArgs e)
+    void OnGoToDefinitionClick(object? sender, EventArgs e)
     {
         if (_selectedState.SelectedInstance != null)
         {
@@ -129,7 +129,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void CreateComponentClick(object sender, EventArgs e)
+    void CreateComponentClick(object? sender, EventArgs e)
     {
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
@@ -138,12 +138,12 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void ForceSaveObjectClick(object sender, EventArgs e)
+    void ForceSaveObjectClick(object? sender, EventArgs e)
     {
         _fileCommands.ForceSaveElement(_selectedState.SelectedElement);
     }
 
-    void AddFolderClick(object sender, EventArgs e)
+    void AddFolderClick(object? sender, EventArgs e)
     {
         if (SelectedNode != null)
         {
@@ -152,7 +152,7 @@ public partial class ElementTreeViewManager
     }
 
 
-    void HandleViewInExplorer(object sender, EventArgs e)
+    void HandleViewInExplorer(object? sender, EventArgs e)
     {
         var treeNode = _selectedState.SelectedTreeNode;
 

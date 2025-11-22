@@ -922,15 +922,22 @@ namespace Gum.Managers
 
         #region Get BehaviorSave
 
-        public BehaviorSave GetBehavior(ElementBehaviorReference behaviorReference)
+        public BehaviorSave? GetBehavior(ElementBehaviorReference behaviorReference)
         {
             var behaviorName = behaviorReference.BehaviorName;
-            return GetBehavior(behaviorName);
+            if(behaviorName != null)
+            {
+                return GetBehavior(behaviorName);
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        public BehaviorSave GetBehavior(string behaviorName)
+        public BehaviorSave? GetBehavior(string behaviorName)
         {
-            var behaviors = GumProjectSave.Behaviors;
+            var behaviors = GumProjectSave!.Behaviors;
 
             foreach (var behavior in behaviors)
             {
