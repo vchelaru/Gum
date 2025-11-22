@@ -7,7 +7,7 @@ using ToolsUtilities;
 
 namespace Gum.Logic.FileWatch;
 
-public class FileWatchManager : Singleton<FileWatchManager>
+public class FileWatchManager
 {
     #region Fields/Properties
 
@@ -21,11 +21,12 @@ public class FileWatchManager : Singleton<FileWatchManager>
     /// change to the Gum main system and plugins. If a file is ignored (either
     /// directly or by time) then it should not appear here.
     /// </summary>
-    public List<FilePath> ChangedFilesWaitingForFlush { get; private set; } = new List<FilePath>();
+    public HashSet<FilePath> ChangedFilesWaitingForFlush { get; private set; } = new ();
     List<FilePath> filesCurrentlyFlushing = new List<FilePath>();
 
-    FileSystemWatcher fileSystemWatcher;
-    public bool Enabled { get { return fileSystemWatcher.EnableRaisingEvents; } }
+    List<FileSystemWatcher> fileSystemWatchers = new ();
+    public bool Enabled =>
+        fileSystemWatchers.FirstOrDefault()?.EnableRaisingEvents == true;
 
     DateTime LastFileChange;
 
@@ -34,27 +35,22 @@ public class FileWatchManager : Singleton<FileWatchManager>
     bool IsFlushing;
 
 
-    public FilePath? CurrentFilePathWatching { get; private set; }
+    public IEnumerable<FilePath> CurrentFilePathsWatching
+    {
+        get
+        {
+            foreach(var item in fileSystemWatchers)
+            {
+                yield return item.Path;
+            }
+        }
+    }
 
     #endregion
 
     public FileWatchManager()
     {
-        fileSystemWatcher = new FileSystemWatcher();
-        fileSystemWatcher.Filter = "*.*";
-        fileSystemWatcher.IncludeSubdirectories = true;
-        fileSystemWatcher.NotifyFilter =
-            NotifyFilters.LastWrite |
-            NotifyFilters.DirectoryName
-            // This causes 2 events to fire for changes on files like screens
-            // ... but it's needed for file names on PNG
-            |NotifyFilters.FileName;
 
-        fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
-        fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
-        // Gum files get deleted and then created, rather than changed
-        fileSystemWatcher.Created += HandleFileSystemChange;
-        fileSystemWatcher.Renamed += HandleRename;
     }
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
@@ -66,53 +62,54 @@ public class FileWatchManager : Singleton<FileWatchManager>
         }
         FilePath gumProjectFilePath = gumProject.FullFileName;
 
-        char? gumProjectDrive = gumProjectFilePath.Standardized[0];
-
-        var rootmostDirectory = directories
-            .Where(item => item != null && FileManager.IsUrl(item.Original) == false)
-            .OrderBy(item => item.FullPath.Length).FirstOrDefault();
-
-        foreach (var path in directories)
+        foreach(var item in this.fileSystemWatchers)
         {
-            // be safe:
-            if(path == null)
-            {
-                continue;
-            }
-            // make sure this is on the same drive as the gum project. If not, don't include it:
-            if (path.Standardized.StartsWith(gumProjectDrive.ToString()))
-            {
-                // This is finding a common root for all folders
-                // If the folders are in different directories, then
-                // no common root is possible, so this will ultimately
-                // result in a null value. We should tolerate this
-                // by not turning on file watch
-                while (rootmostDirectory != null && rootmostDirectory.IsRootOf(path) == false && rootmostDirectory != path)
-                {
-                    rootmostDirectory = rootmostDirectory.GetDirectoryContainingThis();
-                }
-            }
+            item.EnableRaisingEvents = false;
         }
+        fileSystemWatchers.Clear();
 
-        if(rootmostDirectory != null)
+        foreach(var item in directories)
         {
-            var filePathAsString = rootmostDirectory.StandardizedCaseSensitive;
+            var filePathAsString = item.StandardizedCaseSensitive;
+
+            var fileWatcher = CreateFileSystemWatcher();
+
             // Gum standard is to have a trailing slash, 
             // but FileSystemWatcher expects no trailing slash:
-            fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
-            CurrentFilePathWatching = fileSystemWatcher.Path;
+            fileWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
+            fileWatcher.EnableRaisingEvents = true;
+            fileSystemWatchers.Add(fileWatcher);
+        }
+    }
 
-            fileSystemWatcher.EnableRaisingEvents = true;
-        }
-        else
-        {
-            fileSystemWatcher.EnableRaisingEvents = false;
-        }
+    FileSystemWatcher CreateFileSystemWatcher()
+    {
+        var fileSystemWatcher = new FileSystemWatcher();
+        fileSystemWatcher.Filter = "*.*";
+        fileSystemWatcher.IncludeSubdirectories = true;
+        fileSystemWatcher.NotifyFilter =
+            NotifyFilters.LastWrite |
+            NotifyFilters.DirectoryName
+            // This causes 2 events to fire for changes on files like screens
+            // ... but it's needed for file names on PNG
+            | NotifyFilters.FileName;
+
+        fileSystemWatcher.Deleted += new FileSystemEventHandler(HandleFileSystemDelete);
+        fileSystemWatcher.Changed += new FileSystemEventHandler(HandleFileSystemChange);
+        // Gum files get deleted and then created, rather than changed
+        fileSystemWatcher.Created += HandleFileSystemChange;
+        fileSystemWatcher.Renamed += HandleRename;
+
+        return fileSystemWatcher;
     }
 
     public void Disable()
     {
-        fileSystemWatcher.EnableRaisingEvents = false;
+        foreach (var item in this.fileSystemWatchers)
+        {
+            item.EnableRaisingEvents = false;
+        }
+        fileSystemWatchers.Clear();
     }
 
     private void HandleRename(object sender, RenamedEventArgs e)
@@ -156,7 +153,10 @@ public class FileWatchManager : Singleton<FileWatchManager>
             if(!wasIgnored)
             {
                 var directoryContainingThis = fileName.GetDirectoryContainingThis();
-                var isFolderConsidered = CurrentFilePathWatching == directoryContainingThis || CurrentFilePathWatching.IsRootOf(fileName);
+                var isFolderConsidered = 
+                    CurrentFilePathsWatching.Any(item => 
+                        item == directoryContainingThis || 
+                        item.IsRootOf(fileName));
 
                 if(!isFolderConsidered)
                 {
@@ -166,6 +166,11 @@ public class FileWatchManager : Singleton<FileWatchManager>
 
             if (!wasIgnored)
             {
+                // shuffle so that changes move to the end:
+                if(ChangedFilesWaitingForFlush.Contains(fileName))
+                {
+                    ChangedFilesWaitingForFlush.Remove(fileName);
+                }
                 ChangedFilesWaitingForFlush.Add(fileName);
 
                 LastFileChange = DateTime.Now;
@@ -227,6 +232,9 @@ public class FileWatchManager : Singleton<FileWatchManager>
 
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromSeconds(2)) - DateTime.Now;
 
+    /// <summary>
+    /// Attempts to processes all queued file changes
+    /// </summary>
     public void Flush()
     {
         // early out

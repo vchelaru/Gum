@@ -29,6 +29,7 @@ using Microsoft.Extensions.Configuration;
 using System.IO;
 using Gum.Settings;
 using ToolsUtilities;
+using Gum.Logic.FileWatch;
 
 namespace Gum.Services;
 
@@ -102,6 +103,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ImportLogic>();
         services.AddSingleton<MainOutputViewModel>();
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
+        services.AddSingleton<FileWatchManager>();
 
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();

@@ -45,6 +45,7 @@ namespace Gum
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IMessenger _messenger;
+        private readonly FileWatchManager _fileWatchManager;
 
         #endregion
 
@@ -90,6 +91,7 @@ namespace Gum
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _messenger =  Locator.GetRequiredService<IMessenger>();
+            _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
         }
 
         public void LoadSettings()
@@ -716,7 +718,7 @@ namespace Gum
                         }
 
                         // todo - this should go through the plugin...
-                        FileWatchManager.Self.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
+                        _fileWatchManager.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
                         succeeded = true;

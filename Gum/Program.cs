@@ -140,12 +140,15 @@ namespace Gum
             await ProjectManager.Self.Initialize();
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
-            fileWatchTimer.Tick += static () =>
+
+            var fileWatchManager = Locator.GetRequiredService<FileWatchManager>(); 
+
+            fileWatchTimer.Tick += () =>
             {
                 GumProjectSave? gumProject = ProjectState.Self.GumProjectSave;
                 if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
                 {
-                    FileWatchManager.Self.Flush();
+                    fileWatchManager.Flush();
                 }
             };
 
