@@ -53,7 +53,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
     public object Tag { get; set; }
 
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -184,7 +184,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
         Width = 32;
         Height = 32;
         this.Visible = true;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
     }
 

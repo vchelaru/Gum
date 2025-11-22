@@ -17,7 +17,7 @@ namespace RenderingLibrary.Math.Geometry
         LinePrimitive mLinePrimitive;
         IRenderableIpso mParent;
         bool mVisible;
-        ObservableCollection<IRenderableIpso> mChildren;
+        ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
         #endregion
 
@@ -159,7 +159,7 @@ namespace RenderingLibrary.Math.Geometry
         public LinePolygon(SystemManagers managers)
         {
 
-            mChildren = new ObservableCollection<IRenderableIpso>();
+            mChildren = new ();
 
             Visible = true;
 

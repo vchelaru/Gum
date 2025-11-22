@@ -35,7 +35,7 @@
 		<Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
 			<Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
 		</Compile>
-		<Compile Include="..\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
+		<Compile Include="..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
 
 	</ItemGroup>
 

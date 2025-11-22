@@ -174,7 +174,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
 
     IRenderableIpso? mParent;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
     int mAlpha = 255;
     int mRed = 255;
@@ -744,7 +744,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
         RenderBoundary = RenderBoundaryDefault;
 
         mManagers = managers;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         mRawText = text;
         mNeedsBitmapFontRefresh = true;
@@ -1803,7 +1803,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     {
         var newInstance = (Text)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

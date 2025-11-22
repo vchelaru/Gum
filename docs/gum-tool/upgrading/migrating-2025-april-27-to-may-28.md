@@ -45,7 +45,7 @@ mainPanel.AddChild(text);
 
 <figure><img src="../../.gitbook/assets/15_06 42 09.png" alt=""><figcaption><p>New default TextRuntime behavior</p></figcaption></figure>
 
-<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Old default TextRuntime behavior</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Old default TextRuntime behavior</p></figcaption></figure>
 
 Note that Height and HeightUnits have also changed so that TextRuntimes now automatically adjust their heights. This allows TextRuntimes to properly stack by default, as shown in the following code:
 
@@ -92,4 +92,3 @@ Previously, the 2nd Text would ignore the stacking behavior since it had a `Y Un
 To continue using the old behavior, set the parent's `Children Layout` to `Regular`.
 
 <figure><img src="../../.gitbook/assets/15_07 11 09.gif" alt=""><figcaption><p>Old behavior can be obtained by setting Children Layout to Regular</p></figcaption></figure>
-

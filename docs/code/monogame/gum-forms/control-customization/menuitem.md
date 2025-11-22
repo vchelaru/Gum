@@ -39,7 +39,7 @@ for (int i = 0; i < 10; i++)
 
 <figure><img src="../../../../.gitbook/assets/14_22 56 32.gif" alt=""><figcaption></figcaption></figure>
 
-For more information on working with `TextRuntime` instances, see the [TextRuntime page](../../../standard-elements/textruntime/).
+For more information on working with `TextRuntime` instances, see the [TextRuntime page](../../../standard-visuals/textruntime/).
 
 ## Customizing Sub-Item Background (ScrollViewer)
 

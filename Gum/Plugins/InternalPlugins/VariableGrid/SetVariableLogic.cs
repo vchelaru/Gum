@@ -679,7 +679,7 @@ public class SetVariableLogic
 
         if (!isValidExtension)
         {
-            whyInvalid = "The extension " + extension + " is not supported for textures";
+            whyInvalid = "The extension " + extension + " is not supported";
         }
 
         if (string.IsNullOrEmpty(whyInvalid))

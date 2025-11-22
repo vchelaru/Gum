@@ -152,7 +152,7 @@ public class Text : IRenderableIpso, IVisible, IText
         }
     }
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -331,7 +331,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
         this.Visible = true;
         Color = SKColors.Black;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
     }
 
     public void Render(ISystemManagers managers)

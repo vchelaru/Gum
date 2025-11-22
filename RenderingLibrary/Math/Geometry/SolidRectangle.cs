@@ -17,7 +17,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
     Vector2 Position;
     IRenderableIpso mParent;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     private static Texture2D mTexture;
     public static Rectangle SinglePixelTextureSourceRectangle;
 
@@ -173,7 +173,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
 
     public SolidRectangle()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
         Color = Color.White;
         Visible = true;
 
@@ -287,7 +287,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
     {
         var newInstance = (SolidRectangle)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

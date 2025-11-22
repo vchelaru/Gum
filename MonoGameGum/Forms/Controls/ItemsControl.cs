@@ -118,7 +118,36 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    public FrameworkElementTemplate FrameworkElementTemplate { get; set; }
+    FrameworkElementTemplate? _frameworkElementTemplate;
+    public FrameworkElementTemplate? FrameworkElementTemplate 
+    {
+        get => _frameworkElementTemplate;
+        set
+        {
+            if(value != _frameworkElementTemplate)
+            {
+                _frameworkElementTemplate = value;
+                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+                GraphicalUiElement.IsAllLayoutSuspended = true;
+
+                ClearVisualsInternal();
+
+                if (items?.Count > 0)
+                {
+                    // refresh!
+                    var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                        items, startingIndex: 0);
+                    HandleItemsCollectionChanged(this, args);
+                }
+
+                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+                if (!wasSuppressed)
+                {
+                    Visual.ResumeLayout(recursive: true);
+                }
+            }
+        }
+    }
 
     VisualTemplate visualTemplate;
     public VisualTemplate VisualTemplate
@@ -319,17 +348,20 @@ public class ItemsControl : ScrollViewer
             case NotifyCollectionChangedAction.Remove:
                 {
                     int absoluteIndex = e.OldStartingIndex;
-
-                    foreach (var item in e.OldItems)
+                    if(e.OldItems != null)
                     {
-                        var asGue = item as InteractiveGue;
-                        var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
-                        if (newFrameworkItem != null)
+                        var topIndex = e.OldStartingIndex + e.OldItems.Count;
+                        // Reverse order this so that as we are removing, the internal list count change doesn't
+                        // cause an out of bounds exception
+                        for(int i = e.OldItems.Count - 1; i > -1; i--)
                         {
-                            HandleCollectionItemRemoved(absoluteIndex);
+                            var asGue = e.OldItems[i] as InteractiveGue;
+                            var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
+                            if (newFrameworkItem != null)
+                            {
+                                HandleCollectionItemRemoved(i);
+                            }
                         }
-
-                        absoluteIndex++;
                     }
                 }
                 break;
@@ -480,7 +512,7 @@ public class ItemsControl : ScrollViewer
     {
         if (InnerPanel != null)
         {
-            InnerPanel.Children.Clear();
+            InnerPanel.Children!.Clear();
 
             for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
             {

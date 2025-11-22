@@ -55,13 +55,13 @@ customizedButton.AddToRoot();
 
 The code above access the TextInstance visual which is of type TextRuntime. Components, such as Button, are ultimately made out of the following visual types:
 
-* [CircleRuntime](../../../standard-elements/circleruntime.md)
-* [ColoredRectangleRuntime](../../../standard-elements/coloredrectangleruntime.md)
-* [ContainerRuntime](../../../standard-elements/containerruntime.md)
-* [NineSliceRuntime](../../../standard-elements/ninesliceruntime.md)
-* [RectangleRuntime](../../../standard-elements/rectangleruntime.md)
-* [SpriteRuntime](../../../standard-elements/spriteruntime/)
-* [TextRuntime](../../../standard-elements/textruntime/)
+* [CircleRuntime](../../../standard-visuals/circleruntime.md)
+* [ColoredRectangleRuntime](../../../standard-visuals/coloredrectangleruntime.md)
+* [ContainerRuntime](../../../standard-visuals/containerruntime.md)
+* [NineSliceRuntime](../../../standard-visuals/ninesliceruntime.md)
+* [RectangleRuntime](../../../standard-visuals/rectangleruntime.md)
+* [SpriteRuntime](../../../standard-visuals/spriteruntime/)
+* [TextRuntime](../../../standard-visuals/textruntime/)
 
 For information on working with the individual visual types, click the links in the list above.
 
@@ -267,4 +267,4 @@ background.TextureWidth = 41;
 background.TextureHeight = 42;
 ```
 
-For more information on working with NineSliceRuntime (the background type), see the [NineSliceRuntime page](../../../standard-elements/ninesliceruntime.md).
+For more information on working with NineSliceRuntime (the background type), see the [NineSliceRuntime page](../../../standard-visuals/ninesliceruntime.md).

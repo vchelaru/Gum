@@ -22,7 +22,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
     public object Tag { get; set; }
 
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -116,7 +116,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
 
     public LottieAnimation()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
         Loops = true;
         TimeAnimationStarted = DateTime.Now;
     }

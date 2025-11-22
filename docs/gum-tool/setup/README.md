@@ -1,10 +1,10 @@
 # Setup
 
-Gum Application (binaries):
+Latest release and release history (including older releases): \
+[https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
 
-* Latest release and release history (including older releases): [https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
-
-Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
+Gum Source Code: \
+[https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
 
 ### Windows
 

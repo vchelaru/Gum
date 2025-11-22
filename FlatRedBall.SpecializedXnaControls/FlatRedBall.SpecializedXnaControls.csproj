@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-  <TargetFrameworks>net472;net8-windows</TargetFrameworks>
+	  <TargetFramework>net8.0-windows</TargetFramework>
 
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -23,7 +23,7 @@
   <ItemGroup>
 	  <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
 	  <PackageReference Include="nkast.Xna.Framework.Game" Version="4.1.9001" />
-	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />   
+	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />   
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>

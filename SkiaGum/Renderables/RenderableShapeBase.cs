@@ -88,7 +88,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         }
     }
 
-    internal protected ObservableCollection<IRenderableIpso> mChildren;
+    internal protected ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -557,7 +557,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         Alpha1 = 255;
         Alpha2 = 255;
         this.Visible = true;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
     }
 

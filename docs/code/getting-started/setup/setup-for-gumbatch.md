@@ -75,6 +75,6 @@ Note that this code assumes a font .fnt file (and matching .png) are in the Cont
 
 <figure><img src="../../../.gitbook/assets/image (62).png" alt=""><figcaption><p>.fnt file copied to output folder</p></figcaption></figure>
 
-For more information on loading FNT files, see the [File Loading](../../monogame/file-loading.md) documentation.
+For more information on loading FNT files, see the [File Loading](../../files-and-fonts/file-loading.md) documentation.
 
 For a more detailed discussion of using GumBatch, see the [GumBatch](../../monogame/gumbatch.md) page.

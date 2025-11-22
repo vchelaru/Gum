@@ -18,7 +18,7 @@ namespace RenderingLibrary.Math.Geometry
 
         IRenderableIpso mParent;
 
-        ObservableCollection<IRenderableIpso> mChildren;
+        ObservableCollectionNoReset<IRenderableIpso> mChildren;
         SystemManagers mManagers;
 
         #endregion
@@ -204,7 +204,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
             }
 
-            mChildren = new ObservableCollection<IRenderableIpso>();
+            mChildren = new ();
             UpdatePoints();
         }
 

@@ -2516,9 +2516,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
     {
         float maxCellHeight = maxHeight;
-        for (int i = 0; i < Children.Count; i++)
+        for (int i = 0; i < Children!.Count; i++)
         {
-            var element = Children[i] as GraphicalUiElement;
+            var element = (GraphicalUiElement)Children[i];
             var childLayout = element.GetChildLayoutType(XOrY.Y, this);
             var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
             if (considerChild && element.Visible)
@@ -2530,9 +2530,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
                     if (i != 0)
                     {
-                        maxCellHeight += StackSpacing;
+                        var maxHeightWithSpacing = maxCellHeight + StackSpacing;
+
+                        if(maxHeightWithSpacing > this.MaxHeight)
+                        {
+                            // don't do anything, we can't expand any further so leave the height wherever it was before
+                            // because this item should wrap:
+                            //maxCellHeight = this.MaxHeight.Value;
+                            break;
+                        }
+                        else
+                        {
+                            maxCellHeight = maxHeightWithSpacing;
+                        }
                     }
-                    maxCellHeight += elementHeight;
+
+                    var maxHeightWithElement = maxCellHeight + elementHeight;
+                    if(maxHeightWithElement > this.MaxHeight)
+                    {
+                        // don't do anything, we can't expand any further so leave the height wherever it was before
+                        // because this item should wrap:
+                        //maxCellHeight = this.MaxHeight.Value;
+                        break;
+                    }
+                    else
+                    {
+                        maxCellHeight = maxHeightWithElement;
+                    }
                 }
                 else
                 {
@@ -2879,9 +2903,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
     {
         float maxCellWidth = maxWidth;
-        for (int i = 0; i < this.Children.Count; i++)
+        for (int i = 0; i < this.Children!.Count; i++)
         {
-            var element = this.Children[i] as GraphicalUiElement;
+            var element = (GraphicalUiElement)this.Children[i];
             var childLayout = element.GetChildLayoutType(XOrY.X, this);
             var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
@@ -2894,9 +2918,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
                     if (i != 0)
                     {
-                        maxCellWidth += StackSpacing;
+                        var maxWidthWithSpacing = maxCellWidth + StackSpacing;
+
+                        if(maxWidthWithSpacing > this.MaxWidth)
+                        {
+                            // don't do anything, we can't expand any further so leave the width wherever it was before
+                            // because this item should wrap:
+                            //maxCellWidth = this.MaxWidth.Value;
+                            break;
+                        }
+                        else
+                        {
+                            maxCellWidth = maxWidthWithSpacing;
+                        }
                     }
-                    maxCellWidth += elementWidth;
+
+                    var maxWidthWithElement = maxCellWidth + elementWidth;
+                    if(maxWidthWithElement > this.MaxWidth)
+                    {
+                        // don't do anything, we can't expand any further so leave the width wherever it was before
+                        // because this item should wrap:
+                        //maxCellWidth = this.MaxWidth.Value;
+                        break;
+                    }
+                    else
+                    {
+                        maxCellWidth = maxWidthWithElement;
+                    }
                 }
                 else
                 {
@@ -5117,11 +5165,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     throw new InvalidOperationException($"Attempting to add a null child to {this}");
                 }
 #endif
-                var ipso = newItem as IRenderableIpso;
-                if (ipso == null)
-                {
-                    int m = 3;
-                }
+                var ipso = (IRenderableIpso)newItem;
+
                 if (ipso.Parent != this)
                 {
                     ipso.Parent = this;
@@ -5142,6 +5187,29 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     ipso.Parent = null;
                 }
+            }
+        }
+        else if(e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            if(e.OldItems != null)
+            {
+                foreach (IRenderableIpso ipso in e.OldItems)
+                {
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+            }
+            else
+            {
+#if FULL_DIAGNOSTICS
+                var message = "STOP!!! The GraphicalUiElement " + this + " has been reset, but the Children ObservableCollection " +
+                    "did not include e.OldItems, so the old children cannot have their Parent set to null. This can cause memory leaks through " +
+                    "events, and other references. You should consider implementing a Children backing field that instead loops through and removes each child through a .Remove call.";
+
+                System.Diagnostics.Debug.WriteLine(message);
+#endif
             }
         }
         else if (e.Action == NotifyCollectionChangedAction.Replace)
@@ -5729,8 +5797,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    HashSet<StateSave> statesInStack = new HashSet<StateSave>();
     public virtual void ApplyState(DataTypes.Variables.StateSave state)
     {
+        if(statesInStack.Contains(state))
+        {
+            return; // don't do anything, this would cause infinite recursion
+        }
 #if FULL_DIAGNOSTICS
         // Dynamic states can be applied in code. It is cumbersome for the user to
         // specify the ParentContainer, especially if the state is to be reused. 
@@ -5740,6 +5813,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //    throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
         //}
 #endif
+        statesInStack.Add(state);
 
         if (state.Apply != null)
         {
@@ -5811,6 +5885,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             }
         }
+
+        statesInStack.Remove(state);
+
     }
 
     private int GetOrderedIndexForParentVariable(VariableSave item)

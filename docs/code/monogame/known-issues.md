@@ -4,6 +4,6 @@ Gum projects can be loaded and used in MonoGame projects with most features avai
 
 ## Missing Features
 
-* Gum Animations - As of April 28, 2025 these are partially implemented. More information can be found in the [AnimationRuntime](../gum-code-reference/animationruntime.md) page.
+* Gum Animations - As of April 28, 2025 these are partially implemented. More information can be found in the [AnimationRuntime](../animationruntime.md) page.
 * Variable References - note that variable references propagate variable assignments, so you can use variable references in your project, but they will not update in real-time in your game
 * Skia
