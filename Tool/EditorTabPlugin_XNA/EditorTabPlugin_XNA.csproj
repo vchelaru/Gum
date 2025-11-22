@@ -11,6 +11,8 @@
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<DefineConstants>GUM; MONOGAME</DefineConstants>
+		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
