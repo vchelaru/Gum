@@ -113,14 +113,18 @@ public class MainFileWatchPlugin : InternalPlugin
         showFileWatchMenuItem.Text = "Show File Watch";
     }
 
-    private void HandleShowFileWatch(object sender, EventArgs e)
+    private void HandleShowFileWatch(object? sender, EventArgs e)
     {
         pluginTab.IsVisible = !pluginTab.IsVisible;
+        if(pluginTab.IsVisible)
+        {
+            pluginTab.IsSelected = true;
+        }
     }
 
     private void HandleRefreshDisplayTimerElapsed()
     {
-        if (_fileWatchManager.CurrentFilePathWatching == null)
+        if (_fileWatchManager.CurrentFilePathsWatching.Count() == 0)
         {
             return;
         }
@@ -129,7 +133,11 @@ public class MainFileWatchPlugin : InternalPlugin
 
         if (_fileWatchManager.Enabled)
         {
-            filePathsWatchingText = $"File path watching ({_fileWatchManager.CurrentFilePathWatching}):";
+            filePathsWatchingText = $"File path(s) watching:\n";
+            foreach (var item in _fileWatchManager.CurrentFilePathsWatching)
+            {
+                filePathsWatchingText += "  " + item + "\n";
+            }
 
             viewModel.WatchFolderInformation = filePathsWatchingText;
         }
