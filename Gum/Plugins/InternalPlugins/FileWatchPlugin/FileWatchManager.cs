@@ -7,7 +7,7 @@ using ToolsUtilities;
 
 namespace Gum.Logic.FileWatch;
 
-public class FileWatchManager : Singleton<FileWatchManager>
+public class FileWatchManager
 {
     #region Fields/Properties
 
@@ -227,6 +227,9 @@ public class FileWatchManager : Singleton<FileWatchManager>
 
     public TimeSpan TimeToNextFlush => (LastFileChange + TimeSpan.FromSeconds(2)) - DateTime.Now;
 
+    /// <summary>
+    /// Attempts to processes all queued file changes
+    /// </summary>
     public void Flush()
     {
         // early out

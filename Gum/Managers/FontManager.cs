@@ -22,12 +22,15 @@ public class FontManager
 {
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly FileWatchManager _fileWatchManager;
 
     public FontManager(IGuiCommands guiCommands, 
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        FileWatchManager fileWatchManager)
     {
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _fileWatchManager = fileWatchManager;
     }
 
     public string AbsoluteFontCacheFolder
@@ -255,11 +258,9 @@ public class FontManager
                 string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
                 System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
-                var fileWatchManager = FileWatchManager.Self;
-
                 // arbitrary wait time
-                fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
-                fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
+                _fileWatchManager.IgnoreNextChangeUntil(bmfcFileToSave);
+                _fileWatchManager.IgnoreNextChangeUntil(desiredFntFile);
 
                 var pngFileNameBase = desiredFntFile.RemoveExtension();
 
@@ -267,7 +268,7 @@ public class FontManager
                 for (int i = 0; i < 10; i++)
                 {
                     var pngWithNumber = $"{pngFileNameBase}_{i}.png";
-                    fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
+                    _fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
                 }
 
                 bmfcSave.Save(bmfcFileToSave);

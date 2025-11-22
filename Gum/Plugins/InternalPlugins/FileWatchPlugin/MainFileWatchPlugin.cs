@@ -36,7 +36,7 @@ public class MainFileWatchPlugin : InternalPlugin
         viewModel = new FileWatchViewModel();
         control.DataContext = viewModel;
 
-        _fileWatchManager = FileWatchManager.Self;
+        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>(); 
         _fileWatchLogic = FileWatchLogic.Self;
 
         pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);

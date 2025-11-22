@@ -31,14 +31,15 @@ public class FileCommands : IFileCommands
         IDialogService dialogService,
         IGuiCommands guiCommands,
         LocalizationManager localizationManager,
-        IOutputManager outputManager)
+        IOutputManager outputManager,
+        FileWatchManager fileWatchManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _localizationManager = localizationManager;
-        _fileWatchManager = FileWatchManager.Self;
+        _fileWatchManager = fileWatchManager;
         _outputManager = outputManager;
     }
 
