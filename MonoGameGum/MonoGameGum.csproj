@@ -133,7 +133,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Include="..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="Content\UISpriteSheet.png" />
+	  <EmbeddedResource Include="..\Gum\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="Content\UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>

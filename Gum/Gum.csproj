@@ -83,8 +83,8 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
-		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
+		<ProjectReference Include="CommonFormsAndControls\CommonFormsAndControls.csproj" />
+		<ProjectReference Include="CsvLibrary\CsvLibrary.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
@@ -384,10 +384,46 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Remove="CodeOutputPlugin\**" />
+		<Compile Remove="CommonFormsAndControls\**" />
+		<Compile Remove="CsvLibrary\**" />
+		<Compile Remove="EventOutputPlugin\**" />
+		<Compile Remove="GumFigmaIconRipper\**" />
+		<Compile Remove="GumFormsPlugin\**" />
 		<Compile Remove="objNetFramework\**" />
+		<Compile Remove="PerformanceMeasurementPlugin\**" />
+		<Compile Remove="StateAnimationPlugin\**" />
+		<Compile Remove="SvgPlugin\**" />
+		<Compile Remove="TextureCoordinateSelectionPlugin\**" />
 		<EmbeddedResource Remove="CodeOutputPlugin\**" />
+		<EmbeddedResource Remove="CommonFormsAndControls\**" />
+		<EmbeddedResource Remove="CsvLibrary\**" />
+		<EmbeddedResource Remove="EventOutputPlugin\**" />
+		<EmbeddedResource Remove="GumFigmaIconRipper\**" />
+		<EmbeddedResource Remove="GumFormsPlugin\**" />
+		<EmbeddedResource Remove="PerformanceMeasurementPlugin\**" />
+		<EmbeddedResource Remove="StateAnimationPlugin\**" />
+		<EmbeddedResource Remove="SvgPlugin\**" />
+		<EmbeddedResource Remove="TextureCoordinateSelectionPlugin\**" />
 		<None Remove="CodeOutputPlugin\**" />
+		<None Remove="CommonFormsAndControls\**" />
+		<None Remove="CsvLibrary\**" />
+		<None Remove="EventOutputPlugin\**" />
+		<None Remove="GumFigmaIconRipper\**" />
+		<None Remove="GumFormsPlugin\**" />
+		<None Remove="PerformanceMeasurementPlugin\**" />
+		<None Remove="StateAnimationPlugin\**" />
+		<None Remove="SvgPlugin\**" />
+		<None Remove="TextureCoordinateSelectionPlugin\**" />
 		<Page Remove="CodeOutputPlugin\**" />
+		<Page Remove="CommonFormsAndControls\**" />
+		<Page Remove="CsvLibrary\**" />
+		<Page Remove="EventOutputPlugin\**" />
+		<Page Remove="GumFigmaIconRipper\**" />
+		<Page Remove="GumFormsPlugin\**" />
+		<Page Remove="PerformanceMeasurementPlugin\**" />
+		<Page Remove="StateAnimationPlugin\**" />
+		<Page Remove="SvgPlugin\**" />
+		<Page Remove="TextureCoordinateSelectionPlugin\**" />
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />

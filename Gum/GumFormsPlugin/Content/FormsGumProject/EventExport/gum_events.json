@@ -1,0 +1,244 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "MainScreen.MenuItemInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-21T12:59:11.4553035Z"
+      },
+      {
+        "NewName": "MainScreen.MenuItemInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-21T12:59:25.4427047Z"
+      },
+      {
+        "NewName": "MainScreen.MenuItemInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-21T13:04:56.8023967Z"
+      },
+      {
+        "NewName": "MainScreen.FileItem",
+        "OldName": "MainScreen.MenuItemInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-21T13:06:31.6349911Z"
+      },
+      {
+        "NewName": "MainScreen.EditItem",
+        "OldName": "MainScreen.MenuItemInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-21T13:34:16.6981778Z"
+      },
+      {
+        "NewName": "MainScreen.OptionsItem",
+        "OldName": "MainScreen.MenuItemInstance2",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-21T13:34:21.1514909Z"
+      },
+      {
+        "NewName": "Controls/ListBox1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-09-21T15:22:08.6706073Z"
+      },
+      {
+        "NewName": "Controls/ItemsControl",
+        "OldName": "Controls/ListBox1",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2025-09-21T15:22:22.336116Z"
+      },
+      {
+        "NewName": "ItemsControlCategory",
+        "OldName": "ListBoxCategory",
+        "ElementType": "Components",
+        "EventType": 4,
+        "TimestampUtc": "2025-09-21T15:22:48.1450665Z"
+      },
+      {
+        "NewName": "MyScreen.MenuInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-24T12:07:28.6679947Z"
+      },
+      {
+        "NewName": "MyScreen.MenuItemInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-24T12:07:32.6411249Z"
+      },
+      {
+        "NewName": "MyScreen.FileMenuItem",
+        "OldName": "MyScreen.MenuItemInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-24T12:09:24.2900216Z"
+      },
+      {
+        "NewName": "MyScreen.FileMenuItem1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-24T12:09:26.4404791Z"
+      },
+      {
+        "NewName": "MyScreen.EditMenuItem",
+        "OldName": "MyScreen.FileMenuItem1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-24T12:09:29.9856152Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Controls/ScrollViewer (Container).Controls/ListBoxItem ListBoxItemInstance in Controls/ScrollViewer (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2025-09-24T13:49:36.7901408Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-25T01:19:31.3371073Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T01:19:36.5081422Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T01:19:36.5101452Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T01:19:36.5191426Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T01:19:36.5291429Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T01:19:36.5371424Z"
+      },
+      {
+        "NewName": "MyScreen.EditMenuItem1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-25T02:55:10.4641036Z"
+      },
+      {
+        "NewName": "MyScreen.SaveItem",
+        "OldName": "MyScreen.EditMenuItem",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T02:55:20.8931634Z"
+      },
+      {
+        "NewName": "MyScreen.SaveAsitem",
+        "OldName": "MyScreen.EditMenuItem1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T02:55:35.3033658Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MyScreen.ColoredRectangle ColoredRectangleInstance in MyScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2025-09-25T02:55:42.447263Z"
+      },
+      {
+        "NewName": "MyScreen.SaveAsitem1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-25T02:55:46.8523018Z"
+      },
+      {
+        "NewName": "MyScreen.Exit",
+        "OldName": "MyScreen.SaveAsitem1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T02:55:57.3359565Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).ContainerInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-09-25T03:02:37.5209048Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T03:03:19.5267929Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T03:03:19.5282984Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T03:03:19.5282984Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T03:03:19.5293053Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T03:03:19.5303141Z"
+      },
+      {
+        "NewName": "Controls/MenuItem (Container).SubItemContainerInstance",
+        "OldName": "Controls/MenuItem (Container).ContainerInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-09-25T03:03:19.5303141Z"
+      }
+    ]
+  }
+}

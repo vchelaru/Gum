@@ -1,0 +1,468 @@
+<UserControl
+  x:Class="StateAnimationPlugin.Controls.TimelineControl"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:controls="clr-namespace:Gum.Controls;assembly=Gum"
+  xmlns:converters="clr-namespace:Gum.Converters;assembly=Gum"
+  xmlns:local="clr-namespace:StateAnimationPlugin.Controls"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+  xmlns:viewModels="clr-namespace:StateAnimationPlugin.ViewModels"
+  xmlns:views="clr-namespace:StateAnimationPlugin.Views"
+  x:Name="Root">
+  <UserControl.Resources>
+    <!--  Converters  -->
+    <local:TimeToXConverter x:Key="TimeToX" />
+    <local:LengthToWidthConverter x:Key="LengthToWidth" />
+    <local:TimeToCenteredLeftConverter x:Key="TimeToCenteredLeft" />
+    <local:HalfToHorizontalThicknessConverter x:Key="HalfToHorizontalThickness" />
+
+    <converters:MultiplyConverter x:Key="Multiply" />
+    <converters:AreEqualMultiConverter x:Key="Equal" />
+
+    <!--  Brushes and Colors  -->
+    <SolidColorBrush x:Key="TimelineBackground" Color="{DynamicResource Frb.Colors.Background}" />
+    <SolidColorBrush x:Key="MajorLineBrush" Color="{DynamicResource Frb.Colors.Border}" />
+    <SolidColorBrush
+      x:Key="MinorLineBrush"
+      Opacity="0.25"
+      Color="{DynamicResource Frb.Colors.Border}" />
+    <SolidColorBrush x:Key="NowLineBrush" Color="#c3e3ed" />
+    <SolidColorBrush x:Key="DeselectedBrush" Color="{DynamicResource Frb.Colors.Primary.Dark}" />
+    <SolidColorBrush x:Key="SelectedBrush" Color="{DynamicResource Frb.Colors.Primary.Light}" />
+
+    <!--  Event Template  -->
+    <DataTemplate x:Key="EventTemplate" DataType="{x:Type viewModels:AnimatedKeyframeViewModel}">
+      <Grid VerticalAlignment="Stretch">
+        <Ellipse
+          Width="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
+          Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
+          HorizontalAlignment="Left"
+          VerticalAlignment="Center"
+          StrokeThickness="1">
+          <Ellipse.Style>
+            <Style TargetType="{x:Type Ellipse}">
+              <Setter Property="Fill" Value="{StaticResource DeselectedBrush}" />
+              <Setter Property="Stroke" Value="Black" />
+              <Style.Triggers>
+                <DataTrigger Value="True">
+                  <DataTrigger.Binding>
+                    <MultiBinding Converter="{StaticResource Equal}">
+                      <Binding ElementName="Root" Path="Animation.SelectedKeyframe" />
+                      <Binding />
+                    </MultiBinding>
+                  </DataTrigger.Binding>
+                  <Setter Property="Fill" Value="{StaticResource SelectedBrush}" />
+
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                  <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary.Light}" />
+                </DataTrigger>
+
+              </Style.Triggers>
+            </Style>
+          </Ellipse.Style>
+        </Ellipse>
+      </Grid>
+    </DataTemplate>
+
+    <!--  State Template  -->
+    <DataTemplate x:Key="StateTemplate" DataType="{x:Type viewModels:AnimatedKeyframeViewModel}">
+      <Grid VerticalAlignment="Stretch">
+        <Rectangle
+          Width="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
+          Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
+          HorizontalAlignment="Left"
+          VerticalAlignment="Center"
+          RenderTransformOrigin="0.5,0.5"
+          StrokeThickness="1">
+          <Rectangle.RenderTransform>
+            <RotateTransform Angle="45" />
+          </Rectangle.RenderTransform>
+          <Rectangle.Style>
+            <Style TargetType="{x:Type Rectangle}">
+              <Setter Property="Fill" Value="{StaticResource DeselectedBrush}" />
+              <Setter Property="Stroke" Value="Black" />
+              <Style.Triggers>
+                <DataTrigger Value="True">
+                  <DataTrigger.Binding>
+                    <MultiBinding Converter="{StaticResource Equal}">
+                      <Binding ElementName="Root" Path="Animation.SelectedKeyframe" />
+                      <Binding />
+                    </MultiBinding>
+                  </DataTrigger.Binding>
+                  <Setter Property="Fill" Value="{StaticResource SelectedBrush}" />
+
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                  <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary.Light}" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Rectangle.Style>
+        </Rectangle>
+      </Grid>
+    </DataTemplate>
+
+    <!--  fallback small gray dot  -->
+    <DataTemplate x:Key="DefaultDotTemplate">
+      <Grid VerticalAlignment="Stretch">
+        <Ellipse
+          Width="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
+          Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
+          HorizontalAlignment="Left"
+          VerticalAlignment="Center"
+          Fill="Gray"
+          Stroke="Black"
+          StrokeThickness="1" />
+      </Grid>
+    </DataTemplate>
+
+    <local:KeyframeTemplateSelector
+      x:Key="KeyframeTemplateSelector"
+      DefaultTemplate="{StaticResource DefaultDotTemplate}"
+      EventTemplate="{StaticResource EventTemplate}"
+      StateTemplate="{StaticResource StateTemplate}" />
+
+    <!--
+      template for slider where thumb width is bound to slider height
+      used to help center the thumb with current time
+    -->
+    <ControlTemplate x:Key="SliderTemplate" TargetType="Slider">
+      <Grid VerticalAlignment="{TemplateBinding VerticalAlignment}" SnapsToDevicePixels="True">
+
+        <Border
+          Height="2"
+          VerticalAlignment="Center"
+          Background="{TemplateBinding Foreground}"
+          Opacity="0.5" />
+
+        <Track
+          x:Name="PART_Track"
+          Margin="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight, Converter={StaticResource HalfToHorizontalThickness}}"
+          IsDirectionReversed="{TemplateBinding IsDirectionReversed}"
+          Maximum="{TemplateBinding Maximum}"
+          Minimum="{TemplateBinding Minimum}"
+          Orientation="{TemplateBinding Orientation}"
+          Value="{TemplateBinding Value}">
+
+          <Track.DecreaseRepeatButton>
+            <RepeatButton
+              Command="Slider.DecreaseLarge"
+              Focusable="False"
+              Opacity="0" />
+          </Track.DecreaseRepeatButton>
+          <Track.IncreaseRepeatButton>
+            <RepeatButton
+              Command="Slider.IncreaseLarge"
+              Focusable="False"
+              Opacity="0" />
+          </Track.IncreaseRepeatButton>
+
+          <Track.Thumb>
+            <Thumb
+              x:Name="PART_Thumb"
+              Width="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight}"
+              Height="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ActualHeight}"
+              Foreground="{TemplateBinding Foreground}">
+              <Thumb.Template>
+                <ControlTemplate TargetType="Thumb">
+                  <Grid
+                    Width="{TemplateBinding Width}"
+                    Height="{TemplateBinding Height}"
+                    Background="Transparent"
+                    SnapsToDevicePixels="True">
+
+                    <Ellipse
+                      x:Name="Knob"
+                      Width="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Height, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
+                      Height="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Height, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Fill="{TemplateBinding Foreground}"
+                      RenderTransformOrigin="0.5,0.5" />
+                  </Grid>
+
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="Knob" Property="RenderTransform">
+                        <Setter.Value>
+                          <ScaleTransform ScaleX="1.2" ScaleY="1.2" />
+                        </Setter.Value>
+                      </Setter>
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Thumb.Template>
+            </Thumb>
+          </Track.Thumb>
+        </Track>
+      </Grid>
+    </ControlTemplate>
+  </UserControl.Resources>
+
+  <Grid
+    Margin="8,0"
+    ClipToBounds="False"
+    IsSharedSizeScope="True">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition
+        x:Name="LabelCol"
+        Width="Auto"
+        SharedSizeGroup="TimelineLabel" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <Border
+      Grid.Row="1"
+      Grid.Column="1"
+      Background="{StaticResource TimelineBackground}" />
+
+
+
+
+
+    <!--  Current time TextBox  -->
+
+    <TextBox
+      x:Name="CurrentTimeTextBox"
+      Grid.Row="0"
+      Grid.Column="0"
+      Width="{Binding ActualWidth, ElementName=LabelCol}"
+      MinWidth="80"
+      Margin="0,0,12,4"
+      VerticalAlignment="Center"
+      materialDesign:TextFieldAssist.SuffixText="{Binding Animation.Length, StringFormat=/{0:0.##}, ElementName=Root}"
+      Text="{Binding CurrentTime, StringFormat={}{0:0.###}, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+
+    <!--  Scrubber  -->
+    <Slider
+      x:Name="Scrubber"
+      Grid.Row="0"
+      Grid.Column="1"
+      Height="{Binding ActualHeight, ElementName=CurrentTimeTextBox}"
+      Margin="0,0,20,0"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch"
+      AutoToolTipPlacement="TopLeft"
+      AutoToolTipPrecision="2"
+      IsMoveToPointEnabled="True"
+      LargeChange="0.25"
+      Maximum="{Binding Animation.Length, ElementName=Root}"
+      Minimum="0"
+      OverridesDefaultStyle="True"
+      SmallChange="0.01"
+      Template="{StaticResource SliderTemplate}"
+      TickFrequency="0.1"
+      TickPlacement="BottomRight"
+      Value="{Binding CurrentTime, ElementName=Root, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+
+    <ScrollViewer
+      x:Name="RowScroller"
+      Grid.Row="1"
+      Grid.Column="0"
+      Grid.ColumnSpan="2"
+      VerticalScrollBarVisibility="Visible">
+      <Grid Margin="0,0,12,0" VerticalAlignment="Top">
+        <Grid.RowDefinitions>
+          <RowDefinition />
+          <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" SharedSizeGroup="TimelineLabel" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <!--  Ticks and Current Time  -->
+        <views:TimelineOverlay
+          Grid.Row="0"
+          Grid.RowSpan="2"
+          Grid.Column="1"
+          CurrentTime="{Binding CurrentTime, ElementName=Root}"
+          CurrentTimeBrush="{StaticResource NowLineBrush}"
+          IsHitTestVisible="False"
+          Length="{Binding Animation.Length, ElementName=Root}"
+          MajorTickBrush="{StaticResource MajorLineBrush}"
+          MajorTickInterval="1"
+          MinorTickBrush="{StaticResource MinorLineBrush}"
+          MinorTickInterval="0.25" />
+        <ItemsControl
+          x:Name="StateEventItemsControl"
+          Grid.Row="0"
+          Grid.Column="0"
+          Grid.ColumnSpan="2"
+          VerticalAlignment="Top"
+          ItemsSource="{Binding StateEventRows, ElementName=Root}">
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border BorderBrush="{StaticResource MajorLineBrush}" BorderThickness="0,1,0,1">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="TimelineLabel" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+
+                  <TextBlock
+                    x:Name="RowLabel"
+                    Margin="0,0,12,0"
+                    Padding="0,1"
+                    VerticalAlignment="Center"
+                    Text="{Binding Name}" />
+
+                  <ItemsControl
+                    Grid.Column="1"
+                    Height="{Binding ElementName=RowLabel, Path=ActualHeight}"
+                    ItemTemplateSelector="{StaticResource KeyframeTemplateSelector}"
+                    ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemContainerStyle>
+                      <Style TargetType="ContentPresenter">
+                        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight}" />
+                        <Setter Property="SnapsToDevicePixels" Value="True" />
+                        <Setter Property="Canvas.Left">
+                          <Setter.Value>
+                            <MultiBinding Converter="{StaticResource TimeToCenteredLeft}">
+                              <Binding Path="Time" />
+                              <Binding ElementName="Root" Path="Animation.Length" />
+                              <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                              <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                            </MultiBinding>
+                          </Setter.Value>
+                        </Setter>
+                        <Setter Property="ToolTip" Value="{Binding DisplayName}" />
+                        <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+                        <EventSetter Event="MouseLeftButtonDown" Handler="Keyframe_MouseDown" />
+                        <EventSetter Event="MouseEnter" Handler="OnKeyframeMouseEnter" />
+                        <EventSetter Event="MouseLeave" Handler="OnKeyframeMouseLeave" />
+                      </Style>
+                    </ItemsControl.ItemContainerStyle>
+                  </ItemsControl>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!--  ROWS for SubAnimations  -->
+        <ItemsControl
+          x:Name="SubAnimationsItemsControl"
+          Grid.Row="1"
+          Grid.Column="0"
+          Grid.ColumnSpan="2"
+          VerticalAlignment="Top"
+          ItemsSource="{Binding SubRows, ElementName=Root}">
+
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border BorderBrush="{StaticResource MajorLineBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="TimelineLabel" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+
+                  <TextBlock
+                    x:Name="RowLabel"
+                    Margin="0,0,12,0"
+                    Padding="0,1"
+                    VerticalAlignment="Center"
+                    Text="{Binding Name}" />
+
+                  <!--
+                    Inner ItemsControl for SubAnimation Rects
+                    (Currently overkill with 1:1 but leaves the door open for grouping)
+                  -->
+                  <ItemsControl
+                    Grid.Column="1"
+                    Height="{Binding ElementName=RowLabel, Path=ActualHeight}"
+                    ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemContainerStyle>
+                      <Style TargetType="ContentPresenter">
+                        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight}" />
+                        <Setter Property="Canvas.Left">
+                          <Setter.Value>
+                            <MultiBinding Converter="{StaticResource TimeToX}">
+                              <Binding Path="Time" />
+                              <Binding ElementName="Root" Path="Animation.Length" />
+                              <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                            </MultiBinding>
+                          </Setter.Value>
+                        </Setter>
+                        <Setter Property="ToolTip" Value="{Binding DisplayName}" />
+                        <Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+                        <EventSetter Event="MouseLeftButtonDown" Handler="Keyframe_MouseDown" />
+                        <EventSetter Event="MouseEnter" Handler="OnKeyframeMouseEnter" />
+                        <EventSetter Event="MouseLeave" Handler="OnKeyframeMouseLeave" />
+                      </Style>
+                    </ItemsControl.ItemContainerStyle>
+
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Grid VerticalAlignment="Stretch" MouseLeftButtonDown="Keyframe_MouseDown">
+                          <Rectangle
+                            Height="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ActualHeight, Converter={StaticResource Multiply}, ConverterParameter=0.6}"
+                            VerticalAlignment="Center"
+                            StrokeThickness="1">
+                            <Rectangle.Width>
+                              <MultiBinding Converter="{StaticResource LengthToWidth}">
+                                <Binding Path="Length" />
+                                <Binding ElementName="Root" Path="Animation.Length" />
+                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                              </MultiBinding>
+                            </Rectangle.Width>
+
+                            <Rectangle.Style>
+                              <Style TargetType="{x:Type Rectangle}">
+                                <Setter Property="Stroke" Value="Black" />
+                                <Setter Property="Fill" Value="{StaticResource DeselectedBrush}" />
+                                <Style.Triggers>
+                                  <DataTrigger Value="True">
+                                    <DataTrigger.Binding>
+                                      <MultiBinding Converter="{StaticResource Equal}">
+                                        <Binding ElementName="Root" Path="Animation.SelectedKeyframe" />
+                                        <Binding />
+                                      </MultiBinding>
+                                    </DataTrigger.Binding>
+                                    <Setter Property="Fill" Value="{StaticResource SelectedBrush}" />
+                                  </DataTrigger>
+                                  <DataTrigger Binding="{Binding IsTimelineVisualHovered}" Value="True">
+                                    <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary.Light}" />
+                                  </DataTrigger>
+
+                                </Style.Triggers>
+                              </Style>
+                            </Rectangle.Style>
+                          </Rectangle>
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
+    </ScrollViewer>
+    <!--  ROWS: States & Events grouped by category  -->
+
+  </Grid>
+</UserControl>
