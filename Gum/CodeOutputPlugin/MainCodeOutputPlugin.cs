@@ -525,7 +525,7 @@ public class MainCodeOutputPlugin : PluginBase
         GenerateCodeForElement(showPopups, selectedElement);
     }
 
-    private void GenerateCodeForElement(bool showPopups, ElementSave element, CodeOutputElementSettings? settings = null)
+    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null)
     {
         if (element != null && element is not StandardElementSave)
         {

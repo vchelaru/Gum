@@ -64,7 +64,7 @@ public class UndoManagerTests : BaseTestClass
     [Fact]
     public void PerformUndo_ShouldRestoreValue()
     {
-        ComponentSave component = _selectedState.Object.SelectedComponent;
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
         component.DefaultState.SetValue("X", 10f);
 
@@ -85,7 +85,7 @@ public class UndoManagerTests : BaseTestClass
     [Fact]
     public void CurrentElementHistory_ShouldReportVariableChanges()
     {
-        ComponentSave component = _selectedState.Object.SelectedComponent;
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
         component.DefaultState.SetValue("X", 10f);
 
@@ -109,7 +109,7 @@ public class UndoManagerTests : BaseTestClass
     public void CurrentElementHistory_ShouldReportExposedVariables()
     {
         {
-            ComponentSave component = _selectedState.Object.SelectedComponent;
+            ComponentSave component = _selectedState.Object.SelectedComponent!;
 
             component.DefaultState.SetValue("X", 10f);
 
