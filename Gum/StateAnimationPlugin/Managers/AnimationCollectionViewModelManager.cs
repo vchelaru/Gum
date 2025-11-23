@@ -21,6 +21,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
     AnimationFilePathService _animationFilePathService;
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly FileWatchManager _fileWatchManager;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
     private readonly IOutputManager _outputManager;
 
@@ -31,6 +32,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
         _outputManager = Locator.GetRequiredService<IOutputManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
+        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
         _animationVmFactory = () => new(_nameVerifier, dialogService);
     }
 
@@ -86,7 +88,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         {
             var save = viewModel.ToSave();
 
-            FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath);
+            _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
             FileManager.XmlSerialize(save, fileName.FullPath);
         }
     }

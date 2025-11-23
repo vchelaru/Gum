@@ -1,4 +1,5 @@
 ﻿using Gum.Managers;
+using Gum.Services;
 using Gum.ToolStates;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,11 @@ public class FileWatchLogic : Singleton<FileWatchLogic>
 {
     FileWatchManager _fileWatchManager;
 
-    public bool Enabled { get { return _fileWatchManager.Enabled; } }
+    public bool Enabled => _fileWatchManager.Enabled;
 
     public FileWatchLogic()
     {
-        _fileWatchManager = FileWatchManager.Self;
+        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>(); 
     }
 
     public void HandleProjectLoaded()

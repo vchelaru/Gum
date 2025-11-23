@@ -1141,7 +1141,7 @@ public class CodeGenerator
                 var classNameString = GetClassNameForType(instance, context.VisualApi, context);
 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{ToCSharpName(context.Instance.Name)} = " +
+                    $"{context.Tabs}{ToCSharpName(instance.Name)} = " +
                     $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
             }
             else
@@ -1150,7 +1150,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{ToCSharpName(context.Instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{ToCSharpName(instance.Name)} = this.Visual?.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::MonoGameGum.GueDeriving.{className};");
             }
         }
@@ -1160,7 +1160,7 @@ public class CodeGenerator
             if(isStandardElement)
             {
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{ToCSharpName(context.Instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     $"global::MonoGameGum.GueDeriving.{GetClassNameForType(instance, context.VisualApi, context)};");
 
             }
@@ -1170,7 +1170,7 @@ public class CodeGenerator
                 if (className == null) return;
                 
                 context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{ToCSharpName(context.Instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
+                    $"{context.Tabs}{ToCSharpName(instance.Name)} = this.GetGraphicalUiElementByName(\"{instance.Name}\") as " +
                     // do not prefix global::MonoGameGum... because this is a custom component
                     $"{className};");
             }
@@ -1179,7 +1179,7 @@ public class CodeGenerator
 
     private static void FillWithInstanceInstantiation(CodeGenerationContext context)
     {
-        var instance = context.Instance;
+        var instance = context.Instance!;
 
         var baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance.BaseType);
 
@@ -1189,7 +1189,7 @@ public class CodeGenerator
             return;
         }
         //////////////////////End Early Out///////////////////////////
-        var instanceName = ToCSharpName(context.Instance.Name);
+        var instanceName = ToCSharpName(instance.Name);
 
         var strippedType = instance.BaseType;
         if (strippedType.Contains("/"))
@@ -1430,7 +1430,7 @@ public class CodeGenerator
         {
             foreach (var possibleBehavior in behaviors)
             {
-                if (BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
+                if (possibleBehavior.BehaviorName != null && BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
                 {
                     formsType = BehaviorGumFormsTypes[possibleBehavior.BehaviorName];
                     behavior = possibleBehavior;
@@ -1555,7 +1555,7 @@ public class CodeGenerator
 
 
     private static void SetNonAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave defaultState, CodeGenerationContext context,
-        StringBuilder stringBuilder, string parentBaseType)
+        StringBuilder stringBuilder, string? parentBaseType)
     {
         var variableFinder = new RecursiveVariableFinder(defaultState);
 
@@ -1936,7 +1936,7 @@ public class CodeGenerator
     const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
     #endregion
 
-    private static void SetXamarinFormsLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder, string parentBaseType)
+    private static void SetXamarinFormsLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder, string? parentBaseType)
     {
         var variableFinder = new RecursiveVariableFinder(state);
 
@@ -2424,7 +2424,7 @@ public class CodeGenerator
 
         string boundsText =
             $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new {rectangleName}({xString}, {yString}, {widthString}, {heightString} ));";
-        string flagsText = null;
+        string flagsText = string.Empty;
 
         if (proportionalFlags.Count == 0)
         {
@@ -2434,7 +2434,7 @@ public class CodeGenerator
 
         if (proportionalFlags.Count > 0)
         {
-            string flagsArguments = null;
+            string flagsArguments = string.Empty;
             int i = 0;
             foreach (var flag in proportionalFlags)
             {
@@ -2569,10 +2569,10 @@ public class CodeGenerator
         {
             isVariableOwnerSkiaGumCanvasView = context.Instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true;
 
-            if (!isVariableOwnerSkiaGumCanvasView)
+            if (!isVariableOwnerSkiaGumCanvasView && context.Instance.BaseType != null)
             {
                 var element = ObjectFinder.Self.GetElementSave(context.Instance.BaseType);
-                return IsElementSkiaGumCanvasView(element);
+                return element != null && IsElementSkiaGumCanvasView(element);
             }
         }
         else
@@ -2608,6 +2608,10 @@ public class CodeGenerator
 
         ////////////////////////Early Out////////////////////////////
         if(instance != null && ObjectFinder.Self.GetElementSave(instance.BaseType) == null)
+        {
+            return;
+        }
+        if(instance == null)
         {
             return;
         }
@@ -2647,13 +2651,13 @@ public class CodeGenerator
         var parentValue = parentVariable?.Value as string;
         var parentInstance = parentValue != null
             ? ObjectFinder.Self.GetInstanceRecursively(container, parentValue)
-            : (InstanceSave)null;
+            : (InstanceSave?)null;
         var hasParent = parentInstance != null;
         //container.GetInstance(parentValue) != null;
 
         if (hasParent)
         {
-            var codeLine = GetCodeLine(parentVariable, container, visualApi, defaultState, context);
+            var codeLine = GetCodeLine(parentVariable!, container, visualApi, defaultState, context);
 
 
             // the line of code could be " ", a string with a space. This happens
@@ -2678,29 +2682,29 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({ToCSharpName(context.Instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({ToCSharpName(instance.Name)});");
                     }
                     else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                     {
                         // If it's a screen it may have children, or it may not. We just don't know, so we need to check
 
-                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({ToCSharpName(context.Instance.Name)});");
-                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({ToCSharpName(context.Instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({ToCSharpName(instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({ToCSharpName(instance.Name)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({ToCSharpName(context.Instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({ToCSharpName(instance.Name)});");
                     }
                 }
                 else
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({ToCSharpName(context.Instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({ToCSharpName(instance.Name)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({ToCSharpName(context.Instance.Name)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({ToCSharpName(instance.Name)});");
                     }
                 }
             }
@@ -2907,12 +2911,12 @@ public class CodeGenerator
             stringBuilder.AppendLine(context.Tabs + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
             stringBuilder.AppendLine(context.Tabs + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
-            var elementBaseType = element?.BaseType;
-            var baseElements = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
+            var elementBaseType = element.BaseType;
+            var baseElements = ObjectFinder.Self.GetBaseElements(element);
 
-            var isThisAbsoluteLayout = element != null && IsOfXamarinFormsType(element, "AbsoluteLayout");
-            var isStackLayout = element != null && IsOfXamarinFormsType(element, "StackLayout");
-            var isSkiaCanvasView = element != null && IsOfXamarinFormsType(element, "SkiaGumCanvasView");
+            var isThisAbsoluteLayout = IsOfXamarinFormsType(element, "AbsoluteLayout");
+            var isStackLayout = IsOfXamarinFormsType(element, "StackLayout");
+            var isSkiaCanvasView = IsOfXamarinFormsType(element, "SkiaGumCanvasView");
 
             if (isThisAbsoluteLayout)
             {
@@ -3035,15 +3039,18 @@ public class CodeGenerator
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
                     {
                         context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
-                        context.StringBuilder.AppendLine(context.Tabs + ToCSharpName(context.Instance.Name) + ".ForceGumLayout();");
-                        context.StringBuilder.AppendLine(context.Tabs + ToCSharpName(context.Instance.Name) + ".UpdateDimensionsFromAutoSize();");
+                        if(context.Instance != null)
+                        {
+                            context.StringBuilder.AppendLine(context.Tabs + ToCSharpName(context.Instance.Name) + ".ForceGumLayout();");
+                            context.StringBuilder.AppendLine(context.Tabs + ToCSharpName(context.Instance.Name) + ".UpdateDimensionsFromAutoSize();");
+                        }
                     }
                 }
             }
         }
     }
 
-    private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings? projectSettings)
+    private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
         var elementBaseType = element?.BaseType;
         var isThisAbsoluteLayout = IsOfXamarinFormsType(element, "AbsoluteLayout");
@@ -3219,13 +3226,16 @@ public class CodeGenerator
             screenOrComponent = "ComponentSave";
         }
 
-        foreach (var instance in element.Instances)
+        if(context.Instance != null)
         {
-            var instanceVisualApi = GetVisualApiForInstance(instance, element);
-            if (instanceVisualApi == VisualApi.Gum)
+            foreach (var instance in element.Instances)
             {
-                // todo - will need Forms too, but we'll do this for now:
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"{ToCSharpName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                var instanceVisualApi = GetVisualApiForInstance(instance, element);
+                if (instanceVisualApi == VisualApi.Gum)
+                {
+                    // todo - will need Forms too, but we'll do this for now:
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{ToCSharpName(context.Instance.Name)}.Tag = {screenOrComponent}.Instances.Find(item => item.Name == \"{instance.Name}\");");
+                }
             }
         }
 
@@ -5079,7 +5089,7 @@ public class CodeGenerator
 
     }
 
-    private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings? projectSettings)
+    private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
     {
 
         var shouldAddMainLayout =
@@ -5094,7 +5104,7 @@ public class CodeGenerator
             }
 
             var baseHasMain = baseElement != null &&
-                projectSettings?.BaseTypesNotCodeGenerated?.Contains(element.BaseType) != true &&
+                projectSettings.BaseTypesNotCodeGenerated?.Contains(element.BaseType) != true &&
                 GetIfShouldAddMainLayout(baseElement, projectSettings);
             if (!baseHasMain)
             {
