@@ -59,7 +59,6 @@ public class WindowVisual : InteractiveGue
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";
@@ -157,6 +156,7 @@ public class WindowVisual : InteractiveGue
         BorderRightInstance.Width = borderSize;
         BorderRightInstance.Height = 0;
 
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         // Allow the Border drag effect to work outside of this container
         this.RaiseChildrenEventsOutsideOfBounds = true; 
 
