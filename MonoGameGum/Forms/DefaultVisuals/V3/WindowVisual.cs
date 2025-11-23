@@ -15,6 +15,7 @@ using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 using MonoGameGum;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
@@ -31,6 +32,22 @@ public class WindowVisual : InteractiveGue
     public Panel BorderBottomInstance { get; private set; }
     public Panel BorderLeftInstance { get; private set; }
     public Panel BorderRightInstance { get; private set; }
+
+    Color _backgroundColor = Styling.ActiveStyle.Colors.Primary;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if(value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                // Window doesn't have states...
+                //FormsControl?.UpdateState();
+                Background.Color = _backgroundColor;
+            }
+        }
+    }
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -54,7 +71,7 @@ public class WindowVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.ActiveStyle.Colors.Primary;
+        Background.Color = _backgroundColor;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Panel);
         this.AddChild(Background);
@@ -141,7 +158,7 @@ public class WindowVisual : InteractiveGue
         // Allow the Border drag effect to work outside of this container
         this.RaiseChildrenEventsOutsideOfBounds = true; 
 
-        SetCustomCursorForResizing();
+        //SetCustomCursorForResizing();
 
         this.AddChild(BorderRightInstance);
 
@@ -149,55 +166,6 @@ public class WindowVisual : InteractiveGue
         {
             FormsControlAsObject = new Window(this);
         }
-    }
-
-
-    public override object FormsControlAsObject 
-    { 
-        get => base.FormsControlAsObject;
-        set
-        {
-            var oldWindow = base.FormsControlAsObject as Window;
-            if(oldWindow != null)
-            {
-                oldWindow.ResizeModeChanged -= HandleResizeModeChanged;
-            }
-            base.FormsControlAsObject = value;
-            if(value is Window window)
-            {
-                window.ResizeModeChanged += HandleResizeModeChanged;
-            }
-        }
-    }
-
-    private void HandleResizeModeChanged(object? sender, EventArgs e)
-    {
-        if(FormsControl?.ResizeMode == ResizeMode.NoResize)
-        {
-            BorderTopLeftInstance.CustomCursor = null;
-            BorderTopRightInstance.CustomCursor = null;
-            BorderBottomLeftInstance.CustomCursor = null;
-            BorderBottomRightInstance.CustomCursor = null;
-            BorderTopInstance.CustomCursor = null;
-            BorderBottomInstance.CustomCursor = null;
-            BorderLeftInstance.CustomCursor = null;
-            BorderRightInstance.CustomCursor = null;
-        }
-        else
-        {
-            SetCustomCursorForResizing();
-        }
-    }
-    private void SetCustomCursorForResizing()
-    {
-        BorderTopLeftInstance.CustomCursor = Cursors.SizeNWSE;
-        BorderTopRightInstance.CustomCursor = Cursors.SizeNESW;
-        BorderBottomLeftInstance.CustomCursor = Cursors.SizeNESW;
-        BorderBottomRightInstance.CustomCursor = Cursors.SizeNWSE;
-        BorderTopInstance.CustomCursor = Cursors.SizeNS;
-        BorderBottomInstance.CustomCursor = Cursors.SizeNS;
-        BorderLeftInstance.CustomCursor = Cursors.SizeWE;
-        BorderRightInstance.CustomCursor = Cursors.SizeWE;
     }
 
     public Window FormsControl => FormsControlAsObject as Window;
