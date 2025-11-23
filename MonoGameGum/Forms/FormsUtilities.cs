@@ -42,7 +42,11 @@ public enum DefaultVisualsVersion
     /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
     /// and respects a centralized styling.
     /// </summary>
-    V2
+    V2,
+    /// <summary>
+    /// The third version introduced end of 2025. This version makes styling with colors easier.
+    /// </summary>
+    V3
 }
 
 public class FormsUtilities
@@ -84,7 +88,7 @@ public class FormsUtilities
         }
 
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
-        Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new (uiSpriteSheet);
+        
 
         switch (defaultVisualsVersion)
         {
@@ -105,11 +109,9 @@ public class FormsUtilities
                 TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
                 TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
                 TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
                 break;
             case DefaultVisualsVersion.V2:
-
-
-
                 TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
@@ -127,6 +129,29 @@ public class FormsUtilities
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
                 TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
+                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
+
+                break;
+
+            case DefaultVisualsVersion.V3:
+                TryAdd(typeof(Button), typeof(DefaultVisuals.V3.ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.V3.CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.V3.ComboBoxVisual));
+                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.V3.ItemsControlVisual));
+                TryAdd(typeof(Label), typeof(DefaultVisuals.V3.LabelVisual));
+                TryAdd(typeof(ListBox), typeof(DefaultVisuals.V3.ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.V3.ListBoxItemVisual));
+                TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
+                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
+                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
+                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
+                TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
+                TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
+                TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
+                TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
+                Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
             default:

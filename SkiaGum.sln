@@ -5,7 +5,7 @@ VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaGum", "SkiaGum\SkiaGum.csproj", "{39603AE7-D2BC-4CF8-AC54-7286BA4E03C3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaGum.Wpf", "SkiaGum.Wpf\SkiaGum.Wpf.csproj", "{947C8BBF-9867-424E-A0C9-2D9C3A7F8B63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaGum.Wpf", "Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj", "{947C8BBF-9867-424E-A0C9-2D9C3A7F8B63}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolsUtilitiesStandard", "ToolsUtilities\ToolsUtilitiesStandard.csproj", "{01763A3F-12A4-4B1F-B9D6-CA0776B74C3E}"
 EndProject
