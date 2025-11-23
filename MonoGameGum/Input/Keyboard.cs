@@ -154,7 +154,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             // are returned for certain hotkey combinations like '\u0001' for CTRL+A.
             // We need to ignore these:
 
-            System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
+            //System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
             if(ignoredWindowTextInputCharacters.Contains(e.Character) == false)
             {
                 windowTextInputBuffer.Append(e.Character);
