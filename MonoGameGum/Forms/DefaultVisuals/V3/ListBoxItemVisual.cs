@@ -40,6 +40,34 @@ public class ListBoxItemVisual : InteractiveGue
 
     public StateSaveCategory ListBoxItemCategory { get; private set; }
 
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                _foregroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
+
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Height = 6f;
@@ -49,6 +77,9 @@ public class ListBoxItemVisual : InteractiveGue
 
         States = new ListBoxItemCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";
@@ -62,7 +93,6 @@ public class ListBoxItemVisual : InteractiveGue
         Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0f;
         Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
@@ -83,7 +113,6 @@ public class ListBoxItemVisual : InteractiveGue
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
-        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         this.AddChild(TextInstance);
 
         FocusedIndicator = new NineSliceRuntime();
@@ -107,38 +136,59 @@ public class ListBoxItemVisual : InteractiveGue
         ListBoxItemCategory.Name = "ListBoxItemCategory";
         this.AddCategory(ListBoxItemCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
-
-        void AddState(StateSave state, bool isBackgroundVisible, bool isFocusedVisible, 
-            Color textColor, Color? backgroundColor = null)
-        {
-            ListBoxItemCategory.States.Add(state);
-            AddVariable(state, "Background.Visible", isBackgroundVisible);
-            AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
-            AddVariable(state, "TextInstance.Color", textColor);
-            if (backgroundColor != null)
-            {
-                AddVariable(state, "Background.Color", backgroundColor);
-            }
-        }
-
-        AddState(States.Enabled, false, false, Styling.ActiveStyle.Colors.White);
-        AddState(States.Highlighted, true, false, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.Primary);
-        AddState(States.Selected, true, false, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.Accent);
-        AddState(States.Focused, false, true, Styling.ActiveStyle.Colors.White);
-        AddState(States.Disabled, false, false, Styling.ActiveStyle.Colors.Gray);
+        DefineDynamicStyleChanges();
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new ListBoxItem(this);
         }
+    }
+
+    private void DefineDynamicStyleChanges()
+    {
+        // Some named constants vs magic values
+        const float darker = -0.25f;
+        const float lighter = 0.25f;
+        const float greyScaleDarker = -0.30f;
+        const float greyScaleLighter = 0.30f;
+
+        ListBoxItemCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () =>
+        {
+            SetValuesForState(false, false, ForegroundColor, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxItemCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
+        {
+            SetValuesForState(true, false, ForegroundColor, BackgroundColor);
+        };
+
+        ListBoxItemCategory.States.Add(States.Selected);
+        States.Selected.Apply = () =>
+        {
+            SetValuesForState(true, false, ForegroundColor, Styling.ActiveStyle.Colors.Accent); // TODO: Discuss how to approach this.
+        };
+
+        ListBoxItemCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(false, true, ForegroundColor, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxItemCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () =>
+        {
+            SetValuesForState(false, false, ForegroundColor.ToGreyscale().Adjust(greyScaleLighter), BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+    }
+
+    private void SetValuesForState(bool isBackgroundVisible, bool isFocusedVisible, Color foregroundColor, Color backgroundColor)
+    {
+        Background.Visible = isBackgroundVisible;
+        FocusedIndicator.Visible = isFocusedVisible;
+        TextInstance.Color = foregroundColor;
+        Background.Color = backgroundColor;
     }
 
     public ListBoxItem FormsControl => FormsControlAsObject as ListBoxItem;
