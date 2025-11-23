@@ -44,13 +44,29 @@ public class ListBoxVisual : InteractiveGue
 
     public StateSaveCategory ListBoxCategory { get; private set; }
 
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        Width = 150;
-        Height = 150;
+        Width = 256;
+        Height = 256;
 
         States = new ListBoxCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";
@@ -64,7 +80,6 @@ public class ListBoxVisual : InteractiveGue
         Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0f;
         Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
@@ -73,7 +88,7 @@ public class ListBoxVisual : InteractiveGue
         FocusedIndicator.Name = "FocusedIndicator";
         FocusedIndicator.X = 0f;
         FocusedIndicator.XUnits = GeneralUnitType.PixelsFromMiddle;
-        FocusedIndicator.Y = -2f;
+        FocusedIndicator.Y = 2f;
         FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
         FocusedIndicator.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
@@ -129,23 +144,23 @@ public class ListBoxVisual : InteractiveGue
 
         ClipContainerInstance = new ContainerRuntime();
         ClipContainerInstance.Name = "ClipContainerInstance";
+        ClipContainerInstance.X = 2f;
+        ClipContainerInstance.Y = 2f;
         ClipContainerInstance.ClipsChildren = true;
         ClipContainerInstance.Height = -4f;
         ClipContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         ClipContainerInstance.Width = -4f;
         ClipContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        ClipContainerInstance.X = 2f;
-        ClipContainerInstance.Y = 2f;
         ClipContainerInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         ClipContainerInstance.YUnits = GeneralUnitType.PixelsFromSmall;
         ClipContainerParent.Children.Add(ClipContainerInstance);
 
         InnerPanelInstance = new ContainerRuntime();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        InnerPanelInstance.Height = 0f;
-        InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         InnerPanelInstance.Width = 0f;
         InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        InnerPanelInstance.Height = 0f;
+        InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         ClipContainerInstance.Children.Add(InnerPanelInstance);
 
@@ -153,42 +168,71 @@ public class ListBoxVisual : InteractiveGue
         ListBoxCategory.Name = "ListBoxCategory";
         this.AddCategory(ListBoxCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
-
-        // If the set of variables increases, create an AddState void method similar to tghe other V2s.
-
-        ListBoxCategory.States.Add(States.Enabled);
-        AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
-
-        ListBoxCategory.States.Add(States.Disabled);
-        AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
-
-        ListBoxCategory.States.Add(States.DisabledFocused);
-        AddVariable(States.DisabledFocused, "FocusedIndicator.Visible", true);
-
-        ListBoxCategory.States.Add(States.Focused);
-        AddVariable(States.Focused, "FocusedIndicator.Visible", true);
-
-        ListBoxCategory.States.Add(States.Highlighted);
-        AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
-
-        ListBoxCategory.States.Add(States.HighlightedFocused);
-        AddVariable(States.HighlightedFocused, "FocusedIndicator.Visible", true);
-
-        ListBoxCategory.States.Add(States.Pushed);
-        AddVariable(States.Pushed, "FocusedIndicator.Visible", false);
+        DefineDynamicStyleChanges();
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new ListBox(this);
         }
+    }
+
+
+    private void DefineDynamicStyleChanges()
+    {
+        // Some named constants vs magic values
+        const float darker = -0.25f;
+        const float lighter = 0.25f;
+        const float greyScaleDarker = -0.30f;
+        const float greyScaleLighter = 0.30f;
+
+        ListBoxCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxCategory.States.Add(States.DisabledFocused);
+        States.DisabledFocused.Apply = () =>
+        {
+            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxCategory.States.Add(States.HighlightedFocused);
+        States.HighlightedFocused.Apply = () =>
+        {
+            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+        ListBoxCategory.States.Add(States.Pushed);
+        States.Pushed.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker));
+        };
+
+    }
+
+    private void SetValuesForState(bool isFocusedVisible, Color backgroundColor)
+    {
+        FocusedIndicator.Visible = isFocusedVisible;
+        Background.Color = backgroundColor;
     }
 
     public ListBox FormsControl => FormsControlAsObject as ListBox;

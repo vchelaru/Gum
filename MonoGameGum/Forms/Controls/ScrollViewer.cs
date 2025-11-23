@@ -418,6 +418,8 @@ public class ScrollViewer :
         UpdateHorizontalScrollBarValues();
 
         base.ReactToVisualChanged();
+
+        UpdateState();
     }
 
     protected virtual void RefreshInternalVisualReferences()
