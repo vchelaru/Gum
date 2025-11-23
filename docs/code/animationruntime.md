@@ -14,68 +14,153 @@ As of April 2025 animation support at runtime is considered a preview feature an
 
 Animations defined in the Gum tool can be loaded at runtime. To load and play an animation, the following calls are needed:
 
-1. Call `GumService.LoadAnimations`
-2. Obtain an `AnimationRuntime` instance from your `GraphicalUiElement`
-3. Call `ApplyAtTimeTo` to apply the animation at runtime.
+1. Call `GumService.LoadAnimations` . This loads all animation files for all screens and components in the current Gum project.
+2. Obtain an `AnimationRuntime` instance from your `GraphicalUiElement` . This could be a screen or component.
+3. Call `PlayAnimation` to begin the animation.
 
-The following code shows how to load the first screen in a Gum project and how to play its animation.
+Animations can be played on an entire screen, entire component, or an individual instance within a screen or component.&#x20;
 
-<pre class="language-csharp"><code class="lang-csharp">GraphicalUiElement screenRuntime;
+For this example, the project has a screen called AnimatedScreen which contains an animation named SlideOnAndOff.
 
-protected override void Initialize()
+<figure><img src="../.gitbook/assets/23_04 51 29.png" alt=""><figcaption></figcaption></figure>
+
+AnimatedScreen also contains an instance of a component named PleaseWaitPopup which has its own animation called Spinning. Note that the Spinning animation is marked as repeating, so once it starts it will play until it is stopped in code.
+
+<figure><img src="../.gitbook/assets/23_04 53 37.png" alt=""><figcaption></figcaption></figure>
+
+The following code shows how to load all animations, create the AnimatedScreen, and play animations according to keyboard commands.
+
+{% tabs %}
+{% tab title="Using Generated Code" %}
+<pre class="language-cs"><code class="lang-cs">public class Game1 : Game
 {
-    GumUI.Initialize(this, "GumProject/GumProject.gumx");
-<strong>    GumUI.LoadAnimations();
-</strong>
-    var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
-    screenRuntime = screen.ToGraphicalUiElement();
-    screenRuntime.AddToRoot();
-
-    base.Initialize();
-}
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-    if(someCondition)
+    private GraphicsDeviceManager _graphics;
+    GumService GumUI => GumService.Default;
+    public Game1()
     {
-<strong>        var animation = screenRuntime.Animations[0];
-</strong><strong>        // This sets the current animation which plays automatically
-</strong><strong>        screenRuntime.PlayAnimation(animation);
-</strong>    }
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+    }
 
-    base.Update(gameTime);
+<strong>    AnimatedScreen _animatedScreen;
+</strong>
+    protected override void Initialize()
+    {
+        GumUI.Initialize(this, "GumProject/GumProject.gumx");
+        GumUI.LoadAnimations();
+
+<strong>        _animatedScreen = new AnimatedScreen();
+</strong><strong>        _animatedScreen.AddToRoot();
+</strong>
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+
+<strong>        var keyboard = GumUI.Keyboard;
+</strong><strong>        if(keyboard.KeyPushed(Keys.Space))
+</strong><strong>        {
+</strong><strong>            _animatedScreen.Visual.PlayAnimation("SlideOnAndOff");
+</strong><strong>        }
+</strong><strong>        if(keyboard.KeyPushed(Keys.Escape))
+</strong><strong>        {
+</strong><strong>            var popup = _animatedScreen
+</strong><strong>                .PleaseWaitPopupInstance.Visual;
+</strong><strong>
+</strong><strong>            if(popup.Visible)
+</strong><strong>            {
+</strong><strong>                popup.StopAnimation();
+</strong><strong>                popup.Visible = false;
+</strong><strong>            }
+</strong><strong>            else
+</strong><strong>            {
+</strong><strong>                popup.Visible = true;
+</strong><strong>                popup.PlayAnimation("Spinning");
+</strong><strong>            }
+</strong><strong>        }
+</strong>
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
+        base.Draw(gameTime);
+    }
 }
 </code></pre>
+{% endtab %}
 
-Alternatively, you can explicitly apply an animation to a runtime object at a given time. This gives you more control over how animations play.
-
-<pre class="language-csharp"><code class="lang-csharp">GraphicalUiElement screenRuntime;
-
-protected override void Initialize()
+{% tab title="No Generated Code" %}
+<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
 {
-    GumUI.Initialize(this, "GumProject/GumProject.gumx");
-<strong>    GumUI.LoadAnimations();
+    private GraphicsDeviceManager _graphics;
+    GumService GumUI => GumService.Default;
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+    }
+
+<strong>    GraphicalUiElement _animatedScreen;
 </strong>
-    var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
-    screenRuntime = screen.ToGraphicalUiElement();
-    screenRuntime.AddToRoot();
-
-    base.Initialize();
-}
-
-protected override void Update(GameTime gameTime)
-{
-    GumUI.Update(gameTime);
-
-<strong>    var animation = screenRuntime.Animations[0];
-</strong><strong>    animation.ApplyAtTimeTo(gameTime.TotalGameTime.TotalSeconds, screenRuntime);
+    protected override void Initialize()
+    {
+        GumUI.Initialize(this, "GumProject/GumProject.gumx");
+<strong>        GumUI.LoadAnimations();
 </strong>
-    base.Update(gameTime);
-}
+<strong>        _animatedScreen = Gum.Managers.ObjectFinder.Self
+</strong><strong>            .GetScreen("AnimatedScreen")
+</strong><strong>            .ToGraphicalUiElement();
+</strong><strong>        _animatedScreen.AddToRoot();
+</strong>
+        base.Initialize();
+    }
 
+    protected override void Update(GameTime gameTime)
+    {
+        GumUI.Update(gameTime);
+
+<strong>        var keyboard = GumUI.Keyboard;
+</strong><strong>        if(keyboard.KeyPushed(Keys.Space))
+</strong><strong>        {
+</strong><strong>            _animatedScreen.PlayAnimation("SlideOnAndOff");
+</strong><strong>        }
+</strong><strong>        if(keyboard.KeyPushed(Keys.Escape))
+</strong><strong>        {
+</strong><strong>            var popup = _animatedScreen
+</strong><strong>                .GetGraphicalUiElementByName("PleaseWaitPopupInstance");
+</strong><strong>
+</strong><strong>            if(popup.Visible)
+</strong><strong>            {
+</strong><strong>                popup.StopAnimation();
+</strong><strong>                popup.Visible = false;
+</strong><strong>            }
+</strong><strong>            else
+</strong><strong>            {
+</strong><strong>                popup.Visible = true;
+</strong><strong>                popup.PlayAnimation("Spinning");
+</strong><strong>            }
+</strong><strong>        }
+</strong>
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GumUI.Draw();
+        base.Draw(gameTime);
+    }
+}
 </code></pre>
+{% endtab %}
+{% endtabs %}
+
+<figure><img src="../.gitbook/assets/23_05 20 06.gif" alt=""><figcaption></figcaption></figure>
 
 ## Code Example - Animations in Code-Only Projects
 
