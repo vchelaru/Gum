@@ -45,7 +45,7 @@ public class FormsFileService
                     continue;
                 }
             }
-            if (extension == "gumx")
+            if (extension == "gumx" || extension == "gumfcs")
             {
                 continue;
             }
