@@ -653,10 +653,12 @@ public class CodeGenerator
         }
         //////////////End Early Out///////////////////
 
-        var bindingBehavior = GetBindingBehavior(container, exposedVariable.SourceObject);
+        var sourceObject = exposedVariable.SourceObject!;
+
+        var bindingBehavior = GetBindingBehavior(container, sourceObject);
 
         var name = ToCSharpName(exposedVariable.ExposedAsName);
-        var instanceName = ToCSharpName(exposedVariable.SourceObject);
+        var instanceName = ToCSharpName(sourceObject);
         var type = exposedVariable.Type;
 
         if(type == nameof(PositionUnitType))
@@ -683,7 +685,7 @@ public class CodeGenerator
             {
                 string stateContainerType;
                 VisualApi visualApi = GetVisualApiForElement(stateContainer);
-                stateContainerType = GetClassNameForType(stateContainer, visualApi, context);
+                stateContainerType = GetClassNameForType(stateContainer, visualApi, context) ?? string.Empty;
                 type = $"{stateContainerType}.{category.Name}?";
             }
 
@@ -708,7 +710,7 @@ public class CodeGenerator
                 var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, context, forcedValue: defaultValue);
                 var containerClassName = GetClassNameForType(container, VisualApi.XamarinForms, context);
 
-                string defaultAssignmentWithComma = null;
+                string? defaultAssignmentWithComma = null;
 
                 if (!string.IsNullOrEmpty(defaultValueAsString))
                 {
@@ -774,7 +776,7 @@ public class CodeGenerator
                         type = "string";
                     }
 
-                    string sourceObjectName = ToCSharpName(exposedVariable.SourceObject);
+                    string sourceObjectCSharpName = ToCSharpName(sourceObject);
                     string? sourceObjectCast = null;
 
                     ElementSave? sourceInstanceElement = null;
@@ -792,7 +794,7 @@ public class CodeGenerator
                             {
                                 if (isState == false || isStateOnVisual)
                                 {
-                                    sourceObjectName += ".Visual";
+                                    sourceObjectCSharpName += ".Visual";
                                 }
                             }
                             sourceObjectCast = GetVisualCast(exposedVariable, context.Element, context);
@@ -830,36 +832,36 @@ public class CodeGenerator
                     {
                         if (sourceObjectCast != null)
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectName}).{rootVariable?.Name};");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectCSharpName}).{rootVariable?.Name};");
                         }
                         else
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectName}.{rootVariable?.Name};");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectCSharpName}.{rootVariable?.Name};");
                         }
                     }
 
 
                     if (shouldSetStateByString)
                     {
-                        var rightSide = $"{sourceObjectName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                        var rightSide = $"{sourceObjectCSharpName}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
                         stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
                     }
                     else
                     {
                         if (rootVariable?.Name == "SourceFile")
                         {
-                            var variableName = sourceObjectName + ".SourceFileName";
+                            var variableName = sourceObjectCSharpName + ".SourceFileName";
                             stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
                         }
                         else
                         {
                             if (sourceObjectCast != null)
                             {
-                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectName}).{rootVariable?.Name} = value;");
+                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectCSharpName}).{rootVariable?.Name} = value;");
                             }
                             else
                             {
-                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectName}.{rootVariable?.Name} = value;");
+                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.{rootVariable?.Name} = value;");
                             }
                         }
                     }
@@ -906,21 +908,23 @@ public class CodeGenerator
     private static void FillWithInstanceDeclaration(CodeGenerationContext context)
     {
         VisualApi visualApi = VisualApi.Gum;
+
+        var instance = context.Instance!;
         
         var defaultState = context.Element.DefaultState;
-        var isXamForms = defaultState.GetValueRecursive($"{context.Instance.Name}.IsXamarinFormsControl") as bool?;
+        var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
         if (isXamForms == true)
         {
             visualApi = VisualApi.XamarinForms;
         }
 
 
-        string? className = GetClassNameForType(context.Instance, visualApi, context);
+        string? className = GetClassNameForType(instance, visualApi, context);
 
         const bool isPublic = true;
         string accessString = isPublic ? "public " : "";
 
-        var isOverride = (defaultState.GetValueRecursive($"{context.Instance.Name}.IsOverrideInCodeGen") as bool?) ?? false;
+        var isOverride = (defaultState.GetValueRecursive($"{instance.Name}.IsOverrideInCodeGen") as bool?) ?? false;
         if (isOverride)
         {
             accessString += "override ";
@@ -928,7 +932,7 @@ public class CodeGenerator
         
         if (className == null)
         {
-            string message = $"Could not find instance {ToCSharpName(context.Instance.Name)} Gum type." +
+            string message = $"Could not find instance {ToCSharpName(instance.Name)} Gum type." +
                              "Check if it is an instance of a deleted Gum component.";
             context.StringBuilder.AppendLine($"{context.Tabs}// {message}");
             return;
@@ -936,7 +940,7 @@ public class CodeGenerator
         
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
-        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {ToCSharpName(context.Instance.Name)} {{ get; protected set; }}");
+        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {ToCSharpName(instance.Name)} {{ get; protected set; }}");
     }
     
     #endregion
@@ -953,7 +957,7 @@ public class CodeGenerator
             // check the settings:
             var split = projectSettings?.BaseTypesNotCodeGenerated.Split('\n').Select(item => item.Trim()).ToArray();
 
-            if (split.Contains(element.BaseType))
+            if (split?.Contains(element.BaseType) == true)
             {
                 isDerived = false;
             }
@@ -1142,7 +1146,7 @@ public class CodeGenerator
 
                 context.StringBuilder.AppendLine(
                     $"{context.Tabs}{ToCSharpName(instance.Name)} = " +
-                    $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
+                    $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{instance.Name}\");");
             }
             else
             {
@@ -1201,7 +1205,6 @@ public class CodeGenerator
 
         var tabs = context.Tabs;
 
-        string prefix = "";
         var isInstanceStandard = ObjectFinder.Self.GetStandardElement(instance.BaseType) != null;
         if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
         {
@@ -1270,7 +1273,7 @@ public class CodeGenerator
                     context.StringBuilder.AppendLine($"{tabs}{instanceName}.AutomationId = \"{instance.Name}\";");
                 }
 
-                if (IsOfXamarinFormsType(context.Instance, "ActivityIndicator"))
+                if (IsOfXamarinFormsType(instance, "ActivityIndicator"))
                 {
                     // If we don't do this, it is invisible which is confusing for the user...
                     context.StringBuilder.AppendLine($"{tabs}{instanceName}.IsRunning = true;");
@@ -1357,7 +1360,7 @@ public class CodeGenerator
             GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
             if (formsType != null)
             {
-                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
+                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference!);
                 if (behavior?.DefaultImplementation == element.Name)
                 {
                     // This is the default, so let's register it:
@@ -1402,7 +1405,7 @@ public class CodeGenerator
             GetGumFormsTypeFromBehaviors(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
             if (formsType != null)
             {
-                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
+                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference!);
                 if (behavior?.DefaultImplementation == element.Name)
                 {
                     // This is the default, so let's register it:
