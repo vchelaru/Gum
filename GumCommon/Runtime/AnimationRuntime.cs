@@ -275,7 +275,15 @@ public class AnimationRuntime
 
     public void ApplyAtTimeTo(double secondsFromBeginning, GraphicalUiElement graphicalUiElement)
     {
-        var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, true);
+        // November 23, 2025
+        // This should be false,
+        // because if it's true, then
+        // multiple animations cannot play
+        // at the same time since each would
+        // be applying default, potentially wiping
+        // the state set by other animations.
+        bool shouldFirstKeyframeBeDefaultState = false;
+        var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, shouldFirstKeyframeBeDefaultState);
         graphicalUiElement.ApplyState(state);
     }
 

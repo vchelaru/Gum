@@ -24,7 +24,7 @@
     <Page Remove="SaveClasses\**" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
+    <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
     <ProjectReference Include="..\Gum.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
