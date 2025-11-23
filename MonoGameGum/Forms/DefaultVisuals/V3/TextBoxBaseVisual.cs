@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
+using System;
 
 
 namespace Gum.Forms.DefaultVisuals.V3;
@@ -19,6 +20,90 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     public TextRuntime PlaceholderTextInstance { get; private set; }
     public SpriteRuntime CaretInstance { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
+
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _backgroundColor = value;
+                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _foregroundColor = value;
+                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+            }
+        }
+    }
+
+    Color _selectionColor;
+    public Color SelectionColor
+    {
+        get => _selectionColor;
+        set
+        {
+            if (value != _selectionColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _selectionColor = value;
+                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+            }
+        }
+    }
+
+    Color _placeholderColor;
+    public Color PlaceholderColor
+    {
+        get => _placeholderColor;
+        set
+        {
+            if (value != _placeholderColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _placeholderColor = value;
+                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+            }
+        }
+    }
+
+    Color _caretColor;
+    public Color CaretColor
+    {
+        get => _caretColor;
+        set
+        {
+            if (value != _caretColor)
+            {
+                _caretColor = value;
+                if(CaretInstance != null)
+                {
+                    CaretInstance.Color = _caretColor;
+                }
+            }
+        }
+    }
 
     protected abstract string CategoryName { get; }
 
@@ -43,7 +128,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
     public TextBoxBaseVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         States = new TextBoxCategoryStates();
-        Width = 100;
+        Width = 256;
         Height = 24;
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
@@ -60,7 +145,6 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
@@ -73,7 +157,6 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
         SelectionInstance = new NineSliceRuntime();
         SelectionInstance.Name = "SelectionInstance";
-        SelectionInstance.Color = Styling.ActiveStyle.Colors.Accent;
         SelectionInstance.Height = -4f;
         SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         SelectionInstance.Width = 7f;
@@ -100,7 +183,6 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
-        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         TextInstance.Text = "";
         ClipContainer.AddChild(TextInstance);
@@ -117,14 +199,12 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         PlaceholderTextInstance.Height = -4f;
         PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        PlaceholderTextInstance.Color = Styling.ActiveStyle.Colors.Gray;
         PlaceholderTextInstance.Text = "Text Placeholder";
         PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
         ClipContainer.AddChild(PlaceholderTextInstance);
 
         CaretInstance = new SpriteRuntime();
         CaretInstance.Name = "CaretInstance";
-        CaretInstance.Color = Styling.ActiveStyle.Colors.Primary;
         CaretInstance.Height = 18f;
         CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
         CaretInstance.Texture = uiSpriteSheetTexture;
@@ -158,9 +238,56 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Visible = false;
         this.AddChild(FocusedIndicator);
 
+        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
+        SelectionColor = Styling.ActiveStyle.Colors.Accent;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        PlaceholderColor = Styling.ActiveStyle.Colors.Gray;
+        CaretColor = Styling.ActiveStyle.Colors.Primary;
+
         TextboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         TextboxCategory.Name = CategoryName;
         this.AddCategory(TextboxCategory);
+
+        DefineDynamicStyleChanges();
+    }
+
+    private void DefineDynamicStyleChanges()
+    {
+        // Some named constants vs magic values
+        const float darker = -0.25f;
+        const float lighter = 0.25f;
+        const float greyScaleDarker = -0.30f;
+        const float greyScaleLighter = 0.30f;
+
+        TextboxCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, false, PlaceholderColor, SelectionColor);
+        };
+
+        TextboxCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor.Adjust(darker), false, PlaceholderColor, SelectionColor);
+        };
+
+        TextboxCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, false, PlaceholderColor, SelectionColor);
+        };
+
+        TextboxCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, true, PlaceholderColor, SelectionColor);
+        };
+
+
+
+        LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        LineModeCategory.Name = "LineModeCategory";
+        this.AddCategory(LineModeCategory);
 
         void AddVariable(StateSave state, string name, object value)
         {
@@ -170,33 +297,6 @@ public abstract class TextBoxBaseVisual : InteractiveGue
                 Value = value
             });
         }
-
-        void AddTextBoxCategoryState(StateSave state, Color backgroundColor, Color textInstanceColor, bool isFocusedVisible, 
-            Color placeholderTextColor, Color selectionColor)
-        {
-            TextboxCategory.States.Add(state);
-            AddVariable(state, "Background.Color", backgroundColor);
-            AddVariable(state, "TextInstance.Color", textInstanceColor);
-            AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
-            AddVariable(state, "PlaceholderTextInstance.Color", placeholderTextColor);
-            AddVariable(state, "SelectionInstance.Color", selectionColor);
-        }
-
-        AddTextBoxCategoryState(States.Enabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, false, 
-            Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray);
-
-        AddTextBoxCategoryState(States.Disabled, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, false, 
-            Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray);
-
-        AddTextBoxCategoryState(States.Highlighted, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.White, false, 
-            Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray);
-
-        AddTextBoxCategoryState(States.Focused, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White, true, 
-            Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Accent);
-
-        LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-        LineModeCategory.Name = "LineModeCategory";
-        this.AddCategory(LineModeCategory);
 
         LineModeCategory.States.Add(States.SingleLineMode);
         AddVariable(States.SingleLineMode, "SelectionInstance.Height", -4f);
@@ -221,5 +321,15 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToChildren);
         AddVariable(States.MultiLineModeNoWrap, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
+    }
+
+    private void SetValuesForState(Color backgroundColor, Color foregroundColor, bool isFocusIndicatorVisible, 
+        Color placeholderColor, Color selectionColor)
+    {
+        Background.Color = backgroundColor;
+        TextInstance.Color = foregroundColor;
+        FocusedIndicator.Visible = isFocusIndicatorVisible;
+        PlaceholderTextInstance.Color = placeholderColor;
+        SelectionInstance.Color = selectionColor;
     }
 }

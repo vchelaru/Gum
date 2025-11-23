@@ -33,7 +33,7 @@ public class WindowVisual : InteractiveGue
     public Panel BorderLeftInstance { get; private set; }
     public Panel BorderRightInstance { get; private set; }
 
-    Color _backgroundColor = Styling.ActiveStyle.Colors.Primary;
+    Color _backgroundColor;
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -58,6 +58,8 @@ public class WindowVisual : InteractiveGue
         MinWidth = borderSize;
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";
