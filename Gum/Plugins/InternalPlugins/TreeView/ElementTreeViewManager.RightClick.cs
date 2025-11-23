@@ -431,22 +431,22 @@ public partial class ElementTreeViewManager
             null);
     }
 
-    private void HandlePaste(object sender, EventArgs e)
+    private void HandlePaste(object? sender, EventArgs e)
     {
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive);
     }
 
-    private void HandlePasteTopLevel(object sender, EventArgs e)
+    private void HandlePasteTopLevel(object? sender, EventArgs e)
     {
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top);
     }
 
-    private void HandleViewReferences(object sender, EventArgs e)
+    private void HandleViewReferences(object? sender, EventArgs e)
     {
         _dialogService.Show<DisplayReferencesDialog>(vm => vm.ElementSave = _selectedState.SelectedElement);
     }
 
-    private void HandleRenameFolder(object sender, EventArgs e)
+    private void HandleRenameFolder(object? sender, EventArgs e)
     {
         _dialogService.Show<RenameFolderDialogViewModel>(vm =>
         {
@@ -454,12 +454,12 @@ public partial class ElementTreeViewManager
         });
     }
 
-    private void HandleAddBehavior(object sender, EventArgs e)
+    private void HandleAddBehavior(object? sender, EventArgs e)
     {
         _editCommands.AddBehavior();
     }
 
-    private void HandleImportBehavior(object sender, EventArgs args)
+    private void HandleImportBehavior(object? sender, EventArgs args)
     {
         if (GuardProjectSaved("before importing behaviors"))
         {
@@ -467,7 +467,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    public void ImportScreenClick(object sender, EventArgs e)
+    public void ImportScreenClick(object? sender, EventArgs e)
     {
         if (GuardProjectSaved("before importing screens"))
         {
@@ -475,7 +475,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    public void ImportComponentsClick(object sender, EventArgs e)
+    public void ImportComponentsClick(object? sender, EventArgs e)
     {
         if (GuardProjectSaved("before importing components"))
         {
@@ -497,7 +497,7 @@ public partial class ElementTreeViewManager
     private void HandleAddLinkedComponentClick(object sender, EventArgs e)
     {
         ////////////////Early Out/////////////////////////
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave?.FullFileName))
         {
             _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
@@ -515,13 +515,13 @@ public partial class ElementTreeViewManager
         }
         ///////////End Another Early Out//////////////////////////
 
-        ComponentSave lastImportedComponent = null;
+        ComponentSave? lastImportedComponent = null;
 
         for (int i = 0; i < openFileDialog.FileNames.Length; ++i)
         {
             FilePath componentFilePath = openFileDialog.FileNames[i];
 
-            var gumProject = ObjectFinder.Self.GumProjectSave;
+            var gumProject = ObjectFinder.Self.GumProjectSave!;
             var gumProjectDirectory = new FilePath(gumProject.FullFileName).GetDirectoryContainingThis();
 
             var relative = FileManager.MakeRelative(componentFilePath.FullPath, gumProjectDirectory.FullPath);

@@ -79,11 +79,6 @@ namespace StateAnimationPlugin.Views
             _dialogService = Locator.GetRequiredService<IDialogService>();
         }
 
-
-        AnimationViewModel animationViewModel;
-
-
-
         private void InitializeTimer()
         {
         }
@@ -95,7 +90,7 @@ namespace StateAnimationPlugin.Views
                 throw new NullReferenceException("The ViewModel for this is invalid - set the DataContext on this view before showing it.");
             }
 
-            string whyIsntValid = null;
+            string? whyIsntValid = null;
 
             whyIsntValid = this.ViewModel.GetWhyAddingAnimationIsInvalid();
 

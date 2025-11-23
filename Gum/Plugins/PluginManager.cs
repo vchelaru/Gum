@@ -334,7 +334,7 @@ public class PluginManager
     internal void VariableDelete(ElementSave elementSave, string variableName) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
-    public void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+    public void VariableSet(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue)
     {
         CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
         CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, changedMember, oldValue), "VariableSet (Late)");

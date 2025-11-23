@@ -154,6 +154,42 @@ public class EditCommands : IEditCommands
         }
     }
 
+    public void SetSetValuesToDefault(StateSave stateSave, IStateContainer stateContainer)
+    {
+        var elementSave = stateContainer as ElementSave;
+        var category = _selectedState.SelectedStateCategorySave;
+        if(elementSave == null || category == null)
+        {
+            return;
+        }
+
+        using var undoLock = _undoManager.RequestLock();
+
+        var variables = stateSave.Variables
+            .ToArray();
+        stateSave.Clear();
+        foreach(var variable in variables)
+        {
+            var variableValue = variable.Value;
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(
+                variable.Name, elementSave, new List<StateSave> { stateSave });
+
+            var name = variable.Name;
+            InstanceSave? instance = null;
+            if(!string.IsNullOrEmpty(variable.SourceObject))
+            {
+                name = variable.GetRootName();
+                instance = elementSave.GetInstance(variable.SourceObject);
+            }
+
+            _pluginManager.VariableSet(elementSave, instance, name, variableValue);
+        }
+
+        _guiCommands.RefreshVariableValues();
+
+        _fileCommands.TryAutoSaveCurrentElement();
+    }
+
 
     #endregion
 
