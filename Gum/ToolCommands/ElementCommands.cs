@@ -128,7 +128,7 @@ public class ElementCommands : IElementCommands
 
         StateSave stateSave = new StateSave();
         stateSave.Name = name;
-        AddState(stateContainer, category, stateSave);
+        AddState(stateContainer!, category, stateSave);
 
         return stateSave;
     }

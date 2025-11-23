@@ -17,6 +17,8 @@ public interface IEditCommands
 
     void AskToRenameState(StateSave stateSave, IStateContainer stateContainer);
 
+    void SetSetValuesToDefault(StateSave stateSave, IStateContainer stateContainer);
+
     #endregion
 
     #region Category
