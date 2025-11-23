@@ -62,13 +62,14 @@ public class MainStatePlugin : InternalPlugin
         _objectFinder = ObjectFinder.Self;
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
         _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
+
+        stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,
+            selectedState);
     }
 
     public override void StartUp()
     {
         AssignEvents();
-
-        stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
         CreateNewStateTab();
 

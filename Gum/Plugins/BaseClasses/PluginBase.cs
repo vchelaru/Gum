@@ -104,7 +104,7 @@ public abstract class PluginBase : IPlugin
     /// [string] - name of the variable set. If an InstanceSave exists, this is the variable name on the instance without the instance name (the stripped name)
     /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
     /// </summary>
-    public event Action<ElementSave, InstanceSave, string, object>? VariableSet;
+    public event Action<ElementSave, InstanceSave?, string, object?>? VariableSet;
 
     /// <summary>
     /// Event raised after a variable has been set - this can be used to perform action after most 
@@ -114,7 +114,7 @@ public abstract class PluginBase : IPlugin
     /// [string] - name of the variable set 
     /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
     /// </summary>
-    public event Action<ElementSave, InstanceSave, string, object>? VariableSetLate;
+    public event Action<ElementSave, InstanceSave?, string, object?>? VariableSetLate;
     public event Action<IStateContainer, VariableSave>? VariableSelected;
 
     /// <summary>
@@ -399,10 +399,10 @@ public abstract class PluginBase : IPlugin
     public void CallVariableDelete(ElementSave elementSave, string variableName) =>
         VariableDelete?.Invoke(elementSave, variableName);
 
-    public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
+    public void CallVariableSet(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue) =>
         VariableSet?.Invoke(parentElement, instance, changedMember, oldValue);
 
-    public void CallVariableSetLate(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
+    public void CallVariableSetLate(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue) =>
         VariableSetLate?.Invoke(parentElement, instance, changedMember, oldValue);
 
     public void CallVariableSelected(IStateContainer container, VariableSave variable) =>

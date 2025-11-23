@@ -336,7 +336,7 @@ public class MainCodeOutputPlugin : PluginBase
         /////////////////////end early out/////////////////
 
         var instance = _selectedState.SelectedInstance;
-        var selectedElement = _selectedState.SelectedElement;
+        var selectedElement = _selectedState.SelectedElement!;
 
         viewModel.IsViewingStandardElement = selectedElement is StandardElementSave;
 
@@ -407,7 +407,7 @@ public class MainCodeOutputPlugin : PluginBase
         pluginTab.GotFocus += () => RefreshCodeDisplay();
     }
 
-    private void HandleMainViewModelPropertyChanged(string propertyName)
+    private void HandleMainViewModelPropertyChanged(string? propertyName)
     {
         /////////////////Early Out////////////////////
         if(GumState.Self.ProjectState.GumProjectSave == null)

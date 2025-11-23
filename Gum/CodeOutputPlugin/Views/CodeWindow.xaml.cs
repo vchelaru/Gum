@@ -271,7 +271,7 @@ public partial class CodeWindow : UserControl
             if (CodeOutputProjectSettings != null)
             {
                 CodeOutputProjectSettings.CommonUsingStatements = (string)args.Value;
-                CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
 
