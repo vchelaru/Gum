@@ -59,7 +59,6 @@ public class WindowVisual : InteractiveGue
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-
         Background = new NineSliceRuntime();
         Background.Name = "Background";
         Background.X = 0;
@@ -155,14 +154,12 @@ public class WindowVisual : InteractiveGue
         BorderRightInstance.X = borderSize;
         BorderRightInstance.Width = borderSize;
         BorderRightInstance.Height = 0;
+        this.AddChild(BorderRightInstance);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         // Allow the Border drag effect to work outside of this container
         this.RaiseChildrenEventsOutsideOfBounds = true; 
 
-        //SetCustomCursorForResizing();
-
-        this.AddChild(BorderRightInstance);
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
         if (tryCreateFormsObject)
         {
