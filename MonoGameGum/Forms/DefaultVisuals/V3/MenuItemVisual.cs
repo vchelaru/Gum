@@ -2,7 +2,6 @@
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
-using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -10,6 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if RAYLIB
+using Raylib_cs;
+
+#else
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
@@ -109,7 +115,6 @@ public class MenuItemVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.Visible = true;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
@@ -131,7 +136,6 @@ public class MenuItemVisual : InteractiveGue
         TextInstance.Dock(Gum.Wireframe.Dock.Left);
         TextInstance.X = 0;
         TextInstance.Y = 0;
-        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         TextInstance.Width = 2;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;

@@ -1,12 +1,17 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
+
+#if RAYLIB
+using Raylib_cs;
+
+#else
+using Microsoft.Xna.Framework;
+#endif
 
 
 namespace Gum.Forms.DefaultVisuals.V3;
@@ -238,7 +243,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Visible = false;
         this.AddChild(FocusedIndicator);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         SelectionColor = Styling.ActiveStyle.Colors.Accent;
         ForegroundColor = Styling.ActiveStyle.Colors.White;
         PlaceholderColor = Styling.ActiveStyle.Colors.Gray;
@@ -256,25 +261,25 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextboxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), ForegroundColor, false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor, true, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, true, PlaceholderColor, SelectionColor);
         };
 
 

@@ -26,7 +26,7 @@ namespace Gum.Forms.DefaultVisuals.V3;
 public class RadioButtonVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
-    public SpriteRuntime InnerCheck { get; private set; }
+    public SpriteRuntime Radio { get; private set; }
     public TextRuntime TextInstance { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
 
@@ -53,10 +53,61 @@ public class RadioButtonVisual : InteractiveGue
 
     public StateSaveCategory RadioButtonCategory { get; private set; }
 
+
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _foregroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
+    Color _radioColor;
+    public Color RadioColor
+    {
+        get => _radioColor;
+        set
+        {
+            if (value != _radioColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _radioColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        Height = 32;
         Width = 128;
+        Height = 24;
 
         States = new RadioButtonCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
@@ -73,31 +124,30 @@ public class RadioButtonVisual : InteractiveGue
         Background.Height = 24;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        Background.Color = Styling.ActiveStyle.Colors.Primary;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.CircleBordered);
         this.AddChild(Background);
 
-        InnerCheck = new SpriteRuntime();
-        InnerCheck.Name = "InnerCheck";
-        InnerCheck.Width = 100;
-        InnerCheck.Height = 100;
-        InnerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        InnerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        InnerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        InnerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        InnerCheck.XOrigin = HorizontalAlignment.Center;
-        InnerCheck.YOrigin = VerticalAlignment.Center;
-        InnerCheck.Color = Styling.ActiveStyle.Colors.White;
-        InnerCheck.Texture = uiSpriteSheetTexture;
-        InnerCheck.ApplyState(Styling.ActiveStyle.Icons.Circle2);
-        Background.Children.Add(InnerCheck);
+        // TOOL uses Elements/Icon, which contains an IconSprite that uses the same values (100 and PercentOfSourceFile)
+        Radio = new SpriteRuntime();
+        Radio.Name = "InnerCheck";
+        Radio.Width = 100;
+        Radio.Height = 100;
+        Radio.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        Radio.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        Radio.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        Radio.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        Radio.XOrigin = HorizontalAlignment.Center;
+        Radio.YOrigin = VerticalAlignment.Center;
+        Radio.Texture = uiSpriteSheetTexture;
+        Radio.ApplyState(Styling.ActiveStyle.Icons.Circle2);
+        Background.Children.Add(Radio);
 
         TextInstance = new TextRuntime();
         TextInstance.Name = "TextInstance";
         TextInstance.X = 0;
-        TextInstance.Y = 0;
         TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        TextInstance.Y = 0;
         TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         TextInstance.XOrigin = HorizontalAlignment.Right;
         TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -105,6 +155,8 @@ public class RadioButtonVisual : InteractiveGue
         TextInstance.Height = 0;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        TextInstance.Text = "Radio Label";
+        TextInstance.VerticalAlignment = VerticalAlignment.Center;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         this.AddChild(TextInstance);
 
@@ -130,52 +182,121 @@ public class RadioButtonVisual : InteractiveGue
         RadioButtonCategory.Name = "RadioButtonCategory";
         this.AddCategory(RadioButtonCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        RadioColor = Styling.ActiveStyle.Colors.White;
 
-        void AddState(StateSave state, Color backgroundColor,
-            Color textColor, Color checkColor, bool isFocused, bool checkVisible)
-        {
-            RadioButtonCategory.States.Add(state);
-            AddVariable(state, "InnerCheck.Visible", checkVisible);
-            AddVariable(state, "InnerCheck.Color", checkColor);
-            AddVariable(state, "Background.Color", backgroundColor);
-            AddVariable(state, "FocusedIndicator.Visible", isFocused);
-            AddVariable(state, "TextInstance.Color", textColor);
-        }
-
-        AddState(States.EnabledOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true);
-        AddState(States.EnabledOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false);
-
-        AddState(States.DisabledOn, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, true);
-        AddState(States.DisabledOff, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false, false);
-
-        AddState(States.DisabledFocusedOn, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, true);
-        AddState(States.DisabledFocusedOff, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true, false);
-
-        AddState(States.FocusedOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true);
-        AddState(States.FocusedOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, false);
-
-        AddState(States.HighlightedOn, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true);
-        AddState(States.HighlightedOff, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false);
-
-        AddState(States.HighlightedFocusedOn, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, true);
-        AddState(States.HighlightedFocusedOff, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true, false);
-
-        // PER V1 comment: // dark looks weird so staying with normal primary. This matches the default template
-        AddState(States.PushedOn, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, true);
-        AddState(States.PushedOff, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, false, false);
+        DefineDynamicStyleChanges();
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new RadioButton(this);
         }
     }
+
+
+    private void DefineDynamicStyleChanges()
+    {
+        // Enabled (On/Off)
+        RadioButtonCategory.States.Add(States.EnabledOn);
+        States.EnabledOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, RadioColor, false, true);
+        };
+
+        RadioButtonCategory.States.Add(States.EnabledOff);
+        States.EnabledOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, RadioColor, false, false);
+        };
+
+        // Disabled (On/Off)
+        RadioButtonCategory.States.Add(States.DisabledOn);
+        States.DisabledOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), RadioColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, true);
+        };
+
+        RadioButtonCategory.States.Add(States.DisabledOff);
+        States.DisabledOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), RadioColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, false);
+        };
+
+        // Disabled Focused (On/Off)
+        RadioButtonCategory.States.Add(States.DisabledFocusedOn);
+        States.DisabledFocusedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), RadioColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, true);
+        };
+
+        RadioButtonCategory.States.Add(States.DisabledFocusedOff);
+        States.DisabledFocusedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), RadioColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, false);
+        };
+
+        // Focused (On/Off)
+        RadioButtonCategory.States.Add(States.FocusedOn);
+        States.FocusedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, RadioColor, true, true);
+        };
+
+        RadioButtonCategory.States.Add(States.FocusedOff);
+        States.FocusedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor, ForegroundColor, RadioColor, true, false);
+        };
+
+        // Highlighted (On/Off)
+        RadioButtonCategory.States.Add(States.HighlightedOn);
+        States.HighlightedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, RadioColor, false, true);
+        };
+
+        RadioButtonCategory.States.Add(States.HighlightedOff);
+        States.HighlightedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, RadioColor, false, false);
+        };
+
+        // Highlighted Focused (On/Off)
+        RadioButtonCategory.States.Add(States.HighlightedFocusedOn);
+        States.HighlightedFocusedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, RadioColor, true, true);
+        };
+
+        RadioButtonCategory.States.Add(States.HighlightedFocusedOff);
+        States.HighlightedFocusedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, RadioColor, true, false);
+        };
+
+        // Pushed (On/Off)
+        RadioButtonCategory.States.Add(States.PushedOn);
+        States.PushedOn.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), ForegroundColor, RadioColor, false, true);
+        };
+
+        RadioButtonCategory.States.Add(States.PushedOff);
+        States.PushedOff.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), ForegroundColor, RadioColor, false, false);
+        };
+    }
+
+    private void SetValuesForState(Color checkboxBackgroundColor, Color textColor, Color radioColor, bool isFocused, bool radioVisible)
+    {
+        Background.Color = checkboxBackgroundColor;
+        TextInstance.Color = textColor;
+        Radio.Color = radioColor;
+        Radio.Visible = radioVisible;
+        FocusedIndicator.Visible = isFocused;
+    }
+
     public RadioButton FormsControl => FormsControlAsObject as RadioButton;
 }
