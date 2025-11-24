@@ -202,9 +202,9 @@ public class ComboBoxVisual : InteractiveGue
         //AddState(States.Disabled, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false);
         //AddState(States.DisabledFocused, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true);
         //AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
-        AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
-        AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
-        AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
+        //AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
+        //AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
+        //AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
 
         DefineDynamicStyleChanges();
 
@@ -216,49 +216,53 @@ public class ComboBoxVisual : InteractiveGue
 
     private void DefineDynamicStyleChanges()
     {
-        // Some named constants vs magic values
-        const float darker = -0.25f;
-        const float lighter = 0.25f;
-        const float greyScaleDarker = -0.30f;
-        const float greyScaleLighter = 0.30f;
-        const float greyScaleSuperDark = -0.50f;
-
-        Color _backgroundColor = BackgroundColor.ToGreyscale().Adjust(greyScaleSuperDark);
-
         ComboBoxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(_backgroundColor, BackgroundColor, ForegroundColor, false);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor, ForegroundColor, false);
         };
 
         ComboBoxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(_backgroundColor, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), false);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), false);
         };
 
         ComboBoxCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(_backgroundColor, BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), true);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), true);
         };
 
         ComboBoxCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(_backgroundColor, ForegroundColor, ForegroundColor, true);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, ForegroundColor, true);
         };
 
-        ComboBoxCategory.States.Add(States.Focused);
-        States.Focused.Apply = () =>
+        ComboBoxCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
         {
-            SetValuesForState(_backgroundColor, ForegroundColor, ForegroundColor, true);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, ForegroundColor, true);
         };
 
-        //AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
-        //AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
-        //AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
-        //AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
+        ComboBoxCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), false);
+        };
+
+        ComboBoxCategory.States.Add(States.HighlightedFocused);
+        States.HighlightedFocused.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), true);
+        };
+
+        ComboBoxCategory.States.Add(States.Pushed);
+        States.Pushed.Apply = () =>
+        {
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), true);
+        };
 
     }
 

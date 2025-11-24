@@ -155,12 +155,6 @@ public class ButtonVisual : InteractiveGue
     // the BackgroundColor and the ForegroundColor
     private void DefineDynamicStyleChanges()
     {
-        // Some named constants vs magic values
-        const float darker = -0.25f;
-        const float lighter = 0.25f;
-        const float greyScaleDarker = -0.30f;
-        const float greyScaleLighter = 0.30f;
-
         ButtonCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
@@ -170,25 +164,26 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), false);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
+                , ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), false);
         };
 
         ButtonCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, false);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, false);
         };
 
         ButtonCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(darker), ForegroundColor, false);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), ForegroundColor, false);
         };
 
         ButtonCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, true);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, true);
         };
 
         ButtonCategory.States.Add(States.Focused);
@@ -200,7 +195,8 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(greyScaleDarker), ForegroundColor.ToGreyscale().Adjust(greyScaleDarker), true);
+            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
+                , ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), true);
         };
     }
 

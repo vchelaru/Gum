@@ -132,6 +132,13 @@ public class Colors
     public Color Warning { get; set; } = new Color(232, 171, 25);
     public Color Danger { get; set; } = new Color(212, 18, 41);
     public Color Accent { get; set; } = new Color(140, 48, 138);
+
+    // These are utilized in the V3 controls to "shade" or "highlight" controls parts dynamically
+    public float PercentDarken = -25f;
+    public float PercentLighten = 25f;
+    public float PercentGreyScaleDarken = -35f;
+    public float PercentGreyScaleLighten = 30f;
+    public float PercentGreyScaleSuperDarken = -50f;
 }
 
 
@@ -440,12 +447,12 @@ public static class ColorExtensions
 {
     /// <summary>
     /// Lightens (positive amount) or darkens (negative amount) a color.
-    /// amount = -1 to +1.  Example: -0.3f = 30% darker, +0.2f = 20% lighter.
+    /// amount = -100% to +100%.  Example: -30f = 30% darker, +20f = 20% lighter.
     /// </summary>
     public static Color Adjust(this Color color, float amount)
     {
-        // Clamp amount to [-1, 1]
-        amount = MathHelper.Clamp(amount, -1f, 1f);
+        // Clamp amount / 100 to [-1, 1]
+        amount = MathHelper.Clamp(amount / 100, -1f, 1f);
 
         float r = color.R;
         float g = color.G;
