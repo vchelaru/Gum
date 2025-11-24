@@ -32,7 +32,9 @@ The following code shows how to load all animations, create the AnimatedScreen, 
 
 {% tabs %}
 {% tab title="Using Generated Code" %}
-<pre class="language-cs"><code class="lang-cs">public class Game1 : Game
+<pre class="language-cs"><code class="lang-cs">using Gum.Wireframe; // for PlayAnimation extension method
+
+public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     GumService GumUI => GumService.Default;
@@ -95,7 +97,8 @@ The following code shows how to load all animations, create the AnimatedScreen, 
 {% endtab %}
 
 {% tab title="No Generated Code" %}
-<pre class="language-csharp"><code class="lang-csharp">using MonoGameGum; // needed for ToGraphicalUiElement() extension method
+<pre class="language-csharp"><code class="lang-csharp">using Gum.Wireframe; // for PlayAnimation extension method
+using MonoGameGum; // needed for ToGraphicalUiElement() extension method
 
 public class Game1 : Game
 {
