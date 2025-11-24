@@ -111,7 +111,6 @@ public class ComboBoxVisual : InteractiveGue
         Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0f;
         Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = Styling.ActiveStyle.Colors.DarkGray;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);

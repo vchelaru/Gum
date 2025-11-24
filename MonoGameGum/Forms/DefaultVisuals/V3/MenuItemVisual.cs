@@ -34,13 +34,64 @@ public class MenuItemVisual : InteractiveGue
 
     public StateSaveCategory MenuItemCategory { get; private set; }
 
+
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _foregroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
+    Color _submenuIndicatorColor;
+    public Color SubmenuIndicatorColor
+    {
+        get => _submenuIndicatorColor;
+        set
+        {
+            if (value != _submenuIndicatorColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _submenuIndicatorColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public MenuItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         X = 0;
         Y = 0;
-        Width = 6;
+        Width = 0;
         WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        Height = 3;
+        Height = 0;
         HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
         States = new MenuItemCategoryStates();
@@ -78,13 +129,13 @@ public class MenuItemVisual : InteractiveGue
         TextInstance.Name = "TextInstance";
         TextInstance.Text = "Menu Item";
         TextInstance.Dock(Gum.Wireframe.Dock.Left);
-        TextInstance.X = 4;
+        TextInstance.X = 0;
         TextInstance.Y = 0;
         TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         TextInstance.Width = 2;
         TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        TextInstance.Height = 2;
+        TextInstance.Height = 0;
         TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ContainerInstance.AddChild(TextInstance);
 
@@ -92,46 +143,83 @@ public class MenuItemVisual : InteractiveGue
         SubmenuIndicatorInstance.Name = "SubmenuIndicatorInstance";
         SubmenuIndicatorInstance.Dock(Gum.Wireframe.Dock.Left);
         SubmenuIndicatorInstance.X = 8;
-        SubmenuIndicatorInstance.Height = 0f;
-        SubmenuIndicatorInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        SubmenuIndicatorInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-        SubmenuIndicatorInstance.Text = @">";
+        SubmenuIndicatorInstance.Y = 0;
+        SubmenuIndicatorInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+        SubmenuIndicatorInstance.YOrigin = VerticalAlignment.Center;
         SubmenuIndicatorInstance.Width = 2f;
         SubmenuIndicatorInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-
+        SubmenuIndicatorInstance.Height = 0f;
+        SubmenuIndicatorInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        SubmenuIndicatorInstance.Text = @">";
+        SubmenuIndicatorInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         ContainerInstance.AddChild(SubmenuIndicatorInstance);
 
         MenuItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         MenuItemCategory.Name = "MenuItemCategory";
         this.AddCategory(MenuItemCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        SubmenuIndicatorColor = Styling.ActiveStyle.Colors.White;
 
-        void AddState(StateSave state, bool isBackgroundVisible, Color backgroundColor, Color textInstanceColor)
-        {
-            MenuItemCategory.States.Add(state);
-            AddVariable(state, "Background.Visible", isBackgroundVisible);
-            AddVariable(state, "Background.Color", backgroundColor);
-            AddVariable(state, "TextInstance.Color", textInstanceColor);
-        }
-
-        AddState(States.Enabled, false, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White);
-        AddState(States.Disabled, false, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.Gray);
-        AddState(States.Highlighted, true, Styling.ActiveStyle.Colors.LightGray, Styling.ActiveStyle.Colors.White);
-        AddState(States.Selected, true, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White);
-        AddState(States.Focused, false, Styling.ActiveStyle.Colors.DarkGray, Styling.ActiveStyle.Colors.White);
+        DefineDynamicStyleChanges();
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new MenuItem(this);
         }
+    }
+
+
+    private void DefineDynamicStyleChanges()
+    {
+        MenuItemCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor // background is hidden, set to any value
+                , ForegroundColor
+                , SubmenuIndicatorColor);
+        };
+
+        MenuItemCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor // background is hidden, set to any value
+                , ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
+                , SubmenuIndicatorColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        MenuItemCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
+        {
+            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten)
+                , ForegroundColor
+                , SubmenuIndicatorColor);
+        };
+
+        MenuItemCategory.States.Add(States.Selected);
+        States.Selected.Apply = () =>
+        {
+            SetValuesForState(true, BackgroundColor
+                , ForegroundColor
+                , SubmenuIndicatorColor);
+        };
+
+        MenuItemCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(false, BackgroundColor // background is hidden, set to any value
+                , ForegroundColor
+                , SubmenuIndicatorColor);
+        };
+    }
+
+    private void SetValuesForState(bool isBackgroundVisible, Color backgroundColor, Color foregroundColor, Color submenuIndicatorColor)
+    {
+        Background.Visible = isBackgroundVisible;
+        Background.Color = backgroundColor;
+        TextInstance.Color = foregroundColor;
+        SubmenuIndicatorInstance.Color = submenuIndicatorColor;
     }
 
     public override object FormsControlAsObject 
