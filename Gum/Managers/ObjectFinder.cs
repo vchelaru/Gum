@@ -886,7 +886,7 @@ namespace Gum.Managers
             return instance;
         }
 
-        public string GetDefaultChildName(InstanceSave targetInstance, StateSave stateSave = null)
+        public string GetDefaultChildName(InstanceSave targetInstance, StateSave? stateSave = null)
         {
             string defaultChild = null;
             // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property

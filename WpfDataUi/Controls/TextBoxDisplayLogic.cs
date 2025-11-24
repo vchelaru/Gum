@@ -337,7 +337,21 @@ namespace WpfDataUi.Controls
                                 // computer settings use commas
                                 try
                                 {
-                                    value = converter.ConvertFromString(usableString);
+                                    if(usableString == "-0" && (InstancePropertyType == typeof(float) || InstancePropertyType == typeof(double)))
+                                    {
+                                        if(InstancePropertyType == typeof(float))
+                                        {
+                                            value = 0f;
+                                        }
+                                        else
+                                        {
+                                            value = 0.0;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        value = converter.ConvertFromString(usableString);
+                                    }
                                     result = ApplyValueResult.Success;
                                 }
                                 catch (NotSupportedException)

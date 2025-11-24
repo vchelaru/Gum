@@ -453,7 +453,7 @@ public class CopyPasteLogic
         return toReturn;
     }
 
-    public void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
+    public void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave? selectedInstance)
     {
         if (targetElement is StandardElementSave)
         {
@@ -461,7 +461,7 @@ public class CopyPasteLogic
             return;
         }
 
-        if (LastPastedInstances.Contains(selectedInstance))
+        if (selectedInstance != null && LastPastedInstances.Contains(selectedInstance))
         {
             selectedInstance = selectedInstance?.GetParentInstance();
         }
@@ -546,7 +546,7 @@ public class CopyPasteLogic
 
         foreach (var sourceInstance in instancesToCopy)
         {
-            ElementSave sourceElement = sourceInstance.ParentContainer;
+            var sourceElement = sourceInstance.ParentContainer;
 
             var isPastingInNewElement = sourceElement != targetElement;
             var isSelectedInstancePartOfCopied = selectedInstance != null && instancesToCopy.Any(item =>
