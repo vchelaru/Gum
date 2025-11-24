@@ -66,8 +66,6 @@ public class ListBoxVisual : InteractiveGue
         States = new ListBoxCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-
         Background = new NineSliceRuntime();
         Background.Name = "Background";
         Background.X = 0f;
@@ -167,6 +165,8 @@ public class ListBoxVisual : InteractiveGue
         ListBoxCategory = new StateSaveCategory();
         ListBoxCategory.Name = "ListBoxCategory";
         this.AddCategory(ListBoxCategory);
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
         DefineDynamicStyleChanges();
 

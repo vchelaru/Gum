@@ -78,9 +78,6 @@ public class ListBoxItemVisual : InteractiveGue
         States = new ListBoxItemCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
-
         Background = new NineSliceRuntime();
         Background.Name = "Background";
         Background.X = 0f;
@@ -135,6 +132,9 @@ public class ListBoxItemVisual : InteractiveGue
         ListBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         ListBoxItemCategory.Name = "ListBoxItemCategory";
         this.AddCategory(ListBoxItemCategory);
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
 
         DefineDynamicStyleChanges();
 

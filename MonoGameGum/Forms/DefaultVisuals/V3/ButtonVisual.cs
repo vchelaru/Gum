@@ -82,9 +82,6 @@ public class ButtonVisual : InteractiveGue
         States = new ButtonCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
-
         Background = new NineSliceRuntime();
         Background.X = 0;
         Background.Y = 0;
@@ -141,6 +138,9 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         ButtonCategory.Name = "ButtonCategory";
         this.AddCategory(ButtonCategory);
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
 
         DefineDynamicStyleChanges();
 

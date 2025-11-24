@@ -99,9 +99,6 @@ public class ComboBoxVisual : InteractiveGue
         States = new ComboBoxCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
-
         Background = new NineSliceRuntime();
         Background.Name = "Background";
         Background.X = 0f;
@@ -181,30 +178,8 @@ public class ComboBoxVisual : InteractiveGue
         ComboBoxCategory.Name = "ComboBoxCategory";
         this.AddCategory(ComboBoxCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
-
-        void AddState(StateSave state, Color dropdownIndicatorColor, Color textInstanceColor, bool isFocusedVisible)
-        {
-            ComboBoxCategory.States.Add(state);
-            AddVariable(state, "DropdownIndicator.Color", dropdownIndicatorColor);
-            AddVariable(state, "TextInstance.Color", textInstanceColor);
-            AddVariable(state, "FocusedIndicator.Visible", isFocusedVisible);
-        }
-
-        //AddState(States.Enabled, Styling.ActiveStyle.Colors.Primary, Styling.ActiveStyle.Colors.White, false);
-        //AddState(States.Disabled, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, false);
-        //AddState(States.DisabledFocused, Styling.ActiveStyle.Colors.Gray, Styling.ActiveStyle.Colors.Gray, true);
-        //AddState(States.Focused, Styling.ActiveStyle.Colors.White, Styling.ActiveStyle.Colors.White, true);
-        //AddState(States.Highlighted, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, false);
-        //AddState(States.HighlightedFocused, Styling.ActiveStyle.Colors.PrimaryLight, Styling.ActiveStyle.Colors.PrimaryLight, true);
-        //AddState(States.Pushed, Styling.ActiveStyle.Colors.PrimaryDark, Styling.ActiveStyle.Colors.PrimaryDark, false);
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
 
         DefineDynamicStyleChanges();
 

@@ -93,9 +93,6 @@ public class CheckBoxVisual : InteractiveGue
         States = new CheckBoxCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
-
         CheckBoxBackground = new NineSliceRuntime();
         CheckBoxBackground.Width = 24;
         CheckBoxBackground.Height = 24;
@@ -160,6 +157,9 @@ public class CheckBoxVisual : InteractiveGue
         CheckboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         CheckboxCategory.Name = "CheckBoxCategory";
         this.AddCategory(CheckboxCategory);
+
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        ForegroundColor = Styling.ActiveStyle.Colors.White;
 
         DefineDynamicStyleChanges();
 
