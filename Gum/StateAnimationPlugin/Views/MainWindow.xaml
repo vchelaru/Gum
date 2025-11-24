@@ -180,7 +180,7 @@
             <TextBlock
               Margin="8,0,0,0"
               VerticalAlignment="Center"
-              Text="Animations" />
+              Text="{Binding AnimationColumnTitle}" />
             <Button
               Grid.Column="1"
               Padding="4"

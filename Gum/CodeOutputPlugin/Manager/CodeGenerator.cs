@@ -478,7 +478,7 @@ public class CodeGenerator
         return className;
     }
 
-    public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
+    public static string? GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
         string? inheritance = null;
         if (element is ScreenSave)
