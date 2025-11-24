@@ -83,12 +83,12 @@ namespace CodeOutputPlugin.Manager
         public string GetClassHeader(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
             var visualApi = _codeGenerator.GetVisualApiForElement(element);
-            string inheritance = "";
+            string inheritance = string.Empty;
             
             
             if(projectSettings.InheritanceLocation == InheritanceLocation.InCustomCode)
             {
-                inheritance = CodeGenerator.GetInheritance(element, projectSettings);
+                inheritance = CodeGenerator.GetInheritance(element, projectSettings) ?? string.Empty;
             }
 
             var context = new CodeGenerationContext();

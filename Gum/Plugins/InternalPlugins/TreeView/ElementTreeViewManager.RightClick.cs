@@ -208,7 +208,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void HandleDeleteFolder(object sender, EventArgs e)
+    void HandleDeleteFolder(object? sender, EventArgs e)
     {
         var treeNode = _selectedState.SelectedTreeNode;
 
@@ -287,7 +287,7 @@ public partial class ElementTreeViewManager
 
                 mMenuStrip.Items.Add("-");
 
-                mAddInstance.Text = "Add object to " + _selectedState.SelectedElement.Name;
+                mAddInstance.Text = "Add object to " + _selectedState.SelectedElement!.Name;
                 mMenuStrip.Items.Add(mAddInstance);
                 mMenuStrip.Items.Add(mSaveObject);
                 if (_selectedState.SelectedScreen != null)
@@ -296,7 +296,7 @@ public partial class ElementTreeViewManager
                 }
                 else
                 {
-                    duplicateElement.Text = $"Duplicate {_selectedState.SelectedComponent.Name}";
+                    duplicateElement.Text = $"Duplicate {_selectedState.SelectedComponent!.Name}";
                 }
                 mMenuStrip.Items.Add(duplicateElement);
 
