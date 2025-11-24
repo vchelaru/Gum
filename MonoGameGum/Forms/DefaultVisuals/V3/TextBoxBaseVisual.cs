@@ -253,12 +253,6 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
     private void DefineDynamicStyleChanges()
     {
-        // Some named constants vs magic values
-        const float darker = -0.25f;
-        const float lighter = 0.25f;
-        const float greyScaleDarker = -0.30f;
-        const float greyScaleLighter = 0.30f;
-
         TextboxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
@@ -268,13 +262,13 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextboxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor.Adjust(darker), false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor, ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(lighter), ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Focused);
