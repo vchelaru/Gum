@@ -165,9 +165,12 @@ public class ElementAnimationsViewModel : ViewModel
 
     public ElementSave Element
     {
-        get;
-        set;
+        get => Get<ElementSave>();
+        set => Set(value);
     }
+
+    [DependsOn(nameof(Element))]
+    public string AnimationColumnTitle => Element == null ? "No Element Selected" : $"{Element.Name} Animations";
 
     public ElementAnimationsSave BackingData { get; private set; }
 

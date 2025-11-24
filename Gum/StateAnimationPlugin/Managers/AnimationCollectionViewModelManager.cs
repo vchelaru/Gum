@@ -36,7 +36,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         _animationVmFactory = () => new(_nameVerifier, dialogService);
     }
 
-    public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
+    public ElementAnimationsViewModel? GetAnimationCollectionViewModel(ElementSave? element)
     {
         if(element == null)
         {

@@ -411,7 +411,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void CreateViewModel()
     {
-        ElementSave currentlyReferencedElement = null;
+        ElementSave? currentlyReferencedElement = null;
         if (_viewModel != null)
         {
             currentlyReferencedElement = _viewModel.Element;
@@ -453,7 +453,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
-    private void HandleAnimatedKeyframePropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void HandleAnimatedKeyframePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         switch (e.PropertyName)
         {
