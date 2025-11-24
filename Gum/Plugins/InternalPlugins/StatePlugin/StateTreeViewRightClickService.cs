@@ -94,7 +94,7 @@ public class StateTreeViewRightClickService
                     AddMenuItem("Rename [" + _selectedState.SelectedStateSave.Name + "]", RenameStateClick);
                     AddMenuItem("Delete [" + _selectedState.SelectedStateSave.Name + "]", DeleteStateClick);
                     AddMenuItem("Duplicate [" + _selectedState.SelectedStateSave.Name + "]", DuplicateStateClick);
-                    AddMenuItem("Assign [" + _selectedState.SelectedStateSave.Name + "] variables to default", AssignToDefault);
+                    AddMenuItem("Set [" + _selectedState.SelectedStateSave.Name + "] variables to default", AssignToDefault);
 
                     AddMoveToCategoryItems();
 
