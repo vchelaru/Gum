@@ -38,6 +38,23 @@ public class SliderVisual : InteractiveGue
 
     public StateSaveCategory SliderCategory { get; private set; }
 
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _backgroundColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
 
@@ -61,14 +78,16 @@ public class SliderVisual : InteractiveGue
 
         TrackBackground = new NineSliceRuntime();
         TrackBackground.Name = "TrackBackground";
+        TrackBackground.X = 0;
+        TrackBackground.XUnits = GeneralUnitType.PixelsFromMiddle;
         TrackBackground.Y = 0;
         TrackBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
+        TrackBackground.XOrigin = HorizontalAlignment.Center;
         TrackBackground.YOrigin = VerticalAlignment.Center;
         TrackBackground.Width = 0f;
         TrackBackground.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TrackBackground.Height = 8f;
         TrackBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        TrackBackground.Color = Styling.ActiveStyle.Colors.DarkGray;
         TrackBackground.Texture = uiSpriteSheetTexture;
         TrackBackground.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         TrackInstance.AddChild(TrackBackground);
@@ -81,8 +100,8 @@ public class SliderVisual : InteractiveGue
         ThumbInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         ThumbInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         ThumbInstance.Width = sliderButtonWidth;
-        ThumbInstance.Height = 24f;
-        ThumbInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        ThumbInstance.Height = 0f;
+        ThumbInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TrackInstance.AddChild(ThumbInstance);
 
         FocusedIndicator = new NineSliceRuntime();
@@ -107,43 +126,68 @@ public class SliderVisual : InteractiveGue
         SliderCategory.Name = "SliderCategory";
         this.AddCategory(SliderCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
+        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
-        SliderCategory.States.Add(States.Disabled);
-        AddVariable(States.Disabled, "FocusedIndicator.Visible", false);
-        AddVariable(States.Disabled, "ThumbInstance.IsEnabled", false);
+        DefineDynamicStyleChanges();
 
-        SliderCategory.States.Add(States.DisabledFocused);
-        AddVariable(States.DisabledFocused, "FocusedIndicator.Visible", true);
-        AddVariable(States.DisabledFocused, "ThumbInstance.IsEnabled", false);
-
-        SliderCategory.States.Add(States.Enabled);
-        AddVariable(States.Enabled, "FocusedIndicator.Visible", false);
-        AddVariable(States.Enabled, "ThumbInstance.IsEnabled", true);
-
-        SliderCategory.States.Add(States.Focused);
-        AddVariable(States.Focused, "FocusedIndicator.Visible", true);
-
-        SliderCategory.States.Add(States.Highlighted);
-        AddVariable(States.Highlighted, "FocusedIndicator.Visible", false);
-
-        SliderCategory.States.Add(States.HighlightedFocused);
-        AddVariable(States.HighlightedFocused, "FocusedIndicator.Visible", true);
-
-        SliderCategory.States.Add(States.Pushed);
-        AddVariable(States.Pushed, "FocusedIndicator.Visible", false);
-
-        if(tryCreateFormsObject)
+        if (tryCreateFormsObject)
         {
             FormsControlAsObject = new Controls.Slider(this);
         }
+    }
+
+
+    private void DefineDynamicStyleChanges()
+    {
+        // Enabled (On/Off)
+        SliderCategory.States.Add(States.Enabled);
+        States.Enabled.Apply = () =>
+        {
+            SetValuesForState(false, true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        SliderCategory.States.Add(States.Disabled);
+        States.Disabled.Apply = () =>
+        {
+            SetValuesForState(false, false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        SliderCategory.States.Add(States.DisabledFocused);
+        States.DisabledFocused.Apply = () =>
+        {
+            SetValuesForState(true, false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        SliderCategory.States.Add(States.Focused);
+        States.Focused.Apply = () =>
+        {
+            SetValuesForState(true, false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        SliderCategory.States.Add(States.Highlighted);
+        States.Highlighted.Apply = () =>
+        {
+            SetValuesForState(false, true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        SliderCategory.States.Add(States.HighlightedFocused);
+        States.HighlightedFocused.Apply = () =>
+        {
+            SetValuesForState(true, true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+
+        SliderCategory.States.Add(States.Pushed);
+        States.Pushed.Apply = () =>
+        {
+            SetValuesForState(false, true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+        };
+    }
+
+    private void SetValuesForState(bool isFocused, bool isEnabled, Color backgroundColor)
+    {
+        TrackBackground.Color = backgroundColor;
+        FocusedIndicator.Visible = isFocused;
+        ThumbInstance.IsEnabled = isEnabled;
     }
 
     public Controls.Slider FormsControl => FormsControlAsObject as Controls.Slider;
