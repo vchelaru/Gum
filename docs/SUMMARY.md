@@ -226,6 +226,7 @@
   * [Common Control Events](code/events-and-interactivity/common-control-events.md)
   * [Troubleshooting Events](code/events-and-interactivity/troubleshooting-events.md)
   * [Tabbing (Moving Focus)](code/events-and-interactivity/tabbing-moving-focus.md)
+  * [Scrolling](code/events-and-interactivity/scrolling.md)
   * [Gamepad Support](code/events-and-interactivity/gamepad-support.md)
   * [Keyboard Support](code/events-and-interactivity/keyboard-support.md)
 * [Standard Visuals](code/standard-visuals/README.md)
