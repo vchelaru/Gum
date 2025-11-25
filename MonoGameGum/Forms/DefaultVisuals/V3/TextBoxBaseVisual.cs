@@ -245,7 +245,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
         BackgroundColor = Styling.ActiveStyle.Colors.BoxBackground;
         SelectionColor = Styling.ActiveStyle.Colors.Accent;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
         PlaceholderColor = Styling.ActiveStyle.Colors.Gray;
         CaretColor = Styling.ActiveStyle.Colors.Primary;
 

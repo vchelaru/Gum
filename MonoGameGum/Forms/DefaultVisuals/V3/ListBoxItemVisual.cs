@@ -134,7 +134,7 @@ public class ListBoxItemVisual : InteractiveGue
         this.AddCategory(ListBoxItemCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
 
         DefineDynamicStyleChanges();
 

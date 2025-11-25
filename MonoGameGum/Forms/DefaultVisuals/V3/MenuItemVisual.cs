@@ -163,8 +163,8 @@ public class MenuItemVisual : InteractiveGue
         this.AddCategory(MenuItemCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
-        SubmenuIndicatorColor = Styling.ActiveStyle.Colors.White;
+        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
+        SubmenuIndicatorColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
 
         DefineDynamicStyleChanges();
 
