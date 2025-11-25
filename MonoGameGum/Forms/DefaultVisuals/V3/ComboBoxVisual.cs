@@ -144,7 +144,6 @@ public class ComboBoxVisual : InteractiveGue
         TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Strong);
         this.AddChild(TextInstance);
 
@@ -191,8 +190,8 @@ public class ComboBoxVisual : InteractiveGue
         ComboBoxCategory.Name = "ComboBoxCategory";
         this.AddCategory(ComboBoxCategory);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        BackgroundColor = Styling.ActiveStyle.Colors.BoxBackground;
+        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
         DropdownIndicatorColor = Styling.ActiveStyle.Colors.Primary;
 
         DefineDynamicStyleChanges();

@@ -113,7 +113,6 @@ public class ButtonVisual : InteractiveGue
         TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         TextInstance.HorizontalAlignment = HorizontalAlignment.Center;
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
-        TextInstance.Color = Styling.ActiveStyle.Colors.White;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         this.AddChild(TextInstance);
 
@@ -140,7 +139,7 @@ public class ButtonVisual : InteractiveGue
         this.AddCategory(ButtonCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
 
         DefineDynamicStyleChanges();
 

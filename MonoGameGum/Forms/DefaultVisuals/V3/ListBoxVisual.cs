@@ -166,7 +166,7 @@ public class ListBoxVisual : InteractiveGue
         ListBoxCategory.Name = "ListBoxCategory";
         this.AddCategory(ListBoxCategory);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
+        BackgroundColor = Styling.ActiveStyle.Colors.BoxBackground;
 
         DefineDynamicStyleChanges();
 

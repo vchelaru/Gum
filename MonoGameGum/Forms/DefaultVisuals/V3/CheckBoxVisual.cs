@@ -159,7 +159,7 @@ public class CheckBoxVisual : InteractiveGue
         this.AddCategory(CheckboxCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.White;
+        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
 
         DefineDynamicStyleChanges();
 

@@ -120,18 +120,23 @@ public class Styling
 
 public class Colors
 {
+    // Concrete colors:
     public Color Black { get; set; } = new Color(0, 0, 0);
     public Color DarkGray { get; set; } = new Color(70, 70, 80);
     public Color Gray { get; set; } = new Color(130, 130, 130);
     public Color LightGray { get; set; } = new Color(170, 170, 170);
     public Color White { get; set; } = new Color(255, 255, 255);
-    public Color PrimaryDark { get; set; } = new Color(4, 120, 137);
+
+    // Abstract colors by function:
     public Color Primary { get; set; } = new Color(6, 159, 177);
-    public Color PrimaryLight { get; set; } = new Color(74, 180, 193);
     public Color Success { get; set; } = new Color(62, 167, 48);
     public Color Warning { get; set; } = new Color(232, 171, 25);
     public Color Danger { get; set; } = new Color(212, 18, 41);
     public Color Accent { get; set; } = new Color(140, 48, 138);
+    public Color BoxBackground { get; set; } = new Color(74, 74, 74);
+
+    public Color ForegroundTextColor { get; set; } = new Color(255, 255, 255);
+
 
     // These are utilized in the V3 controls to "shade" or "highlight" controls parts dynamically
     public float PercentDarken = -25f;
