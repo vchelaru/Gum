@@ -141,6 +141,10 @@ public class ScrollViewer :
         }
     }
 
+    /// <inheritdoc cref="Gum.Forms.Controls.Primitives.RangeBase.SmallChange"/>
+    /// <remarks>
+    /// This property sets the SmallChange value for both vertical and horizontal scroll bars.
+    /// </remarks>
     public double SmallChange
     {
         get => verticalScrollBar.SmallChange;

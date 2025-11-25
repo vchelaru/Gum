@@ -213,7 +213,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    public string? Placeholder
+    public virtual string? Placeholder
     {
         get => placeholderTextObject?.RawText;
         set
