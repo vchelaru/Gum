@@ -243,7 +243,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Visible = false;
         this.AddChild(FocusedIndicator);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
         SelectionColor = Styling.ActiveStyle.Colors.Accent;
         ForegroundColor = Styling.ActiveStyle.Colors.White;
         PlaceholderColor = Styling.ActiveStyle.Colors.Gray;
@@ -261,25 +261,25 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextboxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor, ForegroundColor, false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), ForegroundColor, false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, true, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor, ForegroundColor, true, PlaceholderColor, SelectionColor);
         };
 
 

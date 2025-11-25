@@ -166,7 +166,7 @@ public class ListBoxVisual : InteractiveGue
         ListBoxCategory.Name = "ListBoxCategory";
         this.AddCategory(ListBoxCategory);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
 
         DefineDynamicStyleChanges();
 
@@ -182,43 +182,43 @@ public class ListBoxVisual : InteractiveGue
         ListBoxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, BackgroundColor);
         };
 
         ListBoxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
         };
 
         ListBoxCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(true, BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
         };
 
         ListBoxCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(true, BackgroundColor);
         };
 
         ListBoxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten));
         };
 
         ListBoxCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(true, BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten));
         };
 
         ListBoxCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(false, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
         };
 
     }

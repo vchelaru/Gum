@@ -477,7 +477,7 @@ public static class ColorExtensions
         return new Color((byte)r, (byte)g, (byte)b, color.A);
     }
 
-    public static Color ToGreyscale(this Color color)
+    public static Color ToGrayscale(this Color color)
     {
         // Standard luminance calculation
         float gray =

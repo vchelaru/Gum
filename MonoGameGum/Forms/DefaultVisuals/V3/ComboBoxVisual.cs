@@ -76,6 +76,20 @@ public class ComboBoxVisual : InteractiveGue
         }
     }
 
+    Color _dropdownIndicatorColor;
+    public Color DropdownIndicatorColor
+    {
+        get => _dropdownIndicatorColor;
+        set
+        {
+            if (value != _dropdownIndicatorColor)
+            {
+                _dropdownIndicatorColor = value;
+                FormsControl?.UpdateState();
+            }
+        }
+    }
+
     public class ComboBoxCategoryStates
     {
         public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
@@ -177,8 +191,9 @@ public class ComboBoxVisual : InteractiveGue
         ComboBoxCategory.Name = "ComboBoxCategory";
         this.AddCategory(ComboBoxCategory);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        BackgroundColor = Styling.ActiveStyle.Colors.DarkGray;
         ForegroundColor = Styling.ActiveStyle.Colors.White;
+        DropdownIndicatorColor = Styling.ActiveStyle.Colors.Primary;
 
         DefineDynamicStyleChanges();
 
@@ -193,49 +208,49 @@ public class ComboBoxVisual : InteractiveGue
         ComboBoxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor, ForegroundColor, false);
+            SetValuesForState(BackgroundColor, DropdownIndicatorColor, ForegroundColor, false);
         };
 
         ComboBoxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), false);
+            SetValuesForState(BackgroundColor, DropdownIndicatorColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), false);
         };
 
         ComboBoxCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), true);
+            SetValuesForState(BackgroundColor, DropdownIndicatorColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), true);
         };
 
         ComboBoxCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, ForegroundColor, true);
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, true);
         };
 
         ComboBoxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor, ForegroundColor, true);
+            SetValuesForState(BackgroundColor, ForegroundColor, ForegroundColor, true);
         };
 
         ComboBoxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), false);
+            SetValuesForState(BackgroundColor, DropdownIndicatorColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), false);
         };
 
         ComboBoxCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), true);
+            SetValuesForState(BackgroundColor, DropdownIndicatorColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), true);
         };
 
         ComboBoxCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), true);
+            SetValuesForState(BackgroundColor, DropdownIndicatorColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), true);
         };
 
     }

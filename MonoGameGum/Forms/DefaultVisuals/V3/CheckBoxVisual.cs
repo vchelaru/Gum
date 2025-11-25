@@ -194,38 +194,38 @@ public class CheckBoxVisual : InteractiveGue
         CheckboxCategory.States.Add(States.DisabledOn);
         States.DisabledOn.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, true, Styling.ActiveStyle.Icons.Check);
+            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, true, Styling.ActiveStyle.Icons.Check);
         };
 
         CheckboxCategory.States.Add(States.DisabledOff);
         States.DisabledOff.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, false, Styling.ActiveStyle.Icons.Check);
+            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, false, Styling.ActiveStyle.Icons.Check);
         };
 
         CheckboxCategory.States.Add(States.DisabledIndeterminate);
         States.DisabledIndeterminate.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, true, Styling.ActiveStyle.Icons.Dash);
+            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), false, true, Styling.ActiveStyle.Icons.Dash);
         };
 
         // Disabled Focused (On/Off/Indeterminate)
         CheckboxCategory.States.Add(States.DisabledFocusedOn);
         States.DisabledFocusedOn.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, true, Styling.ActiveStyle.Icons.Check);
+            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, true, Styling.ActiveStyle.Icons.Check);
         };
 
         CheckboxCategory.States.Add(States.DisabledFocusedOff);
         States.DisabledFocusedOff.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, false, Styling.ActiveStyle.Icons.Check);
+            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, false, Styling.ActiveStyle.Icons.Check);
         };
 
         CheckboxCategory.States.Add(States.DisabledFocusedIndeterminate);
         States.DisabledFocusedIndeterminate.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, true, Styling.ActiveStyle.Icons.Dash);
+            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleSuperDarken), true, true, Styling.ActiveStyle.Icons.Dash);
         };
 
         // Focused (On/Off/Indeterminate)

@@ -189,14 +189,14 @@ public class MenuItemVisual : InteractiveGue
         States.Disabled.Apply = () =>
         {
             SetValuesForState(false, BackgroundColor // background is hidden, set to any value
-                , ForegroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
-                , SubmenuIndicatorColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+                , ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
+                , SubmenuIndicatorColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
         };
 
         MenuItemCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(true, BackgroundColor.ToGreyscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten)
+            SetValuesForState(true, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten)
                 , ForegroundColor
                 , SubmenuIndicatorColor);
         };
