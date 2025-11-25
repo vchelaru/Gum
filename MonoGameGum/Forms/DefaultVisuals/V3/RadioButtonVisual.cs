@@ -25,7 +25,7 @@ namespace Gum.Forms.DefaultVisuals.V3;
 
 public class RadioButtonVisual : InteractiveGue
 {
-    public NineSliceRuntime Background { get; private set; }
+    public NineSliceRuntime RadioBackground { get; private set; }
     public SpriteRuntime Radio { get; private set; }
     public TextRuntime TextInstance { get; private set; }
     public NineSliceRuntime FocusedIndicator { get; private set; }
@@ -112,21 +112,21 @@ public class RadioButtonVisual : InteractiveGue
         States = new RadioButtonCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        Background = new NineSliceRuntime();
-        Background.Name = "Background";
-        Background.X = 0;
-        Background.Y = 0;
-        Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        Background.XOrigin = HorizontalAlignment.Left;
-        Background.YOrigin = VerticalAlignment.Center;
-        Background.Width = 24;
-        Background.Height = 24;
-        Background.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        Background.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        Background.Texture = uiSpriteSheetTexture;
-        Background.ApplyState(Styling.ActiveStyle.NineSlice.CircleBordered);
-        this.AddChild(Background);
+        RadioBackground = new NineSliceRuntime();
+        RadioBackground.Name = "Background";
+        RadioBackground.X = 0;
+        RadioBackground.Y = 0;
+        RadioBackground.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        RadioBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        RadioBackground.XOrigin = HorizontalAlignment.Left;
+        RadioBackground.YOrigin = VerticalAlignment.Center;
+        RadioBackground.Width = 24;
+        RadioBackground.Height = 24;
+        RadioBackground.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        RadioBackground.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        RadioBackground.Texture = uiSpriteSheetTexture;
+        RadioBackground.ApplyState(Styling.ActiveStyle.NineSlice.CircleBordered);
+        this.AddChild(RadioBackground);
 
         // TOOL uses Elements/Icon, which contains an IconSprite that uses the same values (100 and PercentOfSourceFile)
         Radio = new SpriteRuntime();
@@ -141,7 +141,7 @@ public class RadioButtonVisual : InteractiveGue
         Radio.YOrigin = VerticalAlignment.Center;
         Radio.Texture = uiSpriteSheetTexture;
         Radio.ApplyState(Styling.ActiveStyle.Icons.Circle2);
-        Background.Children.Add(Radio);
+        RadioBackground.Children.Add(Radio);
 
         TextInstance = new TextRuntime();
         TextInstance.Name = "TextInstance";
@@ -291,7 +291,7 @@ public class RadioButtonVisual : InteractiveGue
 
     private void SetValuesForState(Color checkboxBackgroundColor, Color textColor, Color radioColor, bool isFocused, bool radioVisible)
     {
-        Background.Color = checkboxBackgroundColor;
+        RadioBackground.Color = checkboxBackgroundColor;
         TextInstance.Color = textColor;
         Radio.Color = radioColor;
         Radio.Visible = radioVisible;
