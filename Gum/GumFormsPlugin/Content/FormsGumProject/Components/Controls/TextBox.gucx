@@ -325,7 +325,7 @@
       <Type>string</Type>
       <Name>PlaceholderTextInstance.Text</Name>
       <Value xsi:type="xsd:string">Text Placeholder</Value>
-      <ExposedAsName>PlaceholderText</ExposedAsName>
+      <ExposedAsName>Placeholder</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

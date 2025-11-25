@@ -1248,7 +1248,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>MultiLineTextBox.PlaceholderText</Name>
+      <Name>MultiLineTextBox.Placeholder</Name>
       <Value xsi:type="xsd:string">Multi-line text box</Value>
       <SetsValue>true</SetsValue>
     </Variable>
