@@ -1,4 +1,5 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
@@ -142,14 +143,14 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         Background.Name = "Background";
         Background.X = 0;
         Background.Y = 0;
-        Background.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        Background.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        Background.XUnits = GeneralUnitType.PixelsFromMiddle;
+        Background.YUnits = GeneralUnitType.PixelsFromMiddle;
         Background.XOrigin = HorizontalAlignment.Center;
         Background.YOrigin = VerticalAlignment.Center;
         Background.Width = 0;
         Background.Height = 0;
-        Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        Background.WidthUnits = DimensionUnitType.RelativeToParent;
+        Background.HeightUnits = DimensionUnitType.RelativeToParent;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
@@ -163,11 +164,11 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         SelectionInstance = new NineSliceRuntime();
         SelectionInstance.Name = "SelectionInstance";
         SelectionInstance.Height = -4f;
-        SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        SelectionInstance.HeightUnits = DimensionUnitType.RelativeToParent;
         SelectionInstance.Width = 7f;
-        SelectionInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        SelectionInstance.WidthUnits = DimensionUnitType.Absolute;
         SelectionInstance.X = 15f;
-        SelectionInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        SelectionInstance.XOrigin = HorizontalAlignment.Left;
         SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
         SelectionInstance.Y = 0f;
         SelectionInstance.Texture = uiSpriteSheetTexture;
@@ -180,13 +181,13 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
         TextInstance.Y = 0f;
         TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-        TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        TextInstance.XOrigin = HorizontalAlignment.Left;
+        TextInstance.YOrigin = VerticalAlignment.Center;
         TextInstance.Width = 0f;
-        TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        TextInstance.WidthUnits = DimensionUnitType.RelativeToChildren;
         TextInstance.Height = -4f;
-        TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        TextInstance.HeightUnits = DimensionUnitType.RelativeToParent;
+        TextInstance.HorizontalAlignment = HorizontalAlignment.Left;
         TextInstance.VerticalAlignment = VerticalAlignment.Center;
         TextInstance.ApplyState(Styling.ActiveStyle.Text.Normal);
         TextInstance.Text = "";
@@ -198,12 +199,12 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
         PlaceholderTextInstance.Y = 0f;
         PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-        PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-        PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        PlaceholderTextInstance.XOrigin = HorizontalAlignment.Left;
+        PlaceholderTextInstance.YOrigin = VerticalAlignment.Center;
         PlaceholderTextInstance.Width = -8f;
-        PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        PlaceholderTextInstance.WidthUnits = DimensionUnitType.RelativeToParent;
         PlaceholderTextInstance.Height = -4f;
-        PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        PlaceholderTextInstance.HeightUnits = DimensionUnitType.RelativeToParent;
         PlaceholderTextInstance.Text = "Text Placeholder";
         PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
         ClipContainer.AddChild(PlaceholderTextInstance);
@@ -211,17 +212,17 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         CaretInstance = new SpriteRuntime();
         CaretInstance.Name = "CaretInstance";
         CaretInstance.Height = 18f;
-        CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        CaretInstance.HeightUnits = DimensionUnitType.Absolute;
         CaretInstance.Texture = uiSpriteSheetTexture;
         CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
         CaretInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         CaretInstance.Width = 1f;
-        CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        CaretInstance.WidthUnits = DimensionUnitType.Absolute;
         CaretInstance.X = 4f;
-        CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        CaretInstance.XOrigin = HorizontalAlignment.Left;
         CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
         CaretInstance.Y = 0f;
-        CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        CaretInstance.YOrigin = VerticalAlignment.Center;
         CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         ClipContainer.AddChild(CaretInstance);
 
@@ -230,14 +231,14 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.X = 0;
         FocusedIndicator.Y = 2;
-        FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        FocusedIndicator.XUnits = GeneralUnitType.PixelsFromMiddle;
+        FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
         FocusedIndicator.XOrigin = HorizontalAlignment.Center;
         FocusedIndicator.YOrigin = VerticalAlignment.Top;
         FocusedIndicator.Width = 0;
         FocusedIndicator.Height = 2;
-        FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        FocusedIndicator.WidthUnits = DimensionUnitType.RelativeToParent;
+        FocusedIndicator.HeightUnits = DimensionUnitType.Absolute;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
@@ -249,7 +250,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         PlaceholderColor = Styling.ActiveStyle.Colors.TextMuted;
         CaretColor = Styling.ActiveStyle.Colors.Primary;
 
-        TextboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        TextboxCategory = new StateSaveCategory();
         TextboxCategory.Name = CategoryName;
         this.AddCategory(TextboxCategory);
 
@@ -286,7 +287,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
 
 
-        LineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+        LineModeCategory = new StateSaveCategory();
         LineModeCategory.Name = "LineModeCategory";
         this.AddCategory(LineModeCategory);
 
@@ -301,25 +302,25 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
         LineModeCategory.States.Add(States.SingleLineMode);
         AddVariable(States.SingleLineMode, "SelectionInstance.Height", -4f);
-        AddVariable(States.SingleLineMode, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToParent);
+        AddVariable(States.SingleLineMode, "SelectionInstance.HeightUnits", DimensionUnitType.RelativeToParent);
         AddVariable(States.SingleLineMode, "TextInstance.Width", 0f);
-        AddVariable(States.SingleLineMode, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+        AddVariable(States.SingleLineMode, "TextInstance.WidthUnits", DimensionUnitType.RelativeToChildren);
         AddVariable(States.SingleLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Center);
         AddVariable(States.SingleLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Center);
 
         LineModeCategory.States.Add(States.MultiLineMode);
         AddVariable(States.MultiLineMode, "SelectionInstance.Height", 20f);
-        AddVariable(States.MultiLineMode, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.Absolute);
+        AddVariable(States.MultiLineMode, "SelectionInstance.HeightUnits", DimensionUnitType.Absolute);
         AddVariable(States.MultiLineMode, "TextInstance.Width", -8f);
-        AddVariable(States.MultiLineMode, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToParent);
+        AddVariable(States.MultiLineMode, "TextInstance.WidthUnits", DimensionUnitType.RelativeToParent);
         AddVariable(States.MultiLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
         AddVariable(States.MultiLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
 
         LineModeCategory.States.Add(States.MultiLineModeNoWrap);
         AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.Height", 20f);
-        AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.HeightUnits", global::Gum.DataTypes.DimensionUnitType.Absolute);
+        AddVariable(States.MultiLineModeNoWrap, "SelectionInstance.HeightUnits", DimensionUnitType.Absolute);
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.Width", 0f);
-        AddVariable(States.MultiLineModeNoWrap, "TextInstance.WidthUnits", global::Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+        AddVariable(States.MultiLineModeNoWrap, "TextInstance.WidthUnits", DimensionUnitType.RelativeToChildren);
         AddVariable(States.MultiLineModeNoWrap, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
     }
