@@ -26,7 +26,7 @@ public class LabelVisual : TextRuntime
             WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             Height = 0;
             HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            this.Color = Styling.ActiveStyle.Colors.ForegroundTextColor;
+            this.Color = Styling.ActiveStyle.Colors.TextPrimary;
 
             this.ApplyState(Styling.ActiveStyle.Text.Normal);
         }

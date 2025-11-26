@@ -173,8 +173,8 @@ public class CheckBoxVisual : InteractiveGue
         this.AddCategory(CheckboxCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
-        CheckColor = Styling.ActiveStyle.Colors.NeuntralIconColor;
+        ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
+        CheckColor = Styling.ActiveStyle.Colors.IconDefault;
 
         DefineDynamicStyleChanges();
 

@@ -133,11 +133,11 @@ public class Colors
     public Color Warning { get; set; } = new Color(232, 171, 25);
     public Color Danger { get; set; } = new Color(212, 18, 41);
     public Color Accent { get; set; } = new Color(140, 48, 138);
-    public Color InputBackgroundColor { get; set; } = new Color(74, 74, 74);
-    public Color ElevatedBackgroundColor { get; set; } = new Color(130, 130, 130);
-    public Color NeuntralIconColor { get; set; } = new Color(255, 255, 255);
-    public Color ForegroundTextColor { get; set; } = new Color(255, 255, 255);
-    public Color SecondaryTextColor { get; set; } = new Color(130, 130, 130);
+    public Color InputBackground { get; set; } = new Color(74, 74, 74);
+    public Color SurfaceVariant { get; set; } = new Color(130, 130, 130);
+    public Color IconDefault { get; set; } = new Color(255, 255, 255);
+    public Color TextPrimary { get; set; } = new Color(255, 255, 255);
+    public Color TextMuted { get; set; } = new Color(130, 130, 130);
 
 
     // These are utilized in the V3 controls to "shade" or "highlight" controls parts dynamically

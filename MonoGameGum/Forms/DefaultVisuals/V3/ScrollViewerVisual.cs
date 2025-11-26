@@ -81,7 +81,7 @@ public class ScrollViewerVisual : InteractiveGue
             Background.Y = 0f;
             Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-            Background.Color = Styling.ActiveStyle.Colors.InputBackgroundColor;
+            Background.Color = Styling.ActiveStyle.Colors.InputBackground;
             Background.Texture = uiSpriteSheetTexture;
             Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
             this.AddChild(Background);

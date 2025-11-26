@@ -183,8 +183,8 @@ public class RadioButtonVisual : InteractiveGue
         this.AddCategory(RadioButtonCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
-        RadioColor = Styling.ActiveStyle.Colors.NeuntralIconColor;
+        ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
+        RadioColor = Styling.ActiveStyle.Colors.IconDefault;
 
         DefineDynamicStyleChanges();
 

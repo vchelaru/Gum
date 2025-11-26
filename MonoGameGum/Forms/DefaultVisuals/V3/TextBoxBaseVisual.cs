@@ -243,10 +243,10 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Visible = false;
         this.AddChild(FocusedIndicator);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.InputBackgroundColor;
+        BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
         SelectionColor = Styling.ActiveStyle.Colors.Accent;
-        ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
-        PlaceholderColor = Styling.ActiveStyle.Colors.SecondaryTextColor;
+        ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
+        PlaceholderColor = Styling.ActiveStyle.Colors.TextMuted;
         CaretColor = Styling.ActiveStyle.Colors.Primary;
 
         TextboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
