@@ -133,16 +133,18 @@ public class Colors
     public Color Warning { get; set; } = new Color(232, 171, 25);
     public Color Danger { get; set; } = new Color(212, 18, 41);
     public Color Accent { get; set; } = new Color(140, 48, 138);
-    public Color BoxBackground { get; set; } = new Color(74, 74, 74);
+    public Color InputBackgroundColor { get; set; } = new Color(74, 74, 74);
+
+    public Color NeuntralIconColor { get; set; } = new Color(255, 255, 255);
 
     public Color ForegroundTextColor { get; set; } = new Color(255, 255, 255);
 
 
     // These are utilized in the V3 controls to "shade" or "highlight" controls parts dynamically
-    public float PercentDarken = -25f;
-    public float PercentLighten = 25f;
+    public float PercentDarken = -15f;
+    public float PercentLighten = 15f;
     public float PercentGreyScaleDarken = -35f;
-    public float PercentGreyScaleLighten = 30f;
+    public float PercentGreyScaleLighten = 20f;
     public float PercentGreyScaleSuperDarken = -50f;
 }
 

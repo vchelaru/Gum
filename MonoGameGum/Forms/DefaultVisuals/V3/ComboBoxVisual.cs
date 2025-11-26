@@ -190,7 +190,7 @@ public class ComboBoxVisual : InteractiveGue
         ComboBoxCategory.Name = "ComboBoxCategory";
         this.AddCategory(ComboBoxCategory);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.BoxBackground;
+        BackgroundColor = Styling.ActiveStyle.Colors.InputBackgroundColor;
         ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
         DropdownIndicatorColor = Styling.ActiveStyle.Colors.Primary;
 

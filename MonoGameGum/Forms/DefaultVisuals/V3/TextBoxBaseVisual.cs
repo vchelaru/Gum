@@ -243,7 +243,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Visible = false;
         this.AddChild(FocusedIndicator);
 
-        BackgroundColor = Styling.ActiveStyle.Colors.BoxBackground;
+        BackgroundColor = Styling.ActiveStyle.Colors.InputBackgroundColor;
         SelectionColor = Styling.ActiveStyle.Colors.Accent;
         ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
         PlaceholderColor = Styling.ActiveStyle.Colors.Gray;

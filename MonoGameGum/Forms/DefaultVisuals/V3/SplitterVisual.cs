@@ -29,7 +29,7 @@ public class SplitterVisual : InteractiveGue
         Background = new NineSliceRuntime();
         Background.Name = "Background";
         Background.Dock(Gum.Wireframe.Dock.Fill);
-        Background.Color = Styling.ActiveStyle.Colors.BoxBackground;
+        Background.Color = Styling.ActiveStyle.Colors.InputBackgroundColor;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
