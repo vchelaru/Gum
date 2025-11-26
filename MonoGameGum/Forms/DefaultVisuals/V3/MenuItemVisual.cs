@@ -41,32 +41,32 @@ public class MenuItemVisual : InteractiveGue
     public StateSaveCategory MenuItemCategory { get; private set; }
 
 
-    Color _highlightedColor;
-    public Color HighlightedColor
+    Color _highlightedBackgroundColor;
+    public Color HighlightedBackgroundColor
     {
-        get => _highlightedColor;
+        get => _highlightedBackgroundColor;
         set
         {
-            if (value != _highlightedColor)
+            if (value != _highlightedBackgroundColor)
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
-                _highlightedColor = value;
+                _highlightedBackgroundColor = value;
                 FormsControl?.UpdateState();
             }
         }
     }
 
-    Color _selectedColor;
-    public Color SelectedColor
+    Color _selectedBackgroundColor;
+    public Color SelectedBackgroundColor
     {
-        get => _selectedColor;
+        get => _selectedBackgroundColor;
         set
         {
-            if(value != _selectedColor)
+            if(value != _selectedBackgroundColor)
             {
-                _selectedColor = value;
+                _selectedBackgroundColor = value;
                 FormsControl?.UpdateState();
             }
         }
@@ -177,8 +177,8 @@ public class MenuItemVisual : InteractiveGue
         MenuItemCategory.Name = "MenuItemCategory";
         this.AddCategory(MenuItemCategory);
 
-        HighlightedColor = Styling.ActiveStyle.Colors.Accent;
-        SelectedColor = Styling.ActiveStyle.Colors.Primary;
+        HighlightedBackgroundColor = Styling.ActiveStyle.Colors.Accent;
+        SelectedBackgroundColor = Styling.ActiveStyle.Colors.Primary;
 
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
         SubmenuIndicatorColor = Styling.ActiveStyle.Colors.TextPrimary;
@@ -197,7 +197,7 @@ public class MenuItemVisual : InteractiveGue
         MenuItemCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(false, HighlightedColor // background is hidden, set to any value
+            SetValuesForState(false, HighlightedBackgroundColor // background is hidden, set to any value
                 , ForegroundColor
                 , SubmenuIndicatorColor);
         };
@@ -205,7 +205,7 @@ public class MenuItemVisual : InteractiveGue
         MenuItemCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(false, HighlightedColor // background is hidden, set to any value
+            SetValuesForState(false, HighlightedBackgroundColor // background is hidden, set to any value
                 , ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
                 , SubmenuIndicatorColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
         };
@@ -213,7 +213,7 @@ public class MenuItemVisual : InteractiveGue
         MenuItemCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(true, HighlightedColor
+            SetValuesForState(true, HighlightedBackgroundColor
                 , ForegroundColor
                 , SubmenuIndicatorColor);
         };
@@ -221,7 +221,7 @@ public class MenuItemVisual : InteractiveGue
         MenuItemCategory.States.Add(States.Selected);
         States.Selected.Apply = () =>
         {
-            SetValuesForState(true, SelectedColor
+            SetValuesForState(true, SelectedBackgroundColor
                 , ForegroundColor
                 , SubmenuIndicatorColor);
         };
@@ -229,7 +229,7 @@ public class MenuItemVisual : InteractiveGue
         MenuItemCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(false, HighlightedColor // background is hidden, set to any value
+            SetValuesForState(false, HighlightedBackgroundColor // background is hidden, set to any value
                 , ForegroundColor
                 , SubmenuIndicatorColor);
         };

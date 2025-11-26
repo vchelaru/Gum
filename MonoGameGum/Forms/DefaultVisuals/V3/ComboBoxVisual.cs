@@ -90,6 +90,20 @@ public class ComboBoxVisual : InteractiveGue
         }
     }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
+
     public class ComboBoxCategoryStates
     {
         public StateSave Enabled { get; set; } = new StateSave() { Name = FrameworkElement.EnabledStateName };
@@ -164,7 +178,6 @@ public class ComboBoxVisual : InteractiveGue
         DropdownIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         DropdownIndicator.Rotation = -90;
         DropdownIndicator.Texture = uiSpriteSheetTexture;
-        DropdownIndicator.Color = Styling.ActiveStyle.Colors.Primary;
         DropdownIndicator.ApplyState(Styling.ActiveStyle.Icons.Arrow2);
         this.AddChild(DropdownIndicator);
 
@@ -183,7 +196,6 @@ public class ComboBoxVisual : InteractiveGue
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         ComboBoxCategory = new StateSaveCategory();
@@ -193,6 +205,7 @@ public class ComboBoxVisual : InteractiveGue
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
         DropdownIndicatorColor = Styling.ActiveStyle.Colors.Primary;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         DefineDynamicStyleChanges();
 

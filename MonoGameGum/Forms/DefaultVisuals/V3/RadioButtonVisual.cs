@@ -104,6 +104,20 @@ public class RadioButtonVisual : InteractiveGue
         }
     }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
+
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 128;
@@ -175,7 +189,6 @@ public class RadioButtonVisual : InteractiveGue
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         RadioButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
@@ -185,6 +198,7 @@ public class RadioButtonVisual : InteractiveGue
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
         RadioColor = Styling.ActiveStyle.Colors.IconDefault;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         DefineDynamicStyleChanges();
 

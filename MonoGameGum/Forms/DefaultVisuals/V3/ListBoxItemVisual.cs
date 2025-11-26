@@ -40,29 +40,29 @@ public class ListBoxItemVisual : InteractiveGue
 
     public StateSaveCategory ListBoxItemCategory { get; private set; }
 
-    Color _highlightedColor;
-    public Color HighlightedColor
+    Color _highlightedBackgroundColor;
+    public Color HighlightedBackgroundColor
     {
-        get => _highlightedColor;
+        get => _highlightedBackgroundColor;
         set
         {
-            if (value != _highlightedColor)
+            if (value != _highlightedBackgroundColor)
             {
-                _highlightedColor = value;
+                _highlightedBackgroundColor = value;
                 FormsControl?.UpdateState();
             }
         }
     }
 
-    Color _selectedColor;
-    public Color SelectedColor
+    Color _selectedBackgroundColor;
+    public Color SelectedBackgroundColor
     {
-        get => _selectedColor;
+        get => _selectedBackgroundColor;
         set
         {
-            if (value != _selectedColor)
+            if (value != _selectedBackgroundColor)
             {
-                _selectedColor = value;
+                _selectedBackgroundColor = value;
                 FormsControl?.UpdateState();
             }
         }
@@ -82,6 +82,19 @@ public class ListBoxItemVisual : InteractiveGue
         }
     }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
 
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
@@ -139,7 +152,6 @@ public class ListBoxItemVisual : InteractiveGue
         FocusedIndicator.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.Height = 2f;
         FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         this.AddChild(FocusedIndicator);
@@ -148,9 +160,10 @@ public class ListBoxItemVisual : InteractiveGue
         ListBoxItemCategory.Name = "ListBoxItemCategory";
         this.AddCategory(ListBoxItemCategory);
 
-        HighlightedColor = Styling.ActiveStyle.Colors.Accent;
-        SelectedColor = Styling.ActiveStyle.Colors.Primary;
+        HighlightedBackgroundColor = Styling.ActiveStyle.Colors.Accent;
+        SelectedBackgroundColor = Styling.ActiveStyle.Colors.Primary;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         DefineDynamicStyleChanges();
 
@@ -165,32 +178,32 @@ public class ListBoxItemVisual : InteractiveGue
         ListBoxItemCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(false, false, ForegroundColor, HighlightedColor);
+            SetValuesForState(false, false, ForegroundColor, HighlightedBackgroundColor);
         };
 
         ListBoxItemCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(true, false, ForegroundColor, HighlightedColor);
+            SetValuesForState(true, false, ForegroundColor, HighlightedBackgroundColor);
         };
 
         ListBoxItemCategory.States.Add(States.Selected);
         States.Selected.Apply = () =>
         {
-            SetValuesForState(true, false, ForegroundColor, SelectedColor); // TODO: Discuss how to approach this.
+            SetValuesForState(true, false, ForegroundColor, SelectedBackgroundColor); // TODO: Discuss how to approach this.
         };
 
         ListBoxItemCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(false, true, ForegroundColor, SelectedColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, true, ForegroundColor, SelectedBackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
         };
 
         ListBoxItemCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
             SetValuesForState(false, false, ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), 
-                HighlightedColor);
+                HighlightedBackgroundColor);
         };
     }
 

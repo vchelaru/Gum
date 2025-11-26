@@ -55,16 +55,30 @@ public class SliderVisual : InteractiveGue
         }
     }
 
-    Color _trackColor;
-    public Color TrackColor
+    Color _trackBackgroundColor;
+    public Color TrackBackgroundColor
     {
-        get => _trackColor;
+        get => _trackBackgroundColor;
         set
         {
-            if (value != _trackColor)
+            if (value != _trackBackgroundColor)
             {
-                _trackColor = value;
+                _trackBackgroundColor = value;
                 TrackBackground.Color = value;
+            }
+        }
+    }
+
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
             }
         }
     }
@@ -120,7 +134,6 @@ public class SliderVisual : InteractiveGue
 
         FocusedIndicator = new NineSliceRuntime();
         FocusedIndicator.Name = "FocusedIndicator";
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.X = 0;
         FocusedIndicator.Y = 2;
         FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
@@ -141,7 +154,8 @@ public class SliderVisual : InteractiveGue
         this.AddCategory(SliderCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        TrackColor = Styling.ActiveStyle.Colors.InputBackground;
+        TrackBackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         DefineDynamicStyleChanges();
 
@@ -158,43 +172,43 @@ public class SliderVisual : InteractiveGue
         SliderCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(false, true, TrackColor);
+            SetValuesForState(false, true, TrackBackgroundColor);
         };
 
         SliderCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(false, false, TrackColor);
+            SetValuesForState(false, false, TrackBackgroundColor);
         };
 
         SliderCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(true, false, TrackColor);
+            SetValuesForState(true, false, TrackBackgroundColor);
         };
 
         SliderCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(true, false, TrackColor);
+            SetValuesForState(true, false, TrackBackgroundColor);
         };
 
         SliderCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(false, true, TrackColor);
+            SetValuesForState(false, true, TrackBackgroundColor);
         };
 
         SliderCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(true, true, TrackColor);
+            SetValuesForState(true, true, TrackBackgroundColor);
         };
 
         SliderCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(false, true, TrackColor);
+            SetValuesForState(false, true, TrackBackgroundColor);
         };
     }
 

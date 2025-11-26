@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+
 
 
 #if RAYLIB
@@ -39,7 +41,33 @@ public class ScrollViewerVisual : InteractiveGue
 
     public StateSaveCategory ScrollViewerCategory { get; private set; }
 
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if(value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                Background.Color = _backgroundColor;
+            }
+        }
+    }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
     public void MakeSizedToChildren()
     {
         Height = 0;
@@ -81,7 +109,6 @@ public class ScrollViewerVisual : InteractiveGue
             Background.Y = 0f;
             Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-            Background.Color = Styling.ActiveStyle.Colors.InputBackground;
             Background.Texture = uiSpriteSheetTexture;
             Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
             this.AddChild(Background);
@@ -101,7 +128,6 @@ public class ScrollViewerVisual : InteractiveGue
             FocusedIndicator.Texture = uiSpriteSheetTexture;
             FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
             FocusedIndicator.Visible = false;
-            FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
             this.AddChild(FocusedIndicator);
 
             ScrollAndClipContainer = new ContainerRuntime();
@@ -173,6 +199,8 @@ public class ScrollViewerVisual : InteractiveGue
 
             }
 
+            BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
+            FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
         }
 
         CreateStates();

@@ -99,6 +99,20 @@ public class CheckBoxVisual : InteractiveGue
         }
     }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
+
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 128;
@@ -165,7 +179,6 @@ public class CheckBoxVisual : InteractiveGue
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         CheckboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
@@ -175,6 +188,7 @@ public class CheckBoxVisual : InteractiveGue
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
         CheckColor = Styling.ActiveStyle.Colors.IconDefault;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         DefineDynamicStyleChanges();
 

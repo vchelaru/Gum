@@ -60,18 +60,18 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         }
     }
 
-    Color _selectionColor;
-    public Color SelectionColor
+    Color _selectionBackgroundColor;
+    public Color SelectionBackgroundColor
     {
-        get => _selectionColor;
+        get => _selectionBackgroundColor;
         set
         {
-            if (value != _selectionColor)
+            if (value != _selectionBackgroundColor)
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
-                _selectionColor = value;
+                _selectionBackgroundColor = value;
                 (FormsControlAsObject as TextBoxBase)?.UpdateState();
             }
         }
@@ -107,6 +107,20 @@ public abstract class TextBoxBaseVisual : InteractiveGue
                 {
                     CaretInstance.Color = _caretColor;
                 }
+            }
+        }
+    }
+
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
             }
         }
     }
@@ -228,7 +242,6 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
         FocusedIndicator = new NineSliceRuntime();
         FocusedIndicator.Name = "FocusedIndicator";
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.X = 0;
         FocusedIndicator.Y = 2;
         FocusedIndicator.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -245,10 +258,11 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         this.AddChild(FocusedIndicator);
 
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
-        SelectionColor = Styling.ActiveStyle.Colors.Primary;
+        SelectionBackgroundColor = Styling.ActiveStyle.Colors.Primary;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
         PlaceholderColor = Styling.ActiveStyle.Colors.TextMuted;
         CaretColor = Styling.ActiveStyle.Colors.Primary;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         TextboxCategory = new StateSaveCategory();
         TextboxCategory.Name = CategoryName;
@@ -262,27 +276,27 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextboxCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor, ForegroundColor, false, PlaceholderColor, SelectionBackgroundColor);
         };
 
         TextboxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
             SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), 
-                ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
+                ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionBackgroundColor);
         };
 
         TextboxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
             SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), 
-                ForegroundColor, false, PlaceholderColor, SelectionColor);
+                ForegroundColor, false, PlaceholderColor, SelectionBackgroundColor);
         };
 
         TextboxCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor, true, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor, ForegroundColor, true, PlaceholderColor, SelectionBackgroundColor);
         };
 
 

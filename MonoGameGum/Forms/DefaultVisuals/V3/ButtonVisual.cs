@@ -73,6 +73,20 @@ public class ButtonVisual : InteractiveGue
         }
     }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if(value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
+
     public ButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 128;
@@ -131,13 +145,13 @@ public class ButtonVisual : InteractiveGue
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         FocusedIndicator.Visible = false;
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         this.AddChild(FocusedIndicator);
 
         ButtonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         ButtonCategory.Name = "ButtonCategory";
         this.AddCategory(ButtonCategory);
 
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
 

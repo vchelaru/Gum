@@ -58,6 +58,20 @@ public class ListBoxVisual : InteractiveGue
         }
     }
 
+    Color _focusedIndicatorColor;
+    public Color FocusedIndicatorColor
+    {
+        get => _focusedIndicatorColor;
+        set
+        {
+            if (value != _focusedIndicatorColor)
+            {
+                _focusedIndicatorColor = value;
+                FocusedIndicator.Color = value;
+            }
+        }
+    }
+
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 256;
@@ -94,7 +108,6 @@ public class ListBoxVisual : InteractiveGue
         FocusedIndicator.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         FocusedIndicator.Height = 2f;
         FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        FocusedIndicator.Color = Styling.ActiveStyle.Colors.Warning;
         FocusedIndicator.Texture = uiSpriteSheetTexture;
         FocusedIndicator.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         // NOTE: Focus for a ListBox must come from code 
@@ -167,6 +180,7 @@ public class ListBoxVisual : InteractiveGue
         this.AddCategory(ListBoxCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
+        FocusedIndicatorColor = Styling.ActiveStyle.Colors.Warning;
 
         DefineDynamicStyleChanges();
 

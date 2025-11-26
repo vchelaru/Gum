@@ -58,7 +58,6 @@ public class MenuVisual : InteractiveGue
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";
@@ -72,7 +71,6 @@ public class MenuVisual : InteractiveGue
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.Height = 0;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = BackgroundColor;
         Background.Texture = uiSpriteSheetTexture;
         Background.Visible = true;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
@@ -96,6 +94,8 @@ public class MenuVisual : InteractiveGue
         MenuCategory = new Gum.DataTypes.Variables.StateSaveCategory();
         MenuCategory.Name = Menu.MenuCategoryStateName;
         this.AddCategory(MenuCategory);
+
+        BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
 
         if (tryCreateFormsObject)
         {
