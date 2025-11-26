@@ -30,7 +30,7 @@ The above example shows how to react to a component being exported, but it doesn
 
 The first thing that an export plugin needs to do is to access properties on an element (such as its position and size) as well as the instances contained within the element. This information is available through the ElementSave class.
 
-For more information on how to access properties and instances from the ElementSave, see the [Gum Class Overview](broken-reference) page.
+For more information on how to access properties and instances from the ElementSave, see the [Gum Class Overview](/broken/pages/-MiveTqhTrAT7yL-hNWT) page.
 
 ## Example Export Code
 

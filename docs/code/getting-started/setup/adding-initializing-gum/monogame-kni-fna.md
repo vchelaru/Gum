@@ -179,7 +179,7 @@ public class Game1 : Core
     {
         base.Initialize();
 
-<strong>        GumUI.Initialize(Core.GraphicsDevice);
+<strong>        GumUI.Initialize(Core.GraphicsDevice, DefaultVisualsVersion.V2);
 </strong>        
         Scene = new BasicScene();
     }
@@ -201,6 +201,12 @@ public class Game1 : Core
 {% endtab %}
 {% endtabs %}
 
+{% hint style="info" %}
+The code above initializes Gum using _V2_ (version 2) visuals. Future versions of Gum may introduce new versions of visuals.
+
+Old version will continue to be supported when new versions are released, but you may want to upgrade to new versions to take advantage of new features.
+{% endhint %}
+
 ## Adding a Button (Testing the Setup)
 
 Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
@@ -209,7 +215,7 @@ Gum can be tested by adding a Button after Gum is initialized. To do so, add cod
 {
     base.Initialize();
 
-    GumUI.Initialize(Core.GraphicsDevice);
+    GumUI.Initialize(Core.GraphicsDevice, DefaultVisualsVersion.V2);
     
 <strong>    var button = new Button();
 </strong><strong>    button.AddToRoot();

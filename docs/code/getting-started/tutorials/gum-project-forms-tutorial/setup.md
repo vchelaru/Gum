@@ -16,7 +16,7 @@ This tutorial presents the minimum amount of code necessary to work with Gum. Yo
 
 ## Adding Gum NuGet Packages
 
-Before writing any code, we must add the Gum NuGet package. Add the `Gum.MonoGame` package to your game. For more information see the [Setup page](broken-reference).
+Before writing any code, we must add the Gum NuGet package. Add the `Gum.MonoGame` package to your game. For more information see the [Setup page](/broken/pages/rWdPjrCsUs4H8CwNUB2w).
 
 Once you are finished, your game project should reference the `Gum.MonoGame` project.
 

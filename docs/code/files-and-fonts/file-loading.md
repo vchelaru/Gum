@@ -12,7 +12,7 @@ When a file is added to a Gum project, the Gum UI tool checks the location of th
 
 If all of your project files are located relative to the .gumx root project file, then your project should be portable, and all referenced files will be automatically resolved for you when instantiating Screens and Components from your Gum project.
 
-The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading .gumx](broken-reference) page, all of your files should be set to **Copy if newer** in Visual Studio.
+The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading .gumx](/broken/pages/PGWmyRmXA6uMwNXuO6Aa) page, all of your files should be set to **Copy if newer** in Visual Studio.
 
 <figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
 

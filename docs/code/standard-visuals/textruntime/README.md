@@ -78,7 +78,7 @@ Also, note that files are loaded from-file rather than using the content pipelin
 
 <figure><img src="../../../.gitbook/assets/FontCopyIfNewer.png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
-The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](broken-reference) page.
+The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](/broken/pages/PGWmyRmXA6uMwNXuO6Aa#adding-the-gum-project-files-to-your-.csproj) page.
 
 ### Assigning BitmapFont
 

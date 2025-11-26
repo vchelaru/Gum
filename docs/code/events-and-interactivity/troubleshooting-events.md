@@ -15,6 +15,8 @@ Since event failure may be caused by `Cursor` and control position, it's best to
 The following example shows how to use `GetEventFailureReason`:
 
 ```csharp
+using MonoGameGum.Input; // Adds GetEventFailureReason extension method
+
 Button button;
 protected override void Initialize()
 {
@@ -47,7 +49,9 @@ The argument ButtonVisual is invisible so it will not raise events
 
 Improved diagnostics can be provided if names are given to controls. For example, changing the Button's name changes the output as shown in the following code block:
 
-<pre class="language-csharp"><code class="lang-csharp">Button button;
+<pre class="language-csharp"><code class="lang-csharp">using MonoGameGum.Input; // Adds GetEventFailureReason extension method
+
+Button button;
 protected override void Initialize()
 {
     GumUI.Initialize(this, DefaultVisualsVersion.V2);

@@ -20,7 +20,7 @@ You can clone the repository and open the projects in your favorite IDE (like Vi
 
 The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/master/Samples](https://github.com/vchelaru/Gum/tree/master/Samples)
 
-For more information about the Sample projects, see the [Samples page](broken-reference).
+For more information about the Sample projects, see the [Samples page](/broken/pages/j0sr8sjbLY1OWWfXcQwa).
 
 ### What is the Gum UI Tool?
 
@@ -36,7 +36,7 @@ Gum is an _object oriented_ design tool, so projects can contain reusable compon
 
 <figure><img src="../../.gitbook/assets/image (34).png" alt=""><figcaption><p>PauseMenu in Gum</p></figcaption></figure>
 
-Gum produces a set of XML files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading .gumx (Gum Project)](broken-reference) page.
+Gum produces a set of XML files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading .gumx (Gum Project)](/broken/pages/PGWmyRmXA6uMwNXuO6Aa) page.
 
 <figure><img src="../../.gitbook/assets/image (35).png" alt=""><figcaption><p>Example Gum project in Windows Explorer</p></figcaption></figure>
 
