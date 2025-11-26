@@ -64,7 +64,7 @@ public class ScrollViewerVisual : InteractiveGue
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 150;
-        Height = 200;
+        Height = 150;
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 

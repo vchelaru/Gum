@@ -49,35 +49,33 @@ public class ScrollBarVisual : InteractiveGue
     public StateSaveCategory OrientationCategory { get; private set; }
     public StateSaveCategory ScrollBarCategory { get; private set; }
 
-    Color _backgroundColor;
-    public Color BackgroundColor
+    Color _trackBackgroundColor;
+    public Color TrackBackgroundColor
     {
-        get => _backgroundColor;
+        get => _trackBackgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (value != _trackBackgroundColor)
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
-                _backgroundColor = value;
+                _trackBackgroundColor = value;
                 (FormsControlAsObject as TextBoxBase)?.UpdateState();
             }
         }
     }
-    Color _foregroundColor;
-    public Color ForegroundColor
+
+    Color _scrollArrowColor;
+    public Color ScrollArrowColor
     {
-        get => _foregroundColor;
+        get => _scrollArrowColor;
         set
         {
-            if (value != _foregroundColor)
+            if (value != _scrollArrowColor)
             {
-                // Just in case FormsControl hasn't been set yet, do ?. to check for null
-                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
-                // Highlighted or Disabled etc
-                _foregroundColor = value;
-                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+                _scrollArrowColor = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -107,7 +105,6 @@ public class ScrollBarVisual : InteractiveGue
         UpButtonIcon.Height = 100;
         UpButtonIcon.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
         UpButtonIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow1);
-        UpButtonIcon.Color = Styling.ActiveStyle.Colors.IconDefault;
         UpButtonIcon.Texture = uiSpriteSheetTexture;
         UpButtonIcon.Visible = true;
         UpButtonIcon.Rotation = 90;
@@ -137,7 +134,6 @@ public class ScrollBarVisual : InteractiveGue
         DownButtonIcon.Height = 100;
         DownButtonIcon.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
         DownButtonIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow1);
-        DownButtonIcon.Color = Styling.ActiveStyle.Colors.IconDefault;
         DownButtonIcon.Texture = uiSpriteSheetTexture;
         DownButtonIcon.Visible = true;
         DownButtonIcon.Rotation = -90;
@@ -180,7 +176,6 @@ public class ScrollBarVisual : InteractiveGue
         TrackInstance.YOrigin = VerticalAlignment.Center;
         TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         TrackInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
-        TrackInstance.Color = Styling.ActiveStyle.Colors.SurfaceVariant;
         TrackInstance.Texture = uiSpriteSheetTexture;
         ThumbContainer.AddChild(TrackInstance);
 
@@ -199,79 +194,94 @@ public class ScrollBarVisual : InteractiveGue
         OrientationCategory.Name = "OrientationCategory";
         this.AddCategory(OrientationCategory);
 
-        void AddVariable(StateSave state, string name, object value)
-        {
-            state.Variables.Add(new VariableSave
-            {
-                Name = name,
-                Value = value
-            });
-        }
-
+        TrackBackgroundColor = Styling.ActiveStyle.Colors.SurfaceVariant;
+        ScrollArrowColor = Styling.ActiveStyle.Colors.IconDefault;
 
         OrientationCategory.States.Add(States.OrientationStates.Horizontal);
-        AddVariable(States.OrientationStates.Horizontal, nameof(this.Height), 24f);
-        AddVariable(States.OrientationStates.Horizontal, nameof(this.HeightUnits), DimensionUnitType.Absolute);
-        AddVariable(States.OrientationStates.Horizontal, nameof(this.Width), 128f);
-        AddVariable(States.OrientationStates.Horizontal, nameof(this.WidthUnits), DimensionUnitType.Absolute);
 
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonIcon.Rotation", 180f);
+        States.OrientationStates.Horizontal.Apply = () =>
+        {
+            Height = 24f;
+            HeightUnits =DimensionUnitType.Absolute;
+            Width = 128f;
+            WidthUnits = DimensionUnitType.Absolute;
 
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromSmall);
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.XOrigin", HorizontalAlignment.Left);
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.YOrigin", VerticalAlignment.Center);
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.Width", 24f);
-        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.WidthUnits", DimensionUnitType.Absolute);
+            UpButtonIcon.Rotation = 180f;
 
-        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.Height", 0f);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.Width", -48f);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.WidthUnits", DimensionUnitType.RelativeToParent);
+            UpButtonInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            UpButtonInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            UpButtonInstance.XOrigin = HorizontalAlignment.Left;
+            UpButtonInstance.YOrigin = VerticalAlignment.Center;
+            UpButtonInstance.Width = 24f;
+            UpButtonInstance.WidthUnits = DimensionUnitType.Absolute;
 
-        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.Height", 0f);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.HeightUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.Y", 0f);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.YOrigin", VerticalAlignment.Center);
+            ThumbContainer.Height = 0f;
+            ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
+            ThumbContainer.Width = -48f;
+            ThumbContainer.WidthUnits = DimensionUnitType.RelativeToParent;
 
-        AddVariable(States.OrientationStates.Horizontal, "DownButtonIcon.Rotation", 0f);
-        AddVariable(States.OrientationStates.Horizontal, "DownButtonInstance.XUnits", GeneralUnitType.PixelsFromLarge);
-        AddVariable(States.OrientationStates.Horizontal,"DownButtonInstance.XOrigin", HorizontalAlignment.Right);
-        AddVariable(States.OrientationStates.Horizontal, "DownButtonInstance.Width", 24f);
-        AddVariable(States.OrientationStates.Horizontal, "DownButtonInstance.WidthUnits", DimensionUnitType.Absolute);
+            ThumbInstance.Height = 0f;
+            ThumbInstance.HeightUnits = DimensionUnitType.RelativeToParent;
+            ThumbInstance.Y = 0f;
+            ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+            ThumbInstance.YOrigin = VerticalAlignment.Center;
+
+            
+            DownButtonIcon.Rotation = 0f;
+            DownButtonInstance.XUnits = GeneralUnitType.PixelsFromLarge;
+            DownButtonInstance.XOrigin = HorizontalAlignment.Right;
+            DownButtonInstance.Width = 24f;
+            DownButtonInstance.WidthUnits = DimensionUnitType.Absolute;
+
+            // Local Styling colors
+            UpButtonIcon.Color = ScrollArrowColor;
+            DownButtonIcon.Color = ScrollArrowColor;
+            TrackInstance.Color = TrackBackgroundColor;
+        };
+        
 
         OrientationCategory.States.Add(States.OrientationStates.Vertical);
-        AddVariable(States.OrientationStates.Vertical, nameof(this.Height), 128f);
-        AddVariable(States.OrientationStates.Vertical, nameof(this.HeightUnits), DimensionUnitType.Absolute);
-        AddVariable(States.OrientationStates.Vertical, nameof(this.Width), 24f);
-        AddVariable(States.OrientationStates.Vertical, nameof(this.WidthUnits), DimensionUnitType.Absolute);
+        States.OrientationStates.Vertical.Apply = () =>
+        {
+            Height = 128f;
+            HeightUnits = DimensionUnitType.Absolute;
+            Width = 24f;
+            WidthUnits = DimensionUnitType.Absolute;
 
-        AddVariable(States.OrientationStates.Vertical, "UpButtonIcon.Rotation", 90f);
+            UpButtonIcon.Color = Styling.ActiveStyle.Colors.IconDefault;
+            UpButtonIcon.Rotation = 90f;
 
-        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromSmall);
-        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.XOrigin", VerticalAlignment.Center);
-        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.YOrigin", VerticalAlignment.Top);
-        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.Height", 24f);
-        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.HeightUnits", DimensionUnitType.Absolute);
+            UpButtonInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            UpButtonInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+            UpButtonInstance.XOrigin = HorizontalAlignment.Center;
+            UpButtonInstance.YOrigin = VerticalAlignment.Top;
+            UpButtonInstance.Height = 24f;
+            UpButtonInstance.HeightUnits = DimensionUnitType.Absolute;
 
-        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.Height", -48f);
-        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.Width", 0f);
-        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.WidthtUnits", DimensionUnitType.RelativeToParent);
+            ThumbContainer.Height = -48f;
+            ThumbContainer.HeightUnits = DimensionUnitType.RelativeToParent;
+            ThumbContainer.Width = 0f;
+            ThumbContainer.WidthUnits = DimensionUnitType.RelativeToParent;
 
-        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.Width", 0f);
-        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.WidthUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.X", 0f);
-        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.XOrigin", VerticalAlignment.Center);
+            ThumbInstance.Width = 0f;
+            ThumbInstance.WidthUnits = DimensionUnitType.RelativeToParent;
+            ThumbInstance.X = 0f;
+            ThumbInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            ThumbInstance.XOrigin = HorizontalAlignment.Center;
 
-        AddVariable(States.OrientationStates.Vertical, "DownButtonIcon.Rotation", -90f);
-        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.YUnits", GeneralUnitType.PixelsFromLarge);
-        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.YOrigin", HorizontalAlignment.Right);
-        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.Height", 24f);
-        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.HeightUnits", DimensionUnitType.Absolute);
+            DownButtonIcon.Color = Styling.ActiveStyle.Colors.IconDefault;
+            DownButtonIcon.Rotation = -90f;
+            DownButtonInstance.YUnits = GeneralUnitType.PixelsFromLarge;
+            DownButtonInstance.YOrigin = VerticalAlignment.Bottom;
+            DownButtonInstance.Height = 24f;
+            DownButtonInstance.HeightUnits = DimensionUnitType.Absolute;
+
+            // Local Styling colors
+            UpButtonIcon.Color = ScrollArrowColor;
+            DownButtonIcon.Color = ScrollArrowColor;
+            TrackInstance.Color = TrackBackgroundColor;
+        };      
+
 
         if (tryCreateFormsObject)
         {
