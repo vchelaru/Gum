@@ -373,7 +373,7 @@
     <Variable>
       <Type>ColorCategory</Type>
       <Name>SelectionInstance.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">Accent</Value>
+      <Value xsi:type="xsd:string">Primary</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

@@ -170,7 +170,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         SelectionInstance.X = 15f;
         SelectionInstance.XOrigin = HorizontalAlignment.Left;
         SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-        SelectionInstance.Y = 0f;
+        SelectionInstance.Y = 2f;
         SelectionInstance.Texture = uiSpriteSheetTexture;
         SelectionInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         ClipContainer.AddChild(SelectionInstance);
@@ -245,7 +245,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         this.AddChild(FocusedIndicator);
 
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
-        SelectionColor = Styling.ActiveStyle.Colors.Accent;
+        SelectionColor = Styling.ActiveStyle.Colors.Primary;
         ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
         PlaceholderColor = Styling.ActiveStyle.Colors.TextMuted;
         CaretColor = Styling.ActiveStyle.Colors.Primary;
