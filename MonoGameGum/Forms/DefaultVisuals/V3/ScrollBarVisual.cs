@@ -56,7 +56,7 @@ public class ScrollBarVisual : InteractiveGue
         UpButtonIcon.Height = 100;
         UpButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         UpButtonIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow1);
-        UpButtonIcon.Color = Styling.ActiveStyle.Colors.White;
+        UpButtonIcon.Color = Styling.ActiveStyle.Colors.NeuntralIconColor;
         UpButtonIcon.Texture = uiSpriteSheetTexture;
         UpButtonIcon.Visible = true;
         UpButtonIcon.Rotation = 90;
@@ -86,7 +86,7 @@ public class ScrollBarVisual : InteractiveGue
         DownButtonIcon.Height = 100;
         DownButtonIcon.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         DownButtonIcon.ApplyState(Styling.ActiveStyle.Icons.Arrow1);
-        DownButtonIcon.Color = Styling.ActiveStyle.Colors.White;
+        DownButtonIcon.Color = Styling.ActiveStyle.Colors.NeuntralIconColor;
         DownButtonIcon.Texture = uiSpriteSheetTexture;
         DownButtonIcon.Visible = true;
         DownButtonIcon.Rotation = -90;
