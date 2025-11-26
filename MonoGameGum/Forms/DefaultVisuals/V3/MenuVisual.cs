@@ -58,7 +58,7 @@ public class MenuVisual : InteractiveGue
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        BackgroundColor = Styling.ActiveStyle.Colors.Primary.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken);
+        BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
 
         Background = new NineSliceRuntime();
         Background.Name = "Background";

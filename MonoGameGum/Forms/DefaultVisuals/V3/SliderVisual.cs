@@ -55,6 +55,20 @@ public class SliderVisual : InteractiveGue
         }
     }
 
+    Color _trackColor;
+    public Color TrackColor
+    {
+        get => _trackColor;
+        set
+        {
+            if (value != _trackColor)
+            {
+                _trackColor = value;
+                TrackBackground.Color = value;
+            }
+        }
+    }
+
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
 
@@ -127,6 +141,7 @@ public class SliderVisual : InteractiveGue
         this.AddCategory(SliderCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        TrackColor = Styling.ActiveStyle.Colors.InputBackground;
 
         DefineDynamicStyleChanges();
 
@@ -143,43 +158,43 @@ public class SliderVisual : InteractiveGue
         SliderCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(false, true, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, true, TrackColor);
         };
 
         SliderCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(false, false, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, false, TrackColor);
         };
 
         SliderCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(true, false, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(true, false, TrackColor);
         };
 
         SliderCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(true, false, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(true, false, TrackColor);
         };
 
         SliderCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(false, true, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, true, TrackColor);
         };
 
         SliderCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(true, true, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(true, true, TrackColor);
         };
 
         SliderCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(false, true, BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken));
+            SetValuesForState(false, true, TrackColor);
         };
     }
 
