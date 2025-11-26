@@ -1366,7 +1366,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public const string SelectedStateName = "Selected";
 
-
+    // These are used in ScrollBarVisual for the OrientationCategory
+    public const string VerticalStateName = "Vertical";
+    public const string HorizontalStateName = "Horizontal";
 
     protected string GetDesiredState()
     {

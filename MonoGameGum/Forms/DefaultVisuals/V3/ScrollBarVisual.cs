@@ -33,13 +33,64 @@ public class ScrollBarVisual : InteractiveGue
     public NineSliceRuntime TrackInstance { get; private set; }
     public ButtonVisual ThumbInstance { get; private set; }
 
+    public class ScrollBarStates
+    {
+        public OrientationStates OrientationStates { get; set; } = new();
+    }
+
+    public class OrientationStates
+    {
+        public StateSave Vertical { get; set; } = new StateSave() { Name = FrameworkElement.VerticalStateName };
+        public StateSave Horizontal { get; set; } = new StateSave() { Name = FrameworkElement.HorizontalStateName };
+    }
+
+    public ScrollBarStates States;
+
+    public StateSaveCategory OrientationCategory { get; private set; }
+    public StateSaveCategory ScrollBarCategory { get; private set; }
+
+    Color _backgroundColor;
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _backgroundColor = value;
+                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+            }
+        }
+    }
+    Color _foregroundColor;
+    public Color ForegroundColor
+    {
+        get => _foregroundColor;
+        set
+        {
+            if (value != _foregroundColor)
+            {
+                // Just in case FormsControl hasn't been set yet, do ?. to check for null
+                // UpdateState forcefully applies the current state, so it will work regardless of whether this is
+                // Highlighted or Disabled etc
+                _foregroundColor = value;
+                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+            }
+        }
+    }
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable()) 
     {
+        // These values change depending on vertical or horizontal Orientation category state
         Width = 24;
-        WidthUnits = DimensionUnitType.Absolute;
+        WidthUnits = DimensionUnitType.Absolute; 
         Height = 128;
-        HeightUnits = DimensionUnitType.RelativeToParent;
+        HeightUnits = DimensionUnitType.Absolute;
+
+        States = new ScrollBarStates();
 
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
@@ -144,9 +195,9 @@ public class ScrollBarVisual : InteractiveGue
         ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         ThumbContainer.AddChild(ThumbInstance);
 
-        var category = new StateSaveCategory();
-        category.Name = "OrientationCategory";
-        this.AddCategory(category);
+        OrientationCategory = new StateSaveCategory();
+        OrientationCategory.Name = "OrientationCategory";
+        this.AddCategory(OrientationCategory);
 
         void AddVariable(StateSave state, string name, object value)
         {
@@ -157,73 +208,70 @@ public class ScrollBarVisual : InteractiveGue
             });
         }
 
-        var horizontalState = new StateSave();
-        category.States.Add(horizontalState);
-        horizontalState.Name = "Horizontal";
-        AddVariable(horizontalState, nameof(this.Height), 24f);
-        AddVariable(horizontalState, nameof(this.HeightUnits), DimensionUnitType.Absolute);
-        AddVariable(horizontalState, nameof(this.Width), 128f);
-        AddVariable(horizontalState, nameof(this.WidthUnits), DimensionUnitType.Absolute);
 
-        AddVariable(horizontalState, "UpButtonIcon.Rotation", 180f);
+        OrientationCategory.States.Add(States.OrientationStates.Horizontal);
+        AddVariable(States.OrientationStates.Horizontal, nameof(this.Height), 24f);
+        AddVariable(States.OrientationStates.Horizontal, nameof(this.HeightUnits), DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Horizontal, nameof(this.Width), 128f);
+        AddVariable(States.OrientationStates.Horizontal, nameof(this.WidthUnits), DimensionUnitType.Absolute);
 
-        AddVariable(horizontalState, "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromSmall);
-        AddVariable(horizontalState, "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(horizontalState, "UpButtonInstance.XOrigin", HorizontalAlignment.Left);
-        AddVariable(horizontalState, "UpButtonInstance.YOrigin", VerticalAlignment.Center);
-        AddVariable(horizontalState, "UpButtonInstance.Width", 24f);
-        AddVariable(horizontalState, "UpButtonInstance.WidthUnits", DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonIcon.Rotation", 180f);
 
-        AddVariable(horizontalState, "ThumbContainer.Height", 0f);
-        AddVariable(horizontalState, "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(horizontalState, "ThumbContainer.Width", -48f);
-        AddVariable(horizontalState, "ThumbContainer.WidthUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromSmall);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.XOrigin", HorizontalAlignment.Left);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.YOrigin", VerticalAlignment.Center);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.Width", 24f);
+        AddVariable(States.OrientationStates.Horizontal, "UpButtonInstance.WidthUnits", DimensionUnitType.Absolute);
 
-        AddVariable(horizontalState, "ThumbInstance.Height", 0f);
-        AddVariable(horizontalState, "ThumbInstance.HeightUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(horizontalState, "ThumbInstance.Y", 0f);
-        AddVariable(horizontalState, "ThumbInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(horizontalState, "ThumbInstance.YOrigin", VerticalAlignment.Center);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.Height", 0f);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.Width", -48f);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbContainer.WidthUnits", DimensionUnitType.RelativeToParent);
 
-        AddVariable(horizontalState, "DownButtonIcon.Rotation", 0f);
-        AddVariable(horizontalState, "DownButtonInstance.XUnits", GeneralUnitType.PixelsFromLarge);
-        AddVariable(horizontalState,"DownButtonInstance.XOrigin", HorizontalAlignment.Right);
-        AddVariable(horizontalState, "DownButtonInstance.Width", 24f);
-        AddVariable(horizontalState, "DownButtonInstance.WidthUnits", DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.Height", 0f);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.HeightUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.Y", 0f);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.YUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(States.OrientationStates.Horizontal, "ThumbInstance.YOrigin", VerticalAlignment.Center);
 
-        var verticalState = new StateSave();
-        category.States.Add(verticalState);
-        verticalState.Name = "Vertical";
-        AddVariable(verticalState, nameof(this.Height), 128f);
-        AddVariable(verticalState, nameof(this.HeightUnits), DimensionUnitType.Absolute);
-        AddVariable(verticalState, nameof(this.Width), 24f);
-        AddVariable(verticalState, nameof(this.WidthUnits), DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Horizontal, "DownButtonIcon.Rotation", 0f);
+        AddVariable(States.OrientationStates.Horizontal, "DownButtonInstance.XUnits", GeneralUnitType.PixelsFromLarge);
+        AddVariable(States.OrientationStates.Horizontal,"DownButtonInstance.XOrigin", HorizontalAlignment.Right);
+        AddVariable(States.OrientationStates.Horizontal, "DownButtonInstance.Width", 24f);
+        AddVariable(States.OrientationStates.Horizontal, "DownButtonInstance.WidthUnits", DimensionUnitType.Absolute);
 
-        AddVariable(verticalState, "UpButtonIcon.Rotation", 90f);
+        OrientationCategory.States.Add(States.OrientationStates.Vertical);
+        AddVariable(States.OrientationStates.Vertical, nameof(this.Height), 128f);
+        AddVariable(States.OrientationStates.Vertical, nameof(this.HeightUnits), DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Vertical, nameof(this.Width), 24f);
+        AddVariable(States.OrientationStates.Vertical, nameof(this.WidthUnits), DimensionUnitType.Absolute);
 
-        AddVariable(verticalState, "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(verticalState, "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromSmall);
-        AddVariable(verticalState, "UpButtonInstance.XOrigin", VerticalAlignment.Center);
-        AddVariable(verticalState, "UpButtonInstance.YOrigin", VerticalAlignment.Top);
-        AddVariable(verticalState, "UpButtonInstance.Height", 24f);
-        AddVariable(verticalState, "UpButtonInstance.HeightUnits", DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonIcon.Rotation", 90f);
 
-        AddVariable(verticalState, "ThumbContainer.Height", -48f);
-        AddVariable(verticalState, "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(verticalState, "ThumbContainer.Width", 0f);
-        AddVariable(verticalState, "ThumbContainer.WidthtUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.YUnits", GeneralUnitType.PixelsFromSmall);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.XOrigin", VerticalAlignment.Center);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.YOrigin", VerticalAlignment.Top);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.Height", 24f);
+        AddVariable(States.OrientationStates.Vertical, "UpButtonInstance.HeightUnits", DimensionUnitType.Absolute);
 
-        AddVariable(verticalState, "ThumbInstance.Width", 0f);
-        AddVariable(verticalState, "ThumbInstance.WidthUnits", DimensionUnitType.RelativeToParent);
-        AddVariable(verticalState, "ThumbInstance.X", 0f);
-        AddVariable(verticalState, "ThumbInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
-        AddVariable(verticalState, "ThumbInstance.XOrigin", VerticalAlignment.Center);
+        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.Height", -48f);
+        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.HeightUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.Width", 0f);
+        AddVariable(States.OrientationStates.Vertical, "ThumbContainer.WidthtUnits", DimensionUnitType.RelativeToParent);
 
-        AddVariable(verticalState, "DownButtonIcon.Rotation", -90f);
-        AddVariable(verticalState, "DownButtonInstance.YUnits", GeneralUnitType.PixelsFromLarge);
-        AddVariable(verticalState, "DownButtonInstance.YOrigin", HorizontalAlignment.Right);
-        AddVariable(verticalState, "DownButtonInstance.Height", 24f);
-        AddVariable(verticalState, "DownButtonInstance.HeightUnits", DimensionUnitType.Absolute);
+        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.Width", 0f);
+        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.WidthUnits", DimensionUnitType.RelativeToParent);
+        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.X", 0f);
+        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.XUnits", GeneralUnitType.PixelsFromMiddle);
+        AddVariable(States.OrientationStates.Vertical, "ThumbInstance.XOrigin", VerticalAlignment.Center);
+
+        AddVariable(States.OrientationStates.Vertical, "DownButtonIcon.Rotation", -90f);
+        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.YUnits", GeneralUnitType.PixelsFromLarge);
+        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.YOrigin", HorizontalAlignment.Right);
+        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.Height", 24f);
+        AddVariable(States.OrientationStates.Vertical, "DownButtonInstance.HeightUnits", DimensionUnitType.Absolute);
 
         if (tryCreateFormsObject)
         {
