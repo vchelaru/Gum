@@ -246,7 +246,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackgroundColor;
         SelectionColor = Styling.ActiveStyle.Colors.Accent;
         ForegroundColor = Styling.ActiveStyle.Colors.ForegroundTextColor;
-        PlaceholderColor = Styling.ActiveStyle.Colors.Gray;
+        PlaceholderColor = Styling.ActiveStyle.Colors.SecondaryTextColor;
         CaretColor = Styling.ActiveStyle.Colors.Primary;
 
         TextboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
@@ -267,13 +267,15 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         TextboxCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), 
+                ForegroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), ForegroundColor, false, PlaceholderColor, SelectionColor);
+            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleLighten), 
+                ForegroundColor, false, PlaceholderColor, SelectionColor);
         };
 
         TextboxCategory.States.Add(States.Focused);

@@ -129,7 +129,7 @@ public class ScrollBarVisual : InteractiveGue
         TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         TrackInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
-        TrackInstance.Color = Styling.ActiveStyle.Colors.Gray;
+        TrackInstance.Color = Styling.ActiveStyle.Colors.ElevatedBackgroundColor;
         TrackInstance.Texture = uiSpriteSheetTexture;
         ThumbContainer.AddChild(TrackInstance);
 
