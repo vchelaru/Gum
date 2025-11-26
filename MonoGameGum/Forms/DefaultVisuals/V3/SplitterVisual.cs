@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+
 
 #if RAYLIB
 using Gum.GueDeriving;
@@ -19,6 +21,25 @@ public class SplitterVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
 
+    Color _backgroundColor;
+
+    public Color BackgroundColor
+    {
+        get => _backgroundColor;
+        set
+        {
+            if (value != _backgroundColor)
+            {
+                _backgroundColor = value;
+                //FormsControl?.UpdateState();
+                if(Background != null)
+                {
+                    Background.Color = value;
+                }
+            }
+        }
+    }
+
     public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         Width = 8;
@@ -29,10 +50,11 @@ public class SplitterVisual : InteractiveGue
         Background = new NineSliceRuntime();
         Background.Name = "Background";
         Background.Dock(Gum.Wireframe.Dock.Fill);
-        Background.Color = Styling.ActiveStyle.Colors.InputBackground;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Bordered);
         this.AddChild(Background);
+
+        BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
 
         if(tryCreateFormsObject)
         {
