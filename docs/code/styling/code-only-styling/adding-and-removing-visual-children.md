@@ -90,3 +90,36 @@ var buttonVisual = (ButtonVisual)button.Visual;
 // setting Parent to null removes a child from its parent:
 <strong>buttonVisual.TextInstance.Visible = false;
 </strong></code></pre>
+
+## Replacing Children with Different Types
+
+Default visual children can be replaced with children of different types to further customize controls. For example, the Button control uses a NineSlice for its background, but this can be replaced with other types such as ColoredRectangleRuntime or SpriteRuntime.
+
+The following code shows how to replace a button's default background with a SpriteRuntime. For simplicity this button uses [Lorem Picsum](https://picsum.photos/).
+
+```csharp
+var button = new Button();
+button.AddToRoot();
+button.Anchor(Anchor.Center);
+        
+var buttonVisual = (ButtonVisual)button.Visual;
+// setting Parent to null removes a child from its parent:
+buttonVisual.Background.Parent = null;
+
+var newBackground = new SpriteRuntime();
+newBackground.SourceFileName = "https://picsum.photos/200/300";
+// insert at 0 so it appears behind the text
+buttonVisual.Children.Insert(0, newBackground);
+// Size the button according to its new background:
+button.Dock(Dock.SizeToChildren);
+
+buttonVisual.ForegroundColor = Color.Black;
+
+button.Click += (_, _) => button.Text = $"Clicked at {DateTime.Now}";
+```
+
+<figure><img src="../../../.gitbook/assets/26_09 42 13.png" alt=""><figcaption></figcaption></figure>
+
+{% hint style="info" %}
+By removing the background, the highlighting behavior is no longer functional. This can be fixed by updating states. For more information, see the [Styling Using States](styling-using-states.md) page.
+{% endhint %}
