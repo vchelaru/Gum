@@ -1,12 +1,10 @@
-# MenuItem
+# Customizing Menu and MenuItem
 
 ## Introduction
 
-This page shows how to customize MenuItem instances.
+MenuItems can contain sub-items. This page discusses how to customize individual MenuItem instances as well as the container that holds MenuItem instances (ScrollViewer).
 
-## Customizing MenuItem Text
-
-The following code shows how to adjust the color of menu items:
+## Customizing MenuItem Text Color
 
 ```csharp
 var menu = new Menu();
@@ -25,10 +23,7 @@ for (int i = 0; i < 10; i++)
     var itemVisual = (MenuItemVisual)item.Visual;
     // Remove the color values from the states so they can
     // be set directly
-    itemVisual.MenuItemCategory.RemoveValues("TextInstance.Color");
-
-    var textRuntime = itemVisual.TextInstance;
-    textRuntime.Color = new Color(
+    itemVisual.ForegroundColor = new Color(
         100 + random.Next(155),
         100 + random.Next(155),
         100 + random.Next(155));
@@ -37,9 +32,9 @@ for (int i = 0; i < 10; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/14_22 56 32.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/14_22 56 32.gif" alt=""><figcaption></figcaption></figure>
 
-For more information on working with `TextRuntime` instances, see the [TextRuntime page](../../../standard-visuals/textruntime/).
+For more information on working with `TextRuntime` instances, see the [TextRuntime page](../../standard-visuals/textruntime/).
 
 ## Customizing Sub-Item Background (ScrollViewer)
 
@@ -55,9 +50,8 @@ var menuItem = new MenuItem();
 menu.Items.Add(menuItem);
 menuItem.ScrollViewerVisualTemplate = new VisualTemplate(() =>
 {
-    var scrollViewer = new ScrollViewer();
-    var visual = (ScrollViewerVisual)scrollViewer.Visual;
-    visual.Background.Color = Color.Red;
+    var visual = new ScrollViewerVisual();
+    visual.BackgroundColor = Color.Red;
     return visual;
 }); 
 
@@ -71,4 +65,4 @@ for( int i = 0; i < 10; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/05_08 04 19.gif" alt=""><figcaption><p>File menu displaying sub-items on a red background</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/05_08 04 19.gif" alt=""><figcaption><p>File menu displaying sub-items on a red background</p></figcaption></figure>

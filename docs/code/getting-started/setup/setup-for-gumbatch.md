@@ -77,4 +77,4 @@ Note that this code assumes a font .fnt file (and matching .png) are in the Cont
 
 For more information on loading FNT files, see the [File Loading](../../files-and-fonts/file-loading.md) documentation.
 
-For a more detailed discussion of using GumBatch, see the [GumBatch](../../monogame/gumbatch.md) page.
+For a more detailed discussion of using GumBatch, see the [GumBatch](../../gum-code-reference/gumbatch.md) page.
