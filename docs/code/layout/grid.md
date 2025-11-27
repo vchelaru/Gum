@@ -94,7 +94,7 @@ for(int i = 0; i < 8; i++)
 
 <figure><img src="../../.gitbook/assets/17_20 38 51.png" alt=""><figcaption><p>Buttons in a grid with eight cells</p></figcaption></figure>
 
-If additional buttons are added, they overflow the grid. Notice that the grid's size is not modified by the additional cells so, so additional rows do not shift the grid up.
+If additional buttons are added, they overflow the grid. Notice that the grid's size is not modified by the additional cells, so additional rows do not shift the grid up.
 
 ```csharp
 var panel = new Panel();

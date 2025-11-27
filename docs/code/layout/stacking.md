@@ -50,7 +50,7 @@ for(int i = 0; i &#x3C; 10; i++)
 
 ## Horizontal Stacking
 
-We an change the stacking direction by changing the `ChildrenLayout` property as shown in the following code. Note that the `Buttons` have been made narrower so they all fit on screen.
+We can change the stacking direction by changing the `ChildrenLayout` property as shown in the following code. Note that the `Buttons` have been made narrower so they all fit on screen.
 
 <pre class="language-csharp"><code class="lang-csharp">var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
@@ -73,7 +73,7 @@ for(int i = 0; i &#x3C; 10; i++)
 
 ## Wrapping
 
-Stacked children can also be wrap. Before wrapping can happen, the parent `StackPanel` must not depend on its children's size in its _primary_ stacking direction. For example, if a `StackPanel` is using its default vertical stacking, then its `Height` must not depend on its children - otherwise it stretches indefinitely to contain its children.
+Stacked children can also be wrapped horizontally. Before wrapping can happen, the parent `StackPanel` must not depend on its children's size in its _primary_ stacking direction. For example, if a `StackPanel` is using its default vertical stacking, then its `Height` must not depend on its children - otherwise it stretches indefinitely to contain its children.
 
 The following code shows how to set an absolute Height on the parent `StackPanel` and enable wrapping:
 

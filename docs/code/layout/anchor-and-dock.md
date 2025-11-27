@@ -182,7 +182,7 @@ When working with Dock calls, it's important to understand the dependencies crea
 
 Our code above creates a top-down dependency where `panel` ultimately decides the size of its children.
 
-The bottom-most children (`button` and `button2`) depend on their parent for their effective. The parent for both Buttons is either `innerPanel` or `panel`, depending on whether the `innerPanel` is being used for margins. In either case, the Button `Width` values are _relative_ to their parent's effective width.
+The bottom-most children (`button` and `button2`) depend on their parent for their effective positioning and sizing. The parent for both Buttons is either `innerPanel` or `panel`, depending on whether the `innerPanel` is being used for margins. In either case, the Button `Width` values are _relative_ to their parent's effective width.
 
 Similarly, `background` also depends on its parent panel for both its `Width` and `Height`.
 
