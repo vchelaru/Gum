@@ -8,19 +8,19 @@ For information on upgrading, see the [Migrating to 2025 November](../../../gum-
 
 ## Introduction
 
-Gum can be restyled using an ActiveStyles object. Changes to ActiveStyles result in style changes for all controls created after the change is made. ActiveStyles can make it easy to restyle all controls without needing to make changes to each individual control.
+Gum can be restyled using an `ActiveStyle` object. Changes to `ActiveStyle` result in style changes for all controls created after the change is made. `ActiveStyle` can make it easy to restyle all controls without needing to make changes to each individual control.
 
 ## Styling.ActiveStyle.Colors
 
-Gum includes a Styling object which contains multiple Color values for default styling. For example the primary color can be changed using the following code:
+Gum includes a `Styling` object which contains multiple color values for default styling. For example the `Primary` color can be changed using the following code:
 
 ```csharp
 Styling.ActiveStyle.Colors.Primary = Color.DarkGreen;
 ```
 
-The following properties exist:
+The following properties exist on Colors:
 
-<table><thead><tr><th width="212.18182373046875">Property</th><th>Used By</th></tr></thead><tbody><tr><td>Colors.Primary</td><td><ul><li>Button Background</li><li>CheckBox Background</li><li>ComboBox DropdownIndicator</li><li>ListBoxItem Background (Selected)</li><li>MenuItem Background (Selected)</li><li>RadioButton Background</li><li>Slider Thumb Background</li><li>TextBox Caret</li><li>Window Background (Default only border)</li></ul></td></tr><tr><td>Color.Warning</td><td><ul><li>FocusIndicators on all controls</li></ul></td></tr><tr><td>Color.Accent</td><td><ul><li>ListBoxItem Background (Highlight)</li><li>MenuItem Background (Highlight)</li></ul></td></tr><tr><td>Color.InputBackground</td><td><ul><li>ComboBox Background</li><li>ListBox Background</li><li>Menu Background</li><li>PasswordBox Background</li><li>ScrollViewer Background</li><li>Slider Track Background</li><li>Splitter Background</li><li>TextBox Background</li></ul></td></tr><tr><td>Color.SurfaceVariant</td><td><ul><li>ScrollBar Track Background</li></ul></td></tr><tr><td>Color.IconDefault</td><td><ul><li>CheckBox Check</li><li>RadioButton Radio</li><li>ScrollBar UpButton/DownButton Icon</li></ul></td></tr><tr><td>Color.TextPrimary</td><td><ul><li>Button Text</li><li>CheckBox Text</li><li>ComboBox Text</li><li>Label</li><li>ListBoxItem Text</li><li>MenuItem Text</li><li>MenuItem SubmenuIndicator </li><li>PasswordBox Text</li><li>RadioButton Text</li><li>TextBox Text</li></ul></td></tr><tr><td>Color.TextMuted</td><td><ul><li>PasswordBox PlaceholderTextInstance</li><li>TextBox PlaceholderTextInstance</li></ul></td></tr></tbody></table>
+<table><thead><tr><th width="212.18182373046875">Colors Property</th><th>Used By</th></tr></thead><tbody><tr><td>Primary</td><td><ul><li>Button Background</li><li>CheckBox Background</li><li>ComboBox DropdownIndicator</li><li>ListBoxItem Background (Selected)</li><li>MenuItem Background (Selected)</li><li>RadioButton Background</li><li>Slider Thumb Background</li><li>TextBox Caret</li><li>Window Background (Default only border)</li></ul></td></tr><tr><td>Warning</td><td><ul><li>FocusIndicators on all controls</li></ul></td></tr><tr><td>Accent</td><td><ul><li>ListBoxItem Background (Highlight)</li><li>MenuItem Background (Highlight)</li></ul></td></tr><tr><td>InputBackground</td><td><ul><li>ComboBox Background</li><li>ListBox Background</li><li>Menu Background</li><li>PasswordBox Background</li><li>ScrollViewer Background</li><li>Slider Track Background</li><li>Splitter Background</li><li>TextBox Background</li></ul></td></tr><tr><td>SurfaceVariant</td><td><ul><li>ScrollBar Track Background</li></ul></td></tr><tr><td>IconDefault</td><td><ul><li>CheckBox Check</li><li>RadioButton Radio</li><li>ScrollBar UpButton/DownButton Icon</li></ul></td></tr><tr><td>TextPrimary</td><td><ul><li>Button Text</li><li>CheckBox Text</li><li>ComboBox Text</li><li>Label</li><li>ListBoxItem Text</li><li>MenuItem Text</li><li>MenuItem SubmenuIndicator </li><li>PasswordBox Text</li><li>RadioButton Text</li><li>TextBox Text</li></ul></td></tr><tr><td>TextMuted</td><td><ul><li>PasswordBox PlaceholderTextInstance</li><li>TextBox PlaceholderTextInstance</li></ul></td></tr></tbody></table>
 
 ## Code Example: Applying Styles Before Creating Controls
 
@@ -84,7 +84,15 @@ protected override void Initialize()
 
 This code produces a set of controls which can be used to check how styling is applied.
 
+{% columns %}
+{% column %}
 <figure><img src="../../../.gitbook/assets/25_21 23 15.png" alt=""><figcaption><p>Controls using default styles</p></figcaption></figure>
+{% endcolumn %}
+
+{% column %}
+<figure><img src="../../../.gitbook/assets/styling_example_no_color_changes.gif" alt="Controls using default styles (Animated)"><figcaption><p>Controls using default styles (Animated)</p></figcaption></figure>
+{% endcolumn %}
+{% endcolumns %}
 
 We can prefix the following code before creating all of our controls:
 
@@ -103,7 +111,15 @@ protected override void Initialize()
 
 By changing these colors, controls are created using the new colors:
 
-<figure><img src="../../../.gitbook/assets/25_21 34 56.png" alt=""><figcaption></figcaption></figure>
+{% columns %}
+{% column %}
+<figure><img src="../../../.gitbook/assets/25_21 34 56.png" alt="Colors changed with minimal code"><figcaption><p>Colors changed with minimal code</p></figcaption></figure>
+{% endcolumn %}
+
+{% column %}
+<figure><img src="../../../.gitbook/assets/styling_example_with_color_changes.gif" alt=""><figcaption><p>All Styling behaviors remain (darken/lighten)</p></figcaption></figure>
+{% endcolumn %}
+{% endcolumns %}
 
 ## Styling and Creation Order
 

@@ -3,7 +3,7 @@
 ## V3 Visuals
 
 {% hint style="warning" %}
-November 2025 has not yet been released. This document currently covers the November version if you your project is linked to source.
+November 2025 has not yet been released. This document currently covers the November version if your project is linked to source.
 {% endhint %}
 
 The November 2025 release of Gum introduces an improvement to the default code-only controls. These new V3 visuals add the following improvements over V2:
@@ -39,20 +39,6 @@ var buttonVisual = (Gum.Forms.DefaultVisuals.V3.ButtonVisual)button.Visual;
 
 Adjust the dimensions, positions of contorls if desired. Some of the controls have changed size to match the Gum UI tool more closely. Note that a few names have also been changed to match the naming of the visuals in the Gum tool.
 
-The following changes have been made to V3:
+**The following changes have been made to V3:**
 
-* CheckBox Height 32 ⇒ 24
-* ListBoxItem Height 0 ⇒ 6 (RelativeToChildren)
-* ListBox Height 150 ⇒ 256
-* ListBox Width 150 ⇒ 256
-* ListBox FocusedIndicator Y -2 ⇒ 2 (fixed overlap bug)
-* MenuItem Width 6 ⇒ 0 (still RelativeToChildren)
-* MenuItem Height 6 ⇒ 0 (still RelativeToChildren)
-* MenuItem TextInstance X 2 ⇒ 0&#x20;
-* MenuItem TextInstance Height 2 ⇒ 0 (still RelativeToChildren)
-* MenuItem SubmenuIndicatorInstance Width 2 ⇒ 0
-* PasswordBox Width 100 ⇒ 256
-* RadioButton Height 32 ⇒ 24
-* RadioButton Background renamed to RadioBackground
-* RadioButton InnerCheck Renamed to Radio
-* TextBox Width 100 ⇒ 256
+<table><thead><tr><th width="256.7999267578125">Visual Element</th><th width="121.3997802734375">Variable</th><th width="115.400146484375">V2</th><th>V3</th></tr></thead><tbody><tr><td>CheckBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>ListBoxItem</td><td>Height</td><td>0</td><td>6 (RelativeToChildren)</td></tr><tr><td>ListBox</td><td>Height</td><td>150</td><td>256</td></tr><tr><td>ListBox</td><td>Width</td><td>150</td><td>256</td></tr><tr><td>ListBox.FocusedIndicator</td><td>Y</td><td>-2</td><td>2 (fixed overlap bug)</td></tr><tr><td>MenuItem</td><td>Width</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem</td><td>Height</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem.TextInstance</td><td>X</td><td>2</td><td>0</td></tr><tr><td>MenuItem.TextInstance</td><td>Height</td><td>2</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem<br>.SubmenuIndicatorInstance</td><td>Width</td><td>2</td><td>0</td></tr><tr><td>PasswordBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Background</td><td>Background</td><td>Renamed to RadioBackground</td></tr><tr><td>RadioButton</td><td>InnerCheck</td><td>InnerCheck</td><td>Ranamed to Radio</td></tr><tr><td>TextBox</td><td>Width</td><td>100</td><td>256</td></tr></tbody></table>

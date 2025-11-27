@@ -16,7 +16,7 @@ For information on working with standard visuals, see the [Standard Visuals](../
 
 ## Adding Children Visuals
 
-Additional children can be added directly to a control's visual. New children can be added directly to a control's Visual (top visual), or as a child of existing children.
+Additional children can be added directly to a control's Visual (top visual), or as a child of existing children.
 
 The following code shows how to add a colored rectangle to a Button.
 
