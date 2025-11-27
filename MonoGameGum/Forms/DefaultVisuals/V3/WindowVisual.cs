@@ -160,8 +160,6 @@ public class WindowVisual : InteractiveGue
         this.RaiseChildrenEventsOutsideOfBounds = true; 
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
-        // TODO: Figure out how we want to do this for stateless Visuals.
-        Background.Color = BackgroundColor;
 
         if (tryCreateFormsObject)
         {
