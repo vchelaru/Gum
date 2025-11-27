@@ -37,7 +37,20 @@ var button = new Button();
 var buttonVisual = (Gum.Forms.DefaultVisuals.V3.ButtonVisual)button.Visual;
 ```
 
-Adjust the dimensions, positions of contorls if desired. Some of the controls have changed size to match the Gum UI tool more closely. Note that a few names have also been changed to match the naming of the visuals in the Gum tool.
+Optionally, your code can remove state assignments on visual colors since V3 now simplifies setting colors.
+
+For example, the following code can be used to set a button's background:
+
+```csharp
+var button = new Button();
+button.AddToRoot();
+var buttonVisual = (ButtonVisual)button.Visual;
+buttonVisual.BackgroundColor = Color.Red;
+```
+
+For more information on working with the new Visuals, see the [Code-Only  Styling](../../code/styling/code-only-styling/) section;
+
+Adjust the dimensions, positions of controls if desired. Some of the controls have changed size to match the Gum UI tool more closely. Note that a few names have also been changed to match the naming of the visuals in the Gum tool.
 
 **The following changes have been made to V3:**
 
