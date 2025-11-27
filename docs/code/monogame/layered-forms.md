@@ -18,7 +18,7 @@ Although this is convenient, the Button must be drawn on the same layer as the r
 At a high level, the steps to creating a layered button are:
 
 1. Create a Layer
-2. Set the Layer settings, such as by using LayerCameraSettings. For more information, see the [LayerCameraSettings](../../gum-code-reference/layer.md#layercamerasettings) page.
+2. Set the Layer settings, such as by using LayerCameraSettings. For more information, see the [LayerCameraSettings](../gum-code-reference/layer.md#layercamerasettings) page.
 3. Create a Forms control. This could be a simple Button, or it could be a StackPanel which contains many controls
 4. Add the Forms control to the layer
 5. Create a List that contains all controls which should be updated. This might contain the GumServices.Default.Root as well as the layered Forms Control
@@ -109,4 +109,4 @@ public class Game1 : Game
 
 The code above creates two stack panels - one layered and one unlayered. To differentiate, the layered panel is plaed on a layer that is drawn at 2x zoom.
 
-<figure><img src="../../../.gitbook/assets/18_22 24 31.gif" alt=""><figcaption><p>Layered buttons drawn at 2x zoom</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/18_22 24 31.gif" alt=""><figcaption><p>Layered buttons drawn at 2x zoom</p></figcaption></figure>
