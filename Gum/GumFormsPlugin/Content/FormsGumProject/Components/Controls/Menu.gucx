@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Name>Controls/Menu</Name>
   <BaseType>Container</BaseType>
   <State>
@@ -13,7 +13,7 @@
     <Variable>
       <Type>float</Type>
       <Name>Background.Height</Name>
-      <Value xsi:type="xsd:float">-0</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -25,7 +25,7 @@
     <Variable>
       <Type>float</Type>
       <Name>Background.Width</Name>
-      <Value xsi:type="xsd:float">-0</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -79,7 +79,13 @@
     <Variable>
       <Type>float</Type>
       <Name>Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -91,7 +97,7 @@
     <Variable>
       <Type>float</Type>
       <Name>InnerPanelInstance.Height</Name>
-      <Value xsi:type="xsd:float">-8</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -109,7 +115,7 @@
     <Variable>
       <Type>float</Type>
       <Name>InnerPanelInstance.Width</Name>
-      <Value xsi:type="xsd:float">-0</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -168,6 +174,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float?</Type>
+      <Name>MinHeight</Name>
+      <Value xsi:type="xsd:float">5</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>State</Type>
       <Name>State</Name>
       <Value xsi:type="xsd:string">Default</Value>
@@ -177,7 +189,7 @@
     <Variable>
       <Type>float</Type>
       <Name>Width</Name>
-      <Value xsi:type="xsd:float">-0</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

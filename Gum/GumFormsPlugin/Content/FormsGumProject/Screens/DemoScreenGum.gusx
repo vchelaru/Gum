@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Name>DemoScreenGum</Name>
   <State>
     <Name>Default</Name>
@@ -156,7 +156,13 @@
     <Variable>
       <Type>float</Type>
       <Name>ButtonContainer.Height</Name>
-      <Value xsi:type="xsd:float">32</Value>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>ButtonContainer.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -433,12 +439,6 @@
       <Type>PositionUnitType</Type>
       <Name>DemoSettingsMenu.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DetectResolutionsButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1248,7 +1248,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>MultiLineTextBox.PlaceholderText</Name>
+      <Name>MultiLineTextBox.Placeholder</Name>
       <Value xsi:type="xsd:string">Multi-line text box</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1637,12 +1637,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>float</Type>
-      <Name>ShowDialogButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>string</Type>
       <Name>ShowDialogButton.Parent</Name>
       <SetsValue>true</SetsValue>
@@ -1687,12 +1681,6 @@
       <Type>PositionUnitType</Type>
       <Name>ShowDialogButton.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ShowToastButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2270,7 +2258,7 @@
   </Instance>
   <Instance>
     <Name>WindowStandardInstance</Name>
-    <BaseType>Controls/WindowStandard</BaseType>
+    <BaseType>Controls/Window</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
