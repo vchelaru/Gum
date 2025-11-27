@@ -91,7 +91,7 @@ public class ListBoxItemVisual : InteractiveGue
             if (value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -213,6 +213,7 @@ public class ListBoxItemVisual : InteractiveGue
         FocusedIndicator.Visible = isFocusedVisible;
         TextInstance.Color = foregroundColor;
         Background.Color = backgroundColor;
+        FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
     public ListBoxItem FormsControl => FormsControlAsObject as ListBoxItem;

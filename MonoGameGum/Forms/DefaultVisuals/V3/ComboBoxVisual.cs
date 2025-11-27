@@ -99,7 +99,7 @@ public class ComboBoxVisual : InteractiveGue
             if (value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -273,9 +273,10 @@ public class ComboBoxVisual : InteractiveGue
         DropdownIndicator.Color = ddIndicatorColor;
         TextInstance.Color = foregroundColor;
         FocusedIndicator.Visible = isFocused;
+        FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
-private void PositionAndAttachListBox(ListBoxVisual listBoxVisual)
+    private void PositionAndAttachListBox(ListBoxVisual listBoxVisual)
     {
         listBoxVisual.Name = "ListBoxInstance";
         listBoxVisual.Y = 28f;

@@ -39,7 +39,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
                 _backgroundColor = value;
-                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+                (FormsControlAsObject as FrameworkElement)?.UpdateState();
             }
         }
     }
@@ -55,7 +55,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
                 _foregroundColor = value;
-                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+                (FormsControlAsObject as FrameworkElement)?.UpdateState();
             }
         }
     }
@@ -72,7 +72,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
                 _selectionBackgroundColor = value;
-                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+                (FormsControlAsObject as FrameworkElement)?.UpdateState();
             }
         }
     }
@@ -103,10 +103,8 @@ public abstract class TextBoxBaseVisual : InteractiveGue
             if (value != _caretColor)
             {
                 _caretColor = value;
-                if(CaretInstance != null)
-                {
-                    CaretInstance.Color = _caretColor;
-                }
+                (FormsControlAsObject as FrameworkElement)?.UpdateState();
+
             }
         }
     }
@@ -120,7 +118,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
             if (value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                (FormsControlAsObject as FrameworkElement)?.UpdateState();
             }
         }
     }
@@ -347,5 +345,9 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         FocusedIndicator.Visible = isFocusIndicatorVisible;
         PlaceholderTextInstance.Color = placeholderColor;
         SelectionInstance.Color = selectionColor;
+        FocusedIndicator.Color = _focusedIndicatorColor;
+
+        CaretInstance.Color = _caretColor;
+
     }
 }

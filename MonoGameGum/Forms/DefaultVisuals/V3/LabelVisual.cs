@@ -29,6 +29,7 @@ public class LabelVisual : TextRuntime
             this.Color = Styling.ActiveStyle.Colors.TextPrimary;
 
             this.ApplyState(Styling.ActiveStyle.Text.Normal);
+
         }
         if (tryCreateFormsObject)
         {

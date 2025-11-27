@@ -82,7 +82,7 @@ public class ButtonVisual : InteractiveGue
             if(value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -171,45 +171,64 @@ public class ButtonVisual : InteractiveGue
         ButtonCategory.States.Add(States.Enabled);
         States.Enabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor, false);
+            SetValuesForState(
+                BackgroundColor, 
+                ForegroundColor, 
+                false);
         };
 
         ButtonCategory.States.Add(States.Disabled);
         States.Disabled.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
-                , ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), false);
+            SetValuesForState(
+                BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken),
+                ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), 
+                false);
         };
 
         ButtonCategory.States.Add(States.Highlighted);
         States.Highlighted.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, false);
+            SetValuesForState(
+                BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten),
+                ForegroundColor, 
+                false);
         };
 
         ButtonCategory.States.Add(States.Pushed);
         States.Pushed.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), ForegroundColor, false);
+            SetValuesForState(
+                BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentDarken), 
+                ForegroundColor, 
+                false);
         };
 
         ButtonCategory.States.Add(States.HighlightedFocused);
         States.HighlightedFocused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), ForegroundColor, true);
+            SetValuesForState(
+                BackgroundColor.Adjust(Styling.ActiveStyle.Colors.PercentLighten), 
+                ForegroundColor, 
+                true);
         };
 
         ButtonCategory.States.Add(States.Focused);
         States.Focused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor, ForegroundColor, true);
+            SetValuesForState(
+                BackgroundColor, 
+                ForegroundColor, 
+                true);
         };
 
         ButtonCategory.States.Add(States.DisabledFocused);
         States.DisabledFocused.Apply = () =>
         {
-            SetValuesForState(BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken)
-                , ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), true);
+            SetValuesForState(
+                BackgroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), 
+                ForegroundColor.ToGrayscale().Adjust(Styling.ActiveStyle.Colors.PercentGreyScaleDarken), 
+                true);
         };
     }
 
@@ -218,6 +237,7 @@ public class ButtonVisual : InteractiveGue
         Background.Color = backgroundColor;
         TextInstance.Color = foregroundColor;
         FocusedIndicator.Visible = isFocused;
+        FocusedIndicator.Color = FocusedIndicatorColor;
     }
 
     public Button FormsControl => FormsControlAsObject as Button;

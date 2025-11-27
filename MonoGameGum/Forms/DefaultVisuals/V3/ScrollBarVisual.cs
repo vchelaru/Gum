@@ -61,7 +61,7 @@ public class ScrollBarVisual : InteractiveGue
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
                 _trackBackgroundColor = value;
-                (FormsControlAsObject as TextBoxBase)?.UpdateState();
+                FormsControl?.UpdateState();
             }
         }
     }

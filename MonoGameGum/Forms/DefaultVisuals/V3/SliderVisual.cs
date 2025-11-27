@@ -64,7 +64,8 @@ public class SliderVisual : InteractiveGue
             if (value != _trackBackgroundColor)
             {
                 _trackBackgroundColor = value;
-                TrackBackground.Color = value;
+                FormsControl?.UpdateState();
+
             }
         }
     }
@@ -78,7 +79,7 @@ public class SliderVisual : InteractiveGue
             if (value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -217,6 +218,9 @@ public class SliderVisual : InteractiveGue
         TrackBackground.Color = backgroundColor;
         FocusedIndicator.Visible = isFocused;
         ThumbInstance.IsEnabled = isEnabled;
+        FocusedIndicator.Color = _focusedIndicatorColor;
+        TrackBackground.Color = _trackBackgroundColor;
+
     }
 
     public Controls.Slider FormsControl => FormsControlAsObject as Controls.Slider;

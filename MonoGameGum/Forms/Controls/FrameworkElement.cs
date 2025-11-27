@@ -1340,6 +1340,31 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public virtual void UpdateState() { }
 
+    public void UpdateStateRecursively()
+    {
+        UpdateStateRecursively(this.Visual);
+    }
+
+    private static void UpdateStateRecursively(GraphicalUiElement gue)
+    { 
+        if(gue is InteractiveGue interactiveGue &&
+            interactiveGue.FormsControlAsObject is FrameworkElement frameworkElement)
+        {
+            frameworkElement.UpdateState();
+        }
+
+        if (gue.Children != null)
+        {
+            foreach (var child in gue.Children)
+            {
+                if(child is GraphicalUiElement childGue)
+                {
+                    UpdateStateRecursively(childGue);
+                }
+            }
+        }
+    }
+
 
     [Obsolete("Use DisabledStateName")]
     public const string DisabledState = "Disabled";

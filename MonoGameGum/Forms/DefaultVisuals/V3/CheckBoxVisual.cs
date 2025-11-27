@@ -108,7 +108,7 @@ public class CheckBoxVisual : InteractiveGue
             if (value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -349,6 +349,7 @@ public class CheckBoxVisual : InteractiveGue
         InnerCheck.Visible = checkVisible;
         FocusedIndicator.Visible = isFocused;
         InnerCheck.ApplyState(iconSaveState);
+        FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
     public CheckBox FormsControl => FormsControlAsObject as CheckBox;

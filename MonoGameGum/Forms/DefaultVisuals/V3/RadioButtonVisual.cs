@@ -113,7 +113,7 @@ public class RadioButtonVisual : InteractiveGue
             if (value != _focusedIndicatorColor)
             {
                 _focusedIndicatorColor = value;
-                FocusedIndicator.Color = value;
+                FormsControl?.UpdateState();
             }
         }
     }
@@ -310,6 +310,9 @@ public class RadioButtonVisual : InteractiveGue
         Radio.Color = radioColor;
         Radio.Visible = radioVisible;
         FocusedIndicator.Visible = isFocused;
+
+        FocusedIndicator.Color = _focusedIndicatorColor;
+
     }
 
     public RadioButton FormsControl => FormsControlAsObject as RadioButton;
