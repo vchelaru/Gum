@@ -72,7 +72,6 @@ public class WindowVisual : InteractiveGue
         Background.Height = 0;
         Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Background.Color = _backgroundColor;
         Background.Texture = uiSpriteSheetTexture;
         Background.ApplyState(Styling.ActiveStyle.NineSlice.Panel);
         this.AddChild(Background);
@@ -161,6 +160,8 @@ public class WindowVisual : InteractiveGue
         this.RaiseChildrenEventsOutsideOfBounds = true; 
 
         BackgroundColor = Styling.ActiveStyle.Colors.Primary;
+        // TODO: Figure out how we want to do this for stateless Visuals.
+        Background.Color = BackgroundColor;
 
         if (tryCreateFormsObject)
         {

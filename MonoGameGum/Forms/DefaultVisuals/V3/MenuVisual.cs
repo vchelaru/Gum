@@ -96,6 +96,8 @@ public class MenuVisual : InteractiveGue
         this.AddCategory(MenuCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
+        // For now, since there is no state, we need to set this hard coded
+        Background.Color = BackgroundColor;
 
         if (tryCreateFormsObject)
         {
