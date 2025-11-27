@@ -236,6 +236,7 @@
     * [Styling Individual Controls](code/styling/code-only-styling/styling-individual-controls.md)
     * [Styling Using States](code/styling/code-only-styling/styling-using-states.md)
     * [Adding and Removing Visual Children](code/styling/code-only-styling/adding-and-removing-visual-children.md)
+    * [ListBoxItem (Customizing ListBox and ComboBox)](code/styling/code-only-styling/listboxitem-customizing-listbox-and-combobox.md)
   * [Control Customization in Gum Tool](code/styling/control-customization-in-gum-tool.md)
 * [Standard Visuals](code/standard-visuals/README.md)
   * [CircleRuntime](code/standard-visuals/circleruntime.md)
