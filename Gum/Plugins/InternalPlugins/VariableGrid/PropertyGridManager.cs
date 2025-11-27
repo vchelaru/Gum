@@ -648,7 +648,7 @@ public partial class PropertyGridManager
         var stateSave = _selectedState.SelectedStateSave;
         if (stateSave != null)
         {
-            GetMemberCategoriesForState(instanceOwner, instance, categories, stateSave, stateCategory);
+            GetMemberCategoriesForState(instanceOwner, instance, ref categories, stateSave, stateCategory);
         }
         else if(stateCategory != null)
         {
@@ -658,10 +658,10 @@ public partial class PropertyGridManager
 
     }
 
-    private void GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    private void GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, ref List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
     {
         categories.Clear();
-        mPropertyGridDisplayer.GetCategories(instanceOwner, instance, categories, stateSave, stateSaveCategory);
+        categories = mPropertyGridDisplayer.GetCategories(instanceOwner, instance, categories, stateSave, stateSaveCategory);
 
         foreach (var category in categories)
         {
@@ -674,7 +674,6 @@ public partial class PropertyGridManager
             }
         }
 
-        ReorganizeCategories(categories);
         CustomizeVariables(categories, stateSave, instanceOwner, instance);
     }
 
@@ -761,22 +760,7 @@ public partial class PropertyGridManager
         //}
     }
 
-    private static void ReorganizeCategories(List<MemberCategory> categories)
-    {
-        MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
-        if (categoryToMove != null)
-        {
-            categories.Remove(categoryToMove);
-            categories.Insert(1, categoryToMove);
-        }
 
-        categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
-        if (categoryToMove != null)
-        {
-            categories.Remove(categoryToMove);
-            categories.Insert(2, categoryToMove);
-        }
-    }
 
     internal void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
     {
