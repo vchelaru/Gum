@@ -81,7 +81,7 @@ public class Styling
     /// <param name="height"></param>
     /// <param name="texture"></param>
     /// <returns></returns>
-    public static StateSave CreateTextureCoordinateState(int left, int top, int width, int height, Texture2D? texture = null)
+    public static StateSave CreateTextureCoordinateState(int left, int top, int width, int height, Texture2D? texture = null, string name = "")
     {
         var variables = new List<VariableSave>
         {
@@ -99,7 +99,8 @@ public class Styling
 
         return new StateSave
         {
-            Variables = variables
+            Variables = variables,
+            Name = name
         };
     }
 
@@ -167,19 +168,19 @@ public class NineSlice
 
     public void UseDefaults(Texture2D texture)
     {
-        Solid = Styling.CreateTextureCoordinateState(0, 48, 24, 24, texture);
-        Bordered = Styling.CreateTextureCoordinateState(24, 48, 24, 24, texture);
-        BracketVertical = Styling.CreateTextureCoordinateState(48, 72, 24, 24, texture);
-        BracketHorizontal = Styling.CreateTextureCoordinateState(72, 72, 24, 24, texture);
-        Tab = Styling.CreateTextureCoordinateState(48, 48, 24, 24, texture);
-        TabBordered = Styling.CreateTextureCoordinateState(72, 48, 24, 24, texture);
-        Outlined = Styling.CreateTextureCoordinateState(0, 72, 24, 24, texture);
-        OutlinedHeavy = Styling.CreateTextureCoordinateState(24, 72, 24, 24, texture);
-        Panel = Styling.CreateTextureCoordinateState(96, 48, 24, 24, texture);
-        CircleSolid = Styling.CreateTextureCoordinateState(0, 96, 24, 24, texture);
-        CircleBordered = Styling.CreateTextureCoordinateState(24, 96, 24, 24, texture);
-        CircleOutlined = Styling.CreateTextureCoordinateState(0, 120, 24, 24, texture);
-        CircleOutlinedHeavy = Styling.CreateTextureCoordinateState(24, 120, 24, 24, texture);
+        Solid = Styling.CreateTextureCoordinateState(0, 48, 24, 24, texture, nameof(Solid));
+        Bordered = Styling.CreateTextureCoordinateState(24, 48, 24, 24, texture, nameof(Bordered));
+        BracketVertical = Styling.CreateTextureCoordinateState(48, 72, 24, 24, texture, nameof(BracketVertical));
+        BracketHorizontal = Styling.CreateTextureCoordinateState(72, 72, 24, 24, texture, nameof(BracketHorizontal));
+        Tab = Styling.CreateTextureCoordinateState(48, 48, 24, 24, texture, nameof(Tab));
+        TabBordered = Styling.CreateTextureCoordinateState(72, 48, 24, 24, texture, nameof(TabBordered));
+        Outlined = Styling.CreateTextureCoordinateState(0, 72, 24, 24, texture, nameof(Outlined));
+        OutlinedHeavy = Styling.CreateTextureCoordinateState(24, 72, 24, 24, texture, nameof(OutlinedHeavy));
+        Panel = Styling.CreateTextureCoordinateState(96, 48, 24, 24, texture, nameof(Panel));
+        CircleSolid = Styling.CreateTextureCoordinateState(0, 96, 24, 24, texture, nameof(CircleSolid));
+        CircleBordered = Styling.CreateTextureCoordinateState(24, 96, 24, 24, texture, nameof(CircleBordered));
+        CircleOutlined = Styling.CreateTextureCoordinateState(0, 120, 24, 24, texture, nameof(CircleOutlined));
+        CircleOutlinedHeavy = Styling.CreateTextureCoordinateState(24, 120, 24, 24, texture, nameof(CircleOutlinedHeavy));
     }
 
     public void UpdateTextures(Texture2D texture)
