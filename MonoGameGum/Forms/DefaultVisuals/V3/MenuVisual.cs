@@ -38,7 +38,11 @@ public class MenuVisual : InteractiveGue
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
                 // Highlighted or Disabled etc
                 _backgroundColor = value;
-                FormsControl?.UpdateState();
+
+                // Currently there are no states
+                //FormsControl?.UpdateState();
+                // For now, since there is no state, we need to set this hard coded
+                Background.Color = BackgroundColor;
             }
         }
     }
@@ -96,8 +100,6 @@ public class MenuVisual : InteractiveGue
         this.AddCategory(MenuCategory);
 
         BackgroundColor = Styling.ActiveStyle.Colors.InputBackground;
-        // For now, since there is no state, we need to set this hard coded
-        Background.Color = BackgroundColor;
 
         if (tryCreateFormsObject)
         {
