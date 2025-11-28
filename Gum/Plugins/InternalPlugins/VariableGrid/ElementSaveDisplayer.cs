@@ -356,7 +356,7 @@ public class ElementSaveDisplayer
     }
 
 
-    public void GetCategories(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    public List<MemberCategory> GetCategories(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
     {
         var properties = GetProperties(instanceOwner, instance, stateSave);
 
@@ -449,6 +449,56 @@ public class ElementSaveDisplayer
                 categoryToAddTo.Members.Add(srim);
             }
         }
+
+        categories = SortCategories(categories);
+
+        return categories;
+    }
+
+    List<string> OrderedCategories = new List<string>
+    {
+        "Position",
+        "Dimensions",
+        "Text",
+        "Font",
+        "Source",
+        "Animation",
+        "Flip and Rotation",
+        "States and Visibility",
+        "Parent",
+        "Children",
+        "Rendering",
+        "Dropshadow",
+        "Stroke and Fill",
+        "Behavior"
+
+    };
+    private List<MemberCategory> SortCategories(List<MemberCategory> categories)
+    {
+        int GetDesiredIndex(string category)
+        {
+            if(string.IsNullOrEmpty(category))
+            {
+                return -1;
+            }
+            else if(OrderedCategories.Contains(category))
+            {
+                return OrderedCategories.IndexOf(category);
+            }
+            else
+            {
+                var itemByCategory = categories.FirstOrDefault(item => item.Name == category);
+
+                var index = categories.IndexOf(itemByCategory);
+
+                return OrderedCategories.Count + index;
+            }
+        }
+
+        categories = categories.OrderBy(item => GetDesiredIndex(item.Name))
+            .ToList();
+
+        return categories;
     }
 
     private StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave instanceOwner, InstanceSave instance, 
@@ -696,7 +746,15 @@ public class ElementSaveDisplayer
             }
             else if (!string.IsNullOrEmpty(defaultVariable.ExposedAsName))
             {
-                category = "Exposed";
+                var baseVariable = ObjectFinder.Self.GetRootVariable(defaultVariable.Name, elementSave);
+                if(baseVariable != null)
+                {
+                    category = baseVariable.Category;
+                }
+                else
+                {
+                    category = "Exposed";
+                }
             }
             else if (isState)
             {

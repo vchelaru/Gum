@@ -3680,7 +3680,7 @@ public class CodeGenerator
 
     #endregion
 
-    #region Gum Save Objets - generate Component or Screen instance
+    #region Gum Save Objects - generate Component or Screen instance
     private void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
     {
         var element = context.Element;
