@@ -283,23 +283,23 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     public override void PreRender()
     {
-        if(this.EffectiveManagers != null)
+        var strokeWidth = StrokeWidth;
+
+        switch (StrokeWidthUnits)
         {
-            var camera = this.EffectiveManagers.Renderer.Camera;
-            var strokeWidth = StrokeWidth;
-
-            switch(StrokeWidthUnits)
-            {
-                case DimensionUnitType.Absolute:
-                    // do nothing
-                    break;
-                case DimensionUnitType.ScreenPixel:
+            case DimensionUnitType.Absolute:
+                // do nothing
+                break;
+            case DimensionUnitType.ScreenPixel:
+                if (this.EffectiveManagers != null)
+                {
+                    var camera = this.EffectiveManagers.Renderer.Camera;
                     strokeWidth /= camera.Zoom;
-                    break;
-            }
-
-            ContainedRenderable.StrokeWidth = strokeWidth;
+                }
+                break;
         }
+
+        ContainedRenderable.StrokeWidth = strokeWidth;
         base.PreRender();
     }
 }

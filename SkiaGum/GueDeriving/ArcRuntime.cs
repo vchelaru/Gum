@@ -31,8 +31,8 @@ public class ArcRuntime : SkiaShapeRuntime
 
     public float Thickness
     {
-        get => ContainedArc.Thickness;
-        set => ContainedArc.Thickness = value;
+        get => base.StrokeWidth;
+        set => base.StrokeWidth = value;
     }
 
     public float StartAngle

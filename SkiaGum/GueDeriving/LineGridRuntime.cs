@@ -52,6 +52,8 @@ public class LineGridRuntime: SkiaShapeRuntime
         SetContainedObject(new LineGrid());
         ContainedLineGrid = this.RenderableComponent as LineGrid;
 
+        StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+
         // Make defaults 100 to match Glue
         Width = 100;
         Height = 100;
