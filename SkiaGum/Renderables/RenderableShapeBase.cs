@@ -415,8 +415,17 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         get => _strokeWidth;
         set
         {
-            _strokeWidth = value;
-            ClearCachedPaint();
+            if(value != _strokeWidth)
+            {
+#if FULL_DIAGNOSTICS
+                if(float.IsPositiveInfinity(value))
+                {
+                    throw new ArgumentException("StrokeWidth cannot be set to PositiveInfinity");
+                }
+#endif
+                _strokeWidth = value;
+                ClearCachedPaint();
+            }
         }
     }
 
@@ -547,7 +556,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     public object Tag { get; set; }
 
-    #endregion
+#endregion
 
     public RenderableShapeBase()
     {

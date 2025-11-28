@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Shapes.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "Runtimes\RaylibGum\RaylibGum.csproj", "{299C14B8-2DF8-94FB-4395-0E49C58874BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Tests", "Tests\SkiaGum.Tests\SkiaGum.Tests.csproj", "{78FE11DE-0B16-446D-A2A9-811480CDE49D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -213,6 +215,18 @@ Global
 		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{299C14B8-2DF8-94FB-4395-0E49C58874BF}.Release|x86.Build.0 = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Debug|x86.Build.0 = Debug|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release_No_Diagnostics|Any CPU.Build.0 = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release_No_Diagnostics|x86.ActiveCfg = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release_No_Diagnostics|x86.Build.0 = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|x86.ActiveCfg = Release|Any CPU
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -224,6 +238,7 @@ Global
 		{2F966462-A7FB-4D99-AE43-4597A145C809} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{96A05A7C-90CA-437F-ACFA-8C8193DD2791} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{E43273A6-C44C-49A4-9301-5D5250688229} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{78FE11DE-0B16-446D-A2A9-811480CDE49D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}
