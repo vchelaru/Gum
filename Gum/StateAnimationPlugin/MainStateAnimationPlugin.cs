@@ -612,7 +612,7 @@ public class MainStateAnimationPlugin : PluginBase
         return response;
     }
 
-    private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave element)
+    private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave? element)
     {
         List<AnimationSave> animatedStatesReferencingState = new List<AnimationSave>();
         if (element != null)

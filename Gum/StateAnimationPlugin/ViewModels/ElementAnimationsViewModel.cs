@@ -388,7 +388,7 @@ public class ElementAnimationsViewModel : ViewModel
         Animations.Add(copyOfAnimation);
     }
 
-    private void OnAnyChange(object sender, string propertyName)
+    private void OnAnyChange(object sender, string? propertyName)
     {
         AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
     }
@@ -412,12 +412,12 @@ public class ElementAnimationsViewModel : ViewModel
         OnAnyChange(this, "Animations");
     }
 
-    private void HandleFrameItemChanged(object sender, PropertyChangedEventArgs e)
+    private void HandleFrameItemChanged(object? sender, PropertyChangedEventArgs e)
     {
         OnAnyChange(sender, e.PropertyName);
     }
 
-    private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
+    private void HandleAnimationItemChange(object? sender, PropertyChangedEventArgs e)
     {
         var shouldNotifyOfTimeChange = false;
 
@@ -508,9 +508,9 @@ public class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    public string GetWhyAddingAnimationIsInvalid()
+    public string? GetWhyAddingAnimationIsInvalid()
     {
-        string whyIsntValid = null;
+        string? whyIsntValid = null;
         if (_selectedState.SelectedScreen == null && _selectedState.SelectedComponent == null)
         {
             whyIsntValid = "You must first select a Screen or Component";

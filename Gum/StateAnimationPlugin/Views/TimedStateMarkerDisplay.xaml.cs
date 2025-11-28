@@ -121,7 +121,7 @@ namespace StateAnimationPlugin.Views
 
         private static void RangePropertyChangeCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            TimedStateMarkerDisplay display = d as TimedStateMarkerDisplay;
+            TimedStateMarkerDisplay display = (TimedStateMarkerDisplay)d;
             display.RefreshRectangles();
         }
 

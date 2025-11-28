@@ -123,6 +123,8 @@ public class Text : RenderableBase, IText
         get; set;
     }
 
+    public string? StoredMarkupText => null;
+
     static Text()
     {
         GraphicalUiElement.UpdateFontFromProperties += HandleUpdateFontValues;
