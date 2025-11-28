@@ -131,6 +131,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
     Vector2 Position;
     IRenderableIpso mParent;
+    public string? StoredMarkupText => null;
 
     public IRenderableIpso Parent
     {

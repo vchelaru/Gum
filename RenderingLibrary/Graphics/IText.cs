@@ -21,6 +21,8 @@ namespace RenderingLibrary.Graphics
         // The text that was assgined on this Text instance prior to any wrapping.
         string? RawText { get; set; }
 
+        string? StoredMarkupText { get; }
+
         float? Width { get; set; }
 
         TextOverflowVerticalMode TextOverflowVerticalMode { get; set; }

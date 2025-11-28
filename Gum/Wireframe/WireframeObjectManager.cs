@@ -326,7 +326,12 @@ public partial class WireframeObjectManager
             var stringId = forcedId;
             if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is IText asText)
             {
-                stringId = asText.RawText;
+                stringId = asText.StoredMarkupText;
+                if(string.IsNullOrEmpty(stringId))
+                {
+                    stringId =  asText.RawText;
+                }
+
             }
 
             // Go through the GraphicalUiElement to kick off a layout adjustment if necessary

@@ -33,7 +33,7 @@ public partial class AnimationViewModel : ViewModel
     BitmapFrame mPlayOnceBitmap;
     
     private readonly ISelectedState _selectedState;
-
+    private readonly WireframeObjectManager _wireframeObjectManager;
     AnimationRuntime? _cachedAnimationRuntime;
 
     #endregion
@@ -128,6 +128,7 @@ public partial class AnimationViewModel : ViewModel
 
         mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
 
     public AnimationViewModel Clone()
@@ -386,7 +387,7 @@ public partial class AnimationViewModel : ViewModel
         {
             _selectedState.CustomCurrentStateSave = stateToSet;
             _selectedState.SelectedStateSave = null;
-            WireframeObjectManager.Self.RootGue?.ApplyState(stateToSet);
+            _wireframeObjectManager.RootGue?.ApplyState(stateToSet);
         }
     }
 
