@@ -39,7 +39,16 @@ public class InterpolationTrackControl : Canvas
     }
 
     public static readonly DependencyProperty LineBrushProperty = DependencyProperty.Register(
-        nameof(LineBrush), typeof(Brush), typeof(InterpolationTrackControl), new PropertyMetadata(Brushes.Gray));
+        nameof(LineBrush), typeof(Brush), typeof(InterpolationTrackControl), new PropertyMetadata(Brushes.Gray, OnDataChanged));
+
+    public Brush? FillBrush
+    {
+        get => (Brush?)GetValue(FillBrushProperty);
+        set => SetValue(FillBrushProperty, value);
+    }
+
+    public static readonly DependencyProperty FillBrushProperty = DependencyProperty.Register(
+        nameof(FillBrush), typeof(Brush), typeof(InterpolationTrackControl), new PropertyMetadata(null, OnDataChanged));
 
     public bool ClampInterpolationVisuals
     {
@@ -55,7 +64,10 @@ public class InterpolationTrackControl : Canvas
     {
         if(d is InterpolationTrackControl c)
         {
-            c.HookItems();
+            if(e.Property == KeyframesProperty)
+            {
+                c.HookItems();
+            }
             c.InvalidateVisual();
         }
     }
@@ -64,7 +76,6 @@ public class InterpolationTrackControl : Canvas
 
     private void HookItems()
     {
-        // detach
         foreach(var k in _hooked)
         {
             if(k is INotifyPropertyChanged inpc)
@@ -138,6 +149,7 @@ public class InterpolationTrackControl : Canvas
 
         const int samples = 32;
         Pen pen = new(LineBrush, 1.0);
+        Brush fillBrush = FillBrush ?? DeriveDefaultFillBrush(LineBrush);
 
         for (int i = 0; i < stateItems.Count - 1; i++)
         {
@@ -152,33 +164,80 @@ public class InterpolationTrackControl : Canvas
 
             TweeningFunction tween = Tweener.GetInterpolationFunction(current.InterpolationType, current.Easing);
 
-            
-            var geo = new StreamGeometry();
-            using (var ctx = geo.Open())
+            StreamGeometry fillGeo = new();
+            using(StreamGeometryContext fillContext = fillGeo.Open())
             {
-                for(int s = 0; s <= samples; s++)
+                double firstProcessed = tween(0f, 0f, 1f, 1f);
+                if (ClampInterpolationVisuals)
+                {
+                    firstProcessed = Math.Clamp(firstProcessed, 0, 1);
+                }
+
+                double firstY = (1 - firstProcessed) * ActualHeight;
+                fillContext.BeginFigure(new Point(startX, firstY), true, true);
+
+                for(int s=1; s<=samples; s++)
                 {
                     float t = (float)s / samples;
                     double processed = tween(t, 0f, 1f, 1f);
+
                     if (ClampInterpolationVisuals)
                     {
                         processed = Math.Clamp(processed, 0, 1);
                     }
 
                     double x = startX + (endX - startX) * t;
-                    double y = (1 - processed) * ActualHeight; // 0-bottom, 1-top
+                    double y = (1 - processed) * ActualHeight;
+                    fillContext.LineTo(new Point(x, y), true, false);
+                }
+
+                // bottom right
+                fillContext.LineTo(new Point(endX, ActualHeight), true, false);
+                // bottom left
+                fillContext.LineTo(new Point(startX, ActualHeight), true, false);
+            }
+            fillGeo.Freeze();
+            dc.DrawGeometry(fillBrush, null, fillGeo);
+
+            // stroke geometry (just the curve)
+            StreamGeometry strokeGeo = new();
+            using (StreamGeometryContext strokeContext = strokeGeo.Open())
+            {
+                for(int s = 0; s <= samples; s++)
+                {
+                    float t = (float)s / samples;
+                    double processed = tween(t, 0f, 1f, 1f);
+
+                    if (ClampInterpolationVisuals)
+                    {
+                        processed = Math.Clamp(processed, 0, 1);
+                    }
+
+                    double x = startX + (endX - startX) * t;
+                    double y = (1 - processed) * ActualHeight;
+
                     if (s == 0)
                     {
-                        ctx.BeginFigure(new Point(x, y), false, false);
+                        strokeContext.BeginFigure(new Point(x, y), false, false);
                     }
                     else
                     {
-                        ctx.LineTo(new Point(x, y), true, false);
+                        strokeContext.LineTo(new Point(x, y), true, false);
                     }
                 }
             }
-            geo.Freeze();
-            dc.DrawGeometry(null, pen, geo);
+            strokeGeo.Freeze();
+            dc.DrawGeometry(null, pen, strokeGeo);
         }
+    }
+
+    static Brush DeriveDefaultFillBrush(Brush lineBrush)
+    {
+        if(lineBrush is SolidColorBrush scb)
+        {
+            Color c = scb.Color;
+            return new SolidColorBrush(Color.FromArgb(80, c.R, c.G, c.B));
+        }
+        return new SolidColorBrush(Color.FromArgb(80, 128,128,128));
     }
 }
