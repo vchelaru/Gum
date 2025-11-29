@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
-public class SpriteRuntimeTests
+public class SpriteRuntimeTests : BaseTestClass
 {
     [Fact]
     public void SourceRectangle_AssignsTextureValues()

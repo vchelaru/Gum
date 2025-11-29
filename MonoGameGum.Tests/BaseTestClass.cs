@@ -48,8 +48,10 @@ public class BaseTestClass : IDisposable
 
         InteractiveGue.CurrentInputReceiver = null;
 
-        GumService.Default.Root.Children.Clear();
-        GumService.Default.ModalRoot.Children.Clear();
-        GumService.Default.PopupRoot.Children.Clear();
+        GumService.Default.Root.Children!.Clear();
+        GumService.Default.ModalRoot.Children!.Clear();
+        GumService.Default.PopupRoot.Children!.Clear();
+
+        CustomSetPropertyOnRenderable.LocalizationService = null;
     }
 }

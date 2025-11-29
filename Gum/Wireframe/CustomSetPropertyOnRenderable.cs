@@ -42,7 +42,7 @@ namespace Gum.Wireframe;
 
 public class CustomSetPropertyOnRenderable
 {
-    public static ILocalizationService LocalizationService { get; set; }
+    public static ILocalizationService? LocalizationService { get; set; }
 #if GUM
     private static readonly FontManager _fontManager;
 #endif
@@ -461,7 +461,6 @@ public class CustomSetPropertyOnRenderable
             if (valueAsString?.Contains("[") == true)
             {
 
-                // todo - eventually support localization here:
                 asText.StoredMarkupText = valueAsString;
                 SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
             }
@@ -473,7 +472,16 @@ public class CustomSetPropertyOnRenderable
                 {
                     rawText = LocalizationService.Translate(rawText);
                 }
-                asText.RawText = rawText;
+
+                if(rawText?.Contains("[") == true)
+                {
+                    asText.StoredMarkupText = rawText;
+                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+                }
+                else
+                {
+                    asText.RawText = rawText;
+                }
             }
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||

@@ -1,5 +1,8 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.GueDeriving;
+using MonoGameGum.Localization;
+using Moq;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
@@ -13,13 +16,21 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-public class TextRuntimeTests
+public class TextRuntimeTests : BaseTestClass
 {
 
     const string fontPattern =
 $"info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
 $"common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\r\n" +
 $"chars count=223\r\n";
+    Mock<ILocalizationService> _localizationService;
+
+
+    public TextRuntimeTests()
+    {
+        _localizationService = new();
+
+    }
 
 
     [Fact]
@@ -310,14 +321,14 @@ $"chars count=223\r\n";
 
     #endregion
 
-    #region Text (including bbcode)
+    #region Text (including bbcode and localization)
 
     [Fact]
     public void Text_WithSlashRSlashN_ShouldSetBbCodeCorrectly()
     {
-        var text = $"[Color=Green]0[/Color]1\r\n[Color=Green]0[/Color]1";
+        string text = $"[Color=Green]0[/Color]1\r\n[Color=Green]0[/Color]1";
 
-        var textRuntime = new TextRuntime();
+        TextRuntime textRuntime = new ();
         textRuntime.Text = text;
 
         var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
@@ -331,7 +342,43 @@ $"chars count=223\r\n";
         inlineVariables[1].CharacterCount.ShouldBe(1);
     }
 
+    [Fact]
+    public void Text_ShouldUseLocalization()
+    {
+        TextRuntime textRuntime = new();
+
+        CustomSetPropertyOnRenderable.LocalizationService = _localizationService.Object;
+        _localizationService.Setup(x => x.Translate("T_StringId")).Returns("This is a localized string");
+        textRuntime.Text = "T_StringId";
+
+        textRuntime.Text.ShouldBe("This is a localized string");
+    }
+
+    [Fact]
+    public void Text_WithLocalization_ShouldSetBbCodeCorrectly()
+    {
+        CustomSetPropertyOnRenderable.LocalizationService = _localizationService.Object;
+        _localizationService
+            .Setup(x => x.Translate("T_StringId"))
+            .Returns("[Color=Green]0[/Color]1\r\n[Color=Green]0[/Color]1");
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "T_StringId";
+
+        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        var inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(2);
+        inlineVariables[0].StartIndex.ShouldBe(0);
+        inlineVariables[0].CharacterCount.ShouldBe(1);
+
+        inlineVariables[1].StartIndex.ShouldBe(3, "Because \\r character should not be included, so the newline 0 character starts at index 3");
+        inlineVariables[1].CharacterCount.ShouldBe(1);
+    }
+
     #endregion
+
+    #region MaxWidth
 
     [Fact]
     public void MaxWidth_ShouldWrapText_IfTextExceedsMaxWidth()
@@ -350,6 +397,8 @@ $"chars count=223\r\n";
         var absoluteHeight = textRuntime.GetAbsoluteHeight();
         absoluteHeight.ShouldBe(lineCount * textRuntime.BitmapFont.LineHeightInPixels);
     }
+
+    #endregion
 
     [Fact]
     public void Clone_ShouldCreateClonedText()
