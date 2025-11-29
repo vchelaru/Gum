@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace MonoGameGum.Tests.Runtimes;
+namespace MonoGameGum.Tests.Forms;
 public class MenuItemTests
 {
     [Fact]
