@@ -45,19 +45,10 @@ brew install winetricks
 
 The following goes through the steps do download and run the `setup_gum_mac.sh` automation script. This script goes through the steps for you with minimal interaction to setup your environment on macOS to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
 
-1. Download the setup\_gum.mac.sh script\
-   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_mac.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_mac.sh)
-2. Open a terminal and `cd` to the directory that the script was downloaded to
-3. Make the script executable
-
+1. Open a terminal
+2. Enter the following command to download and execute the setup script:
 ```sh
-chmod +x ./setup_gum_mac.sh
-```
-
-4. Execute the script
-
-```sh
-./setup_gum.mac.sh
+curl https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh | sh
 ```
 
 ### Linux
@@ -73,14 +64,12 @@ You will need these following prerequisites installed on your system, you can ru
 
 These following commands will go through the steps of downloading and running the `setup_gum_linux.sh` script. This script goes through the steps for you with minimal interaction required to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please refer to the Manual Setup Steps section below.
 
-1. Download the setup\_gum.linux.sh script\
-   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
-2. Open a terminal and `cd` to the directory that the script was downloaded to.
-3. Make the script executable and run the setup.
-
+1. Open a terminal
+2. Enter the following command to download and execute the setup script:
 ```sh
-chmod +x ./setup_gum_linux.sh && ./setup_gum_linux.sh
+curl https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh | sh
 ```
+
 
 **Install WINE and Winetricks Manually**
 
