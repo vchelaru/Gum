@@ -19,6 +19,7 @@ using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using ToolsUtilities;
 using System.Globalization;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using Gum.Services;
@@ -26,7 +27,7 @@ using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.ViewModels;
 
-public class ElementAnimationsViewModel : ViewModel
+public partial class ElementAnimationsViewModel : ViewModel
 {
     #region Fields
 
@@ -49,6 +50,12 @@ public class ElementAnimationsViewModel : ViewModel
     #endregion
 
     #region Properties
+
+    public bool ClampInterpolationVisuals
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
 
     public ObservableCollection<AnimationViewModel> Animations
     {
@@ -220,6 +227,7 @@ public class ElementAnimationsViewModel : ViewModel
 
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService)
     {
+        ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
 
         Animations = new ObservableCollection<AnimationViewModel>();
@@ -520,5 +528,11 @@ public class ElementAnimationsViewModel : ViewModel
     }
 
     #endregion
+
+    [RelayCommand]
+    private void ToggleInterpolationClamping()
+    {
+        ClampInterpolationVisuals = !ClampInterpolationVisuals;
+    }
 
 }

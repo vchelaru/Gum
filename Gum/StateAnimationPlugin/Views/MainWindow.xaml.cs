@@ -405,5 +405,10 @@ namespace StateAnimationPlugin.Views
                 frame.IsTimelineVisualHovered = false;
             }
         }
+
+        private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ToggleInterpolationClampingCommand.Execute(null);
+        }
     }
 }
