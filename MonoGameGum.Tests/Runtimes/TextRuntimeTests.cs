@@ -16,7 +16,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
-public class TextRuntimeTests
+public class TextRuntimeTests : BaseTestClass
 {
 
     const string fontPattern =
@@ -29,7 +29,6 @@ $"chars count=223\r\n";
     public TextRuntimeTests()
     {
         _localizationService = new();
-        CustomSetPropertyOnRenderable.LocalizationService = _localizationService.Object;
 
     }
 
@@ -347,6 +346,8 @@ $"chars count=223\r\n";
     public void Text_ShouldUseLocalization()
     {
         TextRuntime textRuntime = new();
+
+        CustomSetPropertyOnRenderable.LocalizationService = _localizationService.Object;
         _localizationService.Setup(x => x.Translate("T_StringId")).Returns("This is a localized string");
         textRuntime.Text = "T_StringId";
 
@@ -356,6 +357,7 @@ $"chars count=223\r\n";
     [Fact]
     public void Text_WithLocalization_ShouldSetBbCodeCorrectly()
     {
+        CustomSetPropertyOnRenderable.LocalizationService = _localizationService.Object;
         _localizationService
             .Setup(x => x.Translate("T_StringId"))
             .Returns("[Color=Green]0[/Color]1\r\n[Color=Green]0[/Color]1");

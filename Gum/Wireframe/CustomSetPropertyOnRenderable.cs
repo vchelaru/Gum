@@ -42,7 +42,7 @@ namespace Gum.Wireframe;
 
 public class CustomSetPropertyOnRenderable
 {
-    public static ILocalizationService LocalizationService { get; set; }
+    public static ILocalizationService? LocalizationService { get; set; }
 #if GUM
     private static readonly FontManager _fontManager;
 #endif
