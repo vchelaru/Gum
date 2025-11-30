@@ -1,10 +1,39 @@
 # Migrating to 2025 November
 
-## V3 Visuals
-
 {% hint style="warning" %}
 November 2025 has not yet been released. This document currently covers the November version if your project is linked to source.
 {% endhint %}
+
+## Moved .csproj Files
+
+A number of csproj files have been moved. If your project depends on any of these (if you link to source), you will need to adjust your file references.
+
+| Old Location                               | New Location                                        |
+| ------------------------------------------ | --------------------------------------------------- |
+| \<Gum Root>\SkiaGum.Wpf\SkiaGum.Wpf.csproj | \<Gum Root>\Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj |
+
+## Warnings on Invalid Variables
+
+Previous versions of Gum would not report errors if a Screen or Component included an invalid variable. The current version of Gum reports these.
+
+These type of errors are primiarly reported becase they can have an impact on code generation. Although the code generator handles these types of variables in most cases, they can sometimes cause confusing code generation or compile errors.
+
+Currently these errors must be fixed manually in XML files, but this may change in future versions of Gum.
+
+A typical error indicates which variable is causing the problem, as shown in the following screenshot:
+
+<figure><img src="../../.gitbook/assets/30_09 14 58.png" alt=""><figcaption></figcaption></figure>
+
+To solve these:
+
+1. Right-click on the Screen or Component with the invalid variable and select **View in Explorer**.
+2. Open the file in a text editor
+3. Locate the variable in the XML structure
+4. Delete or modify the variable
+   1. If the variable is an old variable which is not used, delete the variable
+   2. If the variable should be used, modify the type or name according to the error displayed. Often these can be modified by appending the word "State" to the variable name
+
+## V3 Visuals
 
 The November 2025 release of Gum introduces an improvement to the default code-only controls. These new V3 visuals add the following improvements over V2:
 
