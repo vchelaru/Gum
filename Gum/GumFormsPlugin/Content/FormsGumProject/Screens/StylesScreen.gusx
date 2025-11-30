@@ -233,14 +233,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonConfirmInstance.Text</Name>
-      <Value xsi:type="xsd:string">Confirm</Value>
+      <Name>ButtonConfirmInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonConfirmInstance.Parent</Name>
-      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+      <Name>ButtonConfirmInstance.Text</Name>
+      <Value xsi:type="xsd:string">Confirm</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -251,14 +251,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonDenyInstance.Text</Name>
-      <Value xsi:type="xsd:string">Deny</Value>
+      <Name>ButtonDenyInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonDenyInstance.Parent</Name>
-      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+      <Name>ButtonDenyInstance.Text</Name>
+      <Value xsi:type="xsd:string">Deny</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -323,14 +323,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonStandardIconInstance.Text</Name>
-      <Value xsi:type="xsd:string">Standard Icon</Value>
+      <Name>ButtonStandardIconInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonStandardIconInstance.Parent</Name>
-      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+      <Name>ButtonStandardIconInstance.Text</Name>
+      <Value xsi:type="xsd:string">Standard Icon</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -341,14 +341,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonStandardInstance.Text</Name>
-      <Value xsi:type="xsd:string">Standard</Value>
+      <Name>ButtonStandardInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ButtonsContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonStandardInstance.Parent</Name>
-      <Value xsi:type="xsd:string">ButtonsContainer</Value>
+      <Name>ButtonStandardInstance.Text</Name>
+      <Value xsi:type="xsd:string">Standard</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

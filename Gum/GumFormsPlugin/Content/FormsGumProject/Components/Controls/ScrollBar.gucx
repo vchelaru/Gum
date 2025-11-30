@@ -89,14 +89,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ThumbInstance.Text</Name>
-      <Value xsi:type="xsd:string"></Value>
+      <Name>ThumbInstance.Parent</Name>
+      <Value xsi:type="xsd:string">TrackInstance</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ThumbInstance.Parent</Name>
-      <Value xsi:type="xsd:string">TrackInstance</Value>
+      <Name>ThumbInstance.Text</Name>
+      <Value xsi:type="xsd:string"></Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

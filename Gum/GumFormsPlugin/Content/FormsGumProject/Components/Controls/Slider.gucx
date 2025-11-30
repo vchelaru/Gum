@@ -88,12 +88,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>ThumbInstance.Text</Name>
-      <Value xsi:type="xsd:string"></Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>ThumbInstance.Height</Name>
       <Value xsi:type="xsd:float">24</Value>
@@ -103,6 +97,12 @@
       <Type>string</Type>
       <Name>ThumbInstance.Parent</Name>
       <Value xsi:type="xsd:string">TrackInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ThumbInstance.Text</Name>
+      <Value xsi:type="xsd:string"></Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

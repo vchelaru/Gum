@@ -86,11 +86,19 @@ namespace ToolsUtilities
 
         #region Delegates
 
-        public static Func<string, Stream> CustomGetStreamFromFile;
+        public static Func<string, Stream>? CustomGetStreamFromFile;
 
         #endregion
 
         #region Methods
+
+        static XmlSerializerNamespaces xmlNamespaces = new XmlSerializerNamespaces();
+        static FileManager()
+        {
+            xmlNamespaces.Add("xsd", "http://www.w3.org/2001/XMLSchema");
+            xmlNamespaces.Add("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        }
+
 
         public static bool AreSaveObjectsEqual<T>(T first, T second)
         {
@@ -1332,7 +1340,8 @@ namespace ToolsUtilities
                     // for info on this, see
                     // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
 
-                    serializer.Serialize(writer, objectToSerialize);
+
+                    serializer.Serialize(writer, objectToSerialize, xmlNamespaces);
 
                 }
             }

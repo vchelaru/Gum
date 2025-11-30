@@ -329,6 +329,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float</Type>
+      <Name>VerticalScrollBarInstance.X</Name>
+      <Value xsi:type="xsd:float">-0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>HorizontalAlignment</Type>
       <Name>VerticalScrollBarInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
@@ -338,6 +344,12 @@
       <Type>PositionUnitType</Type>
       <Name>VerticalScrollBarInstance.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>VerticalScrollBarInstance.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -352,23 +364,17 @@
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>VerticalScrollBarInstance.X</Name>
-      <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>VerticalScrollBarInstance.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
   </State>
   <Category>
     <Name>ScrollBarVisibility</Name>
     <State>
       <Name>NoScrollBar</Name>
+      <Variable>
+        <Type>float</Type>
+        <Name>ClipContainerInstance.Height</Name>
+        <Value xsi:type="xsd:float">-4</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>float</Type>
         <Name>ClipContainerInstance.Width</Name>
@@ -382,9 +388,9 @@
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
-        <Type>bool</Type>
-        <Name>VerticalScrollBarInstance.Visible</Name>
-        <Value xsi:type="xsd:boolean">false</Value>
+        <Type>float</Type>
+        <Name>HorizontalScrollBarInstance.Width</Name>
+        <Value xsi:type="xsd:float">-24</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -394,20 +400,20 @@
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
-        <Type>float</Type>
-        <Name>HorizontalScrollBarInstance.Width</Name>
-        <Value xsi:type="xsd:float">-24</Value>
+        <Type>bool</Type>
+        <Name>VerticalScrollBarInstance.Visible</Name>
+        <Value xsi:type="xsd:boolean">false</Value>
         <SetsValue>true</SetsValue>
       </Variable>
+    </State>
+    <State>
+      <Name>VerticalScrollVisible</Name>
       <Variable>
         <Type>float</Type>
         <Name>ClipContainerInstance.Height</Name>
         <Value xsi:type="xsd:float">-4</Value>
         <SetsValue>true</SetsValue>
       </Variable>
-    </State>
-    <State>
-      <Name>VerticalScrollVisible</Name>
       <Variable>
         <Type>float</Type>
         <Name>ClipContainerInstance.Width</Name>
@@ -423,6 +429,12 @@
       </Variable>
       <Variable>
         <Type>float</Type>
+        <Name>HorizontalScrollBarInstance.Width</Name>
+        <Value xsi:type="xsd:float">-24</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
         <Name>VerticalScrollBarInstance.Height</Name>
         <Value xsi:type="xsd:float">0</Value>
         <SetsValue>true</SetsValue>
@@ -431,18 +443,6 @@
         <Type>bool</Type>
         <Name>VerticalScrollBarInstance.Visible</Name>
         <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>HorizontalScrollBarInstance.Width</Name>
-        <Value xsi:type="xsd:float">-24</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>float</Type>
-        <Name>ClipContainerInstance.Height</Name>
-        <Value xsi:type="xsd:float">-4</Value>
         <SetsValue>true</SetsValue>
       </Variable>
     </State>
