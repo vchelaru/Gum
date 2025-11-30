@@ -29,6 +29,7 @@
     <SolidColorBrush x:Key="NowLineBrush" Color="#c3e3ed" />
     <SolidColorBrush x:Key="DeselectedBrush" Color="{DynamicResource Frb.Colors.Primary.Dark}" />
     <SolidColorBrush x:Key="SelectedBrush" Color="{DynamicResource Frb.Colors.Primary.Light}" />
+    <SolidColorBrush x:Key="InterpolationBrush" Color="{DynamicResource Frb.Colors.Primary}"></SolidColorBrush>
 
     <!--  Event Template  -->
     <DataTemplate x:Key="EventTemplate" DataType="{x:Type viewModels:AnimatedKeyframeViewModel}">
@@ -314,6 +315,15 @@
                     Padding="0,1"
                     VerticalAlignment="Center"
                     Text="{Binding Name}" />
+
+                  <!-- Interpolation visualization for state keyframes -->
+                  <local:InterpolationTrackControl
+                    Grid.Column="1"
+                    Keyframes="{Binding Items}"
+                    AnimationLength="{Binding ElementName=Root, Path=Animation.Length}"
+                    LineBrush="{StaticResource InterpolationBrush}"
+                    ClampInterpolationVisuals="{Binding ClampInterpolationVisuals, ElementName=Root}"
+                    IsHitTestVisible="False" />
 
                   <ItemsControl
                     Grid.Column="1"

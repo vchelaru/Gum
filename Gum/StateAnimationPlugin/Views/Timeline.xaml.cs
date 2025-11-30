@@ -23,6 +23,16 @@ public partial class TimelineControl : UserControl
     }
 
     #region Dependency Properties
+
+    public DependencyProperty ClampInterpolationVisualsProperty =
+        InterpolationTrackControl.ClampInterpolationVisualsProperty.AddOwner(typeof(TimelineControl));
+
+    public bool ClampInterpolationVisuals
+    {
+        get => (bool)GetValue(ClampInterpolationVisualsProperty);
+        set => SetValue(ClampInterpolationVisualsProperty, value);
+    }
+
     public AnimationViewModel? Animation
     {
         get => (AnimationViewModel?)GetValue(AnimationProperty);
