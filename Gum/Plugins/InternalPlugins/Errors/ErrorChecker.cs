@@ -2,16 +2,26 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Windows.Forms;
+using ToolsUtilities;
 using Xceed.Wpf.AvalonDock.Themes;
 
 namespace Gum.Plugins.Errors;
 
 public class ErrorChecker
 {
+    private readonly TypeManager _typeManager;
+
+    public ErrorChecker(TypeManager typeManager)
+    {
+        _typeManager = typeManager;
+    }
+
     public ErrorViewModel[] GetErrorsFor(ElementSave element, GumProjectSave project)
     {
         var list = new List<ErrorViewModel>();
@@ -29,6 +39,8 @@ public class ErrorChecker
                 list.AddRange(GetMissingBaseTypeErrorsFor(element));
 
                 list.AddRange(GetParentErrorsFor(element));
+
+                list.AddRange(GetInvalidVariableTypeErrorsFor(element));
             }
             finally
             {
@@ -38,6 +50,7 @@ public class ErrorChecker
 
         return list.ToArray();
     }
+
 
     #region Behavior Errors
 
@@ -233,6 +246,94 @@ public class ErrorChecker
                 toReturn.Add(error);
             }
         }
+        return toReturn;
+    }
+
+    #endregion
+
+    static HashSet<string> KnowBaseTypes = new HashSet<string>
+    {
+        "int",
+        "int?",
+        "bool",
+        "bool?",
+        "float",
+        "float?",
+        "double",
+        "double?",
+        "string",
+        "string?",
+        "State",
+    };
+
+    #region Invalid variable types
+    private IEnumerable<ErrorViewModel> GetInvalidVariableTypeErrorsFor(ElementSave elementSave)
+    {
+        var toReturn = new List<ErrorViewModel>();
+
+        foreach(var state in elementSave.AllStates)
+        {
+            foreach(var variable in state.Variables)
+            {
+                var variableType = variable.Type;
+
+                if(string.IsNullOrEmpty(variableType))
+                {
+                    continue;
+                }
+                if(KnowBaseTypes.Contains(variableType))
+                {
+                    continue;
+                }
+                if(variable.IsState(elementSave))
+                {
+                    continue;
+                }
+                if(_typeManager.GetTypeFromString(variableType) != null)
+                {
+                    continue;
+                }
+
+                // It's possible that this is an old variable that was created before "State" suffix was needed for state variables
+                // Therefore, we should check for that. If so, let's notify the user that this is the case:
+                var variableClone = FileManager.CloneSaveObject<VariableSave>(variable);
+                variableClone.Type += "State";
+                if(variableClone.IsState(elementSave))
+                {
+                    toReturn.Add(new ErrorViewModel
+                    {
+                        Message =
+                                $"The variable {variable.Name} uses a type of {variable.Type}. " +
+                                $"This type is probably referencing a category, but the type should be {variableClone.Type} (with the word State suffix). " +
+                                $"This can cause code generation problems."
+                    });
+                    continue;
+                }
+
+                variableClone.Name += "State";
+                if (variableClone.IsState(elementSave))
+                {
+                    toReturn.Add(new ErrorViewModel
+                    {
+                        Message =
+                                $"The variable {variable.Name} uses a type of {variable.Type}. " +
+                                $"This type is probably referencing a category, but name should be {variableClone.Name} (with the word State suffix). " +
+                                $"This can cause code generation problems."
+                    });
+                    continue;
+                }
+
+
+                // If we got here, we don't know the type, so this is an error:
+                toReturn.Add(new ErrorViewModel
+                {
+                    Message =
+                            $"The variable {variable.Name} uses an unknown type of {variable.Type}. " +
+                            $"This can cause code generation problems."
+                });
+            }
+        }
+
         return toReturn;
     }
 

@@ -100,12 +100,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>IconCategory</Type>
-      <Name>ThumbInstance.IconCategory</Name>
-      <Value xsi:type="xsd:string">None</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>string</Type>
       <Name>ThumbInstance.Parent</Name>
       <Value xsi:type="xsd:string">TrackInstance</Value>

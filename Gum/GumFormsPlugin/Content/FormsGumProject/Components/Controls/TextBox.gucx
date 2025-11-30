@@ -35,18 +35,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>IconCategory</Type>
-      <Name>CaretInstance.IconCategoryState</Name>
-      <Value xsi:type="xsd:string">CursorText</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>CaretInstance.IconColor</Name>
-      <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>string</Type>
       <Name>CaretInstance.Parent</Name>
       <Value xsi:type="xsd:string">ClipContainer</Value>
@@ -284,11 +272,6 @@
     <Variable>
       <Type>LineModeCategory</Type>
       <Name>LineModeCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PasswordBoxCategory</Type>
-      <Name>PasswordBoxCategoryState</Name>
       <SetsValue>false</SetsValue>
     </Variable>
     <Variable>

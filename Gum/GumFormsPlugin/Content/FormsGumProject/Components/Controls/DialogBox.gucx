@@ -12,12 +12,6 @@
     </Variable>
     <Variable>
       <Type>IconCategory</Type>
-      <Name>ContinueIndicatorInstance.IconCategory</Name>
-      <Value xsi:type="xsd:string">Arrow3</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
       <Name>ContinueIndicatorInstance.IconCategoryState</Name>
       <Value xsi:type="xsd:string">Arrow2</Value>
       <SetsValue>true</SetsValue>

@@ -30,6 +30,7 @@ using System.IO;
 using Gum.Settings;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
+using Gum.Reflection;
 
 namespace Gum.Services;
 
@@ -82,6 +83,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         services.AddSingleton<WireframeObjectManager>(WireframeObjectManager.Self);
         services.AddSingleton<PluginManager>(PluginManager.Self);
+        services.AddSingleton<TypeManager>(TypeManager.Self);
         // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 

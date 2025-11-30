@@ -99,13 +99,13 @@ namespace Gum
 
         private static async Task InitializeGum(IServiceProvider services)
         {
-            TypeManager.Self.Initialize();
 
             // This has to happen before plugins are loaded since they may depend on settings...
             ProjectManager.Self.LoadSettings();
 
             MigrateAppSettings(services, ProjectManager.Self.GeneralSettingsFile);
             services.GetRequiredService<IThemingService>().ApplyInitialTheme();
+            TypeManager.Self.Initialize();
 
             ElementTreeViewManager.Self.Initialize();
 

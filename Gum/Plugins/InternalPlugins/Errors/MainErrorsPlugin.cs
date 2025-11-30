@@ -5,6 +5,8 @@ using Gum.ToolStates;
 using System;
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.Errors.Views;
+using Gum.Reflection;
+using Gum.Services;
 
 namespace Gum.Plugins.Errors;
 
@@ -25,7 +27,9 @@ public class MainErrorsPlugin : InternalPlugin
     {
         viewModel = new AllErrorsViewModel();
 
-        errorChecker = new ErrorChecker();
+        TypeManager typeManager = Locator.GetRequiredService<TypeManager>();
+
+        errorChecker = new ErrorChecker(typeManager);
 
         CreateViews();
 

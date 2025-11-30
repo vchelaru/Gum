@@ -214,12 +214,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TrackInstance.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>TrackInstance.Height</Name>
       <Value xsi:type="xsd:float">-48</Value>
@@ -229,12 +223,6 @@
       <Type>DimensionUnitType</Type>
       <Name>TrackInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TrackInstance.StyleCategoryState</Name>
-      <Value xsi:type="xsd:string">Solid</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
