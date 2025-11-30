@@ -15,7 +15,7 @@ on:
         type: boolean
 
 env:
-  DOTNET_VERSIONS: '6.0.x;8.0.x' # Multiple .NET versions
+  DOTNET_VERSIONS: '6.0.x;8.0.x;10.0.x' # Multiple .NET versions
   CONFIGURATION: Debug
   SOLUTION_FILE: 'AllLibraries.sln' # Specify which solution to build
 
@@ -36,6 +36,7 @@ jobs:
         dotnet-version: |
           6.0.x
           8.0.x
+          10.0.x
     
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
