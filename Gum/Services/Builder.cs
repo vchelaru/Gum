@@ -106,6 +106,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<MainOutputViewModel>();
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
+        services.AddSingleton<ReorderLogic>();
 
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();

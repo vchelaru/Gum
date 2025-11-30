@@ -63,25 +63,25 @@ public partial class EditingManager
 
     void OnMoveForward(object sender, EventArgs e)
     {
-        ReorderLogic.Self.MoveSelectedInstanceForward();
+        _reorderLogic.MoveSelectedInstanceForward();
     }
 
 
 
     void OnMoveBackward(object sender, EventArgs e)
     {
-        ReorderLogic.Self.MoveSelectedInstanceBackward();
+        _reorderLogic.MoveSelectedInstanceBackward();
     }
 
     void OnSendToBack(object sender, EventArgs e)
     {
-        ReorderLogic.Self.MoveSelectedInstanceToBack();
+        _reorderLogic.MoveSelectedInstanceToBack();
     }
 
 
     void OnBringToFrontClick(object sender, EventArgs e)
     {
-        ReorderLogic.Self.MoveSelectedInstanceToFront();
+        _reorderLogic.MoveSelectedInstanceToFront();
     }
 
     public void OnRightClick()
@@ -182,7 +182,7 @@ public partial class EditingManager
     {
         InstanceSave whatToMoveInFrontOf = ((ToolStripMenuItem)sender).Tag as InstanceSave;
 
-        ReorderLogic.Self.MoveSelectedInstanceInFrontOf(whatToMoveInFrontOf);
+        _reorderLogic.MoveSelectedInstanceInFrontOf(whatToMoveInFrontOf);
     }
 
 }

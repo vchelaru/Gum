@@ -73,7 +73,7 @@ public class FileCommands : IFileCommands
     }
 
 
-    public void TryAutoSaveElement(ElementSave elementSave)
+    public void TryAutoSaveElement(ElementSave? elementSave)
     {
         if (ProjectManager.Self.GeneralSettingsFile.AutoSave && elementSave != null)
         {
