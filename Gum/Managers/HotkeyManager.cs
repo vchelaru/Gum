@@ -204,6 +204,7 @@ public class HotkeyManager
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
     private readonly DeleteLogic _deleteLogic;
+    private readonly ReorderLogic _reorderLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
 
@@ -216,7 +217,8 @@ public class HotkeyManager
         IUiSettingsService uiSettingsService,
         CopyPasteLogic copyPasteLogic,
         IUndoManager undoManager,
-        DeleteLogic deleteLogic)
+        DeleteLogic deleteLogic,
+        ReorderLogic reorderLogic)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -228,6 +230,7 @@ public class HotkeyManager
         _uiSettingsService = uiSettingsService;
         _undoManager = undoManager;
         _deleteLogic = deleteLogic;
+        _reorderLogic = reorderLogic;
     }
 
     #region App Wide Keys
@@ -330,12 +333,12 @@ public class HotkeyManager
     {
         if(ReorderUp.IsPressed(e))
         {
-            ReorderLogic.Self.MoveSelectedInstanceBackward();
+            _reorderLogic.MoveSelectedInstanceBackward();
             e.Handled = true;
         }
         if(ReorderDown.IsPressed(e))
         {
-            ReorderLogic.Self.MoveSelectedInstanceForward();
+            _reorderLogic.MoveSelectedInstanceForward();
             e.Handled = true;
         }
     }
@@ -417,8 +420,19 @@ public class HotkeyManager
         HandleReorder(e);
 
         HandleGoToDefinition(e);
-
     }
+
+    public void HandleKeyUpWireframe(KeyEventArgs e)
+    {
+        if (_isNudging)
+        {
+            _isNudging = false;
+            _undoManager.RecordUndo();
+            _fileCommands.TryAutoSaveCurrentElement();
+        }
+    }
+
+    bool _isNudging;
 
     public bool ProcessCmdKeyWireframe(ref Message msg, Keys keyData)
     {
@@ -449,6 +463,11 @@ public class HotkeyManager
 
         if (nudgeX != 0 || nudgeY != 0)
         {
+            if(!_isNudging)
+            {
+                _isNudging = true;
+                _undoManager.RecordState();
+            }
             var instance = _selectedState.SelectedInstance;
 
             var element = _selectedState.SelectedElement;
@@ -471,9 +490,6 @@ public class HotkeyManager
             {
                 PluginManager.Self.VariableSet(element, instance, "Y", oldY);
             }
-
-
-            _fileCommands.TryAutoSaveCurrentElement();
         }
         return handled;
     }

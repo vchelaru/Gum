@@ -100,11 +100,15 @@ public class WireframeControl : GraphicsDeviceControl
     #region Event Methods
 
 
-    void OnKeyDown(object sender, KeyEventArgs e)
+    void HandleKeyDown(object sender, KeyEventArgs e)
     {
         _hotkeyManager.HandleKeyDownWireframe(e);
         _cameraController.HandleKeyPress(e);
+    }
 
+    private void HandleKeyUp(object? sender, KeyEventArgs e)
+    {
+        _hotkeyManager.HandleKeyUpWireframe(e);
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -174,7 +178,8 @@ public class WireframeControl : GraphicsDeviceControl
             var camera = SystemManagers.Default.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
-            KeyDown += OnKeyDown;
+            KeyDown += HandleKeyDown;
+            KeyUp += HandleKeyUp;
             MouseDown += _cameraController.HandleMouseDown;
             MouseMove += _cameraController.HandleMouseMove;
             MouseWheel += _cameraController.HandleMouseWheel;
@@ -203,6 +208,7 @@ public class WireframeControl : GraphicsDeviceControl
             Locator.GetRequiredService<IDialogService>().ShowMessage("Error initializing the wireframe control\n\n" + exception);
         }
     }
+
 
     private void InitializeDefaultTypeInstantiation()
     {

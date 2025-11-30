@@ -8,6 +8,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Extensions;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -137,7 +138,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _scrollbarService = new ScrollbarService();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
-        _editingManager = new EditingManager(Locator.GetRequiredService<WireframeObjectManager>());
+        _editingManager = new EditingManager(
+            Locator.GetRequiredService<WireframeObjectManager>(),
+            Locator.GetRequiredService<ReorderLogic>());
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
