@@ -1,8 +1,30 @@
 # Migrating to 2025 November
 
-{% hint style="warning" %}
-November 2025 has not yet been released. This document currently covers the November version if your project is linked to source.
-{% endhint %}
+## Introduction
+
+This page discusses breaking changes and other considerations when migrating from `2025 October` to `2025 November` .
+
+## Upgrading Gum Tool
+
+To upgrade the Gum tool:
+
+1. Download Gum.zip from the release on Github: [https://github.com/vchelaru/Gum/releases/tag/Release\_November\_30\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_November_30_2025)
+2. Delete the old tool from your machine
+3. Unzip the gum tool to the same location as to not break any file associations
+
+## Upgrading Runtime
+
+Upgrade your Gum NuGet packages to version NEW VERSION. For more information, see the NuGet packages for your particular platform:
+
+* MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
+* KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
+* FNA - [https://www.nuget.org/packages/Gum.FNA/](https://www.nuget.org/packages/Gum.FNA/)
+* raylib - [https://www.nuget.org/packages/Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
+* SkiaSharp - [https://www.nuget.org/packages/Gum.SkiaSharp/](https://www.nuget.org/packages/Gum.SkiaSharp/)
+
+For other platforms you need to build Gum from source
+
+See below for breaking changes and updates.
 
 ## Moved .csproj Files
 
