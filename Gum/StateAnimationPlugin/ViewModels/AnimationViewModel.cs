@@ -174,9 +174,9 @@ public partial class AnimationViewModel : ViewModel
 
         foreach(var animationReference in save.Animations)
         {
-            AnimationSave animationSave = null;
-            ElementSave subAnimationElement= null;
-            ElementAnimationsSave subAnimationSiblings = null;
+            AnimationSave? animationSave = null;
+            ElementSave? subAnimationElement= null;
+            ElementAnimationsSave? subAnimationSiblings = null;
 
             if (string.IsNullOrEmpty(animationReference.SourceObject))
             {
