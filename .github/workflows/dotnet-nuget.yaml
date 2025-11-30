@@ -29,7 +29,7 @@ jobs:
       with:
         fetch-depth: 0 # Fetch full history for version calculation
         submodules: recursive # Fetch all submodules recursively
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -37,6 +37,11 @@ jobs:
           6.0.x
           8.0.x
           10.0.x
+
+    - name: Install required workloads
+      run: |
+        dotnet workload install wasm-tools
+        dotnet workload install maui
     
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
