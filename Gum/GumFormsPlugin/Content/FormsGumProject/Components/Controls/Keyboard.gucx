@@ -342,12 +342,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key0.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key0.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -369,12 +363,6 @@
       <Type>string</Type>
       <Name>Key0.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key0.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -414,12 +402,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key1.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key1.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -441,12 +423,6 @@
       <Type>string</Type>
       <Name>Key1.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key1.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -486,12 +462,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key2.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key2.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -513,12 +483,6 @@
       <Type>string</Type>
       <Name>Key2.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key2.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -558,12 +522,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key3.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key3.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -585,12 +543,6 @@
       <Type>string</Type>
       <Name>Key3.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key3.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -630,12 +582,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key4.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key4.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -657,12 +603,6 @@
       <Type>string</Type>
       <Name>Key4.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key4.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -702,12 +642,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key5.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key5.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -729,12 +663,6 @@
       <Type>string</Type>
       <Name>Key5.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key5.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -774,12 +702,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key6.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key6.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -801,12 +723,6 @@
       <Type>string</Type>
       <Name>Key6.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key6.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -846,12 +762,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key7.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key7.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -873,12 +783,6 @@
       <Type>string</Type>
       <Name>Key7.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key7.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -918,12 +822,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key8.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key8.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -945,12 +843,6 @@
       <Type>string</Type>
       <Name>Key8.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key8.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -990,12 +882,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Key9.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>Key9.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1017,12 +903,6 @@
       <Type>string</Type>
       <Name>Key9.Parent</Name>
       <Value xsi:type="xsd:string">Row1Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>Key9.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1062,12 +942,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyA.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyA.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1089,12 +963,6 @@
       <Type>string</Type>
       <Name>KeyA.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyA.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1134,12 +1002,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyAmpersand.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyAmpersand.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1161,12 +1023,6 @@
       <Type>string</Type>
       <Name>KeyAmpersand.Parent</Name>
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyAmpersand.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1206,12 +1062,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyB.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyB.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1233,12 +1083,6 @@
       <Type>string</Type>
       <Name>KeyB.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyB.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1331,12 +1175,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyBang.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyBang.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1358,12 +1196,6 @@
       <Type>string</Type>
       <Name>KeyBang.Parent</Name>
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyBang.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1403,12 +1235,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyC.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyC.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1430,12 +1256,6 @@
       <Type>string</Type>
       <Name>KeyC.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyC.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1475,12 +1295,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyComma.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyComma.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1502,12 +1316,6 @@
       <Type>string</Type>
       <Name>KeyComma.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyComma.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1547,12 +1355,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyD.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyD.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1574,12 +1376,6 @@
       <Type>string</Type>
       <Name>KeyD.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyD.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1619,12 +1415,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyE.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyE.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1646,12 +1436,6 @@
       <Type>string</Type>
       <Name>KeyE.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyE.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1691,12 +1475,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyF.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyF.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1718,12 +1496,6 @@
       <Type>string</Type>
       <Name>KeyF.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyF.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1763,12 +1535,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyG.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyG.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1790,12 +1556,6 @@
       <Type>string</Type>
       <Name>KeyG.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyG.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1835,12 +1595,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyH.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyH.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1862,12 +1616,6 @@
       <Type>string</Type>
       <Name>KeyH.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyH.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1907,12 +1655,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyHyphen.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyHyphen.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -1934,12 +1676,6 @@
       <Type>string</Type>
       <Name>KeyHyphen.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyHyphen.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1979,12 +1715,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyI.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyI.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2006,12 +1736,6 @@
       <Type>string</Type>
       <Name>KeyI.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyI.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2051,12 +1775,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyJ.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyJ.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2078,12 +1796,6 @@
       <Type>string</Type>
       <Name>KeyJ.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyJ.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2123,12 +1835,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyK.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyK.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2150,12 +1856,6 @@
       <Type>string</Type>
       <Name>KeyK.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyK.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2195,12 +1895,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyL.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyL.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2222,12 +1916,6 @@
       <Type>string</Type>
       <Name>KeyL.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyL.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2321,12 +2009,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyM.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyM.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2348,12 +2030,6 @@
       <Type>string</Type>
       <Name>KeyM.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyM.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2393,12 +2069,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyN.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyN.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2420,12 +2090,6 @@
       <Type>string</Type>
       <Name>KeyN.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyN.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2465,12 +2129,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyO.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyO.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2492,12 +2150,6 @@
       <Type>string</Type>
       <Name>KeyO.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyO.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2537,12 +2189,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyP.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyP.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2564,12 +2210,6 @@
       <Type>string</Type>
       <Name>KeyP.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyP.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2609,12 +2249,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyParenLeft.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyParenLeft.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2636,12 +2270,6 @@
       <Type>string</Type>
       <Name>KeyParenLeft.Parent</Name>
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyParenLeft.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2681,12 +2309,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyParenRight.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyParenRight.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2708,12 +2330,6 @@
       <Type>string</Type>
       <Name>KeyParenRight.Parent</Name>
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyParenRight.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2753,12 +2369,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyPeriod.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyPeriod.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2780,12 +2390,6 @@
       <Type>string</Type>
       <Name>KeyPeriod.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyPeriod.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2825,12 +2429,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyQ.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyQ.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2852,12 +2450,6 @@
       <Type>string</Type>
       <Name>KeyQ.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyQ.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2897,12 +2489,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyQuestion.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyQuestion.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2924,12 +2510,6 @@
       <Type>string</Type>
       <Name>KeyQuestion.Parent</Name>
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyQuestion.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2969,12 +2549,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyR.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyR.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -2996,12 +2570,6 @@
       <Type>string</Type>
       <Name>KeyR.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyR.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3149,12 +2717,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyS.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyS.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3176,12 +2738,6 @@
       <Type>string</Type>
       <Name>KeyS.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyS.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3221,12 +2777,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeySpace.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeySpace.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3248,12 +2798,6 @@
       <Type>string</Type>
       <Name>KeySpace.Parent</Name>
       <Value xsi:type="xsd:string">Row5Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeySpace.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3293,12 +2837,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyT.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyT.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3320,12 +2858,6 @@
       <Type>string</Type>
       <Name>KeyT.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyT.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3365,12 +2897,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyU.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyU.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3392,12 +2918,6 @@
       <Type>string</Type>
       <Name>KeyU.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyU.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3437,12 +2957,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyUnderscore.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyUnderscore.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3464,12 +2978,6 @@
       <Type>string</Type>
       <Name>KeyUnderscore.Parent</Name>
       <Value xsi:type="xsd:string">Row3Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyUnderscore.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3509,12 +3017,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyV.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyV.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3536,12 +3038,6 @@
       <Type>string</Type>
       <Name>KeyV.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyV.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3581,12 +3077,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyW.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyW.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3608,12 +3098,6 @@
       <Type>string</Type>
       <Name>KeyW.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyW.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3653,12 +3137,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyX.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyX.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3680,12 +3158,6 @@
       <Type>string</Type>
       <Name>KeyX.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyX.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3725,12 +3197,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyY.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyY.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3752,12 +3218,6 @@
       <Type>string</Type>
       <Name>KeyY.Parent</Name>
       <Value xsi:type="xsd:string">Row2Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyY.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -3797,12 +3257,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>ColorCategory</Type>
-      <Name>KeyZ.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">White</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>KeyZ.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -3824,12 +3278,6 @@
       <Type>string</Type>
       <Name>KeyZ.Parent</Name>
       <Value xsi:type="xsd:string">Row4Keys</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>SizeCategoryState</Type>
-      <Name>KeyZ.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Small</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

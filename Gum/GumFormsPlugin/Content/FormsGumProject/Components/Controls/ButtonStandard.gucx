@@ -190,12 +190,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>SizeCategory</Type>
-      <Name>TextInstance.SizeCategoryState</Name>
-      <Value xsi:type="xsd:string">Strong</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>StyleCategory</Type>
       <Name>TextInstance.StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Strong</Value>

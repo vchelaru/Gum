@@ -153,7 +153,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     DimensionUnitType mWidthUnit;
     DimensionUnitType mHeightUnit;
 
-    protected ISystemManagers mManagers;
+    protected ISystemManagers? mManagers;
 
     int mTextureTop;
     int mTextureLeft;
@@ -5181,11 +5181,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (e.Action == NotifyCollectionChangedAction.Remove)
         {
-            foreach (IRenderableIpso ipso in e.OldItems)
+            if(e.OldItems != null)
             {
-                if (ipso.Parent == this)
+                foreach (IRenderableIpso ipso in e.OldItems)
                 {
-                    ipso.Parent = null;
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
                 }
             }
         }
@@ -6379,15 +6382,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void RefreshTextOverflowVerticalMode()
     {
+        var asIText = mContainedObjectAsIpso as IText;
+        if (asIText == null) return;
 
         // we want to let it spill over if it is sized by its children:
         if (this.HeightUnits == DimensionUnitType.RelativeToChildren)
         {
-            ((IText)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+            asIText.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
         }
         else
         {
-            ((IText)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode;
+            asIText.TextOverflowVerticalMode = TextOverflowVerticalMode;
         }
     }
 

@@ -126,11 +126,6 @@
       <SetsValue>false</SetsValue>
     </Variable>
     <Variable>
-      <Type>BarDecor</Type>
-      <Name>BarDecorState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>CautionLinesInstance.Height</Name>
       <Value xsi:type="xsd:float">0</Value>

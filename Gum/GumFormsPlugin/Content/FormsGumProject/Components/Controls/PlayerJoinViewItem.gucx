@@ -202,16 +202,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>JoinCategory</Type>
-      <Name>JoinCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PlayerCategory</Type>
-      <Name>PlayerCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
       <Type>PlayerIndexCategory</Type>
       <Name>PlayerIndexCategoryState</Name>
       <SetsValue>false</SetsValue>
@@ -219,11 +209,6 @@
     <Variable>
       <Type>PlayerJoinCategory</Type>
       <Name>PlayerJoinCategoryState</Name>
-      <SetsValue>false</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PlayerJoinCategory</Type>
-      <Name>PlayerJoinCategoryStateState</Name>
       <SetsValue>false</SetsValue>
     </Variable>
     <Variable>

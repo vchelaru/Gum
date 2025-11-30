@@ -936,8 +936,8 @@
     </Variable>
     <Variable>
       <Type>StyleCategory</Type>
-      <Name>LabelInstance1.Style</Name>
-      <Value xsi:type="xsd:string">Normal</Value>
+      <Name>LabelInstance1.StyleCategoryState</Name>
+      <Value xsi:type="xsd:string">Strong</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
