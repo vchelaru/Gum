@@ -230,7 +230,7 @@ public class ParentSetLogic
 
     private bool IsSkiaCanvasRecursively(InstanceSave instance)
     {
-        if(instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+        if(instance.BaseType.EndsWith("/SkiaGumCanvasView") == true)
         {
             return true;
         }
@@ -238,7 +238,7 @@ public class ParentSetLogic
         {
             var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            return IsSkiaCanvasRecursively(element);
+            return element != null && IsSkiaCanvasRecursively(element);
         }
     }
 

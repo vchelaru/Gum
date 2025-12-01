@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.Commands;
+using Gum.Managers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,7 +34,7 @@ public class FileWatchManager
     object LockObject=new object();
 
     bool IsFlushing;
-
+    private readonly IGuiCommands _guiCommands;
 
     public IEnumerable<FilePath> CurrentFilePathsWatching
     {
@@ -48,9 +49,9 @@ public class FileWatchManager
 
     #endregion
 
-    public FileWatchManager()
+    public FileWatchManager(IGuiCommands guiCommands)
     {
-
+        _guiCommands = guiCommands;
     }
 
     public void EnableWithDirectories(HashSet<FilePath> directories)
@@ -76,9 +77,17 @@ public class FileWatchManager
 
             // Gum standard is to have a trailing slash, 
             // but FileSystemWatcher expects no trailing slash:
-            fileWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
-            fileWatcher.EnableRaisingEvents = true;
-            fileSystemWatchers.Add(fileWatcher);
+            var pathToAssign = filePathAsString.Substring(0, filePathAsString.Length - 1);
+            try
+            {
+                fileWatcher.Path = pathToAssign;
+                fileWatcher.EnableRaisingEvents = true;
+                fileSystemWatchers.Add(fileWatcher);
+            }
+            catch (Exception e)
+            {
+                _guiCommands.PrintOutput($"Error trying to watch {filePathAsString}:\n{e.Message}");
+            }
         }
     }
 
