@@ -242,7 +242,7 @@ public class PasswordBox : TextBoxBase
     protected override void HandlePaste()
     {
 
-        var whatToPaste = ClipboardImplementation.GetText();
+        var whatToPaste = ClipboardImplementation.GetText(HandlePaste);
         if (!string.IsNullOrEmpty(whatToPaste))
         {
             if (selectionLength != 0)
