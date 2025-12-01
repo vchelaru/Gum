@@ -463,7 +463,7 @@ public class CodeGenerator
             className = ToCSharpName($"{strippedType}{suffix}", out isPrefixed);
         }
 
-        className = ToCSharpName(className);
+        className = className == null ? string.Empty : ToCSharpName(className);
 
         if(isFullyQualified && container is ElementSave elementSave)
         {
