@@ -47,6 +47,8 @@ public class CustomSetPropertyOnRenderable
     private static readonly FontManager _fontManager;
 #endif
 
+    public static event Action<string>? PropertyAssignmentError;
+
     static CustomSetPropertyOnRenderable()
     {
 #if GUM
@@ -1615,17 +1617,17 @@ public class CustomSetPropertyOnRenderable
                 // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
                 //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
                 {
+                    string message = $"Error setting SourceFile on Sprite";
+
+                    if(graphicalUiElement.Tag != null)
+                    {
+                        message += $" in {graphicalUiElement.Tag}";
+                    }
+                    message += $"\n{value}";
+                    message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                    message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
                     if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                     {
-                        string message = $"Error setting SourceFile on Sprite";
-
-                        if(graphicalUiElement.Tag != null)
-                        {
-                            message += $" in {graphicalUiElement.Tag}";
-                        }
-                        message += $"\n{value}";
-                        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
-                        message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
                         if(ObjectFinder.Self.GumProjectSave == null)
                         {
                             message += "\nNo Gum project has been loaded";
@@ -1634,6 +1636,8 @@ public class CustomSetPropertyOnRenderable
                         throw new System.IO.FileNotFoundException(message, ex);
                     }
                     sprite.Texture = null;
+
+                    PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
                 }
                 graphicalUiElement.UpdateLayout();
             }

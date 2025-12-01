@@ -176,7 +176,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
-
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();
 
@@ -187,6 +187,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         HandleWireframeInitialized();
 
+    }
+
+    private void HandlePropertyAssignmentError(string obj)
+    {
+        _guiCommands.PrintOutput(obj);
     }
 
     private void AssignEvents()
