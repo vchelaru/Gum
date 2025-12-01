@@ -560,7 +560,7 @@ public class CodeGenerator
         else
         {
             inheritance = element.BaseType;
-            if (inheritance?.Contains("/") == true)
+            if (inheritance.Contains("/") == true)
             {
                 inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
             }
