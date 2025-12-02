@@ -42,6 +42,7 @@ public class ElementSaveDisplayer
     private readonly SubtextLogic _subtextLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
+    private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
 
     #endregion
 
@@ -50,6 +51,7 @@ public class ElementSaveDisplayer
         _subtextLogic = subtextLogic;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _categorySortAndColorLogic = new CategorySortAndColorLogic();
     }
 
     private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
@@ -450,56 +452,12 @@ public class ElementSaveDisplayer
             }
         }
 
-        categories = SortCategories(categories);
+        categories = _categorySortAndColorLogic.SortAndColorCategories(categories);
 
         return categories;
     }
 
-    List<string> OrderedCategories = new List<string>
-    {
-        "Position",
-        "Dimensions",
-        "Text",
-        "Font",
-        "Source",
-        "Animation",
-        "Flip and Rotation",
-        "States and Visibility",
-        "Parent",
-        "Children",
-        "Rendering",
-        "Dropshadow",
-        "Stroke and Fill",
-        "Behavior"
 
-    };
-    private List<MemberCategory> SortCategories(List<MemberCategory> categories)
-    {
-        int GetDesiredIndex(string category)
-        {
-            if(string.IsNullOrEmpty(category))
-            {
-                return -1;
-            }
-            else if(OrderedCategories.Contains(category))
-            {
-                return OrderedCategories.IndexOf(category);
-            }
-            else
-            {
-                var itemByCategory = categories.FirstOrDefault(item => item.Name == category);
-
-                var index = categories.IndexOf(itemByCategory);
-
-                return OrderedCategories.Count + index;
-            }
-        }
-
-        categories = categories.OrderBy(item => GetDesiredIndex(item.Name))
-            .ToList();
-
-        return categories;
-    }
 
     private StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave instanceOwner, InstanceSave instance, 
         StateSave stateSave, StateSaveCategory stateSaveCategory, InstanceSavePropertyDescriptor propertyDescriptor)

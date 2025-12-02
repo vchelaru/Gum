@@ -102,7 +102,7 @@ public class MainVariableGridPlugin : InternalPlugin
 
     }
 
-    private void HandleElementSelected(ElementSave save)
+    private void HandleElementSelected(ElementSave? save)
     {
         // when an element is selected, so is a state. States
         // also refresh the grid so we don't need to also refresh
@@ -110,7 +110,7 @@ public class MainVariableGridPlugin : InternalPlugin
         //_propertyGridManager.RefreshEntireGrid(force: true);
     }
 
-    private void HandleBehaviorSelected(BehaviorSave save)
+    private void HandleBehaviorSelected(BehaviorSave? save)
     {
         _propertyGridManager.RefreshEntireGrid(force: true);
     }
