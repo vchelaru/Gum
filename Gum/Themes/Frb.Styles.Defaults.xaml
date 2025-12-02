@@ -1455,9 +1455,11 @@
   </DataTemplate>
 
   <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type wpfdatauiTypes:MemberCategory}">
-    <Border x:Name="HeaderBorder" Background="{Binding HeaderColor}">
+      <!-- -40 margin extends the border to cover the left side button. Note that this is
+      a hack, because a full styling of the toggle button looks like it's dozens of lines and hard to maintain-->
+    <Border x:Name="HeaderBorder" Background="{Binding HeaderColor}" Margin="-40,0,0,0">
       <TextBlock
-        Margin="0,4"
+        Margin="40,4,0,4"
         VerticalAlignment="Center"
         FontWeight="Medium"
         Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
