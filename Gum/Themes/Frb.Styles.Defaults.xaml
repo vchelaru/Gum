@@ -1454,14 +1454,21 @@
 
   </DataTemplate>
 
-  <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type system:String}">
-    <TextBlock
-      Margin="0,4"
-      VerticalAlignment="Center"
-      FontWeight="Medium"
-      Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
-      Text="{Binding}" />
-  </DataTemplate>
+  <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type wpfdatauiTypes:MemberCategory}">
+    <Border x:Name="HeaderBorder" Background="{Binding HeaderColor}">
+      <TextBlock
+        Margin="0,4"
+        VerticalAlignment="Center"
+        FontWeight="Medium"
+        Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
+        Text="{Binding Name}" />
+      </Border>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HeaderColor}" Value="{x:Null}">
+                <Setter TargetName="HeaderBorder" Property="Background" Value="Transparent"/>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
 
   <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
     <Setter Property="Grid.IsSharedSizeScope" Value="True" />
@@ -1471,7 +1478,7 @@
       <Setter.Value>
         <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">
           <Expander
-            Header="{Binding Name}"
+            Header="{Binding}"
             HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
             IsExpanded="True">
             <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
@@ -1489,9 +1496,10 @@
       <Setter.Value>
         <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">
           <Expander
-            Header="{Binding Name}"
+            Header="{Binding}"
             HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
             IsExpanded="True">
+
             <ItemsControl
               AlternationCount="2"
               ItemTemplate="{StaticResource InstanceMember.DefaultColumnTemplate}"
