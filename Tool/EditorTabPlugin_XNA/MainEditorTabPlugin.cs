@@ -129,6 +129,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
 
+
+    // This is used to punch through the selected and go back up to the top. More info here:
+    // https://github.com/vchelaru/Gum/issues/1810
+    public bool IsComponentNoInstanceSelected => _selectedState.SelectedInstance == null && _selectedState.SelectedComponent != null;
+
     #endregion
 
     public MainEditorTabPlugin()
@@ -806,7 +811,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
         // see if it's over the component:
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
         if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
         {
             string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
@@ -902,7 +907,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
         if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
         {
