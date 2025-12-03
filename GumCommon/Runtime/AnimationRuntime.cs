@@ -187,7 +187,7 @@ public class AnimationRuntime
         return null;
     }
 
-    public StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull)
+    public StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull = false)
     {
         StateSave stateToSet = null;
 
@@ -198,7 +198,7 @@ public class AnimationRuntime
         return stateToSet;
     }
 
-    public StateSave GetStateToSet(double animationTime, GraphicalUiElement graphicalUiElement, bool defaultIfNull)
+    public StateSave GetStateToSet(double animationTime, GraphicalUiElement graphicalUiElement, bool defaultIfNull = false)
     {
         StateSave stateToSet = null;
         GetStateToSetFromStateKeyframes(animationTime, null, ref stateToSet, defaultIfNull, graphicalUiElement);
