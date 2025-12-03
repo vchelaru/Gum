@@ -251,3 +251,57 @@ protected override void Initialize()
 ```
 
 <figure><img src="../.gitbook/assets/06_11 02 23.gif" alt=""><figcaption><p>Button reacting to hover</p></figcaption></figure>
+
+## Playing Multiple Animations on the Same Instance
+
+{% hint style="warning" %}
+The following code requires December 2025 or newer of the Gum runtimes. You can also link against source to get the latest code.
+{% endhint %}
+
+The `PlayAnimation` method performs the following logic:
+
+1. Internally stores the animation that is played
+2. Internally resets the time on the animation back to 0
+
+Each instance can store a separate animation and time, allowing a single animation to be played on multiple instances.
+
+Since each instance only stores one value for the current animation and time, an instance cannot play multiple animations at one time.
+
+{% hint style="info" %}
+Future versions of Gum may change this behavior, allowing `PlayAnimation` to stack multiple animations.
+{% endhint %}
+
+To play multiple animations, we can keep track of each animation time and apply it manually in our update function.
+
+The following code assumes that `Animation1` and `Animation2` are valid animations. The following code also assumes that `MyInstance` is a valid visual instance.
+
+```csharp
+double animation1Time = 0;
+double animation2Time = 0;
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    var keyboard = GumUI.Keyboard;
+
+    animation1Time += gameTime.ElapsedGameTime.TotalSeconds;
+    animation2Time += gameTime.ElapsedGameTime.TotalSeconds;
+
+    if(keyboard.KeyPushed(Keys.Space))
+    {
+        // Restart both animations when space is pressed
+        animation1Time = 0;
+        animation2Time = 0;
+    }
+
+    var animation1State = Animation1.GetStateToSet(animation1Time, MyInstance);
+    MyInstance.ApplyState(animation1State);
+
+    var animation2State = Animation2.GetStateToSet(animation2Time, MyInstance);
+    MyInstance.ApplyState(animation2State);
+
+    base.Update(gameTime);
+}
+
+```
