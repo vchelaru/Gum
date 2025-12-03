@@ -1925,14 +1925,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private void RefreshBehaviorTreeNode(TreeNode node, BehaviorSave behavior)
     {
         var allInstances = behavior.RequiredInstances;
-        var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
-        foreach (TreeNode instanceNode in allTreeNodesRecursively)
-        {
-            var instance = instanceNode.Tag as InstanceSave;
+        var childrenNodes = node.Nodes;
 
-            if (!allInstances.Contains(instance))
+        // for now assume that instances sit only at the top level:
+        for(int i = 0; i < allInstances.Count; i++)
+        {
+            if(i < childrenNodes.Count && childrenNodes[i].Tag != allInstances[i])
             {
-                instanceNode.Remove();
+                childrenNodes[i].Remove();
             }
         }
 

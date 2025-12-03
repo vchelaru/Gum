@@ -1,5 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
@@ -21,7 +22,7 @@ public class ReorderLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands)
     {
-        _selectedState = _selectedState;
+        _selectedState = selectedState;
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
@@ -30,7 +31,6 @@ public class ReorderLogic
     public void MoveSelectedInstanceForward()
     {
         var instance = _selectedState.SelectedInstance;
-        var element = _selectedState.SelectedElement;
 
         if (instance != null)
         {
@@ -42,15 +42,23 @@ public class ReorderLogic
             {
                 using (_undoManager.RequestLock())
                 {
-
-                    // remove it before getting the new index, or else the removal could impact the
-                    // index.
-                    element.Instances.Remove(instance);
+                    var element = _selectedState.SelectedElement;
+                    var behavior = _selectedState.SelectedBehavior;
                     var nextSibling = siblingInstances[thisIndex + 1];
-
-                    var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
-
-                    element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
+                    if(element != null)
+                    {
+                        // remove it before getting the new index, or else the removal could impact the
+                        // index.
+                        element.Instances.Remove(instance);
+                        var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
+                        element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
+                    }
+                    else if(behavior != null && instance is BehaviorInstanceSave behaviorInstance)
+                    {
+                        behavior.RequiredInstances.Remove(behaviorInstance);
+                        var nextSiblingIndexInContainer = behavior.RequiredInstances.IndexOf(nextSibling as BehaviorInstanceSave);
+                        behavior.RequiredInstances.Insert(nextSiblingIndexInContainer + 1, behaviorInstance);
+                    }
                     RefreshInResponseToReorder(instance);
                 }
             }
@@ -60,7 +68,6 @@ public class ReorderLogic
     public void MoveSelectedInstanceBackward()
     {
         var instance = _selectedState.SelectedInstance;
-        var element = _selectedState.SelectedElement;
 
         if (instance != null)
         {
@@ -74,13 +81,23 @@ public class ReorderLogic
             {
                 using (_undoManager.RequestLock())
                 {
-
-                    element.Instances.Remove(instance);
+                    var element = _selectedState.SelectedElement;
+                    var behavior = _selectedState.SelectedBehavior;
                     var previousSibling = siblingInstances[thisIndex - 1];
 
-                    var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
+                    if(element != null)
+                    {
+                        element.Instances.Remove(instance);
+                        var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
+                        element.Instances.Insert(previousSiblingIndexInContainer, instance);
+                    }
+                    else if(behavior != null && instance is BehaviorInstanceSave behaviorInstance)
+                    {
+                        behavior.RequiredInstances.Remove(behaviorInstance);
+                        var previousSiblingIndexInContainer = behavior.RequiredInstances.IndexOf(previousSibling as BehaviorInstanceSave);
+                        behavior.RequiredInstances.Insert(previousSiblingIndexInContainer, behaviorInstance);
+                    }
 
-                    element.Instances.Insert(previousSiblingIndexInContainer, instance);
                     RefreshInResponseToReorder(instance);
                 }
             }
@@ -89,17 +106,25 @@ public class ReorderLogic
 
     public void MoveSelectedInstanceToFront()
     {
-        InstanceSave instance = _selectedState.SelectedInstance;
-        ElementSave element = _selectedState.SelectedElement;
+        var instance = _selectedState.SelectedInstance;
 
         if (instance != null)
         {
             using (_undoManager.RequestLock())
             {
-
-                // to bring to back, we're going to remove, then add (at the end)
-                element.Instances.Remove(instance);
-                element.Instances.Add(instance);
+                var element = _selectedState.SelectedElement;
+                var behavior = _selectedState.SelectedBehavior;
+                if(element != null)
+                {
+                    // to bring to back, we're going to remove, then add (at the end)
+                    element.Instances.Remove(instance);
+                    element.Instances.Add(instance);
+                }
+                else if(behavior != null && instance is BehaviorInstanceSave behaviorInstance)
+                {
+                    behavior.RequiredInstances.Remove(behaviorInstance);
+                    behavior.RequiredInstances.Add(behaviorInstance);
+                }
 
                 RefreshInResponseToReorder(instance);
             }
@@ -108,17 +133,24 @@ public class ReorderLogic
 
     public void MoveSelectedInstanceToBack()
     {
-        InstanceSave instance = _selectedState.SelectedInstance;
-        ElementSave element = _selectedState.SelectedElement;
+        var instance = _selectedState.SelectedInstance;
 
         if (instance != null)
         {
             using (_undoManager.RequestLock())
             {
-
-                // to bring to back, we're going to remove, then insert at index 0
-                element.Instances.Remove(instance);
-                element.Instances.Insert(0, instance);
+                var element = _selectedState.SelectedElement;
+                if(element != null)
+                {
+                    // to bring to back, we're going to remove, then insert at index 0
+                    element.Instances.Remove(instance);
+                    element.Instances.Insert(0, instance);
+                }
+                else if(_selectedState.SelectedBehavior is BehaviorSave behavior && instance is BehaviorInstanceSave behaviorInstance)
+                {
+                    behavior.RequiredInstances.Remove(behaviorInstance);
+                    behavior.RequiredInstances.Insert(0, behaviorInstance);
+                }
 
                 RefreshInResponseToReorder(instance);
             }
@@ -127,30 +159,39 @@ public class ReorderLogic
 
     public void MoveSelectedInstanceInFrontOf(InstanceSave whatToMoveInFrontOf)
     {
-        var element = _selectedState.SelectedElement;
         var whatToInsert = _selectedState.SelectedInstance;
         if (whatToInsert != null)
         {
             using (_undoManager.RequestLock())
             {
-
-                element.Instances.Remove(whatToInsert);
-                int whereToInsert = element.Instances.IndexOf(whatToMoveInFrontOf) + 1;
-
-                element.Instances.Insert(whereToInsert, whatToInsert);
-
-                RefreshInResponseToReorder(whatToMoveInFrontOf);
-                _fileCommands.TryAutoSaveElement(element);
+                var element = _selectedState.SelectedElement;
+                var behavior = _selectedState.SelectedBehavior;
+                if (element != null)
+                {
+                    element.Instances.Remove(whatToInsert);
+                    int whereToInsert = element.Instances.IndexOf(whatToMoveInFrontOf) + 1;
+                    element.Instances.Insert(whereToInsert, whatToInsert);
+                    RefreshInResponseToReorder(whatToMoveInFrontOf);
+                }
+                else if(behavior != null && whatToInsert is BehaviorInstanceSave behaviorInstance)
+                {
+                    behavior.RequiredInstances.Remove(behaviorInstance);
+                    int whereToInsert = behavior.RequiredInstances.IndexOf(whatToMoveInFrontOf as BehaviorInstanceSave) + 1;
+                    behavior.RequiredInstances.Insert(whereToInsert, behaviorInstance);
+                    RefreshInResponseToReorder(whatToMoveInFrontOf);
+                }
             }
         }
     }
     private void RefreshInResponseToReorder(InstanceSave instance)
     {
-        var element = _selectedState.SelectedElement;
+        var instanceContainer = _selectedState.SelectedInstanceContainer;
+        if(instanceContainer != null)
+        {
+            _guiCommands.RefreshElementTreeView(instanceContainer);
+        }
 
-        _guiCommands.RefreshElementTreeView(element);
-
-        _fileCommands.TryAutoSaveCurrentElement();
+        _fileCommands.TryAutoSaveCurrentObject();
 
         PluginManager.Self.InstanceReordered(instance);
     }

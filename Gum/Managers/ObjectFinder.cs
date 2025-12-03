@@ -1435,9 +1435,9 @@ namespace Gum.Managers
         public static List<InstanceSave> GetSiblingsIncludingThis(this InstanceSave thisInstance)
         {
             var container = thisInstance.ParentContainer;
-            BehaviorSave containerBehavior = null;
+            BehaviorSave? containerBehavior = null;
 
-            StateSave defaultState = null;
+            StateSave? defaultState = null;
             if(container != null)
             {
                 defaultState = container.DefaultState;
