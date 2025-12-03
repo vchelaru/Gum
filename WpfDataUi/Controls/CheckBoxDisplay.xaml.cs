@@ -54,12 +54,10 @@ namespace WpfDataUi.Controls
             if (force)
             {
                 this.ForceRefreshContextMenu(CheckBox.ContextMenu);
-                this.ForceRefreshContextMenu(StackPanel.ContextMenu);
             }
             else
             {
                 this.RefreshContextMenu(CheckBox.ContextMenu);
-                this.RefreshContextMenu(StackPanel.ContextMenu);
             }
         }
 

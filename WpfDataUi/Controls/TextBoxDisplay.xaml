@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
   x:Class="WpfDataUi.Controls.TextBoxDisplay"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -26,6 +26,7 @@
         <RowDefinition x:Name="DefaultTopRow" Height="Auto" />
         <RowDefinition x:Name="RowForAboveBelowDisplay" Height="Auto" />
         <RowDefinition x:Name="PropertyDescriptionRow" Height="Auto" />
+        <RowDefinition />
 
       </Grid.RowDefinitions>
 
@@ -74,16 +75,17 @@
           Content="Is Null"
           Unchecked="NullableCheckBox_Unchecked" />
       </StackPanel>
+
+      <TextBlock
+        x:Name="HintTextBlock"
+        Grid.Row="4"
+        Margin="0,0,4,0"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:TextBoxDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
+        Text="This is a property description. But what if it is longer?"
+        TextWrapping="Wrap" />
     </Grid>
-    <TextBlock
-      x:Name="HintTextBlock"
-      MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
-      Margin="0,0,4,0"
-      HorizontalAlignment="Left"
-      VerticalAlignment="Top"
-      FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:TextBoxDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
-      Text="This is a property description. But what if it is longer?"
-      TextWrapping="Wrap" />
 
 
   </StackPanel>

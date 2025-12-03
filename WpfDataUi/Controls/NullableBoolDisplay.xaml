@@ -1,38 +1,44 @@
 ﻿<UserControl
-    x:Class="WpfDataUi.Controls.NullableBoolDisplay"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:conv="clr-namespace:WpfDataUi.Converters"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:WpfDataUi.Controls"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignWidth="200"
-    mc:Ignorable="d">
-    <UserControl.Resources>
-        <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
-    </UserControl.Resources>
-    <GroupBox x:Name="GroupBox">
-        <GroupBox.ContextMenu>
-            <ContextMenu />
-        </GroupBox.ContextMenu>
-        <StackPanel>
-            <Grid x:Name="TopRowGrid">
-                <StackPanel>
-                    <RadioButton x:Name="TrueRadioButton" Checked="TrueRadioButton_Checked">True</RadioButton>
-                    <RadioButton x:Name="FalseRadioButton" Checked="FalseRadioButton_Checked">False</RadioButton>
-                    <RadioButton x:Name="NullRadioButton" Checked="NullRadioButton_Checked">None</RadioButton>
-                </StackPanel>
-            </Grid>
-            <TextBlock
-                x:Name="HintTextBlock"
-                MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
-                Margin="0,0,-4,0"
-                Padding="8,1,8,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:NullableBoolDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
-                Text="This is a property description. But what if it is longer?"
-                TextWrapping="Wrap" />
-        </StackPanel>
-    </GroupBox>
+  x:Class="WpfDataUi.Controls.NullableBoolDisplay"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:conv="clr-namespace:WpfDataUi.Converters"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:local="clr-namespace:WpfDataUi.Controls"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  d:DesignWidth="200"
+  mc:Ignorable="d">
+  <UserControl.Resources>
+    <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
+  </UserControl.Resources>
+  <GroupBox x:Name="GroupBox">
+    <GroupBox.ContextMenu>
+      <ContextMenu />
+    </GroupBox.ContextMenu>
+
+    <Grid x:Name="TopRowGrid">
+      <Grid.RowDefinitions>
+        <RowDefinition />
+        <RowDefinition />
+      </Grid.RowDefinitions>
+      <StackPanel>
+        <RadioButton x:Name="TrueRadioButton" Checked="TrueRadioButton_Checked">True</RadioButton>
+        <RadioButton x:Name="FalseRadioButton" Checked="FalseRadioButton_Checked">False</RadioButton>
+        <RadioButton x:Name="NullRadioButton" Checked="NullRadioButton_Checked">None</RadioButton>
+      </StackPanel>
+      <TextBlock
+        x:Name="HintTextBlock"
+        Grid.Row="1"
+        MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+        Margin="0,0,-4,0"
+        Padding="8,1,8,0"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:NullableBoolDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
+        Text="This is a property description. But what if it is longer?"
+        TextWrapping="Wrap" />
+    </Grid>
+
+
+  </GroupBox>
 </UserControl>
