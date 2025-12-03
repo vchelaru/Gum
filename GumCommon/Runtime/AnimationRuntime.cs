@@ -36,7 +36,7 @@ public class AnimationRuntime
 
     public void RefreshCumulativeStates(ElementSave element, bool useDefaultAsStarting = true)
     {
-        RefreshCumulativeStatesForStateKeyframes(element, useDefaultAsStarting);
+        RefreshCumulativeStatesForStateKeyframes(element.Categories, useDefaultAsStarting);
 
         foreach (var subAnimation in this.Keyframes.Where(item => !string.IsNullOrEmpty(item.AnimationName)))
         {
@@ -68,8 +68,38 @@ public class AnimationRuntime
         }
     }
 
+    public void RefreshCumulativeStates(GraphicalUiElement element, bool useDefaultAsStarting = true)
+    {
+        RefreshCumulativeStatesForStateKeyframes(element.Categories.Values, useDefaultAsStarting);
 
-    private void RefreshCumulativeStatesForStateKeyframes(ElementSave element, bool useDefaultAsStarting)
+        foreach (var subAnimation in this.Keyframes.Where(item => !string.IsNullOrEmpty(item.AnimationName)))
+        {
+            GraphicalUiElement? instance = null;
+
+            string name = subAnimation.AnimationName;
+
+            if (name?.Contains('.') == true)
+            {
+                int indexOfDot = name.IndexOf('.');
+
+                string instanceName = name.Substring(0, indexOfDot);
+
+                instance = element.GetChildByNameRecursively(instanceName) as GraphicalUiElement;
+            }
+            if (instance == null)
+            {
+                // Null check in case the referenced instance was removed
+                subAnimation.SubAnimation?.RefreshCumulativeStates(element, false);
+            }
+            else
+            {
+                subAnimation.SubAnimation?.RefreshCumulativeStates(instance, false);
+            }
+        }
+    }
+
+
+    private void RefreshCumulativeStatesForStateKeyframes(IEnumerable<StateSaveCategory> categories, bool useDefaultAsStarting)
     {
         // This allocates a bit for simplicity and debugging. If it's a problem, can do some work to reuse (ThreadLocal<T>?)
         Dictionary<string, HashSet<string>> categoryVariableAssignments = new ();
@@ -91,8 +121,8 @@ public class AnimationRuntime
                 {
                     categoryVariableAssignments[categoryName] = new HashSet<string>();
                 }
-                var state = element
-                    .Categories.FirstOrDefault(item => item.Name == categoryName)
+                var state = categories
+                    .FirstOrDefault(item => item.Name == categoryName)
                     ?.States.FirstOrDefault(item => item.Name == stateName);
                 if(state != null)
                 {
@@ -112,7 +142,7 @@ public class AnimationRuntime
         }
     }
 
-    static StateSave GetStateFromCategorizedName(string categorizedName, ElementSave element)
+    static StateSave? GetStateFromCategorizedName(string categorizedName, ElementSave element)
     {
         if (categorizedName.Contains("/"))
         {
@@ -131,18 +161,52 @@ public class AnimationRuntime
         }
     }
 
+
+    static StateSave? GetStateFromCategorizedName(string categorizedName, GraphicalUiElement graphicalUiElement)
+    {
+        if (categorizedName.Contains("/"))
+        {
+            var names = categorizedName.Split('/');
+
+            string category = names[0];
+            string stateName = names[1];
+
+            if(graphicalUiElement.Categories.TryGetValue(category, out var foundCategory))
+            {
+                return foundCategory.States.FirstOrDefault(item => item.Name == stateName);
+            }
+        }
+        else
+        {
+            // we can only assume default state:
+            if(graphicalUiElement.States.TryGetValue(categorizedName, out var foundState))
+            {
+                return foundState;
+            }
+        }
+        return null;
+    }
+
     public StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull)
     {
         StateSave stateToSet = null;
 
         GetStateToSetFromStateKeyframes(animationTime, element, ref stateToSet, defaultIfNull);
 
-        CombineStateFromAnimations(animationTime, element, ref stateToSet);
+        CombineStateFromAnimations(animationTime, element, null, ref stateToSet);
 
         return stateToSet;
     }
 
-    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave element, ref StateSave stateToSet, bool defaultIfNull)
+    public StateSave GetStateToSet(double animationTime, GraphicalUiElement graphicalUiElement, bool defaultIfNull)
+    {
+        StateSave stateToSet = null;
+        GetStateToSetFromStateKeyframes(animationTime, null, ref stateToSet, defaultIfNull, graphicalUiElement);
+        CombineStateFromAnimations(animationTime, null, graphicalUiElement, ref stateToSet);
+        return stateToSet;
+    }
+
+    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave? element, ref StateSave stateToSet, bool defaultIfNull, GraphicalUiElement? graphicalUiElement = null)
     {
         //var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
 
@@ -162,7 +226,14 @@ public class AnimationRuntime
 
         if(_tracks.Count == 0)
         {
-            RefreshCumulativeStates(element);
+            if (element != null)
+            {
+                RefreshCumulativeStates(element);
+            }
+            else if(graphicalUiElement != null)
+            {
+                RefreshCumulativeStates(graphicalUiElement);
+            }
         }
 
         foreach (var track in _tracks)
@@ -171,32 +242,62 @@ public class AnimationRuntime
             var keyframeBefore = track.Value.LastOrDefault(item => item.Time <= animationTime);
             var keyframeAfter = track.Value.FirstOrDefault(item => item.Time >= animationTime);
 
-            if (keyframeBefore == null && keyframeAfter != null)
+            if(element != null)
             {
-                stateForTrack = GetStateFromCategorizedName(keyframeAfter.StateName, element);
-            }
-            else if (keyframeBefore != null && keyframeAfter == null)
-            {
-                stateForTrack = GetStateFromCategorizedName(keyframeBefore.StateName, element);
-            }
-            else if (keyframeBefore != null && keyframeAfter != null)
-            {
-                double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
-                var stateBefore = GetStateFromCategorizedName(keyframeBefore.StateName, element);
-                var stateAfter = GetStateFromCategorizedName(keyframeAfter.StateName, element);
-
-                if (stateBefore != null && stateAfter != null)
+                if (keyframeBefore == null && keyframeAfter != null)
                 {
-                    double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
+                    stateForTrack = GetStateFromCategorizedName(keyframeAfter.StateName, element);
+                }
+                else if (keyframeBefore != null && keyframeAfter == null)
+                {
+                    stateForTrack = GetStateFromCategorizedName(keyframeBefore.StateName, element);
+                }
+                else if (keyframeBefore != null && keyframeAfter != null)
+                {
+                    double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
+                    var stateBefore = GetStateFromCategorizedName(keyframeBefore.StateName, element);
+                    var stateAfter = GetStateFromCategorizedName(keyframeAfter.StateName, element);
+
+                    if (stateBefore != null && stateAfter != null)
+                    {
+                        double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
 
 
-                    var combined = stateBefore.Clone();
-                    combined.MergeIntoThis(stateAfter, (float)processedRatio);
-                    stateForTrack = combined;
+                        var combined = stateBefore.Clone();
+                        combined.MergeIntoThis(stateAfter, (float)processedRatio);
+                        stateForTrack = combined;
+                    }
+                }
+            }
+            else
+            {
+                if (keyframeBefore == null && keyframeAfter != null)
+                {
+                    stateForTrack = GetStateFromCategorizedName(keyframeAfter.StateName, graphicalUiElement);
+                }
+                else if (keyframeBefore != null && keyframeAfter == null)
+                {
+                    stateForTrack = GetStateFromCategorizedName(keyframeBefore.StateName, graphicalUiElement);
+                }
+                else if (keyframeBefore != null && keyframeAfter != null)
+                {
+                    double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
+                    var stateBefore = GetStateFromCategorizedName(keyframeBefore.StateName, graphicalUiElement);
+                    var stateAfter = GetStateFromCategorizedName(keyframeAfter.StateName, graphicalUiElement);
+
+                    if (stateBefore != null && stateAfter != null)
+                    {
+                        double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
+
+
+                        var combined = stateBefore.Clone();
+                        combined.MergeIntoThis(stateAfter, (float)processedRatio);
+                        stateForTrack = combined;
+                    }
                 }
             }
 
-            if(stateForTrack != null)
+            if (stateForTrack != null)
             {
                 stateToSet.MergeIntoThis(stateForTrack, 1);
             }
@@ -207,43 +308,84 @@ public class AnimationRuntime
 
 
 
-    private void CombineStateFromAnimations(double animationTime, ElementSave element, ref StateSave stateToSet)
+    private void CombineStateFromAnimations(double animationTime, ElementSave? element, GraphicalUiElement? graphicalUiElement, ref StateSave stateToSet)
     {
         var animationKeyframes = this.Keyframes.Where(item => item.SubAnimation != null && item.Time <= animationTime);
 
-        foreach (var keyframe in animationKeyframes)
+        if(element != null)
         {
-            var subAnimationElement = element;
-
-            string instanceName = null;
-
-            if (keyframe.AnimationName.Contains('.'))
+            foreach (var keyframe in animationKeyframes)
             {
-                instanceName = keyframe.AnimationName.Substring(0, keyframe.AnimationName.IndexOf('.'));
+                var subAnimationElement = element;
 
-                InstanceSave instance = element.Instances.FirstOrDefault(item => item.Name == instanceName);
+                string instanceName = null;
 
-                if (instance != null)
+                if (keyframe.AnimationName.Contains('.'))
                 {
-                    subAnimationElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
-                }
-            }
+                    instanceName = keyframe.AnimationName.Substring(0, keyframe.AnimationName.IndexOf('.'));
 
-            var relativeTime = animationTime - keyframe.Time;
+                    InstanceSave instance = element.Instances.FirstOrDefault(item => item.Name == instanceName);
 
-            var stateFromAnimation = keyframe.SubAnimation.GetStateToSet(relativeTime, subAnimationElement, false);
-
-            if (stateFromAnimation != null)
-            {
-                if (subAnimationElement != element)
-                {
-                    foreach (var variable in stateFromAnimation.Variables)
+                    if (instance != null)
                     {
-                        variable.Name = instanceName + "." + variable.Name;
+                        subAnimationElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
                     }
                 }
 
-                stateToSet.MergeIntoThis(stateFromAnimation, 1);
+                var relativeTime = animationTime - keyframe.Time;
+
+                var stateFromAnimation = keyframe.SubAnimation!.GetStateToSet(relativeTime, subAnimationElement, false);
+
+                if (stateFromAnimation != null)
+                {
+                    if (subAnimationElement != element)
+                    {
+                        foreach (var variable in stateFromAnimation.Variables)
+                        {
+                            variable.Name = instanceName + "." + variable.Name;
+                        }
+                    }
+
+                    stateToSet.MergeIntoThis(stateFromAnimation, 1);
+                }
+            }
+        }
+        else if(graphicalUiElement != null)
+        {
+            foreach (var keyframe in animationKeyframes)
+            {
+                var subAnimationGue = graphicalUiElement;
+
+                string instanceName = null;
+
+                if (keyframe.AnimationName.Contains('.'))
+                {
+                    instanceName = keyframe.AnimationName.Substring(0, keyframe.AnimationName.IndexOf('.'));
+
+                    var instance = graphicalUiElement.GetChildByNameRecursively(instanceName) as GraphicalUiElement;
+
+                    if (instance != null)
+                    {
+                        subAnimationGue = instance;
+                    }
+                }
+
+                var relativeTime = animationTime - keyframe.Time;
+
+                var stateFromAnimation = keyframe.SubAnimation!.GetStateToSet(relativeTime, subAnimationGue, false);
+
+                if (stateFromAnimation != null)
+                {
+                    if (subAnimationGue != graphicalUiElement)
+                    {
+                        foreach (var variable in stateFromAnimation.Variables)
+                        {
+                            variable.Name = instanceName + "." + variable.Name;
+                        }
+                    }
+
+                    stateToSet.MergeIntoThis(stateFromAnimation, 1);
+                }
             }
         }
 
@@ -283,8 +425,16 @@ public class AnimationRuntime
         // be applying default, potentially wiping
         // the state set by other animations.
         bool shouldFirstKeyframeBeDefaultState = false;
-        var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, shouldFirstKeyframeBeDefaultState);
-        graphicalUiElement.ApplyState(state);
+        if(graphicalUiElement.ElementSave != null)
+        {
+            var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, shouldFirstKeyframeBeDefaultState);
+            graphicalUiElement.ApplyState(state);
+        }
+        else
+        {
+            var state = GetStateToSet(secondsFromBeginning, graphicalUiElement, shouldFirstKeyframeBeDefaultState);
+            graphicalUiElement.ApplyState(state);
+        }
     }
 
     public override string ToString()
