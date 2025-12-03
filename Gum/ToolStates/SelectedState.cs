@@ -33,7 +33,7 @@ public class SelectedState : ISelectedState
 
     #region Elements (Screen, Component, StandardElement)
 
-    public ScreenSave SelectedScreen
+    public ScreenSave? SelectedScreen
     {
         get
         {
@@ -49,7 +49,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public ComponentSave SelectedComponent
+    public ComponentSave? SelectedComponent
     {
         get
         {
@@ -64,7 +64,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public StandardElementSave SelectedStandardElement
+    public StandardElementSave? SelectedStandardElement
     {
         get
         {
@@ -177,6 +177,59 @@ public class SelectedState : ISelectedState
         }
     }
 
+    public IStateContainer? SelectedStateContainer
+    {
+        get
+        {
+            if (SelectedComponent != null)
+            {
+                return SelectedComponent;
+            }
+            else if (SelectedScreen != null)
+            {
+                return SelectedScreen;
+            }
+            else if (SelectedStandardElement != null)
+            {
+                return SelectedStandardElement;
+            }
+            else if (SelectedBehavior != null)
+            {
+                return SelectedBehavior;
+            }
+
+            return null;
+        }
+    }
+
+    public IInstanceContainer? SelectedInstanceContainer
+    {
+        get
+        {
+            if (SelectedComponent != null)
+            {
+                return SelectedComponent;
+            }
+            else if (SelectedScreen != null)
+            {
+                return SelectedScreen;
+            }
+            // December 3, 2025:
+            // Technically this cannot contain instances, but based on its type
+            // it is an InstanceContainer so, let's return it unless it causes problems?
+            else if (SelectedStandardElement != null)
+            {
+                return SelectedStandardElement;
+            }
+            else if (SelectedBehavior != null)
+            {
+                return SelectedBehavior;
+            }
+
+            return null;
+        }
+    }
+
     #endregion
 
     #region Behavior
@@ -285,33 +338,9 @@ public class SelectedState : ISelectedState
 
     #region Properties
     
-    public IStateContainer SelectedStateContainer
-    {
-        get
-        {
-            if (SelectedComponent != null)
-            {
-                return SelectedComponent;
-            }
-            else if (SelectedScreen != null)
-            {
-                return SelectedScreen;
-            }
-            else if (SelectedStandardElement != null)
-            {
-                return SelectedStandardElement;
-            }
-            else if (SelectedBehavior != null)
-            {
-                return SelectedBehavior;
-            }
-
-            return null;
-        }
-    }
 
 
-    public ITreeNode SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
+    public ITreeNode? SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
 
     public IEnumerable<ITreeNode> SelectedTreeNodes =>
         _pluginManager.GetSelectedNodes();

@@ -15,6 +15,8 @@ public interface ISelectedState
     ElementSave? SelectedElement { get; set; }
     IEnumerable<ElementSave> SelectedElements { get; set; }
     IStateContainer? SelectedStateContainer { get; }
+    IInstanceContainer? SelectedInstanceContainer { get; }
+
     BehaviorSave? SelectedBehavior { get; set; }
     IEnumerable<BehaviorSave> SelectedBehaviors { get; set; }
     ElementBehaviorReference? SelectedBehaviorReference { get; set; }
