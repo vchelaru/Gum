@@ -190,6 +190,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     Dictionary<string, Gum.DataTypes.Variables.StateSave> mStates =
         new Dictionary<string, DataTypes.Variables.StateSave>();
 
+    public Dictionary<string, Gum.DataTypes.Variables.StateSave> States => mStates;
+
     Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
         new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
 
