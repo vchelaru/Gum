@@ -92,21 +92,48 @@ jobs:
           "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
           "draft=$draft"           >> $env:GITHUB_OUTPUT
 
-      # 3) Create and push the version bump and the annotated tag
-      - name: Commit version bump and push tag
+      # 3) Commit version bump on a new branch and create tag
+      - name: Commit version bump, create tag, push branch+tag
         if: github.event.inputs.release_kind == 'release'
+        shell: pwsh
         run: |
           git config user.name  "github-actions"
           git config user.email "actions@github.com"
 
-          echo "Committing version bump..."
+          $branchName = "version-bump/${{ steps.meta.outputs.tag }}"
+          Write-Host "Creating branch $branchName"
+          git checkout -b "$branchName"
+
+          Write-Host "Committing version bump..."
           git add Gum/Properties/AssemblyInfo.cs
           git commit -m "Bump version to ${{ steps.meta.outputs.tag }}" || echo "No changes to commit"
 
-          echo "Creating and pushing tag..."
+          Write-Host "Creating annotated tag..."
           git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}"
-          git push origin ${{ github.ref_name }}
+
+          Write-Host "Pushing branch and tag..."
+          git push origin "$branchName"
           git push origin "${{ steps.meta.outputs.tag }}"
+
+      # 3b) Create PR for version bump
+      - name: Create pull request for version bump
+        if: github.event.inputs.release_kind == 'release'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: version-bump/${{ steps.meta.outputs.tag }}
+          title: "Bump version to ${{ steps.meta.outputs.tag }}"
+          body: |
+            This PR was automatically created by the Build and Release workflow.
+
+            - Bumps `Gum/Properties/AssemblyInfo.cs` to version **${{ steps.meta.outputs.tag }}**
+            - Release title: **${{ steps.meta.outputs.title }}**
+          base: master
+          labels: |
+            automated
+            version-bump
+
+
 
       # 4) Create GitHub Release and attach the zip
       - name: Create GitHub Release
