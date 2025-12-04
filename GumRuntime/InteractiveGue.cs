@@ -776,6 +776,12 @@ public partial class InteractiveGue : BindableGue
     // See DoNextClickAndPushActions for details on why this is needed
     static List<Action> nextClickActionHoldingList = new();
 
+    public static void ClearNextClickActions()
+    {
+        nextClickActionHoldingList.Clear();
+        nextClickActions.Clear();
+    }
+
     /// <summary>
     /// Adds an action to be called the next time the Cursor performs a click action
     /// (the left button was down last frame and is released this frame). The argument

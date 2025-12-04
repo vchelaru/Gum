@@ -124,7 +124,8 @@ public class InteractiveGueTests : BaseTestClass
             didClickRun = true;
             InteractiveGue.AddNextClickAction(() =>
             {
-                throw new Exception();
+                var message = "This should not be run since it is the same frame it was added";
+                throw new Exception(message);
             });
         };
 
