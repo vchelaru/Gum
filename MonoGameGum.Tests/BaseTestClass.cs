@@ -47,6 +47,7 @@ public class BaseTestClass : IDisposable
         FrameworkElement.MainCursor = new Cursor();
 
         InteractiveGue.CurrentInputReceiver = null;
+        InteractiveGue.ClearNextClickActions();
 
         GumService.Default.Root.Children!.Clear();
         GumService.Default.ModalRoot.Children!.Clear();
