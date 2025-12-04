@@ -368,11 +368,11 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     }
 
 
-    public int CompareTo(object other)
+    public int CompareTo(object? other)
     {
-        if (other is AnimatedKeyframeViewModel)
+        if (other is AnimatedKeyframeViewModel animatedKeyframeViewModel)
         {
-            return this.Time.CompareTo((other as AnimatedKeyframeViewModel).Time);
+            return this.Time.CompareTo(animatedKeyframeViewModel.Time);
         }
         else
         {
