@@ -1455,21 +1455,12 @@
   </DataTemplate>
 
   <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type wpfdatauiTypes:MemberCategory}">
-      <!-- -40 margin extends the border to cover the left side button. Note that this is
-      a hack, because a full styling of the toggle button looks like it's dozens of lines and hard to maintain-->
-    <Border x:Name="HeaderBorder" Background="{Binding HeaderColor}" Margin="-40,0,0,0">
-      <TextBlock
-        Margin="40,4,0,4"
-        VerticalAlignment="Center"
-        FontWeight="Medium"
-        Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
-        Text="{Binding Name}" />
-      </Border>
-        <DataTemplate.Triggers>
-            <DataTrigger Binding="{Binding HeaderColor}" Value="{x:Null}">
-                <Setter TargetName="HeaderBorder" Property="Background" Value="Transparent"/>
-            </DataTrigger>
-        </DataTemplate.Triggers>
+    <TextBlock
+      Margin="40,4,0,4"
+      VerticalAlignment="Center"
+      FontWeight="Medium"
+      Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
+      Text="{Binding Name}" />
     </DataTemplate>
 
   <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
@@ -1498,6 +1489,7 @@
       <Setter.Value>
         <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">
           <Expander
+            md:ExpanderAssist.HeaderBackground="{Binding HeaderColor}"
             Header="{Binding}"
             HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
             IsExpanded="True">
