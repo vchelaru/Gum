@@ -108,7 +108,7 @@ public partial class MultiSelectTreeView
         SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
         SetStyle(ControlStyles.StandardClick | ControlStyles.StandardDoubleClick, true);
 
-        AfterSelect += (_, _) => Invalidate();
+        AfterSelect += OnAfterSelect;
         GotFocus += (_, _) => Invalidate();
         LostFocus += (_, _) => Invalidate();
         MouseLeave += (_, _) => SetHotNode(null);
@@ -117,6 +117,41 @@ public partial class MultiSelectTreeView
         AfterExpand += (_, _) => Invalidate();
         AfterCollapse += (_, _) => Invalidate();
         ForeColorChanged += (_, _) => Invalidate();
+    }
+
+    private void OnAfterSelect(object? sender, TreeViewEventArgs args)
+    {
+        Rectangle inv = Rectangle.Empty;
+
+        // current single
+        if (mSelectedNode != null && mSelectedNode.Bounds != Rectangle.Empty)
+        {
+            inv = RowRect(mSelectedNode);
+        }
+
+        // multiselect
+        foreach (var n in SelectedNodes)
+        {
+            if (n.Bounds != Rectangle.Empty)
+                inv = inv.IsEmpty ? RowRect(n) : Rectangle.Union(inv, RowRect(n));
+        }
+
+        // event-associated
+        if (args?.Node != null && args.Node.Bounds != Rectangle.Empty)
+        {
+            var r = RowRect(args.Node);
+            inv = inv.IsEmpty ? r : Rectangle.Union(inv, r);
+        }
+
+        if (!inv.IsEmpty)
+        {
+            Invalidate(inv);
+            Update(); // flush paint to show immediately -- this makes it happen _now_
+        }
+        else
+        {
+            Invalidate();
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)

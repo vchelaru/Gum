@@ -81,6 +81,50 @@
     <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
   </Style>
 
+  <Style x:Key="SimpleTextBox" TargetType="{x:Type TextBox}">
+    <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+    <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
+    <Setter Property="Padding" Value="3,0,3,1" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource Frb.Brushes.ThemeContrast}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Border
+            x:Name="border"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            CornerRadius="2"
+            SnapsToDevicePixels="True">
+
+            <ScrollViewer x:Name="PART_ContentHost" />
+          </Border>
+
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Primary}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="border" Property="Opacity" Value="0.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+
+    <Style.Triggers>
+      <Trigger Property="IsKeyboardFocused" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
   <!--  TextBox  -->
   <Style BasedOn="{StaticResource MaterialDesignTextBox}" TargetType="TextBox">
     <Style.Resources>
@@ -1461,7 +1505,7 @@
       FontWeight="Medium"
       Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
       Text="{Binding Name}" />
-    </DataTemplate>
+  </DataTemplate>
 
   <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">
     <Setter Property="Grid.IsSharedSizeScope" Value="True" />
@@ -1485,6 +1529,9 @@
     x:Key="DataUiGrid.VariableGrid"
     BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}"
     TargetType="{x:Type wpfdataui:DataUiGrid}">
+    <Style.Resources>
+      <Style BasedOn="{StaticResource SimpleTextBox}" TargetType="TextBox" />
+    </Style.Resources>
     <Setter Property="ItemTemplate">
       <Setter.Value>
         <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">

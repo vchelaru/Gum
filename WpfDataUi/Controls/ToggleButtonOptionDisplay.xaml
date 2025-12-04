@@ -14,8 +14,6 @@
   <UserControl.Resources>
     <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
   </UserControl.Resources>
-  <!--<StackPanel>-->
-
   <Grid x:Name="Grid" HorizontalAlignment="Left">
     <Grid.ContextMenu>
       <ContextMenu />
@@ -60,6 +58,4 @@
       This is a property description.
     </TextBlock>
   </Grid>
-  <!--
-  </StackPanel>-->
 </UserControl>
