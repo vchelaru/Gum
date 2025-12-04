@@ -219,6 +219,10 @@ namespace StateAnimationPlugin.Views
 
         private List<AnimationContainerViewModel> CreateAnimationContainers()
         {
+            if(_selectedState.SelectedElement == null)
+            {
+                throw new NullReferenceException("No selected element to get animation containers from");
+            }
 
             var AnimationContainers = new List<AnimationContainerViewModel>();
 

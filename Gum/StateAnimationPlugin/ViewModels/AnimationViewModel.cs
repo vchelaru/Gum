@@ -71,9 +71,9 @@ public partial class AnimationViewModel : ViewModel
 
     public event PropertyChangedEventHandler FramePropertyChanged;
 
-    public AnimatedKeyframeViewModel SelectedKeyframe 
+    public AnimatedKeyframeViewModel? SelectedKeyframe 
     {
-        get => Get<AnimatedKeyframeViewModel>();
+        get => Get<AnimatedKeyframeViewModel?>();
         set 
         {
             if (Set(value))
@@ -254,7 +254,7 @@ public partial class AnimationViewModel : ViewModel
 
     private void HandleKeyframeCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && !mIsInMiddleOfSort)
+        if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && !mIsInMiddleOfSort && e.NewItems != null)
         {
             foreach(var newAdd in e.NewItems)
             {
@@ -325,7 +325,7 @@ public partial class AnimationViewModel : ViewModel
     }
 
 
-    static StateSave GetStateFromCategorizedName(string categorizedName, ElementSave element)
+    static StateSave? GetStateFromCategorizedName(string categorizedName, ElementSave element)
     {
         if(categorizedName.Contains("/"))
         {

@@ -347,9 +347,9 @@ public class MainStateAnimationPlugin : PluginBase
         newVm.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
     }
 
-    private string GetWhyAddingTimedStateIsInvalid()
+    private string? GetWhyAddingTimedStateIsInvalid()
     {
-        string whyIsntValid = null;
+        string? whyIsntValid = null;
 
         if (_viewModel.SelectedAnimation == null)
         {
@@ -423,11 +423,13 @@ public class MainStateAnimationPlugin : PluginBase
         {
             if (_projectState.GumProjectSave?.FullFileName == null)
             {
-                _viewModel = null;
+                // OK to assign null, will be fixed down below
+                _viewModel = null!;
             }
             else
             {
-                _viewModel = _animationCollectionViewModelManager.GetAnimationCollectionViewModel(element);
+                // OK to assign null, will be fixed down below
+                _viewModel = _animationCollectionViewModelManager.GetAnimationCollectionViewModel(element)!;
             }
 
             if (_viewModel != null)

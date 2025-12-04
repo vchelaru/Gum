@@ -91,9 +91,9 @@ public partial class ElementAnimationsViewModel : ViewModel
     public Visibility PlayButtonVisibility => 
         (SelectedAnimation != null).ToVisibility();
 
-    public AnimationViewModel SelectedAnimation
+    public AnimationViewModel? SelectedAnimation
     {
-        get => Get<AnimationViewModel>();
+        get => Get<AnimationViewModel?>();
         set
         {
             if (Set(value))
@@ -328,6 +328,12 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleRenameAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
+        /////////////////Early Out/////////////////
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+        ///////////////End Early Out///////////////
         string message = "Enter new animation name:";
 
         GetUserStringOptions options = new()
@@ -362,14 +368,21 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
         {
-            float value = float.Parse(result);
-            if(SelectedAnimation.Length != 0)
+            // We should use decimals until the very last operation to avoid floating point errors:
+            var value = decimal.Parse(result);
+            var animationLengthBeforeChange = (decimal)SelectedAnimation.Length;
+
+            if (animationLengthBeforeChange > 0)
             {
-                var multiplier = value / SelectedAnimation.Length;
+                var multiplier = value / animationLengthBeforeChange;
 
                 foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
                 {
-                    frame.Time *= multiplier;
+                    var frameTime = (decimal)frame.Time;
+
+                    var newTime = frameTime * multiplier;
+
+                    frame.Time = (float)newTime;
                 }
             }
 
@@ -396,7 +409,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         Animations.Add(copyOfAnimation);
     }
 
-    private void OnAnyChange(object sender, string? propertyName)
+    private void OnAnyChange(object? sender, string? propertyName)
     {
         AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
     }
@@ -404,7 +417,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleListChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
     {
-        if(eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+        if(eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && eventArgs.NewItems != null)
         {
             foreach(AnimationViewModel item in eventArgs.NewItems)
             {

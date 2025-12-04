@@ -161,7 +161,7 @@ namespace StateAnimationPlugin.Managers
 
                 bool didChange = false;
 
-                if (fileName.Exists())
+                if (fileName?.Exists() == true)
                 {
                     try
                     {
