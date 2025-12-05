@@ -4,6 +4,6 @@
     {
         public bool ShouldDelete { get; set; }
         public bool ShouldShowMessage { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 }

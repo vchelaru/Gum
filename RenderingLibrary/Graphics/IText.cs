@@ -19,7 +19,9 @@ namespace RenderingLibrary.Graphics
         float WrappedTextHeight { get; }
 
         // The text that was assgined on this Text instance prior to any wrapping.
-        string RawText { get; set; }
+        string? RawText { get; set; }
+
+        string? StoredMarkupText { get; }
 
         float? Width { get; set; }
 

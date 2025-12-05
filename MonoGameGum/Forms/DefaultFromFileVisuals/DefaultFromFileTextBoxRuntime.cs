@@ -1,5 +1,5 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
+
+#if !RAYLIB
 
 public class DefaultFromFileTextBoxRuntime : InteractiveGue
 {
@@ -25,3 +27,4 @@ public class DefaultFromFileTextBoxRuntime : InteractiveGue
 
     public TextBox FormsControl => FormsControlAsObject as TextBox;
 }
+#endif

@@ -80,7 +80,8 @@ public partial class InteractiveGue : BindableGue
     /// </summary>
     public static double CurrentGameTime { get; internal set; }
 
-    static IInputReceiver currentInputReceiver;
+    public static InteractiveGue? LastVisualPushed { get; set; }
+    static IInputReceiver? currentInputReceiver;
 
     
     public static IInputReceiver? CurrentInputReceiver
@@ -172,26 +173,29 @@ public partial class InteractiveGue : BindableGue
     /// Event raised whenever this is clicked by a cursor. A click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
-    public event EventHandler Click;
+    public event EventHandler? Click;
+
+    public event EventHandler<RoutedEventArgs>? ClickPreview;
+    public event EventHandler<RoutedEventArgs>? PushPreview;
 
     /// <summary>
     /// Event raised whenever this is double-clicked by a cursor. A double-click occurs
     /// when the cursor is over this and the left mouse button is clicked twice in rapid succession.
     /// </summary>
-    public event EventHandler DoubleClick;
+    public event EventHandler? DoubleClick;
 
     /// <summary>
     /// Event which is raised whenever this is right-clicked by a cursor. A right-click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
-    public event EventHandler RightClick;
+    public event EventHandler? RightClick;
 
     /// <summary>
     /// Event which is raised whenever this is pushed by a cursor. A push occurs
     /// when the cursor is over this and the left mouse button is pushed (not down last frame,
     /// down this frame).
     /// </summary>
-    public event EventHandler Push;
+    public event EventHandler? Push;
 
     /// <summary>
     /// Event which is raised whenever this loses a push. A push occurs when the
@@ -203,7 +207,7 @@ public partial class InteractiveGue : BindableGue
     /// LosePush is often used to change the state of a button back to its regular state.
     /// </remarks>
     //public event EventHandler LosePush;
-    public event EventHandler LosePush
+    public event EventHandler? LosePush
     {
         add
         {
@@ -215,28 +219,30 @@ public partial class InteractiveGue : BindableGue
             _losePush -= value;
         }
     }
-    private EventHandler _losePush;
+    private EventHandler? _losePush;
 
 
     /// <summary>
-    /// Event raised when the cursor first moves over this object.
+    /// Event raised when the cursor first moves over this object. This is only raised if the
+    /// cursor is moved directly over this object. If it is instead moved over a child object
+    /// which has its own events, then the parent will not have this raised.
     /// </summary>
-    public event EventHandler RollOn;
+    public event EventHandler? RollOn;
     /// <summary>
     /// Event when the cursor first leaves this object.
     /// </summary>
-    public event EventHandler RollOff;
+    public event EventHandler? RollOff;
     /// <summary>
     /// Event raised every frame the cursor is over this object and the Cursor has changed position.
     /// This event is not raized if the cursor has moved off of the object. For events raised when the 
     /// cursor is not over this instance, see Dragging.
     /// </summary>
-    public event EventHandler RollOver;
+    public event EventHandler? RollOver;
 
     /// <summary>
     /// Event raised every frame the cursor is over this object whether the Cursor has changed positions or not.
     /// </summary>
-    public event EventHandler HoverOver;
+    public event EventHandler? HoverOver;
 
     /// <summary>
     /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, 
@@ -244,12 +250,12 @@ public partial class InteractiveGue : BindableGue
     /// object is to be moved by dragging since it will be raised even if the user moves the 
     /// cursor quickly outside of its bounds.
     /// </summary>
-    public event EventHandler Dragging;
+    public event EventHandler? Dragging;
 
     /// <summary>
     /// Event raised when the Enabled property changed.
     /// </summary>
-    public event EventHandler EnabledChange;
+    public event EventHandler? EnabledChange;
 
     /// <summary>
     /// Eent raised when the mouse wheel has been scrolled while the cursor is over this instance.
@@ -257,7 +263,7 @@ public partial class InteractiveGue : BindableGue
     /// If a control sets the argument RoutedEventArgs Handled to true, the children objects 
     /// will not have this event raised.
     /// </summary>
-    public event Action<object, RoutedEventArgs> MouseWheelScroll;
+    public event Action<object, RoutedEventArgs>? MouseWheelScroll;
 
     /// <summary>
     /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
@@ -265,13 +271,13 @@ public partial class InteractiveGue : BindableGue
     /// RoutedEventArgs Handled to true,
     /// then parent objects will not have this event raised.
     /// </summary>
-    public event Action<object, RoutedEventArgs> RollOverBubbling;
+    public event Action<object, RoutedEventArgs>? RollOverBubbling;
 
     /// <summary>
     /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
     /// This can be used to detect the end of a drag operation, or to reset the state of a button.
     /// </summary>
-    public event EventHandler RemovedAsPushed;
+    public event EventHandler? RemovedAsPushed;
 
     public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
     public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  
@@ -322,6 +328,36 @@ public partial class InteractiveGue : BindableGue
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
         {
+            if(asInteractive != null && asInteractive.HasEvents  && asInteractive.IsEnabledRecursively)
+            {
+                if(asInteractive.ClickPreview != null &&
+                    !handledActions.HandledClickPreview && cursor.PrimaryClick)
+                {
+                    var args = new InputEventArgs() { InputDevice = cursor };
+                    asInteractive.ClickPreview(asInteractive, args);
+
+                    if(args.Handled)
+                    {
+                        cursor.WindowPushed = asInteractive;
+                        LastVisualPushed = asInteractive;
+
+                        handledActions.HandledClickPreview = true;
+                    }
+                }
+                if(asInteractive.PushPreview != null &&
+                    !handledActions.handledPushPreview && cursor.PrimaryPush)
+                {
+                    var args = new InputEventArgs() { InputDevice = cursor };
+                    asInteractive.PushPreview(asInteractive, args);
+
+                    if (args.Handled)
+                    {
+                        handledActions.handledPushPreview = true;
+                    }
+                }
+            }
+
+
             #region Try handling by children
 
             if(currentItem.Children == null)
@@ -420,10 +456,11 @@ public partial class InteractiveGue : BindableGue
                         cursor.WindowOver = asInteractive;
                         handledActions.SetWindowOver = true;
 
-                        if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively)
+                        if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively && handledActions.handledPushPreview == false)
                         {
 
                             cursor.WindowPushed = asInteractive;
+                            LastVisualPushed = asInteractive;
 
                             if (asInteractive.Push != null)
                                 asInteractive.Push(asInteractive, EventArgs.Empty);
@@ -446,14 +483,16 @@ public partial class InteractiveGue : BindableGue
                         {
                             if (cursor.WindowPushed == asInteractive)
                             {
-                                if (asInteractive.Click != null)
+                                if (asInteractive.Click != null && handledActions.HandledClickPreview == false)
                                 {
                                     // Should InputDevice be the cursor? Or the underlying hardware?
                                     // I don't know if we have access to the underlying hardware here...
                                     var args = new InputEventArgs() { InputDevice = cursor };
                                     asInteractive.Click(asInteractive, args);
+
+
                                 }
-                                if(asInteractive.DoubleClick != null && cursor.PrimaryDoubleClick)
+                                if(asInteractive.DoubleClick != null && cursor.PrimaryDoubleClick && handledActions.HandledClickPreview == false)
                                 {
                                     var args = new InputEventArgs() { InputDevice = cursor };
                                     asInteractive.DoubleClick(asInteractive, args);
@@ -713,6 +752,9 @@ public partial class InteractiveGue : BindableGue
         }
     }
 
+    // See DoNextClickAndPushActions for details on why this is needed
+    static List<Action> nextPushActionHoldingList = new();
+
     /// <summary>
     /// Adds an action to be called the next time the Cursor performs a push action 
     /// (the left button is not down the previous frame but is down this frame). The 
@@ -722,13 +764,22 @@ public partial class InteractiveGue : BindableGue
     /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
     public static void AddNextPushAction(Action action)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (action == null)
         {
             throw new ArgumentNullException(nameof(action));
         }
 #endif
-        nextPushActions.Add(action);
+        nextPushActionHoldingList.Add(action);
+    }
+
+    // See DoNextClickAndPushActions for details on why this is needed
+    static List<Action> nextClickActionHoldingList = new();
+
+    public static void ClearNextClickActions()
+    {
+        nextClickActionHoldingList.Clear();
+        nextClickActions.Clear();
     }
 
     /// <summary>
@@ -740,43 +791,61 @@ public partial class InteractiveGue : BindableGue
     /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
     public static void AddNextClickAction(Action action)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (action == null)
         {
             throw new ArgumentNullException(nameof(action));
         }
 #endif
-        nextClickActions.Add(action);
+        nextClickActionHoldingList.Add(action);
     }
 
-    internal static void DoNextClickActions()
+    internal static void DoNextClickAndPushActions(ICursor cursor, bool isInWindow)
     {
+        if (isInWindow == false) return;
 
-        if (nextClickActions.Count > 0)
+        if(cursor.PrimaryClick)
         {
-            var items = nextClickActions.ToList();
-            // clear first so that any actions can add more click actions that won't get run this frame:
-            nextClickActions.Clear();
-            foreach (var item in items)
+            if (nextClickActions.Count > 0)
             {
-                item();
-            }
-
-        }
-    }
-
-    internal static void DoNextPushActions()
-    {
-        if (nextPushActions.Count > 0)
-        {
-            var items = nextPushActions.ToList();
-            nextPushActions.Clear();
-            foreach (var item in items)
-            {
-                item();
+                var items = nextClickActions.ToList();
+                // clear first so that any actions can add more click actions that won't get run this frame:
+                nextClickActions.Clear();
+                foreach (var item in items)
+                {
+                    item();
+                }
             }
         }
+
+        if(cursor.PrimaryPush)
+        {
+            if (nextPushActions.Count > 0)
+            {
+                var items = nextPushActions.ToList();
+                nextPushActions.Clear();
+                foreach (var item in items)
+                {
+                    item();
+                }
+            }
+        }
+
+        // Whenever AddNextPushAction or AddNextClickAction are called, the user expects:
+        // 1. That it will not be raised immediately if added inside a push/click event
+        // 2. That it will have access to the WindowPushed/WindowOver
+        // This means that we cannot immediately run new events, but that all events should
+        // be run *after* we do our every-frame logic of detecting whether the user is over a
+        // window.
+        // To satisfy this, we store new events in a holding list, and then add them after we run through
+        // existing items:
+        nextClickActions.AddRange(nextClickActionHoldingList);
+        nextPushActions.AddRange(nextPushActionHoldingList);
+
+        nextClickActionHoldingList.Clear();
+        nextPushActionHoldingList.Clear();
     }
+
 
     public override void RemoveFromManagers()
     {
@@ -891,9 +960,15 @@ public interface ICursor
     bool MiddleClick { get; }
     bool MiddleDoubleClick { get; }
 
+    /// <summary>
+    /// Returns the visual that was last pushed.
+    /// </summary>
     InteractiveGue? WindowPushed { get; set; }
+
     InteractiveGue? VisualRightPushed { get; set; }
     InteractiveGue? WindowOver { get; set; }
+
+    public void Activity(double currentGameTimeTotalSeconds);
 }
 
 public interface IInputReceiverKeyboard
@@ -913,6 +988,8 @@ class HandledActions
 {
     public bool HandledMouseWheel;
     public bool HandledRollOver;
+    public bool HandledClickPreview;
+    public bool handledPushPreview;
     public bool SetWindowOver;
 }
 public static class GueInteractiveExtensionMethods
@@ -930,8 +1007,8 @@ public static class GueInteractiveExtensionMethods
     static List<IInputReceiver> previewList = new();
     public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
     {
-#if DEBUG
-        if(cursor == null)
+#if FULL_DIAGNOSTICS
+        if (cursor == null)
         {
             throw new ArgumentNullException(nameof(cursor));
         }
@@ -948,8 +1025,10 @@ public static class GueInteractiveExtensionMethods
         var isInWindow = cursorX >= 0 && cursorX < GraphicalUiElement.CanvasWidth &&
             cursorY >= 0 && cursorY < GraphicalUiElement.CanvasHeight;
 
+
         HandledActions actions = new HandledActions();
         var lastWindowOver = cursor.WindowOver;
+
 
         cursor.WindowOver = null;
         for(int i = gues.Count-1; i > -1; i--)
@@ -1013,6 +1092,7 @@ public static class GueInteractiveExtensionMethods
         }
         if(cursor.PrimaryDown == false)
         {
+            InteractiveGue.LastVisualPushed = null;
             cursor.WindowPushed = null;
         }
         if(cursor.SecondaryDown == false)
@@ -1025,20 +1105,22 @@ public static class GueInteractiveExtensionMethods
         }
 
         // the click/push actions need to be after the UI activity
-        if (cursor.PrimaryClick && isInWindow)
-        {
-            InteractiveGue.DoNextClickActions();
+        // Update September 13, 2025
+        // Why do they need to happen after UI activity? I can understand
+        // why they need to happen after updating the cursor properties, but
+        // if they happen after, then any button that registers a next click in
+        // its own click will then immediately have the click fire on the same frame.
+        // This is confusing behavior because users would expect it to be the *next* click
+        // not the current click, and this makes closing windows that were just opened much
+        // harder to do.
+        // Update 2 - The reason this logic must happen after normal UI logic is because some
+        // actions added may inspect the WindowOver or WindowPushed properties, and those are 
+        // set during the UI activity.
+        // This does cause the problem of click and push events being called immediately, which
+        // means the InteractiveGue must only run events which are at least 1 frame old
+        InteractiveGue.DoNextClickAndPushActions(cursor, isInWindow);
 
-        }
-
-
-
-        if (cursor.PrimaryPush && isInWindow)
-        {
-            InteractiveGue.DoNextPushActions();
-        }
-
-        if(InteractiveGue.CurrentInputReceiver != null)
+        if (InteractiveGue.CurrentInputReceiver != null)
         {
             var receiver = InteractiveGue.CurrentInputReceiver;
 

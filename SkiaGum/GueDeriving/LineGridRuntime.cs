@@ -1,22 +1,29 @@
 ﻿using Gum.Wireframe;
 using SkiaGum.Renderables;
+using SkiaSharp;
 
 namespace SkiaGum.GueDeriving;
 
 
 public class LineGridRuntime: SkiaShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => mContainedLineGrid;
+    protected override RenderableShapeBase ContainedRenderable => mContainedLineGrid;
 
     public ushort CellWidth
     {
-        get { return mContainedLineGrid.CellWidth; }
-        set { mContainedLineGrid.CellWidth = value; }
+        get => mContainedLineGrid.CellWidth;
+        set => mContainedLineGrid.CellWidth = value; 
     }
     public ushort CellHeight
     {
-        get { return mContainedLineGrid.CellHeight; }
-        set { mContainedLineGrid.CellHeight = value; }
+        get => mContainedLineGrid.CellHeight; 
+        set => mContainedLineGrid.CellHeight = value; 
+    }
+
+    public SKColor Color
+    {
+        get => ContainedLineGrid.Color;
+        set => ContainedLineGrid.Color = value;
     }
 
     public void LineGridCell(double pX, double pY, out int colX, out int colY)
@@ -44,6 +51,8 @@ public class LineGridRuntime: SkiaShapeRuntime
     {
         SetContainedObject(new LineGrid());
         ContainedLineGrid = this.RenderableComponent as LineGrid;
+
+        StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
 
         // Make defaults 100 to match Glue
         Width = 100;

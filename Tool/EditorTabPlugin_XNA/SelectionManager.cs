@@ -78,6 +78,7 @@ public class SelectionManager
     private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
+    private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public bool IsOverBody
@@ -184,6 +185,9 @@ public class SelectionManager
         set => highlightManager.AreHighlightsVisible = value;
     }
 
+    // This is used to punch through the selected and go back up to the top. More info here:
+    // https://github.com/vchelaru/Gum/issues/1810
+    public bool IsComponentNoInstanceSelected => _selectedState.SelectedInstance == null && _selectedState.SelectedComponent != null;
 
     #endregion
 
@@ -194,13 +198,15 @@ public class SelectionManager
         EditingManager editingManager, 
         IDialogService dialogService,
         HotkeyManager hotkeyManager,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        WireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
         _undoManager = undoManager;
         _dialogService = dialogService;
         _hotkeyManager = hotkeyManager;
+        _wireframeObjectManager = wireframeObjectManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
     }
 
@@ -312,7 +318,7 @@ public class SelectionManager
 
                     if (WireframeEditor?.HasCursorOver == true)
                     {
-                        representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
+                        representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                         IsOverBody = false;
                     }
                     else
@@ -320,7 +326,7 @@ public class SelectionManager
                         if (IsOverBody && Cursor.PrimaryDown)
                         {
                             cursorToSet = System.Windows.Forms.Cursors.SizeAll;
-                            representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
+                            representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                         }
                         else
                         {
@@ -328,7 +334,7 @@ public class SelectionManager
                             elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
 
                             representationOver =
-                                GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
+                                GetRepresentationAt(worldXAt, worldYAt, IsComponentNoInstanceSelected, elementStack);
 
                             if (representationOver != null)
                             {
@@ -389,19 +395,19 @@ public class SelectionManager
         highlightManager.UpdateHighlightObjects();
     }
 
-    public GraphicalUiElement GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
+    public GraphicalUiElement GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
     {
         GraphicalUiElement ipsoOver = null;
 
         // First check if we're over the current
-        var selectedRepresentations = WireframeObjectManager.Self.GetSelectedRepresentations();
+        var selectedRepresentations = _wireframeObjectManager.GetSelectedRepresentations();
 
         int indexToStartAt = -1;
-        if (skipSelected)
+        if (trySkipSelected)
         {
             if (selectedRepresentations?.Length > 0)
             {
-                indexToStartAt = WireframeObjectManager.Self.AllIpsos.IndexOf(selectedRepresentations.First());
+                indexToStartAt = _wireframeObjectManager.AllIpsos.IndexOf(selectedRepresentations.First());
             }
         }
         else
@@ -448,15 +454,15 @@ public class SelectionManager
 
             if (indexToStartAt == -1)
             {
-                indexToStartAt = WireframeObjectManager.Self.AllIpsos.Count;
+                indexToStartAt = _wireframeObjectManager.AllIpsos.Count;
             }
 
             #region First check only visible objects
             ipsoOver = ReverseLoopToFindIpso(x, y, indexToStartAt - 1, -1, true, elementStack);
 
-            if (ipsoOver == null && indexToStartAt != WireframeObjectManager.Self.AllIpsos.Count - 1)
+            if (ipsoOver == null && indexToStartAt != _wireframeObjectManager.AllIpsos.Count - 1)
             {
-                ipsoOver = ReverseLoopToFindIpso(x, y, WireframeObjectManager.Self.AllIpsos.Count - 1, indexToStartAt, true, elementStack);
+                ipsoOver = ReverseLoopToFindIpso(x, y, _wireframeObjectManager.AllIpsos.Count - 1, indexToStartAt, true, elementStack);
             }
             #endregion
 
@@ -466,15 +472,21 @@ public class SelectionManager
             {
                 ipsoOver = ReverseLoopToFindIpso(x, y, indexToStartAt - 1, -1, false, elementStack);
 
-                if (ipsoOver == null && indexToStartAt != WireframeObjectManager.Self.AllIpsos.Count - 1)
+                if (ipsoOver == null && indexToStartAt != _wireframeObjectManager.AllIpsos.Count - 1)
                 {
-                    ipsoOver = ReverseLoopToFindIpso(x, y, WireframeObjectManager.Self.AllIpsos.Count - 1, indexToStartAt, false, elementStack);
+                    ipsoOver = ReverseLoopToFindIpso(x, y, _wireframeObjectManager.AllIpsos.Count - 1, indexToStartAt, false, elementStack);
                 }
 
 
             }
 
             #endregion
+        }
+
+        // If we didn't find anything and we are skipping selected, try again without skipping selected:
+        if(trySkipSelected && ipsoOver == null)
+        {
+            ipsoOver = GetRepresentationAt(x, y, trySkipSelected: false, elementStack);
         }
 
         // Right now we're going to assume that we only want to select IPSOs that represent the current
@@ -489,13 +501,13 @@ public class SelectionManager
 
             if (instance != null)
             {
-                ipsoOver = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
+                ipsoOver = _wireframeObjectManager.GetRepresentation(instance, elementStack);
             }
             else if (element != null) // both may be null if the user drag+dropped onto the wireframe window
             {
                 try
                 {
-                    ipsoOver = WireframeObjectManager.Self.GetRepresentation(element);
+                    ipsoOver = _wireframeObjectManager.GetRepresentation(element);
                 }
                 catch (Exception e)
                 {
@@ -517,7 +529,7 @@ public class SelectionManager
         {
             throw new Exception("Index cannot be less than -1");
         }
-        if (indexToStartAt >= WireframeObjectManager.Self.AllIpsos.Count)
+        if (indexToStartAt >= _wireframeObjectManager.AllIpsos.Count)
         {
             throw new Exception("Index must be less than the AllIpsos Count");
         }
@@ -526,7 +538,7 @@ public class SelectionManager
         for (int i = indexToStartAt; i > indexToEndAt; i--)
         {
 
-            GraphicalUiElement graphicalUiElement = WireframeObjectManager.Self.AllIpsos[i];
+            GraphicalUiElement graphicalUiElement = _wireframeObjectManager.AllIpsos[i];
             bool skip = graphicalUiElement.Tag is ScreenSave;
             if (!skip)
             {
@@ -546,7 +558,7 @@ public class SelectionManager
                         hasCursorOver = graphicalUiElement.HasCursorOver(x, y);
                     }
 
-                    if (hasCursorOver && (WireframeObjectManager.Self.IsRepresentation(graphicalUiElement)))
+                    if (hasCursorOver && (_wireframeObjectManager.IsRepresentation(graphicalUiElement)))
                     {
 
                         // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
@@ -669,7 +681,8 @@ public class SelectionManager
                         _hotkeyManager,
                         this,
                         _selectedState,
-                        _variableInCategoryPropagationLogic);
+                        _variableInCategoryPropagationLogic,
+                        _wireframeObjectManager);
                 }
             }
         }
@@ -729,7 +742,7 @@ public class SelectionManager
 
 
                 IRenderableIpso representation =
-                    GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick, elementStack);
+                    GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick || IsComponentNoInstanceSelected, elementStack);
                 bool hasChanged = true;
 
                 if (representation != null)
@@ -773,7 +786,7 @@ public class SelectionManager
                                 _selectedState.SelectedInstance = selectedInstance;
                             }
                             // See comment above on why we do this
-                            representation = WireframeObjectManager.Self.GetRepresentation(selectedInstance, elementStack);
+                            representation = _wireframeObjectManager.GetRepresentation(selectedInstance, elementStack);
                         }
                     }
                     else
@@ -781,7 +794,7 @@ public class SelectionManager
                         _selectedState.SelectedInstance = null;
                         _selectedState.SelectedElement = selectedElement;
 
-                        representation = WireframeObjectManager.Self.GetRepresentation(selectedElement);
+                        representation = _wireframeObjectManager.GetRepresentation(selectedElement);
                     }
                     _undoManager.RecordUndo();
 
@@ -798,7 +811,7 @@ public class SelectionManager
                         List<GraphicalUiElement> selectedIpsos = new List<GraphicalUiElement>();
                         foreach (var instance in _selectedState.SelectedInstances)
                         {
-                            selectedIpsos.Add(WireframeObjectManager.Self.GetRepresentation(instance, elementStack));
+                            selectedIpsos.Add(_wireframeObjectManager.GetRepresentation(instance, elementStack));
                         }
                         SelectedGues = selectedIpsos;
                     }
@@ -817,7 +830,7 @@ public class SelectionManager
 
     }
 
-    private static void GetElementOrInstanceForIpso(IRenderableIpso representation, List<ElementWithState> elementStack,
+    private void GetElementOrInstanceForIpso(IRenderableIpso representation, List<ElementWithState> elementStack,
                                                     out InstanceSave selectedInstance, out ElementSave selectedElement)
     {
         selectedInstance = null;
@@ -825,7 +838,7 @@ public class SelectionManager
 
         IRenderableIpso ipsoToUse = representation;
 
-        while (ipsoToUse != null && ipsoToUse.Parent != null && WireframeObjectManager.Self.AllIpsos.Contains(ipsoToUse) == false)
+        while (ipsoToUse != null && ipsoToUse.Parent != null && _wireframeObjectManager.AllIpsos.Contains(ipsoToUse) == false)
         {
             ipsoToUse = ipsoToUse.Parent;
         }
@@ -865,7 +878,7 @@ public class SelectionManager
             foreach (var instance in _selectedState.SelectedInstances)
             {
                 GraphicalUiElement toAdd =
-                    WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
+                    _wireframeObjectManager.GetRepresentation(instance, elementStack);
                 if (toAdd != null)
                 {
                     representations.Add(toAdd);
@@ -875,7 +888,7 @@ public class SelectionManager
         else if (_selectedState.SelectedElement != null)
         {
             GraphicalUiElement toAdd =
-                WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+                _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
 
             if (toAdd != null)
             {

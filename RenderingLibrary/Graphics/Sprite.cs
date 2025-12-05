@@ -15,13 +15,20 @@ using RenderingLibrary.Math;
 namespace RenderingLibrary.Graphics;
 
 
-public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
+public class Sprite : SpriteBatchRenderableBase, 
+    IRenderableIpso, 
+    IVisible, 
+    IAspectRatio, 
+    ITextureCoordinate, 
+    IAnimatable, 
+    ICloneable,
+    IRenderTargetTextureReferencer
 {
     #region Fields
 
 
-    static Texture2D mInvalidTexture;
-    public static Texture2D InvalidTexture
+    static Texture2D? mInvalidTexture;
+    public static Texture2D? InvalidTexture
     {
         get { return mInvalidTexture; }
         set {  mInvalidTexture = value; }
@@ -44,8 +51,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         set => mTimeIntoAnimation = value;
     }
 
-    AnimationChainList mAnimationChains;
-    public AnimationChainList AnimationChains
+    AnimationChainList? mAnimationChains;
+    public AnimationChainList? AnimationChains
     {
         get => mAnimationChains;
         set => mAnimationChains = value;
@@ -64,8 +71,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     }
     bool mJustCycled;
 
-    string desiredCurrentChainName;
-    public string CurrentChainName
+    string? desiredCurrentChainName;
+    public string? CurrentChainName
     {
         get => CurrentChain?.Name;
         set
@@ -81,9 +88,6 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     }
 
     Vector2 Position;
-    IRenderableIpso mParent;
-
-    ObservableCollection<IRenderableIpso> mChildren;
 
     public Color Color = Color.White;
 
@@ -192,8 +196,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         get => _height;
         set
         {
-#if DEBUG
-            if(float.IsNaN(value))
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
             {
                 throw new InvalidOperationException("Cannot assign a Sprite's Height to NaN");
             }
@@ -210,6 +214,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         }
     }
 
+    IRenderableIpso mParent;
     public IRenderableIpso? Parent
     {
         get { return mParent; }
@@ -231,7 +236,6 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     }
 
     bool IRenderableIpso.IsRenderTarget => false;
-
     public Texture2D? Texture
     {
         get { return mTexture; }
@@ -241,11 +245,14 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         }
     }
 
-    public float? TextureWidth => Texture?.Width;
-    public float? TextureHeight => Texture?.Height;
+    public IRenderableIpso? RenderTargetTextureSource { get; set; }
+
+    public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
+    public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
 
     // October 30, 2024
     // Vic asks - is this even used?
+    // @VIC Read your comment above sir
     public IAnimation Animation
     {
         get;
@@ -260,6 +267,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         set;
     }
 
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -321,11 +329,26 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         }
     }
 
-    float IAspectRatio.AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
+    float IAspectRatio.AspectRatio
+    {
+        get
+        {
+            if(RenderTargetTextureSource != null)
+            {
+                return (RenderTargetTextureSource.Width / (float)RenderTargetTextureSource.Height);
+            }
+            else if (Texture != null)
+            {
+                return (Texture.Width / (float)Texture.Height);
+            }
+            else
+            {
+                return 1;
+            }
+        }
+    }
 
     #endregion
-
-    #region Methods
 
     public Sprite(Texture2D? texture)
     {
@@ -334,34 +357,15 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         // the sprite will render using the default blendop, which may differ
         // depending on whether the game uses premult or standard
         //BlendState = BlendState.NonPremultiplied;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         Texture = texture;
     }
 
-    public void AnimationActivity(double currentTime)
+    public override void Render(ISystemManagers managers)
     {
-        if (Animate)
-        {
-            Animation.AnimationActivity(currentTime);
-
-            SourceRectangle = Animation.SourceRectangle;
-            Texture = Animation.CurrentTexture;
-            FlipHorizontal = Animation.FlipHorizontal;
-            FlipVertical = Animation.FlipVertical;
-
-            // Right now we'll just default this to resize the Sprite, but eventually we may want more control over it
-            if (SourceRectangle.HasValue)
-            {
-                this.Width = SourceRectangle.Value.Width;
-                this.Height = SourceRectangle.Value.Height;
-            }
-        }
-    }
-
-    void IRenderable.Render(ISystemManagers managers)
-    {
-        if (this.AbsoluteVisible && Width > 0 && Height > 0)
+        // See NineSlice for explanation of this Visible check
+        if (Width > 0 && Height > 0)
         {
             var systemManagers = managers as SystemManagers;
             var renderer = systemManagers.Renderer;
@@ -378,13 +382,33 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
                 var oldX = this.X;
                 var oldY = this.Y;
 
+                var absoluteRotationDegrees = this.GetAbsoluteRotation();
+
                 if (this.CurrentFrameIndex < CurrentChain?.Count)
                 {
-                    this.X += CurrentChain[this.CurrentFrameIndex].RelativeX;
-                    this.Y -= CurrentChain[this.CurrentFrameIndex].RelativeY;
+
+                    var absoluteRotationRadians = MathHelper.ToRadians(absoluteRotationDegrees);
+
+                    var offsetVector = new System.Numerics.Vector2(
+                        CurrentChain[this.CurrentFrameIndex].RelativeX,
+                        CurrentChain[this.CurrentFrameIndex].RelativeY);
+
+                    if(absoluteRotationDegrees != 0 && (offsetVector.X != 0 || offsetVector.Y != 0))
+                    {
+                        var length = offsetVector.Length();
+                        var offsetAngleRadians = System.Math.Atan2(offsetVector.Y, offsetVector.X);
+                        offsetAngleRadians += absoluteRotationRadians;
+
+                        offsetVector = new Vector2(
+                            (float)(length * System.Math.Cos(offsetAngleRadians)), 
+                            (float)(length * System.Math.Sin(offsetAngleRadians)));
+                    }
+
+                    this.X += offsetVector.X;
+                    this.Y -= offsetVector.Y;
                 }
 
-                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, this.GetAbsoluteRotation());
+                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, absoluteRotationDegrees);
 
                 this.X = oldX;
                 this.Y = oldY;
@@ -668,7 +692,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
             renderer = managers.Renderer;
         }
 
-        Texture2D textureToUse = texture;
+        Texture2D? textureToUse = texture;
 
         if (textureToUse == null)
         {
@@ -759,8 +783,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
                 }
             }
 
-#if DEBUG
-            if(float.IsPositiveInfinity( scale.X))
+#if FULL_DIAGNOSTICS
+            if (float.IsPositiveInfinity( scale.X))
             {
                 throw new Exception("scale.X is positive infinity, it shouldn't be!");
             }
@@ -771,16 +795,19 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
             }
 #endif
 
-            spriteRenderer.Draw(textureToUse,
-                new Vector2(leftAbsolute, topAbsolute),
-                sourceRectangle,
-                modifiedColor,
-                -rotationInRadians,
-                origin,
-                scale,
-                effects,
-                0,
-                objectCausingRendering, renderer);
+            if (textureToUse != null)
+            {
+                spriteRenderer.Draw(textureToUse,
+                    new Vector2(leftAbsolute, topAbsolute),
+                    sourceRectangle,
+                    modifiedColor,
+                    -rotationInRadians,
+                    origin,
+                    scale,
+                    effects,
+                    0,
+                    objectCausingRendering, renderer);
+            }
         }
         else
         {
@@ -820,14 +847,33 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
         return Name + " (Sprite)";
     }
 
-    #endregion
-
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
         mParent = parent;
     }
 
     void IRenderable.PreRender() { }
+
+
+    public void AnimationActivity(double currentTime)
+    {
+        if (Animate)
+        {
+            Animation.AnimationActivity(currentTime);
+
+            SourceRectangle = Animation.SourceRectangle;
+            Texture = Animation.CurrentTexture;
+            FlipHorizontal = Animation.FlipHorizontal;
+            FlipVertical = Animation.FlipVertical;
+
+            // Right now we'll just default this to resize the Sprite, but eventually we may want more control over it
+            if (SourceRectangle.HasValue)
+            {
+                this.Width = SourceRectangle.Value.Width;
+                this.Height = SourceRectangle.Value.Height;
+            }
+        }
+    }
 
     public bool AnimateSelf(double secondDifference)
     {
@@ -900,8 +946,8 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
 
             Texture = frame.Texture;
 
-#if DEBUG
-            if(Texture == null)
+#if FULL_DIAGNOSTICS
+            if (Texture == null)
             {
                 throw new NullReferenceException("The AnimationFrame for this sprite has a null texture. This is not allowed.");
             }
@@ -1016,7 +1062,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     {
         var newInstance = (Sprite)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }
@@ -1025,4 +1071,13 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
     {
         return Clone();
     }
+}
+
+
+
+public interface IRenderTargetTextureReferencer
+{
+    IRenderableIpso? RenderTargetTextureSource { get; }
+
+    Texture2D? Texture { get; set; }
 }

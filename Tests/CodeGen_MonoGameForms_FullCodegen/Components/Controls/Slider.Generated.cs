@@ -14,21 +14,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class Slider : global::MonoGameGum.Forms.Controls.Slider
+partial class Slider : global::Gum.Forms.Controls.Slider
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/Slider");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Slider - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Slider(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.Slider)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.Slider)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/Slider", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -121,7 +124,6 @@ partial class Slider : global::MonoGameGum.Forms.Controls.Slider
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         TrackInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
         TrackInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (TrackInstance.ElementSave != null) TrackInstance.AddStatesAndCategoriesRecursivelyToGue(TrackInstance.ElementSave);
@@ -139,6 +141,7 @@ partial class Slider : global::MonoGameGum.Forms.Controls.Slider
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

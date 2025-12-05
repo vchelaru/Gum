@@ -226,12 +226,10 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 else
                 {
                     _fontCharacterFileAbsolute = null;
+                    viewModel.FontRanges = BmfcSave.DefaultRanges;
                 }
 
                 RefreshFontRangeEditability();
-                break;
-            case nameof(viewModel.GuideLineColor):
-                _wireframeCommands.RefreshGuides();
                 break;
             case nameof(viewModel.SinglePixelTextureFile):
             case nameof(viewModel.SinglePixelTextureTop):

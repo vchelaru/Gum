@@ -2,7 +2,7 @@
 
 namespace SkiaGum.Renderables;
 
-class Circle : RenderableBase
+class Circle : RenderableShapeBase
 {
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {

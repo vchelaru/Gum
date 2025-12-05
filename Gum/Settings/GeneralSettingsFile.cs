@@ -1,12 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using ToolsUtilities;
-using System.Windows.Forms;
-using System.Drawing;
-using System.Xml.Serialization;
+﻿using Gum;
+using Gum.Dialogs;
+using Gum.Settings;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Windows.Forms;
+using System.Xml.Serialization;
+using CommunityToolkit.Mvvm.Messaging;
+using ToolsUtilities;
 
 namespace Gum.Settings
 {
@@ -27,6 +32,7 @@ namespace Gum.Settings
     /// </summary>
     public class GeneralSettingsFile
     {
+
         #region Properties
 
         public string LastProject
@@ -117,7 +123,6 @@ namespace Gum.Settings
         public byte GuideTextColorR { get; set; } = 255;
         public byte GuideTextColorG { get; set; } = 255;
         public byte GuideTextColorB { get; set; } = 255;
-
         #endregion
 
         #region Methods
@@ -131,8 +136,6 @@ namespace Gum.Settings
             PreviewSplitterDistance = 558;
             StatesAndVariablesSplitterDistance = 119;
             RecentProjects = new List<RecentProjectReference>();
-
-
         }
 
         public static GeneralSettingsFile LoadOrCreateNew()

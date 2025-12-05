@@ -15,6 +15,7 @@ namespace MonoGameGum.GueDeriving
     public class NineSliceRuntime : InteractiveGue
     {
         #region Static Defaults
+        [Obsolete("This is not currently functional")]
         public static string DefaultSourceFile { get; set; }
         public static int DefaultTextureLeft;
         public static int DefaultTextureTop;
@@ -173,13 +174,13 @@ namespace MonoGameGum.GueDeriving
         #region Source File / Texture
 
         [Obsolete("Use Texture")]
-        public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
+        public Microsoft.Xna.Framework.Graphics.Texture2D? SourceFile
         {
             get => Texture;
             set => Texture = value;
         }
 
-        public Microsoft.Xna.Framework.Graphics.Texture2D Texture
+        public Microsoft.Xna.Framework.Graphics.Texture2D? Texture
         {
             get
             {

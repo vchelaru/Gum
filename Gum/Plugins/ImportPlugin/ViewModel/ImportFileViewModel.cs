@@ -1,79 +1,67 @@
-﻿using System.Collections.Generic;
+﻿using CommunityToolkit.Mvvm.Input;
+using Gum.Services.Dialogs;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Data;
 
-namespace Gum.Plugins.ImportPlugin.ViewModel
+namespace Gum.Plugins.ImportPlugin.ViewModel;
+
+public abstract partial class ImportBaseDialogViewModel : DialogViewModel
 {
-    public class ImportFileViewModel : Gum.Mvvm.ViewModel
+    private readonly IDialogService _dialogService;
+
+    public abstract string Title { get; }
+    public abstract string BrowseFileFilter { get; }
+
+    public string? SearchText 
+    { 
+        get => Get<string?>(); 
+        set
+        {
+            if (Set(value))
+            {
+                FilteredFiles.Refresh();
+            }
+        }
+    }
+
+    public ObservableCollection<string> UnfilteredFiles { get; } = [];
+    public ICollectionView FilteredFiles { get; }
+    public ObservableCollection<string> SelectedFiles { get; } = [];
+
+    public override bool CanExecuteAffirmative() => SelectedFiles.Any();
+
+    protected ImportBaseDialogViewModel(IDialogService dialogService)
     {
-        public string BrowseFileFilter
+        _dialogService = dialogService;
+        AffirmativeText = "Import";
+        NegativeText = "Cancel";
+        FilteredFiles = CollectionViewSource.GetDefaultView(UnfilteredFiles);
+        FilteredFiles.Filter = Filter;
+        SelectedFiles.CollectionChanged += (_, _) => AffirmativeCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool Filter(object item) =>
+        item is string val &&
+        (string.IsNullOrWhiteSpace(SearchText) ||
+        val.ToLowerInvariant().Contains(SearchText!.ToLowerInvariant()));
+
+    [RelayCommand]
+    private void Browse()
+    {
+        OpenFileDialogOptions options = new()
         {
-            get => Get<string>();
-            set => Set(value);
-        }
+            // false for now. Components support it, but screens don't
+            //Multiselect = true,
+            Filter = BrowseFileFilter
+        };
 
-        public string SearchText
+        if (_dialogService.OpenFile(options) is { Count: > 0 } files)
         {
-            get => Get<string>();
-            set
-            {
-                if (Set(value))
-                {
-                    RefreshFilteredList();
-
-                }
-            }
-        }
-
-        public string SelectedListBoxItem
-        {
-            get => Get<string>();
-            set => Set(value);
-        }
-
-        public List<string> SelectedFiles
-        {
-            get;
-            private set;
-        } = new List<string>();
-
-        public List<string> UnfilteredFileList
-        {
-            get;
-            private set;
-        } = new List<string>();
-
-        public ObservableCollection<string> FilteredFileList
-        {
-            get;
-            private set;
-        } = new ObservableCollection<string>();
-
-        public string ContentFolder { get; internal set; }
-
-        public void RefreshFilteredList()
-        {
-            FilteredFileList.Clear();
-
-            string toLower = SearchText?.ToLowerInvariant();
-
-            foreach (var item in UnfilteredFileList)
-            {
-                var shouldAdd =
-                    string.IsNullOrEmpty(toLower) ||
-                    item.ToLowerInvariant().Contains(toLower);
-
-                if (shouldAdd)
-                {
-                    FilteredFileList.Add(item);
-                }
-
-            }
-
-            // pre-select the first (if there is one)
-            if (FilteredFileList.Count > 0)
-            {
-                SelectedListBoxItem = FilteredFileList[0];
-            }
+            SelectedFiles.Clear();
+            SelectedFiles.AddRange(files);
+            AffirmativeCommand.Execute(null);
         }
     }
 }

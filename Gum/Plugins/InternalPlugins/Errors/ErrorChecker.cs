@@ -2,30 +2,55 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Windows.Forms;
+using ToolsUtilities;
 using Xceed.Wpf.AvalonDock.Themes;
 
 namespace Gum.Plugins.Errors;
 
 public class ErrorChecker
 {
+    private readonly TypeManager _typeManager;
+
+    public ErrorChecker(TypeManager typeManager)
+    {
+        _typeManager = typeManager;
+    }
+
     public ErrorViewModel[] GetErrorsFor(ElementSave element, GumProjectSave project)
     {
         var list = new List<ErrorViewModel>();
 
         if(element != null)
         {
-            var asComponent = element as ComponentSave;
+            ObjectFinder.Self.EnableCache();
+            try
+            {
+                var asComponent = element as ComponentSave;
+                if(asComponent != null)
+                {
+                    list.AddRange(GetBehaviorErrorsFor(asComponent, project));
+                }
+                list.AddRange(GetMissingBaseTypeErrorsFor(element));
 
-            list.AddRange(GetBehaviorErrorsFor(asComponent, project));
-            list.AddRange(GetParentErrorsFor(element));
+                list.AddRange(GetParentErrorsFor(element));
+
+                list.AddRange(GetInvalidVariableTypeErrorsFor(element));
+            }
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
+            }
         }
 
         return list.ToArray();
     }
+
 
     #region Behavior Errors
 
@@ -33,23 +58,20 @@ public class ErrorChecker
     {
         List<ErrorViewModel> toReturn = new List<ErrorViewModel>();
 
-        if(component != null)
+        foreach(var behaviorReference in component.Behaviors)
         {
-            foreach(var behaviorReference in component.Behaviors)
-            {
-                var behavior = project.Behaviors.FirstOrDefault(item => item.Name == behaviorReference.BehaviorName);
+            var behavior = project.Behaviors.FirstOrDefault(item => item.Name == behaviorReference.BehaviorName);
 
-                if(behavior == null)
+            if(behavior == null)
+            {
+                toReturn.Add(new ErrorViewModel
                 {
-                    toReturn.Add(new ErrorViewModel
-                    {
-                        Message = $"Missing reference to behavior {behaviorReference.BehaviorName}"
-                    });
-                }
-                else
-                {
-                    AddBehaviorErrors(component, toReturn, behavior);
-                }
+                    Message = $"Missing reference to behavior {behaviorReference.BehaviorName}"
+                });
+            }
+            else
+            {
+                AddBehaviorErrors(component, toReturn, behavior);
             }
         }
 
@@ -180,7 +202,7 @@ public class ErrorChecker
 
                     if(!string.IsNullOrEmpty(value))
                     {
-                        var instanceName = value;
+                        var instanceName = value!;
                         if(value?.Contains('.') == true)
                         {
                             instanceName = value.Substring(0, value.IndexOf('.'));
@@ -197,6 +219,118 @@ public class ErrorChecker
                         }
                     }
                 }
+            }
+        }
+
+        return toReturn;
+    }
+
+    #endregion
+
+    #region Instance BaseType Errors
+
+    List<ErrorViewModel> GetMissingBaseTypeErrorsFor(ElementSave elementSave)
+    {
+        var toReturn = new List<ErrorViewModel>();
+
+        foreach(var instance in elementSave.Instances)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+
+            if(instanceElement == null)
+            {
+                var error = new ErrorViewModel
+                {
+                    Message = $"{instance.Name} references {instance.BaseType} which is an invalid element"
+                };
+                toReturn.Add(error);
+            }
+        }
+        return toReturn;
+    }
+
+    #endregion
+
+    static HashSet<string> KnowBaseTypes = new HashSet<string>
+    {
+        "int",
+        "int?",
+        "bool",
+        "bool?",
+        "float",
+        "float?",
+        "double",
+        "double?",
+        "string",
+        "string?",
+        "State",
+    };
+
+    #region Invalid variable types
+    private IEnumerable<ErrorViewModel> GetInvalidVariableTypeErrorsFor(ElementSave elementSave)
+    {
+        var toReturn = new List<ErrorViewModel>();
+
+        foreach(var state in elementSave.AllStates)
+        {
+            foreach(var variable in state.Variables)
+            {
+                var variableType = variable.Type;
+
+                if(string.IsNullOrEmpty(variableType))
+                {
+                    continue;
+                }
+                if(KnowBaseTypes.Contains(variableType))
+                {
+                    continue;
+                }
+                if(variable.IsState(elementSave))
+                {
+                    continue;
+                }
+                if(_typeManager.GetTypeFromString(variableType) != null)
+                {
+                    continue;
+                }
+
+                // It's possible that this is an old variable that was created before "State" suffix was needed for state variables
+                // Therefore, we should check for that. If so, let's notify the user that this is the case:
+                var variableClone = FileManager.CloneSaveObject<VariableSave>(variable);
+                variableClone.Type += "State";
+                if(variableClone.IsState(elementSave))
+                {
+                    toReturn.Add(new ErrorViewModel
+                    {
+                        Message =
+                                $"The variable {variable.Name} uses a type of {variable.Type}. " +
+                                $"This type is probably referencing a category, but the type should be {variableClone.Type} (with the word State suffix). " +
+                                $"This can cause code generation problems."
+                    });
+                    continue;
+                }
+
+                variableClone.Name += "State";
+                if (variableClone.IsState(elementSave))
+                {
+                    toReturn.Add(new ErrorViewModel
+                    {
+                        Message =
+                                $"The variable {variable.Name} uses a type of {variable.Type}. " +
+                                $"This type is probably referencing a category, but name should be {variableClone.Name} (with the word State suffix). " +
+                                $"This can cause code generation problems."
+                    });
+                    continue;
+                }
+
+
+                // If we got here, we don't know the type, so this is an error:
+                toReturn.Add(new ErrorViewModel
+                {
+                    Message =
+                            $"The variable {variable.Name} uses an unknown type of {variable.Type}. " +
+                            $"This can cause code generation problems."
+                });
             }
         }
 

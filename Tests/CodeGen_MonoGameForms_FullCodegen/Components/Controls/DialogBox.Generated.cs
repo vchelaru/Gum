@@ -14,20 +14,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class DialogBox : MonoGameGum.Forms.Controls.FrameworkElement
+partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/DialogBox");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/DialogBox - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new DialogBox(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(DialogBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(DialogBox)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/DialogBox", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -59,7 +62,6 @@ partial class DialogBox : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         NineSliceInstance = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         NineSliceInstance.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.AddStatesAndCategoriesRecursivelyToGue(NineSliceInstance.ElementSave);
@@ -72,6 +74,7 @@ partial class DialogBox : MonoGameGum.Forms.Controls.FrameworkElement
         TextInstance.Name = "TextInstance";
         ContinueIndicatorInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         ContinueIndicatorInstance.Name = "ContinueIndicatorInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

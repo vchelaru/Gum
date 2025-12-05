@@ -102,8 +102,11 @@ namespace Gum
         public static readonly BlendState NonPremultipliedAddAlpha;
 
         public static readonly BlendState SubtractAlpha;
+        public static readonly BlendState SubtractAlphaPremultiplied;
         public static readonly BlendState ReplaceAlpha;
+        public static readonly BlendState ReplaceAlphaPremultiplied;
         public static readonly BlendState MinAlpha;
+        public static readonly BlendState MinAlphaPremultiplied;
 
         static BlendState()
         {
@@ -137,6 +140,8 @@ namespace Gum
                 SubtractAlpha.ColorBlendFunction = BlendFunction.Add;
                 SubtractAlpha.ColorDestinationBlend = Blend.One;
 
+
+
                 SubtractAlpha.AlphaSourceBlend = Blend.One;
                 SubtractAlpha.AlphaBlendFunction = BlendFunction.ReverseSubtract;
                 SubtractAlpha.AlphaDestinationBlend = Blend.One;
@@ -155,7 +160,24 @@ namespace Gum
                 SubtractAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
                 SubtractAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
             }
+            {
+                SubtractAlphaPremultiplied = new BlendState();
+                SubtractAlphaPremultiplied.ColorSourceBlend = Blend.One;
+                SubtractAlphaPremultiplied.ColorBlendFunction = BlendFunction.ReverseSubtract;
+                SubtractAlphaPremultiplied.ColorDestinationBlend = Blend.One;
 
+
+                SubtractAlphaPremultiplied.AlphaSourceBlend = Blend.One;
+                SubtractAlphaPremultiplied.AlphaBlendFunction = BlendFunction.ReverseSubtract;
+                SubtractAlphaPremultiplied.AlphaDestinationBlend = Blend.One;
+
+                SubtractAlphaPremultiplied.BlendFactor = Color.White;
+                SubtractAlphaPremultiplied.ColorWriteChannels = ColorWriteChannels.All;
+                SubtractAlphaPremultiplied.ColorWriteChannels1 = ColorWriteChannels.All;
+                SubtractAlphaPremultiplied.ColorWriteChannels2 = ColorWriteChannels.All;
+                SubtractAlphaPremultiplied.ColorWriteChannels3 = ColorWriteChannels.All;
+
+            }
 
             ReplaceAlpha = new BlendState();
             ReplaceAlpha.ColorSourceBlend = Blend.Zero;
@@ -172,6 +194,20 @@ namespace Gum
             ReplaceAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
             ReplaceAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
 
+            ReplaceAlphaPremultiplied = new BlendState();
+            ReplaceAlphaPremultiplied.ColorSourceBlend = Blend.One;
+            ReplaceAlphaPremultiplied.ColorBlendFunction = BlendFunction.Add;
+            ReplaceAlphaPremultiplied.ColorDestinationBlend = Blend.Zero;
+
+            ReplaceAlphaPremultiplied.AlphaSourceBlend = Blend.One;
+            ReplaceAlphaPremultiplied.AlphaBlendFunction = BlendFunction.Add;
+            ReplaceAlphaPremultiplied.AlphaDestinationBlend = Blend.Zero;
+
+            ReplaceAlphaPremultiplied.BlendFactor = Color.White;
+            ReplaceAlphaPremultiplied.ColorWriteChannels = ColorWriteChannels.All;
+            ReplaceAlphaPremultiplied.ColorWriteChannels1 = ColorWriteChannels.All;
+            ReplaceAlphaPremultiplied.ColorWriteChannels2 = ColorWriteChannels.All;
+            ReplaceAlphaPremultiplied.ColorWriteChannels3 = ColorWriteChannels.All;
 
             MinAlpha = new BlendState();
             MinAlpha.ColorSourceBlend = Blend.Zero;
@@ -189,7 +225,22 @@ namespace Gum
             MinAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
 
 
+            MinAlphaPremultiplied = new BlendState();
+            // For premultiplied alpha, use Min function for both color and alpha
+            MinAlphaPremultiplied.ColorSourceBlend = Blend.One;
+            MinAlphaPremultiplied.ColorBlendFunction = BlendFunction.Min;
+            MinAlphaPremultiplied.ColorDestinationBlend = Blend.One;
 
+            // Use Min function for alpha as well
+            MinAlphaPremultiplied.AlphaSourceBlend = Blend.One;
+            MinAlphaPremultiplied.AlphaBlendFunction = BlendFunction.Min;
+            MinAlphaPremultiplied.AlphaDestinationBlend = Blend.One;
+
+            MinAlphaPremultiplied.BlendFactor = Color.White;
+            MinAlphaPremultiplied.ColorWriteChannels = ColorWriteChannels.All;
+            MinAlphaPremultiplied.ColorWriteChannels1 = ColorWriteChannels.All;
+            MinAlphaPremultiplied.ColorWriteChannels2 = ColorWriteChannels.All;
+            MinAlphaPremultiplied.ColorWriteChannels3 = ColorWriteChannels.All;
 
 
 

@@ -44,6 +44,8 @@ namespace RenderingLibrary
 
         #endregion
 
+        static bool HasInitializedGlobal = false;
+
         public void Initialize()
         {
             //mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
@@ -61,27 +63,34 @@ namespace RenderingLibrary
             //ShapeManager.Managers = this;
             //Tex
 
-            StandardElementsManager.Self.Initialize();
-            StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
-            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
-            GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-            GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
+            if(!HasInitializedGlobal)
+            {
+                // If we don't do this, then multiple windows may initialize the same thing, causing events to stack,
+                // and wiping customization of standard elements:
+                HasInitializedGlobal = true;
+                StandardElementsManager.Self.Initialize();
+                StandardElementsManager.Self.CustomGetDefaultState = HandleCustomGetDefaultState;
+                ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
+                GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+                GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
 
-            GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
-            SkiaResourceManager.Initialize(null);
-            LoaderManager.Self.ContentLoader = new EmbeddedResourceContentLoader();
-            RegisterComponentRuntimeInstantiations();
+                GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
+                SkiaResourceManager.Initialize(null);
+                LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new EmbeddedResourceContentLoader();
+                RegisterComponentRuntimeInstantiations();
+            }
+
 
         }
 
         private void UpdateFonts(IText text, GraphicalUiElement element)
         {
-            if(text is Text asText)
+            if(text is Text asText && element is TextRuntime textRuntime)
             {
-                asText.FontName = element.Font ?? "Arial";
-                asText.IsItalic = element.IsItalic;
-                asText.BoldWeight = element.IsBold ? 700 : 400;
-                asText.FontSize = element.FontSize;
+                asText.FontName = textRuntime.Font ?? "Arial";
+                asText.IsItalic = textRuntime.IsItalic;
+                asText.BoldWeight = textRuntime.IsBold ? 700 : 400;
+                asText.FontSize = textRuntime.FontSize;
             }
         }
 
@@ -151,15 +160,15 @@ namespace RenderingLibrary
             switch(arg)
             {
                 case "Arc":
-                    return DefaultStateManager.GetArcState();
+                    return StandardElementsManager.GetArcState();
                 case "Canvas":
                     return DefaultStateManager.GetCanvasState();
                 case "ColoredCircle":
-                    return DefaultStateManager.GetColoredCircleState();
+                    return StandardElementsManager.GetColoredCircleState();
                 case "LottieAnimation":
                     return DefaultStateManager.GetLottieAnimationState();
                 case "RoundedRectangle":
-                    return DefaultStateManager.GetRoundedRectangleState();
+                    return StandardElementsManager.GetRoundedRectangleState();
                 case "Svg":
                     return DefaultStateManager.GetSvgState();
             }

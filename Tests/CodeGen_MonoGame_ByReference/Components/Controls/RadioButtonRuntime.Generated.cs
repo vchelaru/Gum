@@ -20,9 +20,9 @@ partial class RadioButtonRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/RadioButton", typeof(RadioButtonRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.RadioButton)] = typeof(RadioButtonRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.RadioButton)] = typeof(RadioButtonRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.RadioButton FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.RadioButton;
+    public global::Gum.Forms.Controls.RadioButton FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.RadioButton;
     public enum RadioButtonCategory
     {
         EnabledOn,
@@ -91,7 +91,7 @@ partial class RadioButtonRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.RadioButton(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.RadioButton(this);
         }
         RadioBackground = this.GetGraphicalUiElementByName("RadioBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         Radio = this.GetGraphicalUiElementByName("Radio") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;

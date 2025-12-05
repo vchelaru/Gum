@@ -43,7 +43,10 @@ namespace Gum.Managers
         {
             foreach (var variable in state.Variables)
             {
-                if (variable.Type == "float" && variable.Name == "Rotation")
+                if (variable.Type == "float" && 
+                    (variable.Name == "Rotation"
+                     || variable.Name == "StartAngle"
+                     || variable.Name == "SweepAngle"))
                 {
                     MakeDegreesAngle(variable);
                 }
@@ -72,11 +75,11 @@ namespace Gum.Managers
                 }
                 else if (variable.Type == nameof(PositionUnitType))
                 {
-                    if (variable.Name == "XUnits")
+                    if (variable.Name == "XUnits" || variable.Name == "GradientX1Units" || variable.Name == "GradientX2Units")
                     {
                         variable.PreferredDisplayer = typeof(XUnitsControl);
                     }
-                    else if (variable.Name == "YUnits")
+                    else if (variable.Name == "YUnits" || variable.Name == "GradientY1Units" || variable.Name == "GradientY2Units")
                     {
                         variable.PreferredDisplayer = typeof(YUnitsControl);
                     }
@@ -116,7 +119,16 @@ namespace Gum.Managers
                 else if (variable.Name == "Red" ||
                     variable.Name == "Green" ||
                     variable.Name == "Blue" ||
-                    variable.Name == "Alpha")
+                    variable.Name == "Alpha"||
+                    variable.Name == "Red1" ||
+                    variable.Name == "Green1" ||
+                    variable.Name == "Blue1" ||
+                    variable.Name == "Alpha1" ||
+                    variable.Name == "Red2" ||
+                    variable.Name == "Green2" ||
+                    variable.Name == "Blue2" ||
+                    variable.Name == "Alpha2" 
+                    )
                 {
                     variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
                     variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;

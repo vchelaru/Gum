@@ -10,6 +10,7 @@ using Gum.Commands;
 using Gum.ToolCommands;
 using ToolsUtilities;
 using Gum.Services;
+using Gum.Managers;
 
 namespace Gum.Gui.Plugins;
 
@@ -23,11 +24,13 @@ public class DeleteObjectPlugin : InternalPlugin
     private RadioButton deleteAllContainedObjects;
     private readonly IElementCommands _elementCommands;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly DeleteLogic _deleteLogic;
 
     public DeleteObjectPlugin()
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
     }
 
     public override void StartUp()
@@ -108,7 +111,7 @@ public class DeleteObjectPlugin : InternalPlugin
 
         if (shouldDetachChildren)
         {
-            _elementCommands.RemoveParentReferencesToInstance(instance, element);
+            _deleteLogic.RemoveParentReferencesToInstance(instance, element);
         }
         if (shouldDeleteChildren)
         {
@@ -137,11 +140,11 @@ public class DeleteObjectPlugin : InternalPlugin
         var parentContainer = instance.ParentContainer;
         if (parentContainer.Instances.Contains(instance))
         {
-            _elementCommands.RemoveInstance(instance, parentContainer);
+            _deleteLogic.RemoveInstance(instance, parentContainer);
         }
         else
         {
-            _elementCommands.RemoveParentReferencesToInstance(instance, parentContainer);
+            _deleteLogic.RemoveParentReferencesToInstance(instance, parentContainer);
         }
     }
 
@@ -238,13 +241,35 @@ public class DeleteObjectPlugin : InternalPlugin
 
             }
 
-            if (objectToDelete is not InstanceSave && !alreadyAddedDeleteXmlCheckBox)
+            var shouldAddDeleteXml = objectToDelete is not InstanceSave && !alreadyAddedDeleteXmlCheckBox;
+
+            // offer to delete this only if there are no duplicates
+            if(shouldAddDeleteXml)
+            {
+                if(objectToDelete is ElementSave elementSave)
+                {
+                    var numberOfMatches = ObjectFinder.Self.GumProjectSave?.AllElements.Count(item => item.Name == elementSave.Name) ?? 0;
+                    // If there are more than 1 match, we don't want to delete XML files because we don't want to remove the base file if 
+                    // duplicates were somehow added to the .gumx.
+                    // it's possible the user has multiple components selected, and wants to delete both, but that's an edge case that adds complexity
+                    // so I'm not going to worry about that.
+                    shouldAddDeleteXml = numberOfMatches < 2;
+                }
+            }
+
+            if (shouldAddDeleteXml)
             {
                 deleteWindow.MainStackPanel.Children.Add(deleteXmlCheckBox);
                 deleteXmlCheckBox.Content = "Delete XML file";
                 deleteXmlCheckBox.Width = 220;
+                deleteXmlCheckBox.IsChecked = true;
                 alreadyAddedDeleteXmlCheckBox = true;
             }
+        }
+
+        if(!alreadyAddedDeleteXmlCheckBox)
+        {
+            deleteXmlCheckBox.IsChecked = false;
         }
     }
 

@@ -14,6 +14,7 @@ using System.Linq;
 using ToolsUtilitiesStandard.Helpers;
 using System.Drawing;
 using System.Text;
+using RenderingLibrary.Math;
 
 namespace RenderingLibrary.Graphics;
 
@@ -66,7 +67,42 @@ public class InlineVariable
 
 #endregion
 
-public class Text : IRenderableIpso, IVisible, IText, ICloneable
+
+#region LetterCustomization
+public struct LetterCustomization
+{
+    public float XOffset;
+    public float YOffset;
+    public Color? Color;
+    public float ScaleX;
+    public HorizontalAlignment ScaleXOrigin = HorizontalAlignment.Center;
+    public float ScaleY;
+    public VerticalAlignment ScaleYOrigin = VerticalAlignment.Center;
+    public float RotationDegrees;
+    public char? ReplacementCharacter;
+
+    public LetterCustomization()
+    {
+        ScaleX = 1;
+        ScaleY = 1;
+    }
+}
+#endregion
+
+#region ParameterizedLetterCustomizationCall
+
+public class ParameterizedLetterCustomizationCall
+{
+    public Func<int, string, LetterCustomization> Function { get; set; }
+    public int CharacterIndex { get; set; }
+
+    public string TextBlock { get; set; }
+
+}
+
+#endregion
+
+public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText, ICloneable
 {
     #region Fields
 
@@ -125,7 +161,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         }
     }
 
-    string mRawText;
+    
     List<string> mWrappedText = new List<string>();
     float? mWidth = 200;
     float mHeight = 200;
@@ -136,9 +172,9 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     BitmapFont mBitmapFont;
     Texture2D mTextureToRender;
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
     int mAlpha = 255;
     int mRed = 255;
@@ -271,7 +307,8 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         // temp:
         = true;
 
-    public string RawText
+    string? mRawText;
+    public string? RawText
     {
         get
         {
@@ -473,7 +510,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         set;
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -583,7 +620,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         get { return mFontScale; }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (float.IsNaN(value) || float.IsInfinity(value))
             {
                 throw new ArgumentException($"Invalid value: {value}. FontScale cannot be NaN.");
@@ -662,6 +699,26 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
     bool IRenderableIpso.IsRenderTarget => false;
 
+    /// <summary>
+    /// Customization functions, where the key is the name of the custom function in bbcode, and the Func returns
+    /// customization per letter.
+    /// </summary>
+    /// <example>
+    /// LetterCustomization SineWave(int index, string textInBlock)
+    /// {
+    ///   // Index is the letter, it will get called for each character in the block, starting at 0
+    ///   // textInBlock is the entire block, in case the function needs to reference it.
+    ///   return new LetterCustomization
+    ///   {
+    ///     OffsetY = MathF.Sin(DateTime.Now.TotalSeconds + index/5);
+    ///   };
+    /// }
+    /// // This would be used as follows:
+    /// Text.Customizations["SineWave"] = SineWave;
+    /// </example>
+    public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
+        = new ();
+
     #endregion
 
     #region Methods
@@ -687,7 +744,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         RenderBoundary = RenderBoundaryDefault;
 
         mManagers = managers;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         mRawText = text;
         mNeedsBitmapFontRefresh = true;
@@ -761,9 +818,16 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
         string? stringToUse = string.IsNullOrEmpty(mRawText)
             ? null
             : stringToUse = mRawText.Replace("\r\n", "\n");
-        
 
-        float wrappingWidth = mWidth / mFontScale ?? float.PositiveInfinity; 
+
+        int wrappingWidth = int.MaxValue;
+        if (mWidth != null && !float.IsPositiveInfinity(mWidth.Value) && mFontScale > 0)
+        {
+            wrappingWidth =  MathFunctions.RoundToInt(System.Math.Ceiling( mWidth.Value / mFontScale));
+        }
+
+        wrappingWidth = System.Math.Max(0, wrappingWidth);
+
 
         // This allocates like crazy but we're
         // on the PC and prob won't be calling this
@@ -1083,10 +1147,10 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     }
 
 
-    public void Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
-
-        if (AbsoluteVisible && !string.IsNullOrEmpty(RawText))
+        // See NineSlice for explanation of this Visible check
+        if (!string.IsNullOrEmpty(RawText))
         {
             var systemManagers = (SystemManagers)managers;
             var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
@@ -1153,12 +1217,14 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
                 if (fontToUse.Texture == null)
                 {
-                    spriteRenderer.Draw(Sprite.InvalidTexture,
-                        new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
-                        sourceRectangle,
-                        Color.White,
-                        this);
-
+                    if (Sprite.InvalidTexture != null)
+                    {
+                        spriteRenderer.Draw(Sprite.InvalidTexture,
+                            new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
+                            sourceRectangle,
+                            Color.White,
+                            this);
+                    }
                 }
                 else
                 {
@@ -1279,6 +1345,12 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                     color = Color;
                     var fontScale = mFontScale;
                     var effectiveFont = fontToUse;
+                    var effectiveTopOfLine = topOfLine;
+                    float yOffset = 0;
+                    float xOffset = 0;
+                    float scaleX = 1;
+                    float scaleY = 1;
+                    float rotationOffset = 0;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
@@ -1306,21 +1378,88 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         {
                             color = color.WithBlue((byte)variable.Value);
                         }
+                        else if(variable.VariableName == nameof(Y))
+                        {
+                            yOffset = (float)variable.Value;
+                        }
+                        else if(variable.VariableName == "Custom")
+                        {
+                            var function = variable.Value as ParameterizedLetterCustomizationCall;
 
+                            if(function != null)
+                            {
+                                var response = function.Function(function.CharacterIndex, function.TextBlock);
+
+                                xOffset = response.XOffset;
+                                yOffset = response.YOffset;
+                                if(response.ReplacementCharacter != null)
+                                {
+                                    lineByLineList[0] = response.ReplacementCharacter.ToString()!;
+                                }
+                                if(response.Color != null)
+                                {
+                                    color = response.Color.Value;
+                                }
+                                scaleX = response.ScaleX;
+                                scaleY = response.ScaleY;
+
+                                if(scaleX != 1)
+                                {
+                                    switch(response.ScaleXOrigin)
+                                    {
+                                        case HorizontalAlignment.Left:
+                                            // do nothing
+                                            break;
+                                        case HorizontalAlignment.Center:
+                                            xOffset -= (fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1)) / 2.0f;
+                                            break;
+                                        case HorizontalAlignment.Right:
+                                            xOffset -= fontScale * effectiveFont.MeasureString(lineByLineList[0]) * (scaleX - 1);
+                                            break;
+                                    }
+                                }
+                                if(scaleY != 1)
+                                {
+                                    switch(response.ScaleYOrigin)
+                                    {
+                                        case VerticalAlignment.Top:
+                                            // do nothing
+                                            break;
+                                        case VerticalAlignment.Center:
+                                            yOffset -= (fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1)) / 2.0f;
+                                            break;
+                                        case VerticalAlignment.Bottom:
+                                            yOffset -= fontScale * effectiveFont.LineHeightInPixels * (scaleY - 1);
+                                            break;
+                                        case VerticalAlignment.TextBaseline:
+                                            yOffset -= fontScale * effectiveFont.BaselineY * (scaleY - 1);
+                                            break;
+                                    }
+                                }
+
+                                rotationOffset = response.RotationDegrees;
+                            }
+                        }
                     }
 
-                    var effectiveTopOfLine = topOfLine;
 
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                     effectiveTopOfLine += baselineDifference;
 
                     var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
-                        requiredWidth, individualLineWidth, spriteRenderer, color,
-                        absoluteLeft,
-                        effectiveTopOfLine,
-                        rotation, fontScale, fontScale, lettersLeft, 
-                        OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                        requiredWidth, 
+                        individualLineWidth,
+                        spriteRenderer, 
+                        color,
+                        absoluteLeft + xOffset,
+                        effectiveTopOfLine + yOffset,
+                        rotation + rotationOffset, 
+                        fontScale * scaleX, 
+                        fontScale * scaleY, 
+                        lettersLeft, 
+                        OverrideTextRenderingPositionMode, 
+                        lineHeightMultiplier: LineHeightMultiplier,
                         shiftForOutline:substringIndex == 0);
 
                     if (lettersLeft != null)
@@ -1328,7 +1467,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                         lettersLeft -= substring.Substring.Length;
                     }
 
-                    absoluteLeft += rect.Width;
+                    absoluteLeft += rect.Width / scaleX;
 
                 }
 
@@ -1341,11 +1480,11 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     // made public for auto tests:
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color)
     {
-        List<StyledSubstring> substrings = new List<StyledSubstring>();
+        List<StyledSubstring> substrings = new ();
         int currentSubstringStart = 0;
 
-        List<InlineVariable> currentlyActiveInlines = new List<InlineVariable>();
-        List<InlineVariable> inlinesForThisCharacter = new List<InlineVariable>();
+        List<InlineVariable> currentlyActiveInlines = new ();
+        List<InlineVariable> inlinesForThisCharacter = new ();
 
         int relativeLetterIndex = 0;
         for (; relativeLetterIndex < lineOfText.Length; relativeLetterIndex++)
@@ -1389,7 +1528,16 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
                 currentSubstringStart = relativeLetterIndex;
 
                 var styledSubstring = new StyledSubstring();
-                styledSubstring.Variables.AddRange(inlinesForThisCharacter);
+                foreach(var item in inlinesForThisCharacter)
+                {
+                    var existing = styledSubstring.Variables.FirstOrDefault(x => x.VariableName == item.VariableName);
+                    if(existing != null)
+                    {
+                        // This allows new variables to replace old ones:
+                        styledSubstring.Variables.Remove(existing);
+                    }
+                    styledSubstring.Variables.Add(item);
+                }
                 styledSubstring.StartIndex = relativeLetterIndex;
 
                 if (relativeLetterIndex == lineOfText.Length - 1)
@@ -1655,7 +1803,7 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     {
         var newInstance = (Text)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

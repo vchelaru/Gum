@@ -1,15 +1,14 @@
 # Setup
 
-Gum Application (binaries):
+Latest release and release history (including older releases): \
+[https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
 
-* Latest release direct link: [files.flatredball.com/content/Tools/Gum/Gum.zip](https://files.flatredball.com/content/Tools/Gum/Gum.zip)
-* Release history (including older releases): [https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
-
-Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
+Gum Source Code: \
+[https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
 
 ### Windows
 
-Download and unzip the .zip file and run the Gum.exe file which is located in Data/Debug/.
+Download and unzip the .zip file and run the Gum.exe file.
 
 Since Gum is a prebuilt file in a .zip, Windows _blocks_ the file which results in the "Windows protected your PC" popup:
 
@@ -92,7 +91,7 @@ wine and winetricks properly on your system.
 
 You can install WINE and Winetricks using your package manager. Open a terminal and run the following commands:
 
-##### Ubuntu 22.04
+**Ubuntu 22.04**
 
 ```sh
 sudo dpkg --add-architecture i386 
@@ -103,7 +102,7 @@ sudo apt update && sudo apt install --install-recommends winehq-stable
 sudo apt-get -y install winetricks
 ```
 
-##### Ubuntu 24.04
+**Ubuntu 24.04**
 
 ```sh
 sudo dpkg --add-architecture i386 
@@ -114,14 +113,14 @@ sudo apt update && sudo apt install --install-recommends winehq-stable
 sudo apt-get -y install winetricks
 ```
 
-##### Fedora & Nobara (All Versions)
+**Fedora & Nobara (All Versions)**
 
 ```sh
 sudo dnf install wine
 sudo dnf install winetricks
 ```
 
-##### Linux Mint 20
+**Linux Mint 20**
 
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
@@ -131,7 +130,7 @@ echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-bu
 sudo apt-get install winetricks
 ```
 
-##### Linux Mint 21
+**Linux Mint 21**
 
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
@@ -141,7 +140,7 @@ echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-bu
 sudo apt-get install winetricks
 ```
 
-##### Linux Mint 22
+**Linux Mint 22**
 
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y

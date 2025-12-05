@@ -19,7 +19,7 @@ To understand how components work, we'll create a simple Button component. To do
 3. Drag+drop a ColoredRectangle standard element into the Button component
 4. Drag+drop a Text standard element into the Button component
 
-![A single Button Component with ColoredRectangle and Text. Note that the text is white.](../../../.gitbook/assets/Gum_HeL31coO2B.png)
+![A single Button Component with ColoredRectangle and Text. Note that the text is white.](<../../../.gitbook/assets/GumButton1 (1).PNG>)
 
 Since ColoredRectangleInstance and TextInstance are both white you may not be able to see the Text. Let's change the ColoredRectangleInstance's color:
 
@@ -34,11 +34,11 @@ Notice that as you change the values, the background on the text box changes fro
 
 Now you should be able to see the Text on top of the rectangle:
 
-![White text on top of a blue ColoredRectangle](../../../.gitbook/assets/Gum_URVP5vRzNF.png)
+![White text on top of a blue ColoredRectangle](<../../../.gitbook/assets/Gum_URVP5vRzNF (1).png>)
 
 ## Sizing the colored rectangle
 
-At this point we have made some progress towards creating our first button, but it still needs some work.&#x20;
+At this point we have made some progress towards creating our first button, but it still needs some work.
 
 First, we're going to adjust the size of the instances inside of our Button component. At this point you can see that the ColoredRectangle (the blue background) is not the same size as the button. Not only do we want to make the blue ColoredRectangle larger, but we also want it to automatically match the Button's size (the dotted outline).
 
@@ -60,9 +60,9 @@ Alternatively you can adjust the individual values. Keep in mind that using the 
 
 Now the ColoredRectangleInstance automatically matches the Button's actual with and height:
 
-![ColoredRectangleInstance fills its parent by matching its width and height](../../../.gitbook/assets/Gum_rL5aAQWKVB.png)
+![ColoredRectangleInstance fills its parent by matching its width and height](<../../../.gitbook/assets/Gum_rL5aAQWKVB (1).png>)
 
-Next we'll position the TextInstance. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button.&#x20;
+Next we'll position the TextInstance. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button.
 
 To do this:
 
@@ -98,7 +98,7 @@ Now let's make it centered on the Y as well:
 Finally, let's make the width of the text match the width of the button. For the Text we'll actually leave a border around the edge so the Text doesn't line wrap right against the edge of the button. To do this:
 
 1. Keep the TextInstance selected
-2. Change the `Width Units` to `Relative to Parent`&#x20;
+2. Change the `Width Units` to `Relative to Parent`
 3. Change `Width` to `-40`. This means the actual width of the Text is 40 pixels less than the actual width of its container. Since the button is centered this means a 20 pixel border on the left and 20 on the right (20+20=40).
 
 ![Width and Width Units set explicitly to give the text a margin](../../../.gitbook/assets/Gum_Pz8MUKGk5c.png)
@@ -128,4 +128,4 @@ We can now resize and position the Button instance. We can reuse our Button comp
 
 We can change _top level_ variables on the Button such as `X`, `Y`, `Width`, and `Height`, but we cannot change variables on instances within the Button - all of our buttons currently display "Hello" text.
 
-The next tutorial shows how to use exposed variables to further customize each button instance.&#x20;
+The next tutorial shows how to use exposed variables to further customize each button instance.

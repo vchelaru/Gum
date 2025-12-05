@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
 	<IsTestProject>true</IsTestProject>
+	<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 
   </PropertyGroup>
 
@@ -23,6 +24,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
 	</ItemGroup>
 
 </Project>

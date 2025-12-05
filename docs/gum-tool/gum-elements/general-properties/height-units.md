@@ -54,7 +54,7 @@ As more children are added, each child's height is adjusted to make room for the
 
 Ratio values are distributed among all siblings using `Ratio of Parent` proportionally. The image above shows four siblings, each given 1/4 of the ratio. If one of the the ratios changes (such as by increasing the second sibling's Height value to 3), then all siblings adjust in response to this change.
 
-<figure><img src="../../../.gitbook/assets/image (6) (1) (1) (1) (1).png" alt=""><figcaption><p>Red ColoredRectangle with a <code>Height</code> value of 3</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (6) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Red ColoredRectangle with a <code>Height</code> value of 3</p></figcaption></figure>
 
 In this case, the total ratio is 6 (1 + 3 + 1 + 1), so the red is given 3/6 (1/2) of the parent's height, while each of the others is given 1/6 of the parent's height.
 
@@ -107,7 +107,7 @@ If a child has its `Ignored By Parent Size` set to true, then the parent ignores
 
 #### Child Depends on Parent Height (2)
 
-If a child's height depends on the parent, then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.&#x20;
+If a child's height depends on the parent, then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.
 
 For example consider a container with two children - BlueRectangle and YellowRectangle - with the following variables:
 
@@ -153,7 +153,7 @@ If a parent sets its `Height Units` to `Relative to Children`, then it resizes i
 
 For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an `Absolute` `Width` and `Height` of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
 
-<figure><img src="../../../.gitbook/assets/11_15 30 38 (1).png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
 
 The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent height adjusts in response.
 

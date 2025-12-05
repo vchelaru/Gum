@@ -18,23 +18,29 @@ namespace Gum.Commands;
 public class FileCommands : IFileCommands
 {
     private readonly LocalizationManager _localizationManager;
+    private readonly FileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
+    private readonly IOutputManager _outputManager;
 
 
     public FileCommands(ISelectedState selectedState, 
         Lazy<IUndoManager> undoManager, 
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager)
+        LocalizationManager localizationManager,
+        IOutputManager outputManager,
+        FileWatchManager fileWatchManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _localizationManager = localizationManager;
+        _fileWatchManager = fileWatchManager;
+        _outputManager = outputManager;
     }
 
     /// <summary>
@@ -67,7 +73,7 @@ public class FileCommands : IFileCommands
     }
 
 
-    public void TryAutoSaveElement(ElementSave elementSave)
+    public void TryAutoSaveElement(ElementSave? elementSave)
     {
         if (ProjectManager.Self.GeneralSettingsFile.AutoSave && elementSave != null)
         {
@@ -132,15 +138,68 @@ public class FileCommands : IFileCommands
 
     public void ForceSaveProject(bool forceSaveContainedElements = false)
     {
-        if (!ProjectManager.Self.HaveErrorsOccurredLoadingProject)
-        {
-            ProjectManager.Self.SaveProject(forceSaveContainedElements);
-            OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
-        }
-        else
+        if (ProjectManager.Self.HaveErrorsOccurredLoadingProject)
         {
             _dialogService.ShowMessage("Cannot save project because of earlier errors");
+            return;
         }
+
+        var succeeded = ProjectManager.Self.SaveProject(forceSaveContainedElements);
+
+        if (string.IsNullOrEmpty(ProjectState.Self.GumProjectSave.FullFileName))
+        {
+            // The user most likely canceled the save, as such, we have no filename
+            // Do nothing, do not error.
+            return;
+        }
+
+        if (!succeeded)
+        {
+            _dialogService.ShowMessage("Cannot save project because of earlier errors");
+            return;
+        }
+
+        _outputManager.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
+        CreateDefaultFontCharacterFile();
+    }
+
+    /// <summary>
+    /// This will copy the ascii character file ".gumfcs" that contains the default characters that match the BmfcSave.DefaultRanges.
+    /// The file contains all the actual characters like "abcde..." etc, not the numerical range.
+    /// This file is used in the project properties for the optional "Use Font Character File" checkbox.
+    /// Method is non-destructive by default, it will not overwrite an existing .gumfcs file.
+    /// </summary>
+    public void CreateDefaultFontCharacterFile(bool forceOverwrite = false)
+    {
+        var gumProject = ObjectFinder.Self.GumProjectSave;
+        if (gumProject == null)
+            return;
+
+        var sourceFile = System.IO.Path.Combine(GetExecutingDirectory(), "Content\\.gumfcs");
+        var destinationFile = FileManager.GetDirectory(gumProject.FullFileName) + ".gumfcs";
+
+        // Exit early if the destination file already exists and we are not forcing an overwrite
+        if (System.IO.File.Exists(destinationFile) && !forceOverwrite)
+        {
+            return;
+        }
+
+        // Copy the file from Content to the saved Project folder
+        try
+        {
+            System.IO.File.Copy(sourceFile, destinationFile);
+        }
+        catch (Exception e)
+        {
+            _guiCommands.PrintOutput($"Error copying .gumfcs: {e}");
+        }
+    }
+
+    // Method copied from MineNineSlicePlugin.cs, potential candidate for DRY refactor
+    static string GetExecutingDirectory()
+    {
+        string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        return path;
     }
 
     public void ForceSaveElement(ElementSave element)
@@ -186,7 +245,7 @@ public class FileCommands : IFileCommands
                 }
                 else
                 {
-                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath);
+                    _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
 
                     const int maxNumberOfTries = 5;
                     const int msBetweenSaves = 100;
@@ -220,7 +279,7 @@ public class FileCommands : IFileCommands
                 }
                 if (succeeded)
                 {
-                    OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
+                    _outputManager.AddOutput("Saved " + elementSave + " to " + fileName);
                     PluginManager.Self.AfterElementSave(elementSave);
                 }
             }
@@ -289,7 +348,7 @@ public class FileCommands : IFileCommands
                 //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                 string fileName = GetFullPathXmlFile( behavior).FullPath;
-                FileWatchManager.Self.IgnoreNextChangeUntil(fileName);
+                _fileWatchManager.IgnoreNextChangeUntil(fileName);
                 // if it's readonly, let's warn the user
                 bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 
@@ -332,7 +391,7 @@ public class FileCommands : IFileCommands
                 }
                 if (succeeded)
                 {
-                    OutputManager.Self.AddOutput("Saved " + behavior + " to " + fileName);
+                    _outputManager.AddOutput("Saved " + behavior + " to " + fileName);
                     //PluginManager.Self.AfterBehaviorSave(behavior);
                 }
             }

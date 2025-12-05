@@ -21,20 +21,23 @@ namespace Gum.Controls
                     {
                         Name = "Left",
                         Value = global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                        Image = leftAlignBitmap
+                        Image = leftAlignBitmap,
+                        IconName = "TextAlignLeft"
 
                     },
                     new Option
                     {
                         Name = "Center",
                         Value = global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                        Image = centerAlignBitmap
+                        Image = centerAlignBitmap,
+                        IconName = "TextAlignCenter"
                     },
                     new Option
                     {
                         Name = "Right",
                         Value = global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                        Image = rightAlignBitmap
+                        Image = rightAlignBitmap,
+                        IconName = "TextAlignRight"
                     },
                 };
             }

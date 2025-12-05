@@ -2,7 +2,7 @@
 
 namespace SkiaGum.Renderables;
 
-class SolidRectangle : RenderableBase
+class SolidRectangle : RenderableShapeBase
 {
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)

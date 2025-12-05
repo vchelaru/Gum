@@ -5,6 +5,8 @@ using Gum.ToolStates;
 using System;
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.Errors.Views;
+using Gum.Reflection;
+using Gum.Services;
 
 namespace Gum.Plugins.Errors;
 
@@ -25,7 +27,9 @@ public class MainErrorsPlugin : InternalPlugin
     {
         viewModel = new AllErrorsViewModel();
 
-        errorChecker = new ErrorChecker();
+        TypeManager typeManager = Locator.GetRequiredService<TypeManager>();
+
+        errorChecker = new ErrorChecker(typeManager);
 
         CreateViews();
 
@@ -38,7 +42,7 @@ public class MainErrorsPlugin : InternalPlugin
         control.DataContext = viewModel;
         tabPage = _tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
 
-        _tabPageHeader = new ErrorTabHeader();
+        _tabPageHeader = new ErrorTabHeader { DataContext = viewModel };
         tabPage.CustomHeaderContent = _tabPageHeader;
     }
 
@@ -92,7 +96,5 @@ public class MainErrorsPlugin : InternalPlugin
         {
             viewModel.Errors.Add(item);
         }
-
-        _tabPageHeader.SetErrorCount(errors.Length);
     }
 }

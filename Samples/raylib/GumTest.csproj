@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\raylib\RaylibGum\RaylibGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,7 +20,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public bool IsRenderTarget => false;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -104,7 +104,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public CanvasRenderable()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         Visible = true;
         Width = 100;
@@ -135,6 +135,14 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
             canvas.Restore();
         }
+    }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
     }
 #else
     public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
@@ -180,6 +188,8 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
             return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
+
+    public string BatchKey => string.Empty;
 
     #endregion
 

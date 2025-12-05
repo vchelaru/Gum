@@ -1,0 +1,71 @@
+﻿<UserControl
+  x:Class="WpfDataUi.Controls.PlusMinusTextBox"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:local="clr-namespace:WpfDataUi.Controls"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d">
+  <Grid x:Name="TopRowGrid">
+    <Grid.ContextMenu>
+      <ContextMenu />
+    </Grid.ContextMenu>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <TextBlock
+      x:Name="Label"
+      MinWidth="100"
+      Padding="4,4,4,0"
+      VerticalAlignment="Center"
+      TextWrapping="Wrap">
+      Property Label:
+    </TextBlock>
+
+    <StackPanel
+      Grid.Column="1"
+      Margin="3,0,3,0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Stretch"
+      Orientation="Horizontal">
+      <Button
+        Width="18"
+        Height="18"
+        Click="MinusButtonClicked">
+        -
+      </Button>
+      <TextBox
+        x:Name="TextBox"
+        Width="60"
+        Height="20"
+        HorizontalContentAlignment="Center"
+        VerticalContentAlignment="Center"
+        GotFocus="TextBox_GotFocus"
+        LostFocus="TextBox_LostFocus_1">
+        <TextBox.ContextMenu>
+          <ContextMenu />
+        </TextBox.ContextMenu>
+      </TextBox>
+      <Button
+        Width="18"
+        Height="18"
+        Click="PlusButtonClicked">
+        +
+      </Button>
+    </StackPanel>
+    <TextBlock
+      x:Name="HintTextBlock"
+      Grid.Row="2"
+      Grid.ColumnSpan="3"
+      MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+      Margin="0,0,-4,0"
+      Padding="8,1,0,4"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Top"
+      FontSize="10"
+      Text="This is a property description. But what if it is longer?"
+      TextWrapping="Wrap" />
+  </Grid>
+</UserControl>

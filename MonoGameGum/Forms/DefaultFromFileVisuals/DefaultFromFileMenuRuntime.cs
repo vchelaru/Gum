@@ -1,5 +1,5 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
+
+#if !RAYLIB
 
 internal class DefaultFromFileMenuRuntime : InteractiveGue
 {
@@ -26,3 +28,4 @@ internal class DefaultFromFileMenuRuntime : InteractiveGue
     public Menu FormsControl => FormsControlAsObject as Menu;
 
 }
+#endif

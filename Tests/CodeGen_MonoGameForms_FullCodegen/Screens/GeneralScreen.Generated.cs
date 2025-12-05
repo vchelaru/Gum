@@ -14,15 +14,18 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Screens;
-partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
+partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("GeneralScreen");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named GeneralScreen - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new GeneralScreen(visual);
             visual.Width = 0;
@@ -31,7 +34,7 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
             visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(GeneralScreen)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(GeneralScreen)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("GeneralScreen", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -93,9 +96,9 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance.Name = "LabelInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -103,6 +106,10 @@ partial class GeneralScreen : MonoGameGum.Forms.Controls.FrameworkElement
     }
     private void ApplyDefaultVariables()
     {
+        this.Visual.Width = 0f;
+        this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.Visual.Height = 0f;
+        this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         ((TextRuntime)this.LabelInstance.Visual).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         ((TextRuntime)this.LabelInstance.Visual).MaxLettersToShow = 55;
         ((TextRuntime)this.LabelInstance.Visual).MaxNumberOfLines = 3;

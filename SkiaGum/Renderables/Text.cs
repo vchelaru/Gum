@@ -131,6 +131,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
     Vector2 Position;
     IRenderableIpso mParent;
+    public string? StoredMarkupText => null;
 
     public IRenderableIpso Parent
     {
@@ -152,7 +153,7 @@ public class Text : IRenderableIpso, IVisible, IText
         }
     }
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -331,7 +332,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
         this.Visible = true;
         Color = SKColors.Black;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
     }
 
     public void Render(ISystemManagers managers)
@@ -451,7 +452,7 @@ public class Text : IRenderableIpso, IVisible, IText
         catch(Exception e)
         {
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             throw new InvalidOperationException($"An internal exception has occurred: {e.ToString()} with the following information:" +
                 $"forcedWidth {forcedWidth}\n" +
                 $"FontName {FontName}\n" +
@@ -490,6 +491,14 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public void PreRender() { }
 
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
+
     #region IVisible Implementation
 
     public bool Visible
@@ -520,6 +529,8 @@ public class Text : IRenderableIpso, IVisible, IText
             return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
+
+    public string BatchKey => string.Empty;
 
     #endregion
 }

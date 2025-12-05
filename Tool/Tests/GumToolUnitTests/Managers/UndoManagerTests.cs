@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
-public class UndoManagerTests
+public class UndoManagerTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IRenameLogic> _renameLogic;
@@ -64,7 +64,7 @@ public class UndoManagerTests
     [Fact]
     public void PerformUndo_ShouldRestoreValue()
     {
-        ComponentSave component = _selectedState.Object.SelectedComponent;
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
         component.DefaultState.SetValue("X", 10f);
 
@@ -85,7 +85,7 @@ public class UndoManagerTests
     [Fact]
     public void CurrentElementHistory_ShouldReportVariableChanges()
     {
-        ComponentSave component = _selectedState.Object.SelectedComponent;
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
         component.DefaultState.SetValue("X", 10f);
 
@@ -109,7 +109,7 @@ public class UndoManagerTests
     public void CurrentElementHistory_ShouldReportExposedVariables()
     {
         {
-            ComponentSave component = _selectedState.Object.SelectedComponent;
+            ComponentSave component = _selectedState.Object.SelectedComponent!;
 
             component.DefaultState.SetValue("X", 10f);
 

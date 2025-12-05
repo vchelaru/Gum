@@ -46,6 +46,7 @@ public class StandardWireframeEditor : WireframeEditor
 
     bool mHasGrabbed = false;
     private readonly IElementCommands _elementCommands;
+    private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly SelectionManager _selectionManager;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
@@ -81,13 +82,15 @@ public class StandardWireframeEditor : WireframeEditor
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        WireframeObjectManager wireframeObjectManager)
         : base(
               hotkeyManager, 
               selectionManager,
               selectedState)
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _wireframeObjectManager = wireframeObjectManager;
         _selectionManager = selectionManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
 
@@ -547,11 +550,11 @@ public class StandardWireframeEditor : WireframeEditor
 
         if (instanceSave != null)
         {
-            representation = WireframeObjectManager.Self.GetRepresentation(instanceSave);
+            representation = _wireframeObjectManager.GetRepresentation(instanceSave);
         }
         else
         {
-            representation = WireframeObjectManager.Self.GetRepresentation(elementStack.Last().Element);
+            representation = _wireframeObjectManager.GetRepresentation(elementStack.Last().Element);
         }
 
         float rotation = MathHelper.ToRadians(representation?.GetAbsoluteRotation() ?? 0);
@@ -615,6 +618,26 @@ public class StandardWireframeEditor : WireframeEditor
         return hasChangeOccurred;
     }
 
+    private void RefreshSideOver()
+    {
+        var worldX = Cursor.GetWorldX();
+        var worldY = Cursor.GetWorldY();
+
+        if (mResizeHandles.Visible == false)
+        {
+            SideOver = ResizeSide.None;
+        }
+        else
+        {
+            // If the user is already dragging then there's
+            // no need to re-check which side the user is over
+            if (Cursor.PrimaryPush || (!Cursor.PrimaryDown && !Cursor.PrimaryClick))
+            {
+                SideOver = mResizeHandles.GetSideOver(worldX, worldY);
+            }
+        }
+    }
+
     #endregion
 
     #region Moving (Changing X and Y)
@@ -629,32 +652,6 @@ public class StandardWireframeEditor : WireframeEditor
         }
 
     }
-
-
-    #endregion
-
-    #region Update To
-
-    public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
-    {
-        this.selectedObjects.Clear();
-        this.selectedObjects.AddRange(selectedObjects);
-
-        if(selectedObjects.Count == 0 || selectedObjects.Any(item => item.Tag is ScreenSave))
-        {
-            mResizeHandles.Visible = false;
-            rotationHandle.Visible = false;
-
-        }
-        else
-        {
-            mResizeHandles.Visible = true;
-            rotationHandle.Visible = true;
-            mResizeHandles.SetValuesFrom(selectedObjects);
-        }
-    }
-
-    #endregion
 
     private void SnapSelectedToUnitValues()
     {
@@ -742,6 +739,32 @@ public class StandardWireframeEditor : WireframeEditor
         }
     }
 
+    #endregion
+
+    #region Update To
+
+    public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
+    {
+        this.selectedObjects.Clear();
+        this.selectedObjects.AddRange(selectedObjects);
+
+        if(selectedObjects.Count == 0 || selectedObjects.Any(item => item.Tag is ScreenSave))
+        {
+            mResizeHandles.Visible = false;
+            rotationHandle.Visible = false;
+        }
+        else
+        {
+            mResizeHandles.Visible = true;
+            rotationHandle.Visible = true;
+            mResizeHandles.SetValuesFrom(selectedObjects);
+        }
+    }
+
+    #endregion
+
+    #region Changing the cursor (for resizing
+
     public override System.Windows.Forms.Cursor GetWindowsCursorToShow(
         System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
     {
@@ -773,25 +796,7 @@ public class StandardWireframeEditor : WireframeEditor
         return cursorToSet;
     }
 
-    private void RefreshSideOver()
-    {
-        var worldX = Cursor.GetWorldX();
-        var worldY = Cursor.GetWorldY();
-
-        if (mResizeHandles.Visible == false)
-        {
-            SideOver = ResizeSide.None;
-        }
-        else
-        {
-            // If the user is already dragging then there's
-            // no need to re-check which side the user is over
-            if (Cursor.PrimaryPush || (!Cursor.PrimaryDown && !Cursor.PrimaryClick))
-            {
-                SideOver = mResizeHandles.GetSideOver(worldX, worldY);
-            }
-        }
-    }
+    #endregion
 
     private void CalculateMultipliers(InstanceSave instanceSave, List<ElementWithState> elementStack, out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier)
     {
@@ -800,10 +805,10 @@ public class StandardWireframeEditor : WireframeEditor
         widthMultiplier = 0;
         heightMultiplier = 0;
 
-        var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
+        var ipso = _wireframeObjectManager.GetRepresentation(instanceSave, elementStack);
         if (ipso == null)
         {
-            ipso = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+            ipso = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
         }
 
         switch (this.SideGrabbed)
@@ -1076,7 +1081,7 @@ public class StandardWireframeEditor : WireframeEditor
 
             if (supportsLockedAxis && instanceSave != null)
             {
-                IRenderableIpso ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
+                IRenderableIpso ipso = _wireframeObjectManager.GetRepresentation(instanceSave, elementStack);
 
                 var cursor = InputLibrary.Cursor.Self;
                 float cursorX = cursor.GetWorldX();

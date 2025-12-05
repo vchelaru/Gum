@@ -61,9 +61,15 @@ namespace WpfDataUi.Controls
                 this.RefreshContextMenu(TextBox.ContextMenu);
                 //this.RefreshContextMenu(StackPanel.ContextMenu);
 
-                this.TextBox.Background = InstanceMember.IsDefault ? DefaultValueBackground : 
-                    InstanceMember.IsIndeterminate ? IndeterminateBackground 
-                    : CustomValueBackground;
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                    {
+                        this.TextBox.Background = InstanceMember.IsDefault ? DefaultValueBackground
+                            : InstanceMember.IsIndeterminate ? IndeterminateBackground
+                            : CustomValueBackground;
+                    }
+                });
 
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 //HintTextBlock.Text = InstanceMember?.DetailText;

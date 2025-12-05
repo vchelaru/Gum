@@ -46,7 +46,7 @@ Changing the `X Units` to `Pixels From Right` causes the Text to be positioned o
 
 The X,Y, Origin, and Units values are all available for every type of element in Gum; however, these values only change the bounds. In the case of a Text object we may be interested in how the text is aligned within the bounds. The Text object offers two variables for aligning its text: `Horizontal Alignment` and `Vertical Alignment`. Changing the `Horizontal Alignment` to `Center` centers the Text within its bounds:
 
-![Centered text in its bounds](<../../../.gitbook/assets/image (11) (1).png>)
+![Centered text in its bounds](<../../../.gitbook/assets/image (11) (1) (1).png>)
 
 ## Default and overriding values
 

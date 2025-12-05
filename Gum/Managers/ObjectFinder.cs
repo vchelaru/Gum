@@ -89,6 +89,9 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// The currently-loaded GumProjectSave.
+        /// </summary>
         public GumProjectSave? GumProjectSave
         {
             get;
@@ -148,6 +151,13 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// Disables the in-memory cache for dictionary lookups, releasing any cached data if no other cache enables
+        /// remain active. This should be called every time EnableCache is called.
+        /// </summary>
+        /// <remarks>If multiple cache enable calls have been made, the cache will only be disabled after
+        /// all corresponding disables have been called. Once disabled, subsequent lookups will not use cached data
+        /// until the cache is re-enabled.</remarks>
         public void DisableCache()
         {
             if(cacheEnableCount > 0)
@@ -324,6 +334,8 @@ namespace Gum.Managers
         /// as their BaseType.
         /// </summary>
         /// <param name="elementSave">The ElementSave to search for.</param>
+        /// <param name="list">An optional list to fill. If null, a new list will be created. This can help reduce allocation if this method is called frequently.</param>
+        /// <param name="foundInstances">An optional list of InstanceSaves to fill with the instances that reference the argument elementSave. If null, instances will not be recorded.</param>
         /// <returns>A List containing all Elements</returns>
         public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave> list = null, List<InstanceSave> foundInstances = null)
         {
@@ -874,7 +886,7 @@ namespace Gum.Managers
             return instance;
         }
 
-        public string GetDefaultChildName(InstanceSave targetInstance, StateSave stateSave = null)
+        public string GetDefaultChildName(InstanceSave targetInstance, StateSave? stateSave = null)
         {
             string defaultChild = null;
             // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
@@ -910,15 +922,22 @@ namespace Gum.Managers
 
         #region Get BehaviorSave
 
-        public BehaviorSave GetBehavior(ElementBehaviorReference behaviorReference)
+        public BehaviorSave? GetBehavior(ElementBehaviorReference behaviorReference)
         {
             var behaviorName = behaviorReference.BehaviorName;
-            return GetBehavior(behaviorName);
+            if(behaviorName != null)
+            {
+                return GetBehavior(behaviorName);
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        public BehaviorSave GetBehavior(string behaviorName)
+        public BehaviorSave? GetBehavior(string behaviorName)
         {
-            var behaviors = GumProjectSave.Behaviors;
+            var behaviors = GumProjectSave!.Behaviors;
 
             foreach (var behavior in behaviors)
             {
@@ -1209,8 +1228,10 @@ namespace Gum.Managers
             return toReturn;
         }
 
-        public ElementSave GetElementContainerOf(StateSave stateSave)
+        public ElementSave? GetElementContainerOf(StateSave? stateSave)
         {
+            if(stateSave == null) return null;
+
             if (GumProjectSave != null)
             {
                 foreach (var screen in GumProjectSave.Screens)
@@ -1239,8 +1260,10 @@ namespace Gum.Managers
             return null;
         }
 
-        public IStateContainer? GetStateContainerOf(StateSave stateSave)
+        public IStateContainer? GetStateContainerOf(StateSave? stateSave)
         {
+            if (stateSave == null) return null;
+
             var element = GetElementContainerOf(stateSave);
 
             if(element != null)
@@ -1412,9 +1435,9 @@ namespace Gum.Managers
         public static List<InstanceSave> GetSiblingsIncludingThis(this InstanceSave thisInstance)
         {
             var container = thisInstance.ParentContainer;
-            BehaviorSave containerBehavior = null;
+            BehaviorSave? containerBehavior = null;
 
-            StateSave defaultState = null;
+            StateSave? defaultState = null;
             if(container != null)
             {
                 defaultState = container.DefaultState;

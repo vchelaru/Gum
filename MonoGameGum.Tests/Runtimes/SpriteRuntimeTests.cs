@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
-public class SpriteRuntimeTests
+public class SpriteRuntimeTests : BaseTestClass
 {
     [Fact]
     public void SourceRectangle_AssignsTextureValues()
@@ -46,4 +46,39 @@ public class SpriteRuntimeTests
         var clone = sut.Clone() as Sprite;
         clone.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void Width_ShouldBeDefault_WithNullTexture()
+    {
+        SpriteRuntime sut = new();
+        sut.Width.ShouldBe(100);
+        sut.WidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile);
+
+        sut.GetAbsoluteWidth().ShouldBe(64);
+    }
+
+    [Fact]
+    public void Width_ShouldIgnoreTextureWidth_IfUsingEntireTexture()
+    {
+        SpriteRuntime sut = new();
+
+        sut.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        sut.TextureAddress = Gum.Managers.TextureAddress.EntireTexture;
+        sut.TextureWidth = 150;
+
+        sut.GetAbsoluteWidth().ShouldBe(64);
+    }
+
+    [Fact]
+    public void Height_ShouldIgnoreTextureHeight_IfUsingEntireTexture()
+    {
+        SpriteRuntime sut = new();
+
+        sut.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        sut.TextureAddress = Gum.Managers.TextureAddress.EntireTexture;
+        sut.TextureHeight = 150;
+
+        sut.GetAbsoluteHeight().ShouldBe(64);
+    }
+
 }

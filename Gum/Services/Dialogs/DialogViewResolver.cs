@@ -12,6 +12,7 @@ internal interface IDialogViewResolver
     Type? GetDialogViewType(Type viewModelType);
 }
 
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class DialogAttribute : Attribute
 {
     public Type DataContext { get; }
@@ -72,15 +73,18 @@ internal class DialogViewResolver : IDialogViewResolver
                 .Where(t => typeof(FrameworkElement).IsAssignableFrom(t))
                 .Aggregate(new Dictionary<Type, Type>(), (types, viewType) =>
                 {
-                    if (viewType.GetCustomAttribute<DialogAttribute>() is { } attr)
+                    if (viewType.GetCustomAttributes<DialogAttribute>().ToList() is { Count: > 0 } attributes)
                     {
-                        if (typeof(DialogViewModel).IsAssignableFrom(attr.DataContext) && !attr.DataContext.IsAbstract)
+                        foreach (var attr in attributes)
                         {
-                            types[attr.DataContext] = viewType;
-                        }
-                        else
-                        {
-                            throw new ArgumentException("Type " + attr.DataContext + " does not derive from DialogViewModel");
+                            if (typeof(DialogViewModel).IsAssignableFrom(attr.DataContext) && !attr.DataContext.IsAbstract)
+                            {
+                                types[attr.DataContext] = viewType;
+                            }
+                            else
+                            {
+                                throw new ArgumentException("Type " + attr.DataContext + " does not derive from DialogViewModel");
+                            }
                         }
                     }
                     else

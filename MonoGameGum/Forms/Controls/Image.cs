@@ -16,7 +16,7 @@ namespace FlatRedBall.Forms.Controls;
 
 namespace Gum.Forms.Controls;
 #endif
-public class Image : MonoGameGum.Forms.Controls.FrameworkElement
+public class Image : Gum.Forms.Controls.FrameworkElement
 {
     global::RenderingLibrary.Graphics.Sprite mContainedSprite;
     
@@ -28,7 +28,7 @@ public class Image : MonoGameGum.Forms.Controls.FrameworkElement
         }
     }
 
-    public Microsoft.Xna.Framework.Graphics.Texture2D Texture
+    public Microsoft.Xna.Framework.Graphics.Texture2D? Texture
     {
         get
         {

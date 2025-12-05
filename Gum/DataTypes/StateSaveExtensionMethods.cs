@@ -1004,7 +1004,7 @@ public static class StateSaveExtensionMethods
     /// <exception cref="ArgumentNullException">If either of the argument states are null.</exception>
     public static void Merge(StateSave firstState, StateSave secondState, float secondRatio, List<VariableSaveValues> mergedValues)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (firstState == null || secondState == null)
         {
             throw new ArgumentNullException("States must not be null");
@@ -1065,7 +1065,7 @@ public static class StateSaveExtensionMethods
 
     public static void MergeIntoThis(this StateSave thisState, StateSave other, float otherRatio = 1)
     {
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (other == null)
         {
             throw new ArgumentNullException("other Statesave is null and it shouldn't be");
@@ -1227,7 +1227,7 @@ public static class StateSaveExtensionMethods
     /// <param name="secondValue">The second value as a numeric value.</param>
     /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
     /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
-    private static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
+    public static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
     {
         if (firstValue == null || secondValue == null)
         {
@@ -1254,6 +1254,10 @@ public static class StateSaveExtensionMethods
             int secondFloat = (int)secondValue;
 
             return (int)(.5f + firstFloat + (secondFloat - firstFloat) * interpolationValue);
+        }
+        if(firstValue is bool && secondValue is bool)
+        {
+            return interpolationValue >= 1 ? secondValue : firstValue;
         }
         else
         {

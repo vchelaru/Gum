@@ -1,35 +1,37 @@
-using Gum.Managers;
-using Gum.ToolStates;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using Gum.DataTypes;
-using Gum.Plugins;
+using CommonFormsAndControls;
 using Gum.Controls;
-using Gum.Extensions;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.Plugins.VariableGrid;
-using Gum.ToolCommands;
-using CommonFormsAndControls;
-using Gum.Undo;
+using Gum.Extensions;
 using Gum.Logic;
-using static System.ComponentModel.Design.ObjectSelectorEditor;
+using Gum.Managers;
+using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Gum.Plugins.VariableGrid;
+using Gum.PropertyGridHelpers;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.ToolCommands;
+using Gum.ToolStates;
+using Gum.Undo;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using System.Windows.Media;
+using System.Xml.Linq;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
-using Gum.PropertyGridHelpers;
-using System.Xml.Linq;
-using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
-using Microsoft.Extensions.Hosting;
-using Gum.Services;
-using Microsoft.Extensions.DependencyInjection;
-using System.Windows.Media;
-using Gum.Services.Dialogs;
+using static System.ComponentModel.Design.ObjectSelectorEditor;
 using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
+
 
 public class GuiCommands : IGuiCommands
 {
@@ -37,14 +39,20 @@ public class GuiCommands : IGuiCommands
     
     private readonly Lazy<ISelectedState> _lazySelectedState;
     private readonly IDispatcher _dispatcher;
+    private readonly IOutputManager _outputManager;
+
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
     #endregion
 
-    public GuiCommands(Lazy<ISelectedState> lazySelectedState, IDispatcher dispatcher)
+    public GuiCommands(
+        Lazy<ISelectedState> lazySelectedState, 
+        IDispatcher dispatcher, 
+        IOutputManager outputManager)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
+        _outputManager = outputManager;
     }
     
     public void BroadcastRefreshBehaviorView()
@@ -87,7 +95,7 @@ public class GuiCommands : IGuiCommands
 
     public void PrintOutput(string output)
     {
-        _dispatcher.Invoke(() => OutputManager.Self.AddOutput(output));
+        _dispatcher.Invoke(() => _outputManager.AddOutput(output));
     }
 
     #region Show/Hide Tools

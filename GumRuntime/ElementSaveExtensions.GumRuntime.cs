@@ -55,19 +55,42 @@ namespace GumRuntime
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave));
             }
-            if(elementSave.Name == null)
+            if (elementSave.Name == null)
             {
                 throw new InvalidOperationException("The argument ElementSave must have a name");
             }
 
 #endif
-            GraphicalUiElement toReturn = null;
+            GraphicalUiElement? toReturn = null;
 
+            toReturn = TryCreateStrongTypeForElement(elementSave, fullInstantiation, genericType);
+
+            if (toReturn == null)
+            {
+                if (TemplateFunc != null)
+                {
+                    toReturn = TemplateFunc();
+                }
+            }
+
+            if (toReturn == null)
+            {
+                toReturn = new GraphicalUiElement();
+            }
+
+
+            toReturn.ElementSave = elementSave;
+            return toReturn;
+        }
+
+        private static GraphicalUiElement? TryCreateStrongTypeForElement(ElementSave elementSave, bool fullInstantiation, string genericType)
+        {
+            GraphicalUiElement? toReturn = null;
             var elementName = elementSave.Name;
             var attemptedGenericLookup = false;
             if (!string.IsNullOrEmpty(genericType))
@@ -127,16 +150,20 @@ namespace GumRuntime
 
             if (toReturn == null)
             {
-                if (TemplateFunc != null)
+                // try inheritance:
+                var baseTypeName = elementSave.BaseType;
+
+                if(!string.IsNullOrEmpty(baseTypeName))
                 {
-                    toReturn = TemplateFunc();
-                }
-                else
-                {
-                    toReturn = new GraphicalUiElement();
+                    var baseElement = ObjectFinder.Self.GetElementSave(baseTypeName);
+
+                    if(baseElement != null)
+                    {
+                        toReturn = TryCreateStrongTypeForElement(baseElement, fullInstantiation, genericType);
+                    }
                 }
             }
-            toReturn.ElementSave = elementSave;
+
             return toReturn;
         }
 
@@ -250,7 +277,7 @@ namespace GumRuntime
 
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (stateSave == null)
             {
                 throw new ArgumentNullException(nameof(stateSave), "State cannot be null");
@@ -586,8 +613,8 @@ namespace GumRuntime
 
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, ISystemManagers systemManagers)
         {
-#if DEBUG
-            if(elementSave == null)
+#if FULL_DIAGNOSTICS
+            if (elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave), "elementSave parameter is required");
             }

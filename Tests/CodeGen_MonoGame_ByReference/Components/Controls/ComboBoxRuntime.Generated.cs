@@ -21,9 +21,9 @@ partial class ComboBoxRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ComboBox", typeof(ComboBoxRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.ComboBox)] = typeof(ComboBoxRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.ComboBox)] = typeof(ComboBoxRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.ComboBox FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.ComboBox;
+    public global::Gum.Forms.Controls.ComboBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ComboBox;
     public enum ComboBoxCategory
     {
         Enabled,
@@ -80,7 +80,7 @@ partial class ComboBoxRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.ComboBox(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.ComboBox(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;

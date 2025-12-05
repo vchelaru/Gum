@@ -267,6 +267,20 @@ namespace Gum.Wireframe
 
     static class Vector2Methods
     {
+        public static Vector2 RotatedBy(this Vector2 vector2, float radiansToRotateBy)
+        {
+            if (vector2.X == 0 && vector2.Y == 0)
+            {
+                return vector2;
+            }
+            else
+            {
+                var existingAngle = vector2.Angle().Value;
+                var newAngle = existingAngle + radiansToRotateBy;
+                return FromAngle(newAngle) * vector2.Length();
+            }
+        }
+
         public static Vector2 AtAngle(this Vector2 vector2, float angleRadians)
         {
             return FromAngle(angleRadians) * vector2.Length();

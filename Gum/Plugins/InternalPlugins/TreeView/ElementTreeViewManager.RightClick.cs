@@ -17,6 +17,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
 
 namespace Gum.Managers;
 
@@ -103,12 +104,13 @@ public partial class ElementTreeViewManager
 
 
 
-    void HandleDeleteObjectClick(object sender, EventArgs e)
+    void HandleDeleteObjectClick(object? sender, EventArgs e)
     {
-        DeleteLogic.Self.HandleDeleteCommand();
+        using var undoLock = _undoManager.RequestLock();
+        _deleteLogic.HandleDeleteCommand();
     }
 
-    void HandleDuplicateElementClick(object sender, EventArgs e)
+    void HandleDuplicateElementClick(object? sender, EventArgs e)
     {
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
@@ -117,7 +119,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void OnGoToDefinitionClick(object sender, EventArgs e)
+    void OnGoToDefinitionClick(object? sender, EventArgs e)
     {
         if (_selectedState.SelectedInstance != null)
         {
@@ -127,7 +129,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void CreateComponentClick(object sender, EventArgs e)
+    void CreateComponentClick(object? sender, EventArgs e)
     {
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
@@ -136,12 +138,12 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void ForceSaveObjectClick(object sender, EventArgs e)
+    void ForceSaveObjectClick(object? sender, EventArgs e)
     {
         _fileCommands.ForceSaveElement(_selectedState.SelectedElement);
     }
 
-    void AddFolderClick(object sender, EventArgs e)
+    void AddFolderClick(object? sender, EventArgs e)
     {
         if (SelectedNode != null)
         {
@@ -150,7 +152,7 @@ public partial class ElementTreeViewManager
     }
 
 
-    void HandleViewInExplorer(object sender, EventArgs e)
+    void HandleViewInExplorer(object? sender, EventArgs e)
     {
         var treeNode = _selectedState.SelectedTreeNode;
 
@@ -187,7 +189,12 @@ public partial class ElementTreeViewManager
                             System.IO.Directory.CreateDirectory(fullFile);
                         }
                     }
-                    Process.Start(fullFile);
+                    var startInfo = new ProcessStartInfo 
+                    { 
+                        UseShellExecute = true ,
+                        FileName = fullFile
+                    };
+                    Process.Start(startInfo );
                 }
                 catch (Exception exc)
                 {
@@ -201,57 +208,13 @@ public partial class ElementTreeViewManager
         }
     }
 
-    void HandleDeleteFolder(object sender, EventArgs e)
+    void HandleDeleteFolder(object? sender, EventArgs e)
     {
         var treeNode = _selectedState.SelectedTreeNode;
 
         if (treeNode != null)
         {
-            string fullFile = treeNode.GetFullFilePath().FullPath;
-
-            // Initially we won't allow deleting of the entire
-            // folder because the user may have to make decisions
-            // about what to do with Screens or Components contained
-            // in the folder.
-
-            if (!Directory.Exists(fullFile))
-            {
-                // It doesn't exist, so let's just refresh the UI for this and it will go away
-                _guiCommands.RefreshElementTreeView();
-            }
-            else
-            {
-                string[] files = Directory.GetFiles(fullFile);
-                string[] directories = Directory.GetDirectories(fullFile);
-
-                if (files != null && files.Length > 0)
-                {
-                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + files.Length + " files.");
-                }
-                else if (directories != null && directories.Length > 0)
-                {
-                    _dialogService.ShowMessage("Cannot delete this folder, it currently contains " + directories.Length + " directories.");
-                }
-
-                else
-                {
-                    bool result = _dialogService.ShowYesNoMessage("Delete folder " + treeNode.Text + "?", "Delete");
-
-                    if (result)
-                    {
-                        try
-                        {
-                            FileManager.DeleteDirectory(fullFile);
-                            _guiCommands.RefreshElementTreeView();
-                        }
-                        catch(Exception exception)
-                        {
-                            _guiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
-                            _dialogService.ShowMessage("Could not delete folder\nSee the output tab for more info");
-                        }
-                    }
-                }
-            }
+            _deleteLogic.DeleteFolder(treeNode);
         }
     }
 
@@ -324,7 +287,7 @@ public partial class ElementTreeViewManager
 
                 mMenuStrip.Items.Add("-");
 
-                mAddInstance.Text = "Add object to " + _selectedState.SelectedElement.Name;
+                mAddInstance.Text = "Add object to " + _selectedState.SelectedElement!.Name;
                 mMenuStrip.Items.Add(mAddInstance);
                 mMenuStrip.Items.Add(mSaveObject);
                 if (_selectedState.SelectedScreen != null)
@@ -333,7 +296,7 @@ public partial class ElementTreeViewManager
                 }
                 else
                 {
-                    duplicateElement.Text = $"Duplicate {_selectedState.SelectedComponent.Name}";
+                    duplicateElement.Text = $"Duplicate {_selectedState.SelectedComponent!.Name}";
                 }
                 mMenuStrip.Items.Add(duplicateElement);
 
@@ -468,53 +431,73 @@ public partial class ElementTreeViewManager
             null);
     }
 
-    private void HandlePaste(object sender, EventArgs e)
+    private void HandlePaste(object? sender, EventArgs e)
     {
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive);
     }
 
-    private void HandlePasteTopLevel(object sender, EventArgs e)
+    private void HandlePasteTopLevel(object? sender, EventArgs e)
     {
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top);
     }
 
-    private void HandleViewReferences(object sender, EventArgs e)
+    private void HandleViewReferences(object? sender, EventArgs e)
     {
         _dialogService.Show<DisplayReferencesDialog>(vm => vm.ElementSave = _selectedState.SelectedElement);
     }
 
-    private void HandleRenameFolder(object sender, EventArgs e)
+    private void HandleRenameFolder(object? sender, EventArgs e)
     {
         _dialogService.Show<RenameFolderDialogViewModel>(vm =>
         {
-            vm.FolderNode = (SelectedNode as TreeNodeWrapper)?.Node;
+            vm.FolderNode = SelectedNode;
         });
     }
 
-    private void HandleAddBehavior(object sender, EventArgs e)
+    private void HandleAddBehavior(object? sender, EventArgs e)
     {
         _editCommands.AddBehavior();
     }
 
-    private void HandleImportBehavior(object sender, EventArgs args)
+    private void HandleImportBehavior(object? sender, EventArgs args)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportBehaviorUi();
+        if (GuardProjectSaved("before importing behaviors"))
+        {
+            _dialogService.Show<ImportBehaviorDialog>();
+        }
     }
 
-    public void ImportScreenClick(object sender, EventArgs e)
+    public void ImportScreenClick(object? sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportScreenUi();
+        if (GuardProjectSaved("before importing screens"))
+        {
+            _dialogService.Show<ImportScreenDialog>();
+        }
     }
 
-    public void ImportComponentsClick(object sender, EventArgs e)
+    public void ImportComponentsClick(object? sender, EventArgs e)
     {
-        Plugins.ImportPlugin.Manager.ImportLogic.ShowImportComponentUi();
+        if (GuardProjectSaved("before importing components"))
+        {
+            _dialogService.Show<ImportComponentDialog>();
+        }
+    }
+
+    private bool GuardProjectSaved(string? reason = null)
+    {
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        {
+            _dialogService.ShowMessage("You must first save the project");
+            return false;
+        }
+
+        return true;
     }
 
     private void HandleAddLinkedComponentClick(object sender, EventArgs e)
     {
         ////////////////Early Out/////////////////////////
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave?.FullFileName))
         {
             _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
@@ -532,13 +515,13 @@ public partial class ElementTreeViewManager
         }
         ///////////End Another Early Out//////////////////////////
 
-        ComponentSave lastImportedComponent = null;
+        ComponentSave? lastImportedComponent = null;
 
         for (int i = 0; i < openFileDialog.FileNames.Length; ++i)
         {
             FilePath componentFilePath = openFileDialog.FileNames[i];
 
-            var gumProject = ObjectFinder.Self.GumProjectSave;
+            var gumProject = ObjectFinder.Self.GumProjectSave!;
             var gumProjectDirectory = new FilePath(gumProject.FullFileName).GetDirectoryContainingThis();
 
             var relative = FileManager.MakeRelative(componentFilePath.FullPath, gumProjectDirectory.FullPath);

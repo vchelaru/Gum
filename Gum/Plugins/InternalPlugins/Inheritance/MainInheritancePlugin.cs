@@ -187,18 +187,22 @@ namespace Gum.Plugins.Inheritance
         {
             var baseElement = instance.ParentContainer;
 
-            var elementsInheritingFromContainer =
-                    ObjectFinder.Self.GetElementsInheritingFrom(baseElement);
-
-            foreach (var inheritingElement in elementsInheritingFromContainer)
+            // instance could be in a behavior, so we could have a null container:
+            if(baseElement != null)
             {
-                var didShiftIndex = 
-                    AdjustInstance(baseElement, inheritingElement, instance.Name);
+                var elementsInheritingFromContainer =
+                        ObjectFinder.Self.GetElementsInheritingFrom(baseElement);
 
-                if(didShiftIndex)
+                foreach (var inheritingElement in elementsInheritingFromContainer)
                 {
-                    _fileCommands.TryAutoSaveElement(inheritingElement);
-                    _guiCommands.RefreshElementTreeView(inheritingElement);
+                    var didShiftIndex = 
+                        AdjustInstance(baseElement, inheritingElement, instance.Name);
+
+                    if(didShiftIndex)
+                    {
+                        _fileCommands.TryAutoSaveElement(inheritingElement);
+                        _guiCommands.RefreshElementTreeView(inheritingElement);
+                    }
                 }
             }
         }
@@ -209,13 +213,13 @@ namespace Gum.Plugins.Inheritance
             var instanceInDerived = derivedElement.GetInstance(instanceName);
 
             var indexInBase = baseElement.Instances.IndexOf(instanceInBase);
-            string nameOfObjectBefore = null;
+            string? nameOfObjectBefore = null;
             if(indexInBase > 0)
             {
                 nameOfObjectBefore = baseElement.Instances[indexInBase - 1].Name;
             }
 
-            string nameOfObjectAfter = null;
+            string? nameOfObjectAfter = null;
             if(indexInBase < baseElement.Instances.Count-1)
             {
                 nameOfObjectAfter = baseElement.Instances[indexInBase + 1].Name;

@@ -13,22 +13,33 @@ using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Services;
+using Gum.Settings;
+using Microsoft.Extensions.Options;
 using Control = System.Windows.Forms.Control;
 
 namespace Gum.Controls;
 
-public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<UiScalingChangedMessage>
+public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<ApplicationTeardownMessage>
 {
-    private readonly IUiSettingsService _uiSettingsService;
-    
-    private const double DefaultFontSize = 12;
+    private readonly IWritableOptions<LayoutSettings> _layoutSettings;
 
-    public double FontSize
+    public double LeftColumnWidth
     {
         get => Get<double>();
-        private set => Set(value);
+        set => Set(value);
     }
-    
+
+    public double CenterColumnWidth
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
+    public double BottomRightHeight
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
+
     private readonly Func<FrameworkElement, PluginTab> _pluginTabFactory;
     private ObservableCollection<PluginTab> PluginTabs { get; } = [];
 
@@ -45,12 +56,16 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<UiScalingCh
         set => Set(value);
     }
 
-    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger)
+    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
     {
+        _layoutSettings = layoutSettings;
         _pluginTabFactory = pluginTabFactory;
         messenger.RegisterAll(this);
-        
-        FontSize = DefaultFontSize;
+
+        LeftColumnWidth = layoutSettings.CurrentValue.MainTabDimensions.LeftColumnWidth;
+        CenterColumnWidth = layoutSettings.CurrentValue.MainTabDimensions.CenterColumnWidth;
+        BottomRightHeight = layoutSettings.CurrentValue.MainTabDimensions.BottomRightHeight;
+
         IsToolsVisible = true;
         PluginTabs.CollectionChanged += PluginTabsOnCollectionChanged;
         
@@ -94,23 +109,46 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<UiScalingCh
 
     public PluginTab AddControl(FrameworkElement element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
-        // This should be moved to the MainPanelControl wpf 
-        string AppTheme = "Light";
-        element.Resources = new System.Windows.ResourceDictionary();
-        element.Resources.Source = new Uri($"/Themes/{AppTheme}.xaml", UriKind.Relative);
-
         PluginTab newPluginTab = _pluginTabFactory(element);
         newPluginTab.Title = tabTitle;
         newPluginTab.Location = tabLocation;
-        
+
+        if (element is WindowsFormsHost host && tabTitle == "Editor")
+        {   // this is kind of a hack to deal with the the airspace issue
+            // blocking mouse interaction with the grid splitter and window resize handle
+            host.Margin = new Thickness(4, 0, 4, 0);
+        }
+
         PluginTabs.Add(newPluginTab);
         return newPluginTab;
     }
     
     public void RemoveTab(PluginTab tab) => PluginTabs.Remove(tab);
-    
-    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
+
+    private void SaveLayoutSettings()
     {
-        FontSize = DefaultFontSize * message.Scale;
+        _layoutSettings.Update(l =>
+        {
+            l.MainTabDimensions =
+                new MainTabDimensions
+                {
+                    LeftColumnWidth = LeftColumnWidth,
+                    CenterColumnWidth = CenterColumnWidth,
+                    BottomRightHeight = BottomRightHeight
+                };
+        });
+    }
+
+    void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message)
+    {
+        message.OnTearDown(SaveLayoutSettings);
+    }
+
+    internal void EnsureMinimumWidth()
+    {
+        const int minWidth = 20;
+        LeftColumnWidth = Math.Max(LeftColumnWidth, minWidth);
+        CenterColumnWidth = Math.Max(CenterColumnWidth, minWidth);
+        BottomRightHeight = Math.Max(BottomRightHeight, minWidth);
     }
 }

@@ -11,13 +11,9 @@ namespace Gum.ToolCommands;
 public interface IElementCommands
 {
     #region Instance
-    InstanceSave AddInstance(ElementSave elementToAddTo, string name, string type = null, string parentName = null);
+    InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null);
 
-    InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string parentName = null);
-
-    void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
-
-    void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
+    InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null);
 
     #endregion
 
@@ -26,8 +22,6 @@ public interface IElementCommands
     StateSave AddState(IStateContainer stateContainer, StateSaveCategory category, string name);
 
     void AddState(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null);
-
-    void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
 
     #endregion
 
@@ -66,5 +60,4 @@ public interface IElementCommands
 
     #endregion
 
-    void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
 }

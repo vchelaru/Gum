@@ -3,8 +3,8 @@ using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms;
+using Gum.Forms.Controls;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -64,6 +64,13 @@ partial class DemoScreenGumRuntime
         DetectResolutionsButton.Click += (not, used) =>
         {
             ShowPopup();
+        };
+
+        ClearResolutionsButton.Click += (not, used) =>
+        {
+            var listBox = this.ResolutionBox.FormsControl;
+
+            listBox.Items.Clear();
         };
 
 

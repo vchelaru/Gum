@@ -20,9 +20,9 @@ partial class SliderRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(SliderRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.Slider)] = typeof(SliderRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.Slider)] = typeof(SliderRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.Slider FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.Slider;
+    public global::Gum.Forms.Controls.Slider FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.Slider;
     public enum SliderCategory
     {
         Enabled,
@@ -84,7 +84,7 @@ partial class SliderRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.Slider(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.Slider(this);
         }
         TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;

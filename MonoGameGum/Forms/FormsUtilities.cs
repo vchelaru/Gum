@@ -3,7 +3,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
@@ -17,6 +17,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 
 
 
@@ -41,14 +42,24 @@ public enum DefaultVisualsVersion
     /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
     /// and respects a centralized styling.
     /// </summary>
-    V2
+    V2,
+    /// <summary>
+    /// The third version introduced end of 2025. This version makes styling with colors easier.
+    /// </summary>
+    V3
 }
 
 public class FormsUtilities
 {
-    static Cursor cursor;
+    static ICursor cursor;
 
-    public static Cursor Cursor => cursor;
+    public static Cursor Cursor => cursor as Cursor;
+
+    public static void SetCursor(ICursor cursor)
+    {
+        FormsUtilities.cursor = cursor;
+        FrameworkElement.MainCursor = cursor;
+    }
 
     static Keyboard keyboard;
 
@@ -77,7 +88,7 @@ public class FormsUtilities
         }
 
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
-        Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new (uiSpriteSheet);
+        
 
         switch (defaultVisualsVersion)
         {
@@ -98,11 +109,9 @@ public class FormsUtilities
                 TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
                 TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
                 TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
                 break;
             case DefaultVisualsVersion.V2:
-
-
-
                 TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
@@ -120,6 +129,29 @@ public class FormsUtilities
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
                 TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
+                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
+
+                break;
+
+            case DefaultVisualsVersion.V3:
+                TryAdd(typeof(Button), typeof(DefaultVisuals.V3.ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.V3.CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.V3.ComboBoxVisual));
+                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.V3.ItemsControlVisual));
+                TryAdd(typeof(Label), typeof(DefaultVisuals.V3.LabelVisual));
+                TryAdd(typeof(ListBox), typeof(DefaultVisuals.V3.ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.V3.ListBoxItemVisual));
+                TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
+                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
+                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
+                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
+                TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
+                TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
+                TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
+                TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
+                Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
             default:
@@ -137,7 +169,7 @@ public class FormsUtilities
             {
                 var baseType = formsType.BaseType;
 
-                if(baseType?.FullName.StartsWith("Gum.Forms.") == true)
+                if(baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
                 {
                     FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
                 }
@@ -157,6 +189,7 @@ public class FormsUtilities
         UpdateGamepads(0);
 
         FrameworkElement.MainCursor = cursor;   
+        FrameworkElement.MainKeyboard = keyboard;
 
 
         FrameworkElement.PopupRoot = CreateFullscreenContainer(nameof(FrameworkElement.PopupRoot), systemManagers);
@@ -268,8 +301,8 @@ public class FormsUtilities
         var didModalsProcessInput = false;
         if (FrameworkElement.ModalRoot.Children.Count > 0)
         {
-#if DEBUG
-            if(FrameworkElement.ModalRoot.Managers == null)
+#if FULL_DIAGNOSTICS
+            if (FrameworkElement.ModalRoot.Managers == null)
             {
                 throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
             }
@@ -311,7 +344,7 @@ public class FormsUtilities
 
             if (!isRootInRoots && FrameworkElement.PopupRoot.Children.Count > 0)
             {
-#if DEBUG
+#if FULL_DIAGNOSTICS
                 if (FrameworkElement.PopupRoot.Managers == null)
                 {
                     throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
@@ -390,7 +423,7 @@ public class FormsUtilities
             Gamepads[i].Activity(gamepadState, time);
         }
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
 
         if (hashSet.Count != FrameworkElement.GamePadsForUiControl.Count)
@@ -414,8 +447,8 @@ public class FormsUtilities
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
-#if DEBUG
-        if(ObjectFinder.Self.GumProjectSave == null)
+#if FULL_DIAGNOSTICS
+        if (ObjectFinder.Self.GumProjectSave == null)
         {
             throw new InvalidOperationException("A Gum project (gumx) must be loaded and assigned to" +
                 "ObjectFinder.Self.GumProjectSave before making this call");
@@ -453,7 +486,13 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
+            else if(behaviorNames.Contains("ItemsControlBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileItemsControlRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -471,7 +510,7 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileListBoxItemRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("MenuBehavior"))
+            else if (behaviorNames.Contains("MenuBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -507,7 +546,7 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileScrollBarRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("ScrollViewerBehavior"))
+            else if (behaviorNames.Contains("ScrollViewerBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -525,7 +564,7 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileSplitterRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("StackPanelBehavior"))
+            else if (behaviorNames.Contains("StackPanelBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -537,7 +576,7 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("WindowBehavior"))
+            else if (behaviorNames.Contains("WindowBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,

@@ -1,5 +1,6 @@
 //Code for Elements/Divider (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using Gum.Converters;
@@ -13,20 +14,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class Divider : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Divider : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/Divider");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/Divider - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Divider(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Divider)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Divider)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Elements/Divider", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -37,7 +41,9 @@ partial class Divider : MonoGameGum.Forms.Controls.FrameworkElement
     public SpriteRuntime Line { get; protected set; }
     public SpriteRuntime AccentRight { get; protected set; }
 
-    public Divider(InteractiveGue visual) : base(visual) { }
+    public Divider(InteractiveGue visual) : base(visual)
+    {
+    }
     public Divider()
     {
 
@@ -47,9 +53,9 @@ partial class Divider : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        AccentLeft = this.Visual?.GetGraphicalUiElementByName("AccentLeft") as SpriteRuntime;
-        Line = this.Visual?.GetGraphicalUiElementByName("Line") as SpriteRuntime;
-        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as SpriteRuntime;
+        AccentLeft = this.Visual?.GetGraphicalUiElementByName("AccentLeft") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        Line = this.Visual?.GetGraphicalUiElementByName("Line") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

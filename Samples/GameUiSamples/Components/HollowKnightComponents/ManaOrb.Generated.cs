@@ -1,5 +1,6 @@
 //Code for HollowKnightComponents/ManaOrb (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using Gum.Converters;
@@ -13,20 +14,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class ManaOrb : MonoGameGum.Forms.Controls.FrameworkElement
+partial class ManaOrb : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("HollowKnightComponents/ManaOrb");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named HollowKnightComponents/ManaOrb - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ManaOrb(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ManaOrb)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(ManaOrb)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("HollowKnightComponents/ManaOrb", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -56,7 +60,7 @@ partial class ManaOrb : MonoGameGum.Forms.Controls.FrameworkElement
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "FullEmptyCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "FullEmptyCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -69,7 +73,9 @@ partial class ManaOrb : MonoGameGum.Forms.Controls.FrameworkElement
     public SpriteRuntime WaveMaskSprite { get; protected set; }
     public ColoredRectangleRuntime ColoredRectangleInstance { get; protected set; }
 
-    public ManaOrb(InteractiveGue visual) : base(visual) { }
+    public ManaOrb(InteractiveGue visual) : base(visual)
+    {
+    }
     public ManaOrb()
     {
 
@@ -79,11 +85,11 @@ partial class ManaOrb : MonoGameGum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        OrbBackground = this.Visual?.GetGraphicalUiElementByName("OrbBackground") as SpriteRuntime;
-        RenderTargetContainer = this.Visual?.GetGraphicalUiElementByName("RenderTargetContainer") as ContainerRuntime;
-        WaveTop = this.Visual?.GetGraphicalUiElementByName("WaveTop") as SpriteRuntime;
-        WaveMaskSprite = this.Visual?.GetGraphicalUiElementByName("WaveMaskSprite") as SpriteRuntime;
-        ColoredRectangleInstance = this.Visual?.GetGraphicalUiElementByName("ColoredRectangleInstance") as ColoredRectangleRuntime;
+        OrbBackground = this.Visual?.GetGraphicalUiElementByName("OrbBackground") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        RenderTargetContainer = this.Visual?.GetGraphicalUiElementByName("RenderTargetContainer") as global::MonoGameGum.GueDeriving.ContainerRuntime;
+        WaveTop = this.Visual?.GetGraphicalUiElementByName("WaveTop") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        WaveMaskSprite = this.Visual?.GetGraphicalUiElementByName("WaveMaskSprite") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        ColoredRectangleInstance = this.Visual?.GetGraphicalUiElementByName("ColoredRectangleInstance") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

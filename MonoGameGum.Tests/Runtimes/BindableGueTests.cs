@@ -1,6 +1,7 @@
 ﻿using Gum.Mvvm;
 using Gum.Wireframe;
 using MonoGameGum.Forms;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using Shouldly;
 using System;
@@ -38,6 +39,83 @@ public class BindableGueTests
         viewModel.TestViewModel.IntPropertyOnVm = 1234;
 
         sut.IntPropertyOnGue.ShouldBe(1234);
+    }
+
+    [Fact]
+    public async Task RemoveFromParent_ShouldUnsubscribeViewModelPropertyChange()
+    {
+        TestViewModel testViewModel = new();
+
+        ContainerRuntime parentContainer = new();
+        parentContainer.BindingContext = testViewModel;
+
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+
+        for(int i = 0; i < 10; i++)
+        {
+            ContainerRuntime child = new();
+            parentContainer.AddChild(child);
+
+            ContainerRuntime grandChild = new();
+            child.AddChild(grandChild);
+            testViewModel.GetPropertyChangeCount().ShouldBe(3);
+
+            child.Parent = null;
+            testViewModel.GetPropertyChangeCount().ShouldBe(1);
+        }
+    }
+
+    [Fact]
+    public async Task Clear_ShouldUnsubscribeViewModelPropertyChange()
+    {
+        TestViewModel testViewModel = new();
+
+        ContainerRuntime parentContainer = new();
+        parentContainer.BindingContext = testViewModel;
+
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+
+        for (int i = 0; i < 10; i++)
+        {
+            ContainerRuntime child = new();
+            parentContainer.AddChild(child);
+
+            ContainerRuntime grandChild = new();
+            child.AddChild(grandChild);
+        }
+
+        testViewModel.GetPropertyChangeCount().ShouldBe(1 + 10*2);
+
+        parentContainer.Children!.Clear();
+
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task BindingContext_ReAssignments_ShouldClearOldSubscriptions()
+    {
+        TestViewModel testViewModel = new();
+        ContainerRuntime parentContainer = new();
+        parentContainer.BindingContext = testViewModel;
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+        for (int i = 0; i < 10; i++)
+        {
+            ContainerRuntime child = new();
+            parentContainer.AddChild(child);
+            ContainerRuntime grandChild = new();
+            child.AddChild(grandChild);
+        }
+        testViewModel.GetPropertyChangeCount().ShouldBe(1 + 10 * 2);
+
+        TestViewModel secondViewModel = new TestViewModel();
+        parentContainer.BindingContext = secondViewModel;
+        
+        testViewModel.GetPropertyChangeCount().ShouldBe(0);
+        secondViewModel.GetPropertyChangeCount().ShouldBe(1 + 10*2);
+
+        parentContainer.BindingContext = null;
+
+        secondViewModel.GetPropertyChangeCount().ShouldBe(0);
     }
 
     class TestViewModel : ViewModel

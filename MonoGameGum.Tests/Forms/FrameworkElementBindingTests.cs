@@ -670,7 +670,7 @@ public class FrameworkElementBindingTests : BaseTestClass
     }
 
     [Fact]
-    public async Task ReplaceBindingContext_UnrelatedTypes()
+    public void ReplaceBindingContext_UnrelatedTypes()
     {
         // Arrange
         const string expectedText = nameof(AuxTestViewModel);

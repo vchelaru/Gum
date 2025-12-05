@@ -24,8 +24,6 @@ partial class StardewInventoryScreen : IUpdateScreen
 
     ItemIcon _grabbedIcon;
 
-    int? inventoryIndexGrabbed = null;
-
     partial void CustomInitialize()
     {
         _inventoryService = Game1.ServiceContainer.GetService<InventoryService>();
@@ -65,6 +63,30 @@ partial class StardewInventoryScreen : IUpdateScreen
         }
     }
 
+    private void HandleInventoryItemPushed(object? sender, EventArgs e)
+    {
+        var visualPushed = sender as InteractiveGue;
+        var itemSlotPushed = visualPushed?.FormsControlAsObject as ItemSlot;
+
+        if (itemSlotPushed != null)
+        {
+            var index = GetItemSlotIndex(itemSlotPushed);
+
+            if(index >= 0 && index < _inventoryService.PlayerInventory.Length)
+            {
+                var item = _inventoryService.PlayerInventory[index];
+                if(item != null)
+                {
+                    itemSlotPushed.ItemIconInstance.IsVisible = false;
+                    _grabbedIcon.IsVisible = true;
+                    _grabbedIcon.TextureLeft = itemSlotPushed.ItemIconInstance.TextureLeft;
+                    _grabbedIcon.TextureTop = itemSlotPushed.ItemIconInstance.TextureTop;
+                }
+            }
+
+        }
+    }
+
     private void HandleInventoryItemRemovedAsPushed(object? sender, EventArgs e)
     {
         var visualPushed = sender as InteractiveGue;
@@ -84,8 +106,8 @@ partial class StardewInventoryScreen : IUpdateScreen
             {
                 var oldInventoryType = itemSlotPushed.Visual.Tag as string;
                 var newInventoryType = itemSlotDropped.Visual.Tag as string;
-                var oldIndex = InventoryGridInstance.MainGrid.Children.IndexOf(itemSlotPushed);
-                var newIndex = InventoryGridInstance.MainGrid.Children.IndexOf(itemSlotDropped);
+                var oldIndex = GetItemSlotIndex(itemSlotPushed);
+                var newIndex = GetItemSlotIndex(itemSlotDropped);
 
                 // swap them in the inventory:
                 var inventory = _inventoryService.PlayerInventory;
@@ -96,21 +118,11 @@ partial class StardewInventoryScreen : IUpdateScreen
             }
         }
         UpdateToInventory();
-
     }
 
-    private void HandleInventoryItemPushed(object? sender, EventArgs e)
+    int GetItemSlotIndex(ItemSlot itemSlot)
     {
-        var visualPushed = sender as InteractiveGue;
-        var itemSlotPushed = visualPushed?.FormsControlAsObject as ItemSlot;
-
-        if (itemSlotPushed != null)
-        {
-            itemSlotPushed.ItemIconInstance.IsVisible = false;
-            _grabbedIcon.IsVisible = true;
-            _grabbedIcon.TextureLeft = itemSlotPushed.ItemIconInstance.TextureLeft;
-            _grabbedIcon.TextureTop = itemSlotPushed.ItemIconInstance.TextureTop;
-        }
+        return InventoryGridInstance.MainGrid.Children.IndexOf(itemSlot);
     }
 
     private void InitializePlayerInventory()
@@ -149,7 +161,7 @@ partial class StardewInventoryScreen : IUpdateScreen
             }
             else
             {
-                var definition = _inventoryService.InventoryItems[item];
+                var definition = _inventoryService.InventoryItemDefinitions[item];
                 itemSlot.ItemIconInstance.IsVisible = true;
                 itemSlot.ItemIconInstance.TextureLeft = definition.PixelLeft;
                 itemSlot.ItemIconInstance.TextureTop = definition.PixelTop;

@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Windows.Forms;
+using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 {
@@ -41,11 +42,13 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
             foreach (var item in recentFiles.Where(item => item.IsFavorite))
             {
-                var name = item.FilePath.RemoveExtension().FileNameNoPath;
+                var filePath = item.FilePath;
+                string name = GetDisplayedNameForGumxFilePath(filePath);
+
                 recentFilesMenuItem.DropDownItems.Add(
                     name,
-                    null, 
-                    (not, used) => _fileCommands.LoadProject(item.FilePath.FullPath));
+                    null,
+                    (not, used) => _fileCommands.LoadProject(filePath.FullPath));
             }
 
             var nonFavorites = recentFiles.Where(item => !item.IsFavorite).ToArray();
@@ -58,18 +61,53 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
                 foreach (var item in nonFavorites.Take(5))
                 {
-                    var name = item.FilePath.RemoveExtension().FileNameNoPath;
+                    var filePath = item.FilePath;
+
+                    string name = GetDisplayedNameForGumxFilePath(filePath);
 
                     recentFilesMenuItem.DropDownItems.Add(
                         name, 
                         null, 
-                        (not, used) => _fileCommands.LoadProject(item.FilePath.FullPath));
+                        (not, used) => _fileCommands.LoadProject(filePath.FullPath));
                 }
 
 
             }
 
             recentFilesMenuItem.DropDownItems.Add("More...", null, HandleLoadRecentClicked);
+        }
+
+        private static string GetDisplayedNameForGumxFilePath(FilePath filePath)
+        {
+            var name = filePath.RemoveExtension().FileNameNoPath;
+
+            // It's common to have lots of same-named projects so let's see if this is in a csproj somewhere:
+            var parentDirectory = filePath.GetDirectoryContainingThis();
+            if (parentDirectory != null)
+            {
+                string? foundCsproj = null;
+                while (parentDirectory?.Exists() == true)
+                {
+                    foundCsproj = System.IO.Directory.GetFiles(parentDirectory.FullPath, "*.csproj").FirstOrDefault();
+
+                    if (foundCsproj == null)
+                    {
+                        parentDirectory = parentDirectory.GetDirectoryContainingThis();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(foundCsproj))
+                {
+                    var fullPath = new FilePath(foundCsproj);
+                    name += $" ({fullPath.FileNameNoPath})";
+                }
+            }
+
+            return name;
         }
 
         private async void HandleLoadRecentClicked(object sender, EventArgs e)

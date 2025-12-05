@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGenProject.Components.Controls;
-partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
+partial class KeyboardKey : global::Gum.Forms.Controls.Button
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/KeyboardKey");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/KeyboardKey - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new KeyboardKey(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(KeyboardKey)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(KeyboardKey)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/KeyboardKey", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -72,7 +75,7 @@ partial class KeyboardKey : global::MonoGameGum.Forms.Controls.Button
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string Text
+    public override string Text
     {
         get => TextInstance.Text;
         set => TextInstance.Text = value;

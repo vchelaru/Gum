@@ -12,7 +12,7 @@ Max Letters To Show limits the number of characters (including spaces). By defau
 
 For example, by default a Text object displays all of its letters. Note that the Width is fixed, and the Height depends on the contained text - the Height is automatically set on the Text object according to the contents of the text.
 
-![](../../../.gitbook/assets/NoMaxLettersToShow.png)
+![](<../../../.gitbook/assets/NoMaxLettersToShow (1).png>)
 
 Setting Max Letters To Show value to 30 restricts the Text object to displaying its first 30 characters, but the size and line wrapping do not change.
 

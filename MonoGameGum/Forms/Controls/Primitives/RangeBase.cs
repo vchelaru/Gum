@@ -32,7 +32,7 @@ public abstract class RangeBase :
 #if RAYLIB || FRB
     FrameworkElement
 #else
-    MonoGameGum.Forms.Controls.FrameworkElement
+    Gum.Forms.Controls.FrameworkElement
 #endif
 {
     #region Fields/Properties
@@ -64,7 +64,7 @@ public abstract class RangeBase :
 
     /// <summary>
     /// The amount to change Value when the user presses the up or down buttons on a scrollbar, 
-    /// per mouse wheel tick on a scrollbar, and the amount to change the value in response
+    /// per mouse wheel tick on a scrollbar, or the amount to change the value in response
     /// to left/right presses on gamepad or keyboard on a Slider.
     /// </summary>
     public double SmallChange { get; set; }
@@ -117,7 +117,7 @@ public abstract class RangeBase :
         get => value;
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (double.IsNaN(value))
             {
                 throw new InvalidOperationException("Can't set the ScrollBar Value to NaN");
@@ -183,10 +183,21 @@ public abstract class RangeBase :
     /// </summary>
     public bool IsMoveToPointEnabled { get; set; }
 
-    // this is used for clicking on the thumb. Eventually this may be
-    // assignable in the future, but for now we're just adding a get so
-    // that ScrollBar can overwrite it.
-    public virtual Orientation Orientation => Orientation.Horizontal;
+    Orientation _orientation = Orientation.Horizontal;
+
+    public virtual Orientation Orientation
+    {
+        get => _orientation;
+        set
+        {
+            if (_orientation != value)
+            {
+                _orientation = value;
+
+                OrientationChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
 
     #endregion
 
@@ -219,6 +230,11 @@ public abstract class RangeBase :
     /// </summary>
     public event EventHandler ValueChangedByUi;
 
+    /// <summary>
+    /// Event raised when the Orientation property is changed.
+    /// </summary>
+    public event EventHandler OrientationChanged;
+
     #endregion
 
     #region Initialize
@@ -235,8 +251,8 @@ public abstract class RangeBase :
             this.Visual.GetGraphicalUiElementByName("ThumbInstance");
         var thumbVisual = thumbInstanceUncasted as InteractiveGue;
 
-#if DEBUG
-        if(thumbInstanceUncasted != null && thumbVisual == null)
+#if FULL_DIAGNOSTICS
+        if (thumbInstanceUncasted != null && thumbVisual == null)
         {
             throw new InvalidOperationException(
                 $"The {this.GetType()} contains a visual {thumbInstanceUncasted} which is not an InteractiveGue. " +
@@ -314,7 +330,7 @@ public abstract class RangeBase :
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
 #if MONOGAME && !FRB
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
         if (trackLocal == null)
         {
             throw new Exception($"Could not find a child named TrackInstance when creating a {this.GetType()}");

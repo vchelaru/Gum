@@ -7,28 +7,31 @@ using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using CommunityToolkit.Mvvm.Messaging;
-using ExCSS;
+using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.ToolCommands;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Themes;
 
 namespace Gum.Managers
 {
-    public class MenuStripManager : IRecipient<UiScalingChangedMessage>
+    public class MenuStripManager : IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
     {
         #region Fields
 
         private readonly IGuiCommands _guiCommands;
         private readonly ISelectedState _selectedState;
         private readonly IUndoManager _undoManager;
-        private readonly EditCommands _editCommands;
+        private readonly IEditCommands _editCommands;
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
         private readonly ProjectCommands _projectCommands;
+        private readonly IMessenger _messenger;
 
         private MenuStrip _menuStrip;
 
@@ -41,7 +44,7 @@ namespace Gum.Managers
         private ToolStripMenuItem contentToolStripMenuItem;
 
         private ToolStripMenuItem helpToolStripMenuItem;
-        
+
         private ToolStripMenuItem RemoveStateMenuItem;
         private ToolStripMenuItem RemoveElementMenuItem;
         private ToolStripMenuItem RemoveVariableMenuItem;
@@ -52,6 +55,8 @@ namespace Gum.Managers
         private ToolStripMenuItem findFileReferencesToolStripMenuItem;
         private ToolStripMenuItem pluginsToolStripMenuItem;
         private ToolStripMenuItem managePluginsToolStripMenuItem;
+        private ToolStripMenuItem undoMenuItem;
+        private ToolStripMenuItem redoMenuItem;
 
 
         #endregion
@@ -59,7 +64,7 @@ namespace Gum.Managers
         public MenuStripManager(IGuiCommands guiCommands,
             ISelectedState selectedState,
             IUndoManager undoManager,
-            EditCommands editCommands,
+            IEditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
             ProjectCommands projectCommands,
@@ -72,6 +77,7 @@ namespace Gum.Managers
             _dialogService = dialogService;
             _fileCommands = fileCommands;
             _projectCommands = projectCommands;
+            _messenger = messenger;
             messenger.RegisterAll(this);
         }
 
@@ -84,7 +90,7 @@ namespace Gum.Managers
             {
                 var tsmi = new ToolStripMenuItem();
                 tsmi.Text = text;
-                if(clickEvent != null)
+                if (clickEvent != null)
                 {
                     tsmi.Click += (not, used) => clickEvent();
                 }
@@ -113,14 +119,17 @@ namespace Gum.Managers
 
             this.editToolStripMenuItem = new ToolStripMenuItem();
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
 
-            var undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
+            undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
             undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+            undoMenuItem.Enabled = false;
 
-            var redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
+            redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
             redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
+            redoMenuItem.Enabled = false;
+
+            _undoManager.UndosChanged += (_, __) => UpdateUndoRedoEnabled();
 
             AddSeparator(editToolStripMenuItem);
 
@@ -146,7 +155,6 @@ namespace Gum.Managers
             // RemoveElementMenuItem
             // 
             this.RemoveElementMenuItem.Name = "RemoveElementMenuItem";
-            this.RemoveElementMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveElementMenuItem.Text = "Element";
             this.RemoveElementMenuItem.Click += RemoveElementClicked;
 
@@ -154,7 +162,6 @@ namespace Gum.Managers
             // RemoveStateMenuItem
             // 
             this.RemoveStateMenuItem.Name = "RemoveStateMenuItem";
-            this.RemoveStateMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveStateMenuItem.Text = "State";
             this.RemoveStateMenuItem.Click += RemoveStateOrCategoryClicked;
 
@@ -162,7 +169,6 @@ namespace Gum.Managers
             // RemoveVariableMenuItem
             // 
             this.RemoveVariableMenuItem.Name = "RemoveVariableMenuItem";
-            this.RemoveVariableMenuItem.Size = new System.Drawing.Size(117, 22);
             this.RemoveVariableMenuItem.Text = "Variable";
             this.RemoveVariableMenuItem.Click += HanldeRemoveBehaviorVariableClicked;
 
@@ -185,26 +191,23 @@ namespace Gum.Managers
             this.pluginsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.managePluginsToolStripMenuItem});
             this.pluginsToolStripMenuItem.Name = "pluginsToolStripMenuItem";
-            this.pluginsToolStripMenuItem.Size = new System.Drawing.Size(58, 20);
             this.pluginsToolStripMenuItem.Text = "Plugins";
             // 
             // managePluginsToolStripMenuItem
             // 
             this.managePluginsToolStripMenuItem.Name = "managePluginsToolStripMenuItem";
-            this.managePluginsToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
             this.managePluginsToolStripMenuItem.Text = "Manage Plugins";
             this.managePluginsToolStripMenuItem.Click += (not, used) =>
             {
                 PluginsWindow pluginsWindow = new PluginsWindow();
                 pluginsWindow.Show();
             };
-            
+
 
             // 
             // findFileReferencesToolStripMenuItem
             // 
             this.findFileReferencesToolStripMenuItem.Name = "findFileReferencesToolStripMenuItem";
-            this.findFileReferencesToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.findFileReferencesToolStripMenuItem.Text = "Find file references...";
             this.findFileReferencesToolStripMenuItem.Click += (not, used) =>
             {
@@ -232,7 +235,7 @@ namespace Gum.Managers
                 }
 
             };
-            
+
 
             // 
             // contentToolStripMenuItem
@@ -240,14 +243,12 @@ namespace Gum.Managers
             this.contentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.findFileReferencesToolStripMenuItem});
             this.contentToolStripMenuItem.Name = "contentToolStripMenuItem";
-            this.contentToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
             this.contentToolStripMenuItem.Text = "Content";
 
             // 
             // saveAllToolStripMenuItem
             // 
             this.saveAllToolStripMenuItem.Name = "saveAllToolStripMenuItem";
-            this.saveAllToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.saveAllToolStripMenuItem.Text = "Save All";
             this.saveAllToolStripMenuItem.Click += (not, used) =>
             {
@@ -266,13 +267,11 @@ namespace Gum.Managers
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
             this.aboutToolStripMenuItem.Click += (not, used) => _dialogService.ShowMessage("Gum version " + Application.ProductVersion, "About");
 
             string documentationLink = "https://docs.flatredball.com/gum";
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
-            this.documentationToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.documentationToolStripMenuItem.Text = $"View Docs ({documentationLink})";
             this.documentationToolStripMenuItem.ToolTipText = "External link to Gum documentation";
             this.documentationToolStripMenuItem.Click += (not, used) =>
@@ -304,7 +303,6 @@ namespace Gum.Managers
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
                 this.aboutToolStripMenuItem, this.documentationToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
 
 
@@ -325,19 +323,24 @@ namespace Gum.Managers
                 }
             });
 
+            Add(fileToolStripMenuItem, "Theming", () =>
+            {
+                Locator.GetRequiredService<IDialogService>().Show<ThemingDialogViewModel>();
+            });
+
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            
+
             this.saveAllToolStripMenuItem,
             this.newProjectToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
 
 
             this._menuStrip = new System.Windows.Forms.MenuStrip();
+            this._menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
 
             // 
             // menuStrip1
@@ -351,12 +354,20 @@ namespace Gum.Managers
                 this.helpToolStripMenuItem});
             this._menuStrip.Location = new System.Drawing.Point(0, 0);
             this._menuStrip.Name = "menuStrip1";
-            this._menuStrip.Size = new System.Drawing.Size(1076, 24);
             this._menuStrip.TabIndex = 0;
             this._menuStrip.Text = "menuStrip1";
-            
+
+
+
             RefreshUI();
+            _menuStrip.Font = new Font("Segoe UI", DefaultFontSize);
             return this._menuStrip;
+        }
+
+        private void UpdateUndoRedoEnabled()
+        {
+            if (undoMenuItem != null) undoMenuItem.Enabled = _undoManager.CanUndo();
+            if (redoMenuItem != null) redoMenuItem.Enabled = _undoManager.CanRedo();
         }
 
         private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
@@ -395,7 +406,7 @@ namespace Gum.Managers
                 RemoveElementMenuItem.Enabled = false;
             }
 
-            if(_selectedState.SelectedBehaviorVariable != null)
+            if (_selectedState.SelectedBehaviorVariable != null)
             {
                 RemoveVariableMenuItem.Text = _selectedState.SelectedBehaviorVariable.ToString();
                 RemoveVariableMenuItem.Enabled = true;
@@ -429,17 +440,18 @@ namespace Gum.Managers
             }
         }
 
-        const int DefaultFontSize = 11;
+        const int DefaultFontSize = 9;
 
-        
-        void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
-        {            
-            var fontSize = DefaultFontSize * (float)message.Scale;
 
-            _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily,
-                fontSize * 0.75f);
+        void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
+        {
+            float fontSize = (DefaultFontSize / 12f) * (float)message.Size;
+
+            _menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out fontSize, "Frb.Colors.Background");
+            _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily, fontSize);
+            _menuStrip.Invalidate();
         }
-        
+
         public ToolStripMenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
         {
             string menuName = menuAndSubmenus.Last();
@@ -450,7 +462,7 @@ namespace Gum.Managers
 
             var menuToAddTo =
                 _menuStrip.Items.Cast<ToolStripMenuItem>().FirstOrDefault(
-                    item=>item.Text == menuNameToAddTo);
+                    item => item.Text == menuNameToAddTo);
             //true);
 
             if (menuToAddTo == null)
@@ -469,7 +481,7 @@ namespace Gum.Managers
             return menuItem;
 
         }
-    
+
         public ToolStripMenuItem GetItem(string name)
         {
             foreach (ToolStripMenuItem item in _menuStrip.Items)
@@ -480,6 +492,12 @@ namespace Gum.Managers
                 }
             }
             return null;
+        }
+
+        void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+        {
+            _menuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
+            _menuStrip.Invalidate();
         }
     }
 }

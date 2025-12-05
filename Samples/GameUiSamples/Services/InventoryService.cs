@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 namespace GameUiSamples.Services;
 public class InventoryService
 {
-    Dictionary<string, InventoryItemDefinition> _inventoryItems = new ();
-    public IReadOnlyDictionary<string, InventoryItemDefinition> InventoryItems => _inventoryItems;
+    Dictionary<string, InventoryItemDefinition> _inventoryItemDefinitions = new ();
+    public IReadOnlyDictionary<string, InventoryItemDefinition> InventoryItemDefinitions => _inventoryItemDefinitions;
 
     // For now assume only 1 item in inventory. This could eventually support a count too
     public string?[] PlayerInventory { get; private set; } = new string?[36];
 
     public InventoryService()
     {
-        _inventoryItems = new ()
+        _inventoryItemDefinitions = new ()
         {
             {"Key", new InventoryItemDefinition { Name = "Key", PixelLeft = 0*16, PixelTop = 0*16 } },
             {"CopperBar", new InventoryItemDefinition { Name = "CopperBar", PixelLeft = 1*16, PixelTop = 1*16 } },

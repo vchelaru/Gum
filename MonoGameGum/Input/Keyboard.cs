@@ -28,6 +28,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 {
     #region Fields/Properties
 
+    HashSet<char> ignoredWindowTextInputCharacters;
     KeyboardStateProcessor keyboardStateProcessor = new KeyboardStateProcessor();
 
     bool[] mKeysTyped;
@@ -82,6 +83,17 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 
     public Keyboard(Game? game = null)
     {
+
+        // characters 1 - 26 are CTRL+letter characters
+        // for example CTRL+A is 1, CTRL+B is 2, etc.
+        // 27, 28, and 29 are also ignored, these are ctrl and
+        // [, ], and \
+        ignoredWindowTextInputCharacters = new HashSet<char>();
+        for (int i = 0; i <= 29; i++)
+        {
+            ignoredWindowTextInputCharacters.Add((char)i);
+        }
+
         mKeysTyped = new bool[NumberOfKeys];
         mLastTimeKeyTyped = new double[NumberOfKeys];
         mLastTypedFromPush = new bool[NumberOfKeys];
@@ -132,12 +144,22 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     StringBuilder windowTextInputBuffer;
     string processedStringFromWindow;
 
+
 #if !FNA
     private void HandleWindowTextInput(object? sender, TextInputEventArgs e)
     {
         lock(windowTextInputBuffer)
         {
-            windowTextInputBuffer.Append(e.Character);
+            // In DirectX environments, which use Windows Forms, certain characters
+            // are returned for certain hotkey combinations like '\u0001' for CTRL+A.
+            // We need to ignore these:
+
+            //System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
+            if(ignoredWindowTextInputCharacters.Contains(e.Character) == false)
+            {
+                windowTextInputBuffer.Append(e.Character);
+            }
+
         }
     }
 #endif
@@ -191,7 +213,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             bool isSTAThreadUsed =
                 System.Threading.Thread.CurrentThread.GetApartmentState() == System.Threading.ApartmentState.STA;
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
             if (!isSTAThreadUsed)
             {
                 throw new InvalidOperationException("Need to set [STAThread] on Main to support copy/paste");

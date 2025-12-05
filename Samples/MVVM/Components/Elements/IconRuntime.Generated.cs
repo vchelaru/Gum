@@ -1,5 +1,8 @@
 //Code for Elements/Icon (Container)
 using GumRuntime;
+using System.Linq;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -10,7 +13,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class IconRuntime:ContainerRuntime
+partial class IconRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
@@ -92,21 +95,27 @@ public partial class IconRuntime:ContainerRuntime
         Wrench,
     }
 
-    public IconCategory IconCategoryState
+    IconCategory? _iconCategoryState;
+    public IconCategory? IconCategoryState
     {
+        get => _iconCategoryState;
         set
         {
-            if(Categories.ContainsKey("IconCategory"))
+            _iconCategoryState = value;
+            if(value != null)
             {
-                var category = Categories["IconCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
-            }
-            else
-            {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "IconCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                if(Categories.ContainsKey("IconCategory"))
+                {
+                    var category = Categories["IconCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "IconCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
             }
         }
     }
@@ -130,7 +139,7 @@ public partial class IconRuntime:ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        IconSprite = this.GetGraphicalUiElementByName("IconSprite") as SpriteRuntime;
+        IconSprite = this.GetGraphicalUiElementByName("IconSprite") as global::MonoGameGum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -111,4 +111,8 @@ public class ContainerRuntime : InteractiveGue
 
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
+    public virtual string BatchKey => Children?.LastOrDefault()?.BatchKey ?? string.Empty;
+
+    public virtual void StartBatch(ISystemManagers systemManagers) => Children?.FirstOrDefault()?.StartBatch(systemManagers);
+    public virtual void EndBatch(ISystemManagers systemManagers) => Children?.FirstOrDefault()?.EndBatch(systemManagers);
 }

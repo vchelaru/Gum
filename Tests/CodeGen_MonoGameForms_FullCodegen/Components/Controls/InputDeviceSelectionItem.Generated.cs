@@ -15,20 +15,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkElement
+partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelectionItem");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelectionItem - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new InputDeviceSelectionItem(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(InputDeviceSelectionItem)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(InputDeviceSelectionItem)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/InputDeviceSelectionItem", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -92,7 +95,6 @@ partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkEle
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
@@ -107,6 +109,7 @@ partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkEle
         TextInstance.Name = "TextInstance";
         RemoveDeviceButtonInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonClose();
         RemoveDeviceButtonInstance.Name = "RemoveDeviceButtonInstance";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -132,11 +135,11 @@ partial class InputDeviceSelectionItem : MonoGameGum.Forms.Controls.FrameworkEle
         this.TextInstance.SetProperty("StyleCategoryState", "H2");
         this.TextInstance.Height = -43f;
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         this.TextInstance.Text = @"Input Device Name Here With 3 Lines";
-        this.TextInstance.TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
+        ((TextRuntime)this.TextInstance).TextOverflowHorizontalMode = global::RenderingLibrary.Graphics.TextOverflowHorizontalMode.EllipsisLetter;
         this.TextInstance.TextOverflowVerticalMode = global::RenderingLibrary.Graphics.TextOverflowVerticalMode.TruncateLine;
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.TextInstance.Width = 0f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TextInstance.X = 0f;

@@ -22,7 +22,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
     public object Tag { get; set; }
 
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -116,7 +116,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
 
     public LottieAnimation()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
         Loops = true;
         TimeAnimationStarted = DateTime.Now;
     }
@@ -169,6 +169,14 @@ internal class LottieAnimation : IRenderableIpso, IVisible
             Animation.Render(canvas, boundingRect);
         }
     }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
 #else
     public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
     {
@@ -215,5 +223,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
         }
     }
 
-#endregion
+    public string BatchKey => string.Empty;
+
+    #endregion
 }

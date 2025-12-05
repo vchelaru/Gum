@@ -35,7 +35,7 @@ Custom variables can be removed by right-clicking on the variable and selecting 
 
 Existing custom variables can be edited by right-clicking on the variable and selecting the Edit Variable item.
 
-<figure><img src="../../.gitbook/assets/RightClick2.png" alt=""><figcaption><p>Edit Variable right-click item</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/RightClick1 (1).png" alt=""><figcaption><p>Edit Variable right-click item</p></figcaption></figure>
 
 Custom variable names and types can be changed.
 

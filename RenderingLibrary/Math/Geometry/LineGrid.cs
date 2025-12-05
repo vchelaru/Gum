@@ -6,7 +6,7 @@ using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class LineGrid : IRenderableIpso
+    public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     {
         #region Fields
 
@@ -124,7 +124,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             get;
             private set;
-        } = new ObservableCollection<IRenderableIpso>();
+        } = new ObservableCollectionNoReset<IRenderableIpso>();
 
         BlendState IRenderable.BlendState
         {
@@ -254,7 +254,6 @@ namespace RenderingLibrary.Math.Geometry
 
         bool IRenderableIpso.IsRenderTarget => false;
 
-
         #endregion
 
 
@@ -306,9 +305,10 @@ namespace RenderingLibrary.Math.Geometry
         void IRenderable.PreRender() { }
 
 
-        public void Render(ISystemManagers managers)
+        public override void Render(ISystemManagers managers)
         {
-            if (Visible)
+            // See NineSlice for explanation of this Visible check
+            //if (Visible)
             {
                 var systemManagers = managers as SystemManagers;
                 mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers);

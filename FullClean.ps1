@@ -11,6 +11,6 @@ dotnet clean .\SkiaGum.sln -c Release
 dotnet clean .\SkiaGum.sln -c Debug
 
 # Recursively find and delete all bin and obj folders
-Get-ChildItem -Path . -Include bin,obj -Recurse -Directory -Force | ForEach-Object {
+Get-ChildItem -Path . -Include bin,obj,objNetFramework -Recurse -Directory -Force | ForEach-Object {
     Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
 }

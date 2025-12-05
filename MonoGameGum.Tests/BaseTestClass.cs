@@ -10,7 +10,7 @@ using MonoGameGum.Input;
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
 {
-    public void Dispose()
+    public virtual void Dispose()
     {
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();
@@ -47,9 +47,12 @@ public class BaseTestClass : IDisposable
         FrameworkElement.MainCursor = new Cursor();
 
         InteractiveGue.CurrentInputReceiver = null;
+        InteractiveGue.ClearNextClickActions();
 
-        GumService.Default.Root.Children.Clear();
-        GumService.Default.ModalRoot.Children.Clear();
-        GumService.Default.PopupRoot.Children.Clear();
+        GumService.Default.Root.Children!.Clear();
+        GumService.Default.ModalRoot.Children!.Clear();
+        GumService.Default.PopupRoot.Children!.Clear();
+
+        CustomSetPropertyOnRenderable.LocalizationService = null;
     }
 }

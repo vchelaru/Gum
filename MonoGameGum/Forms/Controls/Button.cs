@@ -22,26 +22,26 @@ public class Button : ButtonBase
 
     #region Fields/Properties
 
-    GraphicalUiElement textComponent;
+    GraphicalUiElement? textComponent;
 
-    global::RenderingLibrary.Graphics.IText coreTextObject;
+    global::RenderingLibrary.Graphics.IText? coreTextObject;
 
     /// <summary>
     /// Text displayed by the button. This property requires that the TextInstance instance be present in the Gum component.
     /// If the TextInstance instance is not present, an exception will be thrown in DEBUG mode
     /// </summary>
-    public string Text
+    public virtual string? Text
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
-            return coreTextObject.RawText;
+            return coreTextObject?.RawText;
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             // go through the component instead of the core text object to force a layout refresh if necessary
@@ -87,14 +87,15 @@ public class Button : ButtonBase
 
     #region Utilities
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
     private void ReportMissingTextInstance()
     {
         if (textComponent == null)
         {
             throw new Exception(
                 $"This button was created with a Gum component ({Visual?.ElementSave}) " +
-                "that does not have an instance called 'TextInstance'. A 'TextInstance' instance must be added to modify the button's Text property.");
+                "that does not have an instance called 'TextInstance'. " +
+                "A 'TextInstance' instance must be added to modify the button's Text property.");
         }
     }
 #endif

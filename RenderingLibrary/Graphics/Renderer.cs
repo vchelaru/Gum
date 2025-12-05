@@ -102,7 +102,7 @@ public class Renderer : IRenderer
     {
         get
         {
-#if DEBUG && !TEST
+#if FULL_DIAGNOSTICS && !TEST
             // This should always be available
             if (mSinglePixelTexture == null)
             {
@@ -135,7 +135,7 @@ public class Renderer : IRenderer
     {
         get
         {
-#if DEBUG && !TEST
+#if FULL_DIAGNOSTICS && !TEST
             // This should always be available
             if (mDottedLineTexture == null)
             {
@@ -207,6 +207,12 @@ public class Renderer : IRenderer
         set;
     } = BlendState.NonPremultiplied;
 
+    public bool IsUsingPremultipliedAlpha
+    {
+        get; set;
+    }
+    = false;
+
     /// <summary>
     /// Use the custom effect for rendering. This setting takes priority if 
     /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
@@ -246,7 +252,7 @@ public class Renderer : IRenderer
 
     public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
 
-    #endregion
+#endregion
 
     public Renderer()
     {
@@ -254,8 +260,6 @@ public class Renderer : IRenderer
         mCamera = new RenderingLibrary.Camera();
 
     }
-
-    #region Methods
 
     public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
     {
@@ -306,6 +310,8 @@ public class Renderer : IRenderer
         }
     }
 
+    #region Add/Remove Layers
+
     public Layer AddLayer()
     {
         Layer layer = new Layer();
@@ -314,6 +320,10 @@ public class Renderer : IRenderer
     }
 
     public void AddLayer(Layer layer) => _layers.Add(layer);
+
+    public void InsertLayer(int index, Layer layer) => _layers.Insert(index, layer);
+
+    public void RemoveLayer(Layer layer) => _layers.Remove(layer);
 
 
     //public void AddLayer(SortableLayer sortableLayer, Layer masterLayer)
@@ -325,6 +335,8 @@ public class Renderer : IRenderer
 
     //    masterLayer.Add(sortableLayer);
     //}
+
+    #endregion
 
     public void Draw(SystemManagers managers)
     {
@@ -356,17 +368,29 @@ public class Renderer : IRenderer
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;
             mRenderStateVariables.Wrap = false;
 
-            // todo - need to handle more advanced filtering here, but for now let's hook
-            // in to linear to make it work:
-            mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
-
-            if(layer.IsLinearFilteringEnabled != null)
+            if (layer.IsLinearFilteringEnabled != null)
             {
                 mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
-
+            }
+            else
+            {
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
             }
 
-            RenderLayer(managers, layer);
+            PreRender(layer.Renderables);
+
+            PreRenderWithSourceRenderTargets(layer.Renderables);
+
+            if (layer.IsLinearFilteringEnabled != null)
+            {
+                mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
+            }
+            else
+            {
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+            }
+
+            RenderLayer(managers, layer, prerender:false);
 
             if (oldSampler != null)
             {
@@ -404,6 +428,8 @@ public class Renderer : IRenderer
                     mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
                 }
                 PreRender(layer.Renderables);
+
+                PreRenderWithSourceRenderTargets(layer.Renderables);
             }
 
             for (int i = 0; i < layers.Count; i++)
@@ -426,6 +452,8 @@ public class Renderer : IRenderer
     {
         RenderLayer(managers as SystemManagers, layer, prerender);
     }
+    
+
 
     internal void RenderLayer(SystemManagers managers, Layer layer, bool prerender = true)
     {
@@ -439,6 +467,8 @@ public class Renderer : IRenderer
         if (prerender)
         {
             PreRender(layer.Renderables);
+
+            PreRenderWithSourceRenderTargets(layer.Renderables);
         }
 
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
@@ -447,9 +477,15 @@ public class Renderer : IRenderer
 
         layer.SortRenderables();
 
-        Render(layer.Renderables, managers, layer);
+        Render(layer.Renderables, managers, layer, prerender);
 
+        lastBatchOwner?.EndBatch(managers);
+        lastBatchOwner = null;
+        currentBatchKey = string.Empty;
+
+#if !NET8_0_OR_GREATER
         spriteRenderer.EndSpriteBatch();
+#endif
     }
 
 
@@ -464,7 +500,7 @@ public class Renderer : IRenderer
 
     public void Draw(IRenderableIpso renderable)
     {
-        Draw(SystemManagers.Default, _layers[0], renderable);
+        Draw(SystemManagers.Default, _layers[0], renderable, forceRenderHierarchy:false, isPreRender:false);
     }
 
     public void End()
@@ -477,25 +513,32 @@ public class Renderer : IRenderer
 
     private void PreRender(IList<IRenderableIpso> renderables)
     {
-#if DEBUG
-        if(renderables == null)
+#if FULL_DIAGNOSTICS
+        if (renderables == null)
         {
             throw new ArgumentNullException("renderables");
         }
 #endif
 
         var count = renderables.Count;
-        for(int i = 0; i < count; i++)
+        if(count== 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
         {
             var renderable = renderables[i];
-            if(renderable.Visible)
+            if(renderable.Visible || 
+                // If it's a render target, then we want to render it fully:
+                renderable.IsRenderTarget)
             {
 
                 renderable.PreRender();
 
                 // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
                 // yet been assigned a visual. Just skip over it...
-                if(renderable.Visible && renderable.Children != null)
+                if((renderable.Visible || renderable.IsRenderTarget) && renderable.Children != null)
                 {
                     PreRender(renderable.Children);
                 }
@@ -507,7 +550,35 @@ public class Renderer : IRenderer
         }
     }
 
+    private void PreRenderWithSourceRenderTargets(IList<IRenderableIpso> renderables)
+    {
+        var count = renderables.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+
+        for (int i = 0; i < count; i++)
+        {
+            var renderable = renderables[i];
+            if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
+                textureReferencer.RenderTargetTextureSource != null)
+            {
+                textureReferencer.Texture = renderTargetService.GetExistingRenderTarget(
+                    textureReferencer.RenderTargetTextureSource);
+            }
+
+            if (renderable.Visible && renderable.Children != null)
+            {
+                PreRenderWithSourceRenderTargets(renderable.Children);
+            }
+        }
+    }
+
     GumBatch gumBatch;
+
+    bool hasSaved = false;
 
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
@@ -575,13 +646,23 @@ public class Renderer : IRenderer
 
             //gumBatch.Draw(renderable);
             //systemManagers.Renderer.Draw(renderable);
-            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
+            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true, isPreRender:true);
 
             gumBatch.End();
-
             GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
 
-
+#if DEBUG
+            if(!hasSaved)
+            {
+                hasSaved = true;
+                // Uncomment this to test saving...
+                //if (!System.IO.File.Exists("Output.png"))
+                //{
+                //    using var stream = System.IO.File.OpenWrite("Output.png");
+                //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+                //}
+            }
+#endif
 
             Camera.ClientWidth = oldCameraWidth;
             Camera.ClientHeight = oldCameraHeight;
@@ -601,22 +682,25 @@ public class Renderer : IRenderer
 
     }
 
-    private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
+    private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer, bool isPreRender)
     {
         var count = whatToRender.Count;
         for (int i = 0; i < count; i++)
         {
             var renderable = whatToRender[i];
-            Draw(managers, layer, renderable);
+            Draw(managers, layer, renderable, forceRenderHierarchy:false, isPreRender:isPreRender);
         }
     }
 
 
     Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
 
-    private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
+    string currentBatchKey = string.Empty;
+    IRenderable? lastBatchOwner;
+
+    private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy, bool isPreRender)
     {
-        if (renderable.Visible)
+        if (renderable.Visible || ( renderable.IsRenderTarget && isPreRender))
         {
             var oldClip = mRenderStateVariables.ClipRectangle;
             AdjustRenderStates(mRenderStateVariables, layer, renderable);
@@ -641,23 +725,44 @@ public class Renderer : IRenderer
                     renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
                     renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
 
+
                     Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
                 }
             }
             else
             {
+                if(!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != currentBatchKey)
+                {
+                    if(lastBatchOwner != null)
+                    {
+                        lastBatchOwner.EndBatch(managers);
+                    }
+
+                    currentBatchKey = renderable.BatchKey;
+                    lastBatchOwner = renderable;
+                    renderable.StartBatch(managers);
+                }
+
                 renderable.Render(managers);
 
 
                 if (RenderUsingHierarchy)
                 {
-                    Render(renderable.Children, managers, layer);
+                    Render(renderable.Children, managers, layer, isPreRender);
                 }
             }
 
             if (didClipChange)
             {
                 mRenderStateVariables.ClipRectangle = oldClip;
+
+                if (lastBatchOwner != null)
+                {
+                    lastBatchOwner.EndBatch(managers);
+                    lastBatchOwner = null;
+                    currentBatchKey = string.Empty;
+                }
+
                 spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
             }
         }
@@ -818,11 +923,6 @@ public class Renderer : IRenderer
     //    RemoveRenderable(sortableLayer);
     //}
 
-    public void RemoveLayer(Layer layer)
-    {
-        _layers.Remove(layer);
-    }
-
     public void ClearPerformanceRecordingVariables()
     {
         spriteRenderer.ClearPerformanceRecordingVariables();
@@ -838,7 +938,6 @@ public class Renderer : IRenderer
 
     }
 
-    #endregion
 
 }
 
@@ -869,6 +968,20 @@ class RenderTargetService
         }
 
         itemsUsingRenderTargetsThisFrame.Clear();
+    }
+
+    public RenderTarget2D GetExistingRenderTarget(IRenderableIpso renderable)
+    {
+        if(RenderTargets.ContainsKey(renderable))
+        {
+            var renderTarget = RenderTargets[renderable];
+            if(renderTarget.IsDisposed == false)
+            {
+                return RenderTargets[renderable];
+            }
+        }
+        
+        return null;
     }
 
     public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
@@ -969,7 +1082,7 @@ public class GumBatch
         }
 
         internalTextForRendering.BitmapFont = font;
-        internalTextForRendering.Width = 0;
+        internalTextForRendering.Width = null;
         internalTextForRendering.RawText = text;
         internalTextForRendering.X = position.X;
         internalTextForRendering.Y = position.Y;

@@ -42,9 +42,11 @@ public class StateTreeViewModel : ViewModel
     
     #region Initialize
 
-    public StateTreeViewModel(StateTreeViewRightClickService stateTreeViewRightClickService)
+    public StateTreeViewModel(
+        StateTreeViewRightClickService stateTreeViewRightClickService, 
+        ISelectedState selectedState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         _stateTreeViewRightClickService = stateTreeViewRightClickService;
         Categories = new ObservableCollection<CategoryViewModel>();
         States = new ObservableCollection<StateViewModel>();
@@ -52,7 +54,7 @@ public class StateTreeViewModel : ViewModel
         PropertyChanged += HandlePropertyChanged;
     }
 
-    private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
     }
 

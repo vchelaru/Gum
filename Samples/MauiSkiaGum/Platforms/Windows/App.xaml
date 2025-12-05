@@ -2,7 +2,5 @@
     x:Class="MauiSkiaGum.WinUI.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:maui="using:Microsoft.Maui"
-    xmlns:local="using:MauiSkiaGum.WinUI">
-
-</maui:MauiWinUIApplication>
+    xmlns:local="using:MauiSkiaGum.WinUI"
+    xmlns:maui="using:Microsoft.Maui" />

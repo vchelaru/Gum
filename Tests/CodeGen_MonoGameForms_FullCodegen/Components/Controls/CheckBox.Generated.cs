@@ -14,21 +14,24 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
-partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
+partial class CheckBox : global::Gum.Forms.Controls.CheckBox
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/CheckBox");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/CheckBox - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new CheckBox(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] = template;
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::MonoGameGum.Forms.Controls.CheckBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(global::Gum.Forms.Controls.CheckBox)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/CheckBox", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -275,7 +278,6 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         CheckboxBackground = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
         CheckboxBackground.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (CheckboxBackground.ElementSave != null) CheckboxBackground.AddStatesAndCategoriesRecursivelyToGue(CheckboxBackground.ElementSave);
@@ -293,6 +295,7 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();
         FocusedIndicator.Name = "FocusedIndicator";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
@@ -316,9 +319,9 @@ partial class CheckBox : global::MonoGameGum.Forms.Controls.CheckBox
         this.TextInstance.SetProperty("StyleCategoryState", "Normal");
         this.TextInstance.Height = 32f;
         this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+        ((TextRuntime)this.TextInstance).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.TextInstance.Text = @"Checkbox Label";
-        this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+        ((TextRuntime)this.TextInstance).VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.TextInstance.Width = -28f;
         this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;

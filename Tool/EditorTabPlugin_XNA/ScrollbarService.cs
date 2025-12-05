@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using FlatRedBall.SpecializedXnaControls;
+using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Services;

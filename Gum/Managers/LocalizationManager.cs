@@ -53,7 +53,11 @@ namespace Gum.Managers
             //CsvFileManager.Delimiter = delimiter;
             Dictionary<string, string[]> entryDictionary = new Dictionary<string, string[]>();
 
-            CsvFileManager.CsvDeserializeDictionary<string, string[]>(fileName, entryDictionary, out rcr);
+            CsvFileManager.CsvDeserializeDictionary<string, string[]>(fileName, 
+                entryDictionary, 
+                // FRB supports multiple lines of text per single string ID. We don't support this in Gum (yet?), so just use the first:
+                DuplicateDictionaryEntryBehavior.PreserveFirst,
+                out rcr);
             //CsvFileManager.Delimiter = oldDelimiter;
             var keys = entryDictionary.Keys.ToArray();
             foreach(var key in keys)

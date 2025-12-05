@@ -4,7 +4,7 @@ MonoGame projects can take full advantage of the Gum tool and runtimes to create
 
 The Gum UI Tool is a WYSIWYG editor for creating layouts. Projects that are created in the Gum UI tool can be loaded into your MonoGame project with just a few lines of code.
 
-The Gum runtime (called MonoGameGum) is a NuGet package which adds the classes necessary to load and interact with Gum projects.&#x20;
+The Gum runtime (called MonoGameGum) is a NuGet package which adds the classes necessary to load and interact with Gum projects.
 
 ### Do I Need to Use the Gum Tool?
 
@@ -16,11 +16,11 @@ This section uses screenshots of the Gum tool so you can see what is possible wi
 
 If you prefer to dive in and see things working, the Gum repository includes sample projects that show how to work with Gum purely in code, and also how to load a Gum project into a MonoGame project.
 
-You can clone the repository and open the projects in your favorite IDE (like Visual Studio) and try them out.&#x20;
+You can clone the repository and open the projects in your favorite IDE (like Visual Studio) and try them out.
 
 The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/master/Samples](https://github.com/vchelaru/Gum/tree/master/Samples)
 
-For more information about the Sample projects, see the [Samples page](samples/).
+For more information about the Sample projects, see the [Samples page](/broken/pages/j0sr8sjbLY1OWWfXcQwa).
 
 ### What is the Gum UI Tool?
 
@@ -36,7 +36,7 @@ Gum is an _object oriented_ design tool, so projects can contain reusable compon
 
 <figure><img src="../../.gitbook/assets/image (34).png" alt=""><figcaption><p>PauseMenu in Gum</p></figcaption></figure>
 
-Gum produces a set of XML files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading .gumx (Gum Project)](loading-.gumx-gum-project.md) page.
+Gum produces a set of XML files (and PNG/FNT files for fonts) which can be added to any MonoGame project and loaded with a few lines of code. For information on loading projects, see the [Loading .gumx (Gum Project)](/broken/pages/PGWmyRmXA6uMwNXuO6Aa) page.
 
 <figure><img src="../../.gitbook/assets/image (35).png" alt=""><figcaption><p>Example Gum project in Windows Explorer</p></figcaption></figure>
 
@@ -93,8 +93,6 @@ This same layout could be achieved in the Gum UI tool by setting the following v
 
 <figure><img src="../../.gitbook/assets/image (39).png" alt=""><figcaption><p>Child centered horizontally by changing X, X Units, and X Origin</p></figcaption></figure>
 
-
-
 An element's size can also be controlled through units. For example, a child rectangle could set to provide an 8 pixel border inside of its parent container using the following code.
 
 ```csharp
@@ -113,12 +111,12 @@ child.HeightUnits = DimensionUnitType.RelativeToContainer;
 Similarly, the following could be done in the Gum UI tool::
 
 * X = 0
-* X Units = Pixels from Center&#x20;
+* X Units = Pixels from Center
 * X Origin = Center
 * Y = 0
 * Y Units = Pixels from Center
 * Y Origin = Center
-* Width = -16&#x20;
+* Width = -16
 * Width Units = Relative to Container
 * Height = -16
 * Height Units = Relative to Container
@@ -143,7 +141,7 @@ Children are in control of their own layouts using "unit" values, but parent ele
 
 Children can still control their position values relative to the stacking, so a child can change its X and Y value. If a child changes its Y or Height value in a Top to Bottom Stack, then subsequent children are adjusted react to this change immediately.
 
-<figure><img src="../../.gitbook/assets/25_06 47 31 (1).gif" alt=""><figcaption><p>Changing position and size affects all children later in the stack</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/25_06 47 31 (1) (1).gif" alt=""><figcaption><p>Changing position and size affects all children later in the stack</p></figcaption></figure>
 
 Stacking can be combined with wrapping and stack spacing to create list boxes and inventory grids quickly.
 

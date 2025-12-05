@@ -13,7 +13,7 @@ First we'll create a Screen called AnimatedScreen. To do this:
 3. Enter the name "AnimatedScreen" and click the OK button
 4. Drag+drop a few TextComponents into the Screen and spread them out visually
 
-![](../../../.gitbook/assets/AddScreenAndText.gif)
+![](<../../../.gitbook/assets/AddScreenAndText (1).gif>)
 
 ## Defining the initial state
 
@@ -44,7 +44,7 @@ Now we have all of the states and animations that we'll use as keyframes in our 
 
 The animation now sets all TextComponents to their Hidden state initially.
 
-![](../../../.gitbook/assets/CreateScreenAnimation1.gif)
+![](<../../../.gitbook/assets/CreateScreenAnimation1 (1).gif>)
 
 ## Adding Sub-Animations
 
@@ -62,4 +62,4 @@ Next we'll be adding animations to animate the TextComponent instances to visibl
 
 Now the animation can be played or previewed with the slider bar:
 
-![](../../../.gitbook/assets/PreviewAndPlayingSubAnimations.gif)
+![](<../../../.gitbook/assets/PreviewAndPlayingSubAnimations (1).gif>)

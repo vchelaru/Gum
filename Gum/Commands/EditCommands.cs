@@ -11,7 +11,6 @@ using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
-using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +24,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
-public class EditCommands
+public class EditCommands : IEditCommands
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -36,6 +35,8 @@ public class EditCommands
     private readonly IDialogService _dialogService;
     private readonly ProjectCommands _projectCommands;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly PluginManager _pluginManager;
+    private readonly DeleteLogic _deleteLogic;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
@@ -45,7 +46,9 @@ public class EditCommands
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
         IGuiCommands guiCommands,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        PluginManager pluginManager, 
+        DeleteLogic deleteLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -56,6 +59,9 @@ public class EditCommands
         _projectCommands = projectCommands;
         _guiCommands = guiCommands;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
+        _pluginManager = pluginManager;
+
+        _deleteLogic = deleteLogic;
     }
 
     #region State
@@ -96,7 +102,7 @@ public class EditCommands
 
         if (deleteResponse.ShouldDelete)
         {
-            deleteResponse = PluginManager.Self.GetDeleteStateResponse(stateSave, stateContainer);
+            deleteResponse = _pluginManager.GetDeleteStateResponse(stateSave, stateContainer);
         }
 
 
@@ -111,12 +117,13 @@ public class EditCommands
         {
             if (_dialogService.ShowYesNoMessage($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?"))
             {
-                DeleteLogic.Self.Remove(stateSave);
+                using var undoLock = _undoManager.RequestLock();
+                _deleteLogic.Remove(stateSave);
             }
         }
     }
 
-    internal void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
+    public void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
     {
         var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
 
@@ -146,6 +153,47 @@ public class EditCommands
             }
         }
     }
+
+    public void SetSetValuesToDefault(StateSave stateSave, IStateContainer stateContainer)
+    {
+        var elementSave = stateContainer as ElementSave;
+        var category = _selectedState.SelectedStateCategorySave;
+        if(elementSave == null || category == null)
+        {
+            return;
+        }
+
+        using var undoLock = _undoManager.RequestLock();
+
+        var variables = stateSave.Variables
+            .ToArray();
+        stateSave.Clear();
+        foreach(var variable in variables)
+        {
+            var variableValue = variable.Value;
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(
+                variable.Name, elementSave, new List<StateSave> { stateSave });
+
+            var name = variable.Name;
+            InstanceSave? instance = null;
+            if(!string.IsNullOrEmpty(variable.SourceObject))
+            {
+                name = variable.GetRootName();
+                instance = elementSave.GetInstance(variable.SourceObject);
+            }
+
+            _pluginManager.VariableSet(elementSave, instance, name, variableValue);
+        }
+
+        _guiCommands.RefreshVariableValues();
+
+        _fileCommands.TryAutoSaveCurrentElement();
+    }
+
+
+    #endregion
+
+    #region Category
 
     public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
     {
@@ -207,7 +255,7 @@ public class EditCommands
             }
         }
 
-        PluginManager.Self.StateMovedToCategory(stateToMove, newCategory, oldCategory);
+        _pluginManager.StateMovedToCategory(stateToMove, newCategory, oldCategory);
 
         if (stateContainer is BehaviorSave behavior)
         {
@@ -220,18 +268,14 @@ public class EditCommands
         }
     }
 
-
-    #endregion
-
-    #region Category
-
     public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
-        DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
+        using var undoLock = _undoManager.RequestLock();
+        _deleteLogic.RemoveStateCategory(category, stateCategoryListContainer);
     }
 
 
-    internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
     {
         using var undoLock = _undoManager.RequestLock();
         _renameLogic.AskToRenameStateCategory(category, elementSave);
@@ -268,7 +312,7 @@ public class EditCommands
 
             if (elementCategory != null)
             {
-                var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
+                var allBehaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(elementCategory, componentSave);
 
                 foreach (var behavior in allBehaviorsNeedingCategory)
                 {
@@ -319,7 +363,7 @@ public class EditCommands
             ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
             ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            PluginManager.Self.BehaviorCreated(behavior);
+            _pluginManager.BehaviorCreated(behavior);
 
             _selectedState.SelectedBehavior = behavior;
 
@@ -344,7 +388,7 @@ public class EditCommands
         {
             _dialogService.ShowMessage("Standard Elements cannot be duplicated");
         }
-        else if (element is ScreenSave)
+        else if (element is ScreenSave elementAsScreen)
         {
             string message = "Enter new Screen name:";
             string title = "Duplicate Screen";
@@ -362,17 +406,17 @@ public class EditCommands
 
             if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                var newScreen = (element as ScreenSave).Clone();
+                var newScreen = elementAsScreen.Clone();
                 newScreen.Name = name;
                 newScreen.Initialize(null);
                 StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
 
                 _projectCommands.AddScreen(newScreen);
 
-                PluginManager.Self.ElementDuplicate(element, newScreen);
+                _pluginManager.ElementDuplicate(element, newScreen);
             }
         }
-        else if (element is ComponentSave)
+        else if (element is ComponentSave elementAsComponent)
         {
             string message = "Enter new Component name:";
             string title = "Duplicate Component";
@@ -397,7 +441,7 @@ public class EditCommands
 
             if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                var newComponent = (element as ComponentSave).Clone();
+                var newComponent = elementAsComponent.Clone();
                 if (!string.IsNullOrEmpty(folder))
                 {
                     folder += "/";
@@ -408,7 +452,7 @@ public class EditCommands
 
                 _projectCommands.AddComponent(newComponent);
 
-                PluginManager.Self.ElementDuplicate(element, newComponent);
+                _pluginManager.ElementDuplicate(element, newComponent);
             }
         }
 
@@ -505,6 +549,7 @@ public class EditCommands
 
     public void DeleteSelection()
     {
-        DeleteLogic.Self.HandleDeleteCommand();
+        using var undoLock = _undoManager.RequestLock();
+        _deleteLogic.HandleDeleteCommand();
     }
 }

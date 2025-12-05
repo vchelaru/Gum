@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
-using System.Windows.Interop;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 namespace Gum.Services.Dialogs;
 
@@ -11,15 +14,18 @@ public interface IDialogService
     public bool Show<T>(T dialogViewModel) where T : DialogViewModel;
     bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel;
     string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null);
+    List<string>? OpenFile(OpenFileDialogOptions? options = null);
 }
 
 internal class DialogService : IDialogService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger _logger;
     
-    public DialogService(IServiceProvider serviceProvider)
+    public DialogService(IServiceProvider serviceProvider, ILogger<DialogService> logger)
     {
         _serviceProvider = serviceProvider;
+        _logger = logger;       
     }
     
     public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null)
@@ -55,14 +61,32 @@ internal class DialogService : IDialogService
 
     private DialogWindow CreateDialogWindow(DialogViewModel dialogViewModel)
     {
+        Window? owner = null;
+        if (Application.Current.MainWindow is { IsLoaded: true } mainWindow)
+        {
+            owner = mainWindow; 
+        }
+        else
+        {
+            _logger.LogWarning("Showing dialog before main window is loaded.");
+        }
+
         DialogWindow window = new()
         {
-            DataContext = dialogViewModel, 
-            Owner = Application.Current.MainWindow,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            MaxHeight = Application.Current.MainWindow!.ActualHeight
+            DataContext = dialogViewModel
         };
-        
+
+        if(owner != null)
+        {
+            window.Owner = owner;
+            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            window.MaxHeight = owner.ActualHeight;
+        }
+        else
+        {
+            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
         return window;
     }
 
@@ -110,6 +134,22 @@ internal class DialogService : IDialogService
         
         return affirmative ? vm.Value : null;
     }
+
+    public List<string>? OpenFile(OpenFileDialogOptions? options = null)
+    {
+        options ??= new OpenFileDialogOptions();
+        
+        OpenFileDialog openFileDialog = new()
+        {
+            Multiselect = options.Multiselect,
+            Filter = options.Filter ?? "All Files (*.*)|*.*",
+            Title = options.Title ?? "Open File",
+            InitialDirectory = options.InitialDirectory ?? string.Empty,
+        };
+
+        return openFileDialog.ShowDialog() is true ? openFileDialog.FileNames.ToList() : null;
+    }
+
 }
 
 public static class IDialogServiceExt
@@ -127,5 +167,21 @@ public static class IDialogServiceExt
     public static bool Show<T>(this IDialogService dialogService, Action<T> initializer) where T : DialogViewModel
     {
         return dialogService.Show<T>(initializer, out _);
+    }
+
+    public static T? ShowChoices<T>(this IDialogService dialogService, string message, Dictionary<T, string> options,
+        string? title = null,
+        bool canCancel = false) where T : notnull
+    {
+        dialogService.Show(Configure, out ChoiceDialogViewModel dialog);
+        return (T?)dialog.SelectedKey;
+
+        void Configure(ChoiceDialogViewModel d)
+        {
+            d.SetOptions(options);
+            d.Title = title ?? "Gum";
+            d.Message = message;
+            d.CanCancel = canCancel;
+        }
     }
 }

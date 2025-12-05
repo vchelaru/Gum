@@ -1,9 +1,14 @@
 ﻿using CommonFormsAndControls.Forms;
+using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
+using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
+using Gum.Extensions;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -11,10 +16,15 @@ using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.ScrollBarPlugin;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Settings;
+using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
 using RenderingLibrary;
@@ -22,24 +32,23 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Drawing;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Numerics;
+using System.Runtime;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
-using CommunityToolkit.Mvvm.Messaging;
-using Gum.Services.Dialogs;
-using Gum.Undo;
+using System.Windows.Markup;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
 [Export(typeof(PluginBase))]
-internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChangedMessage>
+internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
 {
     #region Fields/Properties
 
@@ -55,6 +64,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             "CurrentChainName",
             "ChildrenLayout",
             "FlipHorizontal",
+            "Font",
             "FontSize",
             "Green",
             "Height",
@@ -105,6 +115,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -116,6 +127,12 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly WireframeObjectManager _wireframeObjectManager;
+
+
+    // This is used to punch through the selected and go back up to the top. More info here:
+    // https://github.com/vchelaru/Gum/issues/1810
+    public bool IsComponentNoInstanceSelected => _selectedState.SelectedInstance == null && _selectedState.SelectedComponent != null;
 
     #endregion
 
@@ -126,8 +143,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _scrollbarService = new ScrollbarService();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
-        _editingManager = new EditingManager();
+        _editingManager = new EditingManager(
+            Locator.GetRequiredService<WireframeObjectManager>(),
+            Locator.GetRequiredService<ReorderLogic>());
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
@@ -138,7 +158,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             _editingManager, 
             dialogService, 
             hotkeyManager,
-            _variableInCategoryPropagationLogic);
+            _variableInCategoryPropagationLogic,
+            _wireframeObjectManager);
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
@@ -149,6 +170,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+
         Locator.GetRequiredService<IMessenger>().RegisterAll(this);
     }
 
@@ -159,7 +181,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
-
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();
 
@@ -170,6 +192,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
         HandleWireframeInitialized();
 
+    }
+
+    private void HandlePropertyAssignmentError(string obj)
+    {
+        _guiCommands.PrintOutput(obj);
     }
 
     private void AssignEvents()
@@ -204,8 +231,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
         this.GetWorldCursorPosition += HandleGetWorldCursorPosition;
 
-        this.GuidesChanged += HandleGuidesChanged;
-
         this.IpsoSelected += HandleIpsoSelected;
         this.SetHighlightedIpso += HandleSetHighlightedElement;
 
@@ -216,6 +241,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         this.GetSelectedIpsos += HandleGetSelectedIpsos;
 
         this.AfterUndo += HandleAfterUndo;
+
     }
 
     private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
@@ -235,7 +261,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         {
             foreach (var instance in _selectedState.SelectedInstances)
             {
-                var representation = WireframeObjectManager.Self.GetRepresentation(instance);
+                var representation = _wireframeObjectManager.GetRepresentation(instance);
                 if (representation != null)
                 {
                     ipsosToReturn.Add(representation);
@@ -244,7 +270,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         }
         else if (_selectedState.SelectedElement != null)
         {
-            var representation = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+            var representation = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
             if (representation != null)
             {
                 ipsosToReturn.Add(representation);
@@ -258,11 +284,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private IRenderableIpso? HandleCreateRenderableForType(string type)
     {
         return RuntimeObjectCreator.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
-    }
-
-    private void HandleGuidesChanged()
-    {
-        _wireframeControl.RefreshGuides();
     }
 
     private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)
@@ -316,7 +337,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _selectionManager.Refresh();
 
         // reset everything. This is slow, but is easy
-        WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     private void HandleIpsoSelected(IPositionedSizedObject ipso)
@@ -354,6 +375,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     private void HandleInstanceReordered(InstanceSave save)
     {
         _selectionManager.Refresh();
+
+        _wireframeObjectManager.RefreshAll(true);
     }
 
     private void HandleWireframePropertyChanged(string name)
@@ -409,7 +432,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         {
             _singlePixelTextureService.RefreshSinglePixelTexture();
 
-            WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
+            _wireframeObjectManager.RefreshAll(forceLayout: true, forceReloadTextures: true);
         }
     }
 
@@ -435,14 +458,13 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
     private void HandleElementDeleted(ElementSave save)
     {
-        Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
     }
 
-    void IRecipient<UiScalingChangedMessage>.Receive(UiScalingChangedMessage message)
+    void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
-        // Uncommenting this makes the area for teh combo box properly grow, but it
-        // kills the wireframe view. Not sure why....
-        _wireframeEditControl.Height = (int)(_defaultWireframeEditControlHeight * message.Scale);
+        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out var fontSize);
+        _wireframeContextMenuStrip.Font = new Font("Segoe UI", fontSize);
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
@@ -510,15 +532,15 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             {
                 // this assumes that the object having its variable set is the selected instance. If we're setting
                 // an exposed variable, this is not the case - the object having its variable set is actually the instance.
-                //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                //GraphicalUiElement gue = _wireframeObjectManager.GetSelectedRepresentation();
                 GraphicalUiElement gue = null;
                 if (instance != null)
                 {
-                    gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                    gue = _wireframeObjectManager.GetRepresentation(instance);
                 }
                 else
                 {
-                    gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+                    gue = _wireframeObjectManager.GetSelectedRepresentation();
                 }
 
                 // If we dispose a file, we should re-create the screen for sure!
@@ -557,20 +579,20 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
 
                     gue.SetProperty(unqualifiedMember, value);
 
-                    WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(state);
+                    _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = !disposedFile;
                 }
                 if (unqualifiedMember == "Text" && _localizationManager.HasDatabase)
                 {
-                    WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
+                    _wireframeObjectManager.ApplyLocalization(gue, value as string);
                 }
             }
 
             if (!handledByDirectSet)
             {
-                WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures: false);
+                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: false);
             }
 
 
@@ -582,14 +604,14 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
     // need to only handle this 1 time. Currently there is a double-refresh
     private void HandleElementSelected(ElementSave save)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout: true);
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
         _selectionManager.Refresh();
 
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout: false);
+        _wireframeObjectManager.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenuStrip();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
         _selectionManager.Refresh();
@@ -634,8 +656,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         this._wireframeControl.MouseDown += wireframeControl1_MouseDown;
 
 
-        this._wireframeControl.DragDrop += HandleFileDragDrop;
-        this._wireframeControl.DragEnter += _dragDropManager.HandleFileDragEnter;
+        this._wireframeControl.DragDrop += OnWireframeDrop;
+        this._wireframeControl.DragEnter += _dragDropManager.OnWireframeDragEnter;
         this._wireframeControl.DragOver += (sender, e) =>
         {
             //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
@@ -669,6 +691,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeControl.DesiredFramesPerSecond = frameRate;
 
         UpdateWireframeControlSizes();
+
+        IEffectiveThemeSettings themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
+        ApplyThemeSettings(themeSettings);
     }
 
     private void HandleControlZoomChange(object sender, EventArgs e)
@@ -676,8 +701,28 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         Renderer.Self.Camera.Zoom = _wireframeEditControl.PercentageValue / 100.0f;
     }
 
-    internal void HandleFileDragDrop(object sender, DragEventArgs e)
+    internal void OnWireframeDrop(object sender, DragEventArgs e)
     {
+        // Handle node drops
+        List<TreeNode>? droppedNodes = e switch
+        {
+            _ when e.GetData<List<TreeNode>>() is { } nodes => nodes,
+            _ when e.GetData<TreeNode>() is { } singleNode => [singleNode],
+            _ => null,
+        };
+
+        if (droppedNodes is not null)
+        {
+            foreach (var draggedObject in droppedNodes.Select(x => x.Tag))
+            {
+                _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject);
+            }
+
+            return;
+        }
+
+        // Handle file drops
+
         if (!CanDrop())
             return;
 
@@ -731,7 +776,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
             _fileCommands.TryAutoSaveCurrentElement();
             _guiCommands.RefreshVariables();
 
-            WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
         }
     }
 
@@ -766,24 +811,21 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
         // see if it's over the component:
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
         if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
         {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
 
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.CenterParent;
+            string message = "What do you want to do with the file " + fileName;
+            DialogChoices<string> choices = new()
+            {
+                ["set-source"] = "Set source file on " + component.Name,
+                ["_"] = "Add new Sprite"
+            };
 
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
+            string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
 
-            mbmb.AddButton("Set source file on " + component.Name, DialogResult.OK);
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-
-            var result = mbmb.ShowDialog();
-
-            if (result == DialogResult.OK)
+            if (result == "set-source")
             {
                 var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>("SourceFile");
@@ -799,7 +841,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
                 shouldUpdate = true;
                 handled = true;
             }
-            else if (result == DialogResult.Cancel)
+            else if (result == null)
             {
                 handled = true;
 
@@ -823,20 +865,18 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
         if (instance != null)
         {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
 
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.CenterParent;
+            string message = "What do you want to do with the file " + fileName;
+            DialogChoices<string> choices = new()
+            {
+                ["set-source"] = "Set source file on " + instance.Name,
+                ["_"] = "Add new Sprite"
+            };
 
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
+            string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
 
-            mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-            var result = mbmb.ShowDialog();
-
-            if (result == DialogResult.OK)
+            if (result == "set-source")
             {
                 var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>(instance.Name + ".SourceFile");
@@ -852,12 +892,12 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
                 shouldUpdate = true;
                 handled = true;
             }
-            else if (result == DialogResult.Cancel)
+            else if (result == null)
             {
                 handled = true;
 
             }
-            // continue for DialogResult.Yes
+            // continue for Add new Sprite
         }
     }
 
@@ -867,7 +907,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
         if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
         {
@@ -892,6 +932,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         wireframeContextMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
         wireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
         wireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
+        wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
 
         gumEditorPanel = new Panel();
 
@@ -910,7 +951,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeControl.XnaUpdate += () =>
         {
             _backgroundSpriteService.Activity();
-            Wireframe.WireframeObjectManager.Self.Activity();
+            _wireframeObjectManager.Activity();
             ToolLayerService.Self.Activity();
         };
 
@@ -941,14 +982,17 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         //_toolbarPanel.Width = _toolbarPanel.Parent.Width;
 
         _wireframeControl.Width = _wireframeControl.Parent.Width;
-
-        // Add location.Y to account for the shortcut bar at the top.
-        _wireframeControl.Height = _wireframeControl.Parent.Height - _wireframeControl.Location.Y;
+       
+        // The combobox's dimensions may have changed due to app-level font scaling, we need to explicitly
+        // set it to it's preferred size, or it will stay constrained to the original docked size
+        var preferred = _wireframeEditControl.GetPreferredSize(new(_wireframeEditControl.Parent.Width, int.MaxValue));
+        _wireframeEditControl.Height = preferred.Height;
+        _wireframeEditControl.Width = _wireframeEditControl.Parent.Width;
     }
 
     private void HandleStateSelected(StateSave save)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout: true);
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
     }
 
     private void wireframeControl1_MouseDown(object sender, MouseEventArgs e)
@@ -976,6 +1020,18 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiScalingChanged
         _wireframeEditControl.PercentageValue = 100;
         _wireframeEditControl.TabIndex = 1;
         _defaultWireframeEditControlHeight = _wireframeEditControl.Height;
+    }
 
+    private void ApplyThemeSettings(IEffectiveThemeSettings settings)
+    {
+        this._wireframeControl.BackgroundColor = ToXna(settings.CheckerA);
+        this._wireframeControl.SetGuideColors(settings.GuideLine, settings.GuideText);
+        _wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _);
+        static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
+    }
+
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        ApplyThemeSettings(message.settings);
     }
 }

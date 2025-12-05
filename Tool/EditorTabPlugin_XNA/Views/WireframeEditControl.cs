@@ -1,6 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Forms;
+using System.Windows.Media;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum;
+using Gum.Services;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace FlatRedBall.AnimationEditorForms.Controls;
 
@@ -69,6 +76,8 @@ public partial class WireframeEditControl : UserControl
         InitializeComponent();
         InitializeComboBox();
     }
+
+
 
     private void InitializeComboBox()
     {

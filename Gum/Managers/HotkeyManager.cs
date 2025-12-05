@@ -1,18 +1,21 @@
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Gum.Dialogs;
-using Gum.PropertyGridHelpers;
-using Gum.Services.Dialogs;
+using Gum.Undo;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 
 namespace Gum.Managers;
@@ -152,6 +155,14 @@ public class HotkeyManager
     public KeyCombination Cut { get; private set; } = KeyCombination.Ctrl(Keys.X);
     public KeyCombination Undo { get; private set; } = KeyCombination.Ctrl(Keys.Z);
     public KeyCombination Redo { get; private set; } = KeyCombination.Ctrl(Keys.Y);
+
+    public KeyCombination RedoAlt { get; private set; } = new KeyCombination()
+    {
+        IsCtrlDown = true,
+        IsShiftDown = true,
+        Key = Keys.Z
+    };
+
     public KeyCombination ReorderUp { get; private set; } = KeyCombination.Alt(Keys.Up);
     public KeyCombination ReorderDown { get; private set; } = KeyCombination.Alt(Keys.Down);
     public KeyCombination GoToDefinition { get; private set; } = KeyCombination.Pressed(Keys.F12);
@@ -191,9 +202,12 @@ public class HotkeyManager
     private readonly IFileCommands _fileCommands;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
+    private readonly IUndoManager _undoManager;
+    private readonly DeleteLogic _deleteLogic;
+    private readonly ReorderLogic _reorderLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
-    
+
     public HotkeyManager(IGuiCommands guiCommands, 
         ISelectedState selectedState, 
         IElementCommands elementCommands,
@@ -201,7 +215,10 @@ public class HotkeyManager
         IFileCommands fileCommands,
         SetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
-        CopyPasteLogic copyPasteLogic)
+        CopyPasteLogic copyPasteLogic,
+        IUndoManager undoManager,
+        DeleteLogic deleteLogic,
+        ReorderLogic reorderLogic)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -211,35 +228,40 @@ public class HotkeyManager
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
+        _undoManager = undoManager;
+        _deleteLogic = deleteLogic;
+        _reorderLogic = reorderLogic;
     }
 
     #region App Wide Keys
 
 
-    public void PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
+    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
     {
-        if (e.Key == Key.F && 
-            Keyboard.Modifiers == ModifierKeys.Control)
+        Action? match = (e.Key, Keyboard.Modifiers) switch
         {
-            _guiCommands.FocusSearch();
+            _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
+            _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
+            _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
+            _ when ZoomDirection() is { } dir => () => _uiSettingsService.BaseFontSize += dir,
+            _ => null
+        };
+
+        if (match is not null)
+        {
             e.Handled = true;
-            return;
+            match.Invoke();
         }
-        
-        int direction = 
+
+        return match is not null;
+
+        double? ZoomDirection() =>
             ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
             ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
-            0;
-        
-        if (direction != 0)
-        {
-            double step = _uiSettingsService.Scale < 1 ? 0.1 : 0.25;
-            _uiSettingsService.Scale += direction > 0 ? step : -step;
-            e.Handled = true;
-        }
+            null;
     }
-    
-    
+
+
     #endregion
 
 
@@ -247,6 +269,12 @@ public class HotkeyManager
 
     public void HandleKeyDownElementTreeView(KeyEventArgs e)
     {
+        if (PreviewKeyDownAppWide(e.ToWpf()))
+        {
+            e.Handled = true;
+            return;
+        }
+
         HandleCopyCutPaste(e);
         HandleDelete(e);
         HandleReorder(e);
@@ -305,12 +333,12 @@ public class HotkeyManager
     {
         if(ReorderUp.IsPressed(e))
         {
-            ReorderLogic.Self.MoveSelectedInstanceBackward();
+            _reorderLogic.MoveSelectedInstanceBackward();
             e.Handled = true;
         }
         if(ReorderDown.IsPressed(e))
         {
-            ReorderLogic.Self.MoveSelectedInstanceForward();
+            _reorderLogic.MoveSelectedInstanceForward();
             e.Handled = true;
         }
     }
@@ -319,7 +347,8 @@ public class HotkeyManager
     {
         if (Delete.IsPressed(e))
         {
-            DeleteLogic.Self.HandleDeleteCommand();
+            using var undoLock = _undoManager.RequestLock();
+            _deleteLogic.HandleDeleteCommand();
 
             e.Handled = true;
             e.SuppressKeyPress = true;
@@ -375,6 +404,12 @@ public class HotkeyManager
 
     public void HandleKeyDownWireframe(KeyEventArgs e)
     {
+        if (PreviewKeyDownAppWide(e.ToWpf()))
+        {
+            e.Handled = true;
+            return;
+        }
+
         HandleCopyCutPaste(e);
 
         HandleDelete(e);
@@ -385,8 +420,19 @@ public class HotkeyManager
         HandleReorder(e);
 
         HandleGoToDefinition(e);
-
     }
+
+    public void HandleKeyUpWireframe(KeyEventArgs e)
+    {
+        if (_isNudging)
+        {
+            _isNudging = false;
+            _undoManager.RecordUndo();
+            _fileCommands.TryAutoSaveCurrentElement();
+        }
+    }
+
+    bool _isNudging;
 
     public bool ProcessCmdKeyWireframe(ref Message msg, Keys keyData)
     {
@@ -417,6 +463,11 @@ public class HotkeyManager
 
         if (nudgeX != 0 || nudgeY != 0)
         {
+            if(!_isNudging)
+            {
+                _isNudging = true;
+                _undoManager.RecordState();
+            }
             var instance = _selectedState.SelectedInstance;
 
             var element = _selectedState.SelectedElement;
@@ -439,9 +490,6 @@ public class HotkeyManager
             {
                 PluginManager.Self.VariableSet(element, instance, "Y", oldY);
             }
-
-
-            _fileCommands.TryAutoSaveCurrentElement();
         }
         return handled;
     }
@@ -473,4 +521,18 @@ public class HotkeyManager
     }
 
     #endregion
+}
+file static class Helpers
+{
+    public static System.Windows.Input.KeyEventArgs ToWpf(this System.Windows.Forms.KeyEventArgs e)
+    {
+        return new System.Windows.Input.KeyEventArgs(
+            Keyboard.PrimaryDevice,
+            PresentationSource.FromVisual(System.Windows.Application.Current.MainWindow),
+            0, // timestamp
+            KeyInterop.KeyFromVirtualKey((int)e.KeyCode))
+        {
+            RoutedEvent = Keyboard.KeyDownEvent
+        };
+    }
 }

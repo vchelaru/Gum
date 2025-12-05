@@ -73,18 +73,21 @@ public class RenameLogic : IRenameLogic
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly DeleteLogic _deleteLogic;
 
     public RenameLogic(ISelectedState selectedState, 
         INameVerifier nameVerifier, 
         IDialogService dialogService, 
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        DeleteLogic deleteLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _deleteLogic = deleteLogic;
     }
 
     #region StateSave
@@ -121,7 +124,7 @@ public class RenameLogic : IRenameLogic
     public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
     {
         // This category can only be renamed if no behaviors require it
-        var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
+        var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
 
         if (behaviorsNeedingCategory.Any())
         {
@@ -589,14 +592,15 @@ public class RenameLogic : IRenameLogic
         }
         else if (instanceContainer is ElementSave elementSave and not StandardElementSave)
         {
-            var nameWithoutFolder = elementSave.Name;
+            // Prevent failures if a "\" is used instead of a "/" for the folder separator
+            var nameWithoutFolder = elementSave.Name.Replace('\\', '/');
             string? folder = null;
 
-            if (elementSave.Name.Contains('/'))
+            if (nameWithoutFolder.Contains('/'))
             {
-                var lastIndexOfSlash = elementSave.Name.LastIndexOf('/');
-                folder = elementSave.Name.Substring(0, lastIndexOfSlash);
-                nameWithoutFolder = elementSave.Name.Substring(lastIndexOfSlash + 1);
+                var lastIndexOfSlash = nameWithoutFolder.LastIndexOf('/');
+                folder = nameWithoutFolder.Substring(0, lastIndexOfSlash);
+                nameWithoutFolder = nameWithoutFolder.Substring(lastIndexOfSlash + 1);
             }
 
             if (_nameVerifier.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)

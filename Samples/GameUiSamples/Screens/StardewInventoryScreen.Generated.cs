@@ -1,5 +1,6 @@
 //Code for StardewInventoryScreen
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,24 +15,27 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Screens;
-partial class StardewInventoryScreen : MonoGameGum.Forms.Controls.FrameworkElement
+partial class StardewInventoryScreen : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("StardewInventoryScreen");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named StardewInventoryScreen - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new StardewInventoryScreen(visual);
             visual.Width = 0;
-            visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             visual.Height = 0;
-            visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(StardewInventoryScreen)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(StardewInventoryScreen)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("StardewInventoryScreen", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -40,7 +44,9 @@ partial class StardewInventoryScreen : MonoGameGum.Forms.Controls.FrameworkEleme
     }
     public InventoryGrid InventoryGridInstance { get; protected set; }
 
-    public StardewInventoryScreen(InteractiveGue visual) : base(visual) { }
+    public StardewInventoryScreen(InteractiveGue visual) : base(visual)
+    {
+    }
     public StardewInventoryScreen()
     {
 
@@ -50,7 +56,7 @@ partial class StardewInventoryScreen : MonoGameGum.Forms.Controls.FrameworkEleme
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        InventoryGridInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InventoryGrid>(this.Visual,"InventoryGridInstance");
+        InventoryGridInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InventoryGrid>(this.Visual,"InventoryGridInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

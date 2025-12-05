@@ -20,9 +20,9 @@ partial class CheckBoxRuntime : ContainerRuntime
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/CheckBox", typeof(CheckBoxRuntime));
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::MonoGameGum.Forms.Controls.CheckBox)] = typeof(CheckBoxRuntime);
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(global::Gum.Forms.Controls.CheckBox)] = typeof(CheckBoxRuntime);
     }
-    public global::MonoGameGum.Forms.Controls.CheckBox FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.CheckBox;
+    public global::Gum.Forms.Controls.CheckBox FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.CheckBox;
     public enum CheckBoxCategory
     {
         EnabledOn,
@@ -98,7 +98,7 @@ partial class CheckBoxRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.CheckBox(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.CheckBox(this);
         }
         CheckboxBackground = this.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;

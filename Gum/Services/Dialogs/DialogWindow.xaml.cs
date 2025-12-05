@@ -1,18 +1,37 @@
-﻿using Gum.Controls;
+using Gum.Controls;
+using SharpDX.XInput;
+using System;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ControlzEx;
+using Application = System.Windows.Application;
 
 namespace Gum.Services.Dialogs;
 
-public partial class DialogWindow : Window
+public partial class DialogWindow : WindowChromeWindow
 {
     public DialogWindow()
     {
         InitializeComponent();
         PreviewKeyDown += OnPreviewKeyDown;
+        Loaded += OnLoaded;
+    }
+
+    // This hacks around some artifacts that present when using custom WindowChrome
+    // when you want your window to size to content and center itself
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        var mainWindow = Application.Current.MainWindow;
+        SizeToContent = SizeToContent.WidthAndHeight;
+        if(mainWindow != null)
+        {
+            Left = mainWindow.Left + ((mainWindow.ActualWidth / 2) - Width / 2);
+            Top = mainWindow.Top + ((mainWindow.ActualHeight / 2) - Height / 2);
+        }
+        Loaded -= OnLoaded;
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)

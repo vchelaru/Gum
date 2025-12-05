@@ -28,9 +28,9 @@ public class RadioButton : ToggleButton
 
     private string _groupName;
 
-    private object GetParent()
+    private object? GetParent()
     {
-        object parent;
+        object? parent;
         if (Visual == null)
             parent = null;
         else if (Visual.Parent != null)
@@ -107,11 +107,11 @@ public class RadioButton : ToggleButton
 
 
 
-    public string Text
+    public string? Text
     {
         get
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
 
@@ -120,7 +120,7 @@ public class RadioButton : ToggleButton
         }
         set
         {
-#if DEBUG
+#if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
             // go through the component instead of the core text object to force a layout refresh if necessary
@@ -232,7 +232,7 @@ public class RadioButton : ToggleButton
 
     #region Utilities
 
-#if DEBUG
+#if FULL_DIAGNOSTICS
     private void ReportMissingTextInstance()
     {
         if (textComponent == null)

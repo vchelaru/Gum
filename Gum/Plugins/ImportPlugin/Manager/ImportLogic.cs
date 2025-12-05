@@ -1,187 +1,140 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
-using Gum.Plugins.ImportPlugin.ViewModel;
-using Gum.Plugins.ImportPlugin.Views;
 using Gum.Services;
 using Gum.ToolStates;
 using System;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using System.Linq;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
 
-public static class ImportLogic
+public class ImportLogic
 {
-    private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
-    private static readonly IGuiCommands _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-    private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
-    private static readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
+    private readonly ISelectedState _selectedState;
+    private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly IDialogService _dialogService;
 
-    #region Screen
-
-    internal static void ShowImportScreenUi()
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService)
     {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-        {
-            _dialogService.ShowMessage("You must first save the project before adding a new screen");
-
-            return;
-        }
-
-        ImportFileViewModel viewModel = ShowImportScreenView();
-
-        for (int i = 0; i < viewModel.SelectedFiles.Count; ++i)
-        {
-            string fileName = viewModel.SelectedFiles[i];
-
-            ImportScreen(fileName);
-
-        }
+        _selectedState = selectedState;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _dialogService = dialogService;
     }
 
-    public static void ImportScreen(FilePath fileName, string desiredDirectory = null, bool saveProject = true)
+    public ScreenSave? ImportScreen(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
     {
-        desiredDirectory = desiredDirectory ?? 
-            FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName) + "Screens/";
+        string screensOrComponents = "Screens";
+        var elementReferences = ProjectManager.Self.GumProjectSave.ScreenReferences;
 
-        var shouldAdd = true;
+        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
 
-
-        if (FileManager.IsRelativeTo(fileName.FullPath, desiredDirectory) == false)
+        ScreenSave? toReturn = null;
+        ScreenSave? screenSave = null;
+        if (shouldAdd)
         {
-            var copyResult = _dialogService.ShowYesNoMessage("The file must be in the Gum project's Screens folder.  " +
-                "Would you like to copy the file?.", "Copy?");
+            screenSave = FileManager.XmlDeserialize<ScreenSave>(filePath.FullPath);
 
-            shouldAdd = copyResult;
+            var isDuplicate = ObjectFinder.Self.GetElementSave(screenSave.Name) != null;
 
-            try
+            if (isDuplicate)
             {
-                string destination = desiredDirectory + FileManager.RemovePath(fileName.FullPath);
-                System.IO.File.Copy(fileName.FullPath,
-                    destination);
-
-                fileName = destination;
-            }
-            catch (Exception ex)
-            {
-                _dialogService.ShowMessage("Error copying the file: " + ex.ToString());
+                _dialogService.ShowMessage($"This project already a screen named {screenSave.Name} in this project");
+                shouldAdd = false;
             }
         }
 
-        if (shouldAdd)
-        {
-            string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName.FullPath));
+        if(shouldAdd)
+        { 
+            elementReferences.Add(new ElementReference { Name = screenSave!.Name, ElementType = ElementType.Screen });
+            elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            ProjectManager.Self.GumProjectSave.ScreenReferences.Add(
-                new ElementReference { Name = strippedName, ElementType = ElementType.Screen });
-
-            ProjectManager.Self.GumProjectSave.ScreenReferences.Sort(
-                (first, second) => first.Name.CompareTo(second.Name));
-
-            var screenSave = FileManager.XmlDeserialize<ScreenSave>(fileName.FullPath);
-
-            ProjectManager.Self.GumProjectSave.Screens.Add(screenSave);
-
-            ProjectManager.Self.GumProjectSave.Screens.Sort(
-                (first, second) => first.Name.CompareTo(second.Name));
+            var screens = ProjectManager.Self.GumProjectSave.Screens;
+            screens.Add(screenSave);
+            screens.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             screenSave.Initialize(null);
 
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
-            if(saveProject)
+            DoAfterImportLogic(saveProject, screenSave);
+
+            toReturn = screenSave;
+        }
+
+        return toReturn;
+    }
+
+
+    public ComponentSave? ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    {
+        string screensOrComponents = "Components";
+        var elementReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
+
+        bool shouldAdd = DetermineIfShouldAdd(ref filePath, ref desiredDirectory, screensOrComponents);
+
+        ComponentSave? toReturn = null;
+        ComponentSave? componentSave = null;
+        if (shouldAdd)
+        {
+            componentSave = FileManager.XmlDeserialize<ComponentSave>(filePath.FullPath);
+
+            var isDuplicate = ObjectFinder.Self.GetElementSave(componentSave.Name) != null;
+
+            if(isDuplicate)
             {
-                _guiCommands.RefreshElementTreeView();
-                _selectedState.SelectedScreen = screenSave;
-                _fileCommands.TryAutoSaveProject();
+                _dialogService.ShowMessage($"This project already a component named {componentSave.Name} in this project");
+                shouldAdd = false;
             }
-            _fileCommands.TryAutoSaveElement(screenSave);
         }
+
+        if(shouldAdd)
+        {
+            elementReferences.Add(new ElementReference { Name = componentSave!.Name, ElementType = ElementType.Component });
+            elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+            var components = ProjectManager.Self.GumProjectSave.Components;
+            components.Add(componentSave);
+            components.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+            componentSave.InitializeDefaultAndComponentVariables();
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+
+            DoAfterImportLogic(saveProject, componentSave);
+
+            toReturn = componentSave;
+        }
+
+        return toReturn;
     }
 
-    private static ImportFileViewModel ShowImportScreenView()
+    private void DoAfterImportLogic(bool saveProject, ElementSave screenSave)
     {
-        var view = new ImportFileView();
-        view.Title = "Import Screen";
+        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(screenSave);
 
-        var viewModel = new ImportFileViewModel();
-
-        viewModel.BrowseFileFilter = "Gum Screen (*.gusx)|*.gusx";
-
-
-        var screenFilesNotInProject = FileManager.GetAllFilesInDirectory(
-            GumState.Self.ProjectState.ScreenFilePath.FullPath, "gusx")
-            .Select(item => new FilePath(item))
-            .ToList();
-
-        var screenFilesInProject = GumState.Self.ProjectState.GumProjectSave
-            .Screens
-            .Select(item => new FilePath(GumState.Self.ProjectState.ComponentFilePath + item.Name + ".gusx"))
-            .ToArray();
-
-        screenFilesNotInProject = screenFilesNotInProject
-            .Except(screenFilesInProject)
-            .ToList();
-
-        viewModel.UnfilteredFileList.AddRange(screenFilesNotInProject.Select(item => item.FullPath));
-
-        viewModel.RefreshFilteredList();
-
-        view.DataContext = viewModel;
-        var result = view.ShowDialog();
-        return viewModel;
-    }
-
-    #endregion
-
-    #region Component
-
-    internal static void ShowImportComponentUi()
-    {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-        {
-            _dialogService.ShowMessage("You must first save the project before adding a new component");
-            return;
-        }
-
-        ImportFileViewModel viewModel = ShowImportComponentView();
-
-        ComponentSave lastImportedComponent = null;
-
-        string desiredDirectory = FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
-        for (int i = 0; i < viewModel.SelectedFiles.Count; ++i)
-        {
-            lastImportedComponent = ImportComponent(viewModel.SelectedFiles[i], desiredDirectory, 
-                // dont' save - we'll do it below:
-                saveProject:false);
-        }
-
-        if (lastImportedComponent != null)
+        if (saveProject)
         {
             _guiCommands.RefreshElementTreeView();
-            _selectedState.SelectedComponent = lastImportedComponent;
+            _selectedState.SelectedElement = screenSave;
             _fileCommands.TryAutoSaveProject();
         }
+        _fileCommands.TryAutoSaveElement(screenSave);
     }
 
-    public static ComponentSave ImportComponent(FilePath filePath, string desiredDirectory = null, bool saveProject = true)
+    private bool DetermineIfShouldAdd(ref FilePath filePath, ref string desiredDirectory, string screensOrComponents)
     {
         var shouldAdd = true;
-
         desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
+            ProjectManager.Self.GumProjectSave.FullFileName) + $"{screensOrComponents}/";
 
         if (!FileManager.IsRelativeTo(filePath.FullPath, desiredDirectory))
         {
             string fileNameWithoutPath = FileManager.RemovePath(filePath.FullPath);
 
-            var copyResult = _dialogService.ShowYesNoMessage("The file " + fileNameWithoutPath + " must be in the Gum project's Components folder. " +
-                "Would you like to copy the file?", "Copy?");
+            var copyResult = _dialogService.ShowYesNoMessage("The file " + fileNameWithoutPath + $" must be in the Gum project's {screensOrComponents} folder.  " +
+                "Would you like to copy the file?.", "Copy?");
 
             shouldAdd = copyResult;
 
@@ -196,110 +149,17 @@ public static class ImportLogic
                 }
                 catch (Exception ex)
                 {
-                    _guiCommands.PrintOutput("Error copying file: " + ex);
+                    _dialogService.ShowMessage("Error copying the file: " + ex);
                     shouldAdd = false;
                 }
             }
         }
 
-        ComponentSave toReturn = null;
-
-        if (shouldAdd)
-        {
-            string strippedName = filePath.RemoveExtension().FileNameNoPath;
-
-            var componentSave = FileManager.XmlDeserialize<ComponentSave>(filePath.FullPath);
-
-            var componentReferences = ProjectManager.Self.GumProjectSave.ComponentReferences;
-            componentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
-            componentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            var components = ProjectManager.Self.GumProjectSave.Components;
-            components.Add(componentSave);
-            components.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-            componentSave.InitializeDefaultAndComponentVariables();
-            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-
-
-            if(saveProject)
-            {
-                _guiCommands.RefreshElementTreeView();
-                _selectedState.SelectedComponent = componentSave;
-                _fileCommands.TryAutoSaveProject();
-            }
-            _fileCommands.TryAutoSaveElement(componentSave);
-
-            toReturn = componentSave;
-        }
-
-        return toReturn;
+        return shouldAdd;
     }
 
-    private static ImportFileViewModel ShowImportComponentView()
-    {
-        var view = new ImportFileView();
-        view.Title = "Import Component";
 
-        var viewModel = new ImportFileViewModel();
-
-        viewModel.BrowseFileFilter = "Gum Component (*.gucx)|*.gucx";
-
-        var componentFilesNotInProject = FileManager.GetAllFilesInDirectory(
-            GumState.Self.ProjectState.ComponentFilePath.FullPath, "gucx")
-            .Select(item => new FilePath(item))
-            .ToList();
-
-        var componentFilesInProject = GumState.Self.ProjectState.GumProjectSave
-            .Components
-            .Select(item => new FilePath(GumState.Self.ProjectState.ComponentFilePath + item.Name + ".gucx"))
-            .ToArray();
-
-        componentFilesNotInProject = componentFilesNotInProject
-            .Except(componentFilesInProject)
-            .ToList();
-
-        viewModel.UnfilteredFileList.AddRange(componentFilesNotInProject.Select(item => item.FullPath));
-        viewModel.RefreshFilteredList();
-
-
-        view.DataContext = viewModel;
-        var result = view.ShowDialog();
-        return viewModel;
-    }
-
-    #endregion
-
-    #region Behavior
-
-    public static void ShowImportBehaviorUi()
-    {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-        {
-            _dialogService.ShowMessage("You must first save the project before adding a new component");
-            return;
-        }
-
-        var viewModel = ShowImportBehaviorView();
-
-        BehaviorSave lastImportedBehavior = null;
-
-        string desiredDirectory = FileManager.GetDirectory(
-            ProjectManager.Self.GumProjectSave.FullFileName) + "Behaviors/";
-        for(int i = 0; i < viewModel.SelectedFiles.Count; ++i)
-        {
-            lastImportedBehavior = ImportBehavior(viewModel.SelectedFiles[i], desiredDirectory, saveProject:false);
-        }
-
-        if (lastImportedBehavior != null)
-        {
-            _guiCommands.RefreshElementTreeView();
-            _selectedState.SelectedBehavior = lastImportedBehavior;
-            _fileCommands.TryAutoSaveProject();
-        }
-    }
-
-    public static BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
+    public BehaviorSave ImportBehavior(FilePath filePath, string desiredDirectory = null, bool saveProject = false)
     {
         var shouldAdd = true;
 
@@ -364,39 +224,6 @@ public static class ImportLogic
 
         return toReturn;
     }
-
-    private static ImportFileViewModel ShowImportBehaviorView()
-    {
-        var view = new ImportFileView();
-        view.Title = "Import Behavior";
-
-        var viewModel = new ImportFileViewModel();
-
-        viewModel.BrowseFileFilter = "Gum Behavior (*.behx)|*.behx";
-
-        var behaviorFilesNotInProject = FileManager.GetAllFilesInDirectory(
-            GumState.Self.ProjectState.BehaviorFilePath.FullPath, "behx")
-            .Select(item => new FilePath(item))
-            .ToList();
-
-        var behaviorFilesInProject = GumState.Self.ProjectState.GumProjectSave
-            .Behaviors
-            .Select(item => new FilePath(GumState.Self.ProjectState.BehaviorFilePath + item.Name + ".behx"))
-            .ToArray();
-
-        behaviorFilesNotInProject = behaviorFilesNotInProject
-            .Except(behaviorFilesInProject)
-            .ToList();
-
-        viewModel.UnfilteredFileList.AddRange(behaviorFilesNotInProject.Select(item => item.FullPath));
-        viewModel.RefreshFilteredList();
-
-        view.DataContext = viewModel;
-        var result = view.ShowDialog();
-        return viewModel;
-    }
-
-    #endregion
 }
 
 

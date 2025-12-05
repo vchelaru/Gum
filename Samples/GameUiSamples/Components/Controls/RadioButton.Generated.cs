@@ -1,5 +1,6 @@
 //Code for Controls/RadioButton (Container)
 using GumRuntime;
+using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using GameUiSamples.Components;
@@ -14,20 +15,23 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components;
-partial class RadioButton : MonoGameGum.Forms.Controls.RadioButton
+partial class RadioButton : global::Gum.Forms.Controls.RadioButton
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/RadioButton - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new RadioButton(visual);
             return visual;
         });
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Controls/RadioButton", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -69,7 +73,7 @@ partial class RadioButton : MonoGameGum.Forms.Controls.RadioButton
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "RadioButtonCategory");
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Visual.Tag).Categories.FirstOrDefault(item => item.Name == "RadioButtonCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.Visual.ApplyState(state);
                 }
@@ -87,7 +91,9 @@ partial class RadioButton : MonoGameGum.Forms.Controls.RadioButton
         set => TextInstance.Text = value;
     }
 
-    public RadioButton(InteractiveGue visual) : base(visual) { }
+    public RadioButton(InteractiveGue visual) : base(visual)
+    {
+    }
     public RadioButton()
     {
 
@@ -97,10 +103,10 @@ partial class RadioButton : MonoGameGum.Forms.Controls.RadioButton
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as NineSliceRuntime;
-        Radio = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Radio");
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
+        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        Radio = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Radio");
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

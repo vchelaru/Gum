@@ -337,7 +337,21 @@ namespace WpfDataUi.Controls
                                 // computer settings use commas
                                 try
                                 {
-                                    value = converter.ConvertFromString(usableString);
+                                    if(usableString == "-0" && (InstancePropertyType == typeof(float) || InstancePropertyType == typeof(double)))
+                                    {
+                                        if(InstancePropertyType == typeof(float))
+                                        {
+                                            value = 0f;
+                                        }
+                                        else
+                                        {
+                                            value = 0.0;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        value = converter.ConvertFromString(usableString);
+                                    }
                                     result = ApplyValueResult.Success;
                                 }
                                 catch (NotSupportedException)
@@ -553,25 +567,36 @@ namespace WpfDataUi.Controls
 
         public void RefreshBackgroundColor()
         {
-            if (InstanceMember.IsDefault)
+            mAssociatedTextBox.Dispatcher.BeginInvoke(() =>
             {
-                mAssociatedTextBox.Background = DefaultValueBackground;
-            }
-            else if (InstanceMember.IsIndeterminate)
-            {
-                mAssociatedTextBox.Background = IndeterminateValueBackground;
-            }
-            else
-            {
-                if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
+                
+                if (DataUiGrid.GetOverridesIsDefaultStyling(mAssociatedTextBox))
                 {
-                    mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty, "Frb.Brushes.Field.Background");
+                    return;
+                }
+
+                if (InstanceMember.IsDefault)
+                {
+                    mAssociatedTextBox.Background = DefaultValueBackground;
+                }
+                else if (InstanceMember.IsIndeterminate)
+                {
+                    mAssociatedTextBox.Background = IndeterminateValueBackground;
                 }
                 else
                 {
-                    mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
+                    if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
+                    {
+                        mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty,
+                            "Frb.Brushes.Field.Background");
+                    }
+                    else
+                    {
+                        mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
+                    }
                 }
-            }
+            });
+
         }
     }
 }

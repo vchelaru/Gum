@@ -11,6 +11,13 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>Animate</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Animation</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>Blend</Type>
       <Name>Blend</Name>
       <Value xsi:type="xsd:int">0</Value>
@@ -22,6 +29,12 @@
       <Name>Blue</Name>
       <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>CurrentChainName</Name>
+      <Category>Animation</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -70,6 +83,30 @@
       <Name>IgnoredByParentSize</Name>
       <Value xsi:type="xsd:boolean">false</Value>
       <Category>Parent</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MaxHeight</Name>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MaxWidth</Name>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MinHeight</Name>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MinWidth</Name>
+      <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

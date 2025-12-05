@@ -7,7 +7,7 @@ using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Math.Geometry
 {
-    public class Line : IRenderableIpso
+    public class Line : SpriteBatchRenderableBase, IRenderableIpso
     {
         #region Fields
 
@@ -18,7 +18,7 @@ namespace RenderingLibrary.Math.Geometry
 
         IRenderableIpso mParent;
 
-        ObservableCollection<IRenderableIpso> mChildren;
+        ObservableCollectionNoReset<IRenderableIpso> mChildren;
         SystemManagers mManagers;
 
         #endregion
@@ -182,7 +182,6 @@ namespace RenderingLibrary.Math.Geometry
 
         bool IRenderableIpso.IsRenderTarget => false;
 
-
         #endregion
 
         public Line()
@@ -205,7 +204,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
             }
 
-            mChildren = new ObservableCollection<IRenderableIpso>();
+            mChildren = new ();
             UpdatePoints();
         }
 
@@ -227,10 +226,11 @@ namespace RenderingLibrary.Math.Geometry
             mParent = parent;
         }
 
-        void IRenderable.Render(ISystemManagers managers)
+        public override void Render(ISystemManagers managers)
         {
             UpdatePoints();
-            if (Visible)
+            // See nineslice for explanation of this Visible check
+            //if (Visible)
             {
 
                 Texture2D textureToUse = AssociatedRenderer.SinglePixelTexture;
@@ -245,6 +245,8 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers, textureToUse, .2f * AssociatedRenderer.Camera.Zoom);
             }
         }
+
+
 
         void IRenderable.PreRender() { }
 

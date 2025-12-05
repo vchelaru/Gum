@@ -25,7 +25,6 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
 
     public bool IsRenderTarget => false;
 
-
     public SKSvg Texture
     {
         get; set;
@@ -54,7 +53,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
     public object Tag { get; set; }
 
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -185,7 +184,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
         Width = 32;
         Height = 32;
         this.Visible = true;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
     }
 
@@ -286,6 +285,14 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent) => mParent = parent;
 
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
+
     #region IVisible Implementation
 
     public bool Visible
@@ -316,6 +323,8 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
             return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
+
+    public string BatchKey => string.Empty;
 
 
     #endregion

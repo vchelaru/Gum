@@ -13,20 +13,23 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Elements;
-partial class Divider : MonoGameGum.Forms.Controls.FrameworkElement
+partial class Divider : global::Gum.Forms.Controls.FrameworkElement
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        var template = new global::MonoGameGum.Forms.VisualTemplate((vm, createForms) =>
+        var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/Divider");
+#if DEBUG
+if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/Divider - did you forget to load a Gum project?");
+#endif
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Divider(visual);
             return visual;
         });
-        global::MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Divider)] = template;
+        global::Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof(Divider)] = template;
         ElementSaveExtensions.RegisterGueInstantiation("Elements/Divider", () => 
         {
             var gue = template.CreateContent(null, true) as InteractiveGue;
@@ -57,7 +60,6 @@ partial class Divider : MonoGameGum.Forms.Controls.FrameworkElement
     }
     protected virtual void InitializeInstances()
     {
-        base.ReactToVisualChanged();
         AccentLeft = new global::MonoGameGum.GueDeriving.SpriteRuntime();
         AccentLeft.ElementSave = ObjectFinder.Self.GetStandardElement("Sprite");
         if (AccentLeft.ElementSave != null) AccentLeft.AddStatesAndCategoriesRecursivelyToGue(AccentLeft.ElementSave);
@@ -73,6 +75,7 @@ partial class Divider : MonoGameGum.Forms.Controls.FrameworkElement
         if (AccentRight.ElementSave != null) AccentRight.AddStatesAndCategoriesRecursivelyToGue(AccentRight.ElementSave);
         if (AccentRight.ElementSave != null) AccentRight.SetInitialState();
         AccentRight.Name = "AccentRight";
+        base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {

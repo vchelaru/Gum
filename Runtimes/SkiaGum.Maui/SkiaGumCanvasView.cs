@@ -81,7 +81,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     //public IReadOnlyCollection<BindableGue> GumElements => GumElementsInternal;
 
     // this is public to support adding GUE's directly in gencode.
-    public ObservableCollection<BindableGue> Children { get; private set; } = new ObservableCollection<BindableGue>();
+    public ObservableCollection<BindableGue> Children { get; private set; } = new ObservableCollectionNoReset<BindableGue>();
 
     SystemManagers SystemManagers;
     public Renderer Renderer => SystemManagers.Renderer;

@@ -1,0 +1,13 @@
+{
+  "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing System.Linq;\r\n",
+  "CodeProjectRoot": "C:\\Users\\vchel\\Documents\\GitHub\\Gum\\Samples\\MauiSkiaGum\\",
+  "RootNamespace": "MauiSkiaGum",
+  "AppendFolderToNamespace": true,
+  "InheritanceLocation": 1,
+  "ObjectInstantiationType": 0,
+  "DefaultScreenBase": "Gum.Wireframe.BindableGue",
+  "OutputLibrary": 2,
+  "AdjustPixelValuesForDensity": false,
+  "BaseTypesNotCodeGenerated": null,
+  "GenerateGumDataTypes": false
+}

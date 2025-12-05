@@ -76,7 +76,7 @@ partial class StardewHotbarScreen : IUpdateScreen
 
     private void AssignIcon(ItemSlot itemSlot, string itemName)
     {
-        var definition = _inventoryService.InventoryItems[itemName];
+        var definition = _inventoryService.InventoryItemDefinitions[itemName];
 
         itemSlot.ItemIconInstance.TextureTop = definition.PixelTop;
 

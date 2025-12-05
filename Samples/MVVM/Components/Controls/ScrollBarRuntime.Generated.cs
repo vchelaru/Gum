@@ -1,5 +1,8 @@
 //Code for Controls/ScrollBar (Container)
 using GumRuntime;
+using System.Linq;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -10,33 +13,39 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ScrollBarRuntime:ContainerRuntime
+partial class ScrollBarRuntime : ContainerRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ScrollBar", typeof(ScrollBarRuntime));
     }
-    public MonoGameGum.Forms.Controls.ScrollBar FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ScrollBar;
+    public global::Gum.Forms.Controls.ScrollBar FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.ScrollBar;
     public enum ScrollBarCategory
     {
     }
 
-    public ScrollBarCategory ScrollBarCategoryState
+    ScrollBarCategory? _scrollBarCategoryState;
+    public ScrollBarCategory? ScrollBarCategoryState
     {
+        get => _scrollBarCategoryState;
         set
         {
-            if(Categories.ContainsKey("ScrollBarCategory"))
+            _scrollBarCategoryState = value;
+            if(value != null)
             {
-                var category = Categories["ScrollBarCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
-            }
-            else
-            {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ScrollBarCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                if(Categories.ContainsKey("ScrollBarCategory"))
+                {
+                    var category = Categories["ScrollBarCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((global::Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ScrollBarCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
             }
         }
     }
@@ -61,12 +70,12 @@ public partial class ScrollBarRuntime:ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.ScrollBar(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.ScrollBar(this);
         }
         UpButtonInstance = this.GetGraphicalUiElementByName("UpButtonInstance") as ButtonIconRuntime;
         DownButtonInstance = this.GetGraphicalUiElementByName("DownButtonInstance") as ButtonIconRuntime;
-        TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as ContainerRuntime;
-        TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as NineSliceRuntime;
+        TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
+        TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
         ThumbInstance = this.GetGraphicalUiElementByName("ThumbInstance") as ButtonStandardRuntime;
         CustomInitialize();
     }

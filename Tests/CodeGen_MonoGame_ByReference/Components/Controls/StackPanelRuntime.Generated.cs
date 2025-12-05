@@ -20,7 +20,7 @@ partial class StackPanelRuntime : ContainerRuntime
     {
         GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/StackPanel", typeof(StackPanelRuntime));
     }
-    public global::MonoGameGum.Forms.Controls.StackPanel FormsControl => FormsControlAsObject as global::MonoGameGum.Forms.Controls.StackPanel;
+    public global::Gum.Forms.Controls.StackPanel FormsControl => FormsControlAsObject as global::Gum.Forms.Controls.StackPanel;
 
     public StackPanelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
@@ -37,7 +37,7 @@ partial class StackPanelRuntime : ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new global::MonoGameGum.Forms.Controls.StackPanel(this);
+            FormsControlAsObject = new global::Gum.Forms.Controls.StackPanel(this);
         }
         CustomInitialize();
     }

@@ -17,6 +17,9 @@ public interface IFileCommands
 
     void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName);
 
+    /// <summary>
+    /// Saves the current Screen, Component, Standard, or Behavior
+    /// </summary>
     void TryAutoSaveCurrentObject();
 
     void TryAutoSaveCurrentElement();
