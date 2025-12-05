@@ -1547,18 +1547,3 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return Clone();
     }
 }
-
-public static class StringExtensions
-{
-    public static string SubstringEnd(this string value, int lettersToRemove)
-    {
-        if (value.Length <= lettersToRemove)
-        {
-            return string.Empty;
-        }
-        else
-        {
-            return value.Substring(0, value.Length - lettersToRemove);
-        }
-    }
-}
