@@ -23,11 +23,12 @@ public class ArcRuntimeTests
     {
         ArcRuntime arcRuntime = new();
 
+        var containedArc = (Arc)arcRuntime.RenderableComponent;
         arcRuntime.StrokeWidth = 10;
+        containedArc.StrokeWidth.ShouldNotBe(10, "because the stroke width isn't applied until PreRender where the units are also considered");
 
         arcRuntime.PreRender();
 
-        var containedArc = (Arc)arcRuntime.RenderableComponent;
         containedArc.StrokeWidth.ShouldBe(10);
     }
 }

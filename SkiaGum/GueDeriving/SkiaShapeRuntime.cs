@@ -210,10 +210,13 @@ public abstract class SkiaShapeRuntime : BindableGue
         set => ContainedRenderable.IsFilled = value;
     }
 
+    // This should NOT modify the contained renderable stroke width directly.
+    // Rather it should be a value that does not affect the underlying object until
+    // pre-render happens where the StrokeWidthUnits can be adjusted too:
     public float StrokeWidth
     {
-        get => ContainedRenderable.StrokeWidth;
-        set => ContainedRenderable.StrokeWidth = value;
+        get;
+        set;
     }
 
     public DimensionUnitType StrokeWidthUnits
