@@ -60,49 +60,8 @@ public class BasicShapes
 
         InitializeStyling();
 
-        var stack = new StackPanel();
-        stack.AddToRoot();
-        stack.Anchor(Anchor.Center);
-
-        for (int i = 0; i < 7; i++)
-        {
-            var button = new Button();
-            stack.AddChild(button);
-            button.Text = "Hi";
-
-            for (int j = 0; j < i; j++)
-            {
-                button.Text += "\n" + j;
-            }
-        }
-
-        //var button = new Button();
-        //stack.AddChild(button);
-        //button.Text = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10";
-
-
-        //var textRuntime = ((ButtonVisual)button.Visual).TextInstance;
-
-
-        //var coloredRectangle = new ColoredRectangleRuntime();
-        //coloredRectangle.AddToRoot();
-        //coloredRectangle.Anchor(Anchor.Center);
-        //coloredRectangle.X = 200;
-        //coloredRectangle.Width = 100;
-        //coloredRectangle.Height = 0;
-        //coloredRectangle.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-
-        //var otherText = new TextRuntime();
-        //otherText.Height = 0;
-        //otherText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        //otherText.Anchor(Anchor.Left);
-        //coloredRectangle.AddChild(otherText);
-        //otherText.Text = "1\n2\n3\n4\n5\n6\n7\n8\n9";
-
-
-
         // Uncomment this to see forms controls:
-        //CreateFormsControls();
+        CreateFormsControls();
 
         // Uncomment this to see normal runtime objects;
         //CreateRuntimes();
