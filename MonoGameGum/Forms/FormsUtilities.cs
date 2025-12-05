@@ -494,9 +494,18 @@ public class FormsUtilities
             }
             else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
             {
-                ElementSaveExtensions.RegisterGueInstantiationType(
-                    component.Name,
-                    typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+                if(component.BaseType == "Text")
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelTextRuntime), overwriteIfAlreadyExists: false);
+                }
+                else
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+                }
             }
             else if (behaviorNames.Contains("ListBoxBehavior"))
             {
