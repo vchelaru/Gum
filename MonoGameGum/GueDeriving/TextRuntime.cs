@@ -210,6 +210,15 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public string Font
     {
+        get => FontFamily;
+        set => FontFamily = value;
+    }
+
+    /// <summary>
+    /// The font name, such as "Arial", which is used to load fonts from 
+    /// </summary>
+    public string FontFamily
+    {
         get { return font; }
         set { font = value; UpdateToFontValues(); }
     }

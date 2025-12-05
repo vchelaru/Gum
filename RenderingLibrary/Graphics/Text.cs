@@ -102,17 +102,14 @@ public class ParameterizedLetterCustomizationCall
 
 #endregion
 
-public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText, ICloneable
+public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrappedText, ICloneable
 {
     #region Fields
 
-    static SpriteFont mDefaultSpriteFont;
-    static BitmapFont mDefaultBitmapFont;
-
     public static SpriteFont DefaultFont
     {
-        get { return mDefaultSpriteFont; }
-        set { mDefaultSpriteFont = value; }
+        get;
+        set;
     }
 
     /// <summary>
@@ -120,8 +117,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     /// </summary>
     public static BitmapFont DefaultBitmapFont
     {
-        get { return mDefaultBitmapFont; }
-        set { mDefaultBitmapFont = value; }
+        get;
+        set;
     }
 
     /// <summary>
@@ -184,6 +181,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     float mFontScale = 1;
 
     public bool mIsTextureCreationSuppressed;
+
+    bool IWrappedText.IsMidWordLineBreakEnabled => IsMidWordLineBreakEnabled;
 
     // Defaulting to false, will be turned on in future version
     // Updating to true on August 3, 2025 for:
@@ -310,10 +309,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     string? mRawText;
     public string? RawText
     {
-        get
-        {
-            return mRawText;
-        }
+        get => mRawText;
         set
         {
             if (mRawText != value)
@@ -335,36 +331,18 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     /// </summary>
     public string StoredMarkupText { get; set; }
 
-    public List<string> WrappedText
-    {
-        get
-        {
-            return mWrappedText;
-        }
-    }
+    public List<string> WrappedText => mWrappedText;
 
     public float X
     {
-        get
-        {
-            return Position.X;
-        }
-        set
-        {
-            Position.X = value;
-        }
+        get => Position.X;
+        set => Position.X = value;
     }
 
     public float Y
     {
-        get
-        {
-            return Position.Y;
-        }
-        set
-        {
-            Position.Y = value;
-        }
+        get => Position.Y;
+        set => Position.Y = value;
     }
 
     public bool FlipHorizontal { get; set; }
@@ -490,13 +468,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     }
 
 
-    bool IRenderableIpso.ClipsChildren
-    {
-        get
-        {
-            return false;
-        }
-    }
+    bool IRenderableIpso.ClipsChildren => false;
 
     public HorizontalAlignment HorizontalAlignment
     {
@@ -664,10 +636,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
         set;
     }
 
-    public bool Wrap
-    {
-        get { return false; }
-    }
+    public bool Wrap =>false; 
 
     float IPositionedSizedObject.Width
     {
@@ -694,6 +663,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     }
 
     public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
+
+    public int LineHeightInPixels => BitmapFont?.LineHeightInPixels ?? 32;
 
     public float LineHeightMultiplier { get; set; } = 1;
 
@@ -793,244 +764,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     const string ellipsis = "...";
     public void UpdateLines(List<string> lines)
     {
-        var effectiveMaxNumberOfLines = MaxNumberOfLines;
-
-        if (TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
-        {
-
-            var maxLinesFromHeight = (int)(Height / BitmapFont.LineHeightInPixels);
-            if (maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
-            {
-                effectiveMaxNumberOfLines = maxLinesFromHeight;
-            }
-        }
-
-        if (string.IsNullOrEmpty(mRawText) || effectiveMaxNumberOfLines == 0)
-        {
-            return;
-        }
-        /////////END EARLY OUT///////////
-
-        float ellipsisWidth = (effectiveMaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
-            ? ellipsisWidth = MeasureString(ellipsis)
-            : 0;
-
-        string? stringToUse = string.IsNullOrEmpty(mRawText)
-            ? null
-            : stringToUse = mRawText.Replace("\r\n", "\n");
-
-
-        int wrappingWidth = int.MaxValue;
-        if (mWidth != null && !float.IsPositiveInfinity(mWidth.Value) && mFontScale > 0)
-        {
-            wrappingWidth =  MathFunctions.RoundToInt(System.Math.Ceiling( mWidth.Value / mFontScale));
-        }
-
-        wrappingWidth = System.Math.Max(0, wrappingWidth);
-
-
-        // This allocates like crazy but we're
-        // on the PC and prob won't be calling this
-        // very frequently so let's 
-        String currentLine = String.Empty;
-        String returnString = String.Empty;
-
-        // The words to process, including the current word
-        List<string> remainingWordsToProcess = new();
-
-        // The user may have entered "\n" in the string, which would 
-        // be written as "\\n".  Let's replace that, shall we?
-        if (!string.IsNullOrEmpty(mRawText))
-        {
-            // multiline text editing in Gum can add \r's, so get rid of those:
-            stringToUse = mRawText.Replace("\r\n", "\n");
-            remainingWordsToProcess.AddRange(stringToUse.Split(whatToSplitOn));
-        }
-
-
-        bool isLastLine = false;
-        while (remainingWordsToProcess.Count != 0)
-        {
-            isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
-
-            // The current word, separated by newlines if one exists. The remainingWordsToProcess
-            // continues to hold the unmodified word
-            string currentWord = remainingWordsToProcess[0];
-            var wordBeforeNewlineRemoval = currentWord;
-            var isLastWord = remainingWordsToProcess.Count == 1;
-
-            bool containsNewline = false;
-            bool startsWithNewline = false;
-
-            if (ToolsUtilities.StringFunctions.ContainsNoAlloc(currentWord, '\n'))
-            {
-                startsWithNewline = currentWord.StartsWith("\n");
-
-                // Newline is an explicit character that the user might
-                // enter in a textbox. We don't want to lose this character
-                // becuse it can be deleted.
-                //word = word.Substring(0, word.IndexOf('\n'));
-                currentWord = currentWord.Substring(0, currentWord.IndexOf('\n') + 1);
-                containsNewline = true;
-            }
-
-            // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
-            // to include part of the word:
-
-            float linePlusWordWidth = MeasureString(currentLine + currentWord);
-
-            var shouldAddEllipsis =
-                IsTruncatingWithEllipsisOnLastLine &&
-                isLastLine &&
-                // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
-                ((isLastWord && linePlusWordWidth > wrappingWidth) ||
-                 // it's not the last word so we need to see if ellipsis fit
-                 (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
-            if (shouldAddEllipsis)
-            {
-                var addedEllipsis = false;
-                for (int i = 1; i < currentWord.Length; i++)
-                {
-                    var substringEnd = currentWord.SubstringEnd(i);
-
-                    float linePlusWordSub = MeasureString(currentLine + substringEnd);
-
-                    if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
-                    {
-                        lines.Add(currentLine + substringEnd + ellipsis);
-                        addedEllipsis = true;
-                        break;
-                    }
-                }
-
-                if (!addedEllipsis && currentLine.EndsWith(" "))
-                {
-                    lines.Add(currentLine.SubstringEnd(1) + ellipsis);
-
-                }
-                break;
-            }
-
-            bool handledByLineTooLong = false;
-
-            if (linePlusWordWidth > wrappingWidth)
-            {
-                if (!string.IsNullOrEmpty(currentLine))
-                {
-                    handledByLineTooLong = true;
-                    // We already have a line started, so let's add it
-                    // and start the next line
-                    lines.Add(currentLine);
-                    if (lines.Count == effectiveMaxNumberOfLines)
-                    {
-                        break;
-                    }
-
-                    currentLine = String.Empty;
-                }
-                // we don't have a line started, but we have a word that is too
-                // long. if we're not using ellipses, then we should measure the 
-                // string, add what we can, and go to the next line:
-                else if(IsMidWordLineBreakEnabled)
-                {
-                    handledByLineTooLong = true;
-                    if (currentWord.Length == 1)
-                    {
-                        lines.Add(currentWord);
-                        remainingWordsToProcess.RemoveAt(0);
-                    }
-                    else
-                    {
-                        for (int i = 1; i < currentWord.Length; i++)
-                        {
-                            var substring = currentWord.Substring(0, i + 1);
-                            float substringLength = MeasureString(substring);
-
-                            if (substringLength >= wrappingWidth)
-                            {
-                                string stringToAdd = string.Empty;
-
-
-                                // word fits perfectly in the line, so add
-                                // the substring
-                                if (substringLength == wrappingWidth)
-                                {
-                                    // add this word to the lines, and subtract what was added
-                                    // from the current word:
-                                    stringToAdd = currentWord.Substring(0, i + 1);
-                                    lines.Add(stringToAdd);
-
-                                    // Be sure to use remainingWordsToProcess[0] so we get everything
-                                    // before it was broken up by newlines
-                                    currentWord = remainingWordsToProcess[0].Substring(i + 1);
-                                    remainingWordsToProcess[0] = currentWord;
-                                    break;
-                                }
-                                else if (substringLength > wrappingWidth)
-                                {
-                                    stringToAdd = currentWord.Substring(0, i);
-                                    lines.Add(stringToAdd);
-
-                                    // Be sure to use remainingWordsToProcess[0] so we get everything
-                                    // before it was broken up by newlines
-                                    currentWord = remainingWordsToProcess[0].Substring(i);
-                                    remainingWordsToProcess[0] = currentWord;
-                                    break;
-                                }
-                            }
-
-                        }
-                    }
-
-                    //returnString = returnString + line + '\n';
-                    currentLine = String.Empty;
-                }
-            }
-            if(!handledByLineTooLong)
-            {
-                // If it's the first word and it's empty, don't add anything
-                // update - but this prevents the word from starting with a space, which it should be able to 
-                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
-                {
-
-                    if ((remainingWordsToProcess.Count > 1 || currentWord == "") &&
-                        // Update Feb 19, 2023
-                        // don't insert space after if it's a newline. That messes up indexes.
-                        !containsNewline)
-                    {
-                        currentLine = currentLine + currentWord + ' ';
-                    }
-                    else
-                    {
-                        currentLine = currentLine + currentWord;
-                    }
-                }
-
-                remainingWordsToProcess.RemoveAt(0);
-
-                if (containsNewline)
-                {
-                    lines.Add(currentLine);
-
-
-                    if (lines.Count == effectiveMaxNumberOfLines)
-                    {
-                        break;
-                    }
-                    currentLine = string.Empty;
-
-                    int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
-                    remainingWordsToProcess.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
-                }
-
-            }
-
-        }
-
-        if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
-        {
-            lines.Add(currentLine);
-        }
+        ((IWrappedText)this).UpdateLines(lines);
 
         mNeedsBitmapFontRefresh = true;
     }
@@ -1755,7 +1489,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
                 mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
             }
 
-            mPreRenderWidth = (int)(requiredWidth + .5f);
+            mPreRenderWidth = requiredWidth;
             mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
         }
     }
@@ -1811,20 +1545,5 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IText,
     object ICloneable.Clone()
     {
         return Clone();
-    }
-}
-
-public static class StringExtensions
-{
-    public static string SubstringEnd(this string value, int lettersToRemove)
-    {
-        if (value.Length <= lettersToRemove)
-        {
-            return string.Empty;
-        }
-        else
-        {
-            return value.Substring(0, value.Length - lettersToRemove);
-        }
     }
 }

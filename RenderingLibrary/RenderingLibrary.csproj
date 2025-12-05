@@ -68,6 +68,7 @@
 		<Compile Remove="Graphics\IText.cs" />
 		<Compile Remove="Graphics\ITextureCoordinate.cs" />
 		<Compile Remove="Graphics\IVisible.cs" />
+		<Compile Remove="Graphics\IWrappedText.cs" />
 		<Compile Remove="Graphics\Layer.cs" />
 		<Compile Remove="Graphics\LayerCameraSettings.cs" />
 		<Compile Remove="Graphics\NineSliceExtensions.cs" />

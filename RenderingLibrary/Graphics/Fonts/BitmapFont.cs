@@ -979,7 +979,7 @@ public class BitmapFont : IDisposable
     /// <param name="requiredWidth">The required width returned by this method.</param>
     /// <param name="requiredHeight">The required height returned by this method.</param>
     /// <param name="widths">The widths of the individual lines.</param>
-    public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+    public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
     {
 
         requiredWidth = 0;

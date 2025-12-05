@@ -24,7 +24,14 @@ internal class ContentLoader : IContentLoader
             // try loading locally first:
             if(System.IO.File.Exists(contentName))
             {
-                return (T)(object)LoadFontEx(contentName, 24, null, 0);
+                if(contentName.ToLower().EndsWith(".fnt"))
+                {
+                    return (T)(object)Raylib.LoadFont(contentName);
+                }
+                else
+                {
+                    return (T)(object)LoadFontEx(contentName, 24, null, 0);
+                }
             }
             if (System.IO.File.Exists(contentName + ".ttf"))
             {

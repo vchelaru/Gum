@@ -106,10 +106,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
     { 
     }
 
-    public virtual void PreRender()
-    {
-        
-    }
+    public virtual void PreRender() { }
 
     public abstract void Render(ISystemManagers managers);
 
