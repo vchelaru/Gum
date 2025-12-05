@@ -106,13 +106,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 {
     #region Fields
 
-    static SpriteFont mDefaultSpriteFont;
-    static BitmapFont mDefaultBitmapFont;
-
     public static SpriteFont DefaultFont
     {
-        get { return mDefaultSpriteFont; }
-        set { mDefaultSpriteFont = value; }
+        get;
+        set;
     }
 
     /// <summary>
@@ -120,8 +117,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public static BitmapFont DefaultBitmapFont
     {
-        get { return mDefaultBitmapFont; }
-        set { mDefaultBitmapFont = value; }
+        get;
+        set;
     }
 
     /// <summary>

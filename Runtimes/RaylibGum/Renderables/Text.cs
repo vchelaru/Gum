@@ -475,11 +475,19 @@ public class Text : IVisible, IRenderableIpso,
             origin.Y = MeasureTextEx(fontValue, RawText, FontSize, 1).Y;
         }
 
+        for(int i = 0; i < WrappedText.Count; i++)
+        {
+            var line = WrappedText[i];
+            var linePosition = position;
+            linePosition.Y += i * (FontSize + 2); // todo - handle line spacing
+            DrawTextPro(fontValue, line, linePosition, origin, 0, FontSize, 1, Color);
+        }
+
         // todo - handle alignment
         //DrawText(RawText, x, y, 20, Color.DarkGray);
         //DrawTextEx(Font, RawText, position, FontSize, 0, Color);
-        const float spacing = 1;
-        DrawTextPro(fontValue, RawText, position, origin, 0, FontSize, spacing, Color);
+        //const float spacing = 1;
+        //DrawTextPro(fontValue, RawText, position, origin, 0, FontSize, spacing, Color);
 
     }
 

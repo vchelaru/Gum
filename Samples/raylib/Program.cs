@@ -97,9 +97,11 @@ public class BasicShapes
             GumUI.Update(0);
 
             GumUI.Draw();
-
+            baseRectangle.Width += 0.3f;
 
             EndDrawing();
+
+            Thread.Sleep(12);
             //----------------------------------------------------------------------------------
         }
 
@@ -110,19 +112,29 @@ public class BasicShapes
 
     }
 
+    static ColoredRectangleRuntime baseRectangle;
     private static void CreateRuntimes()
     {
+        baseRectangle = new ColoredRectangleRuntime();
+        baseRectangle.AddToRoot();
+        baseRectangle.Width = 1;
+        baseRectangle.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        baseRectangle.Height = 300;
+        baseRectangle.Anchor(Anchor.Center);
+        baseRectangle.ClipsChildren = true;
+
         var textRuntime = new TextRuntime();
-        textRuntime.AddToRoot();
+        baseRectangle.AddChild(textRuntime);
 
-        textRuntime.Text = "Hello Justin. I am some really long text. I should line wrap, right? Why don't I?";
+        textRuntime.Text = "Hello Justin. I am some really long text. " +
+            "I am using shared code with MonoGame Gum now which is performing line wrapping. It seems to work " +
+            "fairly well, wouldn't you say? Ya, I think so! As this gets wider, the text continues to adjust its" +
+            "wrapping behavior.";
 
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        textRuntime.Width = 200;
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        textRuntime.Width = 0;
         textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         textRuntime.Height = 200;
-
-        textRuntime.Anchor(Anchor.Center);
 
         textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
         textRuntime.VerticalAlignment = VerticalAlignment.Top;
