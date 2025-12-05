@@ -1489,7 +1489,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
             }
 
-            mPreRenderWidth = (int)(requiredWidth + .5f);
+            mPreRenderWidth = requiredWidth;
             mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
         }
     }

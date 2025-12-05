@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Renderables;
 using Gum.Wireframe;
@@ -18,6 +19,20 @@ namespace RaylibGum.Renderables;
 internal static class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
+
+    public static event Action<string>? PropertyAssignmentError;
+
+    static CustomSetPropertyOnRenderable()
+    {
+#if GUM
+        _fontManager = Builder.Get<FontManager>();
+#endif
+    }
+
+    /// <summary>
+    /// Additional logic to perform before falling back to reflection. This can be added by libraries adding additional runtime types
+    /// </summary>
+    public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
 
     public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -273,28 +288,59 @@ internal static class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static bool TrySetPropertyOnText(Text asText, GraphicalUiElement gue, string propertyName, object value)
+    private static bool TrySetPropertyOnText(Text asText, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
-        if (propertyName == "Text")
+
+#if FRB
+        // FRB doesn't yet have a TextRuntime, so we have to do this:
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+#endif
+
+        void ReactToFontValueChange()
         {
-            if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
+
+            UpdateToFontValues(asText, graphicalUiElement);
+
+            handled = true;
+        }
+
+        if (propertyName == "Text" || propertyName == "TextNoTranslate")
+        {
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
-                gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
                 // make it have no line wrap width before assignign the text:
-                asText.Width = 0;
+                asText.Width = null;
             }
 
-            asText.RawText = value as string;
+            var valueAsString = value as string;
+
+            asText.RawText = valueAsString;
             // we want to update if the text's size is based on its "children" (the letters it contains)
-            if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
-                gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
-                gue.UpdateLayout();
+                graphicalUiElement.UpdateLayout();
             }
             handled = true;
+        }
+        else if (propertyName == "Font Scale" || propertyName == "FontScale")
+        {
+            //asText.FontScale = (float)value;
+            //// we want to update if the text's size is based on its "children" (the letters it contains)
+            //if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+            //    // If height is relative to children, it could be in a stack
+            //    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            //{
+            //    graphicalUiElement.UpdateLayout();
+            //}
+            //handled = true;
+
         }
         else if (propertyName == "Font")
         {
@@ -305,12 +351,131 @@ internal static class CustomSetPropertyOnRenderable
             }
             else if (value is string fontString)
             {
-                var fontFromGum = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Font>(fontString);
-                asText.Font = fontFromGum;
+                asText.FontFamily = fontString;
+
+
+                ReactToFontValueChange();
                 handled = true;
             }
         }
+
+        else if (propertyName == nameof(textRuntime.UseCustomFont))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.UseCustomFont = (bool)value;
+            }
+            //var asText = ((Text)mContainedObjectAsIpso);
+            //if (!string.IsNullOrEmpty(asText.StoredMarkupText))
+            //{
+            //    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+            //}
+            ReactToFontValueChange();
+        }
+
+        else if (propertyName == nameof(textRuntime.CustomFontFile))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.CustomFontFile = (string)value;
+            }
+            ReactToFontValueChange();
+
+        }
+
+        else if (propertyName == nameof(textRuntime.FontSize))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.FontSize = (int)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.OutlineThickness))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.OutlineThickness = (int)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.IsItalic))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.IsItalic = (bool)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.IsBold))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.IsBold = (bool)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == "LineHeightMultiplier")
+        {
+            //asText.LineHeightMultiplier = (float)value;
+        }
+        else if (propertyName == nameof(textRuntime.UseFontSmoothing))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.UseFontSmoothing = (bool)value;
+            }
+            ReactToFontValueChange();
+        }
         return handled;
+    }
+
+    private static void UpdateToFontValues(Text asText, GraphicalUiElement graphicalUiElement)
+    {
+        var textRuntime = graphicalUiElement as TextRuntime;
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (textRuntime.UseCustomFont)
+        {
+            // todo here:
+            string fontName = textRuntime.CustomFontFile;
+
+            string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+            var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
+            if (fontFromGum.BaseSize == 0)
+            {
+                fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+            }
+            asText.Font = fontFromGum;
+        }
+        else
+        {
+            if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(asText.FontFamily))
+            {
+
+                string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                textRuntime.FontSize,
+                asText.FontFamily,
+                textRuntime.OutlineThickness,
+                textRuntime.UseFontSmoothing,
+                textRuntime.IsItalic,
+                textRuntime.IsBold);
+
+                string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                //font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+
+
+                var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
+                if (fontFromGum.BaseSize == 0)
+                {
+                    fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+                }
+                asText.Font = fontFromGum;
+            }
+        }
     }
 
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)

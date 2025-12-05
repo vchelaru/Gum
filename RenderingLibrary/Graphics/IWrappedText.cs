@@ -274,7 +274,7 @@ public static class IWrappedTextExtensions
         //mNeedsBitmapFontRefresh = true;
     }
 
-    public static string SubstringEnd(this string value, int lettersToRemove)
+    static string SubstringEnd(this string value, int lettersToRemove)
     {
         if (value.Length <= lettersToRemove)
         {
