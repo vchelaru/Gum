@@ -60,12 +60,52 @@ public class BasicShapes
 
         InitializeStyling();
 
+        var stack = new StackPanel();
+        stack.AddToRoot();
+        stack.Anchor(Anchor.Center);
+
+        for (int i = 0; i < 7; i++)
+        {
+            var button = new Button();
+            stack.AddChild(button);
+            button.Text = "Hi";
+
+            for (int j = 0; j < i; j++)
+            {
+                button.Text += "\n" + j;
+            }
+        }
+
+        //var button = new Button();
+        //stack.AddChild(button);
+        //button.Text = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10";
+
+
+        //var textRuntime = ((ButtonVisual)button.Visual).TextInstance;
+
+
+        //var coloredRectangle = new ColoredRectangleRuntime();
+        //coloredRectangle.AddToRoot();
+        //coloredRectangle.Anchor(Anchor.Center);
+        //coloredRectangle.X = 200;
+        //coloredRectangle.Width = 100;
+        //coloredRectangle.Height = 0;
+        //coloredRectangle.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+        //var otherText = new TextRuntime();
+        //otherText.Height = 0;
+        //otherText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        //otherText.Anchor(Anchor.Left);
+        //coloredRectangle.AddChild(otherText);
+        //otherText.Text = "1\n2\n3\n4\n5\n6\n7\n8\n9";
+
+
 
         // Uncomment this to see forms controls:
         //CreateFormsControls();
 
         // Uncomment this to see normal runtime objects;
-        CreateRuntimes();
+        //CreateRuntimes();
 
         // Main game loop
         while (!WindowShouldClose())
@@ -97,7 +137,11 @@ public class BasicShapes
             GumUI.Update(0);
 
             GumUI.Draw();
-            baseRectangle.Width += 0.3f;
+
+            if(baseRectangle != null)
+            {
+                //baseRectangle.Width += 0.3f;
+            }
 
             EndDrawing();
 
@@ -117,24 +161,27 @@ public class BasicShapes
     {
         baseRectangle = new ColoredRectangleRuntime();
         baseRectangle.AddToRoot();
-        baseRectangle.Width = 1;
+        baseRectangle.Width = 100;
         baseRectangle.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        baseRectangle.Height = 300;
+        baseRectangle.Height = 0;
+        baseRectangle.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         baseRectangle.Anchor(Anchor.Center);
-        baseRectangle.ClipsChildren = true;
+        //baseRectangle.ClipsChildren = true;
 
         var textRuntime = new TextRuntime();
         baseRectangle.AddChild(textRuntime);
 
-        textRuntime.Text = "Hello Justin. I am some really long text. " +
-            "I am using shared code with MonoGame Gum now which is performing line wrapping. It seems to work " +
-            "fairly well, wouldn't you say? Ya, I think so! As this gets wider, the text continues to adjust its" +
-            "wrapping behavior.";
+
+        textRuntime.Text = "1";
+        for(int i = 2; i < 16; i++)
+        {
+            textRuntime.Text += "\n" + i.ToString();
+        }
 
         textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         textRuntime.Width = 0;
-        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        textRuntime.Height = 200;
+        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        textRuntime.Height = 0;
 
         textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
         textRuntime.VerticalAlignment = VerticalAlignment.Top;

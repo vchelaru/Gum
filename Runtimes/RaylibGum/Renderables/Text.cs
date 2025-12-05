@@ -16,7 +16,28 @@ namespace Gum.Renderables;
 public class Text : IVisible, IRenderableIpso,
     IWrappedText
 {
-    Font _font = Raylib.GetFontDefault();
+    private int _lineHeightInPixels;
+
+    /// <summary>
+    /// Stores the width of the text object's texture before it has had a chance to render, not including
+    /// the FontScale.
+    /// </summary>
+    /// <remarks>
+    /// A text object may need to be positioned according to its dimensions. Normally this would
+    /// use a text's render target texture. In some situations (before the render pass has occurred,
+    /// or when using character-by-character rendering), the text may not have a render target texture.
+    /// Therefore, the pre-rendered values provide size information.
+    /// </remarks>
+    int? mPreRenderWidth;
+    /// <summary>
+    /// Stores the height of the text object's texture before it has had a chance to render, not including
+    /// the FontScale.
+    /// </summary>
+    /// <remarks>
+    /// See mPreRenderWidth for more information about this member.
+    /// </remarks>
+    int? mPreRenderHeight;
+
     bool IWrappedText.IsMidWordLineBreakEnabled => true;
 
     //static Font defaultFont = Raylib.GetFontDefault();
@@ -68,6 +89,7 @@ public class Text : IVisible, IRenderableIpso,
         set;
     }
 
+    Font _font;
     public Font Font
     {
         get
@@ -79,9 +101,19 @@ public class Text : IVisible, IRenderableIpso,
 
             return _font;
         }
-        set => _font = value;
+        set
+        {
+            _font = value;
+
+            // cache this to make checking this faster
+            UpdateLineHeightInPixels();
+        }
     }
 
+    private void UpdateLineHeightInPixels()
+    {
+        _lineHeightInPixels = (int)(MeasureTextEx(_font, "M", FontSize, 1).Y + .5);
+    }
 
     public ObservableCollection<IRenderableIpso> Children
     {
@@ -189,13 +221,56 @@ public class Text : IVisible, IRenderableIpso,
 
     public BlendState BlendState { get; set; } = BlendState.NonPremultiplied;
 
-    public int FontSize { get; set; } = 12;
+    public int FontSize
+    {
+        get => _fontSize;
+        set
+        {
+            _fontSize = value; UpdateLineHeightInPixels();
+        }
+    }
 
-    public float WrappedTextWidth =>  MeasureTextEx(Font, RawText, FontSize, 1).X;
+    public float WrappedTextWidth
+    {
+        get
+        {
+            if (mPreRenderWidth != null)
+            {
+                return mPreRenderWidth.Value * FontScale;
+            }
+            //else if (mTextureToRender?.Width > 0)
+            //{
+            //    return mTextureToRender.Width * mFontScale;
+            //}
+            else
+            {
+                return 0;
+            }
+        }
+    }
 
-    public float WrappedTextHeight => MeasureTextEx(Font, RawText, FontSize, 1).Y;
+    public float WrappedTextHeight
+    {
+        get
+        {
+            if (mPreRenderHeight != null)
+            {
+                return mPreRenderHeight.Value * FontScale;
+            }
+            //else if (mTextureToRender?.Height > 0)
+            //{
+            //    return mTextureToRender.Height * mFontScale;
+            //}
+            else
+            {
+                return 0;
+            }
+        }
+    }
 
     int? maxNumberOfLines;
+    private int _fontSize = 12;
+
     /// <summary>
     /// The maximum number of lines to display. This can be used to 
     /// limit how many lines of text are displayed at one time.
@@ -308,10 +383,10 @@ public class Text : IVisible, IRenderableIpso,
             // the width/height has updated but it hasn't yet made its way to the
             // texture. This could happen when the text already has a texture, so give
             // priority to the prerendered values as they may be more up-to-date.
-            //else if (mPreRenderWidth.HasValue)
-            //{
-            //    return mPreRenderWidth.Value * mFontScale;
-            //}
+            else if (mPreRenderWidth.HasValue)
+            {
+                return mPreRenderWidth.Value * FontScale;
+            }
             //else if (mTextureToRender != null)
             //{
             //    if (mTextureToRender.Width == 0)
@@ -343,10 +418,10 @@ public class Text : IVisible, IRenderableIpso,
                 return Height;
             }
             // See EffectiveWidth for an explanation of why the prerendered values need to come first
-            //else if (mPreRenderHeight.HasValue)
-            //{
-            //    return mPreRenderHeight.Value * mFontScale;
-            //}
+            else if (mPreRenderHeight.HasValue)
+            {
+                return mPreRenderHeight.Value * FontScale;
+            }
             //else if (mTextureToRender != null)
             //{
             //    if (mTextureToRender.Height == 0)
@@ -393,7 +468,7 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     // not sure if basesize is correct here...
-    public int LineHeightInPixels => Font.BaseSize;
+    public int LineHeightInPixels => _lineHeightInPixels;
 
     bool IRenderable.Wrap => false;
 
@@ -412,6 +487,7 @@ public class Text : IVisible, IRenderableIpso,
 
     public Text(ISystemManagers? managers)
     {
+        Font = GetFontDefault();
         mChildren = new();
         Visible = true;
     }
@@ -445,41 +521,44 @@ public class Text : IVisible, IRenderableIpso,
 
         var fontValue = Font;
 
+        var absoluteLeft = this.GetAbsoluteLeft();
         var position = new Vector2(
-            this.GetAbsoluteLeft(),
+            absoluteLeft,
             this.GetAbsoluteTop());
         var origin = new Vector2(
-            0, // todo - handle horizontal alignment
-            0); // todo - handle vertical alignment
+            0,
+            0);
 
-
-        if(HorizontalAlignment == HorizontalAlignment.Center)
-        {
-            position.X += this.Width??32 / 2;
-            origin.X = MeasureTextEx(fontValue, RawText, FontSize, 1).X/2;
-        }
-        else if (HorizontalAlignment == HorizontalAlignment.Right)
-        {
-            position.X += this.Width??32;
-            origin.X = MeasureTextEx(fontValue, RawText, FontSize, 1).X;
-        }
 
         if (VerticalAlignment == VerticalAlignment.Center)
         {
             position.Y += this.Height / 2;
-            origin.Y = MeasureTextEx(fontValue, RawText, FontSize, 1).Y / 2;
+            origin.Y = mPreRenderHeight / 2 ?? 0;
         }
         if (VerticalAlignment == VerticalAlignment.Bottom)
         {
             position.Y += this.Height;
-            origin.Y = MeasureTextEx(fontValue, RawText, FontSize, 1).Y;
+            origin.Y = mPreRenderHeight ?? 0;
         }
 
         for(int i = 0; i < WrappedText.Count; i++)
         {
             var line = WrappedText[i];
+            origin.X = 0;
+            position.X = absoluteLeft;
+
+            if(HorizontalAlignment == HorizontalAlignment.Center)
+            {
+                position.X += (this.Width??32) / 2;
+                origin.X = MeasureTextEx(fontValue, line, FontSize, 1).X/2;
+            }
+            else if (HorizontalAlignment == HorizontalAlignment.Right)
+            {
+                position.X += this.Width??32;
+                origin.X = MeasureTextEx(fontValue, line, FontSize, 1).X;
+            }
             var linePosition = position;
-            linePosition.Y += i * (FontSize + 2); // todo - handle line spacing
+            linePosition.Y += i * LineHeightInPixels;
             DrawTextPro(fontValue, line, linePosition, origin, 0, FontSize, 1, Color);
         }
 
@@ -497,6 +576,45 @@ public class Text : IVisible, IRenderableIpso,
 
     public void UpdatePreRenderDimensions()
     {
+        int requiredWidth = 0;
+        int requiredHeight = 0;
+
+        if (this.mRawText != null)
+        {
+            GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight, null);
+        }
+
+        mPreRenderWidth = (int)(requiredWidth + .5f);
+        //mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
+        mPreRenderHeight = (int)(requiredHeight * 1 + .5f);
+    }
+
+    public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<float>? widths)
+    {
+
+        float maxWidth = 0;
+        float maxHeight = 0;
+
+        foreach (string line in lines)
+        {
+            maxHeight += LineHeightInPixels;
+            float lineWidth = 0;
+
+            lineWidth = (int)Math.Ceiling(this.MeasureString(line));
+            if (widths != null)
+            {
+                widths.Add(lineWidth);
+            }
+            maxWidth = System.Math.Max(lineWidth, maxWidth);
+        }
+
+        const int MaxWidthAndHeight = 4096; // change this later?
+        requiredWidth = System.Math.Min((int)(maxWidth +.5f), MaxWidthAndHeight);
+        requiredHeight = System.Math.Min((int)(maxHeight + .5f), MaxWidthAndHeight);
+        //if (requiredWidth != 0 && mOutlineThickness != 0)
+        //{
+        //    requiredWidth += mOutlineThickness * 2;
+        //}
     }
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
