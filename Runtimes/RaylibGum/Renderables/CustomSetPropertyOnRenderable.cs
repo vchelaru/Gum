@@ -378,8 +378,8 @@ internal static class CustomSetPropertyOnRenderable
             if (textRuntime != null)
             {
                 textRuntime.CustomFontFile = (string)value;
+                ReactToFontValueChange();
             }
-            ReactToFontValueChange();
 
         }
 
@@ -388,32 +388,32 @@ internal static class CustomSetPropertyOnRenderable
             if (textRuntime != null)
             {
                 textRuntime.FontSize = (int)value;
+                ReactToFontValueChange();
             }
-            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.OutlineThickness))
         {
             if (textRuntime != null)
             {
                 textRuntime.OutlineThickness = (int)value;
+                ReactToFontValueChange();
             }
-            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.IsItalic))
         {
             if (textRuntime != null)
             {
                 textRuntime.IsItalic = (bool)value;
+                ReactToFontValueChange();
             }
-            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.IsBold))
         {
             if (textRuntime != null)
             {
                 textRuntime.IsBold = (bool)value;
+                ReactToFontValueChange();
             }
-            ReactToFontValueChange();
         }
         else if (propertyName == "LineHeightMultiplier")
         {
@@ -424,8 +424,8 @@ internal static class CustomSetPropertyOnRenderable
             if (textRuntime != null)
             {
                 textRuntime.UseFontSmoothing = (bool)value;
+                ReactToFontValueChange();
             }
-            ReactToFontValueChange();
         }
         return handled;
     }
@@ -436,37 +436,14 @@ internal static class CustomSetPropertyOnRenderable
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
-        if (textRuntime.UseCustomFont)
+        if(textRuntime != null)
         {
-            // todo here:
-            string fontName = textRuntime.CustomFontFile;
-
-            string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-            var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
-            if (fontFromGum.BaseSize == 0)
+            if (textRuntime.UseCustomFont == true)
             {
-                fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
-            }
-            asText.Font = fontFromGum;
-        }
-        else
-        {
-            if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(asText.FontFamily))
-            {
-
-                string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                textRuntime.FontSize,
-                asText.FontFamily,
-                textRuntime.OutlineThickness,
-                textRuntime.UseFontSmoothing,
-                textRuntime.IsItalic,
-                textRuntime.IsBold);
+                // todo here:
+                string fontName = textRuntime.CustomFontFile;
 
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                //font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
-
 
                 var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
                 if (fontFromGum.BaseSize == 0)
@@ -475,7 +452,34 @@ internal static class CustomSetPropertyOnRenderable
                 }
                 asText.Font = fontFromGum;
             }
+            else
+            {
+                if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(asText.FontFamily))
+                {
+
+                    string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                    textRuntime.FontSize,
+                    asText.FontFamily,
+                    textRuntime.OutlineThickness,
+                    textRuntime.UseFontSmoothing,
+                    textRuntime.IsItalic,
+                    textRuntime.IsBold);
+
+                    string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                    //font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+
+
+                    var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
+                    if (fontFromGum.BaseSize == 0)
+                    {
+                        fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+                    }
+                    asText.Font = fontFromGum;
+                }
+            }
         }
+
     }
 
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
