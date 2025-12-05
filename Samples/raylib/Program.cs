@@ -40,7 +40,7 @@ public class BasicShapes
         GraphicalUiElement.CanvasWidth = screenWidth;
         GraphicalUiElement.CanvasHeight = screenHeight;
 
-        
+
         InitWindow(screenWidth, screenHeight, "Basic shape and image drawing");
 
         //Load the image into the cpu
@@ -59,10 +59,78 @@ public class BasicShapes
         var standardTexture = SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png");
 
         InitializeStyling();
-        
 
-        //var texture2 = LoadTextureFromImage(imageFromFile);
 
+        // Uncomment this to see forms controls:
+        //CreateFormsControls();
+
+        // Uncomment this to see normal runtime objects;
+        CreateRuntimes();
+
+        // Main game loop
+        while (!WindowShouldClose())
+        {
+            // Update
+            //----------------------------------------------------------------------------------
+            // TODO: Update your variables here
+            //----------------------------------------------------------------------------------
+
+            // Draw
+            //----------------------------------------------------------------------------------
+            BeginDrawing();
+            ClearBackground(Color.SkyBlue);
+
+            /* Raylib supports drawing simple 2d shapes with internal functions 
+            so uncomment the following lines to see it in action */
+
+            // DrawLine(18, 42, screenWidth - 18, 42, Color.Black);
+
+            // DrawCircle(screenWidth / 4, 120, 35, Color.DarkBlue);
+            // DrawRectangle(screenWidth / 4 * 2 - 60, 100, 120, 60, Color.Red);
+            // DrawTriangle(
+            //     new Vector2(screenWidth / 4 * 3, 80),
+            //     new Vector2(screenWidth / 4 * 3 - 60, 150),
+            //     new Vector2(screenWidth / 4 * 3 + 60, 150), Color.Violet
+            // );
+
+
+            GumUI.Update(0);
+
+            GumUI.Draw();
+
+
+            EndDrawing();
+            //----------------------------------------------------------------------------------
+        }
+
+        // De-Initialization
+        //--------------------------------------------------------------------------------------
+        CloseWindow();
+        //--------------------------------------------------------------------------------------
+
+    }
+
+    private static void CreateRuntimes()
+    {
+        var textRuntime = new TextRuntime();
+        textRuntime.AddToRoot();
+
+        textRuntime.Text = "Hello Justin. I am some really long text. I should line wrap, right? Why don't I?";
+
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        textRuntime.Width = 200;
+        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        textRuntime.Height = 200;
+
+        textRuntime.Anchor(Anchor.Center);
+
+        textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
+        textRuntime.VerticalAlignment = VerticalAlignment.Top;
+
+    }
+
+    private static void CreateFormsControls()
+    {
         var container = new GraphicalUiElement(new InvisibleRenderable());
         container.AddToRoot();
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
@@ -212,48 +280,6 @@ public class BasicShapes
         {
             listBox2.Items.Add("List Item " + i);
         }
-
-        // Main game loop
-        while (!WindowShouldClose())
-        {
-            // Update
-            //----------------------------------------------------------------------------------
-            // TODO: Update your variables here
-            //----------------------------------------------------------------------------------
-
-            // Draw
-            //----------------------------------------------------------------------------------
-            BeginDrawing();
-            ClearBackground(Color.SkyBlue);
-
-            /* Raylib supports drawing simple 2d shapes with internal functions 
-            so uncomment the following lines to see it in action */
-
-            // DrawLine(18, 42, screenWidth - 18, 42, Color.Black);
-
-            // DrawCircle(screenWidth / 4, 120, 35, Color.DarkBlue);
-            // DrawRectangle(screenWidth / 4 * 2 - 60, 100, 120, 60, Color.Red);
-            // DrawTriangle(
-            //     new Vector2(screenWidth / 4 * 3, 80),
-            //     new Vector2(screenWidth / 4 * 3 - 60, 150),
-            //     new Vector2(screenWidth / 4 * 3 + 60, 150), Color.Violet
-            // );
-
-
-            GumUI.Update(0);
-
-            GumUI.Draw();
-
-
-                EndDrawing();
-            //----------------------------------------------------------------------------------
-        }
-
-        // De-Initialization
-        //--------------------------------------------------------------------------------------
-        CloseWindow();
-        //--------------------------------------------------------------------------------------
-
     }
 
     private static void InitializeStyling()
