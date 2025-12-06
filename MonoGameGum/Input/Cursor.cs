@@ -14,10 +14,20 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Input;
 
-
+/// <summary>
+/// A cursor implementation providing mouse and touch input functionality.
+/// This class includes properties necessary for interacting with Gum UI elements, such 
+/// as push, click, and position tracking.
+/// </summary>
 public class Cursor : ICursor
 {
     Cursors? _customCursor;
+    /// <summary>
+    /// Gets or sets the custom mouse cursor to display within the application window.
+    /// </summary>
+    /// <remarks>Setting this property changes the mouse cursor to the specified value. If set to <see
+    /// langword="null"/>, the default arrow cursor is used. The available cursor options may vary depending on platform
+    /// support.</remarks>
     public Cursors? CustomCursor 
     {
         get => _customCursor;
@@ -55,8 +65,19 @@ public class Cursor : ICursor
         }
     }
 
+    /// <summary>
+    /// Gets or sets the transformation matrix applied to the object, used to determine the cursor's position
+    /// when interacting with Gum UI elements.
+    /// </summary>
+    /// <remarks>The transformation matrix defines how the object's coordinates are mapped, including
+    /// translation, rotation, scaling, or skewing. This is often used when Gum is rendered
+    /// on a render target, or in a modified viewport.</remarks>
     public Matrix TransformMatrix { get; set; } = Matrix.Identity;
 
+    /// <summary>
+    /// Gets the most recent input device used to interact with the application. This is used
+    /// to modify how behavior is interpreted, such as whether to consider cursor hover states.
+    /// </summary>
     public InputDevice LastInputDevice
     {
         get;
@@ -100,7 +121,14 @@ public class Cursor : ICursor
         return (Y / zoom) - renderer.GraphicsDevice?.Viewport.Bounds.Top ?? 0;
     }
 
+    /// <summary>
+    /// Gets the value of the X value last frame, used to calculate changes.
+    /// </summary>
     public int LastX { get; private set; }
+
+    /// <summary>
+    /// Gets the value of the Y value last frame, used to calculate changes.
+    /// </summary>
     public int LastY { get; private set; }
 
     /// <summary>
@@ -113,6 +141,12 @@ public class Cursor : ICursor
     /// </summary>
     public int YChange => Y - LastY;
 
+    /// <summary>
+    /// Gets the amount of scroll wheel movement since the last frame, measured in detents.
+    /// </summary>
+    /// <remarks>A detent represents a single notch or click of the scroll wheel, typically corresponding to a
+    /// value of 120 units. This property is useful for detecting discrete scroll actions in input handling
+    /// scenarios.</remarks>
     public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
 
 
@@ -121,6 +155,13 @@ public class Cursor : ICursor
     /// </summary>
     public float ZVelocity => ScrollWheelChange;
 
+    /// <summary>
+    /// Gets a value indicating whether a primary input action, such as a mouse left button press or a new touch, was
+    /// initiated during the current frame.
+    /// </summary>
+    /// <remarks>This property detects the start of a primary input event, which may originate from either a
+    /// mouse or a touch device depending on the last input used. It is typically used to determine when the user begins
+    /// an interaction, such as clicking or tapping, in real-time input scenarios.</remarks>
     public bool PrimaryPush
     {
         get
@@ -137,6 +178,14 @@ public class Cursor : ICursor
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the primary input action is currently active, such as a mouse left button press
+    /// or a touch contact.
+    /// </summary>
+    /// <remarks>This property reflects the state of the primary input based on the last input device used. If
+    /// the mouse is the last input device, it returns <see langword="true"/> when the left mouse button is pressed. If
+    /// touch is the last input device, it returns <see langword="true"/> when there is at least one active touch
+    /// contact.</remarks>
     public bool PrimaryDown
     {
         get
@@ -152,6 +201,13 @@ public class Cursor : ICursor
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether a primary click input was detected in the current frame, either from a mouse or
+    /// a touch device.
+    /// </summary>
+    /// <remarks>A primary click is considered to have occurred when the left mouse button is released after
+    /// being pressed, or when all touch points are released after being present in the previous frame. This property is
+    /// typically used to detect user selection or activation actions in input handling scenarios.</remarks>
     public bool PrimaryClick
     {
         get
@@ -258,15 +314,15 @@ public class Cursor : ICursor
     //    to follow the more modern naming conventions.
     // 3. Users may want to know which FrameworkElement was pushed without having to do casting. This should
     //    change in .NET 10 with extension properties.
-    public InteractiveGue WindowPushed { get; set; }
+    public InteractiveGue? WindowPushed { get; set; }
 
-    public InteractiveGue VisualRightPushed { get; set; }
+    public InteractiveGue? VisualRightPushed { get; set; }
 
     /// <summary>
     /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
     /// FormsUtilities.
     /// </summary>
-    public InteractiveGue WindowOver { get; set; }
+    public InteractiveGue? WindowOver { get; set; }
 
 
     MouseState _mouseState;
