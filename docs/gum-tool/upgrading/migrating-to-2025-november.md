@@ -14,7 +14,7 @@ To upgrade the Gum tool:
 
 ## Upgrading Runtime
 
-Upgrade your Gum NuGet packages to version NEW VERSION. For more information, see the NuGet packages for your particular platform:
+Upgrade your Gum NuGet packages to version 2025.11.30.1. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
