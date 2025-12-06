@@ -9,6 +9,7 @@
     <Import_RootNamespace>GumCoreShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Collections\GraphicalUiElementCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorInstanceSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorSave.cs" />

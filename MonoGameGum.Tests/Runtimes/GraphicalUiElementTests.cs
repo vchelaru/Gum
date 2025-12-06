@@ -18,6 +18,20 @@ using System.Collections.ObjectModel;
 namespace MonoGameGum.Tests.Runtimes;
 public class GraphicalUiElementTests
 {
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_ShouldCreateValidInstance()
+    {
+        GraphicalUiElement sut = new();
+
+
+        sut.Children.ShouldNotBeNull();
+    }
+
+    #endregion
+
     #region Animation
     static (ComponentSave element, AnimationRuntime animation) CreateElementAndAnimation()
     {
@@ -171,7 +185,56 @@ public class GraphicalUiElementTests
     }
     #endregion
 
-    #region Parent and ParentChanged 
+    #region Parent/Children related
+
+    [Fact]
+    public void AddChild_ShouldSetParentOnChild()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        parent.AddChild(child);
+        child.Parent.ShouldBe(parent);
+    }
+
+    [Fact]
+    public void AddChild_ShouldPopulateChildren()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        parent.AddChild(child);
+        parent.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ShouldAddToParentsChildren()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        child.Parent = parent;
+        parent.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ShouldRemoveFromOldParentsChildren()
+    {
+        ContainerRuntime parent1 = new ();
+        ContainerRuntime parent2 = new ();
+        ContainerRuntime child = new ();
+        parent1.AddChild(child);
+        child.Parent = parent2;
+        parent1.Children.ShouldNotContain(child);
+        parent2.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ToNull_ShouldRemoveFromOldParentsChildren()
+    {
+        ContainerRuntime parent1 = new ();
+        ContainerRuntime child = new ();
+        parent1.AddChild(child);
+        child.Parent = null;
+        parent1.Children.ShouldNotContain(child);
+    }
 
     [Fact]
     public void ParentChanged_ShouldRaiseWhenParentChanges()
