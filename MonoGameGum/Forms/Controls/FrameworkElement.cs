@@ -889,7 +889,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             foreach (var child in currentItem.Children)
             {
-                var found = GetVisual<T>(name, child as GraphicalUiElement);
+                var found = GetVisual<T>(name, child);
                 if (found != null)
                 {
                     return found;
@@ -900,7 +900,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             foreach(var item in currentItem.ContainedElements)
             {
-                var found = GetVisual<T>(name, item as GraphicalUiElement);
+                var found = GetVisual<T>(name, item);
                 if (found != null)
                 {
                     return found;
@@ -1157,7 +1157,7 @@ public class FrameworkElement : INotifyPropertyChanged
             }
         }
 
-        IList<GraphicalUiElement> requestingVisualSiblings = parentVisual?.Children.Cast<GraphicalUiElement>().ToList();
+        IList<GraphicalUiElement>? requestingVisualSiblings = parentVisual?.Children;
         if (requestingVisualSiblings == null && requestingVisual != null)
         {
             requestingVisualSiblings = requestingVisual.ElementGueContainingThis?.ContainedElements.Where(item => item.Parent == null).ToList();
@@ -1357,10 +1357,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             foreach (var child in gue.Children)
             {
-                if(child is GraphicalUiElement childGue)
-                {
-                    UpdateStateRecursively(childGue);
-                }
+                UpdateStateRecursively(child);
             }
         }
     }
@@ -1541,10 +1538,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
         foreach(var child in gue.Children)
         {
-            if(child is GraphicalUiElement childGue)
-            {
-                CallLoadedRecursively(childGue);
-            }
+            CallLoadedRecursively(child);
         }
     }
 

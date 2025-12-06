@@ -319,7 +319,7 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    private void HandleInnerPanelCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleInnerPanelCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {

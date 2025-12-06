@@ -384,7 +384,7 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 if(item is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem)
                 {
-                    this.Items.Add(item as ListBoxItem);
+                    this.Items.Add(listBoxItem);
                     if(this.Items is not INotifyCollectionChanged )
                     {
                         ListBoxItemsInternal.Add(listBoxItem);
