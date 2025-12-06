@@ -30,9 +30,14 @@ See below for breaking changes and updates.
 
 A number of csproj files have been moved. If your project depends on any of these (if you link to source), you will need to adjust your file references.
 
-| Old Location                               | New Location                                        |
-| ------------------------------------------ | --------------------------------------------------- |
-| \<Gum Root>\SkiaGum.Wpf\SkiaGum.Wpf.csproj | \<Gum Root>\Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj |
+| Old Location                                           | New Location                                               |
+| ------------------------------------------------------ | ---------------------------------------------------------- |
+| \<Gum Root>\SkiaGum.Wpf\SkiaGum.Wpf.csproj             | \<Gum Root>\Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj        |
+| \<Gum Root>\SvgPlugin\SkiaInGumShared\SkiaInGum.csproj | \<Gum Root>\Gum\SvgPlugin\SkiaInGumShared\SkiaInGum.csproj |
+
+{% hint style="warning" %}
+FlatRedBall Projects which link to source will have a broken reference to SkiaInGum.csproj. Add an extra "Gum\\" to the path to resolve the issue.
+{% endhint %}
 
 ## Warnings on Invalid Variables
 
@@ -99,7 +104,7 @@ var buttonVisual = (ButtonVisual)button.Visual;
 buttonVisual.BackgroundColor = Color.Red;
 ```
 
-For more information on working with the new Visuals, see the [Code-Only  Styling](../../code/styling/code-only-styling/) section;
+For more information on working with the new Visuals, see the [Code-Only Styling](../../code/styling/code-only-styling/) section;
 
 Adjust the dimensions, positions of controls if desired. Some of the controls have changed size to match the Gum UI tool more closely. Note that a few names have also been changed to match the naming of the visuals in the Gum tool.
 
