@@ -259,8 +259,10 @@ public partial class AnimationViewModel : ViewModel
             foreach(var newAdd in e.NewItems)
             {
                 var asAnimatedState = newAdd as AnimatedKeyframeViewModel;
-
-                asAnimatedState.PropertyChanged += HandleAnimatedKeyframePropertyChange;
+                if(asAnimatedState != null)
+                {
+                    asAnimatedState.PropertyChanged += HandleAnimatedKeyframePropertyChange;
+                }
             }
         }
 
@@ -275,7 +277,7 @@ public partial class AnimationViewModel : ViewModel
 
     }
 
-    private void HandleAnimatedKeyframePropertyChange(object sender, PropertyChangedEventArgs e)
+    private void HandleAnimatedKeyframePropertyChange(object? sender, PropertyChangedEventArgs e)
     {
         switch(e.PropertyName)
         {
@@ -431,9 +433,9 @@ public static class AnimationSaveExtensions
         {
             foreach(var subAnimation in animation.Animations)
             {
-                AnimationSave subAnimationSave = null;
-                ElementSave subAnimationElement = null;
-                ElementAnimationsSave subAnimationSiblings = null;
+                AnimationSave? subAnimationSave = null;
+                ElementSave? subAnimationElement = null;
+                ElementAnimationsSave? subAnimationSiblings = null;
 
                 if(subAnimation.SourceObject == null)
                 {
@@ -446,7 +448,7 @@ public static class AnimationSaveExtensions
                     var instance = elementSave.Instances.FirstOrDefault(item=>item.Name == subAnimation.SourceObject);
                     if(instance != null)
                     {
-                        ElementSave instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                        ElementSave? instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
 
                         if(instanceElement != null)
                         {
@@ -459,7 +461,7 @@ public static class AnimationSaveExtensions
                     }
                 }
 
-                if (subAnimationSave != null)
+                if (subAnimationSave != null && subAnimationElement != null && subAnimationSiblings != null)
                 {
                     endOfLastSubAnimation = 
                         System.Math.Max( endOfLastSubAnimation,
