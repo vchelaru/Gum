@@ -356,6 +356,11 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
     {
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+
         string message = "Set desired animation length (in seconds):";
         GetUserStringOptions options = new()
         {
@@ -391,7 +396,11 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
-        if(_dialogService.ShowYesNoMessage("Delete animation " + SelectedAnimation.Name + "?", "Delete?"))
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+        if (_dialogService.ShowYesNoMessage("Delete animation " + SelectedAnimation.Name + "?", "Delete?"))
         {
             Animations.Remove(SelectedAnimation);
         }
@@ -399,6 +408,11 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleDuplicateAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+
         var copyOfAnimation = SelectedAnimation.Clone();
 
         copyOfAnimation.Name = $"Copy of {copyOfAnimation.Name}";

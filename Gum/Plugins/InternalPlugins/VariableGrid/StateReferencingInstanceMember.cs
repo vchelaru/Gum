@@ -1015,14 +1015,37 @@ namespace Gum.PropertyGridHelpers
             {
                 var element = gumElementOrInstanceSaveAsObject as ElementSave ??
                     (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
-                response = _setVariableLogic.PropertyValueChanged(
-                    name,
-                    LastOldFullCommitValue,
-                    gumElementOrInstanceSaveAsObject as InstanceSave,
-                    element?.DefaultState,
-                    refresh: effectiveRefresh,
-                    recordUndo: effectiveRecordUndo,
-                    trySave: trySave);
+
+                StateSave? stateToSet;
+
+                // If we are viewing the current element, then use the selected state so we can set
+                // values on categorized states...
+                if(_selectedState.SelectedElement == element && _selectedState.SelectedStateSave != null)
+                {
+                    stateToSet = _selectedState.SelectedStateSave;
+                }
+                // ... otherwise, we may not be viewing the current element, like if we are doing a drag+drop...
+                else if(element != null)
+                {
+                    stateToSet = element.DefaultState;
+                }
+                // ... otherwise, there is no valid state so don't do anythinhg:
+                else
+                {
+                    stateToSet = null;
+                }
+
+                if(stateToSet != null)
+                {
+                    response = _setVariableLogic.PropertyValueChanged(
+                        name,
+                        LastOldFullCommitValue,
+                        gumElementOrInstanceSaveAsObject as InstanceSave,
+                        stateToSet,
+                        refresh: effectiveRefresh,
+                        recordUndo: effectiveRecordUndo,
+                        trySave: trySave);
+                }
             }
 
             return response;

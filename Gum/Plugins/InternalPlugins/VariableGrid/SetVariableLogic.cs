@@ -150,9 +150,10 @@ public class SetVariableLogic
     /// <param name="oldValue"></param>
     /// <param name="parentElement"></param>
     /// <param name="instance"></param>
+    /// <param name="currentState">The state where the variable was set - the current state save</param>
     /// <param name="refresh"></param>
     public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, IInstanceContainer instanceContainer,
-        InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
+        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true)
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
         ObjectFinder.Self.EnableCache();
@@ -168,7 +169,7 @@ public class SetVariableLogic
             // So does that mean that we want to call this code before we update variable references, but
             // we can still raise the plugin event after? If so, I'm going to move the plugin manager call
             // out of ReactToChangedMember and call it here.
-            response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
+            response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, currentState);
             var parentElement = instanceContainer as ElementSave;
 
             bool didSetDeepReference = false;
@@ -181,7 +182,7 @@ public class SetVariableLogic
                     qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                 }
 
-                _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, stateSave, qualifiedName, trySave);
+                _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave);
 
                 _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
                     // This code used to not specify the category, so it defaulted to the selected category.
@@ -378,8 +379,10 @@ public class SetVariableLogic
                 {
                     elementStack.Add(new ElementWithState(instanceElement));
                 }
-                var rfv = new RecursiveVariableFinder(elementStack);
 
+                StateSave stateSave = _selectedState.SelectedStateSave;
+
+                var rfv = new RecursiveVariableFinder(elementStack);
 
                 var forcedValues = new StateSave();
 
@@ -400,7 +403,6 @@ public class SetVariableLogic
                 TryAddForced("IsItalic");
                 TryAddForced("IsBold");
 
-                StateSave stateSave = _selectedState.SelectedStateSave;
 
                 // If the user has a category selected but no state in the category, then use the default:
                 if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
