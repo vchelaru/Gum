@@ -3,22 +3,19 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
-using Gum.Renderables;
 using Gum.Wireframe;
 using GumRuntime;
-using Raylib_cs;
 using RaylibGum.Input;
 using RenderingLibrary;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using RenderingLibrary.Graphics;
 using ToolsUtilities;
 
+#if MONOGAME || KNI || FNA
+namespace MonoGameGum;
+#elif RAYLIB
 namespace RaylibGum;
+#endif
+
 public class GumService
 {
     #region Default
@@ -37,12 +34,47 @@ public class GumService
 
     #endregion
 
+#if MONOGAME || KNI || FNA
+    public GameTime GameTime { get; private set; }
+#endif
+
     public Cursor Cursor => FormsUtilities.Cursor;
+
+    public Keyboard Keyboard => FormsUtilities.Keyboard;
+
+    public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
+
+    public Renderer Renderer => this.SystemManagers.Renderer;
 
     public SystemManagers SystemManagers { get; private set; }
 
+    public float CanvasWidth
+    {
+        get => GraphicalUiElement.CanvasWidth;
+        set => GraphicalUiElement.CanvasWidth = value;
+    }
+
+    public float CanvasHeight
+    {
+        get => GraphicalUiElement.CanvasHeight;
+        set => GraphicalUiElement.CanvasHeight = value;
+    }
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
+
+    public GumService()
+    {
+        Root.Width = 0;
+        Root.WidthUnits = DimensionUnitType.RelativeToParent;
+        Root.Height = 0;
+        Root.HeightUnits = DimensionUnitType.RelativeToParent;
+        Root.Name = "Main Root";
+        Root.HasEvents = false;
+
+        Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
+
+        //DeferredQueue = new DeferredActionQueue();
+    }
 
     public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
@@ -59,17 +91,17 @@ public class GumService
             defaultVisualsVersion: DefaultVisualsVersion.V2)!;
     }
 
-    bool hasBeenInitialized = false;
+    public bool IsInitialized { get; private set; }
 
     GumProjectSave? InitializeInternal(string? gumProjectFile = null,
         SystemManagers? systemManagers = null,
         DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
-        if (hasBeenInitialized)
+        if (IsInitialized)
         {
             throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
         }
-        hasBeenInitialized = true;
+        IsInitialized = true;
 
         //_game = game;
         // RegisterRuntimeTypesThroughReflection();
@@ -84,18 +116,21 @@ public class GumService
 #endif
         }
 
-        SystemManagers.Default.Initialize();
+
+#if MONOGAME || FNA || KNI
+        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+#elif RAYLIB
+        this.SystemManagers.Initialize();
+#endif
 
         FormsUtilities.InitializeDefaults(defaultVisualsVersion: defaultVisualsVersion);
 
-        Root.Width = 0;
-        Root.WidthUnits = DimensionUnitType.RelativeToParent;
-        Root.Height = 0;
-        Root.HeightUnits = DimensionUnitType.RelativeToParent;
-        Root.Name = "Main Root";
-        Root.HasEvents = false;
+        Root.AddToManagers(SystemManagers);
+        Root.UpdateLayout();
 
-        Root.AddToManagers();
+        var mainLayer = SystemManagers.Renderer.MainLayer;
+        mainLayer.Remove(Root.RenderableComponent as IRenderableIpso);
+        mainLayer.Insert(0, Root.RenderableComponent as IRenderableIpso);
 
         GumProjectSave? gumProject = null;
 
