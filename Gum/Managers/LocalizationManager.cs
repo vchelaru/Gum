@@ -128,24 +128,4 @@ public class LocalizationManager
         // If we got here, it has no letters, so we should exclude it:
         return true;
     }
-
-    private bool IsTime(string stringID)
-    {
-        for (int i = 0; i < stringID.Length; i++)
-        {
-            char cAti = stringID[i];
-            if (char.IsDigit(cAti) == false && (cAti == ':') == false && (cAti == '.') == false)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private bool IsPercentage(string stringID)
-    {
-        return stringID.CountOf('%') == 1 && stringID.Length > 1 && stringID.EndsWith("%") && StringFunctions.IsNumber(stringID.Substring(0, stringID.Length - 1));
-
-    }
-
 }

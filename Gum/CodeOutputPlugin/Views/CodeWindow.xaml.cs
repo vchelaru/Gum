@@ -159,7 +159,7 @@ public partial class CodeWindow : UserControl
 
                 CodeOutputProjectSettings.CodeProjectRoot = valueToSet;
 
-                CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
 
             }
         };
@@ -229,7 +229,7 @@ public partial class CodeWindow : UserControl
                     CodeOutputProjectSettings.OutputLibrary =  StringToLibrary[asString];
                 }
 
-                CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
 
                 FullRefreshDataGrid();
             }

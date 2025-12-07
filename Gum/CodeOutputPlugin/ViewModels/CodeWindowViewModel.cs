@@ -223,7 +223,7 @@ public class CodeWindowViewModel : ViewModel
         {
 
 
-            codeOutputProjectSettings.CodeProjectRoot = csprojLocation.FullPath;
+            codeOutputProjectSettings.CodeProjectRoot = csprojLocation!.FullPath;
 
             // we're going to load the project, so let's set it to find by name:
             codeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
