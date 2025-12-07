@@ -16,7 +16,22 @@ public class Text : IRenderableIpso, IVisible, IText
 {
     #region Fields/Properties
 
-    public static decimal ScreenDensity = 1;
+    [Obsolete("Use GlobalTextScale instead")]
+    public static decimal ScreenDensity
+    {
+        get => GlobalTextScale;
+        set => GlobalTextScale = value;
+    }
+
+    /// <summary>
+    /// Global font scale, used to increase font size according to user settings, such as 
+    /// font scale at the OS level.
+    /// </summary>
+    public static decimal GlobalTextScale
+    {
+        get;
+        set;
+    }
 
     public bool IsRenderTarget => false;
 
