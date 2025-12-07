@@ -6217,7 +6217,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject? GetChildByName(string name)
+    public GraphicalUiElement? GetChildByName(string name)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -6230,7 +6230,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject? GetChildByType(Type type)
+    public GraphicalUiElement? GetChildByType(Type type)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -6303,18 +6303,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso? GetParentByNameRecursively(string name)
+    public GraphicalUiElement? GetParentByNameRecursively(string name)
     {
         return GetParentByName(this, name);
     }
 
-    private IRenderableIpso? GetParentByName(IRenderableIpso element, string name)
+    private GraphicalUiElement? GetParentByName(IRenderableIpso element, string name)
     {
         if (element.Parent != null)
         {
             if (element.Parent.Name == name)
             {
-                return element.Parent;
+                return element.Parent as GraphicalUiElement;
             }
             else
             {
@@ -6327,18 +6327,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IRenderableIpso? GetParentByTypeRecursively(Type type)
+    public GraphicalUiElement? GetParentByTypeRecursively(Type type)
     {
         return GetParentByType(this, type);
     }
 
-    private IRenderableIpso? GetParentByType(IRenderableIpso element, Type type)
+    private GraphicalUiElement? GetParentByType(IRenderableIpso element, Type type)
     {
         if (element.Parent != null)
         {
             if (element.Parent.GetType().Equals(type))
             {
-                return element.Parent;
+                return element.Parent as GraphicalUiElement;
             }
             else
             {
