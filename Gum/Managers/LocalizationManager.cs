@@ -113,29 +113,20 @@ namespace Gum.Managers
 
         private bool ShouldExcludeFromTranslation(string stringID)
         {
-            if (string.IsNullOrEmpty(stringID))
+            if(string.IsNullOrEmpty(stringID))
             {
                 return true;
             }
-            else if (StringFunctions.IsNumber(stringID))
+            foreach(var character in stringID)
             {
-                return true;
+                if(char.IsLetter(character))
+                {
+                    return false;
+                }
             }
-            else if (IsPercentage(stringID))
-            {
-                return true;
-            }
-            else if (IsTime(stringID))
-            {
-                return true;
-            }
-            else if (stringID == "!" || stringID == "+" || stringID == "-" ||
-                stringID == "*" || stringID == "/" || stringID == "#" || stringID == ":" ||
-                stringID == "<" || stringID == ">")
-            {
-                return true;
-            }
-            return false;
+
+            // If we got here, it has no letters, so we should exclude it:
+            return true;
         }
 
         private bool IsTime(string stringID)
