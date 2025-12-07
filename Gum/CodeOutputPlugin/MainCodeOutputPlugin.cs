@@ -46,9 +46,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly IMessenger _messenger;
     private readonly LocalizationManager _localizationManager;
     private readonly INameVerifier _nameVerifier;
-    private readonly IGuiCommands _guiCommands;
     private readonly CodeGenerator _codeGenerator;
-    private readonly IDialogService _dialogService;
     private readonly ParentSetLogic _parentSetLogic;
 
     PluginTab pluginTab;
@@ -70,12 +68,10 @@ public class MainCodeOutputPlugin : PluginBase
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
 
 
-        _dialogService = Locator.GetRequiredService<IDialogService>();
         _codeGenerator = new CodeGenerator();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator);
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator);
         _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator);
@@ -185,7 +181,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleStateSelected(TreeNode obj)
     {
-        if (control != null)
+        if (control != null && _selectedState.SelectedElement != null)
         {
             LoadCodeSettingsFile(_selectedState.SelectedElement);
 
@@ -195,7 +191,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
     {
-        if(control != null)
+        if(control != null && _selectedState.SelectedElement != null)
         {
             LoadCodeSettingsFile(_selectedState.SelectedElement);
 
@@ -302,7 +298,10 @@ public class MainCodeOutputPlugin : PluginBase
     {
         //GumCommands.Self.GuiCommands.ShowControl(control);
 
-        LoadCodeSettingsFile(_selectedState.SelectedElement);
+        if(_selectedState.SelectedElement != null)
+        {
+            LoadCodeSettingsFile(_selectedState.SelectedElement);
+        }
 
         RefreshCodeDisplay();
 

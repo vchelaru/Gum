@@ -169,7 +169,7 @@ public class ParentSetLogic
             var elementContainingInstance = element;
             if(element.Instances.Contains(newParent) == false)
             {
-                elementContainingInstance = newParent.ParentContainer;
+                elementContainingInstance = newParent.ParentContainer!;
             }
 
             parentVisualApi = CodeGenerator.GetVisualApiForInstance(newParent, elementContainingInstance, considerDefaultContainer:true);

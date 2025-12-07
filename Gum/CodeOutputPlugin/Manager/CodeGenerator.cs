@@ -417,7 +417,7 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.XamarinForms)
         {
-            switch (container?.Name)
+            switch (container.Name)
             {
                 case "Text":
                     className = "Label";

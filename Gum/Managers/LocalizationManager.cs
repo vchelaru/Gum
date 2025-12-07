@@ -113,48 +113,19 @@ public class LocalizationManager
 
     private bool ShouldExcludeFromTranslation(string stringID)
     {
-        if (string.IsNullOrEmpty(stringID))
+        if(string.IsNullOrEmpty(stringID))
         {
             return true;
         }
-        else if (StringFunctions.IsNumber(stringID))
+        foreach(var character in stringID)
         {
-            return true;
-        }
-        else if (IsPercentage(stringID))
-        {
-            return true;
-        }
-        else if (IsTime(stringID))
-        {
-            return true;
-        }
-        else if (stringID == "!" || stringID == "+" || stringID == "-" ||
-            stringID == "*" || stringID == "/" || stringID == "#" || stringID == ":" ||
-            stringID == "<" || stringID == ">")
-        {
-            return true;
-        }
-        return false;
-    }
-
-    private bool IsTime(string stringID)
-    {
-        for (int i = 0; i < stringID.Length; i++)
-        {
-            char cAti = stringID[i];
-            if (char.IsDigit(cAti) == false && (cAti == ':') == false && (cAti == '.') == false)
+            if(char.IsLetter(character))
             {
                 return false;
             }
         }
+
+        // If we got here, it has no letters, so we should exclude it:
         return true;
     }
-
-    private bool IsPercentage(string stringID)
-    {
-        return stringID.CountOf('%') == 1 && stringID.Length > 1 && stringID.EndsWith("%") && StringFunctions.IsNumber(stringID.Substring(0, stringID.Length - 1));
-
-    }
-
 }

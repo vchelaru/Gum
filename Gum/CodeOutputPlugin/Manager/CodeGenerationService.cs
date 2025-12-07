@@ -133,7 +133,7 @@ internal class CodeGenerationService
 
         string message = string.Empty;
 
-        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
+        var codeDirectory = generatedFileName!.GetDirectoryContainingThis();
 
         var hasDirectory = true;
 
