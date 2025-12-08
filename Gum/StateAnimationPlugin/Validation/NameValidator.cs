@@ -16,8 +16,8 @@ public class NameValidator
     {
         _nameVerifier = nameVerifier;
     }
-    public bool IsAnimationNameValid(string animationName,
-        IEnumerable<AnimationViewModel> existingAnimations, out string whyNotValid)
+    public bool IsAnimationNameValid(string? animationName,
+        IEnumerable<AnimationViewModel> existingAnimations, out string? whyNotValid)
     {
         whyNotValid = null;
 

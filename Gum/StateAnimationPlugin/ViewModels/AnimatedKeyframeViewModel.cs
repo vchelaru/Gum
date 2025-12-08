@@ -22,7 +22,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 {
     #region Fields
 
-    AnimationViewModel mSubAnimationViewModel;
+    AnimationViewModel? mSubAnimationViewModel;
 
     static BitmapFrame mStateBitmap;
     static BitmapFrame mAnimationBitmap;
@@ -61,7 +61,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         set => Set(value);
     }
 
-    public AnimationViewModel SubAnimationViewModel
+    public AnimationViewModel? SubAnimationViewModel
     {
         get { return mSubAnimationViewModel; }
         set { mSubAnimationViewModel = value; }

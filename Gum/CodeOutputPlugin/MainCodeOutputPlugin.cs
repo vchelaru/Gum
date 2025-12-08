@@ -81,7 +81,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         _messenger.Register<RequestCodeGenerationMessage>(
             this, 
-            (_, message) => HanndleRequestCodeGeneration(message));
+            (_, message) => HandleRequestCodeGeneration(message));
 
         // The methos in CodeGenerator need to be changed to not be static then we can get rid
         // of this:
@@ -89,7 +89,7 @@ public class MainCodeOutputPlugin : PluginBase
         CodeGenerator.LocalizationManager = _localizationManager;
     }
 
-    private void HanndleRequestCodeGeneration(RequestCodeGenerationMessage message)
+    private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)
     {
         HandleGenerateAllCodeButtonClicked(showPopups:false);
 

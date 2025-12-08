@@ -1,32 +1,34 @@
+using CommunityToolkit.Mvvm.Messaging;
+using FlatRedBall.Glue.StateInterpolation;
+using Gum;
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
+using Gum.Messages;
+using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
+using Gum.Plugins.Errors;
+using Gum.Responses;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.StateAnimation.SaveClasses;
+using Gum.ToolStates;
+using Gum.Wireframe;
+using StateAnimationPlugin.Managers;
+using StateAnimationPlugin.ViewModels;
+using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Gum.Plugins.BaseClasses;
-using System.ComponentModel.Composition;
-using StateAnimationPlugin.Views;
-using StateAnimationPlugin.Managers;
-using System.Windows.Forms.Integration;
-using StateAnimationPlugin.ViewModels;
-using Gum.ToolStates;
 using System.Windows;
-using Gum.DataTypes.Variables;
-using Gum.Wireframe;
-using FlatRedBall.Glue.StateInterpolation;
-using Gum.DataTypes;
-using Gum;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using Gum.Responses;
-using Gum.StateAnimation.SaveClasses;
-
-using Gum.Plugins;
 using System.Windows.Forms;
-using Gum.Services;
-using Gum.Commands;
-using Gum.Managers;
-using Gum.Services.Dialogs;
+using System.Windows.Forms.Integration;
 
 
 namespace StateAnimationPlugin;
@@ -36,6 +38,7 @@ public class MainStateAnimationPlugin : PluginBase
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly IMessenger _messenger;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
     #region Fields
@@ -77,6 +80,8 @@ public class MainStateAnimationPlugin : PluginBase
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+
         _animationVmFactory = () => new ElementAnimationsViewModel(_nameVerifier, _dialogService);
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
@@ -126,7 +131,10 @@ public class MainStateAnimationPlugin : PluginBase
 
         this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
         this.DeleteConfirm += _elementDeleteService.HandleConfirmDelete;
+
+        this.GetAllErrors += HandleGetAllErrors;
     }
+
 
     private void HandleElementSelected(ElementSave? element)
     {
@@ -448,11 +456,18 @@ public class MainStateAnimationPlugin : PluginBase
                 }
             }
         }
-
+        
         if (_viewModel == null)
         {
             _viewModel = new(_nameVerifier, _dialogService);
         }
+        if(currentlyReferencedElement != null)
+        {
+            _viewModel?.RefreshErrors(currentlyReferencedElement);
+        }
+
+        _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
+
     }
 
     private void HandleAnimatedKeyframePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -548,6 +563,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
+
     private DeleteResponse HandleGetDeleteStateResponse(StateSave state, IStateContainer container)
     {
         var response = new DeleteResponse();
@@ -612,6 +628,18 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         return response;
+    }
+
+    private IEnumerable<ErrorViewModel> HandleGetAllErrors()
+    {
+        var toReturn = this._viewModel.GetErrors();
+
+        foreach(var item in toReturn)
+        {
+            item.OwnerPlugin = this;
+        }
+
+        return toReturn;
     }
 
     private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave? element)

@@ -2,7 +2,9 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins.BaseClasses;
 using Gum.Reflection;
+using SharpVectors.Dom;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,13 +18,15 @@ namespace Gum.Plugins.Errors;
 public class ErrorChecker
 {
     private readonly TypeManager _typeManager;
+    private readonly PluginManager _pluginManager;
 
-    public ErrorChecker(TypeManager typeManager)
+    public ErrorChecker(TypeManager typeManager, PluginManager pluginManager)
     {
         _typeManager = typeManager;
+        _pluginManager = pluginManager;
     }
 
-    public ErrorViewModel[] GetErrorsFor(ElementSave element, GumProjectSave project)
+    public ErrorViewModel[] GetErrorsFor(ElementSave? element, GumProjectSave project)
     {
         var list = new List<ErrorViewModel>();
 
@@ -41,6 +45,28 @@ public class ErrorChecker
                 list.AddRange(GetParentErrorsFor(element));
 
                 list.AddRange(GetInvalidVariableTypeErrorsFor(element));
+
+                _pluginManager.FillWithErrors(list);
+            }
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
+            }
+        }
+
+        return list.ToArray();
+    }
+
+    public ErrorViewModel[] GetErrorsFor(ElementSave? element, PluginBase plugin)
+    {
+        var list = new List<ErrorViewModel>();
+
+        if (element != null)
+        {
+            ObjectFinder.Self.EnableCache();
+            try
+            {
+                _pluginManager.FillWithErrors(list, plugin);
             }
             finally
             {
@@ -251,6 +277,8 @@ public class ErrorChecker
 
     #endregion
 
+    #region Invalid variable types
+
     static HashSet<string> KnowBaseTypes = new HashSet<string>
     {
         "int",
@@ -265,8 +293,6 @@ public class ErrorChecker
         "string?",
         "State",
     };
-
-    #region Invalid variable types
     private IEnumerable<ErrorViewModel> GetInvalidVariableTypeErrorsFor(ElementSave elementSave)
     {
         var toReturn = new List<ErrorViewModel>();

@@ -20,6 +20,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using Gum.Services;
 using Gum.StateAnimation.Runtime;
+using Gum.Plugins.Errors;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -390,6 +391,45 @@ public partial class AnimationViewModel : ViewModel
             _selectedState.CustomCurrentStateSave = stateToSet;
             _selectedState.SelectedStateSave = null;
             _wireframeObjectManager.RootGue?.ApplyState(stateToSet);
+        }
+    }
+
+    internal IEnumerable<ErrorViewModel> GetErrors()
+    {
+        foreach(var keyframe in this.Keyframes)
+        {
+            if(!keyframe.HasValidState)
+            {
+                if (!string.IsNullOrEmpty(keyframe.StateName))
+                {
+                    yield return new ErrorViewModel()
+                    {
+                        Message = $"{this.Name} Keyframe at time {keyframe.Time} references a state {keyframe.StateName} which does not exist."
+                    };
+                }
+                else if (!string.IsNullOrEmpty(keyframe.AnimationName))
+                {
+                    yield return new ErrorViewModel()
+                    {
+                        Message = $"{this.Name} Keyframe at time {keyframe.Time} references an animation {keyframe.AnimationName} which does not exist."
+                    };
+                }
+            }
+        }
+    }
+
+    internal void RefreshErrors(ElementSave elementSave)
+    {
+        foreach (var keyframe in this.Keyframes)
+        {
+            if(!string.IsNullOrEmpty(keyframe.StateName))
+            {
+                keyframe.HasValidState = GetStateFromCategorizedName(keyframe.StateName, elementSave) != null;
+            }
+            else if(!string.IsNullOrEmpty(keyframe.AnimationName))
+            {
+                keyframe.HasValidState = keyframe.SubAnimationViewModel != null;
+            }
         }
     }
 

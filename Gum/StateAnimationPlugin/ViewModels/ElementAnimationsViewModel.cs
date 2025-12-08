@@ -24,6 +24,7 @@ using Gum.Mvvm;
 using Gum.Wireframe;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.Errors;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -223,7 +224,6 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     #endregion
 
-    #region Methods
 
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService)
     {
@@ -340,7 +340,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             InitialValue = SelectedAnimation.Name,
             Validator = v =>
-                _nameValidator.IsAnimationNameValid(v, Animations, out string whyInvalid) ? null : whyInvalid,
+                _nameValidator.IsAnimationNameValid(v, Animations, out string? whyInvalid) ? null : whyInvalid,
         };
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
@@ -554,7 +554,17 @@ public partial class ElementAnimationsViewModel : ViewModel
         return whyIsntValid;
     }
 
-    #endregion
+    public IEnumerable<ErrorViewModel> GetErrors()
+    {
+        List<ErrorViewModel> toReturn = new List<ErrorViewModel>();
+        foreach(var animation in Animations)
+        {
+            var animationErrors = animation.GetErrors();
+            toReturn.AddRange(animationErrors);
+        }
+        return toReturn;
+    }
+
 
     [RelayCommand]
     private void ToggleInterpolationClamping()
@@ -562,4 +572,11 @@ public partial class ElementAnimationsViewModel : ViewModel
         ClampInterpolationVisuals = !ClampInterpolationVisuals;
     }
 
+    internal void RefreshErrors(ElementSave element)
+    {
+        foreach(var animation in Animations)
+        {
+            animation.RefreshErrors(element);
+        }
+    }
 }

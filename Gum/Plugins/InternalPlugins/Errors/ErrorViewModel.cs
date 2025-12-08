@@ -1,12 +1,14 @@
 ﻿using Gum.Mvvm;
+using Gum.Plugins.BaseClasses;
 
-namespace Gum.Plugins.Errors
+namespace Gum.Plugins.Errors;
+
+public class ErrorViewModel : ViewModel
 {
-    public class ErrorViewModel : ViewModel
+    public PluginBase? OwnerPlugin { get; set; }
+
+    public string Message
     {
-        public string Message
-        {
-            get; set;
-        }
-    }
+        get; set;
+    } = string.Empty;
 }

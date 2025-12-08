@@ -18,6 +18,7 @@ using Gum.Commands;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.Errors;
 
 namespace Gum.Plugins.BaseClasses;
 
@@ -206,6 +207,8 @@ public abstract class PluginBase : IPlugin
     public event Func<bool>? TryHandleDelete;
 
     public event Func<InputLibrary.Cursor, Vector2?>? GetWorldCursorPosition;
+
+    public event Func<IEnumerable<ErrorViewModel>>? GetAllErrors;
 
     #endregion
 
@@ -497,6 +500,8 @@ public abstract class PluginBase : IPlugin
     public Vector2? CallGetWorldCursorPosition(InputLibrary.Cursor cursor) =>
         GetWorldCursorPosition?.Invoke(cursor);
 
+    public IEnumerable<ErrorViewModel>? CallGetAllErrors() =>
+        GetAllErrors?.Invoke();
     public IEnumerable<IPositionedSizedObject>? CallGetSelectedIpsos() =>
         GetSelectedIpsos?.Invoke();
 
