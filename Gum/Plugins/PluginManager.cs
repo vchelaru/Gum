@@ -26,6 +26,7 @@ using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
 using Gum.Undo;
+using Gum.Plugins.Errors;
 
 namespace Gum.Plugins;
 
@@ -621,6 +622,30 @@ public class PluginManager
         });
 
         return toReturn;
+    }
+
+    public void FillWithErrors(List<ErrorViewModel> errors, PluginBase? plugin = null)
+    {
+        if(plugin != null)
+        {
+            var internalErrors = plugin.CallGetAllErrors();
+            if(internalErrors != null)
+            {
+                errors.AddRange(internalErrors);
+            }
+        }
+        else
+        {
+            CallMethodOnPlugin(plugin =>
+            {
+                var internalErrors = plugin.CallGetAllErrors();
+                if (internalErrors != null)
+                {
+                    errors.AddRange(internalErrors);
+                }
+            });
+        }
+
     }
 
     /// <summary>
