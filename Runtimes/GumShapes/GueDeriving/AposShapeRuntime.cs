@@ -59,7 +59,6 @@ public abstract class AposShapeRuntime : BindableGue
             default:
                 return StandardElementsManager.Self.DefaultStates["Container"];
         }
-        return null;
     }
 
     protected abstract RenderableShapeBase ContainedRenderable { get; }

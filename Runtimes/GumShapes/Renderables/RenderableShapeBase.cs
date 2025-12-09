@@ -23,7 +23,7 @@ public abstract class RenderableShapeBase : RenderableBase
 
     // this is the default in Skia renderables so use that here:
     public Color Color { get; set; } = Color.Red;
-    public new int Alpha
+    public int Alpha
     {
         get => Color.A;
         set

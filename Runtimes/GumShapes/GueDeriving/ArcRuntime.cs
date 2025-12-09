@@ -22,7 +22,7 @@ public class ArcRuntime : AposShapeRuntime
         {
             if(_containedArc == null)
             {
-                _containedArc = this.RenderableComponent as Arc;
+                _containedArc = (Arc)this.RenderableComponent;
             }
             return _containedArc;
         }

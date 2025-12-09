@@ -8,7 +8,7 @@
 		<BaseOutputPath>bin\KNI\</BaseOutputPath>
 
 		<PackageId>Gum.Shapes.KNI</PackageId>
-		<Version>2025.11.30.1</Version>
+		<Version>2025.12.9.1</Version>
 		<NoWarn>1591</NoWarn>
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

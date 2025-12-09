@@ -19,7 +19,7 @@ public class RoundedRectangleRuntime : AposShapeRuntime
         {
             if (_containedRectangle == null)
             {
-                _containedRectangle = this.RenderableComponent as RoundedRectangle;
+                _containedRectangle = (RoundedRectangle)this.RenderableComponent;
             }
             return _containedRectangle;
         }
