@@ -227,12 +227,12 @@ namespace Gum.Graphics.Animation
 
     public static class AnimationChainSaveExtensionMethods
     {
-        public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, string contentManagerName, TimeMeasurementUnit timeMeasurementUnit)
+        public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, TimeMeasurementUnit timeMeasurementUnit)
         {
-            return animationChainSave.ToAnimationChain(contentManagerName, timeMeasurementUnit, TextureCoordinateType.UV);
+            return animationChainSave.ToAnimationChain(timeMeasurementUnit, TextureCoordinateType.UV);
         }
 
-        public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, string contentManagerName, TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType)
+        public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType)
         {
             if (!string.IsNullOrEmpty(animationChainSave.ParentFile))
             {
@@ -256,7 +256,7 @@ namespace Gum.Graphics.Animation
                     AnimationFrame frame = null;
 
                     bool loadTexture = true;
-                    frame = save.ToAnimationFrame(contentManagerName, loadTexture, coordinateType);
+                    frame = save.ToAnimationFrame(loadTexture, coordinateType);
 
                     frame.FrameLength /= divisor;
                     animationChain.Add(frame);

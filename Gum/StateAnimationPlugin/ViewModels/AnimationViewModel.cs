@@ -446,8 +446,8 @@ public static class ListExtension
         {
             for (int j = 1; j <= i; j++)
             {
-                object o1 = o[j - 1];
-                object o2 = o[j];
+                object o1 = o[j - 1]!;
+                object o2 = o[j]!;
                 if (((IComparable)o1).CompareTo(o2) > 0)
                 {
                     o.Remove(o1);

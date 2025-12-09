@@ -210,7 +210,7 @@ public class MainStateAnimationPlugin : PluginBase
             CreateViewModel();
         }
 
-        _renameManager.HandleRename(element, oldName, _viewModel);
+        _renameManager.HandleRename(element, oldName, _viewModel!);
     }
 
     private void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
@@ -222,7 +222,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (_selectedState.SelectedElement != null)
         {
-            _renameManager.HandleRename(instanceSave, oldName, _viewModel);
+            _renameManager.HandleRename(instanceSave, oldName, _viewModel!);
         }
     }
 
@@ -256,7 +256,7 @@ public class MainStateAnimationPlugin : PluginBase
         // We only care about this if we have an element. Otherwise, it could be a behavior:
         if (_selectedState.SelectedElement != null)
         {
-            _renameManager.HandleRename(category, oldName, _viewModel);
+            _renameManager.HandleRename(category, oldName, _viewModel!);
         }
 
     }

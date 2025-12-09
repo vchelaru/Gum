@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 //    FlatRedBall to update its dependencies first.
 // In the meantime, these classes exists as a placeholder to allow code generation
 // to properly override classes
+// Update December 9, 2025: (1) and (2) are done, so we can probably get rid of this:
 
 namespace Gum.Forms.Controls
 {

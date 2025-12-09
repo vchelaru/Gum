@@ -27,7 +27,7 @@ public class ParentSetLogic
         _codeGenerator = codeGenerator;
     }
 
-    public void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var currentState = _selectedState.SelectedStateSave;
         ///////////////////////Early Out//////////////////
@@ -40,7 +40,7 @@ public class ParentSetLogic
         var rfv = new RecursiveVariableFinder(currentState);
 
         var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
-        InstanceSave newParent = null;
+        InstanceSave? newParent = null;
         if (!string.IsNullOrEmpty(newParentName))
         {
             // 5/18/2023

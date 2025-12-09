@@ -199,7 +199,7 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void HandleElementSelected(ElementSave element)
+    private void HandleElementSelected(ElementSave? element)
     {
         if (control != null)
         {
@@ -216,7 +216,7 @@ public class MainCodeOutputPlugin : PluginBase
         GenerateCodeForElement(showPopups: false, element);
     }
 
-    private void LoadCodeSettingsFile(ElementSave element)
+    private void LoadCodeSettingsFile(ElementSave? element)
     {
         if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
         {
@@ -234,7 +234,7 @@ public class MainCodeOutputPlugin : PluginBase
         HandleRefreshAndExport();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object oldValue)
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 

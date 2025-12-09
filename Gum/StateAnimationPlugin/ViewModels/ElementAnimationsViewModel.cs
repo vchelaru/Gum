@@ -429,7 +429,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
 
-    private void HandleListChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
+    private void HandleListChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
     {
         if(eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && eventArgs.NewItems != null)
         {
