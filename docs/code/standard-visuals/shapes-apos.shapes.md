@@ -2,23 +2,55 @@
 
 ## Introduction
 
-The Apos.Shapes library can be used with Gum to add support for the following additional standard types:
+GumUI supports rendering vector shapes as visuals. The following shapes are supported.
 
 * ArcRuntime
 * ColoredCircleRuntime
 * RoundedRectangleRuntime
 
-The interface for working with these types is the same as working with these types in Skia.
+## Setup
 
-## Adding Shapes to a MonoGame Gum Project
+{% tabs %}
+{% tab title="MonoGame" %}
+The Apos.Shapes library is needed to render shapes in MonoGame projects.  Add the Gum.Shapes.MonoGame NuGet package ([https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)):
 
-Currently this library is not distributed as a NuGet package, so games must link to source. To do this:
+Modify csproj:
 
-1. Clone the Gum repository locally
-2. Add the following csproj to your game's .sln: \<Gum Root>/Runtimes/MonoGameGumShapes/MonoGameGumShapes.csproj
-3. Link this project in your main game's csproj as a dependency
+```xml
+<PackageReference Include="Gum.Shapes.MonoGame" Version="*" />
+```
 
-Your game now has access to the shape runtimes mentioned above.
+Or add through command line:
+
+```bash
+dotnet add package Gum.Shapes.MonoGame
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.KNI NuGet package ([https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)):
+
+Modify csproj:
+
+```xml
+<PackageReference Include="Gum.Shapes.KNI" Version="*" />
+```
+
+Or add through command line:
+
+```bash
+dotnet add package Gum.Shapes.KNI
+```
+{% endtab %}
+
+{% tab title=".NET MAUI" %}
+No additional setup is required to use shapes in .NET MAUI
+{% endtab %}
+
+{% tab title="raylib" %}
+Shape visuals are not currently supported in raylib. Please create an issue on GitHub or chat with us on Discord to let us know you need this feature.
+{% endtab %}
+{% endtabs %}
 
 ## Setup in Code
 
@@ -106,7 +138,7 @@ Shapes can be used in the Gum tool. To add shapes:
 For information on using these shapes in the Gum tool, see the [Arc](../../gum-tool/gum-elements/skia-standard-elements/arc/), [ColoredCircle](../../gum-tool/gum-elements/skia-standard-elements/coloredcircle.md), and [RoundedRectangle](../../gum-tool/gum-elements/skia-standard-elements/roundedrectangle/) pages. These shapes all share common values for fill, gradients, dropshadows. For information on these general properties, see the [Skia Element General Properties](../../gum-tool/gum-elements/skia-standard-elements/general-properties/) page.
 
 {% hint style="warning" %}
-Shapes only supports the shapes listed above. Adding other Skia instances, such as SVG or Lottie, will result in compile time or runtime errors.
+The MonoGame and KNI runtimes only supports the shapes listed above. Adding other Skia instances, such as SVG or Lottie, will result in compile time or runtime errors.
 {% endhint %}
 
 Screens and components containing shapes mentioned above can be loaded with no code gen, by reference code gen, or full code gen (no .gumx loaded at runtime).
