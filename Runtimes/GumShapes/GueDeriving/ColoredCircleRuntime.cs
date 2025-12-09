@@ -21,7 +21,7 @@ public class ColoredCircleRuntime : AposShapeRuntime
         {
             if (mContainedCircle == null)
             {
-                mContainedCircle = this.RenderableComponent as Circle;
+                mContainedCircle = (Circle)this.RenderableComponent;
             }
             return mContainedCircle;
         }

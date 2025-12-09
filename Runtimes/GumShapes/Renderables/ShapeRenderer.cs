@@ -12,8 +12,8 @@ namespace MonoGameAndGum.Renderables;
 
 public class ShapeRenderer
 {
-    static ShapeRenderer _self;
-    ShapeBatch _sb;
+    static ShapeRenderer _self = default!;
+    ShapeBatch _sb = default!;
 
     public ShapeBatch ShapeBatch => _sb;
 

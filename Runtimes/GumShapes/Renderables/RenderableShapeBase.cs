@@ -23,7 +23,7 @@ public abstract class RenderableShapeBase : RenderableBase
 
     // this is the default in Skia renderables so use that here:
     public Color Color { get; set; } = Color.Red;
-    public new int Alpha
+    public int Alpha
     {
         get => Color.A;
         set
@@ -471,19 +471,20 @@ public abstract class RenderableShapeBase : RenderableBase
                     break;
             }
 
-            return new Gradient(firstColor, 
-                new Vector2(effectiveGradientX1, effectiveGradientY1),
-                secondColor,
-                new Vector2(effectiveGradientX2, effectiveGradientY2));
+            return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1),
+                firstColor,
+                new Vector2(effectiveGradientX2, effectiveGradientY2),
+                secondColor
+                );
         }
         else
         {
             var effectiveGradientX2 = effectiveGradientX1 + _gradientOuterRadius;
             var effectiveGradientY2 = effectiveGradientY1;
-            return new Gradient(firstColor,
-                new Vector2(effectiveGradientX1, effectiveGradientY1),
-                secondColor,
+            return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1), 
+                firstColor,
                 new Vector2(effectiveGradientX2, effectiveGradientY2),
+                secondColor,
                 s:Gradient.Shape.Radial);
         }
 
