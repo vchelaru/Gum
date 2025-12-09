@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<BaseIntermediateOutputPath>obj\MonoGame\</BaseIntermediateOutputPath>
+		<BaseOutputPath>bin\MonoGame\</BaseOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="obj\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Apos.Shapes" Version="0.5.0" />
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4">
+			<PrivateAssets>All</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+	</ItemGroup>
+
+</Project>

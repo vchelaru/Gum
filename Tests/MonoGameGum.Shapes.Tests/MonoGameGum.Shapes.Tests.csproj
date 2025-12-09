@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Runtimes\MonoGameGumShapes\MonoGameGumShapes.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
     <ProjectReference Include="..\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
   </ItemGroup>
 
