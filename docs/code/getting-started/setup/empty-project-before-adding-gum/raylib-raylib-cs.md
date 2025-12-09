@@ -67,3 +67,5 @@ public class Program
     }
 }
 ```
+
+Next, you can begin adding Gum to your project. For more information see the [Adding/Initializing Gum](../adding-initializing-gum/raylib-raylib-cs.md) page.

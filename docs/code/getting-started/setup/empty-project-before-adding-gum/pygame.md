@@ -21,3 +21,5 @@ If this ends up being something that others want, please join the [discord](http
 {% endhint %}
 
 Gum can be used in Pygame. To begin, create an empty Pygame project. For more information see [https://www.pygame.org/wiki/GettingStarted](https://www.pygame.org/wiki/GettingStarted)
+
+Next, you can begin adding Gum to your project. For more information see the [Adding/Initializing Gum](../adding-initializing-gum/pygame.md) page.
