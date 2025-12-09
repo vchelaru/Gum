@@ -62,10 +62,12 @@ namespace StateAnimationPlugin.Views
         private readonly NameValidator _nameValidator;
         private readonly IDialogService _dialogService;
 
-        public event EventHandler AddStateKeyframeClicked;
-        public event Action<AnimatedKeyframeViewModel> AnimationKeyframeAdded;
+        public event EventHandler? AddStateKeyframeClicked;
+        public event Action<AnimatedKeyframeViewModel>? AnimationKeyframeAdded;
+        AnimatedKeyframeViewModel? copiedFrame;
 
-        public event Action AnimationColumnsResized;
+
+        public event Action? AnimationColumnsResized;
 
         public MainWindow()
         {
@@ -104,7 +106,7 @@ namespace StateAnimationPlugin.Views
                 GetUserStringOptions options = new()
                 {
                     Validator = x =>
-                        _nameValidator.IsAnimationNameValid(x, ViewModel.Animations, out string whyInvalid)
+                        _nameValidator.IsAnimationNameValid(x, ViewModel.Animations, out string? whyInvalid)
                             ? null
                             : whyInvalid,
                 };
@@ -346,7 +348,6 @@ namespace StateAnimationPlugin.Views
             //}
         }
 
-                AnimatedKeyframeViewModel copiedFrame;
 
         private void HandleAnimationKeyframeListBoxKey(object sender, KeyEventArgs e)
         {

@@ -83,7 +83,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
                 foreach (var item in save.Animations)
                 {
                     AnimationViewModel toReturn = AnimationViewModel.FromSave(
-                        item, elementSave);
+                        item, elementSave!);
 
                     toReturn.Name = item.Name;
                     toReturn.ContainingInstance = container.InstanceSave;

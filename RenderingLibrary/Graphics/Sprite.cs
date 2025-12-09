@@ -1014,12 +1014,19 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public void RefreshCurrentChainToDesiredName()
     {
-        for (int i = 0; i < mAnimationChains.Count; i++)
+        if(mAnimationChains == null)
         {
-            if (mAnimationChains[i].Name == desiredCurrentChainName)
+            mCurrentChainIndex = -1;
+        }
+        else
+        {
+            for (int i = 0; i < mAnimationChains.Count; i++)
             {
-                mCurrentChainIndex = i;
-                break;
+                if (mAnimationChains[i].Name == desiredCurrentChainName)
+                {
+                    mCurrentChainIndex = i;
+                    break;
+                }
             }
         }
     }

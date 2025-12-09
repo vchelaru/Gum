@@ -4031,7 +4031,7 @@ public class CodeGenerator
         }
     }
 
-    private static string? VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object forcedValue = null)
+    private static string? VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object? forcedValue = null)
     {
         var value = forcedValue ?? variable.Value;
         var rootName = variable.GetRootName();
@@ -4040,7 +4040,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, categoryContainer, category, context.CodeOutputProjectSettings);
     }
 
-    private static string? VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object forcedValue = null)
+    private static string? VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object? forcedValue = null)
     {
         var value = forcedValue ?? variable.ValueAsIList;
         var rootName = variable.GetRootName();
