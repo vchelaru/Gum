@@ -3,6 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -53,6 +54,7 @@ public class CopyPasteLogicTests : BaseTestClass
             {
 
             });
+        pluginManager.Object.Plugins = new List<PluginBase>();
 
         Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
 
@@ -88,7 +90,7 @@ public class CopyPasteLogicTests : BaseTestClass
         gumProject.StandardElements.Add(spriteElement);
     }
 
-    [Fact(Skip = "Need WireframeObjectManager to take dependencies in constructor")]
+    [Fact]
     public void OnPaste_Instance_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
         Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
@@ -260,7 +262,7 @@ public class CopyPasteLogicTests : BaseTestClass
             "sets the BadVariable which doesn't exist on the component");
     }
 
-    [Fact(Skip = "Need WireframeObjectManager to inject its ISelectedState")]
+    [Fact]
     public void OnPaste_Instance_ShouldSortVariables()
     {
         ScreenSave element = CreateDefaultScreen();

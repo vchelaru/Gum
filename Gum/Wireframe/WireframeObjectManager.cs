@@ -31,12 +31,8 @@ public enum InstanceFetchType
 
 public partial class WireframeObjectManager
 {
-    #region Fields
 
-    GraphicalUiElementManager gueManager;
-    private LocalizationManager _localizationManager;
 
-    #endregion
 
     #region Properties
 
@@ -65,19 +61,24 @@ public partial class WireframeObjectManager
     private readonly ISelectedState _selectedState;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
+    GraphicalUiElementManager gueManager;
+    private LocalizationManager _localizationManager;
+    private readonly PluginManager _pluginManager;
 
     public WireframeObjectManager(FontManager fontManager,
         ISelectedState selectedState,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager)
+        LocalizationManager localizationManager, 
+        PluginManager pluginManager)
     {
         _fontManager = fontManager;
         _selectedState = selectedState;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _localizationManager = localizationManager;
-    
+        _pluginManager = pluginManager;
+
         gueManager = new GraphicalUiElementManager();
     }
 
@@ -100,7 +101,7 @@ public partial class WireframeObjectManager
 
 #if GUM
         containedObject =
-            Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
+            _pluginManager.CreateRenderableForType(type);
 #endif
 
         return containedObject;
@@ -144,7 +145,7 @@ public partial class WireframeObjectManager
 
         RefreshAll(forceLayout, forceReloadTextures, elementSave);
 
-        PluginManager.Self.WireframeRefreshed();
+        _pluginManager.WireframeRefreshed();
     }
 
     private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
@@ -185,7 +186,7 @@ public partial class WireframeObjectManager
 
                 try
                 {
-                    RootGue = PluginManager.Self.CreateGraphicalUiElement(elementSave);
+                    RootGue = _pluginManager.CreateGraphicalUiElement(elementSave);
 
                     if(RootGue != null)
                     {
