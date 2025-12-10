@@ -100,7 +100,7 @@ internal class RenameService
         _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, false);
     }
 
-    internal void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
         if(variableName != "BaseType" || instance != null)

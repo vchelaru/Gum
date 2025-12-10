@@ -32,7 +32,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 {
     #region Fields
 
-    ObservableCollection<AnimationViewModel> mAnimations;
+    ObservableCollection<AnimationViewModel>? mAnimations;
 
     // 50 isn't smooth enough, we want more fps!
     //const int mTimerFrequencyInMs = 50;
@@ -58,7 +58,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         set => Set(value);
     }
 
-    public ObservableCollection<AnimationViewModel> Animations
+    public ObservableCollection<AnimationViewModel>? Animations
     {
         get { return mAnimations; }
         set
@@ -180,7 +180,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     [DependsOn(nameof(Element))]
     public string AnimationColumnTitle => Element == null ? "No Element Selected" : $"{Element.Name} Animations";
 
-    public ElementAnimationsSave BackingData { get; private set; }
+    public ElementAnimationsSave? BackingData { get; private set; }
 
     public List<string> GameSpeedList { get; set; } =
         new List<string>
@@ -218,7 +218,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     #region Events
 
 
-    public event PropertyChangedEventHandler AnyChange;
+    public event PropertyChangedEventHandler? AnyChange;
 
     //public event EventHandler SelectedItemPropertyChanged;
 

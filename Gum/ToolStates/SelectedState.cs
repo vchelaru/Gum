@@ -4,7 +4,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Debug;
-using Gum.Events;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
@@ -26,7 +25,6 @@ public class SelectedState : ISelectedState
     
     private readonly IGuiCommands _guiCommands;
     private readonly PluginManager _pluginManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -322,9 +320,6 @@ public class SelectedState : ISelectedState
 
         _guiCommands.RefreshStateTreeView();
 
-        // todo : this should be handled by plugins, and should not be explicitly handled here:
-        _wireframeObjectManager.RefreshAll(false);
-
         SelectedStateSave = null;
         SelectedStateCategorySave = null;
         if (SelectedBehavior != null)
@@ -369,12 +364,10 @@ public class SelectedState : ISelectedState
 
 
     public SelectedState(IGuiCommands guiCommands,
-        PluginManager pluginManager,
-        WireframeObjectManager wireframeObjectManager)
+        PluginManager pluginManager)
     {
         _guiCommands = guiCommands;
         _pluginManager = pluginManager;
-        _wireframeObjectManager = wireframeObjectManager;
     }
 
     #region Instance
@@ -560,15 +553,6 @@ public class SelectedState : ISelectedState
                 SelectedStateSave = SelectedElement.States[0];
             }
         }
-
-        // todo - this should be handled by plugins and should not be explicitly called here
-        if (_wireframeObjectManager.ElementShowing != this.SelectedElement)
-        {
-            _wireframeObjectManager.RefreshAll(false);
-        }
-
-        // This is needed for the wireframe manager, but this should be moved to a plugin
-        GumEvents.Self.CallInstanceSelected();
     }
 
 
@@ -925,7 +909,7 @@ class SelectedStateSnapshot
         }
     }
     //public InstanceSave SelectedInstance { get; set; }
-    public InstanceSave SelectedInstance
+    public InstanceSave? SelectedInstance
     {
         get => SelectedInstances.FirstOrDefault();
         set

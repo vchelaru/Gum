@@ -264,7 +264,7 @@ public class CopyPasteLogic
             }
 
             _fileCommands.TryAutoSaveElement(sourceElement);
-            WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
             _guiCommands.RefreshVariables();
             _guiCommands.RefreshElementTreeView();
         }

@@ -5,6 +5,7 @@ using FlatRedBall.AnimationEditorForms.Controls;
 using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Extensions;
@@ -213,6 +214,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
 
+        this.BehaviorSelected += HandleBehaviorSelected;
+
         this.VariableSet += HandleVariableSet;
         this.VariableSetLate += HandleVariableSetLate;
 
@@ -242,6 +245,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         this.AfterUndo += HandleAfterUndo;
 
+    }
+
+    private void HandleBehaviorSelected(BehaviorSave? save)
+    {
+        _wireframeObjectManager.RefreshAll(false);
     }
 
     private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
@@ -406,9 +414,10 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _wireframeControl.UpdateCanvasBoundsToProject();
 
-
         _selectionManager.RestrictToUnitValues =
             save.RestrictToUnitValues;
+
+        _wireframeObjectManager.RefreshAll(true);
 
         AdjustTextureFilter();
     }
@@ -605,6 +614,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleElementSelected(ElementSave save)
     {
         _wireframeObjectManager.RefreshAll(forceLayout: true);
+
         _selectionManager.Refresh();
 
     }
@@ -990,7 +1000,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeEditControl.Width = _wireframeEditControl.Parent.Width;
     }
 
-    private void HandleStateSelected(StateSave save)
+    private void HandleStateSelected(StateSave? save)
     {
         _wireframeObjectManager.RefreshAll(forceLayout: true);
     }

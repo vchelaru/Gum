@@ -338,7 +338,7 @@ public class CodeGenerator
 
     public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
-        var namespaceName = elementSettings?.Namespace;
+        var namespaceName = elementSettings?.Namespace ?? string.Empty;
 
         if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
         {

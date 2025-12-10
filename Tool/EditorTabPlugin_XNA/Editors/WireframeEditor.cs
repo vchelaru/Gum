@@ -36,7 +36,7 @@ public abstract class WireframeEditor
     private readonly IUndoManager _undoManager;
     protected readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    
+    private readonly WireframeObjectManager _wireframeObjectManager;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -66,6 +66,7 @@ public abstract class WireframeEditor
         _undoManager = Locator.GetRequiredService<IUndoManager>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -112,7 +113,7 @@ public abstract class WireframeEditor
             : 0;
 
         var vector2 = new Vector2(xToMoveBy, yToMoveBy);
-        var selectedObject = WireframeObjectManager.Self.GetSelectedRepresentation();
+        var selectedObject = _wireframeObjectManager.GetSelectedRepresentation();
         if (selectedObject?.Parent != null)
         {
             var parentRotationDegrees = selectedObject.Parent.GetAbsoluteRotation();
@@ -171,14 +172,14 @@ public abstract class WireframeEditor
 
                 if (xOrY == XOrY.X)
                 {
-                    var gue = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+                    var gue = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
 
                     gue.Y = grabbedState.ComponentPosition.Y;
                 }
                 else if (xOrY == XOrY.Y)
                 {
 
-                    var gue = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+                    var gue = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
 
                     gue.X = grabbedState.ComponentPosition.X;
                 }
@@ -201,14 +202,14 @@ public abstract class WireframeEditor
 
                     if (xOrY == XOrY.X)
                     {
-                        var gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                        var gue = _wireframeObjectManager.GetRepresentation(instance);
 
                         gue.Y = grabbedState.InstancePositions[instance].AbsoluteY;
                     }
                     else if (xOrY == XOrY.Y)
                     {
 
-                        var gue = WireframeObjectManager.Self.GetRepresentation(instance);
+                        var gue = _wireframeObjectManager.GetRepresentation(instance);
 
                         gue.X = grabbedState.InstancePositions[instance].AbsoluteX;
                     }

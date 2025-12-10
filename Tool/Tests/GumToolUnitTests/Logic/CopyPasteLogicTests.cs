@@ -8,6 +8,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
 using Moq.AutoMock;
+using SharpVectors.Dom;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -88,7 +89,7 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact(Skip = "Need WireframeObjectManager to take dependencies in constructor")]
-    public void OnPaste_ShouldCreateOneUndo_ForMultiplePastedObjects()
+    public void OnPaste_Instance_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
         Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
         selectedState
@@ -224,9 +225,9 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void OnPaste_ShouldPaste_IfExposedVariableIsSet()
+    public void OnPaste_State_ShouldPaste_IfExposedVariableIsSet()
     {
-        var variable = new VariableSave
+        VariableSave variable = new ()
         {
             Name = "Instance.X",
             ExposedAsName = "InstanceX",
@@ -245,7 +246,7 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void OnPaste_ShouldPaste_IfCopiedStateHasExtraVariables_InEmptyCategory()
+    public void OnPaste_State_ShouldPaste_IfCopiedStateHasExtraVariables_InEmptyCategory()
     {
         selectedCategory.States.Clear();
 
@@ -260,25 +261,11 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact(Skip = "Need WireframeObjectManager to inject its ISelectedState")]
-    public void OnPaste_ShouldSortVariables()
+    public void OnPaste_Instance_ShouldSortVariables()
     {
-        var element = new ScreenSave();
-        element.States.Add(new Gum.DataTypes.Variables.StateSave());
+        ScreenSave element = CreateDefaultScreen();
 
-        var instance = new InstanceSave();
-        element.Instances.Add(instance);
-        instance.ParentContainer = element;
-        instance.Name = "Instance1";
-
-        _selectedState
-            .Setup(x => x.SelectedInstance).Returns(instance);
-        _selectedState
-            .Setup(x => x.SelectedInstances)
-            .Returns(new List<InstanceSave> { instance });
-
-        _selectedState.Setup(x => x.SelectedElement).Returns(element);
-
-        _selectedState.Setup(x => x.SelectedStateSave).Returns(element.DefaultState);
+        SelectInstances(new List<InstanceSave> { element.Instances.First() });
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
@@ -286,4 +273,58 @@ public class CopyPasteLogicTests : BaseTestClass
 
         _elementCommands.Verify(x => x.SortVariables(It.IsAny<ElementSave>()), Times.Once);
     }
+
+    [Fact]
+    public void OnPaste_Instance_ShouldPastSibling_IfNoSelectionMade()
+    {
+        ScreenSave screen = CreateDefaultScreen();
+
+        var firstInstance = screen.Instances[0];
+        SelectInstances(new List<InstanceSave>() { firstInstance });
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(2);
+
+        screen.Instances[0].ShouldBe(firstInstance);
+
+    }
+
+
+    #region Utilities[
+
+    private ScreenSave CreateDefaultScreen()
+    {
+        ScreenSave element = new ();
+        var defaultState = new Gum.DataTypes.Variables.StateSave();
+        defaultState.ParentContainer = element;
+        element.States.Add(defaultState);
+
+        InstanceSave instance = new();
+        element.Instances.Add(instance);
+        instance.ParentContainer = element;
+        instance.Name = "Instance1";
+
+        return element;
+    }
+
+    private void SelectInstances(IEnumerable<InstanceSave> instances)
+    {
+        _selectedState
+            .Setup(x => x.SelectedInstance)
+            .Returns(instances.First());
+        _selectedState
+            .Setup(x => x.SelectedInstances)
+            .Returns(instances);
+
+        var firstInstance = instances.First();
+        var parentElement = firstInstance.ParentContainer!;
+        _selectedState.Setup(x => x.SelectedElement).Returns(parentElement);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { parentElement });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(parentElement.DefaultState);
+    }
+
+    #endregion
 }
