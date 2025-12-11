@@ -506,76 +506,84 @@ public class CopyPasteLogic
 
                 oldNewNameDictionary[oldName] = newName;
 
+                newInstance.ParentContainer = targetElement;
+                int newIndex = -1;
 
-                if (targetElement == sourceElement)
+                object? parent;
+
+                // The logic for selecting the parent is:
+
+                if(!_hasChangedSelectionSinceCopy)
                 {
-                    int newIndex = -1;
-
-                    object? parent;
-                    if(!_hasChangedSelectionSinceCopy)
+                    parent = GetParentElementOrInstanceFor(sourceInstance);
+                }
+                else
+                {
+                    var originalParent = GetParentElementOrInstanceFor(sourceInstance);
+                    // is this attached to any of the copied instances? If so, we need to 
+                    // preserve that:
+                    var shouldAttacheToPasted =
+                        originalParent is InstanceSave originalParentInstance && instancesToCopy.Any(item => item.Name == originalParentInstance.Name);
+                    if (shouldAttacheToPasted)
                     {
-                        parent = GetParentElementOrInstanceFor(sourceInstance);
+                        parent = originalParent;
                     }
                     else
                     {
                         parent = (object?)_selectedState.SelectedInstance ??
                             _selectedState.SelectedElement;
                     }
+                }
 
 
-                    if (nextIndexByParent.ContainsKey(parent))
+                if (nextIndexByParent.ContainsKey(parent))
+                {
+                    newIndex = nextIndexByParent[parent];
+                }
+                else
+                {
+                    if (parent is ElementSave parentElement)
                     {
-                        newIndex = nextIndexByParent[parent];
+                        newIndex = instancesToCopy.Max(item => GetIndexOfInstanceByName(parentElement, item));
                     }
-                    else
+                    else if (parent is InstanceSave parentInstance)
                     {
-                        if (parent is ElementSave parentElement)
+                        if(_hasChangedSelectionSinceCopy)
                         {
-                            newIndex = instancesToCopy.Max(item => GetIndexOfInstanceByName(parentElement, item));
-                        }
-                        else if (parent is InstanceSave parentInstance)
-                        {
-                            if(_hasChangedSelectionSinceCopy)
+                            // add it to the end:
+                            foreach(var item in sourceElement.Instances)
                             {
-                                // add it to the end:
-                                foreach(var item in sourceElement.Instances)
+                                if(GetParentElementOrInstanceFor(item) == parentInstance)
                                 {
-                                    if(GetParentElementOrInstanceFor(item) == parentInstance)
-                                    {
-                                        newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                List<InstanceSave> instancesWithThisParent = new();
-                                foreach (var item in instancesToCopy)
-                                {
-                                    if (GetParentElementOrInstanceFor(item) == parentInstance)
-                                    {
-                                        newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
-                                    }
+                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
                                 }
                             }
                         }
+                        else
+                        {
+                            List<InstanceSave> instancesWithThisParent = new();
+                            foreach (var item in instancesToCopy)
+                            {
+                                if (GetParentElementOrInstanceFor(item) == parentInstance)
+                                {
+                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                }
+                            }
+                        }
                     }
+                }
 
-                    if (newIndex != -1)
-                    {
-                        targetElement.Instances.Insert(newIndex + 1, newInstance);
+                if (newIndex != -1)
+                {
+                    targetElement.Instances.Insert(newIndex + 1, newInstance);
 
-                        nextIndexByParent[parent] = newIndex + 1;
-                    }
-                    else
-                    {
-                        targetElement.Instances.Add(newInstance);
-
-                        nextIndexByParent[parent] = targetElement.Instances.Count-1;
-                    }
+                    nextIndexByParent[parent] = newIndex + 1;
                 }
                 else
                 {
                     targetElement.Instances.Add(newInstance);
+
+                    nextIndexByParent[parent] = targetElement.Instances.Count-1;
                 }
 
             }
@@ -753,7 +761,7 @@ public class CopyPasteLogic
 
         if(element == null)
         {
-            throw new InvalidOperationException($"The instance {instance} must have a valid parent");
+            throw new InvalidOperationException($"The instance {instance} must have a valid parent (its ParentContainer must be non-null)");
         }
 
         var parentName = element.DefaultState.GetValueRecursive($"{instance.Name}.Parent") as string;

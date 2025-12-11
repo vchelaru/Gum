@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Markup;
 
 namespace GumToolUnitTests.Logic;
@@ -275,7 +276,7 @@ public class CopyPasteLogicTests : BaseTestClass
     {
         ScreenSave element = CreateDefaultScreen();
 
-        SelectInstances(new List<InstanceSave> { element.Instances.First() });
+        SelectInstances(element.Instances.First());
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
@@ -290,7 +291,7 @@ public class CopyPasteLogicTests : BaseTestClass
         ScreenSave screen = CreateDefaultScreen();
 
         var firstInstance = screen.Instances[0];
-        SelectInstances(new List<InstanceSave>() { firstInstance });
+        SelectInstances(firstInstance);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
@@ -314,7 +315,7 @@ public class CopyPasteLogicTests : BaseTestClass
         ScreenSave screen = CreateDefaultScreen();
 
         var firstInstance = screen.Instances[0];
-        SelectInstances(new List<InstanceSave>() { firstInstance });
+        SelectInstances(firstInstance);
 
         // Adding another instance to ensure paste goes after selection
         InstanceSave secondInstance = new();
@@ -354,7 +355,7 @@ public class CopyPasteLogicTests : BaseTestClass
         secondInstance.ParentContainer = screen;
         secondInstance.Name = "Instance2";
 
-        SelectInstances(new List<InstanceSave> { firstInstance, secondInstance });
+        SelectInstances(firstInstance, secondInstance);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
@@ -402,7 +403,7 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.SetValue("ChildOfSecond.Parent", "Instance2", "string");
 
 
-        SelectInstances(new List<InstanceSave> { childOfFirst, childOfSecond });
+        SelectInstances(childOfFirst, childOfSecond);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
@@ -460,7 +461,7 @@ public class CopyPasteLogicTests : BaseTestClass
         InstanceSave childC = AddChild("ChildC", "Instance2");
         InstanceSave childD = AddChild("ChildD", "Instance2");
 
-        SelectInstances(new List<InstanceSave> { childA, childC });
+        SelectInstances(childA, childC);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
@@ -514,7 +515,7 @@ public class CopyPasteLogicTests : BaseTestClass
         InstanceSave child = AddChild("Child", "Instance1");
         InstanceSave grandchild = AddChild("Grandchild", "Child");
 
-        SelectInstances(new [] { child });
+        SelectInstances(child);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
@@ -559,7 +560,7 @@ public class CopyPasteLogicTests : BaseTestClass
         InstanceSave childA = AddChild("ChildA", "Instance1");
         InstanceSave copiedGrandchildA = AddChild("CopiedGrandchildA", "ChildA");
 
-        SelectInstances(new[] { copiedChild, copiedGrandchildA });
+        SelectInstances(copiedChild, copiedGrandchildA);
 
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
@@ -611,11 +612,11 @@ public class CopyPasteLogicTests : BaseTestClass
         InstanceSave child = AddChild("Child", "Instance1");
         InstanceSave selectedChild = AddChild("SelectedChild", "Instance1");
 
-        SelectInstances(new[] { child });
+        SelectInstances(child);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
-        SelectInstances(new[] { selectedChild });
+        SelectInstances(selectedChild);
 
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
 
@@ -652,10 +653,10 @@ public class CopyPasteLogicTests : BaseTestClass
         InstanceSave childA = AddChild("ChildA", "SelectedParent");
         InstanceSave childB = AddChild("ChildB", "SelectedParent");
 
-        SelectInstances(new[] { childA });
+        SelectInstances(childA);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
-        SelectInstances(new[] { selectedParent });
+        SelectInstances(selectedParent);
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
 
         screen.Instances.Count.ShouldBe(4);
@@ -703,11 +704,11 @@ public class CopyPasteLogicTests : BaseTestClass
 
         InstanceSave selectedParent = AddChild("SelectedParent", "");
 
-        SelectInstances(new[] { childA, childB });
+        SelectInstances(childA, childB);
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
-        SelectInstances(new[] { selectedParent });
+        SelectInstances(selectedParent);
 
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
 
@@ -729,9 +730,88 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void OnPaste_InstanceWitHierarchy_InDiffInstance_ShouldPasteWithHierarchy()
+    {
+        /*
+         ParentA
+            ChildACopied
+                GrandchildACopied
+            ChildB
+                ChildACopied1 <--- pasted
+                    GrandchildACopied1 <--- pasted
+        */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave parentA = screen.Instances[0];
+        parentA.Name = "ParentA";
+
+        InstanceSave childACopied = AddChild("ChildACopied", "ParentA");
+        InstanceSave grandchildACopied = AddChild("GrandchildACopied", "ChildACopied");
+
+        InstanceSave childB = AddChild("ChildB", "ParentA");
+
+        SelectInstances(childACopied, grandchildACopied);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        SelectInstances(childB);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(6);
+
+        screen.DefaultState.GetValue("ChildACopied1.Parent").ShouldBe("ChildB");
+        screen.DefaultState.GetValue("GrandchildACopied1.Parent").ShouldBe("ChildACopied1");
+
+        int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
+        InstanceSave AddChild(string childName, string parentName)
+        {
+            InstanceSave child = new();
+            screen.Instances.Add(child);
+            child.ParentContainer = screen;
+            child.Name = childName;
+            if (!string.IsNullOrEmpty(parentName))
+            {
+                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
+            }
+            return child;
+        }
+    }
+
+    [Fact]
     public void OnPaste_Instance_InDifferentElementOnInstance_ShouldPasteAsChild()
     {
-        throw new NotImplementedException();
+        /*
+        ScreenA
+            ChildA (copied)
+        ScreenB
+            ChildB
+                ChildA1 <--- pasted
+        */
+
+        ScreenSave screenA = CreateDefaultScreen();
+        screenA.Name = "ScreenA";
+        InstanceSave childA = screenA.Instances[0];
+        childA.Name = "ChildA";
+
+        ScreenSave screenB = CreateDefaultScreen();
+        screenB.Name = "ScreenB";
+        InstanceSave childB = screenB.Instances[0];
+        childB.Name = "ChildB";
+
+        SelectInstances(childA);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        SelectInstances(childB);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screenA.Instances.Count.ShouldBe(1);
+        screenB.Instances.Count.ShouldBe(2);
+
+        screenB.DefaultState.GetValue("ChildA1.Parent").ShouldBe("ChildB");
+
     }
 
 
@@ -752,7 +832,7 @@ public class CopyPasteLogicTests : BaseTestClass
         return element;
     }
 
-    private void SelectInstances(IEnumerable<InstanceSave> instances)
+    private void SelectInstances(params InstanceSave[] instances)
     {
         _selectedState
             .Setup(x => x.SelectedInstance)
