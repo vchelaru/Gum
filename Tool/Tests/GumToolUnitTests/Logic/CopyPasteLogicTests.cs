@@ -635,6 +635,106 @@ public class CopyPasteLogicTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void OnPaste_Instance_AfterSelection_ShouldAddToEndOfChildren()
+    {
+        /*
+         SelectedParent
+            ChildA  (copied)
+            ChildB
+            ChildA1 <-- pasted 
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave selectedParent = screen.Instances[0];
+        selectedParent.Name = "SelectedParent";
+
+        InstanceSave childA = AddChild("ChildA", "SelectedParent");
+        InstanceSave childB = AddChild("ChildB", "SelectedParent");
+
+        SelectInstances(new[] { childA });
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        SelectInstances(new[] { selectedParent });
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+
+
+        screen.DefaultState.GetValue("ChildA1.Parent").ShouldBe("SelectedParent");
+
+        var childA1 = screen.Instances.Find(item => item.Name == "ChildA1")!;
+        IndexOf(childA1).ShouldBeGreaterThan(IndexOf(childB));
+
+        int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
+
+        InstanceSave AddChild(string childName, string parentName)
+        {
+            InstanceSave child = new();
+            screen.Instances.Add(child);
+            child.ParentContainer = screen;
+            child.Name = childName;
+            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
+            return child;
+        }
+    }
+
+    [Fact]
+    public void OnPaste_MultipleInstances_InDifferentInstances_ShouldPasteInCorrectParents()
+    {
+        /*
+        ParentA
+            ChildA (copied)
+        ParentB
+            ChildB (copied)
+        SelectedParent
+            ChildA1 <--- pasted
+            ChildB1 <--- pasted
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave parentA = screen.Instances[0];
+        parentA.Name = "ParentA";
+
+        InstanceSave childA = AddChild("ChildA", "ParentA");
+
+        InstanceSave parentB = AddChild("ParentB", "");
+        InstanceSave childB = AddChild("ChildB", "Parent2");
+
+        InstanceSave selectedParent = AddChild("SelectedParent", "");
+
+        SelectInstances(new[] { childA, childB });
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        SelectInstances(new[] { selectedParent });
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.DefaultState.GetValue("ChildA1.Parent").ShouldBe("SelectedParent");
+        screen.DefaultState.GetValue("ChildB1.Parent").ShouldBe("SelectedParent");
+
+        InstanceSave AddChild(string childName, string parentName)
+        {
+            InstanceSave child = new();
+            screen.Instances.Add(child);
+            child.ParentContainer = screen;
+            child.Name = childName;
+            if(!string.IsNullOrEmpty(parentName))
+            {
+                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
+            }
+            return child;
+        }
+    }
+
+    [Fact]
+    public void OnPaste_Instance_InDifferentElementOnInstance_ShouldPasteAsChild()
+    {
+        throw new NotImplementedException();
+    }
+
+
     #region Utilities
 
     private ScreenSave CreateDefaultScreen()

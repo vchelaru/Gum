@@ -535,12 +535,26 @@ public class CopyPasteLogic
                         }
                         else if (parent is InstanceSave parentInstance)
                         {
-                            List<InstanceSave> instancesWithThisParent = new();
-                            foreach (var item in instancesToCopy)
+                            if(_hasChangedSelectionSinceCopy)
                             {
-                                if (GetParentElementOrInstanceFor(item) == parentInstance)
+                                // add it to the end:
+                                foreach(var item in sourceElement.Instances)
                                 {
-                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                    if(GetParentElementOrInstanceFor(item) == parentInstance)
+                                    {
+                                        newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                List<InstanceSave> instancesWithThisParent = new();
+                                foreach (var item in instancesToCopy)
+                                {
+                                    if (GetParentElementOrInstanceFor(item) == parentInstance)
+                                    {
+                                        newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                    }
                                 }
                             }
                         }
