@@ -224,6 +224,7 @@
   * [Anchor and Dock](code/layout/anchor-and-dock.md)
   * [Stacking](code/layout/stacking.md)
   * [Grid](code/layout/grid.md)
+  * [Resolution and Resizing the Game Window](code/layout/resizing-the-game-window.md)
 * [Events and Interactivity](code/events-and-interactivity/README.md)
   * [Common Control Events](code/events-and-interactivity/common-control-events.md)
   * [Troubleshooting Events](code/events-and-interactivity/troubleshooting-events.md)
@@ -331,5 +332,4 @@
 * [MonoGame](code/monogame/README.md)
   * [Layered Forms](code/monogame/layered-forms.md)
   * [Ordering](code/monogame/ordering.md)
-  * [Resolution and Resizing the Game Window](code/monogame/resizing-the-game-window.md)
   * [Known Issues](code/monogame/known-issues.md)
