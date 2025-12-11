@@ -41,7 +41,7 @@ namespace Gum.DataTypes
 
         public override string ToString()
         {
-            ElementSave parentContainer = ParentContainer;
+            ElementSave? parentContainer = ParentContainer;
 
             if (parentContainer == null)
             {

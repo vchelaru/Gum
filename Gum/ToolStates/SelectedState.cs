@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
@@ -5,6 +6,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Debug;
 using Gum.Managers;
+using Gum.Messages;
 using Gum.Plugins;
 using Gum.Services;
 using Gum.Wireframe;
@@ -25,6 +27,7 @@ public class SelectedState : ISelectedState
     
     private readonly IGuiCommands _guiCommands;
     private readonly PluginManager _pluginManager;
+    private readonly IMessenger _messenger;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -145,6 +148,8 @@ public class SelectedState : ISelectedState
         if (differ || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
         {
             _pluginManager.ElementSelected(SelectedElement);
+
+            _messenger.Send(new SelectionChangedMessage());
         }
     }
 
@@ -311,6 +316,8 @@ public class SelectedState : ISelectedState
         if (differ || instancesBefore.Count != 0 && SelectedInstances.Count() == 0)
         {
             _pluginManager.BehaviorSelected(SelectedBehavior);
+
+            _messenger.Send(new SelectionChangedMessage());
         }
     }
 
@@ -364,10 +371,12 @@ public class SelectedState : ISelectedState
 
 
     public SelectedState(IGuiCommands guiCommands,
-        PluginManager pluginManager)
+        PluginManager pluginManager,
+        IMessenger messenger)
     {
         _guiCommands = guiCommands;
         _pluginManager = pluginManager;
+        _messenger = messenger;
     }
 
     #region Instance
@@ -463,6 +472,8 @@ public class SelectedState : ISelectedState
                     _pluginManager.BehaviorSelected(SelectedBehavior);
                 }
             }
+
+            _messenger.Send(new SelectionChangedMessage());
         }
 
     }
