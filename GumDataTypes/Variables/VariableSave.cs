@@ -116,7 +116,7 @@ public class VariableSave
     /// The user must explicitly expose that variable.  If the variable
     /// is exposed then this variable is set.
     /// </summary>
-    public string ExposedAsName
+    public string? ExposedAsName
     {
         get;
         set;

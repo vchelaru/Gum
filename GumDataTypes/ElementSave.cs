@@ -15,7 +15,7 @@ namespace Gum.DataTypes
         {
             get;
             set;
-        }
+        } = "";
 
         public string StrippedName
         {
