@@ -103,17 +103,23 @@ public class CopyPasteLogicTests : BaseTestClass
     public void OnPaste_Instance_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
         Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+
+        ComponentSave component = new();
+        component.States.Add(new StateSave());
+
         selectedState
             .Setup(x => x.SelectedInstances)
             .Returns(new List<InstanceSave>
             {
                 new InstanceSave
                 {
-                    Name = "Instance1"
+                    Name = "Instance1",
+                    ParentContainer = component
                 },
                 new InstanceSave
                 {
-                    Name = "Instance2"
+                    Name = "Instance2",
+                    ParentContainer = component
                 }
             });
 
@@ -810,7 +816,7 @@ public class CopyPasteLogicTests : BaseTestClass
         screenA.Instances.Count.ShouldBe(1);
         screenB.Instances.Count.ShouldBe(2);
 
-        screenB.DefaultState.GetValue("ChildA1.Parent").ShouldBe("ChildB");
+        screenB.DefaultState.GetValue("ChildA.Parent").ShouldBe("ChildB");
 
     }
 

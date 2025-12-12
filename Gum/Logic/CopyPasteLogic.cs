@@ -551,7 +551,7 @@ public class CopyPasteLogic
                         if(_hasChangedSelectionSinceCopy)
                         {
                             // add it to the end:
-                            foreach(var item in sourceElement.Instances)
+                            foreach(var item in targetElement.Instances)
                             {
                                 if(GetParentElementOrInstanceFor(item) == parentInstance)
                                 {
@@ -565,6 +565,14 @@ public class CopyPasteLogic
                             foreach (var item in instancesToCopy)
                             {
                                 if (GetParentElementOrInstanceFor(item) == parentInstance)
+                                {
+                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                }
+                            }
+                            // also make sure that we go after selection, in case we are copy/pasting multiple times
+                            foreach(var item in _selectedState.SelectedInstances)
+                            {
+                                if(GetParentElementOrInstanceFor(item) == parentInstance)
                                 {
                                     newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
                                 }
@@ -600,7 +608,7 @@ public class CopyPasteLogic
                 item.Name == selectedInstance.Name &&
                 item.ParentContainer == selectedInstance.ParentContainer);
 
-            var shouldAttachToSelectedInstance = isPastingInNewElement || !isSelectedInstancePartOfCopied;
+            var shouldAttachToSelectedInstance = _hasChangedSelectionSinceCopy && (isPastingInNewElement || !isSelectedInstancePartOfCopied);
             var newParentName = selectedInstance?.Name;
 
             if (selectedInstance != null)
@@ -740,7 +748,13 @@ public class CopyPasteLogic
         _wireframeObjectManager.RefreshAll(true);
         _guiCommands.RefreshElementTreeView(targetElement);
         _fileCommands.TryAutoSaveElement(targetElement);
+
+        //var hasSelectionChangedStore = _hasChangedSelectionSinceCopy;
+
         _selectedState.SelectedInstances = newInstances;
+
+        // we don't want the selection from paste to set this value.
+        _hasChangedSelectionSinceCopy = false;
     }
 
     int GetIndexOfInstanceByName(ElementSave element, InstanceSave instance)
