@@ -10,9 +10,64 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using RenderingLibrary.Math;
+using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
+
+/// <summary>
+/// This enum defines the ways the renderer can align
+/// text, which can affect clarity - especially with
+/// small fonts when drawing with point sampling
+/// </summary>
+public enum TextRenderingPositionMode
+{
+    /// <summary>
+    /// In this mode, the renderer will ensure text renders at
+    /// a whole pixel which can avoid artifacting on small fonts
+    /// </summary>
+    SnapToPixel,
+    
+    /// <summary>
+    /// In this mode the renderer will render text at its
+    /// specified position, even if that's a fractional or
+    /// subpixel.
+    /// </summary>
+    FreeFloating,
+}
+
+/// <summary>
+/// This enum defines the way the renderer can round text
+/// rendering to the nearest pixel. This only applies if
+/// TextRenderingPositionMode is set to SnapToPixel
+/// </summary>
+public enum TextPositionRoundingMode
+{
+    /// <summary>
+    /// This mode does special integer rounding to the nearest
+    /// pixel and will round midpoints away from zero.
+    /// </summary>
+    RoundToInt,
+    
+    /// <summary>
+    /// This mode always rounds to floor, which may reduce
+    /// render jittering affecting the spacing between text.
+    /// Use this if your default rendering behavior rounds
+    /// to floor for subpixels.
+    /// </summary>
+    Floor,
+    
+    /// <summary>
+    /// This mode always rounds to ceiling, which may reduce
+    /// render jittering affecting the spacing between text.
+    /// Use this if your default rendering behavior rounds
+    /// to ceiling for subpixels.
+    /// </summary>
+    Ceiling,
+}
+
+
 public class Text : IVisible, IRenderableIpso,
     IWrappedText
 {
@@ -43,6 +98,19 @@ public class Text : IVisible, IRenderableIpso,
     //static Font defaultFont = Raylib.GetFontDefault();
 
     public Vector2 Position;
+    
+    /// <summary>
+    /// Whether the renderer should snap text rendering to whole pixels or not. Default
+    /// behavior is to snap as this prevents baseline misalignment and artifacts for
+    /// small fonts.
+    /// </summary>
+    public static TextRenderingPositionMode TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
+    
+    /// <summary>
+    /// How the renderer should round text rendering to whole pixels. Only applies if
+    /// TextRenderingPositionMode is SnapToPixel. Default is to use special integer rounding.
+    /// </summary>
+    public static TextPositionRoundingMode TextPositionRoundingMode = TextPositionRoundingMode.RoundToInt;
 
     List<string> mWrappedText = new List<string>();
     float? mWidth = 200;
@@ -564,6 +632,28 @@ public class Text : IVisible, IRenderableIpso,
             }
             var linePosition = position;
             linePosition.Y += i * LineHeightInPixels;
+
+            if (TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
+            {
+                switch (TextPositionRoundingMode)
+                {
+                    case TextPositionRoundingMode.Floor:
+                        linePosition = new Vector2(
+                            (int)Math.Floor(linePosition.X),
+                            (int)Math.Floor(linePosition.Y));
+                        break;
+                    case TextPositionRoundingMode.Ceiling:
+                        linePosition = new Vector2(
+                            (int)Math.Ceiling(linePosition.X),
+                            (int)Math.Ceiling(linePosition.Y));
+                        break;
+                    default:
+                        linePosition = new Vector2(
+                            MathFunctions.RoundToInt(linePosition.X),
+                            MathFunctions.RoundToInt(linePosition.Y));
+                        break;
+                }
+            }
 
             Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
             DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize, 0, Color);
