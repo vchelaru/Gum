@@ -18,6 +18,7 @@ using Gum.Undo;
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Services.Dialogs;
+using Gum.Wireframe;
 
 namespace Gum.Managers;
 
@@ -35,7 +36,7 @@ public partial class PropertyGridManager
     private readonly IDialogService _dialogService;
     private readonly LocalizationManager _localizationManager;
     private readonly ITabManager _tabManager;
-    
+    private readonly WireframeObjectManager _wireframeObjectManager;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -115,6 +116,7 @@ public partial class PropertyGridManager
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)

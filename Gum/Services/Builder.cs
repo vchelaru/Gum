@@ -81,7 +81,6 @@ file static class ServiceCollectionExtensions
 
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
-        services.AddSingleton<WireframeObjectManager>(WireframeObjectManager.Self);
         services.AddSingleton<PluginManager>(PluginManager.Self);
         services.AddSingleton<TypeManager>(TypeManager.Self);
         // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.
@@ -104,6 +103,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();
         services.AddSingleton<MainOutputViewModel>();
+        services.AddSingleton<WireframeObjectManager>();
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<ReorderLogic>();

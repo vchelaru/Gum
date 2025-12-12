@@ -285,6 +285,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IMessenger _messenger;
     private readonly DeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     public bool HasMouseOver
     {
@@ -312,6 +313,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _messenger.RegisterAll(this);
         _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
@@ -2423,11 +2425,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if(element != null)
         {
-            whatToHighlight = WireframeObjectManager.Self.GetRepresentation(element);
+            whatToHighlight = _wireframeObjectManager.GetRepresentation(element);
         }
         else if(instance != null)
         {
-            whatToHighlight = WireframeObjectManager.Self.GetRepresentation(instance, null);
+            whatToHighlight = _wireframeObjectManager.GetRepresentation(instance, null);
         }
 
         PluginManager.Self.SetHighlightedIpso(whatToHighlight);

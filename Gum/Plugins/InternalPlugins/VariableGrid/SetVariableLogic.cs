@@ -66,6 +66,7 @@ public class SetVariableLogic
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IDialogService _dialogService;
     private readonly PluginManager _pluginManager;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     public SetVariableLogic(ISelectedState selectedState, 
         INameVerifier nameVerifier, 
@@ -80,7 +81,8 @@ public class SetVariableLogic
         CircularReferenceManager circularReferenceManager,
         VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IDialogService dialogService,
-        PluginManager pluginManager)
+        PluginManager pluginManager,
+        WireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -96,6 +98,7 @@ public class SetVariableLogic
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _dialogService = dialogService;
         _pluginManager = pluginManager;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -442,7 +445,7 @@ public class SetVariableLogic
             if (UnitConverter.TryConvertToGeneralUnit(oldValueAsObject, out oldValue))
             {
                 IRenderableIpso currentIpso =
-                    WireframeObjectManager.Self.GetSelectedRepresentation();
+                    _wireframeObjectManager.GetSelectedRepresentation();
 
                 float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
                 float parentHeight = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
@@ -542,7 +545,7 @@ public class SetVariableLogic
             stateSave.SetValue(variableToSet, valueToSet, instanceSave);
 
             // Force update everything on the spot. We know we can just set this value instead of forcing a full refresh:
-            var gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+            var gue = _wireframeObjectManager.GetSelectedRepresentation();
 
             if (gue != null)
             {

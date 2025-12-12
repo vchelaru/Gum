@@ -43,7 +43,7 @@ namespace Gum.PropertyGridHelpers
         private readonly IExposeVariableService _exposeVariableService;
         private readonly ISelectedState _selectedState;
         private readonly SetVariableLogic _setVariableLogic;
-        
+        private readonly WireframeObjectManager _wireframeObjectManager;
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -261,6 +261,7 @@ namespace Gum.PropertyGridHelpers
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands =  Locator.GetRequiredService<IFileCommands>();
             _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+            _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
             mStateSave = stateSave;
@@ -924,7 +925,7 @@ namespace Gum.PropertyGridHelpers
             {
                 _undoManager.RecordUndo();
                 _guiCommands.RefreshVariables(force: true);
-                WireframeObjectManager.Self.RefreshAll(true);
+                _wireframeObjectManager.RefreshAll(true);
 
                 PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 

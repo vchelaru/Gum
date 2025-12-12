@@ -30,6 +30,7 @@ namespace Gum.Managers
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly PluginManager _pluginManager;
+        private readonly WireframeObjectManager _wireframeObjectManager;
 
         public DeleteLogic(
             ProjectCommands projectCommands,
@@ -37,7 +38,8 @@ namespace Gum.Managers
             IDialogService dialogService,
             IGuiCommands guiCommands,
             IFileCommands fileCommands,
-            PluginManager pluginManager)
+            PluginManager pluginManager,
+            WireframeObjectManager wireframeObjectManager)
         {
             _projectCommands = projectCommands;
             _selectedState = selectedState;
@@ -45,6 +47,7 @@ namespace Gum.Managers
             _guiCommands = guiCommands;
             _fileCommands = fileCommands;
             _pluginManager = pluginManager;
+            _wireframeObjectManager = wireframeObjectManager;
         }
 
 
@@ -357,7 +360,7 @@ namespace Gum.Managers
                 _guiCommands.RefreshElementTreeView(behavior);
             }
 
-            WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
         }
 
         public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
@@ -481,7 +484,7 @@ namespace Gum.Managers
 
             _guiCommands.RefreshStateTreeView();
             _guiCommands.RefreshVariables();
-            WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
 
             PluginManager.Self.CategoryDelete(category);
         }
@@ -521,7 +524,7 @@ namespace Gum.Managers
                 PluginManager.Self.StateDelete(stateSave);
 
                 _guiCommands.RefreshVariables();
-                WireframeObjectManager.Self.RefreshAll(true);
+                _wireframeObjectManager.RefreshAll(true);
 
                 if (shouldSelectAfterRemoval)
                 {
