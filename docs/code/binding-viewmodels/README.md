@@ -25,19 +25,11 @@ The approach that Gum uses for binding is common in other C# front end framework
 
 Typically the class that contains the data is called a _view model_. View models can also contain logic to respond to actions such as adding health to a player, or subtracting money when an item is purchased. The term _view model_ appears in the pattern Model-View-ViewModel (MVVM), although this document focuses primarily on the binding capabilities in Gum and not the entire MVVM pattern.
 
-## ViewModel-Inheritance
+## Creating a ViewModel
 
-The view model class is responsible for storing information that is displayed by the UI, and similarly which can be set by the UI through user interaction. The view model often is specific to a particular page or component. For example, if your game includes an OptionsScreen, then you might also have an OptionsScreenViewModel.
+The view model class is responsible for storing information that is displayed by the UI. The view model can also store values that are assigned through UI interaction, such as text in a TextBox. The view model is often specific to a particular page or component. For example, if your game includes an OptionsScreen, then you might also have an OptionsScreenViewModel.
 
-This class inherits from the ViewModel class and contains properties which can be viewed or edited by the OptionsScreen or its contained UI.
-
-Binding to FrameworkElement properties is usually two-way. This means that changes to the UI also result in changes to the view model's property. Similarly changes to the view model in code update the UI. For example, a view model may contain a property named `PlayerName` which is bound to a `TextBox`'s `Text` property. If the user changes the text in the `TextBox`, then the value is also changed on the view model. Similarly, if the code changes the view model's `PlayerName` property, this change is pushed to the `TextBox`.
-
-FrameworkElements like TextBox automatically push their changes to their bound view model, so the only code needed to support UI->view model changes is the initial binding.
-
-The view model must broadcast its changes to push changes to the `FrameworkElement`. The easiest way to do this is to inherit from the Gum ViewModel class and use the Get and Set methods in the property getters and setters.
-
-The following class is an example of an OptionsScreenViewModel which has values for common options in a game.
+As mentioned above, Gum provides a built-in ViewModel class which can be inherited from. This class can include any properties which should be displayed in your game. For example, the following shows a simple view model class for an options screen:
 
 ```csharp
 public class OptionsScreenViewModel : ViewModel
@@ -62,6 +54,8 @@ public class OptionsScreenViewModel : ViewModel
     
 }
 ```
+
+Notice that the properties in the class above use the Get and Set methods. These methods exist in the base ViewModel class. By using these, rather than normal properties, the ViewModel automatically broadcasts any changes to the properties so the UI can update automatically. For example, if an OptionsScreen had binding set up for IsFullScreen, whenever this property was changed the UI (such as a CheckBox) would automatically update to be checked.
 
 ## BindingContext
 
