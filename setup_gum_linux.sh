@@ -153,24 +153,56 @@ if ! winetricks --version &> /dev/null; then
     esac
 fi
 
-echo "Winetricks is installed"
+echo "Winetricks is installed\n"
 
 ################################################################################
-### Install windows allfonts with winetricks.  They can take a few minutes to finish, please be patient
+### Check if winetricks is newer than version 2024
 ################################################################################
-echo "Installing all fonts using winetricks"
+echo "Verifying winetricks version..."
+WINETRICKS_YEAR=$(winetricks --version 2>/dev/null | grep -Eo '[0-9]{4}' | head -n1)
+if [[ ! "${WINETRICKS_YEAR}" || "${WINETRICKS_YEAR}" -lt 2024 ]]; then
+    echo "Winetricks version is older than 2024 or could not be determined."
+    echo " - A newer version is required for dotnet 8. Attempting to update..."
+    echo " - Attempting to self update winetricks..."
+
+    case "$DISTRO" in
+        ubuntu|linuxmint)
+            sudo winetricks --self-update
+            ;;
+        fedora|nobara)
+            sudo winetricks --self-update
+            ;;
+        darwin)
+            brew winetricks --self-update
+            ;;
+        *)
+            echo "Unsupported distribution [${DISTRO}] for automated winetricks update."
+            exit 1
+            ;;
+    esac
+else
+    echo "Winetricks version is new enough.\n"
+fi
+
+
+################################################################################
+### Install two fonts with winetricks.
+################################################################################
+echo "Installing two fonts using winetricks"
 echo "An installer dialog may appear, follow the steps to install"
 echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks allfonts &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks segui &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks consolas &> /dev/null
+echo "Fonts installed\n"
 
 ################################################################################
-### Install dotnet48 with winetricks. This will cause two installation prompts
+### Install dotnetdeskop8 with winetricks. This will cause two installation prompts
 ### to appear.  They can take a few minutes to finish, please be patient
 ################################################################################
-echo "Installing .NET Framework 4.8 using winetricks"
+echo "Installing .NET 8 using winetricks"
 echo "Two installer dialogs will appear, follow the steps for both to install"
 echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnetdesktop8 &> /dev/null
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
