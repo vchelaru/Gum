@@ -812,7 +812,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <summary>
     /// Calls the loaded event. This should not be called in custom code, but instead is called by Gum
     /// </summary>
-    public virtual void CallLoaded() => Loaded?.Invoke(this, null);
+    public virtual void CallLoaded() => Loaded?.Invoke(this, EventArgs.Empty);
 
     protected void RaiseKeyDown(KeyEventArgs e)
     {
@@ -963,9 +963,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
-    protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
+    protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
-        OnPropertyChanged(uiPropertyName);
+        OnPropertyChanged(uiPropertyName ?? string.Empty);
     }
 
     #endregion
@@ -1116,7 +1116,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <param name="requestingElement">The element which is requesting the tab. This can be a parent of the current element. If null is passed, then this element is 
     /// treated as the origin of the tab action.</param>
     /// <param name="loop">Whether to loop around to the beginning or end if at the last focusable item.</param>
-    public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null, bool loop = false)
+    public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement? requestingElement = null, bool loop = false)
     {
         requestingElement = requestingElement ?? this;
 
@@ -1144,8 +1144,8 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <param name="loop"></param>
     /// <returns></returns>
     // This should stay public so that it can be called with a null requestingVisual to select the first child.
-    public static bool HandleTab(TabDirection tabDirection, InteractiveGue requestingVisual,
-        InteractiveGue parentVisual, bool shouldAskParent, bool loop)
+    public static bool HandleTab(TabDirection tabDirection, InteractiveGue? requestingVisual,
+        InteractiveGue? parentVisual, bool shouldAskParent, bool loop)
     {
         void UnFocusRequestingVisual()
         {
@@ -1226,7 +1226,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
                 if (CanElementBeFocused(elementAtI))
                 {
-                    elementAtI.IsFocused = true;
+                    elementAtI!.IsFocused = true;
 
                     UnFocusRequestingVisual();
 
@@ -1321,7 +1321,7 @@ public class FrameworkElement : INotifyPropertyChanged
         return didChildHandle;
     }
 
-    static bool CanElementBeFocused(FrameworkElement element)
+    static bool CanElementBeFocused(FrameworkElement? element)
     {
         return element is IInputReceiver &&
                     element.IsVisible == true &&

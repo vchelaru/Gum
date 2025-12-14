@@ -50,12 +50,15 @@ public class ObservableCollectionNoReset<T> : ObservableCollection<T>
     protected override void ClearItems()
     {
         List<T> removed = new List<T>(this);
-        base.ClearItems();
-        var args = new NotifyCollectionChangedEventArgs(
-            NotifyCollectionChangedAction.Remove, 
-            removed,
-            0);
-        base.OnCollectionChanged(args);
+        if(this.Count > 0)
+        {
+            base.ClearItems();
+            var args = new NotifyCollectionChangedEventArgs(
+                NotifyCollectionChangedAction.Remove, 
+                removed,
+                0);
+            base.OnCollectionChanged(args);
+        }
     }
 
     protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
