@@ -39,7 +39,10 @@ namespace SkiaGum.Renderables
                     drawWidth -= StrokeWidth;
                     drawHeight -= StrokeWidth;
                 }
-                surface.Canvas.DrawRoundRect(leftMargin,topMargin, drawWidth, drawHeight, CornerRadius, CornerRadius, paint);
+
+                var effectiveCornerRadius = Math.Max(0, CornerRadius - StrokeWidth/2f);
+
+                surface.Canvas.DrawRoundRect(leftMargin,topMargin, drawWidth, drawHeight, effectiveCornerRadius, effectiveCornerRadius, paint);
             }
         }
     }

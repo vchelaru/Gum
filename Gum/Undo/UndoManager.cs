@@ -692,7 +692,7 @@ public class UndoManager : IUndoManager
             AddAndRemoveInstances(elementInUndoSnapshot.Instances, toApplyTo.Instances, toApplyTo);
             shouldRefreshWireframe = true;
         }
-        if (elementInUndoSnapshot.Name != null)
+        if (!string.IsNullOrEmpty(elementInUndoSnapshot.Name))
         {
             string oldName = toApplyTo.Name;
             toApplyTo.Name = elementInUndoSnapshot.Name;
