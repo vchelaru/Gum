@@ -89,8 +89,6 @@ internal class Arc : RenderableShapeBase
         float lineThickness,
         Color? forcedColor = null)
     {
-        //antiAliasSize = 0;
-
         var startAngleRadians = MathHelper.ToRadians(-StartAngle);
         float endAngleRadians = 0;
         endAngleRadians = MathHelper.ToRadians(-StartAngle - SweepAngle);

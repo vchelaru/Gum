@@ -52,8 +52,6 @@ public class Circle : RenderableShapeBase
         float strokeWidth,
         Color? forcedColor = null)
     {
-        //antiAliasSize = 0;
-
         if (IsFilled)
         {
             // as outlined here:

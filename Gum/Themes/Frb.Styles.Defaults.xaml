@@ -1500,7 +1500,7 @@
 
   <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type wpfdatauiTypes:MemberCategory}">
     <TextBlock
-      Margin="40,4,0,4"
+      Margin="0,4,0,4"
       VerticalAlignment="Center"
       FontWeight="Medium"
       Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
