@@ -24,20 +24,21 @@ public class RoundedRectangle : RenderableShapeBase
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX;
-            var shadowTop = absoluteTop + DropshadowOffsetY;
+            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX/2;
+            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurY/2;
 
             // Currently apos shapes doesn't support different sizes for anti-aliasing on X and Y
             var dropshadowSize = size;
-            //dropshadowSize.X -= DropshadowBlurX;
-            //dropshadowSize.Y -= DropshadowBlurX;
+            dropshadowSize.X -= DropshadowBlurX;
+            dropshadowSize.Y -= DropshadowBlurX;
 
             RenderInternal(sb, shadowLeft, shadowTop, dropshadowSize, 
                 MathFunctions.RoundToInt(DropshadowBlurX), 
+                StrokeWidth - DropshadowBlurX,
                 forcedColor: DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, size, 1);
+        RenderInternal(sb, absoluteLeft, absoluteTop, size, 1, StrokeWidth);
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb, 
@@ -45,8 +46,10 @@ public class RoundedRectangle : RenderableShapeBase
         float absoluteTop, 
         Vector2 size, 
         int antiAliasSize, 
+        float strokeWidth,
         Color? forcedColor = null)
     {
+        //antiAliasSize = 0;
         var position = new Microsoft.Xna.Framework.Vector2(absoluteLeft, absoluteTop);
 
         int thickness = 1;
@@ -100,7 +103,7 @@ public class RoundedRectangle : RenderableShapeBase
                     size,
                     transparentGradient,
                     gradient,
-                    StrokeWidth,
+                    strokeWidth,
                     CornerRadius,
                     0,
                     antiAliasSize);
@@ -116,7 +119,7 @@ public class RoundedRectangle : RenderableShapeBase
                     size,
                     transparentColor,
                     color,
-                    StrokeWidth,
+                    strokeWidth,
                     CornerRadius,
                     0,
                     antiAliasSize);
