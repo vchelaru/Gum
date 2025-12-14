@@ -43,7 +43,7 @@ For example, notice that DemoScrenGum uses the Primary color on labels, radio bu
 {% hint style="info" %}
 The outlines that are drawn by Gum can get in the way of viewing styles. You can disable this by selecting **Edit ->** Properties, then unchecking **Show Outlines**.
 
-![](<../../../../.gitbook/assets/02_08 10 43.png>)
+<img src="../../../../.gitbook/assets/02_08 10 43.png" alt="" data-size="original">
 {% endhint %}
 
 We can change the color values in the Styles component by selecting any of the rectangles and changing their colors. The names suggest their purpose, so if you are changing the Primary color values, be sure to consider the Light and Dark suffixes. For example, we can change the teal colors to orange colors in Styles.
@@ -115,7 +115,7 @@ As mentioned above, to change the TextBox's background, you must first select on
 
 <figure><img src="../../../../.gitbook/assets/02_18 20 39.png" alt=""><figcaption><p>Variables modified by TextBoxCategory states</p></figcaption></figure>
 
-So to change the background color of the text box, we must select each of the categories under TextBoxCategory, then change the variable in each one. The following image shows how to change the TextBox's background to Black in the Enabled state.&#x20;
+So to change the background color of the text box, we must select each of the categories under TextBoxCategory, then change the variable in each one. The following image shows how to change the TextBox's background to Black in the Enabled state.
 
 <figure><img src="../../../../.gitbook/assets/03_05 05 09.png" alt=""><figcaption><p>Changing TextBoxBackground to Black</p></figcaption></figure>
 
@@ -141,8 +141,7 @@ We will modify the variables on the TextBox again to show how to set the color d
 
 1. Select the TextBox Background instance
 2. Select the TextBoxCategory
-3.  Click the X button to remove the Background.ColorCategoryState from all contained states - this means that we now intend to directly set the color on the background rather than using one of the pre-made colors\
-
+3.  Click the X button to remove the Background.ColorCategoryState from all contained states - this means that we now intend to directly set the color on the background rather than using one of the pre-made colors\\
 
     <figure><img src="../../../../.gitbook/assets/03_05 44 52.png" alt=""><figcaption><p>Click X to remove the Background.ColorCategoryState variables</p></figcaption></figure>
 4. Select the Enabled state
@@ -188,8 +187,7 @@ To add a new state to the NineSlice:
 1. Select the NineSlice standard
 2. Expand ColorCategory
 3.  Right-click on any of the existing states and select **Duplicate State**\
-    \
-
+    \\
 
     <figure><img src="../../../../.gitbook/assets/03_06 05 36.png" alt=""><figcaption><p>Duplicate an existing NineSlice state</p></figcaption></figure>
 4. Right-click on the new state and select **Rename State**
@@ -212,8 +210,7 @@ Now that we've set up `Variable References`, we can make changes to the color in
 Now we can use this color on our TextBox. To do this:
 
 1. Select the TextBox's Background
-2.  If you have explicitly set colors in the previous section, select the TextBoxCategory and remove the explicitly-set Red, Green, and Blue variables\
-
+2.  If you have explicitly set colors in the previous section, select the TextBoxCategory and remove the explicitly-set Red, Green, and Blue variables\\
 
     <figure><img src="../../../../.gitbook/assets/03_06 20 15.png" alt=""><figcaption><p>Remove explicitly set color values from the Background</p></figcaption></figure>
 3. Expand the TextBoxCategory state
@@ -259,7 +256,7 @@ Feel free to open this file and add more frames to be used by your NineSlice.
 
 Notice that most of the frames are white so that they can be colored in Gum using the pre-defined color values in the Styles component. If you intend for your borders to be dynamically colored, you should also use the white color. For example, a new rounded rectangle style can be added below the existing styles.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1).png" alt=""><figcaption><p>New rounded rectangle style </p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1).png" alt=""><figcaption><p>New rounded rectangle style</p></figcaption></figure>
 
 Be sure to save your .png file so it shows up in Gum.
 
@@ -287,8 +284,7 @@ To do this we must first expose the variable that should be available per instan
 
 1. Expand the ButtonStandard component
 2. Select TextInstance
-3.  Right-click on the `Style State Category` variable and select **Expose Variable**\
-
+3.  Right-click on the `Style State Category` variable and select **Expose Variable**\\
 
     <figure><img src="../../../../.gitbook/assets/03_21 23 37.png" alt=""><figcaption><p>Expose Variable right click option</p></figcaption></figure>
 4. Enter an appropriate name, such as **TextStyle**
@@ -308,5 +304,4 @@ For example, we can create a copy of ButtonStandard by following these steps:
 3. Rename the new Button to ButtonDark
 4. Select each of the states under ButtonCategory and change the background's color as desired
 
-<figure><img src="../../../../.gitbook/assets/04_03 27 32.png" alt=""><figcaption><p>Change ButtonDark's Background color </p></figcaption></figure>
-
+<figure><img src="../../../../.gitbook/assets/04_03 27 32.png" alt=""><figcaption><p>Change ButtonDark's Background color</p></figcaption></figure>
