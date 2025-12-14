@@ -153,7 +153,7 @@ if ! winetricks --version &> /dev/null; then
     esac
 fi
 
-echo "Winetricks is installed\n"
+echo "Winetricks is installed"
 
 ################################################################################
 ### Check if winetricks is newer than version 2024
@@ -196,7 +196,7 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks arial &> /dev/null
 WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks tahoma &> /dev/null
 WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks courier &> /dev/null
 WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks calibri &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks micross &> /dev/null
+#WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks micross &> /dev/null # not available in 2024 winetricks
 echo " - Fonts installed"
 
 ################################################################################
