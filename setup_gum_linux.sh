@@ -122,9 +122,9 @@ if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
             ;;
 
         *)
-            echo "Unsupported or unknown distribution: $DISTRO"
-  			echo "Please install wine manually!"
-			echo "https://duckduckgo.com/?t=h_&q=Insert+Your+Linux+Distro+Here+How+To+Install+Wine"
+            echo "ERROR: Unsupported or unknown distribution: $DISTRO"
+  			echo "ERROR: Please install wine manually!"
+			echo "ERROR: https://duckduckgo.com/?t=h_&q=Insert+Your+Linux+Distro+Here+How+To+Install+Wine"
             exit 1
             ;;
     esac
@@ -147,7 +147,7 @@ if ! winetricks --version &> /dev/null; then
             brew install winetricks
             ;;
         *)
-            echo "Unsupported distribution [${DISTRO}] for automated winetricks install."
+            echo "ERROR: Unsupported distribution [${DISTRO}] for automated winetricks install."
             exit 1
             ;;
     esac
@@ -157,52 +157,69 @@ echo "Winetricks is installed\n"
 
 ################################################################################
 ### Check if winetricks is newer than version 2024
+###   The 2025 version has the new dotnetdesktop8 verb
 ################################################################################
-echo "Verifying winetricks version..."
-WINETRICKS_YEAR=$(winetricks --version 2>/dev/null | grep -Eo '[0-9]{4}' | head -n1)
-if [[ ! "${WINETRICKS_YEAR}" || "${WINETRICKS_YEAR}" -lt 2024 ]]; then
-    echo "Winetricks version is older than 2024 or could not be determined."
-    echo " - A newer version is required for dotnet 8. Attempting to update..."
-    echo " - Attempting to self update winetricks..."
+## Commented out for now until we figure out the menu issues in dotnet8 and linux and wine
+# echo "Verifying winetricks version..."
+# WINETRICKS_YEAR=$(winetricks --version 2>/dev/null | grep -Eo '[0-9]{4}' | head -n1)
+# if [[ ! "${WINETRICKS_YEAR}" || "${WINETRICKS_YEAR}" -le 2024 ]]; then
+#     echo "Winetricks version is older than 2024 or could not be determined."
+#     echo " - A newer version is required for dotnet 8. Attempting to update..."
+#     echo " - Attempting to self update winetricks..."
 
-    case "$DISTRO" in
-        ubuntu|linuxmint)
-            sudo winetricks --self-update
-            ;;
-        fedora|nobara)
-            sudo winetricks --self-update
-            ;;
-        darwin)
-            brew winetricks --self-update
-            ;;
-        *)
-            echo "Unsupported distribution [${DISTRO}] for automated winetricks update."
-            exit 1
-            ;;
-    esac
-else
-    echo "Winetricks version is new enough.\n"
-fi
+#     case "$DISTRO" in
+#         ubuntu|linuxmint)
+#             sudo winetricks --self-update
+#             ;;
+#         fedora|nobara)
+#             sudo winetricks --self-update
+#             ;;
+#         darwin)
+#             brew winetricks --self-update
+#             ;;
+#         *)
+#             echo "Unsupported distribution [${DISTRO}] for automated winetricks update."
+#             exit 1
+#             ;;
+#     esac
+# else
+#     echo "Winetricks version is new enough ${WINETRICKS_YEAR}."
+# fi
 
 
 ################################################################################
 ### Install two fonts with winetricks.
 ################################################################################
-echo "Installing two fonts using winetricks"
-echo "An installer dialog may appear, follow the steps to install"
-echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks segui &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks consolas &> /dev/null
-echo "Fonts installed\n"
+echo "Checking and Installing Some fonts using winetricks"
+echo " - They may take a few minutes to install, please be patient"
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks arial &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks tahoma &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks courier &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks calibri &> /dev/null
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks micross &> /dev/null
+echo " - Fonts installed"
+
+################################################################################
+### Install dotnet48 with winetricks. This will cause two installation prompts
+### to appear.  They can take a few minutes to finish, please be patient
+################################################################################
+echo "Installing .NET Framework 4.8 using winetricks"
+echo " - Two installer dialogs will appear, follow the steps for both to install"
+echo " - They may take a few minutes to install, please be patient"
+WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 
 ################################################################################
 ### Install dotnetdeskop8 with winetricks. This will cause two installation prompts
 ### to appear.  They can take a few minutes to finish, please be patient
 ################################################################################
-echo "Installing .NET 8 using winetricks"
-echo "Two installer dialogs will appear, follow the steps for both to install"
-echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnetdesktop8 &> /dev/null
+
+# TODO: Commented out for now until we figure out the menu issues in dotnet8 and linux and wine
+
+# echo "Installing .NET 8 using winetricks"
+# echo " - Two installer dialogs will appear, follow the steps for both to install"
+# echo " - They may take a few minutes to install, please be patient"
+# WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnetdesktop8 &> /dev/null
+
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
@@ -210,14 +227,16 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnetdesktop8 &> /dev/null
 ################################################################################
 echo "Installing GUM Tool..."
 GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
-GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
+# Temporarily pointing directly at the october release until we can fix the dotnet8+linux+wine issues
+GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/Gum/releases/download/Release_October_31_2025/Gum.zip"
+#GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
 
 if ! curl --version &> /dev/null; then
     wget -O "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
-        && echo "Download completed." || { echo "Download failed using WGET."; exit 1; }
+        && echo " - Download completed." || { echo "Download failed using WGET."; exit 1; }
 else
     curl -L -o "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
-        && echo "Download completed." || { echo "Download failed using CURL."; exit 1; }
+        && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
 fi
 
 ################################################################################
@@ -228,15 +247,15 @@ GUM_WINE_EXTRACT_DIR="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum"
 rm -rf "$GUM_WINE_EXTRACT_DIR"
 unzip -q "$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
     && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
-echo "Cleaning up..."
+echo " - Cleaning up..."
 rm -f "$GUM_ZIP_FILE" \
     && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
 
-echo "Adding Gum to path"
 
 ################################################################################
 ### Define the script content
 ################################################################################
+echo "Creating gum script and adding to path"
 GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f)
 SCRIPT_CONTENT="#!/bin/bash
 WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" wine \"$GUM_EXE_PATH\""
@@ -282,6 +301,8 @@ elif [[ $SHELL == *"fish"* ]]; then
     fi
     echo "Reloading config.fish, please wait..."
     source ~/.config/fish/config.fish &> /dev/null
+else
+    echo "WARNING: Unable to determine shell type. Please ensure ~/bin is in your PATH manually."
 fi
 
 ################################################################################
@@ -291,4 +312,6 @@ echo "SUCCESS: Gum setup on Linux using WINE is now complete. You can open the G
 echo "TIP: To start Gum: in a terminal type ~/bin/gum"
 echo "TIP: You may need to restart the terminal or your computer if it doesn't work at first"
 echo "-------------------"
-echo "TIP: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
+echo "OPTIONAL: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
+echo "-------------------"
+echo "Enjoy using GUM!"
