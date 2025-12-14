@@ -588,7 +588,7 @@ public class BitmapFont : IDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="lines"></param>
+    /// <param name="lines">The lines of text to draw</param>
     /// <param name="horizontalAlignment"></param>
     /// <param name="objectRequestingChange"></param>
     /// <param name="requiredWidth"></param>
@@ -1154,6 +1154,10 @@ public class BitmapFont : IDisposable
     /// Returns the number of pixels (horizontally) required to render the argument string.
     /// </summary>
     /// <param name="line">The line of text.</param>
+    /// <param name="horizontalMeasurementStyle">How to measure the last letter in the line. This can be used
+    /// to adjust whether the last letter should be trimmed according to its width, or if it should advance using XAdvance.
+    /// TrimRight trims the advance and uses the PixelRight-PixelLeft value to determine the last letter's width.
+    /// Full uses the letter's XAdvance to determine the last letter's width.</param>
     /// <returns>The number of pixels needed to render this text horizontally.</returns>
     public int MeasureString(string line, HorizontalMeasurementStyle horizontalMeasurementStyle = HorizontalMeasurementStyle.TrimRight)
     {
