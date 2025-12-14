@@ -49,7 +49,6 @@ public class RoundedRectangle : RenderableShapeBase
         float strokeWidth,
         Color? forcedColor = null)
     {
-        //antiAliasSize = 0;
         var position = new Microsoft.Xna.Framework.Vector2(absoluteLeft, absoluteTop);
 
         int thickness = 1;
