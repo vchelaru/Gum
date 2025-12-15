@@ -769,6 +769,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         mNeedsBitmapFontRefresh = true;
     }
 
+    /// <summary>
+    /// Returns the size of the string, ignoring font scale, but considering the bitmap font.
+    /// </summary>
+    /// <param name="whatToMeasure"></param>
+    /// <returns></returns>
     public float MeasureString(string whatToMeasure)
     {
         if (this.BitmapFont != null)

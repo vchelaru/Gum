@@ -331,15 +331,15 @@ internal static class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")
         {
-            //asText.FontScale = (float)value;
-            //// we want to update if the text's size is based on its "children" (the letters it contains)
-            //if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-            //    // If height is relative to children, it could be in a stack
-            //    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-            //{
-            //    graphicalUiElement.UpdateLayout();
-            //}
-            //handled = true;
+            asText.FontScale = (float)value;
+            // we want to update if the text's size is based on its "children" (the letters it contains)
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                // If height is relative to children, it could be in a stack
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                graphicalUiElement.UpdateLayout();
+            }
+            handled = true;
 
         }
         else if (propertyName == "Font")
