@@ -66,6 +66,20 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    public float FontScale
+    {
+        get => ContainedText.FontScale;
+        set
+        {
+            if (value != FontScale)
+            {
+                ContainedText.FontScale = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
+    }
+
     bool useCustomFont;
     /// <summary>
     /// Whether to use the CustomFontFile to determine the font value. 
