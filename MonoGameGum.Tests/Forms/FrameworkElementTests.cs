@@ -1,7 +1,8 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
 using Moq;
 using NVorbis.Ogg;
 using Shouldly;
@@ -97,6 +98,8 @@ public class FrameworkElementTests : BaseTestClass
     }
 
     // CustomCursor cannot be properly tested because it requires a concrete Cursor class.
+
+    #region HandleTab
 
     [Fact]
     public void HandleTab_ShouldSelectNextItem_InSameContainer()
@@ -199,6 +202,75 @@ public class FrameworkElementTests : BaseTestClass
 
         playButton.IsFocused.ShouldBeTrue();
     }
+
+    #endregion
+
+    #region OnFocusUpdate
+
+    [Fact]
+    public void OnFocusUpdate_ShouldFocusNextItem_IfTabIsPressed()
+    {
+        // Many controls support focus, but they all implement their own logic so
+        // we have to use a specific control and not just FrameworkElement.
+        TextBox textBox1 = new ();
+        textBox1.AddToRoot();
+
+        TextBox textBox2 = new ();
+        textBox2.AddToRoot();
+
+        textBox1.IsFocused = true;
+
+        var keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard
+            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Tab))
+            .Returns(true);
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        textBox1.OnFocusUpdate();
+
+        textBox1.IsFocused.ShouldBeFalse();
+        textBox2.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void OnFocusUpdate_ShouldFocusNextItem_IfGamepadDownIsPressed()
+    {
+        // Many controls support focus, but they all implement their own logic so
+        // we have to use a specific control and not just FrameworkElement.
+        TextBox textBox1 = new();
+        textBox1.AddToRoot();
+
+        TextBox textBox2 = new();
+        textBox2.AddToRoot();
+        textBox1.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.Activity(new Microsoft.Xna.Framework.Input.GamePadState(), 0);
+
+        var newGamepadState = new Microsoft.Xna.Framework.Input.GamePadState(
+            new Microsoft.Xna.Framework.Input.GamePadThumbSticks(),
+            new Microsoft.Xna.Framework.Input.GamePadTriggers(),
+            new Microsoft.Xna.Framework.Input.GamePadButtons(),
+            new Microsoft.Xna.Framework.Input.GamePadDPad(
+                Microsoft.Xna.Framework.Input.ButtonState.Released,
+                // down state is pressed:
+                Microsoft.Xna.Framework.Input.ButtonState.Pressed,
+                Microsoft.Xna.Framework.Input.ButtonState.Released,
+                Microsoft.Xna.Framework.Input.ButtonState.Released));
+        gamepad.Activity(
+            newGamepadState, 
+            .0667);
+
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        textBox1.OnFocusUpdate();
+
+        textBox1.IsFocused.ShouldBeFalse();
+        textBox2.IsFocused.ShouldBeTrue();
+
+    }
+
+    #endregion
 
     [Fact]
     public void PositionValues_ShouldApplyToVisual()
