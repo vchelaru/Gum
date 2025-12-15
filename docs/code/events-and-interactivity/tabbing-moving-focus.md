@@ -4,6 +4,10 @@
 
 Gum supports tabbing focus between controls. Tabbing can be performed with the keyboard or gamepad.
 
+{% hint style="info" %}
+Keyboard and Gamepad input is currently not supported in raylib Gum. If you need this feature or would like to help with its implementation or testing, please send us a message in Discord.
+{% endhint %}
+
 ## Keyboard Tabbing
 
 The keyboard can be used to interact with controls. Keyboards can be used to:
@@ -58,3 +62,27 @@ FrameworkElement.GamePadsForUiControl.Clear();
 FrameworkElement.GamePadsForUiControl.Add(gamepad);
 MyButton.IsFocused = true;
 ```
+
+Gamepad navigation uses the following input for tabbing to the next item:
+
+* DPad down
+* DPad right
+* Left stick down
+* Left stick right
+
+Gamepad navigation uses the following input for tabbing to the previous item:
+
+* DPad up
+* DPad left
+* Left stick up
+* Left stick left
+
+Left and right navigation can be enabled or disabled on a control by setting `IsUsingLeftAndRightGamepadDirectionsForNavigation` to false. For example the following code adds a button which can only be navigated from by pressing up/down on the gamepad:
+
+```csharp
+var button = new Button();
+myStackPanel.AddChild(button);
+button.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
+```
+
+`IsUsingLeftAndRightGamepadDirectionsForNavigation` is set to true on all controls except on `Sliders`, which use left/right input for changing the `Slider`'s `Value`.
