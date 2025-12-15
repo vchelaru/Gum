@@ -11,18 +11,7 @@ using ToolsUtilities;
 
 namespace MonoGameGum.Input;
 
-#region IInputReceiverKeyboardMonoGame Interface
 
-public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
-{
-    IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
-    bool KeyDown(Keys key);
-    bool KeyPushed(Keys key);
-    bool KeyReleased(Keys key);
-    bool KeyTyped(Keys key);
-}
-
-#endregion
 
 public class Keyboard : IInputReceiverKeyboardMonoGame
 {
@@ -569,6 +558,19 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
 }
+
+#region IInputReceiverKeyboardMonoGame Interface
+
+public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
+{
+    IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+    bool KeyDown(Keys key);
+    bool KeyPushed(Keys key);
+    bool KeyReleased(Keys key);
+    bool KeyTyped(Keys key);
+}
+
+#endregion
 
 #region KeyboardStateProcessor
 
