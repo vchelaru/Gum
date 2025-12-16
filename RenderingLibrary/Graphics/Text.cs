@@ -662,8 +662,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
+    /// <summary>
+    /// DescenderHeight in pixels as defined by the BitmapFont, ignoring FontScale.
+    /// </summary>
     public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
 
+    /// <summary>
+    /// Line height in pixels as defined by the BitmapFont, ignoring FontScale
+    /// </summary>
     public int LineHeightInPixels => BitmapFont?.LineHeightInPixels ?? 32;
 
     public float LineHeightMultiplier { get; set; } = 1;
