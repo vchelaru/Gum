@@ -6,7 +6,7 @@ The `Has Events` variable controls whether the selected instance supports UI-rel
 
 Usually instances of components should have this value set to true if the component can be interacted with at runtime, such as a button or text box.
 
-This value has no affect in the Gum tool and is only used at runtime.
+This value has no effect in the Gum tool and is only used at runtime.
 
 ## Has Events and Cursor.WindowOver
 

@@ -86,3 +86,57 @@ button.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
 ```
 
 `IsUsingLeftAndRightGamepadDirectionsForNavigation` is set to true on all controls except on `Sliders`, which use left/right input for changing the `Slider`'s `Value`.
+
+## Getting Focused Item (CurrentInputReceiver)
+
+The static `InteractiveGue.CurrentInputReceiver` returns the current item that has focus. This can be used to diagnose problems.
+
+The following code shows how to display which button has focus with a label:
+
+```csharp
+Label label;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+
+    // Enables tabbing with the keyboard
+    GumUI.UseKeyboardDefaults();
+
+    StackPanel stackPanel = new();
+    stackPanel.AddToRoot();
+    stackPanel.Anchor(Anchor.Center);
+    stackPanel.Spacing = 6;
+
+    for(int i = 0; i < 5; i++)
+    {
+        Button button = new();
+        stackPanel.AddChild(button);
+        button.Text = $"Button {i + 1}";
+        button.Name = button.Text;
+        if(i == 0)
+        {
+            button.IsFocused = true;
+        }
+    }
+
+    label = new ();
+    stackPanel.AddChild(label);
+
+    base.Initialize();
+}
+
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    label.Text = 
+        $"Focused Control: {InteractiveGue.CurrentInputReceiver?.ToString() ?? "null"}";
+
+    base.Update(gameTime);
+}
+```
+
+<figure><img src="../../.gitbook/assets/17_05 01 49.gif" alt=""><figcaption><p><code>CurrentInputReceiver</code> displayed on a <code>Label</code></p></figcaption></figure>
+
