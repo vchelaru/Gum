@@ -231,6 +231,7 @@
   * [Visual Events](code/events-and-interactivity/visual-events.md)
   * [Tabbing (Moving Focus)](code/events-and-interactivity/tabbing-moving-focus.md)
   * [Scrolling](code/events-and-interactivity/scrolling.md)
+  * [Mouse and Touch Screen (Cursor)](code/events-and-interactivity/mouse-and-touch-screen-cursor.md)
   * [Gamepad Support](code/events-and-interactivity/gamepad-support.md)
   * [Keyboard Support](code/events-and-interactivity/keyboard-support.md)
 * [Styling](code/styling/README.md)
