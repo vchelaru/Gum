@@ -2,7 +2,7 @@
 
 ## Introduction
 
-`MakeSizedToChildren` can be used to size a ScrollViewer to its children. Note that this method only exists on the ScrollViewerVisual if V2 styling (code-only) is used.
+`MakeSizedToChildren` can be used to size a ScrollViewer to its children. Note that this method only exists on the ScrollViewerVisual if V2 or newer styling (code-only) is used.
 
 ## Code Example: Sizing a ScrollViewer to its Children
 

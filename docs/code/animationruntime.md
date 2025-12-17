@@ -180,7 +180,7 @@ Animations can be defined and executed in a code-only environment. The steps for
 ```csharp
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
 
     var button = new Button();
     button.AddToRoot();

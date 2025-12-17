@@ -20,7 +20,7 @@ using MonoGameGum.Input; // Adds GetEventFailureReason extension method
 Button button;
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V3);
 
     button = new Button();
     button.AddToRoot();
@@ -54,7 +54,7 @@ Improved diagnostics can be provided if names are given to controls. For example
 Button button;
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V3);
 
     button = new Button();
     button.AddToRoot();
