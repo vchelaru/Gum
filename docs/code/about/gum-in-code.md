@@ -30,7 +30,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-<strong>        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+<strong>        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
 </strong><strong>
 </strong><strong>        var stackPanel = new StackPanel();
 </strong><strong>        stackPanel.AddToRoot();

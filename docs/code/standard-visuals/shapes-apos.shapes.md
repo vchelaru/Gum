@@ -81,7 +81,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
         // Initialize shape renderer:
         Renderables.ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 
