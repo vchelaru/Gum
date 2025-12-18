@@ -1,7 +1,8 @@
 ﻿using CommonFormsAndControls.Forms;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
-using FlatRedBall.AnimationEditorForms.Controls;
+using EditorTabPlugin_XNA.ViewModels;
+using EditorTabPlugin_XNA.Views;
 using FlatRedBall.Glue.Themes;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -40,8 +41,11 @@ using System.Runtime;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using System.Windows.Forms.Integration;
 using System.Windows.Markup;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
@@ -116,14 +120,14 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly SetVariableLogic _setVariableLogic;
+    private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
-    private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
     private int _defaultWireframeEditControlHeight;
 
-    Panel gumEditorPanel;
+    System.Windows.Forms.Panel gumEditorPanel;
     private LayerService _layerService;
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
@@ -171,6 +175,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+
+        _editorViewModel = new EditorViewModel();
 
         Locator.GetRequiredService<IMessenger>().RegisterAll(this);
     }
@@ -633,21 +639,26 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _layerService = new Services.LayerService();
 
-
-        _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
-
         _wireframeControl.Initialize(
-            _wireframeEditControl, 
             gumEditorPanel, 
             _hotkeyManager, 
             _selectionManager, 
-            _dragDropManager);
+            _dragDropManager,
+            _editorViewModel);
+        var systemManagers = _wireframeControl.SystemManagers;
+
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
         _layerService.Initialize();
         _selectionManager.Initialize(_layerService);
 
         _wireframeControl.ShareLayerReferences(_layerService);
+
+        // This must be initialized *after* ShareLayerReferences since that
+        // creates the rulers
+        _editorViewModel.InitializeXnaView(systemManagers,
+            _wireframeControl.TopRuler,
+            _wireframeControl.LeftRuler);
 
         _editingManager.Initialize(_wireframeContextMenuStrip);
 
@@ -681,7 +692,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         this._wireframeControl.QueryContinueDrag += (sender, args) =>
         {
-            args.Action = DragAction.Continue;
+            args.Action = System.Windows.Forms.DragAction.Continue;
         };
         _wireframeControl.CameraChanged += () =>
         {
@@ -706,12 +717,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         ApplyThemeSettings(themeSettings);
     }
 
-    private void HandleControlZoomChange(object sender, EventArgs e)
-    {
-        Renderer.Self.Camera.Zoom = _wireframeEditControl.PercentageValue / 100.0f;
-    }
-
-    internal void OnWireframeDrop(object sender, DragEventArgs e)
+    internal void OnWireframeDrop(object sender, System.Windows.Forms.DragEventArgs e)
     {
         // Handle node drops
         List<TreeNode>? droppedNodes = e switch
@@ -738,7 +744,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         float worldX, worldY;
         Renderer.Self.Camera.ScreenToWorld(InputLibrary.Cursor.Self.X, InputLibrary.Cursor.Self.Y, out worldX, out worldY);
-        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+        string[] files = (string[])e.Data.GetData(System.Windows.Forms.DataFormats.FileDrop);
 
         if (files == null)
         {
@@ -944,7 +950,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         wireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
         wireframeContextMenuStrip.Renderer = FrbMenuStripRenderer.GetCurrentThemeRenderer(out _, "Frb.Colors.Background");
 
-        gumEditorPanel = new Panel();
+        gumEditorPanel = new ();
+        gumEditorPanel.Dock = DockStyle.Fill;
 
         // 2025-01-02 UI Scale update
         // WireFrameControl needs to be added to the gumEditorPanel first
@@ -952,11 +959,23 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         CreateWireframeControl(wireframeContextMenuStrip);
         _wireframeContextMenuStrip = wireframeContextMenuStrip;
 
-        // The WireframeEditControl (Where the combobox lives) must
-        // be added to the gumEditorPanel 2nd, no idea why
-        CreateWireframeEditControl(gumEditorPanel);
+        System.Windows.Controls.Grid wpfGrid = new();
+        wpfGrid.RowDefinitions.Add(new () { Height = GridLength.Auto});
+        wpfGrid.RowDefinitions.Add(new () { Height = new (1, GridUnitType.Star) });
 
-        _tabManager.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
+        EditorControls editorControls = new ();
+        wpfGrid.Children.Add(editorControls);
+        Grid.SetRow(editorControls, 0);
+
+        WindowsFormsHost host = new WindowsFormsHost();
+        host.Child = gumEditorPanel;
+
+        wpfGrid.Children.Add(host);
+        Grid.SetRow(host, 1);
+
+        _tabManager.AddControl(wpfGrid, "Editor", TabLocation.RightTop);
+
+        wpfGrid.DataContext = _editorViewModel;
 
         _wireframeControl.XnaUpdate += () =>
         {
@@ -992,13 +1011,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         //_toolbarPanel.Width = _toolbarPanel.Parent.Width;
 
         _wireframeControl.Width = _wireframeControl.Parent.Width;
-       
-        // The combobox's dimensions may have changed due to app-level font scaling, we need to explicitly
-        // set it to it's preferred size, or it will stay constrained to the original docked size
-        var preferred = _wireframeEditControl.GetPreferredSize(new(_wireframeEditControl.Parent.Width, int.MaxValue));
-        _wireframeEditControl.Height = preferred.Height;
-        _wireframeEditControl.Width = _wireframeEditControl.Parent.Width;
-    }
+           }
 
     private void HandleStateSelected(StateSave? save)
     {
@@ -1011,25 +1024,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         {
             _editingManager.OnRightClick();
         }
-    }
-
-
-    private void CreateWireframeEditControl(Panel gumEditorPanel)
-    {
-        _wireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
-        gumEditorPanel.Controls.Add(_wireframeEditControl);
-        // 
-        // WireframeEditControl
-        // 
-        //this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-        //| System.Windows.Forms.AnchorStyles.Right)));
-        _wireframeEditControl.Dock = DockStyle.Top;
-        _wireframeEditControl.Location = new System.Drawing.Point(0, 0);
-        _wireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
-        _wireframeEditControl.Name = "WireframeEditControl";
-        _wireframeEditControl.PercentageValue = 100;
-        _wireframeEditControl.TabIndex = 1;
-        _defaultWireframeEditControlHeight = _wireframeEditControl.Height;
     }
 
     private void ApplyThemeSettings(IEffectiveThemeSettings settings)
