@@ -1,4 +1,4 @@
-﻿using FlatRedBall.AnimationEditorForms.Controls;
+﻿using EditorTabPlugin_XNA.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
@@ -34,7 +34,6 @@ public class WireframeControl : GraphicsDeviceControl
     
     private HotkeyManager _hotkeyManager;
 
-    WireframeEditControl mWireframeEditControl;
     private SelectionManager _selectionManager;
     private DragDropManager _dragDropManager;
     LineRectangle mCanvasBounds;
@@ -43,8 +42,8 @@ public class WireframeControl : GraphicsDeviceControl
 
     bool mHasInitialized = false;
 
-    Ruler mTopRuler;
-    Ruler mLeftRuler;
+    public Ruler TopRuler { get; private set; }
+    public Ruler LeftRuler { get; private set; }
 
     public event Action CameraChanged;
 
@@ -59,11 +58,11 @@ public class WireframeControl : GraphicsDeviceControl
 
     public bool RulersVisible
     {
-        get => mLeftRuler.Visible;
+        get => LeftRuler.Visible;
         set
         {
-            mLeftRuler.Visible = value;
-            mTopRuler.Visible = value;
+            LeftRuler.Visible = value;
+            TopRuler.Visible = value;
         }
     }
 
@@ -131,11 +130,11 @@ public class WireframeControl : GraphicsDeviceControl
     #region Initialize Methods
 
     public void Initialize(
-        WireframeEditControl wireframeEditControl, 
         Panel wireframeParentPanel,
         HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        DragDropManager dragDropManager)
+        DragDropManager dragDropManager,
+        EditorViewModel editorViewModel)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
@@ -143,11 +142,6 @@ public class WireframeControl : GraphicsDeviceControl
         try
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
-
-            mWireframeEditControl = wireframeEditControl;
-
-
-            mWireframeEditControl.ZoomChanged += HandleZoomChanged;
 
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(GraphicsDevice);
@@ -162,7 +156,7 @@ public class WireframeControl : GraphicsDeviceControl
             _cameraController = new CameraController();
 
             LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-            _cameraController.Initialize(Camera, mWireframeEditControl, Width, Height, hotkeyManager);
+            _cameraController.Initialize(Camera, editorViewModel, Width, Height, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
             InputLibrary.Cursor.Self.Initialize(this);
@@ -227,29 +221,21 @@ public class WireframeControl : GraphicsDeviceControl
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
 
 
-        mTopRuler = new Ruler(this, 
+        TopRuler = new Ruler(this, 
             SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService,
             _hotkeyManager);
-        mLeftRuler = new Ruler(this, SystemManagers.Default,
+        LeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService,
             _hotkeyManager);
-        mLeftRuler.RulerSide = RulerSide.Left;
+        LeftRuler.RulerSide = RulerSide.Left;
 
-    }
-
-    void HandleZoomChanged(object sender, EventArgs e)
-    {
-        mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
-        mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
-
-        Invalidate();
     }
 
     #endregion
@@ -280,8 +266,8 @@ public class WireframeControl : GraphicsDeviceControl
                 //{
 
                 //}
-                bool isOver = mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
-                    mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
+                bool isOver = TopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
+                    LeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
 
 
                 // But we want the selection to update the handles to the selected object
@@ -295,7 +281,7 @@ public class WireframeControl : GraphicsDeviceControl
                 // has not entered so things don't stay highlighted when exiting the control
                 // Update 2 - yea, we def need to pass in mouseHasEntered == false to force no highlight
 
-                if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
+                if (TopRuler.IsCursorOver == false && LeftRuler.IsCursorOver == false)
                 {
                     var shouldForceNoHighlight = mouseHasEntered == false &&
                         PluginManager.Self.GetIfShouldSuppressRemoveEditorHighlight() == false;
@@ -360,7 +346,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     internal void SetGuideColors(Color guidelineColor, Color guideTextColor)
     {
-        mTopRuler.SetGuideColors(guidelineColor, guideTextColor);
-        mLeftRuler.SetGuideColors(guidelineColor, guideTextColor);
+        TopRuler.SetGuideColors(guidelineColor, guideTextColor);
+        LeftRuler.SetGuideColors(guidelineColor, guideTextColor);
     }
 }
