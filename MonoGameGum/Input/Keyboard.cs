@@ -66,6 +66,18 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         }
     }
 
+    // temporary - to help unify raylib
+    IEnumerable<int> IInputReceiverKeyboard.KeysTyped
+    {
+        get
+        {
+            foreach (var item in KeysTyped)
+            {
+                yield return (int)item;
+            }
+        }
+    }
+
     public const int NumberOfKeys = 255;
 
     #endregion

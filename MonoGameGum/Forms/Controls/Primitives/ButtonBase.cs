@@ -348,12 +348,9 @@ public class ButtonBase :
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-#if RAYLIB
-#else
-        var asKeyboard = keyboard as IInputReceiverKeyboardMonoGame;
-        if(asKeyboard != null)
+        if(keyboard != null)
         {
-            foreach(var key in asKeyboard.KeysTyped)
+            foreach(Keys key in keyboard.KeysTyped)
             {
                 HandleKeyDown(key, 
                     keyboard.IsShiftDown,
@@ -361,7 +358,6 @@ public class ButtonBase :
                     keyboard.IsCtrlDown);
             }
         }
-#endif
     }
 #endif
 

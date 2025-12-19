@@ -972,16 +972,22 @@ public interface ICursor
 }
 
 public interface IInputReceiverKeyboard
+    //<T> where T : struct, System.Enum
 {
     bool IsShiftDown { get; }
     bool IsCtrlDown { get; }
     bool IsAltDown { get; }
 
     // FRB has this, but we don't have access to XNA-likes here, so we can't include it
-    //IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+    // Update - we can make this use int instead of the specific enum, and then cast it to
+    // the enum based on the platform
+    // Update2 - this is going to change to a specific key type when we get the generic type in
+    IEnumerable<int> KeysTyped { get; }
+
 
     string GetStringTyped();
 }
+
 
 
 class HandledActions
