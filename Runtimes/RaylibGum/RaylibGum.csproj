@@ -36,6 +36,10 @@
 	<ItemGroup>
 		<Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
+
+		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
+
+		<!--
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" Link="Forms\Controls\ComboBox.cs" />
@@ -55,6 +59,9 @@
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Splitter.cs" Link="Forms\Controls\Splitter.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\StackPanel.cs" Link="Forms\Controls\StackPanel.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\ToggleButton.cs" Link="Forms\Controls\ToggleButton.cs" />
+		-->
+		
+		
 		<Compile Include="..\..\MonoGameGum\Forms\Data\BinderHelpers.cs" Link="Forms\Data\BinderHelpers.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Data\Binding.cs" Link="Forms\Data\Binding.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Data\BindingExpressionBase.cs" Link="Forms\Data\BindingExpressionBase.cs" />
@@ -78,11 +85,23 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\KeyCombo.cs" Link="Input\KeyCombo.cs" />
 		<Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\ControlsCompatability.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Image.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\PasswordBox.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -98,7 +117,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Forms\Controls\Primitives\" />
 		<Folder Include="Forms\Data\" />
 		<Folder Include="Forms\DefaultVisuals\" />
 	</ItemGroup>

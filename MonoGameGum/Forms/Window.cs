@@ -45,12 +45,7 @@ public enum ResizeMode
 /// <summary>
 /// A resizable, movable FrameworkElement
 /// </summary>
-public class Window :
-#if RAYLIB
-    FrameworkElement
-#else
-    Gum.Forms.Controls.FrameworkElement
-#endif
+public class Window : Gum.Forms.Controls.FrameworkElement
 {
     public const string WindowCategoryName = "WindowCategory";
 

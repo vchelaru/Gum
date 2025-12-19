@@ -37,7 +37,7 @@ namespace Gum.Forms.Controls;
 #endif
 
 public class ComboBox :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement,
 #else
     Gum.Forms.Controls.FrameworkElement, 
@@ -742,19 +742,13 @@ public class ComboBox :
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-#if !RAYLIB
-        var asKeyboard = keyboard as IInputReceiverKeyboardMonoGame;
-        if (asKeyboard != null)
+        foreach (Keys key in keyboard.KeysTyped)
         {
-            foreach (var key in asKeyboard.KeysTyped)
-            {
-                HandleKeyDown(key,
-                    keyboard.IsShiftDown,
-                    keyboard.IsAltDown,
-                    keyboard.IsCtrlDown);
-            }
+            HandleKeyDown(key,
+                keyboard.IsShiftDown,
+                keyboard.IsAltDown,
+                keyboard.IsCtrlDown);
         }
-#endif
     }
 #endif
 

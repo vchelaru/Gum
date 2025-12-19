@@ -40,7 +40,7 @@ public class TextCompositionEventArgs : RoutedEventArgs
 #endregion
 
 public abstract class TextBoxBase :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement,
 #else
     Gum.Forms.Controls.FrameworkElement,

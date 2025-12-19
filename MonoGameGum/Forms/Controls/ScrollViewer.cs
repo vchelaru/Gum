@@ -64,7 +64,7 @@ public class ScrollChangedEventArgs : EventArgs
 /// FrameworkElements (Forms) or regular visuals (GraphicalUiElements).
 /// </summary>
 public class ScrollViewer :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement,
 #else
     Gum.Forms.Controls.FrameworkElement, 

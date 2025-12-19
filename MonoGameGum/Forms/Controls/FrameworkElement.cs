@@ -112,8 +112,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
-#if MONOGAME || KNI || FNA
-    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new List<IInputReceiverKeyboardMonoGame>();
+#if !FRB
+
+#if RAYLIB
+    public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
+#else
+    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new ();
+
+#endif
+
+
 #endif
 
 #endif
@@ -1045,7 +1053,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public virtual bool IsTabNavigationEnabled => true;
 
-#if !FRB && (MONOGAME || KNI || FNA)
+#if !FRB
 
     /// <summary>
     /// List of key combinations that will trigger shifting focus
@@ -1482,8 +1490,9 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
         }
+#endif
 
-#if (MONOGAME || KNI) && !FRB
+#if !FRB
         if (!isPushInputHeldDown)
         {
             for (int i = 0; i < KeyboardsForUiControl.Count; i++)
@@ -1498,7 +1507,6 @@ public class FrameworkElement : INotifyPropertyChanged
                 }
             }
         }
-#endif
 #endif
         return isPushInputHeldDown;
     }
