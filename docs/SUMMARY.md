@@ -229,6 +229,7 @@
   * [Common Control Events](code/events-and-interactivity/common-control-events.md)
   * [Troubleshooting Events](code/events-and-interactivity/troubleshooting-events.md)
   * [Visual Events](code/events-and-interactivity/visual-events.md)
+  * [Event Bounds and Clipping](code/events-and-interactivity/event-bounds-and-clipping.md)
   * [Tabbing (Moving Focus)](code/events-and-interactivity/tabbing-moving-focus.md)
   * [Scrolling](code/events-and-interactivity/scrolling.md)
   * [Mouse and Touch Screen (Cursor)](code/events-and-interactivity/mouse-and-touch-screen-cursor.md)
