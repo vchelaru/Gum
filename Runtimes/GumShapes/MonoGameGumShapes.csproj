@@ -7,6 +7,7 @@
 		<BaseIntermediateOutputPath>obj\MonoGame\</BaseIntermediateOutputPath>
 		<BaseOutputPath>bin\MonoGame\</BaseOutputPath>
 		<PackageId>Gum.Shapes.MonoGame</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2025.12.9.1</Version>
 		<NoWarn>1591</NoWarn>
 
