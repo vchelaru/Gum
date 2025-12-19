@@ -49,11 +49,11 @@ public class MainStateAnimationPlugin : PluginBase
     private readonly SettingsManager _settingsManager;
     private readonly ProjectState _projectState;
     private readonly AnimationCollectionViewModelManager _animationCollectionViewModelManager;
-    ElementAnimationsViewModel _viewModel;
+    ElementAnimationsViewModel? _viewModel;
 
-    StateAnimationPlugin.Views.MainWindow mMainWindow;
-    private PluginTab pluginTab;
-    private ToolStripMenuItem menuItem;
+    StateAnimationPlugin.Views.MainWindow? _mainWindow;
+    private PluginTab? pluginTab;
+    private ToolStripMenuItem? menuItem;
 
     #endregion
 
@@ -230,7 +230,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (_selectedState.SelectedElement != null)
+        if (_selectedState.SelectedElement != null && _viewModel != null)
         {
             _renameManager.HandleRename(stateSave, oldName, _viewModel);
         }
@@ -261,28 +261,31 @@ public class MainStateAnimationPlugin : PluginBase
 
     }
 
-    private void HandleToggleTabVisibility(object sender, EventArgs e)
+    private void HandleToggleTabVisibility(object? sender, EventArgs e)
     {
-        pluginTab.IsVisible = !pluginTab.IsVisible;
+        if(pluginTab != null)
+        {
+            pluginTab.IsVisible = !pluginTab.IsVisible;
+        }
     }
 
     private void CreateAnimationWindow()
     {
-        if (mMainWindow == null)
+        if (_mainWindow == null)
         {
             _settingsManager.LoadOrCreateSettings();
 
-            mMainWindow = new StateAnimationPlugin.Views.MainWindow();
+            _mainWindow = new StateAnimationPlugin.Views.MainWindow();
 
             var settings = _settingsManager.GlobalSettings;
 
-            mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
-            mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
-            mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
-            mMainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
-            mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
+            _mainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
+            _mainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
+            _mainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
+            _mainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
+            _mainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             
-            pluginTab = _tabManager.AddControl(mMainWindow, "Animations",
+            pluginTab = _tabManager.AddControl(_mainWindow, "Animations",
                 TabLocation.RightBottom);
 
             pluginTab.TabShown += HandleTabShown;
@@ -299,9 +302,9 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleAnimationColumnsResized()
     {
-        if (mMainWindow.SecondRowWidth.Value > 0)
+        if (_mainWindow?.SecondRowWidth.Value > 0)
         {
-            var ratio = mMainWindow.FirstRowWidth.Value / mMainWindow.SecondRowWidth.Value;
+            var ratio = _mainWindow.FirstRowWidth.Value / _mainWindow.SecondRowWidth.Value;
 
             _settingsManager.GlobalSettings.FirstToSecondColumnRatio = (decimal)ratio;
 
@@ -309,9 +312,15 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
-    private void HandleAddStateKeyframe(object sender, EventArgs e)
+    private void HandleAddStateKeyframe(object? sender, EventArgs e)
     {
-        string whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+        string? whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+
+        var selectedAnimation = _viewModel?.SelectedAnimation;
+        if(selectedAnimation == null)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(whyIsntValid))
         {
@@ -324,28 +333,30 @@ public class MainStateAnimationPlugin : PluginBase
             ElementSave = _selectedState.SelectedElement
         };
 
+
+
         _dialogService.Show(dialog);
 
         if (dialog.Result is { } newVm)
         {
-            if (_viewModel.SelectedAnimation.SelectedKeyframe != null)
+            if (selectedAnimation.SelectedKeyframe != null)
             {
                 // put this after the current animation
-                newVm.Time = _viewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+                newVm.Time = selectedAnimation.SelectedKeyframe.Time + 1f;
             }
-            else if (_viewModel.SelectedAnimation.Keyframes.Count != 0)
+            else if (selectedAnimation.Keyframes.Count != 0)
             {
-                newVm.Time = _viewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
+                newVm.Time = selectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            _viewModel.SelectedAnimation.Keyframes.BubbleSort();
+            selectedAnimation.Keyframes.BubbleSort();
 
-            _viewModel.SelectedAnimation.Keyframes.Add(newVm);
+            selectedAnimation.Keyframes.Add(newVm);
             // Call this *before* setting SelectedKeyframe so the available
             // states are assigned. Otherwise
             // StateName will be nulled out.
             HandleAnimationKeyrameAdded(newVm);
-            _viewModel.SelectedAnimation.SelectedKeyframe = newVm;
+            selectedAnimation.SelectedKeyframe = newVm;
         }
     }
 
@@ -359,6 +370,11 @@ public class MainStateAnimationPlugin : PluginBase
     {
         string? whyIsntValid = null;
 
+        if(_viewModel == null)
+        {
+            // invalid state, but don't blow up
+            return null;
+        }
         if (_viewModel.SelectedAnimation == null)
         {
             whyIsntValid = "You must first select an Animation";
@@ -373,12 +389,18 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleTabShown()
     {
-        menuItem.Text = "Hide Animations";
+        if (menuItem != null)
+        {
+            menuItem.Text = "Hide Animations";
+        }
     }
 
     private void HandleTabHidden()
     {
-        menuItem.Text = "View Animations";
+        if(menuItem != null)
+        {
+            menuItem.Text = "View Animations";
+        }
     }
 
     private void RefreshViewModel()
@@ -387,9 +409,9 @@ public class MainStateAnimationPlugin : PluginBase
 
         CreateViewModel();
 
-        if (mMainWindow != null)
+        if (_mainWindow != null)
         {
-            mMainWindow.DataContext = _viewModel;
+            _mainWindow.DataContext = _viewModel;
         }
     }
 
@@ -497,7 +519,7 @@ public class MainStateAnimationPlugin : PluginBase
     private void SetWireframeStateFromDisplayedAnimTime()
     {
         //////////////////////// EARLY OUT
-        if (_viewModel.SelectedAnimation == null)
+        if (_viewModel?.SelectedAnimation == null)
         {
             return;
         }
@@ -554,7 +576,7 @@ public class MainStateAnimationPlugin : PluginBase
         {
             try
             {
-                _animationCollectionViewModelManager.Save(_viewModel);
+                _animationCollectionViewModelManager.Save(_viewModel!);
             }
             catch (Exception exc)
             {
@@ -632,6 +654,11 @@ public class MainStateAnimationPlugin : PluginBase
 
     private IEnumerable<ErrorViewModel> HandleGetAllErrors()
     {
+        if(_viewModel == null)
+        {
+            return Enumerable.Empty<ErrorViewModel>();
+        }
+
         var toReturn = this._viewModel.GetErrors();
 
         foreach(var item in toReturn)
@@ -647,10 +674,10 @@ public class MainStateAnimationPlugin : PluginBase
         List<AnimationSave> animatedStatesReferencingState = new List<AnimationSave>();
         if (element != null)
         {
-            global::Gum.StateAnimation.SaveClasses.ElementAnimationsSave model;
+            global::Gum.StateAnimation.SaveClasses.ElementAnimationsSave? model;
             if (element == _viewModel?.Element)
             {
-                model = _viewModel.BackingData;
+                model = _viewModel.BackingData!;
             }
             else
             {

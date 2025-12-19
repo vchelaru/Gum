@@ -16,7 +16,7 @@ namespace StateAnimationPlugin.Managers
             Assembly thisassembly = Assembly.GetExecutingAssembly();
 
             string fullName = "StateAnimationPlugin.Resources." + resourceName;
-            using (System.IO.Stream imageStream =
+            using (var imageStream =
                 thisassembly.GetManifestResourceStream(fullName))
             {
                 return BitmapFrame.Create(imageStream);

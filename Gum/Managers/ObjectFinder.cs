@@ -69,7 +69,6 @@ namespace Gum.Managers
     {
         #region Fields/Properties
 
-        static ObjectFinder mObjectFinder;
 
         /// <summary>
         /// Provides quick access to Gum objects by name. Elements do not prefix their type
@@ -77,17 +76,7 @@ namespace Gum.Managers
         /// </summary>
         Dictionary<string, ElementSave>? cachedDictionary;
 
-        public static ObjectFinder Self
-        {
-            get
-            {
-                if (mObjectFinder == null)
-                {
-                    mObjectFinder = new ObjectFinder();
-                }
-                return mObjectFinder;
-            }
-        }
+        public static ObjectFinder Self { get; private set; } = new ObjectFinder();
 
         /// <summary>
         /// The currently-loaded GumProjectSave.
