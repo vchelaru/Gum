@@ -56,7 +56,12 @@ namespace StateAnimationPlugin.Managers
             }
             else // renaming an element that is not currently selected. See if it has an animation, and if so move it
             {
-                var projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+                var gumProject = ProjectManager.Self.GumProjectSave;
+                if(gumProject == null)
+                {
+                    throw new InvalidOperationException("Renaming elements is not supported when a Gum project is null...how did this happen anyway?");
+                }
+                var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName);
 
                 var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + "Animations.ganx");
                 

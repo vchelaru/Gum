@@ -70,7 +70,7 @@ public partial class AnimationViewModel : ViewModel
 
     public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
 
-    public event PropertyChangedEventHandler FramePropertyChanged;
+    public event PropertyChangedEventHandler? FramePropertyChanged;
 
     public AnimatedKeyframeViewModel? SelectedKeyframe 
     {
@@ -89,7 +89,7 @@ public partial class AnimationViewModel : ViewModel
         var stateName = SelectedKeyframe?.StateName;
         if (stateName != null)
         {
-            string categoryName = null;
+            string? categoryName = null;
             if (stateName.Contains("/"))
             {
                 categoryName = stateName.Substring(0, stateName.IndexOf('/'));
@@ -99,18 +99,18 @@ public partial class AnimationViewModel : ViewModel
             var element = _selectedState.SelectedElement;
             if (string.IsNullOrEmpty(categoryName))
             {
-                _selectedState.SelectedStateSave = element.GetStateSaveRecursively(stateName);
+                _selectedState.SelectedStateSave = element?.GetStateSaveRecursively(stateName);
             }
             else
             {
-                var category = element.GetStateSaveCategoryRecursively(categoryName);
+                var category = element?.GetStateSaveCategoryRecursively(categoryName);
 
                 _selectedState.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
             }
         }
     }
 
-    public InstanceSave ContainingInstance
+    public InstanceSave? ContainingInstance
     {
         get;
         set;
@@ -149,7 +149,7 @@ public partial class AnimationViewModel : ViewModel
         return clone;
     }
 
-    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, ElementAnimationsSave allAnimationSaves = null)
+    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, ElementAnimationsSave? allAnimationSaves = null)
     {
         AnimationViewModel toReturn = new AnimationViewModel();
         toReturn.Name = save.Name;
@@ -186,7 +186,7 @@ public partial class AnimationViewModel : ViewModel
                     allAnimationSaves = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
                 }
 
-                animationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
+                animationSave = allAnimationSaves?.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
                 subAnimationElement = element;
                 subAnimationSiblings = allAnimationSaves;
             }
@@ -196,14 +196,14 @@ public partial class AnimationViewModel : ViewModel
 
                 if(instance != null)
                 {
-                    ElementSave instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                    ElementSave? instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
                     subAnimationElement = instanceElement;
 
                     if(instanceElement != null)
                     {
                         var allAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
 
-                        animationSave = allAnimations.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
+                        animationSave = allAnimations?.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
                         subAnimationElement = instanceElement;
                         subAnimationSiblings = allAnimations;
                     }
@@ -211,7 +211,7 @@ public partial class AnimationViewModel : ViewModel
             }
             var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element);
 
-            if(animationSave != null)
+            if(animationSave != null && subAnimationElement != null)
             {
                 newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, subAnimationSiblings);
             }
@@ -253,7 +253,7 @@ public partial class AnimationViewModel : ViewModel
         return toReturn;
     }
 
-    private void HandleKeyframeCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void HandleKeyframeCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && !mIsInMiddleOfSort && e.NewItems != null)
         {
@@ -494,7 +494,7 @@ public static class AnimationSaveExtensions
                         {
                             var instanceAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
 
-                            subAnimationSave = instanceAnimations.Animations.FirstOrDefault(item => item.Name == subAnimation.RootName);
+                            subAnimationSave = instanceAnimations?.Animations.FirstOrDefault(item => item.Name == subAnimation.RootName);
                             subAnimationElement = instanceElement;
                             subAnimationSiblings = instanceAnimations;
                         }

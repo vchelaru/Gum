@@ -12,7 +12,7 @@ namespace StateAnimationPlugin.Managers
 {
     public class SettingsManager : Singleton<SettingsManager>
     {
-        public AnimationPluginSettings GlobalSettings { get; private set; }
+        public AnimationPluginSettings GlobalSettings { get; private set; } = new();
 
         FilePath GlobalSettingsFilePath
         {
@@ -29,9 +29,11 @@ namespace StateAnimationPlugin.Managers
             {
                 var text = System.IO.File.ReadAllText(GlobalSettingsFilePath.FullPath);
 
-                GlobalSettings = JsonConvert.DeserializeObject<AnimationPluginSettings>(text);
+                GlobalSettings = JsonConvert.DeserializeObject<AnimationPluginSettings>(text) ??
+                    new AnimationPluginSettings();
             }
-            else
+
+            if(GlobalSettings == null)
             {
                 GlobalSettings = new AnimationPluginSettings();
 
@@ -48,7 +50,5 @@ namespace StateAnimationPlugin.Managers
 
             System.IO.File.WriteAllText(GlobalSettingsFilePath.FullPath, text);
         }
-
-
     }
 }

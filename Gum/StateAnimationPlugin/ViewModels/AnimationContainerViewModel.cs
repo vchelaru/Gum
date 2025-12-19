@@ -13,40 +13,24 @@ public class AnimationContainerViewModel
     {
         get
         {
-            if(mInstanceSave == null)
+            if(InstanceSave == null)
             {
-                return mElementSave.Name + " (container)";
+                return ElementSave.Name + " (container)";
             }
             else
             {
-                return mInstanceSave.Name + " (" + InstanceSave.BaseType + ")";
+                return InstanceSave.Name + " (" + InstanceSave.BaseType + ")";
             }
         }
     }
 
-    public ElementSave ElementSave
+    public ElementSave ElementSave { get; private set; }
+
+    public InstanceSave? InstanceSave { get; private set; }
+
+    public AnimationContainerViewModel(ElementSave element, InstanceSave? instance)
     {
-        get
-        {
-            return mElementSave;
-        }
-    }
-
-    public InstanceSave InstanceSave
-    {
-        get
-        {
-            return mInstanceSave;
-        }
-    }
-
-
-    ElementSave mElementSave;
-    InstanceSave mInstanceSave;
-
-    public AnimationContainerViewModel(ElementSave element, InstanceSave instance)
-    {
-        mElementSave = element;
-        mInstanceSave = instance;
+        ElementSave = element;
+        InstanceSave = instance;
     }
 }
