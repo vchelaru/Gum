@@ -22,7 +22,7 @@ namespace Gum.Forms.Controls;
 /// when instantiating a StackPanel.
 /// </summary>
 public class Panel :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement
 #else
     Gum.Forms.Controls.FrameworkElement
