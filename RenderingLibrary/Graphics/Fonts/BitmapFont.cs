@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Gum.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Xml.Serialization;
 using ToolsUtilities;
@@ -26,6 +28,14 @@ public enum HorizontalMeasurementStyle
     // eventually trim left and trim both too
 }
 
+
+internal struct LetterRenderInfo
+{
+    public Rectangle SourceRectangle;
+    public FloatRectangle DestinationRectangle;
+    public Vector2 FinalPosition;
+    public int PageIndex;
+}
 
 public class BitmapFont : IDisposable
 {
@@ -586,6 +596,8 @@ public class BitmapFont : IDisposable
         return renderTarget;
     }
 
+    static List<LetterRenderInfo> letterInfos = new List<LetterRenderInfo>();
+
     /// <summary>
     /// 
     /// </summary>
@@ -615,7 +627,8 @@ public class BitmapFont : IDisposable
         int? numberOfLettersToRender = null, 
         TextRenderingPositionMode? overrideTextRenderingPositionMode = null, 
         float lineHeightMultiplier = 1,
-        bool shiftForOutline = true)
+        bool shiftForOutline = true,
+        OverlapDirection overlapDirection = OverlapDirection.RightOnTop)
     {
         ///////////Early Out////////////////
         if (numberOfLettersToRender == 0)
@@ -666,6 +679,29 @@ public class BitmapFont : IDisposable
 
         int numberOfLettersRendered = 0;
 
+        var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
+            Text.TextRenderingPositionMode;
+
+        var isFreeFloating = effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
+            // If rotated, need free floating positions since sprite positions will likely not line up with pixels
+            rotationDegrees != 0;
+
+        if (!isFreeFloating)
+        {
+            // If scaled up/down, don't use free floating
+            isFreeFloating = scaleX != 1;
+        }
+        float finalRotation;
+        if (isFreeFloating)
+        {
+            finalRotation = -rotationRadians;
+        }
+        else
+        {
+            finalRotation = 0;
+        }
+            
+        var scale = new Vector2(scaleX, scaleY);
 
         for (int i = 0; i < lines.Count; i++)
         {
@@ -703,9 +739,6 @@ public class BitmapFont : IDisposable
 
             currentLetterOrigin.X += offsetFromAlignment;
 
-            var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
-                Text.TextRenderingPositionMode;
-
             if (line.Length > 0)
             {
                 FloatRectangle destRect;
@@ -713,13 +746,24 @@ public class BitmapFont : IDisposable
 
                 float lineOffset = 0;
 
-                for(int charIndex = 0; charIndex < line.Length; charIndex++)
+                int lineBoundExclusive = line.Length;
+
+                if(numberOfLettersToRender != null)
+                {
+                    var lettersLeftToRender = numberOfLettersToRender.Value - numberOfLettersRendered;
+
+                    lineBoundExclusive = System.Math.Min(lineBoundExclusive, lettersLeftToRender);
+                }
+
+                letterInfos.Clear();
+
+                for (int charIndex = 0; charIndex < lineBoundExclusive; charIndex++)
                 {
                     char c = line[charIndex];
                     var sourceRect =
                         GetCharacterRect(c, lineNumber, ref currentLetterOrigin, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
-                    if(charIndex == 0)
+                    if (charIndex == 0)
                     {
                         var firstLetterDestinationX = destRect.X;
                         var firstLetterDestinationXInt = MathFunctions.RoundToInt(firstLetterDestinationX);
@@ -729,12 +773,11 @@ public class BitmapFont : IDisposable
                         {
                             lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
                         }
-
                     }
 
                     var unrotatedX = destRect.X + xOffset;
                     var unrotatedY = destRect.Y + yOffset;
-                    toReturn.X = System.Math.Min(toReturn.X, unrotatedX - offsetFromAlignment) ;
+                    toReturn.X = System.Math.Min(toReturn.X, unrotatedX - offsetFromAlignment);
                     toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
 
                     // why are we max'ing the point.X's and width? This makes center and right-alignment text render incorrectly
@@ -747,8 +790,6 @@ public class BitmapFont : IDisposable
 
                     toReturn.Height = System.Math.Max(toReturn.Height, currentLetterOrigin.Y);
 
-
-
 #if FULL_DIAGNOSTICS
                     if (mTextures.Length <= pageIndex)
                     {
@@ -756,20 +797,10 @@ public class BitmapFont : IDisposable
                     }
 #endif
 
-                    var isFreeFloating = effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
-                        // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotationDegrees != 0;
-
-                    if(!isFreeFloating)
-                    {
-                        // If scaled up/down, don't use free floating
-                        isFreeFloating = scaleX != 1;
-                    }
-
+                    Vector2 finalPosition;
                     if (isFreeFloating)
                     {
-
-                        var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
+                        finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
 
                         // This is free floating:
                         //finalPosition.X += xOffsetRoundedToZoom;
@@ -778,11 +809,6 @@ public class BitmapFont : IDisposable
                         finalPosition.X += xOffset;
                         finalPosition.Y += yOffset;
 
-
-                        var scale = new Vector2(scaleX, scaleY);
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, 
-                            color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this,
-                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
                     else
                     {
@@ -790,22 +816,61 @@ public class BitmapFont : IDisposable
                         destRect.X += xOffsetAsInt + lineOffset;
                         destRect.Y += yOffsetAsInt;
 
-                        var position = new Vector2(destRect.X, destRect.Y);
-
-                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, 
-                            new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this,
-                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
+                        finalPosition = new Vector2(destRect.X, destRect.Y);
                     }
+
+                    LetterRenderInfo letterRenderInfo = new LetterRenderInfo();
+
+                    letterRenderInfo.FinalPosition = finalPosition;
+                    letterRenderInfo.SourceRectangle = sourceRect;
+                    letterRenderInfo.PageIndex = pageIndex;
+
+                    letterInfos.Add(letterRenderInfo);
+
 
                     numberOfLettersRendered++;
-
-                    if (numberOfLettersToRender <= numberOfLettersRendered)
-                    {
-                        break;
-                    }
-
                 }
 
+                if(overlapDirection == OverlapDirection.RightOnTop)
+                {
+                    for (int charIndex = 0; charIndex < lineBoundExclusive; charIndex++)
+                    {
+                        var letterRenderInfo = letterInfos[charIndex];
+
+                        spriteRenderer.Draw(
+                            mTextures[letterRenderInfo.PageIndex],
+                            letterRenderInfo.FinalPosition,
+                            letterRenderInfo.SourceRectangle,
+                            color,
+                            finalRotation,
+                            Vector2.Zero,
+                            scale,
+                            SpriteEffects.None,
+                            0,
+                            this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
+                    }
+                }
+                else
+                {
+                    for (int charIndex = lineBoundExclusive - 1; charIndex >= 0; charIndex--)
+                    {
+                        var letterRenderInfo = letterInfos[charIndex];
+
+                        spriteRenderer.Draw(
+                            mTextures[letterRenderInfo.PageIndex],
+                            letterRenderInfo.FinalPosition,
+                            letterRenderInfo.SourceRectangle,
+                            color,
+                            finalRotation,
+                            Vector2.Zero,
+                            scale,
+                            SpriteEffects.None,
+                            0,
+                            this,
+                            dimensionSnapping: DimensionSnapping.DimensionSnapping);
+                    }
+                }
             }
             currentLetterOrigin.X = 0;
             lineNumber++;
