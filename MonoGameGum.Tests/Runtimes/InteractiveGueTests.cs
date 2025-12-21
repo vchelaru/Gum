@@ -13,6 +13,7 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 public class InteractiveGueTests : BaseTestClass
 {
+    #region CurrentInputReceiver
     [Fact]
     public void CurrentInputReceiver_ShouldGetUnset_IfRootIsReset()
     {
@@ -107,8 +108,10 @@ public class InteractiveGueTests : BaseTestClass
         textBox.IsFocused.ShouldBeFalse();
         InteractiveGue.CurrentInputReceiver.ShouldBeNull();
     }
-
     // todo - repeat the tests above for ModalRoot and PopupRoot
+
+    #endregion
+
     [Fact]
     public void AddNextClickAction_ShouldNotBeRaised_OnSameFrameAdded()
     {
@@ -173,5 +176,50 @@ public class InteractiveGueTests : BaseTestClass
         cursor.Object.WindowPushed = null;
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+    }
+
+    [Fact]
+    public void MouseWheelScroll_ShouldRaiseOnChildrenBeforeParents()
+    {
+        bool didChildRaise = false;
+        bool didParentRaise = false;
+
+        Panel parent = new ();
+        parent.AddToRoot();
+        parent.Width = 10;
+        parent.Height = 10;
+        parent.Visual.MouseWheelScroll += (_, _) =>
+        {
+            didParentRaise = true;
+            if(!didChildRaise)
+            {
+                throw new Exception("Parent raised before child, should not be");
+            }
+        };
+
+        Panel child = new ();
+        parent.AddChild(child);
+        child.Width = 10;
+        child.Height = 10;
+        child.Visual.MouseWheelScroll += (_, _) =>
+        {
+            didChildRaise = true;
+            if(didParentRaise)
+            {
+                throw new Exception("Child raised after parent, should not be");
+            }
+        };
+
+        Mock<ICursor> cursor = new();
+        cursor
+            .Setup(x => x.ScrollWheelChange).Returns(1);
+        FormsUtilities.SetCursor(cursor.Object);
+
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        didChildRaise.ShouldBeTrue();
+        didParentRaise.ShouldBeTrue();
+
     }
 }

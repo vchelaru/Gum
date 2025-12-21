@@ -230,27 +230,12 @@ public partial class InteractiveGue : BindableGue
         }
     }
 
-    // The underlying delegate storage
-    private Action<object, RoutedEventArgs>? _mouseWheelScrollDelegate;
-
     /// <summary>
     /// Event raised when the mouse wheel has been scrolled while the cursor is over this instance.
-    /// Preview events are received by parents before children, and if the event
-    /// is handled, children do not receive the event.
+    /// This event is first raised on children, then bubbles up to parents. If a control sets the argument
+    /// Handled to true, then parent objects will not receive this event.
     /// </summary>
-    public event Action<object, RoutedEventArgs>? MouseWheelScrollPreview
-    {
-        add => _mouseWheelScrollDelegate += value;
-        remove => _mouseWheelScrollDelegate -= value;
-    }
-
-    // Obsolete event that shares the same delegate
-    [Obsolete("Use MouseWheelScrollPreview instead. This event uses preview semantics where parents receive it before children.")]
-    public event Action<object, RoutedEventArgs>? MouseWheelScroll
-    {
-        add => _mouseWheelScrollDelegate += value;
-        remove => _mouseWheelScrollDelegate -= value;
-    }
+    public event Action<object, RoutedEventArgs>? MouseWheelScroll;
 
     /// <summary>
     /// Event raised when this is pushed by a cursor. A push occurs
@@ -299,10 +284,10 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler? RollOver;
 
     /// <summary>
-    /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
+    /// Event raised when the mouse rolls over this instance. Bubbling events are raised top-down, with the
     /// child object having the opportunity to handle the roll over first. If a control sets the argument 
     /// RoutedEventArgs Handled to true,
-    /// then parent objects will not have this event raised.
+    /// then parent objects will not receive this event raised.
     /// </summary>
     public event Action<object, RoutedEventArgs>? RollOverBubbling;
 
@@ -449,7 +434,7 @@ public partial class InteractiveGue : BindableGue
                 asInteractive?._losePush != null ||
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
-                asInteractive?._mouseWheelScrollDelegate != null
+                asInteractive?.MouseWheelScroll != null
                 // if it has events and it has a Forms control, then let's consider it a click
                 //|| asInteractive?.FormsControlAsObject != null
                 // Update July 18, 2025 
@@ -567,7 +552,7 @@ public partial class InteractiveGue : BindableGue
                     if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
                     {
                         var args = new RoutedEventArgs();
-                        asInteractive._mouseWheelScrollDelegate?.Invoke(asInteractive, args);
+                        asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
                         handledActions.HandledMouseWheel = args.Handled;
                     }
                 }
