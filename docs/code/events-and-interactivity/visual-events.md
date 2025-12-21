@@ -6,11 +6,29 @@ Visuals in Gum provide a large number of events. Most Forms events are based on 
 
 * Handle events specific to certain visuals
 * Create custom controls, such as a button "from scratch"
+* Access additional events which are not exposed by the event, such as HoverOver on a Button
 * Access events on controls which normally do not have events, such as click events on a Label
 
 ## Available Events
 
-UNDER CONSTRUCTION
+The following events are available on visuals:
 
-##
+<table><thead><tr><th width="234">Event Name</th><th>Description</th></tr></thead><tbody><tr><td><code>Click</code></td><td>Event raised when this is clicked by a cursor. A click occurs when the cursor is over this and is first pushed, then released.</td></tr><tr><td><code>ClickPreview</code></td><td>Event raised when this is clicked by a cursor. A click occurs when the cursor is over this and is first pushed, then released. Preview events are received by parents before children, and if the event is handled, children do not receive the event.</td></tr><tr><td><code>DoubleClick</code></td><td>Event raised when this is double-clicked by a cursor. A double-click occurs when the cursor is over this and the left moue button is clicked twice in rapid succession.</td></tr><tr><td><code>Dragging</code></td><td>Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even if outside of the bounds of the object. This can be used if an object is to be moved by dragging since it will be raised even if the user moves the cursor quickly outside of its bounds.</td></tr><tr><td><code>EnabledChange</code></td><td>Event raised when the Enabled property changed.</td></tr><tr><td><code>HoverOver</code></td><td>Event raised every frame the cursor is over this object whether the cursor has changed positions or not.</td></tr><tr><td><code>LosePush</code></td><td>Event raised when this loses a push. A push occurs when the cursor is over this window and the left mouse button is pushed. A push is lost if the left mouse button is released or if the user moves the cursor so that it is no longer over this while the mouse button is pressed.</td></tr><tr><td><code>MouseWheelScrollPreview</code></td><td>Event raised when the mouse wheel has been scrolled while the cursor is over this instance. Preview events are received by parents before children, and if the event is handled, children do not receive the event.</td></tr><tr><td><code>Push</code></td><td>Event raised when this is pushed by a cursor. A push occurs when the cursor is over this and the left mouse button is pushed (not down last frame, down this frame).</td></tr><tr><td><code>PushPreview</code></td><td>Event raised when this is pushed by a cursor. A push occurs when the cursor is over this and the left mouse button is pushed (not down last frame, down this frame). Preview events are received by parents before children, and if the event is handled, children do not receive the event.</td></tr><tr><td><code>RemovedAsPushed</code></td><td>Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button. This can be used to detect the end of a drag operation, or to reset the state of a button.</td></tr><tr><td><code>RightClick</code></td><td>Event raised when this is right-clicked by a cursor. A right-click occurs when the cursor is over this and is first pushed, then released.</td></tr><tr><td><code>RollOff</code></td><td>Event raised when the cursor first leaves this object.</td></tr><tr><td><code>RollOn</code></td><td>Event raised when the cursor first moves over this object. This is only received if the cursor is moved directly over this object. If it is instead moved over a child object which has its own events, then the parent will receive this event.</td></tr><tr><td><code>RollOver</code></td><td>Event raised every frame the cursor is over this object and the Cursor has changed position. This event is not raised if the cursor has moved off of the object. For events raised when the cursor is not over this instance, see Dragging.</td></tr><tr><td><code>RollOverBubbling</code></td><td>Event raised when the mouse rolls over this instance. This event is raised top-down, with the child object having the opportunity to handle the roll over first. If a control sets the argument <code>RoutedEventArgs</code> Handled to true, then parent objects will not have this event raised.</td></tr></tbody></table>
+
+## Code Example: Handling Visual Events
+
+Visual events can be subscribed to on any control. The following code shows how to subscribe to a `Visual.HoverOver` event which is raised every frame that the cursor is hovering over the `Button`.
+
+```csharp
+Button button = new();
+button.AddToRoot();
+button.Anchor(Anchor.Center);
+button.Visual.HoverOver += (_, _) =>
+{
+    button.Text = 
+        $"Hovered at {DateTime.Now:HH:mm:ss.fff}";
+};
+```
+
+<figure><img src="../../.gitbook/assets/21_04 46 25.gif" alt=""><figcaption></figcaption></figure>
 
