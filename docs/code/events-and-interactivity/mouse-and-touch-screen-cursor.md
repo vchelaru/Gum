@@ -30,6 +30,63 @@ protected override void Update(GameTime gameTime)
 
 <figure><img src="../../.gitbook/assets/17_04 24 51.gif" alt=""><figcaption><p>Rectangles created in response to <code>Cursor</code> clicks</p></figcaption></figure>
 
+## Checking Control Over
+
+The `Cursor` class reports information about what it is over which can be checked in events or in an Update call.
+
+```csharp
+Label label;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+
+    StackPanel panel = new ();
+    panel.AddToRoot();
+    panel.Anchor(Anchor.Center);
+    
+    for(int i = 0; i < 5; i++)
+    {
+        Button button = new();
+        panel.AddChild(button);
+        button.Text = "Button " + i;
+        button.Name = button.Text;
+    }
+
+    label = new Label();
+    panel.AddChild(label);
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    var visualOver = GumUI.Cursor.WindowOver;
+    var control = visualOver?.FormsControlAsObject as FrameworkElement;
+
+    if(control == null)
+    {
+        label.Text = "Not over any visual";
+    }
+    else
+    {
+        label.Text = "Over: " + control.Name;
+    }
+
+    base.Update(gameTime);
+}
+```
+
+<figure><img src="../../.gitbook/assets/20_17 44 14.gif" alt=""><figcaption><p>Cursor.WindowOver displaying the element that the cursor is over</p></figcaption></figure>
+
+### WindowOver
+
+The `WindowOver` property returns the visual that the `Cursor` is over. The following code shows how to detect the Button that the Cursor is hovering over.
+
+
+
 ## Disabling the Cursor Globally
 
 The Cursor instance reported by GumService can be replaced with a custom implementation of the `ICursor` interface. A custom `ICursor` class can be created to modify its behavior. For example, the following implementation disables all behavior:
