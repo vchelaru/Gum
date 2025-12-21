@@ -11,7 +11,7 @@ using static Raylib_cs.Raylib;
 
 namespace RenderingLibrary.Content;
 
-internal class ContentLoader : IContentLoader
+public class ContentLoader : IContentLoader
 {
     public T LoadContent<T>(string contentName)
     {

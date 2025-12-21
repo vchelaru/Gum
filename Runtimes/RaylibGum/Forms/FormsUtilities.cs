@@ -53,12 +53,20 @@ public enum DefaultVisualsVersion
     /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
     /// and respects a centralized styling.
     /// </summary>
-    V2
+    V2,
+
+    /// <summary>
+    /// Specifies that the newest version is used.
+    /// </summary>
+    /// <remarks>This value is an alias for the latest supported version. Use this option to ensure the most
+    /// recent features and updates are applied.</remarks>
+    Newest = V2,
 }
 
 public class FormsUtilities
 {
     static ICursor cursor;
+
     public static Cursor Cursor => cursor as Cursor;
 
     public static void SetCursor(ICursor cursor)

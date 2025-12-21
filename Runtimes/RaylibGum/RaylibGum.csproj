@@ -91,6 +91,7 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\KeyCombo.cs" Link="Input\KeyCombo.cs" />
 		<Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
+		<Compile Include="..\..\MonoGameGum\Threading\DeferredActionQueue.cs" Link="Threading\DeferredActionQueue.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>
 
@@ -119,6 +120,7 @@
 	<ItemGroup>
 		<Folder Include="Forms\Data\" />
 		<Folder Include="Forms\DefaultVisuals\" />
+		<Folder Include="Threading\" />
 	</ItemGroup>
 
 </Project>
