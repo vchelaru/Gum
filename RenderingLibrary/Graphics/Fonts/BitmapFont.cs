@@ -503,6 +503,7 @@ public class BitmapFont : IDisposable
     /// <param name="toReplace"></param>
     /// <param name="objectRequestingRender"></param>
     /// <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
+    /// <param name="lineHeightMultiplier"></param>
     /// <returns></returns>
     public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment,
         SystemManagers managers, Texture2D toReplace, object objectRequestingRender,
@@ -603,6 +604,7 @@ public class BitmapFont : IDisposable
     /// <param name="numberOfLettersToRender"></param>
     /// <param name="overrideTextRenderingPositionMode"></param>
     /// <param name="lineHeightMultiplier"></param>
+    /// <param name="shiftForOutline"></param>
     /// <returns>The rectangle of the drawn text. This will return the same value regardless of alignment.</returns>
     public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment,
         object objectRequestingChange, int requiredWidth, List<int> widths,

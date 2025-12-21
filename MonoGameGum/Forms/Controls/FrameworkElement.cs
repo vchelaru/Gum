@@ -827,6 +827,7 @@ public class FrameworkElement : INotifyPropertyChanged
         KeyDown?.Invoke(this, e);
     }
 
+#if FRB
     /// <summary>
     /// Every-frame logic. This will automatically be called if this element is added to the FrameworkElementManager
     /// </summary>
@@ -834,6 +835,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
 
     }
+#endif
 
     public void RepositionToKeepInScreen()
     {
