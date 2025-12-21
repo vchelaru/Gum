@@ -129,7 +129,6 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        float rotation;
         public float Rotation
         {
             get; set;
