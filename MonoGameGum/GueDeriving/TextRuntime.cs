@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Graphics;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -321,6 +322,12 @@ public class TextRuntime : InteractiveGue
                     Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
             }
         }
+    }
+
+    public OverlapDirection OverlapDirection
+    {
+        get => ContainedText.OverlapDirection;
+        set => ContainedText.OverlapDirection = value;
     }
 
     #region Defaults

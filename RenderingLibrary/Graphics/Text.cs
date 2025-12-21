@@ -15,6 +15,7 @@ using ToolsUtilitiesStandard.Helpers;
 using System.Drawing;
 using System.Text;
 using RenderingLibrary.Math;
+using Gum.Graphics;
 
 namespace RenderingLibrary.Graphics;
 
@@ -696,6 +697,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
         = new ();
 
+    public OverlapDirection OverlapDirection { get; set; } = OverlapDirection.RightOnTop;
+
     #endregion
 
     #region Methods
@@ -973,12 +976,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
-                    fontToUse.DrawTextLines(WrappedText, HorizontalAlignment,
+                    fontToUse.DrawTextLines(WrappedText, 
+                        HorizontalAlignment,
                         this,
                         requiredWidth, widths, spriteRenderer, Color,
                         absoluteLeft,
                         absoluteTop,
-                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                        this.GetAbsoluteRotation(), 
+                        mFontScale, mFontScale, maxLettersToShow, 
+                        OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                        overlapDirection: OverlapDirection);
                 }
             }
 
@@ -1037,7 +1044,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     requiredWidth, widths, spriteRenderer, color,
                     absoluteLeft,
                     topOfLine,
-                    this.GetAbsoluteRotation(), mFontScale, mFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                    this.GetAbsoluteRotation(), mFontScale, 
+                    mFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                    overlapDirection: OverlapDirection);
 
                 topOfLine += fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
                 maxLettersToShow -= lineOfText.Length;
@@ -1205,7 +1214,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         lettersLeft, 
                         OverrideTextRenderingPositionMode, 
                         lineHeightMultiplier: LineHeightMultiplier,
-                        shiftForOutline:substringIndex == 0);
+                        shiftForOutline:substringIndex == 0,
+                        overlapDirection: OverlapDirection);
 
                     if (lettersLeft != null)
                     {

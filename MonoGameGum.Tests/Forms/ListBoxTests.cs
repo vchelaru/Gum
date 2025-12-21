@@ -125,7 +125,7 @@ public class ListBoxTests : BaseTestClass
 
         listBox.InnerPanel.Children.Count.ShouldBe(1);
         (listBox.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
-        (listBox.InnerPanel.Children[0] as InteractiveGue).FormsControlAsObject
+        (listBox.InnerPanel.Children[0] as InteractiveGue)!.FormsControlAsObject
             .ShouldBeOfType<ListBoxItem>();
     }
 
