@@ -1,4 +1,16 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+#if RAYLIB
+using System.Numerics;
+using Raylib_cs;
+namespace RaylibGum.Input;
+#else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -6,13 +18,8 @@ using Microsoft.Xna.Framework.Input.Touch;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace MonoGameGum.Input;
+#endif
 
 /// <summary>
 /// A cursor implementation providing mouse and touch input functionality.
@@ -22,6 +29,7 @@ namespace MonoGameGum.Input;
 public class Cursor : ICursor
 {
     Cursors? _customCursor;
+
     /// <summary>
     /// Gets or sets the custom mouse cursor to display within the application window.
     /// </summary>
@@ -35,9 +43,8 @@ public class Cursor : ICursor
         {
             _customCursor = value;
 
-
 #if MONOGAME || KNI
-            switch(value)
+            switch (value)
             {
                 case Cursors.Arrow:
                 case null:
@@ -58,6 +65,35 @@ public class Cursor : ICursor
                     break;
                 case Cursors.SizeNESW:
                     Microsoft.Xna.Framework.Input.Mouse.SetCursor(MouseCursor.SizeNESW);
+
+                    break;
+            }
+#endif
+
+#if RAYLIB
+            switch (value)
+            {
+                case Cursors.Arrow:
+                case null:
+                    // Horizontal resize
+
+                    Raylib.SetMouseCursor(MouseCursor.Arrow);
+                    break;
+                case Cursors.SizeNS:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNs);
+
+                    break;
+                case Cursors.SizeWE:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeEw);
+
+                    break;
+
+                case Cursors.SizeNWSE:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNwse);
+
+                    break;
+                case Cursors.SizeNESW:
+                    Raylib.SetMouseCursor(MouseCursor.ResizeNesw);
 
                     break;
             }
@@ -314,16 +350,51 @@ public class Cursor : ICursor
     //    to follow the more modern naming conventions.
     // 3. Users may want to know which FrameworkElement was pushed without having to do casting. This should
     //    change in .NET 10 with extension properties.
-    public InteractiveGue? WindowPushed { get; set; }
+    [Obsolete("Use VisualPushed instead")]
+    public InteractiveGue? WindowPushed 
+    { 
+        get => VisualPushed;
+        set => VisualPushed = value;
+    }
 
+    /// <summary>
+    /// Gets or sets the Visual that was under the cursor when the cursor (left button)
+    /// was pushed.
+    /// </summary>
+    public InteractiveGue? VisualPushed { get; set; }
+
+    /// <summary>
+    /// Gets the control that was under the cursor when the cursor (left button) was pushed.
+    /// </summary>
+    public FrameworkElement? FrameworkElementPushed => VisualPushed?.FormsControlAsObject as FrameworkElement;
+
+    /// <summary>
+    /// Gets or sets the Visual that was under the cursor when the cursor right button
+    /// was pushed.
+    /// </summary>
     public InteractiveGue? VisualRightPushed { get; set; }
 
     /// <summary>
-    /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
-    /// FormsUtilities.
+    /// Gets the control that was under the cursor when the cursor right button was pushed.
     /// </summary>
-    public InteractiveGue? WindowOver { get; set; }
+    public FrameworkElement? FrameworkElementRightPushed => VisualRightPushed?.FormsControlAsObject as FrameworkElement;
 
+    [Obsolete("Use VisualOver instead")]
+    public InteractiveGue? WindowOver
+    {
+        get => VisualOver;
+        set => VisualOver = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the Visual that was under the cursor the last time it was updated.
+    /// </summary>
+    public InteractiveGue? VisualOver { get; set; }
+
+    /// <summary>
+    /// Gets the control that is currently under the cursor.
+    /// </summary>
+    public FrameworkElement? FrameworkElementOver => VisualOver?.FormsControlAsObject as FrameworkElement;
 
     MouseState _mouseState;
     MouseState mLastFrameMouseState = new MouseState();
@@ -365,8 +436,6 @@ public class Cursor : ICursor
 
         LastX = X;
         LastY = Y;
-
-
 
         int? x = null;
         int? y = null;
