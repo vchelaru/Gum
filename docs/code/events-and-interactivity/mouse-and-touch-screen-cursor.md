@@ -34,6 +34,10 @@ protected override void Update(GameTime gameTime)
 
 The `Cursor` class reports information about what it is over which can be checked in events or in an Update call.
 
+### WindowOver
+
+The `WindowOver` property returns the visual that the `Cursor` is over. The following code shows how to detect the Button that the Cursor is hovering over.
+
 ```csharp
 Label label;
 
@@ -80,12 +84,6 @@ protected override void Update(GameTime gameTime)
 ```
 
 <figure><img src="../../.gitbook/assets/20_17 44 14.gif" alt=""><figcaption><p>Cursor.WindowOver displaying the element that the cursor is over</p></figcaption></figure>
-
-### WindowOver
-
-The `WindowOver` property returns the visual that the `Cursor` is over. The following code shows how to detect the Button that the Cursor is hovering over.
-
-
 
 ## Disabling the Cursor Globally
 
