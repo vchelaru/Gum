@@ -614,12 +614,12 @@ public class Text : IVisible, IRenderableIpso,
         if (VerticalAlignment == VerticalAlignment.Center)
         {
             position.Y += this.Height / 2;
-            origin.Y = mPreRenderHeight / 2 ?? 0;
+            origin.Y = FontScale * mPreRenderHeight / 2 ?? 0;
         }
         if (VerticalAlignment == VerticalAlignment.Bottom)
         {
             position.Y += this.Height;
-            origin.Y = mPreRenderHeight ?? 0;
+            origin.Y = FontScale * mPreRenderHeight ?? 0;
         }
 
         for(int i = 0; i < WrappedText.Count; i++)
