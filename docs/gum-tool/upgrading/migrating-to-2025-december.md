@@ -4,7 +4,21 @@
 
 This page discusses breaking changes and other considerations when migrating from `2025 November` to `2025 December` .
 
-## Changed GraphicalUiElement Children Type
+## Upgrading Runtime
+
+Upgrade your Gum NuGet packages to version 2025.12.9.1. For more information, see the NuGet packages for your particular platform:
+
+* MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
+* KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
+* FNA - [https://www.nuget.org/packages/Gum.FNA/](https://www.nuget.org/packages/Gum.FNA/)
+* raylib - [https://www.nuget.org/packages/Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
+* SkiaSharp - [https://www.nuget.org/packages/Gum.SkiaSharp/](https://www.nuget.org/packages/Gum.SkiaSharp/)
+
+For other platforms you need to build Gum from source
+
+See below for breaking changes and updates.
+
+## \[Breaking] Changed GraphicalUiElement Children Type
 
 In previous versions the GraphicalUiElement (base class for all Visuals) included the following property:
 
@@ -78,7 +92,7 @@ void DoSomethingTo(ObservableCollection<GraphicalUiElement> children)
 }
 ```
 
-Alternatively if it is difficult to change calls which work on Children, you can still access the Children by casting the visual to an IPositionedSizedObject as shown in the following block:
+Alternatively if it is difficult to change calls which work on Children, you can still access the Children by casting the visual to an `IPositionedSizedObject` as shown in the following block:
 
 ```csharp
 var asIpso = (IPositionedSizedObject)myControl.Visual;
@@ -92,3 +106,10 @@ void DoSomethingTo(ObservableCollection<IPositionedSizedObject> children)
     // ...
 }
 ```
+
+## \[Breaking] Removed FrameworkElement.FrameworkElement.Activity
+
+`FrameworkElement.Activity` method was removed from all runtimes except FlatRedBall. This method was incorrectly suggesting that it could be called every frame, but this has never been implemented in any other runtime besides FlatRedBall, so it has been removed to avoid further confusion.
+
+
+

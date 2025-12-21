@@ -6,6 +6,10 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## Upgrading Gum Tool
 
+{% hint style="warning" %}
+The November release of Gum includes a number of problems on Linux including .NET 8 installation problems as well as a missing menu. Linux users should remain on Gum's October 2025 release until this issue is resolved.
+{% endhint %}
+
 To upgrade the Gum tool:
 
 1. Download Gum.zip from the release on Github: [https://github.com/vchelaru/Gum/releases/tag/Release\_November\_30\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_November_30_2025)
