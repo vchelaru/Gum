@@ -332,8 +332,9 @@ public class GumProjectSave
         shouldLoadFromTitleContainer = true;
 #elif NET6_0_OR_GREATER
         // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
-        shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsBrowser();
-
+        shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() ||
+                                       System.OperatingSystem.IsBrowser() ||
+                                       FileManager.CustomGetStreamFromFile != null;
 #endif
 
 

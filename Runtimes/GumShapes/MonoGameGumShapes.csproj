@@ -17,8 +17,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="bin\**" />
 	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="bin\**" />
 	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="bin\**" />
 	  <None Remove="obj\**" />
 	</ItemGroup>
 
@@ -28,7 +31,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Apos.Shapes" Version="0.5.0" />
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" PrivateAssets="All"/>
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
