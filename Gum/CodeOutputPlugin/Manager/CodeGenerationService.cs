@@ -27,7 +27,7 @@ internal class CodeGenerationService
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator);
         _guiCommands = guiCommands;
         _dialogService = dialogService;
     }

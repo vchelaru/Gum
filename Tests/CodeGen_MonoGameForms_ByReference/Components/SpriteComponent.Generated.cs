@@ -38,6 +38,17 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     public SpriteRuntime SpriteInstance { get; protected set; }
 
+    public string SpriteInstanceSourceFile
+    {
+        set => SpriteInstance.SourceFileName = value;
+    }
+
+    public TextureAddress SpriteInstanceTextureAddress
+    {
+        get => SpriteInstance.TextureAddress;
+        set => SpriteInstance.TextureAddress = value;
+    }
+
     public int SpriteInstanceTextureHeight
     {
         get => SpriteInstance.TextureHeight;
@@ -60,6 +71,12 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     {
         get => SpriteInstance.TextureWidth;
         set => SpriteInstance.TextureWidth = value;
+    }
+
+    public float SpriteInstanceX
+    {
+        get => SpriteInstance.X;
+        set => SpriteInstance.X = value;
     }
 
     public SpriteComponent(InteractiveGue visual) : base(visual)

@@ -98,7 +98,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.Visual.Height = 0f;
         this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
          
-        this.Visual.Width = 0f;
+        this.Visual.Width = -0f;
         this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         this.Visual.X = 0f;
         this.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
@@ -147,9 +147,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     private void ApplyDefaultVariables()
     {
         this.Background.SetProperty("ColorCategoryState", "DarkGray");
-        this.Background.Height = 0f;
+        this.Background.Height = -0f;
         this.Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.Background.Width = 0f;
+        this.Background.Width = -0f;
         this.Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.Background.X = 0f;
         this.Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;

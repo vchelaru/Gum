@@ -245,7 +245,7 @@ public class CodeGenerator
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
 
-    public static LocalizationManager LocalizationManager { get; set; }
+    public LocalizationManager LocalizationManager { get; set; }
     public static INameVerifier NameVerifier { get; set; }
 
     /// <summary>
@@ -255,15 +255,8 @@ public class CodeGenerator
     /// </summary>
     static bool AdjustPixelValuesForDensity { get; set; } = false;
 
-    static CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
-
     #endregion
-    // All the methods here need be changed to instance first (not be static),
-    // then we can get rid of this and make it a proper constructor with DI
-    static CodeGenerator()
-    {
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
-    }
+    
 
     #region Using Statements
 
@@ -316,7 +309,7 @@ public class CodeGenerator
         // https://github.com/vchelaru/Gum/issues/242
         if (!string.IsNullOrWhiteSpace(context.CodeOutputProjectSettings?.CommonUsingStatements))
         {
-            var originalString = context.CodeOutputProjectSettings?.CommonUsingStatements;
+            var originalString = context.CodeOutputProjectSettings.CommonUsingStatements;
 
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
@@ -336,7 +329,7 @@ public class CodeGenerator
 
     #region Namespace
 
-    public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+    public string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
         var namespaceName = elementSettings?.Namespace ?? string.Empty;
 
@@ -375,7 +368,7 @@ public class CodeGenerator
 
     #region Class Name and Header, Inheritance
 
-    private static void GenerateClassHeader(CodeGenerationContext context)
+    private void GenerateClassHeader(CodeGenerationContext context)
     {
         //const string access = "public";
         // According to this:https://github.com/vchelaru/Gum/issues/581
@@ -399,16 +392,16 @@ public class CodeGenerator
     /// <returns>
     /// The corresponding class name, or <c>null</c> if that type couldn't be found.
     /// </returns>
-    public static string? GetClassNameForType(InstanceSave instanceSave, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
+    public string? GetClassNameForType(InstanceSave instanceSave, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false)
     {
         var element = ObjectFinder.Self.GetElementSave(instanceSave);
         return element == null ? null : GetClassNameForType(element, visualApi, context, isFullyQualified);
     }
     
-    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false) =>
+    public string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, bool isFullyQualified = false) =>
         GetClassNameForType(container, visualApi, context, out _, isFullyQualified);
     
-    public static string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, out bool isPrefixed, bool isFullyQualified = false)
+    public string? GetClassNameForType(IStateContainer container, VisualApi visualApi, CodeGenerationContext context, out bool isPrefixed, bool isFullyQualified = false)
     {
         isPrefixed = false;
         
@@ -657,7 +650,7 @@ public class CodeGenerator
 
         var bindingBehavior = GetBindingBehavior(container, sourceObject);
 
-        var name = ToCSharpName(exposedVariable.ExposedAsName);
+        var name = ToCSharpName(exposedVariable.ExposedAsName!);
         var instanceName = ToCSharpName(sourceObject);
         var type = exposedVariable.Type;
 
@@ -828,15 +821,32 @@ public class CodeGenerator
                         hasGetter = false;
                     }
 
+                    // See if this is an exposed variable:
+                    InstanceSave? instance = context.Instance;
+                    ElementSave? instanceElement = null;
+                    if (instance != null)
+                    {
+                        instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                    }
+
+                    // see if this has an exposed variable with the name of this variable
+                    var exposedVariableOnInstanceElement = instanceElement?.DefaultState.GetVariableRecursive(exposedVariable.GetRootName());
+                    if(exposedVariableOnInstanceElement?.ExposedAsName != exposedVariable.GetRootName())
+                    {
+                        exposedVariableOnInstanceElement = null;
+                    }
+
                     if (hasGetter)
                     {
+                        var variableNameAfterDot = exposedVariableOnInstanceElement?.ExposedAsName ?? rootVariable?.Name;
+
                         if (sourceObjectCast != null)
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectCSharpName}).{rootVariable?.Name};");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => (({sourceObjectCast}) {sourceObjectCSharpName}).{variableNameAfterDot};");
                         }
                         else
                         {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectCSharpName}.{rootVariable?.Name};");
+                            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {sourceObjectCSharpName}.{variableNameAfterDot};");
                         }
                     }
 
@@ -848,20 +858,35 @@ public class CodeGenerator
                     }
                     else
                     {
-                        if (rootVariable?.Name == "SourceFile")
+                        // In Gum, it's "SourceFile",
+                        // but in code the standard elements
+                        // have the variable "SourceFileName".
+                        // However, we only want to assign "SourceFileName"
+                        // if variable on the element of the instance is not
+                        // itself an exposed variable.
+
+                        var shouldAssignSourceFileName = 
+                            rootVariable?.Name == "SourceFile" &&
+                            exposedVariableOnInstanceElement == null;
+
+                        if(shouldAssignSourceFileName)
                         {
                             var variableName = sourceObjectCSharpName + ".SourceFileName";
                             stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {variableName} = value;");
                         }
+
                         else
                         {
+
+                            var variableNameAfterDot = exposedVariableOnInstanceElement?.ExposedAsName ?? rootVariable?.Name;
+
                             if (sourceObjectCast != null)
                             {
-                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectCSharpName}).{rootVariable?.Name} = value;");
+                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => (({sourceObjectCast}){sourceObjectCSharpName}).{variableNameAfterDot} = value;");
                             }
                             else
                             {
-                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.{rootVariable?.Name} = value;");
+                                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {sourceObjectCSharpName}.{variableNameAfterDot} = value;");
                             }
                         }
                     }
@@ -878,7 +903,7 @@ public class CodeGenerator
 
     private bool GetIfExposedVariableIsOverride(VariableSave exposedVariable, CodeGenerationContext context)
     {
-        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && exposedVariable.ExposedAsName != null)
         {
             GetGumFormsTypeFromBehaviors(context.Element, out string? formsType, out _);
 
@@ -905,7 +930,7 @@ public class CodeGenerator
 
     #region Instance Properties (like ColoredRectangleInstance or ButtonInstance)
 
-    private static void FillWithInstanceDeclaration(CodeGenerationContext context)
+    private void FillWithInstanceDeclaration(CodeGenerationContext context)
     {
         VisualApi visualApi = VisualApi.Gum;
 
@@ -966,7 +991,7 @@ public class CodeGenerator
         return isDerived;
     }
 
-    private static void GenerateInitializeInstancesMethod(CodeGenerationContext context)
+    private void GenerateInitializeInstancesMethod(CodeGenerationContext context)
     {
         var isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
 
@@ -1121,7 +1146,7 @@ public class CodeGenerator
         }
     }
 
-    private static void AddFindByNameAssignment(CodeGenerationContext context)
+    private void AddFindByNameAssignment(CodeGenerationContext context)
     {
         var isGeneratingFormsControls = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms;
 
@@ -1181,7 +1206,7 @@ public class CodeGenerator
         }
     }
 
-    private static void FillWithInstanceInstantiation(CodeGenerationContext context)
+    private void FillWithInstanceInstantiation(CodeGenerationContext context)
     {
         var instance = context.Instance!;
 
@@ -1286,7 +1311,7 @@ public class CodeGenerator
 
     #region Register (MonoGame)
 
-    static void RegisterRuntimeType(CodeGenerationContext context)
+    private void RegisterRuntimeType(CodeGenerationContext context)
     {
 
         var outputLibrary = context.CodeOutputProjectSettings.OutputLibrary;
@@ -1302,7 +1327,7 @@ public class CodeGenerator
 
 
 
-            var className = CodeGenerator.GetClassNameForType(context.Element, context.VisualApi, context);
+            var className = GetClassNameForType(context.Element, context.VisualApi, context);
 
 
 
@@ -1397,7 +1422,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
-            var className = CodeGenerator.GetClassNameForType(context.Element, context.VisualApi, context);
+            var className = GetClassNameForType(context.Element, context.VisualApi, context);
 
             builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
 
@@ -3983,7 +4008,7 @@ public class CodeGenerator
         return forceSetDirectlyOnInstance;
     }
 
-    private static string? VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
+    private string? VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
     {
         var value = variable.Value;
         var rootName = variable.GetRootName();
@@ -3991,7 +4016,7 @@ public class CodeGenerator
         return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
     }
 
-    private static string? VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
+    private string? VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
     {
         var value = variable.ValueAsIList;
         var rootName = variable.GetRootName();
@@ -4031,7 +4056,7 @@ public class CodeGenerator
         }
     }
 
-    private static string? VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object? forcedValue = null)
+    private string? VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object? forcedValue = null)
     {
         var value = forcedValue ?? variable.Value;
         var rootName = variable.GetRootName();
@@ -4040,7 +4065,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, categoryContainer, category, context.CodeOutputProjectSettings);
     }
 
-    private static string? VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object? forcedValue = null)
+    private string? VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object? forcedValue = null)
     {
         var value = forcedValue ?? variable.ValueAsIList;
         var rootName = variable.GetRootName();
@@ -4049,7 +4074,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, null, null, codeOutputProjectSettings);
     }
 
-    private static string? VariableValueToGumCode(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeOutputProjectSettings settings)
+    private string? VariableValueToGumCode(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeOutputProjectSettings settings)
     {
         if (value is float asFloat)
         {
@@ -4138,7 +4163,7 @@ public class CodeGenerator
         }
     }
 
-    private static string? VariableValueToXamarinFormsCodeValue(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
+    private string? VariableValueToXamarinFormsCodeValue(object? value, string rootName, bool isState, ElementSave? categoryContainer, StateSaveCategory? category, CodeGenerationContext context)
     {
         if (value is float asFloat)
         {
@@ -4272,7 +4297,7 @@ public class CodeGenerator
         return value?.ToString();
     }
     
-    private static string? TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
+    private string? TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
     {
         var rootVariableName = variable.GetRootName();
 
@@ -4749,7 +4774,7 @@ public class CodeGenerator
                 type?.EndsWith("/Frame") == true;
     }
 
-    private static string? TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
+    private string? TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
     {
         InstanceSave? instance = context.Instance;
         var rootName = variable.GetRootName();
@@ -4951,7 +4976,7 @@ public class CodeGenerator
         }
     }
 
-    private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
+    private void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
     {
         if (LocalizationManager.HasDatabase)
         {
@@ -5017,7 +5042,7 @@ public class CodeGenerator
 
     #region MAUI-specific
 
-    private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
+    private void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
     {
         var context = new CodeGenerationContext();
         context.Element = element;

@@ -25,7 +25,7 @@ internal class RenameService
         CustomCodeGenerator customCodeGenerator)
     {
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
