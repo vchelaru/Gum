@@ -13,9 +13,15 @@ namespace CodeOutputPlugin.Manager;
 
 internal class CodeGenerationFileLocationsService
 {
+    CodeGenerator _codeGenerator;
+
+    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator)
+    {
+        _codeGenerator = codeGenerator;
+    }
 
     public FilePath GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-    CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
     {
         string generatedFileName = elementSettings.GeneratedFileName;
 
@@ -40,7 +46,7 @@ internal class CodeGenerationFileLocationsService
                 var context = new CodeGenerationContext();
                 context.CodeOutputProjectSettings = codeOutputProjectSettings;
 
-                string? fileName = CodeGenerator.GetClassNameForType(selectedElement, effectiveVisualApi, context, out bool isPrefixed);
+                string? fileName = _codeGenerator.GetClassNameForType(selectedElement, effectiveVisualApi, context, out bool isPrefixed);
                 if (isPrefixed) fileName = fileName?.Substring(1);
                 
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(fileName);

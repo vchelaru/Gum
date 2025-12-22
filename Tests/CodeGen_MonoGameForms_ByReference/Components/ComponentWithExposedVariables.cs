@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace CodeGenProject.Components
 {
-    partial class ExposedVariableComponent
+    partial class ComponentWithExposedVariables
     {
         partial void CustomInitialize()
         {

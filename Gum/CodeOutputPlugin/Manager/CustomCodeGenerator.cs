@@ -39,7 +39,7 @@ namespace CodeOutputPlugin.Manager
 
             #region Namespace Header/Opening {
 
-            string namespaceName = CodeGenerator.GetElementNamespace(element, elementSettings, projectSettings);
+            string namespaceName = _codeGenerator.GetElementNamespace(element, elementSettings, projectSettings);
 
             if (!string.IsNullOrEmpty(namespaceName))
             {
@@ -97,7 +97,7 @@ namespace CodeOutputPlugin.Manager
 
             // intentionally do not include "public" or "internal" so the user can customize this as desired
             // https://github.com/vchelaru/Gum/issues/581
-            var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element, visualApi, context)}";
+            var classHeader = $"partial class {_codeGenerator.GetClassNameForType(element, visualApi, context)}";
             if(!string.IsNullOrEmpty(inheritance))
             {
                 classHeader += $" : {inheritance}";

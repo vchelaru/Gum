@@ -34,7 +34,7 @@ public partial class CodeWindow : UserControl
 
     bool HasClickedManualSetup;
 
-    CodeWindowViewModel ViewModel => DataContext as CodeWindowViewModel;
+    CodeWindowViewModel ViewModel => (CodeWindowViewModel)DataContext!;
 
     public CodeOutputProjectSettings CodeOutputProjectSettings
     {

@@ -65,10 +65,11 @@ public class MainCodeOutputPlugin : PluginBase
 
     public MainCodeOutputPlugin()
     {
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
-
-
         _codeGenerator = new CodeGenerator();
+
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator);
+
+
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
@@ -234,7 +235,7 @@ public class MainCodeOutputPlugin : PluginBase
         HandleRefreshAndExport();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 

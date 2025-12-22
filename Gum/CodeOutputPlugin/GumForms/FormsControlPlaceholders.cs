@@ -21,12 +21,12 @@ namespace Gum.Forms.Controls
 
     public class Button
     {
-        public virtual string Text { get; set; }
+        public virtual string Text { get; set; } = string.Empty;
     }
 
     public class MenuItem
     {
-        public virtual string Header { get; set; }
+        public virtual string Header { get; set; } = string.Empty;
     }
 
 }
