@@ -71,7 +71,10 @@ public class MainCodeOutputPlugin : PluginBase
 
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _codeGenerator.LocalizationManager = _localizationManager;
+
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator);
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator);
@@ -87,7 +90,6 @@ public class MainCodeOutputPlugin : PluginBase
         // The methos in CodeGenerator need to be changed to not be static then we can get rid
         // of this:
         CodeGenerator.NameVerifier = _nameVerifier;
-        CodeGenerator.LocalizationManager = _localizationManager;
     }
 
     private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)

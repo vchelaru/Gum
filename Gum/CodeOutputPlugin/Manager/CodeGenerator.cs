@@ -245,7 +245,7 @@ public class CodeGenerator
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
 
-    public static LocalizationManager LocalizationManager { get; set; }
+    public LocalizationManager LocalizationManager { get; set; }
     public static INameVerifier NameVerifier { get; set; }
 
     /// <summary>
@@ -256,12 +256,7 @@ public class CodeGenerator
     static bool AdjustPixelValuesForDensity { get; set; } = false;
 
     #endregion
-    // All the methods here need be changed to instance first (not be static),
-    // then we can get rid of this and make it a proper constructor with DI
-    static CodeGenerator()
-    {
-
-    }
+    
 
     #region Using Statements
 
@@ -4302,7 +4297,7 @@ public class CodeGenerator
         return value?.ToString();
     }
     
-    private static string? TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
+    private string? TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
     {
         var rootVariableName = variable.GetRootName();
 
@@ -4779,7 +4774,7 @@ public class CodeGenerator
                 type?.EndsWith("/Frame") == true;
     }
 
-    private static string? TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
+    private string? TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
     {
         InstanceSave? instance = context.Instance;
         var rootName = variable.GetRootName();
@@ -4981,7 +4976,7 @@ public class CodeGenerator
         }
     }
 
-    private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
+    private void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
     {
         if (LocalizationManager.HasDatabase)
         {

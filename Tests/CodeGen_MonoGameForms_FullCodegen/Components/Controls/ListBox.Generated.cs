@@ -198,9 +198,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.FocusedIndicator.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
-        this.ClipAndScrollContainer.Height = 0f;
+        this.ClipAndScrollContainer.Height = -0f;
         this.ClipAndScrollContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.ClipAndScrollContainer.Width = 0f;
+        this.ClipAndScrollContainer.Width = -0f;
         this.ClipAndScrollContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.ClipAndScrollContainer.X = 0f;
         this.ClipAndScrollContainer.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
@@ -209,7 +209,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.ClipAndScrollContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         this.ClipAndScrollContainer.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
-        this.ClipContainerParent.Height = 0f;
+        this.ClipContainerParent.Height = -0f;
         this.ClipContainerParent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.ClipContainerParent.Width = 1f;
         this.ClipContainerParent.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;

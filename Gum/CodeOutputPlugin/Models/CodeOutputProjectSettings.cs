@@ -66,7 +66,7 @@ using System.Linq;
 
     public bool AdjustPixelValuesForDensity { get; set; } = false;
 
-    public string BaseTypesNotCodeGenerated { get; set; }
+    public string BaseTypesNotCodeGenerated { get; set; } = string.Empty;
 
     public bool GenerateGumDataTypes { get; set; }
 
