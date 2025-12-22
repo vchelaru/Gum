@@ -75,7 +75,9 @@
               Grid.Column="1"
               VerticalAlignment="Center" />
 
-            <controls:TitleFilePathDisplay
+                        <Button Content="Hello" Grid.Column="2"/>
+
+                        <controls:TitleFilePathDisplay
               Grid.Column="3"
               HorizontalAlignment="Center"
               behaviors:TitleBarClickPassthrough.Enable="True"
