@@ -111,5 +111,37 @@ void DoSomethingTo(ObservableCollection<IPositionedSizedObject> children)
 
 `FrameworkElement.Activity` method was removed from all runtimes except FlatRedBall. This method was incorrectly suggesting that it could be called every frame, but this has never been implemented in any other runtime besides FlatRedBall, so it has been removed to avoid further confusion.
 
+## Deprecated
 
+This section lists all deprecated types and members. Projects should migrate to the recommended types and members to avoid breaking changes in future versions.
 
+### Cursor WindowPushed and WindowOver
+
+`Cursor` has two properties which are confusingly named:
+
+* `WindowPushed`
+* `WindowOver`
+
+These two properties are hold-overs from FlatRedBall. These properties were marked as Obsolete in the December 2025 version of Gum. They have been replaced with more accurately-named properties:
+
+❌Old:
+
+```csharp
+var visualPushed = GumUI.Cursor.WindowPushed;
+var visualOver = GumUI.Cursor.WindowOver;
+```
+
+✅New:
+
+```
+var visualPushed = GumUI.Cursor.VisualPushed;
+var visualOver = GumUI.Cursor.VisualOver;
+```
+
+Additionally, `Cursor` now has three new properties which can be used to access the control (`FrameworkElement`) that the `Cursor` is interacting with.
+
+```csharp
+var controlPushed = GumUI.Cursor.FrameworkElementPushed;
+var controlRightPushed = GumUI.Cursor.FrameworkElementRightPushed;
+var controlOver = GumUI.Cursor.FrameworkElementOver;
+```
