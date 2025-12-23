@@ -163,6 +163,8 @@ SfxSlider.SetBinding(
     nameof(SettingsViewModel.SfxVolume));
 ```
 
+Notice that `nameof` allows using either an instance to get a property (such as `SfxSlider.Value`) or a class name (such as `SettingsViewModel.SfxVolume`). In fact, we could have even replaced `SfxSlider.Value` with `Slider.Value` since Value is a property on the `Slider` class.
+
 Creating a local property for the ViewModel can also help simplify the code slightly. For example, we could modify the code to have a ViewModel property that is used in the SetBinding calls as shown in the following code block:
 
 ```csharp
@@ -188,7 +190,7 @@ This approach can also be used to handle events as shown in the [Task Screen tut
 
 ## Using the SettingsScreen
 
-Once the `SettingsScreen` is defined, we can instantiate it in our game. The following code shows how to create a `SettingsScreen` instance and assign its `BindingContext` to a `SettingsViewModel` instance. Note that we are setting values on the view model to verify that doing so changes the values on the UI:
+Once the `SettingsScreen` is defined, we can instantiate it in our game. The following code shows how to create a `SettingsScreen` instance and assign its `BindingContext` to a `SettingsViewModel` instance. Note that we are setting initial values on the view model - these values are shown by our UI when we run the game:
 
 ```csharp
 var screen = new SettingsScreen();

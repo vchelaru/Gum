@@ -29,7 +29,7 @@ Gum uses a similar binding syntax as other C# UI frameworks. Binding can be crea
 
 ## How Binding Works
 
-Binding associates a property on a view to a property on a view model. Once properties are bound between a view and a view model, the properties automatically stay in sync.
+View properties can be bound to view model properties. Once this binding is made, the properties automatically stay in sync.
 
 The concept of binding is very flexible - it can be performed on any type of property on a view. Some examples include:
 
