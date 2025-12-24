@@ -1756,39 +1756,39 @@ public class CustomSetPropertyOnRenderable
 
     public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
     {
-        var managers = iSystemManagers as SystemManagers;
+        var managers = (SystemManagers)iSystemManagers;
 
-        if (renderable is Sprite)
+        if (renderable is Sprite asSprite)
         {
-            managers.SpriteManager.Remove(renderable as Sprite);
+            managers.SpriteManager.Remove(asSprite);
         }
-        else if (renderable is NineSlice)
+        else if (renderable is NineSlice asNineSlice)
         {
-            managers.SpriteManager.Remove(renderable as NineSlice);
+            managers.SpriteManager.Remove(asNineSlice);
         }
-        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle asLineRectangle)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+            managers.ShapeManager.Remove(asLineRectangle);
         }
-        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon)
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon asLinePolygon)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LinePolygon);
+            managers.ShapeManager.Remove(asLinePolygon);
         }
-        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle)
+        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle solidRectangle)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Graphics.SolidRectangle);
+            managers.ShapeManager.Remove(solidRectangle);
         }
-        else if (renderable is Text)
+        else if (renderable is Text asText)
         {
-            managers.TextManager.Remove(renderable as Text);
+            managers.TextManager.Remove(asText);
         }
-        else if (renderable is LineCircle)
+        else if (renderable is LineCircle asLineCircle)
         {
-            managers.ShapeManager.Remove(renderable as LineCircle);
+            managers.ShapeManager.Remove(asLineCircle);
         }
-        else if (renderable is InvisibleRenderable)
+        else if (renderable is InvisibleRenderable asInvisibleRenderable)
         {
-            managers.SpriteManager.Remove(renderable as InvisibleRenderable);
+            managers.SpriteManager.Remove(asInvisibleRenderable);
         }
         else if (renderable != null)
         {

@@ -5,7 +5,7 @@ namespace System.Linq
 {
     public static class EnumerableExtensionMethods
     {
-        public static object FirstOrDefault(this IEnumerable enumerable, Func<object, bool> predicate)
+        public static object? FirstOrDefault(this IEnumerable enumerable, Func<object, bool> predicate)
         {
             foreach(var item in enumerable)
             {
@@ -16,7 +16,7 @@ namespace System.Linq
             }
             return null;
         }
-        public static object FirstOrDefault(this IEnumerable enumerable)
+        public static object? FirstOrDefault(this IEnumerable enumerable)
         {
             foreach (var item in enumerable)
             {

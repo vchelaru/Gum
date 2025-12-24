@@ -496,10 +496,10 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.Instances[1].ShouldBe(screen.Instances[1]);
 
         var indexOfInstance1 = screen.Instances.IndexOf(instance1);
-        var childOfFirstCopy = screen.Instances.Find(item => item.Name == "ChildOfFirst1");
+        var childOfFirstCopy = screen.Instances.Find(item => item.Name == "ChildOfFirst1")!;
 
         var childOfSecondCopy =
-            screen.Instances.Find(item => item.Name == "ChildOfSecond1");
+            screen.Instances.Find(item => item.Name == "ChildOfSecond1")!;
 
         screen.Instances.IndexOf(childOfFirstCopy).ShouldBeGreaterThan(
             screen.Instances.IndexOf(instance1));
@@ -551,8 +551,8 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.Instances.Count.ShouldBe(8);
 
 
-        var childA1 = screen.Instances.Find(item => item.Name == "ChildA1");
-        var childC1 = screen.Instances.Find(item => item.Name == "ChildC1");
+        var childA1 = screen.Instances.Find(item => item.Name == "ChildA1")!;
+        var childC1 = screen.Instances.Find(item => item.Name == "ChildC1")!;
 
         screen.DefaultState.GetValue("ChildA1.Parent").ShouldBe("Instance1");
         screen.DefaultState.GetValue("ChildC1.Parent").ShouldBe("Instance2");
@@ -845,7 +845,6 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.GetValue("ChildACopied1.Parent").ShouldBe("ChildB");
         screen.DefaultState.GetValue("GrandchildACopied1.Parent").ShouldBe("ChildACopied1");
 
-        int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
         InstanceSave AddChild(string childName, string parentName)
         {
             InstanceSave child = new();
@@ -1008,7 +1007,7 @@ public class CopyPasteLogicTests : BaseTestClass
     public void OnPaste_Instance_OnSameElement_ShouldPasteOnDefaultChild()
     {
         ComponentSave component = new();
-        ObjectFinder.Self.GumProjectSave.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
         component.Name = "ComponentWithDefaultContainer";
         StateSave defaultState = new();
         defaultState.ParentContainer = component;
@@ -1056,7 +1055,7 @@ public class CopyPasteLogicTests : BaseTestClass
     {
         ScreenSave element = new ();
         element.Name = "DefaultScreen";
-        ObjectFinder.Self.GumProjectSave.Screens.Add(element);
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(element);
         StateSave defaultState = new ();
         defaultState.ParentContainer = element;
         element.States.Add(defaultState);
