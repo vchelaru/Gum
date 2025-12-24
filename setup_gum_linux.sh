@@ -7,10 +7,32 @@
 set -e
 
 GUM_WINE_PREFIX_PATH="${1:-$HOME/.wine_gum_dotnet8/}"
+INSTALL_LOG_FILE="/tmp/gum_install.log"
+
+write_log_section_header() {
+    echo "#############################################" &>>$INSTALL_LOG_FILE
+    echo "$@" &>>$INSTALL_LOG_FILE
+    echo "#############################################" &>>$INSTALL_LOG_FILE
+    echo "" &>>$INSTALL_LOG_FILE
+}
+
+run_and_write_log() {
+    eval "$@" &>>"$INSTALL_LOG_FILE"
+    echo "" &>>$INSTALL_LOG_FILE
+}
+
+run_winetricks() {
+    write_log_section_header "Running WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" winetricks \"$@\""
+    run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks "$@"
+}
+
+echo "" > $INSTALL_LOG_FILE # clear the log file
+write_log_section_header "Starting installation process..."
 
 echo "This is an experimental script."
 echo "Script last updated on the 23rd of November 2025!"
 echo "This will set up a new Wine prefix for gum in $GUM_WINE_PREFIX_PATH"
+echo "Install logs will be written to $INSTALL_LOG_FILE"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -202,11 +224,11 @@ fi
 ################################################################################
 echo "Checking and Installing Some fonts using winetricks"
 echo " - They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks arial &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks tahoma &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks courier &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks calibri &> /dev/null
-#WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks micross &> /dev/null # not available in 2024 winetricks
+run_winetricks arial
+run_winetricks tahoma
+run_winetricks courier
+run_winetricks calibri
+#run_winetricks micross # not available in 2024 winetricks
 echo " - Fonts installed"
 
 ################################################################################
@@ -216,7 +238,7 @@ echo " - Fonts installed"
 #echo "Installing .NET Framework 4.8 using winetricks"
 #echo " - Two installer dialogs will appear, follow the steps for both to install"
 #echo " - They may take a few minutes to install, please be patient"
-#WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
+#$RUN_WINETRICKS dotnet48
 
 ################################################################################
 ### Install dotnetdeskop8 with winetricks. This will cause two installation prompts
@@ -226,7 +248,7 @@ echo " - Fonts installed"
 echo "Installing .NET 8 using winetricks"
 echo " - Two installer dialogs will appear, follow the steps for both to install"
 echo " - They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnetdesktop8 &> /dev/null
+run_winetricks dotnetdesktop8
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
