@@ -21,62 +21,6 @@ You can click **More info,** then **Run anyway**. Alternatively, you can right-c
 
 {% endtab %}
 
-{% tab title="Linux (Bottles, recommended)" %}
-[Bottles](https://usebottles.com/) is an application that makes it easy to configure custom Wine prefixes and application specific configuration.&#x20;
-
-Official releases of bottles are released as [Flatpak packages on the flathub repository](https://flathub.org/en/apps/com.usebottles.bottles). Use the install button if it's not already installed.
-
-<figure><img src="../../.gitbook/assets/image (21).png" alt=""><figcaption></figcaption></figure>
-
-Next run the bottles application.  The program uses the term "bottle" to refer to an isolated wine configuration. We'll need to create a new bottle specifically for Gum.
-
-If this is your first time running bottles you will have a blank screen with a `Create New Bottle` button in the center.  If you have used bottles before, then the top left corner will have a button to create a new bottle. Click on either of these.
-
-<figure><img src="../../.gitbook/assets/image (23).png" alt=""><figcaption></figcaption></figure>
-
-This will open the `Create New Bottle` window. Give it a name (such as `Gum`), select `Application` and set the runner to `sys-wine-10.0`. The click the `Create` button.
-
-<figure><img src="../../.gitbook/assets/image (25).png" alt=""><figcaption></figcaption></figure>
-
-This will set up wine and configure an initial wine configuration for that bottle. Since we used the `Application` option, it will install the required fonts we need.
-
-Next we need to install the .net 8 desktop runtime. When the bottle is selected, click `Options->Dependencies` and click `dotnetcoredesktop8`.  This will install the runtime directly into the bottle.
-
-<figure><img src="../../.gitbook/assets/image (32).png" alt=""><figcaption></figcaption></figure>
-
-![](<../../.gitbook/assets/image (43).png>)
-
-<figure><img src="../../.gitbook/assets/image (48).png" alt=""><figcaption></figcaption></figure>
-
-Now use the back button in the top left corner to go back to the main details page for your Gum bottle. Scroll to the bottom and click `Tools -> Legacy Wine Tools` to expand the options, and then click `Configuration`&#x20;
-
-<figure><img src="../../.gitbook/assets/image (50).png" alt=""><figcaption></figcaption></figure>
-
-This opens a wine configuration window. Under the `Graphics` tab, uncheck `Allow the window manager to decorate the windows`.  This will make it so that it won't use native decorations on the window. If this is not done then it is likely that window decorations may cover the menu bar of the gum application.
-
-![](<../../.gitbook/assets/image (52).png>)
-
-Now click `Ok` to save the configuration and scroll back up to the top of the detail page of the Gum bottle. Click the `Browse` button for `Browse C:/ drive`. &#x20;
-
-<figure><img src="../../.gitbook/assets/image (67).png" alt=""><figcaption></figcaption></figure>
-
-This will open the file browser for where your bottle will have its `C:/` file system. Create a `Gum` folder and [unzip the latest gum release](https://github.com/vchelaru/Gum/releases) into this folder. Once done you can close this folder.
-
-Next we need to add a shortcut to the Gum executable. In the bottle detail page, select the `Add Shortcut` button.
-
-<figure><img src="../../.gitbook/assets/image (68).png" alt=""><figcaption></figcaption></figure>
-
-A file selection window will appear. Select the `drive_c/Gum/Gum.exe` file. That will add the program to the Gum bottle.
-
-<figure><img src="../../.gitbook/assets/image (80).png" alt=""><figcaption></figcaption></figure>
-
-Pressing the play button should now successfully launch gum! Clicking the kebab menu next to the shortcut will give you the options to add it to your "Bottles" library to make it quicker to run through the bottles application, or to add a desktop entry to make it runnable without the bottles application in the future.&#x20;
-
-<figure><img src="../../.gitbook/assets/image (84).png" alt=""><figcaption></figcaption></figure>
-
-If you need to upgrade the Gum release in the future, you can use the `Browse C:/ drive` option again to find the location of the gum folder and extract the new release in there.
-{% endtab %}
-
 {% tab title="Linux (script)" %}
 #### Prerequisites
 
@@ -254,6 +198,62 @@ gum
 ```
 
 If the command doesn't work immediately, try closing and reopening the terminal.
+{% endtab %}
+
+{% tab title="Linux (Bottles)" %}
+[Bottles](https://usebottles.com/) is an application that makes it easy to configure custom Wine prefixes and application specific configuration.&#x20;
+
+Official releases of bottles are released as [Flatpak packages on the flathub repository](https://flathub.org/en/apps/com.usebottles.bottles). Use the install button if it's not already installed.
+
+<figure><img src="../../.gitbook/assets/image (21).png" alt=""><figcaption></figcaption></figure>
+
+Next run the bottles application.  The program uses the term "bottle" to refer to an isolated wine configuration. We'll need to create a new bottle specifically for Gum.
+
+If this is your first time running bottles you will have a blank screen with a `Create New Bottle` button in the center.  If you have used bottles before, then the top left corner will have a button to create a new bottle. Click on either of these.
+
+<figure><img src="../../.gitbook/assets/image (23).png" alt=""><figcaption></figcaption></figure>
+
+This will open the `Create New Bottle` window. Give it a name (such as `Gum`), select `Application` and set the runner to `sys-wine-10.0`. The click the `Create` button.
+
+<figure><img src="../../.gitbook/assets/image (25).png" alt=""><figcaption></figcaption></figure>
+
+This will set up wine and configure an initial wine configuration for that bottle. Since we used the `Application` option, it will install the required fonts we need.
+
+Next we need to install the .net 8 desktop runtime. When the bottle is selected, click `Options->Dependencies` and click `dotnetcoredesktop8`.  This will install the runtime directly into the bottle.
+
+<figure><img src="../../.gitbook/assets/image (32).png" alt=""><figcaption></figcaption></figure>
+
+![](<../../.gitbook/assets/image (43).png>)
+
+<figure><img src="../../.gitbook/assets/image (48).png" alt=""><figcaption></figcaption></figure>
+
+Now use the back button in the top left corner to go back to the main details page for your Gum bottle. Scroll to the bottom and click `Tools -> Legacy Wine Tools` to expand the options, and then click `Configuration`&#x20;
+
+<figure><img src="../../.gitbook/assets/image (50).png" alt=""><figcaption></figcaption></figure>
+
+This opens a wine configuration window. Under the `Graphics` tab, uncheck `Allow the window manager to decorate the windows`.  This will make it so that it won't use native decorations on the window. If this is not done then it is likely that window decorations may cover the menu bar of the gum application.
+
+![](<../../.gitbook/assets/image (52).png>)
+
+Now click `Ok` to save the configuration and scroll back up to the top of the detail page of the Gum bottle. Click the `Browse` button for `Browse C:/ drive`. &#x20;
+
+<figure><img src="../../.gitbook/assets/image (67).png" alt=""><figcaption></figcaption></figure>
+
+This will open the file browser for where your bottle will have its `C:/` file system. Create a `Gum` folder and [unzip the latest gum release](https://github.com/vchelaru/Gum/releases) into this folder. Once done you can close this folder.
+
+Next we need to add a shortcut to the Gum executable. In the bottle detail page, select the `Add Shortcut` button.
+
+<figure><img src="../../.gitbook/assets/image (68).png" alt=""><figcaption></figcaption></figure>
+
+A file selection window will appear. Select the `drive_c/Gum/Gum.exe` file. That will add the program to the Gum bottle.
+
+<figure><img src="../../.gitbook/assets/image (80).png" alt=""><figcaption></figcaption></figure>
+
+Pressing the play button should now successfully launch gum! Clicking the kebab menu next to the shortcut will give you the options to add it to your "Bottles" library to make it quicker to run through the bottles application, or to add a desktop entry to make it runnable without the bottles application in the future.&#x20;
+
+<figure><img src="../../.gitbook/assets/image (84).png" alt=""><figcaption></figcaption></figure>
+
+If you need to upgrade the Gum release in the future, you can use the `Browse C:/ drive` option again to find the location of the gum folder and extract the new release in there.
 {% endtab %}
 
 {% tab title="Mac OS" %}
