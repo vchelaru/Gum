@@ -10,12 +10,14 @@ namespace CodeOutputPlugin.Manager
 {
     public class CustomCodeGenerator
     {
-        public CustomCodeGenerator(CodeGenerator codeGenerator)
+        public CustomCodeGenerator(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier)
         {
             _codeGenerator = codeGenerator;
+            _nameVerifier = nameVerifier;
         }
 
         private CodeGenerator _codeGenerator;
+        private readonly CodeGenerationNameVerifier _nameVerifier;
 
         public string GetCustomCodeForElement(ElementSave element, 
             CodeOutputElementSettings elementSettings, 
@@ -26,7 +28,7 @@ namespace CodeOutputPlugin.Manager
 
             #region Using Statements
 
-            if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
+            if (!string.IsNullOrWhiteSpace(projectSettings.CommonUsingStatements))
             {
                 stringBuilder.AppendLine(projectSettings.CommonUsingStatements);
             }
@@ -91,8 +93,7 @@ namespace CodeOutputPlugin.Manager
                 inheritance = CodeGenerator.GetInheritance(element, projectSettings) ?? string.Empty;
             }
 
-            var context = new CodeGenerationContext();
-            context.Element = element;
+            var context = new CodeGenerationContext(_nameVerifier, element);
             context.CodeOutputProjectSettings = projectSettings;
 
             // intentionally do not include "public" or "internal" so the user can customize this as desired

@@ -4131,11 +4131,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private int GetIndexInVisibleSiblings()
     {
-        System.Collections.IList siblings = null;
+        System.Collections.IList? siblings = null;
 
         if (this.Parent == null)
         {
-            siblings = this.ElementGueContainingThis.mWhatThisContains;
+            siblings = this.ElementGueContainingThis?.mWhatThisContains;
         }
         else if (this.Parent is GraphicalUiElement)
         {
@@ -4143,15 +4143,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         var thisIndex = 0;
-        for (int i = 0; i < siblings.Count; i++)
+        if(siblings != null)
         {
-            if (siblings[i] == this)
+            for (int i = 0; i < siblings.Count; i++)
             {
-                break;
-            }
-            if ((siblings[i] as IVisible).Visible)
-            {
-                thisIndex++;
+                if (siblings[i] == this)
+                {
+                    break;
+                }
+                if (((IVisible)siblings[i]).Visible)
+                {
+                    thisIndex++;
+                }
             }
         }
 
@@ -4219,12 +4222,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // if any siblings are ratio-based, then we need to
                 if (this.Parent == null)
                 {
-                    for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
+                    if(ElementGueContainingThis != null)
                     {
-                        var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
-                        if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                        for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
                         {
-                            return true;
+                            var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
+                            if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
