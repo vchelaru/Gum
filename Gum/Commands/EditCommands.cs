@@ -461,12 +461,16 @@ public class EditCommands : IEditCommands
     public void ShowCreateComponentFromInstancesDialog()
     {
         var element = _selectedState.SelectedElement;
-        var instances = _selectedState.SelectedInstances.ToList();
-        if (instances == null || instances.Count == 0 || element == null)
+        var instances = _selectedState.SelectedInstances.Concat(
+            from selectedInstance in _selectedState.SelectedInstances
+            from child in GetChildInstancesRecursive(selectedInstance)
+            select child).Distinct();
+        
+        if (instances == null || !instances.Any() || element == null)
         {
             _dialogService.ShowMessage("You must first save the project before adding a new component");
         }
-        else if (instances is List<InstanceSave>)
+        else
         {
             FilePath filePath = element.Name;
             var nameWithoutPath = filePath.FileNameNoPath;
@@ -543,6 +547,16 @@ public class EditCommands : IEditCommands
                 }
             }
         }
+    }
+
+    private IEnumerable<InstanceSave> GetChildInstancesRecursive(InstanceSave parent)
+    {
+        return
+            from child in parent.ParentContainer.Instances
+            where child.GetParentInstance() == parent
+            let subchildren = GetChildInstancesRecursive(child)
+            from childOrSubchild in subchildren.Concat([child])
+            select childOrSubchild;
     }
 
     #endregion
