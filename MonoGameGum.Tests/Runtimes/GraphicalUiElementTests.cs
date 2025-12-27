@@ -16,7 +16,7 @@ using RenderingLibrary;
 using System.Collections.ObjectModel;
 
 namespace MonoGameGum.Tests.Runtimes;
-public class GraphicalUiElementTests
+public class GraphicalUiElementTests : BaseTestClass
 {
 
     #region Constructor Tests
@@ -400,6 +400,27 @@ public class GraphicalUiElementTests
 
 
 
+    }
+
+    [Fact]
+    public void WidthUnits_Ratio_ShouldRespectAbsoluteMultipliedByFontScale()
+    {
+        GraphicalUiElement.GlobalFontScale = 2;
+
+        ContainerRuntime parent = new();
+        parent.Width = 1000;
+
+        ContainerRuntime sut = new();
+        parent.Children.Add(sut);
+        sut.Width = 1;
+        sut.WidthUnits = DimensionUnitType.Ratio;
+
+        ContainerRuntime absoluteMultipliedByFontScaleContainer = new();
+        parent.AddChild(absoluteMultipliedByFontScaleContainer);
+        absoluteMultipliedByFontScaleContainer.Width = 100;
+        absoluteMultipliedByFontScaleContainer.WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
+
+        sut.GetAbsoluteWidth().ShouldBe(800); // 1000 - (100 * 2)
     }
 
     [Fact]
