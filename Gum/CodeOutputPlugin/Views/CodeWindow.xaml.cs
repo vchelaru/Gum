@@ -588,12 +588,12 @@ public partial class CodeWindow : UserControl
     private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
     {
 
-        GenerateCodeClicked(this, EventArgs.Empty);
+        GenerateCodeClicked?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleGenerateAllCodeClicked(object sender, RoutedEventArgs e)
     {
-        GenerateAllCodeClicked(this, EventArgs.Empty);
+        GenerateAllCodeClicked?.Invoke(this, EventArgs.Empty);
     }
 
     // maybe we'll bring this back later?
@@ -620,7 +620,8 @@ public partial class CodeWindow : UserControl
 
     private void HandleAutoSetupClicked(object sender, RoutedEventArgs e)
     {
-        bool shouldContinue = ViewModel.HandleAutoSetupClicked(CodeOutputProjectSettings);
+        bool shouldContinue = CodeOutputProjectSettings != null && 
+            ViewModel.HandleAutoSetupClicked(CodeOutputProjectSettings);
 
         if (shouldContinue)
         {

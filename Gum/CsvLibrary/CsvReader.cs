@@ -2000,11 +2000,8 @@ namespace CsvLibrary
 		/// </remarks>
 		public void Dispose()
 		{
-			if (!_isDisposed)
-			{
-				Dispose(true);
-				GC.SuppressFinalize(this);
-			}
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
@@ -2070,10 +2067,6 @@ namespace CsvLibrary
 		/// </summary>
 		~CsvReader()
 		{
-#if DEBUG && !XBOX360
-			Debug.WriteLine("FinalizableObject was not disposed" + _allocStack.ToString());
-#endif
-
 			Dispose(false);
 		}
 

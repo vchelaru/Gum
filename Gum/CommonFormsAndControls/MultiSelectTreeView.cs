@@ -18,13 +18,13 @@ namespace CommonFormsAndControls
         private char mLastSearchChar;
         private const double TIMERVALUE = 750;
         bool mNewKeyMatchesFirstKey;
-        private TreeNode mSelectedNode;
+        private TreeNode? mSelectedNode;
         private bool mSelectedNodeChanged = false;
-        private List<TreeNode> mSelectedNodes = null;
-        private ImageList ElementTreeImages;
-        private System.ComponentModel.IContainer components;
-        private TreeNode nodeOnDragStart;
-        public ImageList ElementTreeImageList => ElementTreeImages;
+        private List<TreeNode> mSelectedNodes = new();
+        private ImageList _elementTreeImages = default!;
+        private System.ComponentModel.IContainer _components;
+        private TreeNode? nodeOnDragStart;
+        public ImageList ElementTreeImageList => _elementTreeImages;
 
         #endregion
 
@@ -51,7 +51,7 @@ namespace CommonFormsAndControls
         }
 
         // Note we use the new keyword to Hide the native treeview's SelectedNode property.  
-        public new TreeNode SelectedNode
+        public new TreeNode? SelectedNode
         {
             get
             {
@@ -108,7 +108,7 @@ namespace CommonFormsAndControls
         #region Events  
 
 
-        public event TreeViewEventHandler AfterClickSelect;
+        public event TreeViewEventHandler? AfterClickSelect;
 
         #endregion
 
@@ -159,10 +159,10 @@ namespace CommonFormsAndControls
             {
                 base.SelectedNode = null;
 
-                TreeNode previousSelectedNode = mSelectedNode;
+                TreeNode? previousSelectedNode = mSelectedNode;
                 var previousCount = SelectedNodes.Count;
 
-                TreeNode node = this.GetNodeAtRowY(e.Location.Y);
+                var node = this.GetNodeAtRowY(e.Location.Y);
                 if (node != null)
                 {
                     if (mSelectedNodes.Contains(node) && e.Button == MouseButtons.Right &&
@@ -231,7 +231,7 @@ namespace CommonFormsAndControls
                 }
 
                 // Check to see if a node was clicked on 
-                TreeNode node = this.GetNodeAtRowY(e.Location.Y);
+                var node = this.GetNodeAtRowY(e.Location.Y);
                 if (node != null)
                 {
                     var shouldSelect =
@@ -271,7 +271,7 @@ namespace CommonFormsAndControls
             try  
 #endif
             {
-                TreeNode node = e.Item as TreeNode;
+                var node = e.Item as TreeNode;
 
                 if (node != null)
                 {
@@ -383,8 +383,8 @@ namespace CommonFormsAndControls
                     return;
                 }
 
-                TreeNode ndCurrent = mSelectedNode;
-                if (ndCurrent.Text.StartsWith(mSearchString))
+                TreeNode? ndCurrent = mSelectedNode;
+                if (ndCurrent?.Text.StartsWith(mSearchString) == true)
                 {
                     return;
                 }
@@ -599,6 +599,7 @@ namespace CommonFormsAndControls
 
         public MultiSelectTreeView()
         {
+            this._components = new System.ComponentModel.Container();
             InitializeComponent();
             mSelectedNodes = new List<TreeNode>();
             mOriginalColors = new Dictionary<TreeNode, Color>();
@@ -656,10 +657,7 @@ namespace CommonFormsAndControls
 
         public void CallAfterClickSelect(object sender, TreeViewEventArgs args)
         {
-            if (AfterClickSelect != null)
-            {
-                AfterClickSelect(sender, args);
-            }
+            AfterClickSelect?.Invoke(sender, args);
         }
 
         #endregion
@@ -714,7 +712,7 @@ namespace CommonFormsAndControls
             mSelectedNode = null;
         }
 
-        private bool FindAndSelectNode(TreeNode node)
+        private bool FindAndSelectNode(TreeNode? node)
         {
             if (node == null)
             {
@@ -735,10 +733,12 @@ namespace CommonFormsAndControls
             return false;
         }
 
-        protected static TreeNode GetNextTreeNodeCrawling(TreeNode treeNode)
+        protected static TreeNode? GetNextTreeNodeCrawling(TreeNode treeNode)
         {
             const int maxNumberOfTries = 10;
             int numberTriedSoFar = 0;
+
+            TreeNode? foundNode = treeNode;
 
             // This may  
             // get called  
@@ -752,7 +752,7 @@ namespace CommonFormsAndControls
             {
                 try
                 {
-                    treeNode = treeNode.NextNodeCrawlingTree();
+                    foundNode = foundNode?.NextNodeCrawlingTree();
                     break;
                 }
                 catch
@@ -762,7 +762,7 @@ namespace CommonFormsAndControls
                 }
             }
 
-            return treeNode;
+            return foundNode;
         }
 
         private void HandleException(Exception ex)
@@ -772,7 +772,7 @@ namespace CommonFormsAndControls
             MessageBox.Show(ex.Message);
         }
 
-        private void ReactToClickedNode(TreeNode node)
+        private void ReactToClickedNode(TreeNode? node)
         {
 #if !DEBUG
             try  
@@ -974,7 +974,7 @@ namespace CommonFormsAndControls
             }
         }
 
-        private void TimerElapsed(object source, ElapsedEventArgs e)
+        private void TimerElapsed(object? source, ElapsedEventArgs e)
         {
             mSearchString = "";
             mNewKeyMatchesFirstKey = true;
@@ -994,7 +994,7 @@ namespace CommonFormsAndControls
             }
             else
             {
-                TreeNode currentNode = Nodes[0];
+                TreeNode? currentNode = Nodes[0];
 
                 while (currentNode != null)
                 {
@@ -1016,7 +1016,7 @@ namespace CommonFormsAndControls
             }
             else
             {
-                TreeNode currentNode = Nodes[0];
+                TreeNode? currentNode = Nodes[0];
 
                 while (currentNode != null)
                 {
@@ -1028,27 +1028,37 @@ namespace CommonFormsAndControls
 
         #endregion
 
+        protected override void Dispose(bool disposing)
+        {
+            mSearchTimer?.Dispose();
+            _components?.Dispose();
+            _rowBgBrushHot?.Dispose();
+            _rowBgBrushNormal?.Dispose();
+            _elementTreeImages?.Dispose();
+            base.Dispose(disposing);
+        }
+
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MultiSelectTreeView));
-            this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
+            this._elementTreeImages = new System.Windows.Forms.ImageList(this._components);
             this.SuspendLayout();
             // 
             // ElementTreeImages
             // 
-            this.ElementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")));
-            this.ElementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
-            this.ElementTreeImages.Images.SetKeyName(0, "transparent.png");
-            this.ElementTreeImages.Images.SetKeyName(1, "Folder.png");
-            this.ElementTreeImages.Images.SetKeyName(2, "Component.png");
-            this.ElementTreeImages.Images.SetKeyName(3, "Instance.png");
-            this.ElementTreeImages.Images.SetKeyName(4, "Screen.png");
-            this.ElementTreeImages.Images.SetKeyName(5, "StandardElement.png");
-            this.ElementTreeImages.Images.SetKeyName(6, "redExclamation.png");
-            this.ElementTreeImages.Images.SetKeyName(7, "state.png");
-            this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
-            this.ElementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
+            this._elementTreeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ElementTreeImages.ImageStream")!));
+            this._elementTreeImages.TransparentColor = System.Drawing.Color.Transparent;
+            this._elementTreeImages.Images.SetKeyName(0, "transparent.png");
+            this._elementTreeImages.Images.SetKeyName(1, "Folder.png");
+            this._elementTreeImages.Images.SetKeyName(2, "Component.png");
+            this._elementTreeImages.Images.SetKeyName(3, "Instance.png");
+            this._elementTreeImages.Images.SetKeyName(4, "Screen.png");
+            this._elementTreeImages.Images.SetKeyName(5, "StandardElement.png");
+            this._elementTreeImages.Images.SetKeyName(6, "redExclamation.png");
+            this._elementTreeImages.Images.SetKeyName(7, "state.png");
+            this._elementTreeImages.Images.SetKeyName(8, "behavior.png");
+            this._elementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
             this.ResumeLayout(false);
 
         }
@@ -1058,7 +1068,7 @@ namespace CommonFormsAndControls
 
     public static class TreeNodeExtensions
     {
-        public static TreeNode NextNodeCrawlingTree(this TreeNode node)
+        public static TreeNode? NextNodeCrawlingTree(this TreeNode node)
         {
             // return child?  
             if (node.Nodes.Count != 0)
