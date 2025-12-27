@@ -1,32 +1,34 @@
+using CommunityToolkit.Mvvm.Messaging;
+using FlatRedBall.Glue.StateInterpolation;
+using Gum;
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
+using Gum.Messages;
+using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
+using Gum.Plugins.Errors;
+using Gum.Responses;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.StateAnimation.SaveClasses;
+using Gum.ToolStates;
+using Gum.Wireframe;
+using StateAnimationPlugin.Managers;
+using StateAnimationPlugin.ViewModels;
+using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Gum.Plugins.BaseClasses;
-using System.ComponentModel.Composition;
-using StateAnimationPlugin.Views;
-using StateAnimationPlugin.Managers;
-using System.Windows.Forms.Integration;
-using StateAnimationPlugin.ViewModels;
-using Gum.ToolStates;
 using System.Windows;
-using Gum.DataTypes.Variables;
-using Gum.Wireframe;
-using FlatRedBall.Glue.StateInterpolation;
-using Gum.DataTypes;
-using Gum;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using Gum.Responses;
-using Gum.StateAnimation.SaveClasses;
-
-using Gum.Plugins;
 using System.Windows.Forms;
-using Gum.Services;
-using Gum.Commands;
-using Gum.Managers;
-using Gum.Services.Dialogs;
+using System.Windows.Forms.Integration;
 
 
 namespace StateAnimationPlugin;
@@ -36,6 +38,7 @@ public class MainStateAnimationPlugin : PluginBase
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
+    private readonly IMessenger _messenger;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
     #region Fields
@@ -46,11 +49,11 @@ public class MainStateAnimationPlugin : PluginBase
     private readonly SettingsManager _settingsManager;
     private readonly ProjectState _projectState;
     private readonly AnimationCollectionViewModelManager _animationCollectionViewModelManager;
-    ElementAnimationsViewModel _viewModel;
+    ElementAnimationsViewModel? _viewModel;
 
-    StateAnimationPlugin.Views.MainWindow mMainWindow;
-    private PluginTab pluginTab;
-    private ToolStripMenuItem menuItem;
+    StateAnimationPlugin.Views.MainWindow? _mainWindow;
+    private PluginTab? pluginTab;
+    private ToolStripMenuItem? menuItem;
 
     #endregion
 
@@ -77,6 +80,8 @@ public class MainStateAnimationPlugin : PluginBase
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+
         _animationVmFactory = () => new ElementAnimationsViewModel(_nameVerifier, _dialogService);
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
@@ -126,7 +131,10 @@ public class MainStateAnimationPlugin : PluginBase
 
         this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
         this.DeleteConfirm += _elementDeleteService.HandleConfirmDelete;
+
+        this.GetAllErrors += HandleGetAllErrors;
     }
+
 
     private void HandleElementSelected(ElementSave? element)
     {
@@ -202,7 +210,7 @@ public class MainStateAnimationPlugin : PluginBase
             CreateViewModel();
         }
 
-        _renameManager.HandleRename(element, oldName, _viewModel);
+        _renameManager.HandleRename(element, oldName, _viewModel!);
     }
 
     private void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
@@ -214,7 +222,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         if (_selectedState.SelectedElement != null)
         {
-            _renameManager.HandleRename(instanceSave, oldName, _viewModel);
+            _renameManager.HandleRename(instanceSave, oldName, _viewModel!);
         }
     }
 
@@ -222,7 +230,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (_selectedState.SelectedElement != null)
+        if (_selectedState.SelectedElement != null && _viewModel != null)
         {
             _renameManager.HandleRename(stateSave, oldName, _viewModel);
         }
@@ -248,33 +256,36 @@ public class MainStateAnimationPlugin : PluginBase
         // We only care about this if we have an element. Otherwise, it could be a behavior:
         if (_selectedState.SelectedElement != null)
         {
-            _renameManager.HandleRename(category, oldName, _viewModel);
+            _renameManager.HandleRename(category, oldName, _viewModel!);
         }
 
     }
 
-    private void HandleToggleTabVisibility(object sender, EventArgs e)
+    private void HandleToggleTabVisibility(object? sender, EventArgs e)
     {
-        pluginTab.IsVisible = !pluginTab.IsVisible;
+        if(pluginTab != null)
+        {
+            pluginTab.IsVisible = !pluginTab.IsVisible;
+        }
     }
 
     private void CreateAnimationWindow()
     {
-        if (mMainWindow == null)
+        if (_mainWindow == null)
         {
             _settingsManager.LoadOrCreateSettings();
 
-            mMainWindow = new StateAnimationPlugin.Views.MainWindow();
+            _mainWindow = new StateAnimationPlugin.Views.MainWindow();
 
             var settings = _settingsManager.GlobalSettings;
 
-            mMainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
-            mMainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
-            mMainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
-            mMainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
-            mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
+            _mainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
+            _mainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
+            _mainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
+            _mainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
+            _mainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             
-            pluginTab = _tabManager.AddControl(mMainWindow, "Animations",
+            pluginTab = _tabManager.AddControl(_mainWindow, "Animations",
                 TabLocation.RightBottom);
 
             pluginTab.TabShown += HandleTabShown;
@@ -291,9 +302,9 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleAnimationColumnsResized()
     {
-        if (mMainWindow.SecondRowWidth.Value > 0)
+        if (_mainWindow?.SecondRowWidth.Value > 0)
         {
-            var ratio = mMainWindow.FirstRowWidth.Value / mMainWindow.SecondRowWidth.Value;
+            var ratio = _mainWindow.FirstRowWidth.Value / _mainWindow.SecondRowWidth.Value;
 
             _settingsManager.GlobalSettings.FirstToSecondColumnRatio = (decimal)ratio;
 
@@ -301,9 +312,15 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
-    private void HandleAddStateKeyframe(object sender, EventArgs e)
+    private void HandleAddStateKeyframe(object? sender, EventArgs e)
     {
-        string whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+        string? whyIsntValid = GetWhyAddingTimedStateIsInvalid();
+
+        var selectedAnimation = _viewModel?.SelectedAnimation;
+        if(selectedAnimation == null)
+        {
+            return;
+        }
 
         if (!string.IsNullOrEmpty(whyIsntValid))
         {
@@ -316,28 +333,30 @@ public class MainStateAnimationPlugin : PluginBase
             ElementSave = _selectedState.SelectedElement
         };
 
+
+
         _dialogService.Show(dialog);
 
         if (dialog.Result is { } newVm)
         {
-            if (_viewModel.SelectedAnimation.SelectedKeyframe != null)
+            if (selectedAnimation.SelectedKeyframe != null)
             {
                 // put this after the current animation
-                newVm.Time = _viewModel.SelectedAnimation.SelectedKeyframe.Time + 1f;
+                newVm.Time = selectedAnimation.SelectedKeyframe.Time + 1f;
             }
-            else if (_viewModel.SelectedAnimation.Keyframes.Count != 0)
+            else if (selectedAnimation.Keyframes.Count != 0)
             {
-                newVm.Time = _viewModel.SelectedAnimation.Keyframes.Last().Time + 1f;
+                newVm.Time = selectedAnimation.Keyframes.Last().Time + 1f;
             }
 
-            _viewModel.SelectedAnimation.Keyframes.BubbleSort();
+            selectedAnimation.Keyframes.BubbleSort();
 
-            _viewModel.SelectedAnimation.Keyframes.Add(newVm);
+            selectedAnimation.Keyframes.Add(newVm);
             // Call this *before* setting SelectedKeyframe so the available
             // states are assigned. Otherwise
             // StateName will be nulled out.
             HandleAnimationKeyrameAdded(newVm);
-            _viewModel.SelectedAnimation.SelectedKeyframe = newVm;
+            selectedAnimation.SelectedKeyframe = newVm;
         }
     }
 
@@ -351,6 +370,11 @@ public class MainStateAnimationPlugin : PluginBase
     {
         string? whyIsntValid = null;
 
+        if(_viewModel == null)
+        {
+            // invalid state, but don't blow up
+            return null;
+        }
         if (_viewModel.SelectedAnimation == null)
         {
             whyIsntValid = "You must first select an Animation";
@@ -365,12 +389,18 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleTabShown()
     {
-        menuItem.Text = "Hide Animations";
+        if (menuItem != null)
+        {
+            menuItem.Text = "Hide Animations";
+        }
     }
 
     private void HandleTabHidden()
     {
-        menuItem.Text = "View Animations";
+        if(menuItem != null)
+        {
+            menuItem.Text = "View Animations";
+        }
     }
 
     private void RefreshViewModel()
@@ -379,9 +409,9 @@ public class MainStateAnimationPlugin : PluginBase
 
         CreateViewModel();
 
-        if (mMainWindow != null)
+        if (_mainWindow != null)
         {
-            mMainWindow.DataContext = _viewModel;
+            _mainWindow.DataContext = _viewModel;
         }
     }
 
@@ -448,11 +478,18 @@ public class MainStateAnimationPlugin : PluginBase
                 }
             }
         }
-
+        
         if (_viewModel == null)
         {
             _viewModel = new(_nameVerifier, _dialogService);
         }
+        if(currentlyReferencedElement != null)
+        {
+            _viewModel?.RefreshErrors(currentlyReferencedElement);
+        }
+
+        _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
+
     }
 
     private void HandleAnimatedKeyframePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -482,7 +519,7 @@ public class MainStateAnimationPlugin : PluginBase
     private void SetWireframeStateFromDisplayedAnimTime()
     {
         //////////////////////// EARLY OUT
-        if (_viewModel.SelectedAnimation == null)
+        if (_viewModel?.SelectedAnimation == null)
         {
             return;
         }
@@ -539,7 +576,7 @@ public class MainStateAnimationPlugin : PluginBase
         {
             try
             {
-                _animationCollectionViewModelManager.Save(_viewModel);
+                _animationCollectionViewModelManager.Save(_viewModel!);
             }
             catch (Exception exc)
             {
@@ -547,6 +584,7 @@ public class MainStateAnimationPlugin : PluginBase
             }
         }
     }
+
 
     private DeleteResponse HandleGetDeleteStateResponse(StateSave state, IStateContainer container)
     {
@@ -614,15 +652,32 @@ public class MainStateAnimationPlugin : PluginBase
         return response;
     }
 
+    private IEnumerable<ErrorViewModel> HandleGetAllErrors()
+    {
+        if(_viewModel == null)
+        {
+            return Enumerable.Empty<ErrorViewModel>();
+        }
+
+        var toReturn = this._viewModel.GetErrors();
+
+        foreach(var item in toReturn)
+        {
+            item.OwnerPlugin = this;
+        }
+
+        return toReturn;
+    }
+
     private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave? element)
     {
         List<AnimationSave> animatedStatesReferencingState = new List<AnimationSave>();
         if (element != null)
         {
-            global::Gum.StateAnimation.SaveClasses.ElementAnimationsSave model;
+            global::Gum.StateAnimation.SaveClasses.ElementAnimationsSave? model;
             if (element == _viewModel?.Element)
             {
-                model = _viewModel.BackingData;
+                model = _viewModel.BackingData!;
             }
             else
             {

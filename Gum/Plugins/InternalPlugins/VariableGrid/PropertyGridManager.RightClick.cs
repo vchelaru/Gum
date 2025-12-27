@@ -1,7 +1,8 @@
-﻿using System;
-using System.Windows.Forms;
-using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes.Variables;
 using Gum.ToolStates;
+using Gum.Wireframe;
+using System;
+using System.Windows.Forms;
 
 namespace Gum.Managers
 {
@@ -36,7 +37,7 @@ namespace Gum.Managers
 
             }
 
-            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
             _guiCommands.RefreshVariables();
 
             _fileCommands.TryAutoSaveProject();

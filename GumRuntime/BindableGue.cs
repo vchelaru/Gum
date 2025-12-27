@@ -335,11 +335,15 @@ public class BindableGue : GraphicalUiElement
                 else
                 {
                     var binding = vmPropsToUiProps[vmPropertyName];
-                    PropertyInfo? uiProperty = this.GetType().GetProperty(binding.UiProperty);
+
+                    var thisType = this.GetType();
+
+                    PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty);
 
                     if (uiProperty == null)
                     {
-                        throw new Exception($"The type {this.GetType()} does not have a property {vmPropsToUiProps[vmPropertyName]}");
+                        var message = $"The type {thisType} does not have a property {binding.UiProperty}. If this property exists, make sure that it's not private.";
+                        throw new Exception(message);
                     }
 
                     var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType, binding.ToStringFormat);

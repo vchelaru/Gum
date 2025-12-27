@@ -6,9 +6,8 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2025.11.30.1</Version>
-
-
+		<Version>2025.12.9.1</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
@@ -82,7 +81,6 @@
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineRectangle.cs" Link="Renderables\LineRectangle.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
-		<Compile Include="..\..\RenderingLibrary\Math\MathFunctions.cs" Link="Utilities\MathFunctions.cs" />
 		<Compile Include="..\..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
 
 		<Compile Include="..\**\*.cs" />
@@ -134,16 +132,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" />
-		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>

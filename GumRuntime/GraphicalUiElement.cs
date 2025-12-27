@@ -24,6 +24,8 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
+using Gum.Collections;
+
 
 #if !FRB
 using Gum.StateAnimation.Runtime;
@@ -525,9 +527,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public virtual void StartBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.StartBatch(systemManagers);
     public virtual void EndBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.EndBatch(systemManagers);
 
-    Layer mLayer;
+    Layer? mLayer;
 
-    public Layer Layer => mLayer;
+    public Layer? Layer => mLayer;
 
 #endregion
 
@@ -1158,16 +1160,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     /// <summary>
-    /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element, only direct children. 
+    /// Returns the direct hierarchical children of this. 
+    /// Note that this does not return all objects contained in the element, only direct children. 
     /// </summary>
 
-    public ObservableCollection<IRenderableIpso>? Children
+    ObservableCollection<IRenderableIpso>? IRenderableIpso.Children
     {
         get
         {
             return mContainedObjectAsIpso?.Children;
         }
     }
+
+    private GraphicalUiElementCollection _childrenWrapper = GraphicalUiElementCollection.Empty;
+
+    public ObservableCollection<GraphicalUiElement> Children => _childrenWrapper;
+
+
 
     object mTagIfNoContainedObject;
     public object? Tag
@@ -1632,19 +1641,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             throw new ArgumentException("The argument containedObject cannot be 'this'");
         }
 
-        if (mContainedObjectAsIpso != null)
-        {
-            mContainedObjectAsIpso.Children.CollectionChanged -= HandleCollectionChanged;
-        }
-
         mContainedObjectAsIpso = containedObject as IRenderableIpso;
+
+        if(mContainedObjectAsIpso == null)
+        {
+            _childrenWrapper = GraphicalUiElementCollection.Empty;
+        }
+        else
+        {
+            _childrenWrapper = new GraphicalUiElementCollection(mContainedObjectAsIpso.Children);
+            _childrenWrapper.CollectionChanged += HandleCollectionChanged;
+        }
 
         mContainedObjectAsIVisible = containedObject as IVisible;
 
         if (mContainedObjectAsIpso != null)
         {
-            mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
-
             mContainedObjectAsIpso.Name ??= name;
             name = mContainedObjectAsIpso.Name;
         }
@@ -1944,7 +1956,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
 
                     //UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
-                    var firstChild = this.Children[0] as GraphicalUiElement;
+                    var firstChild = this.Children[0];
                     var childLayout = firstChild.GetChildLayoutType(this);
 
                     if (childLayout == ChildType.Absolute)
@@ -2072,17 +2084,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 for (int i = 0; i < this.Children.Count; i++)
                 {
-                    var uncastedChild = Children[i];
+                    var child = Children[i];
 
-                    if (uncastedChild is GraphicalUiElement child)
+                    canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(child);
+
+                    if (canOneDimensionChangeOtherDimension)
                     {
-                        canOneDimensionChangeOtherDimension = GetIfOneDimensionCanChangeOtherDimension(child);
-
-                        if (canOneDimensionChangeOtherDimension)
-                        {
-                            break;
-                        }
-
+                        break;
                     }
                 }
             }
@@ -2253,7 +2261,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                     if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1)
                     {
-                        var element = Children[0] as GraphicalUiElement;
+                        var element = Children[0];
 
                         maxHeight = element.GetRequiredParentHeight();
                         var elementHeight = element.GetAbsoluteHeight();
@@ -2520,7 +2528,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         float maxCellHeight = maxHeight;
         for (int i = 0; i < Children!.Count; i++)
         {
-            var element = (GraphicalUiElement)Children[i];
+            var element = Children[i];
             var childLayout = element.GetChildLayoutType(XOrY.Y, this);
             var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
             if (considerChild && element.Visible)
@@ -2907,7 +2915,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         float maxCellWidth = maxWidth;
         for (int i = 0; i < this.Children!.Count; i++)
         {
-            var element = (GraphicalUiElement)this.Children[i];
+            var element = this.Children[i];
             var childLayout = element.GetChildLayoutType(XOrY.X, this);
             var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
 
@@ -3403,7 +3411,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             for (int i = 0; i < this.Children.Count; i++)
             {
-                var child = this.Children[i] as GraphicalUiElement;
+                var child = this.Children[i];
 
                 doesAnyChildUseRatioWidth |= child.WidthUnits == DimensionUnitType.Ratio;
                 doesAnyChildUseRatioHeight |= child.HeightUnits == DimensionUnitType.Ratio;
@@ -3425,9 +3433,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 for (int i = 0; i < this.Children.Count; i++)
                 {
-                    var ipsoChild = this.Children[i];
+                    var child = this.Children[i];
 
-                    if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                    if ((alreadyUpdated == null || alreadyUpdated.Contains(child) == false))
                     {
                         if (DoesDimensionNeedUpdateFirstForRatio(child.WidthUnits) || DoesDimensionNeedUpdateFirstForRatio(child.HeightUnits))
                         {
@@ -3441,9 +3449,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // do a normal one:
             for (int i = 0; i < this.Children.Count; i++)
             {
-                var ipsoChild = this.Children[i];
+                var child = this.Children[i];
 
-                if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
+                if ((alreadyUpdated == null || alreadyUpdated.Contains(child) == false))
                 {
                     // now do all:
                     UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
@@ -4056,9 +4064,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 if (child.Visible)
                 {
-                    var asIpso = child as IPositionedSizedObject;
-
-
                     if (child.StackedRowOrColumnIndex == indexToUpdate)
                     {
                         if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
@@ -4126,11 +4131,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private int GetIndexInVisibleSiblings()
     {
-        System.Collections.IList siblings = null;
+        System.Collections.IList? siblings = null;
 
         if (this.Parent == null)
         {
-            siblings = this.ElementGueContainingThis.mWhatThisContains;
+            siblings = this.ElementGueContainingThis?.mWhatThisContains;
         }
         else if (this.Parent is GraphicalUiElement)
         {
@@ -4138,15 +4143,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         var thisIndex = 0;
-        for (int i = 0; i < siblings.Count; i++)
+        if(siblings != null)
         {
-            if (siblings[i] == this)
+            for (int i = 0; i < siblings.Count; i++)
             {
-                break;
-            }
-            if ((siblings[i] as IVisible).Visible)
-            {
-                thisIndex++;
+                if (siblings[i] == this)
+                {
+                    break;
+                }
+                if (((IVisible)siblings[i]).Visible)
+                {
+                    thisIndex++;
+                }
             }
         }
 
@@ -4176,7 +4184,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // do we care about situations with no parent?
             foreach (var child in effectiveParentGue.Children)
             {
-                if (child is GraphicalUiElement childGue && (childGue.WidthUnits == DimensionUnitType.Ratio || childGue.HeightUnits == DimensionUnitType.Ratio))
+                if (child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio)
                 {
                     return true;
                 }
@@ -4186,7 +4194,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             foreach (var child in effectiveParentGue.ContainedElements)
             {
-                if (child is GraphicalUiElement childGue && child.Parent == null && (childGue.WidthUnits == DimensionUnitType.Ratio || childGue.HeightUnits == DimensionUnitType.Ratio))
+                if (child.Parent == null && (child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio))
                 {
                     return true;
                 }
@@ -4214,21 +4222,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // if any siblings are ratio-based, then we need to
                 if (this.Parent == null)
                 {
-                    for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
+                    if(ElementGueContainingThis != null)
                     {
-                        var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
-                        if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                        for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
                         {
-                            return true;
+                            var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
+                            if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
                 else if (this.Parent is GraphicalUiElement parentGue && parentGue.Children != null)
                 {
-                    var siblingsAsIpsos = parentGue.Children;
-                    for (int i = 0; i < siblingsAsIpsos.Count; i++)
+                    var siblings = parentGue.Children;
+                    for (int i = 0; i < siblings.Count; i++)
                     {
-                        var siblingAsGraphicalUiElement = (GraphicalUiElement)siblingsAsIpsos[i];
+                        var siblingAsGraphicalUiElement = siblings[i];
                         if (siblingAsGraphicalUiElement.WidthUnits == DimensionUnitType.Ratio || siblingAsGraphicalUiElement.HeightUnits == DimensionUnitType.Ratio)
                         {
                             return true;
@@ -4263,17 +4274,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             for (int i = 0; i < gue.Children.Count; i++)
             {
-                var uncastedChild = gue.Children[i];
+                var child = gue.Children[i];
 
-                if (uncastedChild is GraphicalUiElement child)
+                if (GetIfOneDimensionCanChangeOtherDimension(child))
                 {
-
-                    if (GetIfOneDimensionCanChangeOtherDimension(child))
-                    {
-                        canOneDimensionChangeTheOtherOnChild = true;
-                        break;
-                    }
+                    canOneDimensionChangeTheOtherOnChild = true;
+                    break;
                 }
+                
             }
         }
 
@@ -5080,7 +5088,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// this does not perform any operations - it can be safely called multiple times, but
     /// calling it multiple times will not move this to a different layer.
     /// </summary>
-    public virtual void AddToManagers(ISystemManagers managers, Layer layer = null)
+    public virtual void AddToManagers(ISystemManagers managers, Layer? layer = null)
     {
 #if FULL_DIAGNOSTICS
         if (managers == null)
@@ -5136,10 +5144,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     managedObject.AddToManagers();
                 }
-                if (child is GraphicalUiElement childGue)
-                {
-                    RecursivelyAddIManagedChildren(childGue);
-                }
+                
+                RecursivelyAddIManagedChildren(child);
+                
             }
         }
     }
@@ -5159,21 +5166,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            foreach (var newItem in e.NewItems)
+            if(e.NewItems != null)
             {
-#if FULL_DIAGNOSTICS
-                if (newItem == null)
+                foreach (var newItem in e.NewItems)
                 {
-                    throw new InvalidOperationException($"Attempting to add a null child to {this}");
-                }
-#endif
-                var ipso = (IRenderableIpso)newItem;
+    #if FULL_DIAGNOSTICS
+                    if (newItem == null)
+                    {
+                        throw new InvalidOperationException($"Attempting to add a null child to {this}");
+                    }
+    #endif
+                    var ipso = (GraphicalUiElement)newItem;
 
-                if (ipso.Parent != this)
-                {
-                    ipso.Parent = this;
+                    if (ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
 
+                    }
                 }
+
             }
         }
         else if (e.Action == NotifyCollectionChangedAction.Move)
@@ -5219,19 +5230,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (e.Action == NotifyCollectionChangedAction.Replace)
         {
-            foreach (IRenderableIpso ipso in e.OldItems)
+            if(e.OldItems != null)
             {
-                if (ipso.Parent == this)
+                foreach (IRenderableIpso ipso in e.OldItems)
                 {
-                    ipso.Parent = null;
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
                 }
             }
-            foreach (IRenderableIpso ipso in e.NewItems)
-            {
-                if (ipso.Parent != this)
+            if (e.NewItems != null)
+            { 
+                foreach (IRenderableIpso ipso in e.NewItems)
                 {
-                    ipso.Parent = this;
+                    if (ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
 
+                    }
                 }
             }
         }
@@ -5265,7 +5282,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // "above" that.
                     if (child.Parent == null || child.Parent == this)
                     {
-                        (child as GraphicalUiElement).AddToManagers(managers, layer);
+                        child.AddToManagers(managers, layer);
                     }
                     else
                     {
@@ -5284,19 +5301,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 if (child is GraphicalUiElement)
                 {
-                    var childGue = child as GraphicalUiElement;
-
                     if (child.Parent == null || child.Parent == this)
                     {
-                        childGue.AddToManagers(managers, layer);
+                        child.AddToManagers(managers, layer);
                     }
                     else
                     {
-                        childGue.mManagers = this.mManagers;
+                        child.mManagers = this.mManagers;
 
-                        childGue.CustomAddToManagers();
+                        child.CustomAddToManagers();
 
-                        childGue.CustomAddChildren();
+                        child.CustomAddChildren();
                     }
                 }
             }
@@ -6011,7 +6026,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 var count = Children.Count;
                 for (int i = 0; i < count; i++)
                 {
-                    var asGraphicalUiElement = Children[i] as GraphicalUiElement;
+                    var asGraphicalUiElement = Children[i];
                     asGraphicalUiElement?.SuspendLayout(true);
                 }
             }
@@ -6090,7 +6105,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var count = Children.Count;
             for (int i = 0; i < count; i++)
             {
-                var asGraphicalUiElement = Children[i] as GraphicalUiElement;
+                var asGraphicalUiElement = Children[i];
                 asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
             }
         }
@@ -6148,7 +6163,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (this.Children?.Count > 0 && mWhatThisContains.Count == 0)
             {
                 // This is a regular item that hasn't had its mWhatThisContains populated
-                return this.GetChildByNameRecursively(name) as GraphicalUiElement;
+                return this.GetChildByNameRecursively(name);
             }
             else
             {
@@ -6208,7 +6223,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject? GetChildByName(string name)
+    public GraphicalUiElement? GetChildByName(string name)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -6221,7 +6236,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject? GetChildByType(Type type)
+    public GraphicalUiElement? GetChildByType(Type type)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -6234,12 +6249,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso? GetChildByNameRecursively(string name)
+    public GraphicalUiElement? GetChildByNameRecursively(string name)
     {
         return GetChildByName(Children, name);
     }
 
-    private IRenderableIpso? GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
+    private GraphicalUiElement? GetChildByName(ObservableCollection<GraphicalUiElement> children, string name)
     {
         // This is a recursive call, but we want to find the most-shallow child
         // first before going deeper. This is important for controls like ListBox
@@ -6264,12 +6279,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso? GetChildByTypeRecursively(Type type)
+    public GraphicalUiElement? GetChildByTypeRecursively(Type type)
     {
         return GetChildByType(Children, type);
     }
 
-    private IRenderableIpso? GetChildByType(ObservableCollection<IRenderableIpso> children, Type type)
+    private GraphicalUiElement? GetChildByType(ObservableCollection<GraphicalUiElement> children, Type type)
     {
         // This is a recursive call, but we want to find the most-shallow child
         // first before going deeper. This is important for controls like ListBox
@@ -6294,18 +6309,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso? GetParentByNameRecursively(string name)
+    public GraphicalUiElement? GetParentByNameRecursively(string name)
     {
         return GetParentByName(this, name);
     }
 
-    private IRenderableIpso? GetParentByName(IRenderableIpso element, string name)
+    private GraphicalUiElement? GetParentByName(IRenderableIpso element, string name)
     {
         if (element.Parent != null)
         {
             if (element.Parent.Name == name)
             {
-                return element.Parent;
+                return element.Parent as GraphicalUiElement;
             }
             else
             {
@@ -6318,18 +6333,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IRenderableIpso? GetParentByTypeRecursively(Type type)
+    public GraphicalUiElement? GetParentByTypeRecursively(Type type)
     {
         return GetParentByType(this, type);
     }
 
-    private IRenderableIpso? GetParentByType(IRenderableIpso element, Type type)
+    private GraphicalUiElement? GetParentByType(IRenderableIpso element, Type type)
     {
         if (element.Parent != null)
         {
             if (element.Parent.GetType().Equals(type))
             {
-                return element.Parent;
+                return element.Parent as GraphicalUiElement;
             }
             else
             {
@@ -6347,7 +6362,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="listToFill">List to populate. The type to search for is inferred from the element type and must be an <see cref="IRenderableIpso"/>.
     /// The user has the responsability of instantiating and clearing this list.</param>
-    public void FillListWithChildrenByTypeRecursively<T>(List<T> listToFill) where T : IRenderableIpso
+    public void FillListWithChildrenByTypeRecursively<T>(List<T> listToFill) where T : GraphicalUiElement
     {
         FillListWithChildrenByType(Children, listToFill);
     }
@@ -6357,14 +6372,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <typeparam name="T">Type to search for. Must be an <see cref="IRenderableIpso"/>.</typeparam>
     /// <returns></returns>
-    public List<T> FillListWithChildrenByTypeRecursively<T>() where T : IRenderableIpso
+    public List<T> FillListWithChildrenByTypeRecursively<T>() where T : GraphicalUiElement
     {
         var list = new List<T>();
         FillListWithChildrenByTypeRecursively(list);
         return list;
     }
 
-    private void FillListWithChildrenByType<T>(ObservableCollection<IRenderableIpso> children, List<T> listToFill) where T : IRenderableIpso
+    private void FillListWithChildrenByType<T>(ObservableCollection<GraphicalUiElement> children, List<T> listToFill) where T : GraphicalUiElement
     {
         foreach (var child in children)
         {
@@ -6498,7 +6513,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             for (int i = 0; i < this.Children.Count; i++)
             {
-                (this.Children[i] as GraphicalUiElement).UpdateFontRecursive();
+                this.Children[i].UpdateFontRecursive();
             }
         }
         else
@@ -6602,10 +6617,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             for (int i = 0; i < this.Children.Count; i++)
             {
                 var child = this.Children[i];
-                if (child is GraphicalUiElement childGue)
-                {
-                    childGue.AnimateSelf(secondDifference);
-                }
+                child.AnimateSelf(secondDifference);
+                
             }
         }
         else
@@ -6613,10 +6626,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             for (int i = 0; i < this.mWhatThisContains.Count; i++)
             {
                 var child = mWhatThisContains[i];
-                if (child is GraphicalUiElement childGue)
-                {
-                    childGue.AnimateSelf(secondDifference);
-                }
+                child.AnimateSelf(secondDifference);
+                
             }
         }
     }

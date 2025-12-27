@@ -25,7 +25,6 @@ public class FileCommands : IFileCommands
     private readonly IGuiCommands _guiCommands;
     private readonly IOutputManager _outputManager;
 
-
     public FileCommands(ISelectedState selectedState, 
         Lazy<IUndoManager> undoManager, 
         IDialogService dialogService,
@@ -116,7 +115,6 @@ public class FileCommands : IFileCommands
 
         _guiCommands.RefreshStateTreeView();
         _guiCommands.RefreshVariables();
-        WireframeObjectManager.Self.RefreshAll(true);
     }
 
     /// <summary>

@@ -5,7 +5,8 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.SkiaSharp</PackageId>
-		<Version>2025.11.30.1</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2025.12.9.1</Version>
 
 		<NoWarn>1591</NoWarn>
 

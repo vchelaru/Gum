@@ -34,17 +34,6 @@
 		<Compile Update="Views\WireframeControl.cs">
 			<SubType>Component</SubType>
 		</Compile>
-		<Compile Update="Views\WireframeEditControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="Views\WireframeEditControl.designer.cs">
-			<DependentUpon>WireframeEditControl.cs</DependentUpon>
-		</Compile>
-	</ItemGroup>
-	<ItemGroup>
-		<EmbeddedResource Update="Views\WireframeEditControl.resx">
-			<DependentUpon>WireframeEditControl.cs</DependentUpon>
-		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

@@ -13,9 +13,17 @@ namespace CodeOutputPlugin.Manager;
 
 internal class CodeGenerationFileLocationsService
 {
+    CodeGenerator _codeGenerator;
+    private readonly CodeGenerationNameVerifier _nameVerifier;
+
+    public CodeGenerationFileLocationsService(CodeGenerator codeGenerator, CodeGenerationNameVerifier nameVerifier)
+    {
+        _codeGenerator = codeGenerator;
+        _nameVerifier = nameVerifier;
+    }
 
     public FilePath GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-    CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
+        CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
     {
         string generatedFileName = elementSettings.GeneratedFileName;
 
@@ -26,7 +34,7 @@ internal class CodeGenerationFileLocationsService
         }
         if(selectedElement != null)
         {
-            var elementName = selectedElement?.Name;
+            var elementName = selectedElement.Name;
 
             var effectiveVisualApi = visualApi;
 
@@ -37,11 +45,11 @@ internal class CodeGenerationFileLocationsService
                     : "Standards";
                 var splitName = (prefix + "/" + elementName).Split('/');
 
-                var context = new CodeGenerationContext();
+                var context = new CodeGenerationContext(_nameVerifier, selectedElement);
                 context.CodeOutputProjectSettings = codeOutputProjectSettings;
 
-                string fileName = CodeGenerator.GetClassNameForType(selectedElement, effectiveVisualApi, context, out bool isPrefixed);
-                if (isPrefixed) fileName = fileName.Substring(1);
+                string? fileName = _codeGenerator.GetClassNameForType(selectedElement, effectiveVisualApi, context, out bool isPrefixed);
+                if (isPrefixed) fileName = fileName?.Substring(1);
                 
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(fileName);
 

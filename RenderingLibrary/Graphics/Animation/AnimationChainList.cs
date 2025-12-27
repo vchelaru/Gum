@@ -183,14 +183,15 @@ namespace Gum.Graphics.Animation
 
     public static class AnimationChainListSaveExtensionMethods
     {
-        public static AnimationChainList ToAnimationChainList(this AnimationChainListSave animationChainListSave, string contentManagerName)
+        // todo - the contentManagerName parameter is unused, but FRB codegen depends on it. Need to increment FRB version to remove this, but that's a pain, so making it optional for now
+        public static AnimationChainList ToAnimationChainList(this AnimationChainListSave animationChainListSave, string? contentManagerName = null)
         {
 
-            return animationChainListSave.ToAnimationChainList(contentManagerName, true);
+            return animationChainListSave.ToAnimationChainList(true);
         }
 
 
-        public static AnimationChainList ToAnimationChainList(this AnimationChainListSave animationChainListSave, string contentManagerName, bool throwError)
+        public static AnimationChainList ToAnimationChainList(this AnimationChainListSave animationChainListSave, bool throwError)
         {
             animationChainListSave.ToRuntimeErrors.Clear();
 
@@ -215,7 +216,7 @@ namespace Gum.Graphics.Animation
                     {
                         Gum.Graphics.Animation.AnimationChain newChain = null;
 
-                        newChain = animationChain.ToAnimationChain(contentManagerName, animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType);
+                        newChain = animationChain.ToAnimationChain(animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType);
 
                         newChain.IndexInLoadedAchx = list.Count;
 

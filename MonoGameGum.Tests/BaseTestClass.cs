@@ -1,11 +1,12 @@
-﻿using Gum.Wireframe;
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
+using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MonoGameGum.Input;
+using ToolsUtilities;
 
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
@@ -54,5 +55,7 @@ public class BaseTestClass : IDisposable
         GumService.Default.PopupRoot.Children!.Clear();
 
         CustomSetPropertyOnRenderable.LocalizationService = null;
+
+        FileManager.CustomGetStreamFromFile = null;
     }
 }

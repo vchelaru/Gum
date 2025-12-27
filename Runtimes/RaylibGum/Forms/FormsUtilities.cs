@@ -20,6 +20,8 @@ using GumRuntime;
 
 using Gum.Managers;
 using Gum.Forms.DefaultFromFileVisuals;
+using System.Collections.Specialized;
+
 
 
 #else
@@ -31,8 +33,11 @@ using  MonoGameGum.GueDeriving;
 using Gum.GueDeriving;
 #endif
 
-
+#if FRB
+namespace MonoGameGum.Forms;
+#else
 namespace Gum.Forms;
+#endif
 
 /// <summary>
 /// The version to use for default visuals in a code-only project.
@@ -48,13 +53,27 @@ public enum DefaultVisualsVersion
     /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
     /// and respects a centralized styling.
     /// </summary>
-    V2
+    V2,
+
+    /// <summary>
+    /// Specifies that the newest version is used.
+    /// </summary>
+    /// <remarks>This value is an alias for the latest supported version. Use this option to ensure the most
+    /// recent features and updates are applied.</remarks>
+    Newest = V2,
 }
 
 public class FormsUtilities
 {
-    static Cursor cursor;
-    public static Cursor Cursor => cursor;
+    static ICursor cursor;
+
+    public static Cursor Cursor => cursor as Cursor;
+
+    public static void SetCursor(ICursor cursor)
+    {
+        FormsUtilities.cursor = cursor;
+        FrameworkElement.MainCursor = cursor;
+    }
 
     static Keyboard keyboard;
 
@@ -74,10 +93,13 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        switch(defaultVisualsVersion)
+        // Is this needed?
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
+
+
+        switch (defaultVisualsVersion)
         {
             case DefaultVisualsVersion.V2:
-                Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
                 Styling.ActiveStyle = new Styling(uiSpriteSheet);
                 TryAdd(typeof(Button), typeof(ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
@@ -92,6 +114,7 @@ public class FormsUtilities
                 TryAdd(typeof(Splitter), typeof(SplitterVisual));
                 TryAdd(typeof(Window), typeof(WindowVisual));
 
+                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
         }
@@ -114,7 +137,11 @@ public class FormsUtilities
             Gamepads[i] = new GamePad();
         }
 
+        // Do an initial update to update connectivity
+        UpdateGamepads(0);
+
         FrameworkElement.MainCursor = cursor;
+        FrameworkElement.MainKeyboard = keyboard;
 
 
         FrameworkElement.PopupRoot = CreateFullscreenContainer(nameof(FrameworkElement.PopupRoot), systemManagers);
@@ -125,6 +152,7 @@ public class FormsUtilities
     {
         var container = new ContainerRuntime();
 
+        container.Children.CollectionChanged += (o,e) => HandleRootCollectionChanged (container, e);
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.Width = GraphicalUiElement.CanvasWidth;
@@ -134,6 +162,52 @@ public class FormsUtilities
         container.AddToManagers(systemManagers);
 
         return container;
+    }
+
+    internal static void HandleRootCollectionChanged(InteractiveGue container, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Remove ||
+            e.Action == NotifyCollectionChangedAction.Replace ||
+            e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            if (InteractiveGue.CurrentInputReceiver != null)
+            {
+                var recieverVisual = InteractiveGue.CurrentInputReceiver as InteractiveGue;
+                if (InteractiveGue.CurrentInputReceiver is Gum.Forms.Controls.FrameworkElement frameworkElement)
+                {
+                    recieverVisual = frameworkElement.Visual;
+                }
+
+                if (recieverVisual != null)
+                {
+                    var removedElements = e.OldItems;
+
+                    var topParent = GetRootElement(recieverVisual);
+
+                    if (e.Action == NotifyCollectionChangedAction.Reset && topParent == container)
+                    {
+                        InteractiveGue.CurrentInputReceiver = null;
+                    }
+                    else if (removedElements?.Contains(topParent) == true)
+                    {
+                        InteractiveGue.CurrentInputReceiver = null;
+                    }
+                }
+
+            }
+        }
+    }
+
+    static GraphicalUiElement GetRootElement(GraphicalUiElement item)
+    {
+        if (item.Parent is GraphicalUiElement parentGue)
+        {
+            return GetRootElement(parentGue);
+        }
+        else
+        {
+            return item;
+        }
     }
 
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
@@ -326,9 +400,18 @@ public class FormsUtilities
             }
             else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
             {
-                ElementSaveExtensions.RegisterGueInstantiationType(
-                    component.Name,
-                    typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+                if (component.BaseType == "Text")
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelTextRuntime), overwriteIfAlreadyExists: false);
+                }
+                else
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+                }
             }
             else if (behaviorNames.Contains("ListBoxBehavior"))
             {

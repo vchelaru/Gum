@@ -73,7 +73,6 @@ $"chars count=223\r\n";
         innerText.WrappedText[1].ShouldNotStartWith("This is a");
     }
 
-
     [Fact]
     public void WrappedText_ShouldNotBreakWords_IfBreakWordsWithNoWhitespaceIsFalse()
     {

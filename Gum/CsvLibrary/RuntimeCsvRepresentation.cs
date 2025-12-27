@@ -1039,7 +1039,6 @@ namespace CsvLibrary
                             case DuplicateDictionaryEntryBehavior.ThrowException:
                                 throw new InvalidOperationException("The key " + keyToUse +
                                     " is already part of the dictionary.");
-                                break;
                             case DuplicateDictionaryEntryBehavior.Replace:
                                 dictionaryToPopulate[keyToUse] = (ValueType)newElement;
                                 break;

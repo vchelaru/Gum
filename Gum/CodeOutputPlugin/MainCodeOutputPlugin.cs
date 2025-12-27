@@ -46,9 +46,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly IMessenger _messenger;
     private readonly LocalizationManager _localizationManager;
     private readonly INameVerifier _nameVerifier;
-    private readonly IGuiCommands _guiCommands;
     private readonly CodeGenerator _codeGenerator;
-    private readonly IDialogService _dialogService;
     private readonly ParentSetLogic _parentSetLogic;
 
     PluginTab pluginTab;
@@ -67,33 +65,31 @@ public class MainCodeOutputPlugin : PluginBase
 
     public MainCodeOutputPlugin()
     {
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
-
-
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _codeGenerator = new CodeGenerator();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        var customCodeGenerator = new CustomCodeGenerator(_codeGenerator);
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator);
-        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator);
+        CodeGenerationNameVerifier codeGenerationNameVerifier = new(_nameVerifier);
+        _codeGenerator = new CodeGenerator(codeGenerationNameVerifier);
+
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, codeGenerationNameVerifier);
+
+
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _codeGenerator.LocalizationManager = _localizationManager;
+
+        var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, codeGenerationNameVerifier);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, codeGenerationNameVerifier);
+        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator, codeGenerationNameVerifier);
         _messenger = Locator.GetRequiredService<IMessenger>();
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator);
 
         _messenger.Register<RequestCodeGenerationMessage>(
             this, 
-            (_, message) => HanndleRequestCodeGeneration(message));
-
-        // The methos in CodeGenerator need to be changed to not be static then we can get rid
-        // of this:
-        CodeGenerator.NameVerifier = _nameVerifier;
-        CodeGenerator.LocalizationManager = _localizationManager;
+            (_, message) => HandleRequestCodeGeneration(message));
     }
 
-    private void HanndleRequestCodeGeneration(RequestCodeGenerationMessage message)
+    private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)
     {
         HandleGenerateAllCodeButtonClicked(showPopups:false);
 
@@ -185,7 +181,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleStateSelected(TreeNode obj)
     {
-        if (control != null)
+        if (control != null && _selectedState.SelectedElement != null)
         {
             LoadCodeSettingsFile(_selectedState.SelectedElement);
 
@@ -195,7 +191,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
     {
-        if(control != null)
+        if(control != null && _selectedState.SelectedElement != null)
         {
             LoadCodeSettingsFile(_selectedState.SelectedElement);
 
@@ -203,7 +199,7 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void HandleElementSelected(ElementSave element)
+    private void HandleElementSelected(ElementSave? element)
     {
         if (control != null)
         {
@@ -220,7 +216,7 @@ public class MainCodeOutputPlugin : PluginBase
         GenerateCodeForElement(showPopups: false, element);
     }
 
-    private void LoadCodeSettingsFile(ElementSave element)
+    private void LoadCodeSettingsFile(ElementSave? element)
     {
         if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
         {
@@ -238,7 +234,7 @@ public class MainCodeOutputPlugin : PluginBase
         HandleRefreshAndExport();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
@@ -302,7 +298,10 @@ public class MainCodeOutputPlugin : PluginBase
     {
         //GumCommands.Self.GuiCommands.ShowControl(control);
 
-        LoadCodeSettingsFile(_selectedState.SelectedElement);
+        if(_selectedState.SelectedElement != null)
+        {
+            LoadCodeSettingsFile(_selectedState.SelectedElement);
+        }
 
         RefreshCodeDisplay();
 
@@ -435,7 +434,7 @@ public class MainCodeOutputPlugin : PluginBase
     private void HandleCodeOutputPropertyChanged()
     {
         var element = _selectedState.SelectedElement;
-        if(element != null)
+        if(element != null && control.CodeOutputElementSettings != null)
         {
             CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
 
@@ -534,10 +533,11 @@ public class MainCodeOutputPlugin : PluginBase
             // If user is using automatic generation, generate everything
             // If it's manual, don't check for missing files
 
-            var checkForMissing = settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
-
-
-            _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups, checkForMissing: checkForMissing);
+            if(settings != null)
+            {
+                var checkForMissing = settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
+                _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups, checkForMissing: checkForMissing);
+            }
         }
     }
 

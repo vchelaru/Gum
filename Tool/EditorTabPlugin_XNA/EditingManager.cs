@@ -1,7 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Events;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.PropertyGridHelpers;

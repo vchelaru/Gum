@@ -17,10 +17,12 @@ public class ScrollbarService
 {
     ScrollBarControlLogic scrollBarControlLogic;
     private readonly ISelectedState _selectedState;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     public ScrollbarService()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
     
     public void HandleElementSelected(ElementSave obj)
@@ -30,7 +32,7 @@ public class ScrollbarService
 
         if(obj != null)
         {
-            ipso = WireframeObjectManager.Self.GetRepresentation(obj);
+            ipso = _wireframeObjectManager.GetRepresentation(obj);
         }
 
         float minX = -ProjectManager.Self.GumProjectSave.DefaultCanvasWidth/2;

@@ -1,14 +1,15 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
-using Gum.ToolStates;
-using System.Linq;
-using Gum.Commands;
-using ToolsUtilities;
 using Gum.Services;
-using System.Collections.Generic;
-using System;
+using Gum.ToolStates;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ToolsUtilities;
 
 namespace Gum.Managers
 {
@@ -19,7 +20,8 @@ namespace Gum.Managers
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IOutputManager _outputManager;
-        
+        private readonly WireframeObjectManager _wireframeObjectManager;
+
         public FileChangeReactionLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
@@ -27,6 +29,7 @@ namespace Gum.Managers
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _outputManager = Locator.GetRequiredService<IOutputManager>();
+            _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -132,7 +135,7 @@ namespace Gum.Managers
 
                 if(referencedFiles.Contains(file))
                 {
-                    Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                    _wireframeObjectManager.RefreshAll(true, true);
                 }
             }
         }
@@ -183,7 +186,7 @@ namespace Gum.Managers
                     ;
                 if (referencedFiles.Contains(file))
                 {
-                    Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                    _wireframeObjectManager.RefreshAll(true, true);
                 }
             }
         }
@@ -203,7 +206,7 @@ namespace Gum.Managers
 
                 if (referencedFiles.Contains(file))
                 {
-                    Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                    _wireframeObjectManager.RefreshAll(true, true);
                 }
             }
         }
@@ -249,7 +252,7 @@ namespace Gum.Managers
             if(element != null && !shouldReloadWireframe)
             {
                 // Update - we should also refresh if the element is referenced by any visual object
-                var hasMatchingRepresentation = Wireframe.WireframeObjectManager.Self.AllIpsos
+                var hasMatchingRepresentation = _wireframeObjectManager.AllIpsos
                     .Any(item => item.Tag is InstanceSave asInstance && asInstance.BaseType == element.Name);
 
                 shouldReloadWireframe = hasMatchingRepresentation;
@@ -260,7 +263,7 @@ namespace Gum.Managers
             if(shouldReloadWireframe)
             {
                 // reload wireframe
-                Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
+                _wireframeObjectManager.RefreshAll(true, true);
 
                 // todo - this isn't working if I rename a variable...
                 _guiCommands.RefreshVariables(force: true);

@@ -21,4 +21,4 @@ roundedRectangle.CornerRadius = 20;
 roundedRectangle.Color = SKColors.Blue;
 ```
 
-<figure><img src="../../../.gitbook/assets/blueRect.png" alt=""><figcaption><p>Blue RoundedRectangleRuntime</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/blueRect (1).png" alt=""><figcaption><p>Blue RoundedRectangleRuntime</p></figcaption></figure>

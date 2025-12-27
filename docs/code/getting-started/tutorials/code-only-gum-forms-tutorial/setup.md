@@ -22,11 +22,9 @@ Once you are finished, your game project should reference the `Gum.MonoGame` pro
 
 Gum requires a few lines of code to get started. A simplified Game class with the required calls would look like the following code:
 
-{% tabs %}
-{% tab title="Full Code" %}
 ```csharp
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+using Gum.Forms;
+using Gum.Forms.Controls;
 
 public class Game1 : Game
 {
@@ -43,7 +41,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, DefaultVisualsVersion.V2);
+        GumUI.Initialize(this, DefaultVisualsVersion.V3);
             
         var mainPanel = new StackPanel();
         mainPanel.AddToRoot();
@@ -65,60 +63,14 @@ public class Game1 : Game
     }
 }
 ```
-{% endtab %}
-
-{% tab title="Diff" %}
-```diff
-+using MonoGameGum.Forms;
-+using MonoGameGum.Forms.Controls;
-
-public class Game1 : Game
-{
-    private GraphicsDeviceManager _graphics;
-    
-+   GumService GumUI => GumService.Default;
-    
-    public Game1()
-    {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
-    }
-
-    protected override void Initialize()
-    {
-+       GumUI.Initialize(this, DefaultVisualsVersion.V2);
-            
-+       var mainPanel = new StackPanel();
-+       mainPanel.Visual.AddToRoot();
-        
-        base.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-+       GumUI.Update(gameTime);
-        base.Update(gameTime);
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-+       GumUI.Draw();
-        base.Draw(gameTime);
-    }
-}
-```
-{% endtab %}
-{% endtabs %}
 
 The code above includes the following sections:
 
-* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Note that `DefaultVisualsVersion.V2` is passed as a second parameter, indicating that Version 2 of visuals are used. All new projects should use Version 2 rather than Version 1 as of July 2025.
+* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Note that `DefaultVisualsVersion.V3` is passed as a second parameter, indicating that Version 3 of visuals are used. All new projects should use Version 3 as of November 2025.
 * Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls. By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
 ```csharp
-GumUI.Initialize(this, DefaultVisualsVersion.V2);
+GumUI.Initialize(this, DefaultVisualsVersion.V3);
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
 ```
@@ -143,61 +95,29 @@ We can run our project to see a blank (cornflower blue) screen.
 
 Now that we have Gum running, we can add controls to our `StackPanel` (`mainPanel`). The following code in Initialize adds a `Button` which responds to being clicked by modifying its `Text` property:
 
-{% tabs %}
-{% tab title="Full Code" %}
-```csharp
-protected override void Initialize()
+<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V3);
 
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
 
-    // Creates a button instance
-    var button = new Button();
-    // Adds the button as a child so that it is drawn and has its
-    // events raised
-    mainPanel.AddChild(button);
-    // Initial button text before being clicked
-    button.Text = "Click Me";
-    // Makes the button wider so the text fits
-    button.Width = 350;
-    // Click event can be handled with a lambda
-    button.Click += (_, _) =>
-        button.Text = $"Clicked at {System.DateTime.Now}";
-
+<strong>    // Creates a button instance
+</strong><strong>    var button = new Button();
+</strong><strong>    // Adds the button as a child so that it is drawn and has its
+</strong><strong>    // events raised
+</strong><strong>    mainPanel.AddChild(button);
+</strong><strong>    // Initial button text before being clicked
+</strong><strong>    button.Text = "Click Me";
+</strong><strong>    // Makes the button wider so the text fits
+</strong><strong>    button.Width = 350;
+</strong><strong>    // Click event can be handled with a lambda
+</strong><strong>    button.Click += (_, _) =>
+</strong><strong>        button.Text = $"Clicked at {System.DateTime.Now}";
+</strong>
     base.Initialize();
 }
-```
-{% endtab %}
-
-{% tab title="Diff" %}
-```diff
-protected override void Initialize()
-{
-    GumUI.Initialize(this, DefaultVisualsVersion.V2);
-
-    var mainPanel = new StackPanel();
-    mainPanel.Visual.AddToRoot();
-
-+   // Creates a button instance
-+   var button = new Button();
-+   // Adds the button as a child so that it is drawn and has its
-+   // events raised
-+   mainPanel.AddChild(button);
-+   // Initial button text before being clicked
-+   button.Text = "Click Me";
-+   // Makes the button wider so the text fits
-+   button.Width = 350;
-+   // Click event can be handled with a lambda
-+   button.Click += (_, _) =>
-+       button.Text = $"Clicked at {System.DateTime.Now}";
-
-    base.Initialize();
-}
-```
-{% endtab %}
-{% endtabs %}
+</code></pre>
 
 <figure><img src="../../../../.gitbook/assets/13_07 03 09.gif" alt=""><figcaption></figcaption></figure>
 

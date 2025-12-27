@@ -33,6 +33,11 @@ public class CommonControlLogic
     }
     public void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits, float value = 0f)
     {
+        if(value == 0f)
+        {
+            // remove the negative
+            value = 0f;
+        }
         SetAndCallReact("X", value, "float");
         SetAndCallReact("XOrigin", alignment, "HorizontalAlignment");
         SetAndCallReact("XUnits", xUnits, typeof(Gum.Managers.PositionUnitType).Name);
@@ -46,6 +51,11 @@ public class CommonControlLogic
 
     public void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits, float value = 0f)
     {
+        if (value == 0f)
+        {
+            // remove the negative
+            value = 0f;
+        }
         var state = _selectedState.SelectedStateSave;
 
         SetAndCallReact("Y", value, "float");

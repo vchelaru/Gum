@@ -24,14 +24,13 @@ using Gum.Mvvm;
 using Gum.Wireframe;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Plugins.Errors;
 
 namespace StateAnimationPlugin.ViewModels;
 
 public partial class ElementAnimationsViewModel : ViewModel
 {
     #region Fields
-
-    ObservableCollection<AnimationViewModel> mAnimations;
 
     // 50 isn't smooth enough, we want more fps!
     //const int mTimerFrequencyInMs = 50;
@@ -57,23 +56,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         set => Set(value);
     }
 
-    public ObservableCollection<AnimationViewModel> Animations
-    {
-        get { return mAnimations; }
-        set
-        {
-            if(mAnimations != null)
-            {
-                mAnimations.CollectionChanged -= HandleListChanged;
-            }
-            mAnimations = value;
-
-            if (mAnimations != null)
-            {
-                mAnimations.CollectionChanged += HandleListChanged;
-            }
-        }
-    }
+    public ObservableCollection<AnimationViewModel> Animations { get; private set; }
 
     public ObservableCollection<MenuItem> AnimationRightClickItems
     {
@@ -144,7 +127,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             if(SelectedAnimation == null || SelectedAnimation.Keyframes.Count == 0)
             {
-                return null;
+                return string.Empty;
             }
             else
             {
@@ -179,7 +162,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     [DependsOn(nameof(Element))]
     public string AnimationColumnTitle => Element == null ? "No Element Selected" : $"{Element.Name} Animations";
 
-    public ElementAnimationsSave BackingData { get; private set; }
+    public ElementAnimationsSave? BackingData { get; private set; }
 
     public List<string> GameSpeedList { get; set; } =
         new List<string>
@@ -217,13 +200,12 @@ public partial class ElementAnimationsViewModel : ViewModel
     #region Events
 
 
-    public event PropertyChangedEventHandler AnyChange;
+    public event PropertyChangedEventHandler? AnyChange;
 
     //public event EventHandler SelectedItemPropertyChanged;
 
     #endregion
 
-    #region Methods
 
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService)
     {
@@ -231,6 +213,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         CurrentGameSpeed = "100%";
 
         Animations = new ObservableCollection<AnimationViewModel>();
+        Animations.CollectionChanged += HandleListChanged;
 
         this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
 
@@ -272,7 +255,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         return toReturn;
     }
 
-    private void OnPropertyChanged(string propertyName)
+    private void OnPropertyChanged(string? propertyName)
     {
         OnAnyChange(this, propertyName);
     }
@@ -340,7 +323,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             InitialValue = SelectedAnimation.Name,
             Validator = v =>
-                _nameValidator.IsAnimationNameValid(v, Animations, out string whyInvalid) ? null : whyInvalid,
+                _nameValidator.IsAnimationNameValid(v, Animations, out string? whyInvalid) ? null : whyInvalid,
         };
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
@@ -356,6 +339,11 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
     {
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+
         string message = "Set desired animation length (in seconds):";
         GetUserStringOptions options = new()
         {
@@ -391,7 +379,11 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
-        if(_dialogService.ShowYesNoMessage("Delete animation " + SelectedAnimation.Name + "?", "Delete?"))
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+        if (_dialogService.ShowYesNoMessage("Delete animation " + SelectedAnimation.Name + "?", "Delete?"))
         {
             Animations.Remove(SelectedAnimation);
         }
@@ -399,6 +391,11 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleDuplicateAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
+        if(SelectedAnimation == null)
+        {
+            return;
+        }
+
         var copyOfAnimation = SelectedAnimation.Clone();
 
         copyOfAnimation.Name = $"Copy of {copyOfAnimation.Name}";
@@ -415,7 +412,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
 
-    private void HandleListChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
+    private void HandleListChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
     {
         if(eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && eventArgs.NewItems != null)
         {
@@ -459,7 +456,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
     double? lastPlayTimerTickTime;
-    private void HandlePlayTimerTick(object sender, EventArgs e)
+    private void HandlePlayTimerTick(object? sender, EventArgs e)
     {
         var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
 
@@ -540,7 +537,17 @@ public partial class ElementAnimationsViewModel : ViewModel
         return whyIsntValid;
     }
 
-    #endregion
+    public IEnumerable<ErrorViewModel> GetErrors()
+    {
+        List<ErrorViewModel> toReturn = new List<ErrorViewModel>();
+        foreach(var animation in Animations)
+        {
+            var animationErrors = animation.GetErrors();
+            toReturn.AddRange(animationErrors);
+        }
+        return toReturn;
+    }
+
 
     [RelayCommand]
     private void ToggleInterpolationClamping()
@@ -548,4 +555,11 @@ public partial class ElementAnimationsViewModel : ViewModel
         ClampInterpolationVisuals = !ClampInterpolationVisuals;
     }
 
+    internal void RefreshErrors(ElementSave element)
+    {
+        foreach(var animation in Animations)
+        {
+            animation.RefreshErrors(element);
+        }
+    }
 }

@@ -9,12 +9,14 @@
       <Type>string</Type>
       <Name>SpriteInstance.SourceFile</Name>
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+      <ExposedAsName>SpriteInstanceSourceFile</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
       <Name>SpriteInstance.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
+      <ExposedAsName>SpriteInstanceTextureAddress</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -44,6 +46,12 @@
       <Value xsi:type="xsd:int">100</Value>
       <ExposedAsName>SpriteInstanceTextureWidth</ExposedAsName>
       <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.X</Name>
+      <ExposedAsName>SpriteInstanceX</ExposedAsName>
+      <SetsValue>false</SetsValue>
     </Variable>
     <Variable>
       <Type>State</Type>

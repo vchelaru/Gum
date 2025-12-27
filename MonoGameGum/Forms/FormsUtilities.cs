@@ -46,14 +46,23 @@ public enum DefaultVisualsVersion
     /// <summary>
     /// The third version introduced end of 2025. This version makes styling with colors easier.
     /// </summary>
-    V3
+    V3,
+
+    /// <summary>
+    /// Specifies that the newest version is used.
+    /// </summary>
+    /// <remarks>This value is an alias for the latest supported version. Use this option to ensure the most
+    /// recent features and updates are applied.</remarks>
+    Newest = V3,
 }
+
+
 
 public class FormsUtilities
 {
     static ICursor cursor;
 
-    public static Cursor Cursor => cursor as Cursor;
+    public static Cursor? Cursor => cursor as Cursor;
 
     public static void SetCursor(ICursor cursor)
     {
@@ -165,6 +174,7 @@ public class FormsUtilities
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
+            // This is needed until MonoGameGum.Forms goes away completely. It's now marked as obsolete with error as of November 2025
             if(formsType.FullName.StartsWith("MonoGameGum.Forms."))
             {
                 var baseType = formsType.BaseType;
@@ -199,6 +209,7 @@ public class FormsUtilities
     static ContainerRuntime CreateFullscreenContainer(string name, SystemManagers systemManagers)
     {
         var container = new ContainerRuntime();
+
         container.Children.CollectionChanged += (o,e) => HandleRootCollectionChanged (container, e);
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
@@ -494,9 +505,18 @@ public class FormsUtilities
             }
             else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
             {
-                ElementSaveExtensions.RegisterGueInstantiationType(
-                    component.Name,
-                    typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+                if(component.BaseType == "Text")
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelTextRuntime), overwriteIfAlreadyExists: false);
+                }
+                else
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
+                }
             }
             else if (behaviorNames.Contains("ListBoxBehavior"))
             {

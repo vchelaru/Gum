@@ -4,9 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,10 +14,12 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Runtimes\MonoGameGumShapes\MonoGameGumShapes.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
     <ProjectReference Include="..\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
   </ItemGroup>
 

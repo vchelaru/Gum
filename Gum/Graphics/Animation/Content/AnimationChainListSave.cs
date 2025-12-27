@@ -68,7 +68,7 @@ namespace Gum.Content.AnimationChain
 
         public static AnimationChainListSave FromFile(string fileName)
         {
-            AnimationChainListSave toReturn = null;
+            AnimationChainListSave? toReturn = null;
 
             if (ManualDeserialization)
             {

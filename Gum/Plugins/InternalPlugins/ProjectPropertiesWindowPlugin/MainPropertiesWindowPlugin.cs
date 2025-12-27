@@ -43,7 +43,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     private readonly WireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
-    
+    private readonly WireframeObjectManager _wireframeObjectManager;
     private FilePath? _fontCharacterFileAbsolute;
 
     private PluginTab? _pluginTab;
@@ -54,6 +54,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _dispatcher = Locator.GetRequiredService<IDispatcher>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
 
     public override void StartUp()
@@ -147,7 +148,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 {
                     _fileCommands.LoadLocalizationFile();
 
-                    WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
+                    _wireframeObjectManager.RefreshAll(forceLayout: true, forceReloadTextures: false);
                 }
                 break;
             case nameof(viewModel.LanguageIndex):

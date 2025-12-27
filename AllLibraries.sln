@@ -29,13 +29,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.IntegrationTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.TestsCommon", "Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj", "{96A05A7C-90CA-437F-ACFA-8C8193DD2791}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGumShapes", "Runtimes\MonoGameGumShapes\MonoGameGumShapes.csproj", "{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGumShapes", "Runtimes\GumShapes\MonoGameGumShapes.csproj", "{076A88F7-6EA7-FAD6-0782-AB23BBC6D12D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Shapes.Tests", "Tests\MonoGameGum.Shapes.Tests\MonoGameGum.Shapes.Tests.csproj", "{E43273A6-C44C-49A4-9301-5D5250688229}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "Runtimes\RaylibGum\RaylibGum.csproj", "{299C14B8-2DF8-94FB-4395-0E49C58874BF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Tests", "Tests\SkiaGum.Tests\SkiaGum.Tests.csproj", "{78FE11DE-0B16-446D-A2A9-811480CDE49D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KniGumShapes", "Runtimes\GumShapes\KniGumShapes.csproj", "{0ACB5541-4EE9-B119-BD9A-78E237974418}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -227,6 +229,18 @@ Global
 		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|x86.ActiveCfg = Release|Any CPU
 		{78FE11DE-0B16-446D-A2A9-811480CDE49D}.Release|x86.Build.0 = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Debug|x86.Build.0 = Debug|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release_No_Diagnostics|Any CPU.Build.0 = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release_No_Diagnostics|x86.ActiveCfg = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release_No_Diagnostics|x86.Build.0 = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release|x86.ActiveCfg = Release|Any CPU
+		{0ACB5541-4EE9-B119-BD9A-78E237974418}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

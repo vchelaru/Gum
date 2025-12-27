@@ -1,11 +1,12 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Debug;
-using Gum.Events;
 using Gum.Managers;
+using Gum.Messages;
 using Gum.Plugins;
 using Gum.Services;
 using Gum.Wireframe;
@@ -26,7 +27,7 @@ public class SelectedState : ISelectedState
     
     private readonly IGuiCommands _guiCommands;
     private readonly PluginManager _pluginManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IMessenger _messenger;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -147,6 +148,8 @@ public class SelectedState : ISelectedState
         if (differ || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
         {
             _pluginManager.ElementSelected(SelectedElement);
+
+            _messenger.Send(new SelectionChangedMessage());
         }
     }
 
@@ -313,6 +316,8 @@ public class SelectedState : ISelectedState
         if (differ || instancesBefore.Count != 0 && SelectedInstances.Count() == 0)
         {
             _pluginManager.BehaviorSelected(SelectedBehavior);
+
+            _messenger.Send(new SelectionChangedMessage());
         }
     }
 
@@ -321,9 +326,6 @@ public class SelectedState : ISelectedState
         snapshot.SelectedBehaviors = behaviors;
 
         _guiCommands.RefreshStateTreeView();
-
-        // todo : this should be handled by plugins, and should not be explicitly handled here:
-        _wireframeObjectManager.RefreshAll(false);
 
         SelectedStateSave = null;
         SelectedStateCategorySave = null;
@@ -370,11 +372,11 @@ public class SelectedState : ISelectedState
 
     public SelectedState(IGuiCommands guiCommands,
         PluginManager pluginManager,
-        WireframeObjectManager wireframeObjectManager)
+        IMessenger messenger)
     {
         _guiCommands = guiCommands;
         _pluginManager = pluginManager;
-        _wireframeObjectManager = wireframeObjectManager;
+        _messenger = messenger;
     }
 
     #region Instance
@@ -470,6 +472,8 @@ public class SelectedState : ISelectedState
                     _pluginManager.BehaviorSelected(SelectedBehavior);
                 }
             }
+
+            _messenger.Send(new SelectionChangedMessage());
         }
 
     }
@@ -560,15 +564,6 @@ public class SelectedState : ISelectedState
                 SelectedStateSave = SelectedElement.States[0];
             }
         }
-
-        // todo - this should be handled by plugins and should not be explicitly called here
-        if (_wireframeObjectManager.ElementShowing != this.SelectedElement)
-        {
-            _wireframeObjectManager.RefreshAll(false);
-        }
-
-        // This is needed for the wireframe manager, but this should be moved to a plugin
-        GumEvents.Self.CallInstanceSelected();
     }
 
 
@@ -925,7 +920,7 @@ class SelectedStateSnapshot
         }
     }
     //public InstanceSave SelectedInstance { get; set; }
-    public InstanceSave SelectedInstance
+    public InstanceSave? SelectedInstance
     {
         get => SelectedInstances.FirstOrDefault();
         set

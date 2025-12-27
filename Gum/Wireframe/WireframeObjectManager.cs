@@ -31,16 +31,8 @@ public enum InstanceFetchType
 
 public partial class WireframeObjectManager
 {
-    #region Fields
 
-    ElementSave mElementShowing;
 
-    static WireframeObjectManager mSelf;
-
-    GraphicalUiElementManager gueManager;
-    private LocalizationManager _localizationManager;
-
-    #endregion
 
     #region Properties
 
@@ -52,49 +44,49 @@ public partial class WireframeObjectManager
         private set;
     }
 
-    [Obsolete("Inject this through constructors, or grab from locator at the root of plugins/views")]
-    public static WireframeObjectManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new WireframeObjectManager();
-            }
-            return mSelf;
-        }
-    }
 
-    public GraphicalUiElement RootGue
+    public GraphicalUiElement? RootGue
     {
         get;
         private set;
     }
 
-    public System.Windows.Forms.Cursor AddCursor { get; private set; }
 
     #endregion
 
     #region Constructor/Initialize
 
 
-    FontManager _fontManager;
-    private ISelectedState _selectedState;
-    private IDialogService _dialogService;
-    private IGuiCommands _guiCommands;
+    private readonly FontManager _fontManager;
+    private readonly ISelectedState _selectedState;
+    private readonly IDialogService _dialogService;
+    private readonly IGuiCommands _guiCommands;
+    GraphicalUiElementManager gueManager;
+    private LocalizationManager _localizationManager;
+    private readonly PluginManager _pluginManager;
 
-    public WireframeObjectManager() { }
-
-    // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
-    public void Initialize()
+    public WireframeObjectManager(FontManager fontManager,
+        ISelectedState selectedState,
+        IDialogService dialogService,
+        IGuiCommands guiCommands,
+        LocalizationManager localizationManager, 
+        PluginManager pluginManager)
     {
-        _fontManager = Locator.GetRequiredService<FontManager>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _fontManager = fontManager;
+        _selectedState = selectedState;
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
+        _localizationManager = localizationManager;
+        _pluginManager = pluginManager;
 
         gueManager = new GraphicalUiElementManager();
+    }
+
+    // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
+    // Update - self usages are gone, but not sure if these can be moved up, need to run some tests
+    public void Initialize()
+    {
+
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
 
@@ -109,7 +101,7 @@ public partial class WireframeObjectManager
 
 #if GUM
         containedObject =
-            Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
+            _pluginManager.CreateRenderableForType(type);
 #endif
 
         return containedObject;
@@ -153,7 +145,7 @@ public partial class WireframeObjectManager
 
         RefreshAll(forceLayout, forceReloadTextures, elementSave);
 
-        PluginManager.Self.WireframeRefreshed();
+        _pluginManager.WireframeRefreshed();
     }
 
     private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
@@ -194,7 +186,7 @@ public partial class WireframeObjectManager
 
                 try
                 {
-                    RootGue = PluginManager.Self.CreateGraphicalUiElement(elementSave);
+                    RootGue = _pluginManager.CreateGraphicalUiElement(elementSave);
 
                     if(RootGue != null)
                     {

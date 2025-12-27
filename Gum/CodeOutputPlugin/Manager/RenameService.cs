@@ -22,10 +22,11 @@ internal class RenameService
 
     public RenameService(CodeGenerationService codeGenerationService,
         CodeGenerator codeGenerator,
-        CustomCodeGenerator customCodeGenerator)
+        CustomCodeGenerator customCodeGenerator,
+        CodeGenerationNameVerifier nameVerifier)
     {
         _dialogService = Locator.GetRequiredService<IDialogService>();
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
@@ -42,7 +43,8 @@ internal class RenameService
 
     }
 
-    private void RegenerateAndMoveCode(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, FilePath oldGeneratedFileName, FilePath oldCustomFileName, FilePath newCustomFileName,
+    private void RegenerateAndMoveCode(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, FilePath oldGeneratedFileName, 
+        FilePath? oldCustomFileName, FilePath newCustomFileName,
         VisualApi? oldVisualApi = null)
     {
 
@@ -100,7 +102,7 @@ internal class RenameService
         _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, false);
     }
 
-    internal void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
         if(variableName != "BaseType" || instance != null)

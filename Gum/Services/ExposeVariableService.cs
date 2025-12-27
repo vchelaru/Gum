@@ -38,6 +38,7 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
+    private readonly VariableSaveLogic _variableSaveLogic;
 
     public ExposeVariableService(
         IUndoManager undoManager,
@@ -55,6 +56,7 @@ internal class ExposeVariableService : IExposeVariableService
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
+        _variableSaveLogic = new();
     }
 
     public OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
@@ -108,7 +110,7 @@ internal class ExposeVariableService : IExposeVariableService
             using var undoLocl = _undoManager.RequestLock();
             if (existingVariable != null)
             {
-                var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
+                var isActive = _variableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
                 if (isActive == false)
                 {
                     // gotta remove the variable:

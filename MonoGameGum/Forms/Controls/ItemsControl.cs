@@ -319,7 +319,7 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    private void HandleInnerPanelCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleInnerPanelCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {
@@ -347,19 +347,18 @@ public class ItemsControl : ScrollViewer
                 break;
             case NotifyCollectionChangedAction.Remove:
                 {
-                    int absoluteIndex = e.OldStartingIndex;
                     if(e.OldItems != null)
                     {
-                        var topIndex = e.OldStartingIndex + e.OldItems.Count;
                         // Reverse order this so that as we are removing, the internal list count change doesn't
                         // cause an out of bounds exception
                         for(int i = e.OldItems.Count - 1; i > -1; i--)
                         {
+                            var indexInItems = e.OldStartingIndex + i;
                             var asGue = e.OldItems[i] as InteractiveGue;
                             var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
                             if (newFrameworkItem != null)
                             {
-                                HandleCollectionItemRemoved(i);
+                                HandleCollectionItemRemoved(indexInItems);
                             }
                         }
                     }

@@ -1576,9 +1576,37 @@ public class CustomSetPropertyOnRenderable
         }
         else if (value.EndsWith(".achx"))
         {
-            AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+            AnimationChainList? animationChainList = null;
+            try
+            {
+                animationChainList = GetAnimationChainList(ref value, loaderManager);
+                sprite.AnimationChains = animationChainList;
+            }
+            catch(Exception ex)
+            {
+                string message = $"Error setting SourceFile to on Sprite";
 
-            sprite.AnimationChains = animationChainList;
+                if (graphicalUiElement.Tag != null)
+                {
+                    message += $" in {graphicalUiElement.Tag}";
+                }
+                message += $"\n{value}";
+                message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                {
+                    if (ObjectFinder.Self.GumProjectSave == null)
+                    {
+                        message += "\nNo Gum project has been loaded";
+                    }
+
+                    throw new System.IO.FileNotFoundException(message, ex);
+                }
+                sprite.AnimationChains = null;
+
+                PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
+            }
+
 
             sprite.RefreshCurrentChainToDesiredName();
 
@@ -1646,7 +1674,7 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static AnimationChainList GetAnimationChainList(ref string value, 
+    private static AnimationChainList? GetAnimationChainList(ref string value, 
         // fully qualify to avoid Android namign conflicts
         global::RenderingLibrary.Content.LoaderManager loaderManager)
     {
@@ -1657,7 +1685,7 @@ public class CustomSetPropertyOnRenderable
             value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
         }
 
-        AnimationChainList animationChainList = null;
+        AnimationChainList? animationChainList = null;
 
         if (loaderManager.CacheTextures)
         {
@@ -1667,7 +1695,7 @@ public class CustomSetPropertyOnRenderable
         if (animationChainList == null)
         {
             var animationChainListSave = AnimationChainListSave.FromFile(value);
-            animationChainList = animationChainListSave.ToAnimationChainList(null);
+            animationChainList = animationChainListSave.ToAnimationChainList();
             if (loaderManager.CacheTextures)
             {
                 loaderManager.AddDisposable(value, animationChainList);
@@ -1728,39 +1756,39 @@ public class CustomSetPropertyOnRenderable
 
     public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
     {
-        var managers = iSystemManagers as SystemManagers;
+        var managers = (SystemManagers)iSystemManagers;
 
-        if (renderable is Sprite)
+        if (renderable is Sprite asSprite)
         {
-            managers.SpriteManager.Remove(renderable as Sprite);
+            managers.SpriteManager.Remove(asSprite);
         }
-        else if (renderable is NineSlice)
+        else if (renderable is NineSlice asNineSlice)
         {
-            managers.SpriteManager.Remove(renderable as NineSlice);
+            managers.SpriteManager.Remove(asNineSlice);
         }
-        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle asLineRectangle)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+            managers.ShapeManager.Remove(asLineRectangle);
         }
-        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon)
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon asLinePolygon)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LinePolygon);
+            managers.ShapeManager.Remove(asLinePolygon);
         }
-        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle)
+        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle solidRectangle)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Graphics.SolidRectangle);
+            managers.ShapeManager.Remove(solidRectangle);
         }
-        else if (renderable is Text)
+        else if (renderable is Text asText)
         {
-            managers.TextManager.Remove(renderable as Text);
+            managers.TextManager.Remove(asText);
         }
-        else if (renderable is LineCircle)
+        else if (renderable is LineCircle asLineCircle)
         {
-            managers.ShapeManager.Remove(renderable as LineCircle);
+            managers.ShapeManager.Remove(asLineCircle);
         }
-        else if (renderable is InvisibleRenderable)
+        else if (renderable is InvisibleRenderable asInvisibleRenderable)
         {
-            managers.SpriteManager.Remove(renderable as InvisibleRenderable);
+            managers.SpriteManager.Remove(asInvisibleRenderable);
         }
         else if (renderable != null)
         {

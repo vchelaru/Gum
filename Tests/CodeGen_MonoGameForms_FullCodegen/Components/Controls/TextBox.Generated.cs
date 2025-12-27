@@ -229,9 +229,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.Background.SetProperty("StyleCategoryState", "Bordered");
 
         this.ClipContainer.ClipsChildren = true;
-        this.ClipContainer.Height = 0f;
+        this.ClipContainer.Height = -0f;
         this.ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.ClipContainer.Width = 0f;
+        this.ClipContainer.Width = -0f;
         this.ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.ClipContainer.X = 0f;
         this.ClipContainer.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;

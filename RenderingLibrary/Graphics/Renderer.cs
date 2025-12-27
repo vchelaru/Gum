@@ -50,7 +50,6 @@ public class Renderer : IRenderer
 
     GraphicsDevice mGraphicsDevice;
 
-    static Renderer mSelf;
     private RenderTargetService renderTargetService;
     Camera mCamera;
 

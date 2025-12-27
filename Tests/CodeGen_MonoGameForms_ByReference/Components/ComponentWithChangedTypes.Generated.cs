@@ -38,11 +38,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     public SpriteRuntime Icon { get; protected set; }
 
-    public IconCategory IconType
-    {
-        get => Icon.;
-        set => Icon. = value;
-    }
+    // Could not generate variable Icon.IconCategoryState (IconCategory) = GamepadXbox[exposed as IconType] because it references a variable that doesn't exist
 
     public ComponentWithChangedTypes(InteractiveGue visual) : base(visual)
     {

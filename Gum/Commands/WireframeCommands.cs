@@ -5,9 +5,15 @@ namespace Gum.Commands;
 
 public class WireframeCommands
 {
+    private readonly WireframeObjectManager _wireframeObjectManager;
+    public WireframeCommands(WireframeObjectManager wireframeObjectManager)
+    {
+        _wireframeObjectManager = wireframeObjectManager;
+    }
+
     public void Refresh(bool forceLayout = true, bool forceReloadContent = false)
     {
-        WireframeObjectManager.Self.RefreshAll(forceLayout, forceReloadContent);
+        _wireframeObjectManager.RefreshAll(forceLayout, forceReloadContent);
     }
 
     bool areRulersVisible = true;
@@ -44,6 +50,7 @@ public class WireframeCommands
     }
 
     bool areHighlightsVisible;
+
     public bool AreHighlightsVisible
     {
         get => areHighlightsVisible;

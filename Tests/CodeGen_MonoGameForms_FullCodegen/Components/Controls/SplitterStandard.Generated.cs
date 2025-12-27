@@ -48,7 +48,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     {
 
         this.Visual.Height = 5f;
-        this.Visual.Width = 0f;
+        this.Visual.Width = -0f;
         this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.Visual.X = 0f;
         this.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
@@ -77,9 +77,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     {
         this.NineSliceInstance.SetProperty("ColorCategoryState", "DarkGray");
         this.NineSliceInstance.SetProperty("StyleCategoryState", "Bordered");
-        this.NineSliceInstance.Height = 0f;
+        this.NineSliceInstance.Height = -0f;
         this.NineSliceInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.NineSliceInstance.Width = 0f;
+        this.NineSliceInstance.Width = -0f;
         this.NineSliceInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.NineSliceInstance.X = 0f;
         this.NineSliceInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;

@@ -47,3 +47,5 @@ public class Game1 : Game
     }
 }
 ```
+
+Next, you can begin adding Gum to your project. For more information see the [Adding/Initializing Gum](../adding-initializing-gum/monogame-kni-fna.md) page.

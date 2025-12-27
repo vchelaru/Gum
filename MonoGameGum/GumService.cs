@@ -3,27 +3,28 @@ using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
 using GumRuntime;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
-using MonoGameGum.Input;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using ToolsUtilities;
 using Gum.Forms;
-using System.Collections.Specialized;
 using Gum.Threading;
 
+#if MONOGAME || KNI || FNA
+using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 namespace MonoGameGum;
+#elif RAYLIB
+using Gum.GueDeriving;
+using RaylibGum.Input;
+namespace RaylibGum;
+#endif
 
 public class GumService
 {
@@ -43,11 +44,13 @@ public class GumService
 
     #endregion
 
+#if MONOGAME || KNI || FNA
     public GameTime GameTime { get; private set; }
+#endif
 
-    public Cursor Cursor => Gum.Forms.FormsUtilities.Cursor;
+    public Cursor Cursor => FormsUtilities.Cursor;
 
-    public Keyboard Keyboard => Gum.Forms.FormsUtilities.Keyboard;
+    public Keyboard Keyboard => FormsUtilities.Keyboard;
 
     public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
 
@@ -82,7 +85,14 @@ public class GumService
         Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
     }
 
+    public void UseGamepadDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+    }
+
+#if MONOGAME || KNI || FNA
     Game _game;
+#endif
 
     #region Initialize
 
@@ -103,11 +113,14 @@ public class GumService
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
+#if MONOGAME || KNI || FNA
     /// <param name="game">The game instance.</param>
+#endif
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
+#if MONOGAME || KNI || FNA
         if (game.GraphicsDevice == null)
         {
             throw new InvalidOperationException(
@@ -115,9 +128,10 @@ public class GumService
                 "Be sure to call Initialize in the Game's Initialize method or later " +
                 "so that the Game has a valid GrahicsDevice");
         }
+#endif
 
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile, defaultVisualsVersion:
-            Gum.Forms.DefaultVisualsVersion.V2);
+            Gum.Forms.DefaultVisualsVersion.Newest);
     }
 
 
@@ -179,17 +193,17 @@ public class GumService
         return InitializeInternal(null, graphicsDevice, gumProjectFile);
     }
 
-    bool hasBeenInitialized = false;
+    public bool IsInitialized { get; private set; }
     GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, 
         string? gumProjectFile = null, 
         SystemManagers? systemManagers = null, 
         Gum.Forms.DefaultVisualsVersion defaultVisualsVersion = Gum.Forms.DefaultVisualsVersion.V1)
     {
-        if(hasBeenInitialized)
+        if(IsInitialized)
         {
             throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
         }
-        hasBeenInitialized = true;
+        IsInitialized = true;
 
         _game = game;
         RegisterRuntimeTypesThroughReflection();
@@ -202,8 +216,13 @@ public class GumService
             ISystemManagers.Default = this.SystemManagers;
 #endif
         }
+
+#if MONOGAME || FNA || KNI
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-        
+#elif raylib
+
+#endif
+
         FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
 
@@ -213,9 +232,6 @@ public class GumService
         var mainLayer = SystemManagers.Renderer.MainLayer;
         mainLayer.Remove(Root.RenderableComponent as IRenderableIpso);
         mainLayer.Insert(0, Root.RenderableComponent as IRenderableIpso);
-
-        // make sure the Root is the first in the list:
-
 
         GumProjectSave? gumProject = null;
 
@@ -283,7 +299,7 @@ public class GumService
         }
     }
 
-    #endregion
+#endregion
 
     #region Update
 

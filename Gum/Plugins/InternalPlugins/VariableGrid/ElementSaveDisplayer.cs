@@ -42,6 +42,7 @@ public class ElementSaveDisplayer
     private readonly SubtextLogic _subtextLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
+    private readonly VariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
 
     #endregion
@@ -51,6 +52,7 @@ public class ElementSaveDisplayer
         _subtextLogic = subtextLogic;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _variableSaveLogic = new VariableSaveLogic();
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
     }
 
@@ -669,7 +671,7 @@ public class ElementSaveDisplayer
         // Not sure why we were passing elementSave to this function:
         // I added a container object
         //bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
-        bool shouldInclude = Gum.Logic.VariableSaveLogic.GetIfVariableIsActive(defaultVariable, container, instanceSave);
+        bool shouldInclude = _variableSaveLogic.GetIfVariableIsActive(defaultVariable, container, instanceSave);
 
         shouldInclude &= (
             string.IsNullOrEmpty(defaultVariable.SourceObject) || 
@@ -825,7 +827,7 @@ public class ElementSaveDisplayer
         }
     }
 
-    private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance)
+    private bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance)
     {
         bool toReturn = (string.IsNullOrEmpty(variableList.SourceObject));
 
@@ -842,7 +844,7 @@ public class ElementSaveDisplayer
                 rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(container);
             }
 
-            toReturn = VariableSaveLogic.GetShouldIncludeBasedOnBaseType(variableList, container, rootElementSave);
+            toReturn = _variableSaveLogic.GetShouldIncludeBasedOnBaseType(variableList, container, rootElementSave);
         }
 
         return toReturn;

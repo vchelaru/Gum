@@ -31,6 +31,8 @@ public class CircleRuntime : SkiaShapeRuntime
         {
             SetContainedObject(new Circle());
             ContainedCircle.StrokeWidth = 1;
+            StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+
             ContainedCircle.IsFilled = false;
             this.Color = SKColors.White;
             Width = 100;
