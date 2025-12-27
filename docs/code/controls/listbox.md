@@ -31,6 +31,69 @@ button.Click += (s, e) =>
 
 <figure><img src="../../.gitbook/assets/13_09 05 48.gif" alt=""><figcaption><p>Adding items to a ListBox by clicking a button</p></figcaption></figure>
 
+## Items
+
+The Items property contains the data that is displayed by the ListBox. Whenever an object is added to Items, the ListBox creates a ListBoxItem instance.
+
+Any object can be added to Items. By default, ToList is called on any added item. The following code shows how `int` andn `string` instances can be added and mixed in a ListBox:
+
+```csharp
+StackPanel stackPanel = new();
+stackPanel.AddToRoot();
+stackPanel.Anchor(Anchor.Center);
+
+ListBox listBox = new();
+stackPanel.AddChild(listBox);
+
+
+Button addIntButton = new();
+addIntButton.Text = "Add Integer";
+stackPanel.AddChild(addIntButton);
+addIntButton.Click += (not, used) =>
+{
+    listBox.Items.Add(new Random().Next(0, 100));
+};
+
+Button addStringButton = new();
+addStringButton.Text = "Add String";
+stackPanel.AddChild(addStringButton);
+addStringButton.Click += (not, used) =>
+{
+    listBox.Items.Add("Hello " + DateTime.Now.Ticks);
+};
+```
+
+<figure><img src="../../.gitbook/assets/26_21 44 00.gif" alt=""><figcaption><p>Items added to a ListBox</p></figcaption></figure>
+
+### Adding ListBoxItems to Items
+
+If a ListBoxItem is added directly to the Items property, then the ListBox uses this ListBoxItem directly rather than creating a new ListBoxItem. This simplifies the creation of ListBoxItems.&#x20;
+
+For example, the following code shows how to create ListBoxItems with custom colors:
+
+```csharp
+ListBox listBox = new();
+listBox.AddToRoot();
+listBox.Anchor(Anchor.Center);
+
+for(int i  = 0; i < 5; i++)
+{
+    ListBoxItem item = new();
+    item.UpdateToObject("Item " + i);
+
+    var visual = (ListBoxItemVisual)item.Visual;
+
+    visual.ForegroundColor = Color.Pink;
+    visual.HighlightedBackgroundColor = Color.Red;
+    visual.SelectedBackgroundColor = Color.Green;
+
+    // add the ListBoxitem directly
+    listBox.Items.Add(item);
+}
+```
+
+<figure><img src="../../.gitbook/assets/26_21 51 15.gif" alt=""><figcaption><p>ListBoxItems directly added</p></figcaption></figure>
+
 ## Selection
 
 ListBox items can be selected. The ListBox class provides a number of ways to work with the selection.
