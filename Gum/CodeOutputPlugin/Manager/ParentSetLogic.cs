@@ -160,7 +160,7 @@ public class ParentSetLogic
         return toReturn;
     }
 
-    private GeneralResponse CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(InstanceSave instance, InstanceSave newParent, ElementSave element)
+    private GeneralResponse CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(InstanceSave instance, InstanceSave? newParent, ElementSave element)
     {
         VisualApi parentVisualApi;
         VisualApi childVisualApi = CodeGenerator.GetVisualApiForInstance(instance, element);
