@@ -41,7 +41,7 @@ internal enum PluginCategories
 
 #endregion
 
-public class PluginManager
+public class PluginManager : IPluginManager
 {
     #region Fields
 
@@ -422,10 +422,10 @@ public class PluginManager
         CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
 
 
-    internal void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
+    public virtual void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
 
-    internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
+    public virtual void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
         CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
 
     internal StateSave? GetDefaultStateFor(string type)

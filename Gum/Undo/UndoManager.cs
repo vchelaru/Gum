@@ -93,6 +93,7 @@ public class UndoManager : IUndoManager
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IMessenger _messenger;
+    private readonly PluginManager _pluginManager;
 
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
@@ -100,9 +101,9 @@ public class UndoManager : IUndoManager
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
 
-    UndoSnapshot recordedSnapshot;
+    UndoSnapshot? recordedSnapshot;
     
-    public UndoSnapshot RecordedSnapshot => recordedSnapshot;
+    public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
     public ElementHistory CurrentElementHistory
     {
         get
@@ -126,7 +127,7 @@ public class UndoManager : IUndoManager
 
     #region Events/Invokations
 
-    public event EventHandler<UndoOperationEventArgs> UndosChanged;
+    public event EventHandler<UndoOperationEventArgs>? UndosChanged;
 
     public void BroadcastUndosChanged() => InvokeUndosChanged(UndoOperation.EntireHistoryChange);
 
@@ -138,13 +139,15 @@ public class UndoManager : IUndoManager
         IRenameLogic renameLogic, 
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IMessenger messenger)
+        IMessenger messenger,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _messenger = messenger;
+        _pluginManager = pluginManager;
 
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
@@ -468,53 +471,61 @@ public class UndoManager : IUndoManager
 
 
 
-        ElementSave toApplyTo = _selectedState.SelectedElement;
+        ElementSave? toApplyTo = _selectedState.SelectedElement;
 
-        ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, 
-            out bool shouldRefreshWireframe, 
-            out bool shouldRefreshStateTreeView,
-            out bool shouldRefreshBehaviorView);
+        AddedAndRemovedInstances? addedAndRemovedInstances = null;
 
-        //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
-        //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
-        //{
-
-        StateSave stateToSelect = null;
-        if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
+        if (toApplyTo != null)
         {
-            var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
-            if(category != null)
+            addedAndRemovedInstances = ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, 
+                out bool shouldRefreshWireframe, 
+                out bool shouldRefreshStateTreeView,
+                out bool shouldRefreshBehaviorView);
+
+            //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
+            //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
+            //{
+
+            StateSave? stateToSelect = null;
+            if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
             {
-                stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
+                var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
+                if(category != null)
+                {
+                    stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
+                }
             }
+            else
+            {
+                stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
+            }
+            if (stateToSelect != null)
+            {
+                isRecordingUndos = false;
+                _selectedState.SelectedStateSave = stateToSelect;
+
+                isRecordingUndos = true;
+            }
+
+            var newIndex = elementHistory.UndoIndex - 1;
+
+            //if (isLast)
+            //{
+            //    RecordUndo();
+            //}
+
+            elementHistory.UndoIndex = newIndex;
+            DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, 
+                shouldRefreshBehaviorView,
+                addedAndRemovedInstances);
         }
-        else
-        {
-            stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-        }
-        if (stateToSelect != null)
-        {
-            isRecordingUndos = false;
-            _selectedState.SelectedStateSave = stateToSelect;
-
-            isRecordingUndos = true;
-        }
-
-        var newIndex = elementHistory.UndoIndex - 1;
-
-        //if (isLast)
-        //{
-        //    RecordUndo();
-        //}
-
-        elementHistory.UndoIndex = newIndex;
-        DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, shouldRefreshBehaviorView);
     }
 
     private void DoAfterUndoLogic(ElementSave toApplyTo,
         bool shouldRefreshWireframe, 
         bool shouldRefreshStateTreeView, 
-        bool shouldRefreshBehaviorView)
+        bool shouldRefreshBehaviorView,
+        AddedAndRemovedInstances? addedAndRemovedInstances)
     {
         RecordState();
 
@@ -523,6 +534,15 @@ public class UndoManager : IUndoManager
         _messenger.Send(new AfterUndoMessage());
 
         _guiCommands.RefreshElementTreeView(toApplyTo);
+
+        if(addedAndRemovedInstances != null)
+        {
+            foreach(var addedInstance in addedAndRemovedInstances.Value.Added)
+            {
+                _pluginManager.InstanceAdd(toApplyTo, addedInstance);
+            }
+            _pluginManager.InstancesDelete(toApplyTo, addedAndRemovedInstances.Value.Removed);
+        }
 
         if (shouldRefreshStateTreeView)
         {
@@ -604,30 +624,39 @@ public class UndoManager : IUndoManager
 
         ElementSave toApplyTo = _selectedState.SelectedElement;
 
-        ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, 
-            out bool shouldRefreshWireframe, 
-            out bool shouldRefreshStateTreeView,
-            out bool shouldRefreshBehaviorView);
+        AddedAndRemovedInstances? addedAndRemoved = null;
 
-        if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
-            redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
+        if (toApplyTo != null)
         {
-            var listOfStates = toApplyTo.States;
-            var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
+            addedAndRemoved = ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true,
+                out bool shouldRefreshWireframe,
+                out bool shouldRefreshStateTreeView,
+                out bool shouldRefreshBehaviorView);
 
-            if (state != null)
+            if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
+                redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
             {
-                isRecordingUndos = false;
-                _selectedState.SelectedStateSave = state;
+                var listOfStates = toApplyTo.States;
+                var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
 
-                isRecordingUndos = true;
+                if (state != null)
+                {
+                    isRecordingUndos = false;
+                    _selectedState.SelectedStateSave = state;
+
+                    isRecordingUndos = true;
+                }
             }
+
+            elementHistory.UndoIndex++;
+
+            DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, 
+                shouldRefreshStateTreeView, 
+                shouldRefreshBehaviorView,
+                addedAndRemoved);
+
         }
 
-        elementHistory.UndoIndex++;
-
-        DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, 
-            shouldRefreshBehaviorView);
     }
 
     public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
@@ -635,7 +664,7 @@ public class UndoManager : IUndoManager
         ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges, out bool _, out bool _, out bool _);
     }
 
-    private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,
+    private AddedAndRemovedInstances? ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,
         bool propagateNameChanges, out bool shouldRefreshWireframe, 
         out bool shouldRefreshStateTreeView, 
         out bool shouldRefreshBehaviorView)
@@ -687,9 +716,11 @@ public class UndoManager : IUndoManager
             shouldRefreshBehaviorView = true;
         }
 
+        AddedAndRemovedInstances? addedAndRemovedInstances = null;
+
         if (elementInUndoSnapshot.Instances != null)
         {
-            AddAndRemoveInstances(elementInUndoSnapshot.Instances, toApplyTo.Instances, toApplyTo);
+            addedAndRemovedInstances = AddAndRemoveInstances(elementInUndoSnapshot.Instances, toApplyTo.Instances, toApplyTo);
             shouldRefreshWireframe = true;
         }
         if (!string.IsNullOrEmpty(elementInUndoSnapshot.Name))
@@ -698,7 +729,7 @@ public class UndoManager : IUndoManager
             toApplyTo.Name = elementInUndoSnapshot.Name;
             if (propagateNameChanges)
             {
-                _renameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
+                _renameLogic.HandleRename(toApplyTo, (InstanceSave?)null, oldName, NameChangeAction.Rename, askAboutRename: false);
             }
         }
         if(elementInUndoSnapshot.BaseType != null)
@@ -720,6 +751,8 @@ public class UndoManager : IUndoManager
                     .FirstOrDefault(item => item.Name == undoSnapshot.CategoryName)?.States;
             }
         }
+
+        return addedAndRemovedInstances;
     }
 
     // Normally we wouldn't do this in the pattern but the originator itself
@@ -801,10 +834,23 @@ public class UndoManager : IUndoManager
         }
     }
 
-    void AddAndRemoveInstances(List<InstanceSave> undoList, List<InstanceSave> listToApplyTo, ElementSave parent)
+    record struct AddedAndRemovedInstances(InstanceSave[] Added, InstanceSave[] Removed);
+
+    AddedAndRemovedInstances AddAndRemoveInstances(List<InstanceSave>? undoList, List<InstanceSave>? listToApplyTo, ElementSave parent)
     {
+        InstanceSave[] added = Array.Empty<InstanceSave>();
+        InstanceSave[] removed = Array.Empty<InstanceSave>();
+
         if (listToApplyTo != null && undoList != null)
         {
+            var oldNames = new HashSet<string>(listToApplyTo.Select(item => item.Name));
+            var newNames = new HashSet<string>(undoList.Select(item => item.Name));
+
+            var namesToRemove = oldNames.Except(newNames).ToList();
+
+            removed = listToApplyTo.Where(item => namesToRemove.Contains(item.Name)).ToArray();
+            added = undoList.Where(item => !oldNames.Contains(item.Name)).ToArray();
+
             listToApplyTo.Clear();
 
             foreach (var undoItem in undoList)
@@ -813,6 +859,8 @@ public class UndoManager : IUndoManager
                 listToApplyTo.Add(undoItem);
             }
         }
+
+        return new AddedAndRemovedInstances(added, removed);
     }
 
     void PrintStatus(string reason)
