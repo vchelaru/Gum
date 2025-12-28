@@ -22,6 +22,7 @@ public class UndoManagerTests : BaseTestClass
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IMessenger> _messenger;
+    private readonly Mock<PluginManager> _pluginManager;
     private readonly UndoManager _undoManager;
 
     public UndoManagerTests()
@@ -31,6 +32,7 @@ public class UndoManagerTests : BaseTestClass
         _guiCommands = new Mock<IGuiCommands>();
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
+        _pluginManager = new Mock<PluginManager>();
 
         ComponentSave component = new();
         component.States.Add(new Gum.DataTypes.Variables.StateSave 
@@ -57,7 +59,8 @@ public class UndoManagerTests : BaseTestClass
             _renameLogic.Object,
             _guiCommands.Object,
             _fileCommands.Object,
-            _messenger.Object
+            _messenger.Object,
+            _pluginManager.Object
             );
     }
 

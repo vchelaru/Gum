@@ -138,7 +138,8 @@ public class UndoManager : IUndoManager
         IRenameLogic renameLogic, 
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IMessenger messenger)
+        IMessenger messenger,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _renameLogic = renameLogic;
@@ -468,7 +469,7 @@ public class UndoManager : IUndoManager
 
 
 
-        ElementSave toApplyTo = _selectedState.SelectedElement;
+        ElementSave? toApplyTo = _selectedState.SelectedElement;
 
         ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, 
             out bool shouldRefreshWireframe, 
@@ -479,7 +480,7 @@ public class UndoManager : IUndoManager
         //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
         //{
 
-        StateSave stateToSelect = null;
+        StateSave? stateToSelect = null;
         if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
         {
             var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
@@ -698,7 +699,7 @@ public class UndoManager : IUndoManager
             toApplyTo.Name = elementInUndoSnapshot.Name;
             if (propagateNameChanges)
             {
-                _renameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
+                _renameLogic.HandleRename(toApplyTo, (InstanceSave?)null, oldName, NameChangeAction.Rename, askAboutRename: false);
             }
         }
         if(elementInUndoSnapshot.BaseType != null)
@@ -801,7 +802,7 @@ public class UndoManager : IUndoManager
         }
     }
 
-    void AddAndRemoveInstances(List<InstanceSave> undoList, List<InstanceSave> listToApplyTo, ElementSave parent)
+    void AddAndRemoveInstances(List<InstanceSave>? undoList, List<InstanceSave>? listToApplyTo, ElementSave parent)
     {
         if (listToApplyTo != null && undoList != null)
         {
