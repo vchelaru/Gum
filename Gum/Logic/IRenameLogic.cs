@@ -24,7 +24,7 @@ public interface IRenameLogic
 
     #region Element
 
-    GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true);
+    GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave? instance, string oldName, NameChangeAction action, bool askAboutRename = true);
 
 
 

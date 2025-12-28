@@ -22,9 +22,15 @@ internal class CodeGenerationFileLocationsService
         _nameVerifier = nameVerifier;
     }
 
-    public FilePath GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
+    public FilePath? GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
         CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi, string? forcedElementName = null )
     {
+        ///////////////////Early Out///////////////////
+        if (codeOutputProjectSettings.CodeProjectRoot == null)
+        {
+            return null;
+        }
+        /////////////////End Early Out/////////////////
         string generatedFileName = elementSettings.GeneratedFileName;
 
         if(!string.IsNullOrEmpty(forcedElementName))

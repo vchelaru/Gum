@@ -302,7 +302,7 @@ public class RenameLogic : IRenameLogic
 
     #region Element
 
-    public GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
+    public GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave? instance, string oldName, NameChangeAction action, bool askAboutRename = true)
     {
         GeneralResponse toReturn = new GeneralResponse();
         toReturn.Succeeded = false;

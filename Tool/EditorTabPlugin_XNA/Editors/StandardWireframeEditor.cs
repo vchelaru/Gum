@@ -48,7 +48,7 @@ public class StandardWireframeEditor : WireframeEditor
     private readonly IElementCommands _elementCommands;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly SelectionManager _selectionManager;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public InputLibrary.Cursor Cursor
     {
@@ -82,7 +82,7 @@ public class StandardWireframeEditor : WireframeEditor
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         WireframeObjectManager wireframeObjectManager)
         : base(
               hotkeyManager, 
