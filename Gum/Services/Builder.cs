@@ -103,7 +103,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();
         services.AddSingleton<MainOutputViewModel>();
+
+        // temporary while transitioning all usage from WireframeObjectManager to IWireframeObjectManager
         services.AddSingleton<WireframeObjectManager>();
+        services.AddSingleton<IWireframeObjectManager>(provider => provider.GetRequiredService<WireframeObjectManager>());
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<ReorderLogic>();
@@ -115,7 +118,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<IEditCommands, EditCommands>();
-        services.AddSingleton<VariableInCategoryPropagationLogic>();
+        services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<ProjectCommands>();

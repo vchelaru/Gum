@@ -63,7 +63,7 @@ public class SetVariableLogic
     private readonly IUndoManager _undoManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IDialogService _dialogService;
     private readonly PluginManager _pluginManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
@@ -79,7 +79,7 @@ public class SetVariableLogic
         FontManager fontManager,
         IFileCommands fileCommands,
         CircularReferenceManager circularReferenceManager,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IDialogService dialogService,
         PluginManager pluginManager,
         WireframeObjectManager wireframeObjectManager)

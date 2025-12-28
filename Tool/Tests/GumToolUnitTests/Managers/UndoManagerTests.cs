@@ -81,6 +81,39 @@ public class UndoManagerTests : BaseTestClass
         component.DefaultState.GetValueOrDefault<float>("X").ShouldBe(10.0f);
     }
 
+    [Fact]
+    public void PerformUndo_ShouldAddRemovedInstance()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        var instance = new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        };
+
+        component.Instances.Add(instance);
+
+        _undoManager.RecordState();
+
+        component.Instances.Clear();
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.Instances.Count.ShouldBe(1);
+        component.Instances[0].Name.ShouldBe("Instance1");
+        component.Instances[0].BaseType.ShouldBe("Sprite");
+        component.Instances[0].ParentContainer.ShouldBe(component);
+    }
+
+    [Fact]
+    public void PerformUndo_OnDeletedInstance_ShouldNotifyPluginOfInstanceAdd()
+    {
+
+    }
+
 
     [Fact]
     public void CurrentElementHistory_ShouldReportVariableChanges()
@@ -170,4 +203,5 @@ public class UndoManagerTests : BaseTestClass
 
         _undoManager.RecordUndo();
     }
+
 }

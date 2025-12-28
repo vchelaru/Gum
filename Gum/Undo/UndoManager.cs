@@ -100,9 +100,9 @@ public class UndoManager : IUndoManager
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
 
-    UndoSnapshot recordedSnapshot;
+    UndoSnapshot? recordedSnapshot;
     
-    public UndoSnapshot RecordedSnapshot => recordedSnapshot;
+    public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
     public ElementHistory CurrentElementHistory
     {
         get
@@ -126,7 +126,7 @@ public class UndoManager : IUndoManager
 
     #region Events/Invokations
 
-    public event EventHandler<UndoOperationEventArgs> UndosChanged;
+    public event EventHandler<UndoOperationEventArgs>? UndosChanged;
 
     public void BroadcastUndosChanged() => InvokeUndosChanged(UndoOperation.EntireHistoryChange);
 

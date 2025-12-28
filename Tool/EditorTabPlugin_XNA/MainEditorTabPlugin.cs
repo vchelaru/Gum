@@ -131,7 +131,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private LayerService _layerService;
     private ContextMenuStrip _wireframeContextMenuStrip;
     private EditingManager _editingManager;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
 
 
@@ -151,7 +151,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _editingManager = new EditingManager(
             Locator.GetRequiredService<WireframeObjectManager>(),
             Locator.GetRequiredService<ReorderLogic>());
-        _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+        _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
