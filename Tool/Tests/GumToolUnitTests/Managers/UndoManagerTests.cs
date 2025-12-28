@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -33,6 +34,7 @@ public class UndoManagerTests : BaseTestClass
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
         _pluginManager = new Mock<PluginManager>();
+        _pluginManager.Object.Plugins = new List<PluginBase>();
 
         ComponentSave component = new();
         component.States.Add(new Gum.DataTypes.Variables.StateSave 
@@ -114,7 +116,50 @@ public class UndoManagerTests : BaseTestClass
     [Fact]
     public void PerformUndo_OnDeletedInstance_ShouldNotifyPluginOfInstanceAdd()
     {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
+        var instance = new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        };
+
+        component.Instances.Add(instance);
+
+        _undoManager.RecordState();
+
+        component.Instances.Clear();
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _pluginManager.Verify(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void PerformUndo_OnAddedInstance_ShouldNotifyPluginOfInstanceAdd()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        _undoManager.RecordState();
+
+        var instance = new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        };
+
+        component.Instances.Add(instance);
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _pluginManager.Verify(
+            x => x.InstancesDelete(It.IsAny<ElementSave>(), It.IsAny<InstanceSave[]>()),
+            Times.Once);
     }
 
 
