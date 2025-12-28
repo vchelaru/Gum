@@ -133,7 +133,7 @@ var visualOver = GumUI.Cursor.WindowOver;
 
 ✅New:
 
-```
+```csharp
 var visualPushed = GumUI.Cursor.VisualPushed;
 var visualOver = GumUI.Cursor.VisualOver;
 ```
