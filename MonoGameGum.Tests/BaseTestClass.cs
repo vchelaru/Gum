@@ -57,5 +57,7 @@ public class BaseTestClass : IDisposable
         CustomSetPropertyOnRenderable.LocalizationService = null;
 
         FileManager.CustomGetStreamFromFile = null;
+
+        GraphicalUiElement.GlobalFontScale = 1;
     }
 }
