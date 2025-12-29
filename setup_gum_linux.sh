@@ -298,9 +298,17 @@ mkdir -p ~/bin &> /dev/null
 cat > ~/bin/gum <<EOF
 #!/bin/bash
 
+# Setup Env vars (harmless if unsupported)
+export WINE_NO_WM_DECORATION=1
+export PROTON_NO_WM_DECORATION=1
+
 # If no arguments were passed in, then just run gum
 if [ \$# -eq 0 ]; then
+
+    # Attempt to add registry keys
     WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\X11 Driver" /v Decorated /t REG_SZ /d N /f
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Mac Driver" /v Decorated /t REG_SZ /d N /f
+
     WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine "$GUM_EXE_PATH"
     exit 0
 fi
