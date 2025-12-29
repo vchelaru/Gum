@@ -2,6 +2,8 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic.FileWatch;
+using Gum.Managers;
+using Microsoft.VisualBasic.ApplicationServices;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -16,13 +18,29 @@ using System.Threading.Tasks;
 using System.Windows;
 using ToolsUtilities;
 
-namespace Gum.Managers;
+namespace Gum.Services.Fonts;
 
 public class FontManager 
 {
+    int[] availableSizes = new int[]
+    {
+        32,
+        64,
+        128,
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192
+    };
+
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly FileWatchManager _fileWatchManager;
+
+    public string AbsoluteFontCacheFolder => _fileCommands.ProjectDirectory + "FontCache/";
+    string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
 
     public FontManager(IGuiCommands guiCommands, 
         IFileCommands fileCommands,
@@ -33,13 +51,6 @@ public class FontManager
         _fileWatchManager = fileWatchManager;
     }
 
-    public string AbsoluteFontCacheFolder
-    {
-        get
-        {
-            return _fileCommands.ProjectDirectory + "FontCache/";
-        }
-    }
 
     public void DeleteFontCacheFolder()
     {
@@ -115,15 +126,28 @@ public class FontManager
             TrySaveBmFontExe(assembly);
         }
 
-        foreach (var item in bitmapFonts)
-
+        if(project.AutoSizeFontOutputs)
         {
+            foreach (var item in bitmapFonts)
+            {
+                System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
 
-            System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
-
-            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true));
+                // this is really heavy, so let's just do one at a time:
+                await TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true, project.AutoSizeFontOutputs);
+            }
 
         }
+        else
+        {
+            foreach (var item in bitmapFonts)
+            {
+                System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
+
+                tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true, project.AutoSizeFontOutputs));
+            }
+
+        }
+
 
         await Task.WhenAll(tasks);
 
@@ -158,7 +182,8 @@ public class FontManager
                 showSpinner:false, 
                 // don't create a task, so that the function does not continue
                 // until the font is recreated.
-                createTask:false);
+                createTask:false,
+                gumProject.AutoSizeFontOutputs);
         }
 
         var container = stateSave.ParentContainer;
@@ -171,7 +196,7 @@ public class FontManager
         }
     }
 
-    private BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
+    public BmfcSave? TryGetBmfcSaveFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues)
     {
         string prefix = "";
         if (instance != null)
@@ -206,11 +231,16 @@ public class FontManager
         return bmfcSave;
     }
 
-    private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
+    private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask,
+        bool iterativelyDetermineSize)
     {
-        AssignEstimatedNeededSizeOn(bmfcSave);
 
-        var response = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
+        if(force || GetFilePath(bmfcSave, null).Exists() == false)
+        {
+           await AssignEstimatedNeededSizeOn(bmfcSave, iterativelyDetermineSize, null);
+        }
+
+        var response = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask, null);
 
         if(response.Succeeded == false)
         {
@@ -229,17 +259,148 @@ public class FontManager
         return response;
     }
 
-    async Task<OptionallyAttemptedGeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
-    {
 
+    public async Task<GeneralResponse<int>> GetOptimizedSizeFor(BmfcSave bmfcSave,
+        bool forceMonoSpacedNumber, Action<string>? callback)
+    {
+        // todo finish here
+
+        int index = availableSizes.Length / 2;
+        int minIndex = 0;
+        int maxIndex = availableSizes.Length - 1;
+
+        var guess = availableSizes[index];
+        int bestIndexAt1Page = maxIndex;
+
+        while(minIndex < maxIndex)
+        {
+            bmfcSave.OutputWidth = guess;
+            bmfcSave.OutputHeight = guess;
+
+            callback?.Invoke($"Testing {bmfcSave}, guessing {guess}x{guess}...");
+
+            var pageCount = await GetPageCountFor(bmfcSave, forceMonoSpacedNumber, showSpinner:false, createTask:true);
+
+
+
+            if (pageCount.Succeeded == false)
+            {
+                return GeneralResponse<int>.UnsuccessfulWith(pageCount.Message);
+            }
+            else
+            {
+                callback?.Invoke($"{guess}x{guess} requires {pageCount.Data} page(s)");
+                if(pageCount.Data == 1)
+                {
+                    bestIndexAt1Page = Math.Min(bestIndexAt1Page, index);
+                    maxIndex = index - 1;
+                }
+                else
+                {
+                    minIndex = index + 1;
+                }
+
+                // use geometric mean to get the new value:
+
+                index = (minIndex + maxIndex) / 2;
+                guess = availableSizes[index];
+
+                callback?.Invoke($"Trying again...");
+            }
+        }
+
+        var toReturn = new GeneralResponse<int>();
+        toReturn.Succeeded = true;
+        toReturn.Data = availableSizes[bestIndexAt1Page];
+        return toReturn;
+
+    }
+
+    public async Task<GeneralResponse<int>> GetPageCountFor(BmfcSave bmfcSave,
+        bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
+    {
+        string tempDirectory = System.IO.Path.GetTempPath();
+        // or more specific:
+        FilePath appTempDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Gum") + 
+            System.IO.Path.DirectorySeparatorChar;
+
+        var createResponse = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, 
+            force:true, 
+            forceMonoSpacedNumber, 
+            showSpinner, createTask, appTempDirectory);
+
+
+        if(createResponse.Succeeded == false)
+        {
+            return GeneralResponse<int>.UnsuccessfulWith(createResponse.Message);
+        }
+        else
+        {
+            // parse the fnt file, count the pages
+            var fntFileName = bmfcSave.FontCacheFileName;
+            FilePath desiredFntFile = System.IO.Path.Combine(appTempDirectory + fntFileName);
+
+            try
+            {
+                using (var reader = new System.IO.StreamReader(desiredFntFile.FullPath))
+                {
+                    string? line;
+                    while ((line = await reader.ReadLineAsync()) != null)
+                    {
+                        if (line.Contains("pages="))
+                        {
+                            var pagesIndex = line.IndexOf("pages=");
+                            var valueStart = pagesIndex + "pages=".Length;
+                            var valueEnd = line.IndexOf(' ', valueStart);
+                            if (valueEnd == -1)
+                            {
+                                valueEnd = line.Length;
+                            }
+                            
+                            var pagesValue = line.Substring(valueStart, valueEnd - valueStart);
+                            if (int.TryParse(pagesValue, out int pageCount))
+                            {
+                                var toReturn = GeneralResponse<int>.SuccessfulResponse;
+                                toReturn.Data = pageCount;
+                                return toReturn;
+                            }
+                            else
+                            {
+                                return GeneralResponse<int>.UnsuccessfulWith($"Could not parse page count from value: {pagesValue}");
+                            }
+                        }
+                    }
+                    return GeneralResponse<int>.UnsuccessfulWith("Could not find 'pages=' in font file");
+                }
+            }
+            catch (Exception ex)
+            {
+                return GeneralResponse<int>.UnsuccessfulWith($"Error reading font file: {ex.Message}");
+            }
+        }
+    }
+
+    FilePath GetFilePath(BmfcSave bmfcSave, FilePath? destinationDirectory)
+    {
         var fntFileName = bmfcSave.FontCacheFileName;
-        FilePath desiredFntFile = _fileCommands.ProjectDirectory + fntFileName;
+
+        FilePath desiredFntFile = destinationDirectory != null
+            ? destinationDirectory + fntFileName
+            : _fileCommands.ProjectDirectory + fntFileName;
+
+        return desiredFntFile;
+    }
+
+    async Task<OptionallyAttemptedGeneralResponse> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, 
+        bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask, FilePath? destinationDirectory)
+    {
+        FilePath desiredFntFile = GetFilePath(bmfcSave, destinationDirectory);
 
         var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
 
         if(_fileCommands.ProjectDirectory == null)
         {
-            return OptionallyAttemptedGeneralResponse.UnsuccessfulWith("Project directory is null");
+            return OptionallyAttemptedGeneralResponse.UnsuccessfulWith("Project directory is null, has the project been saved?");
         }
 
         Window? spinner = null;
@@ -254,7 +415,7 @@ public class FontManager
                 }
 
 
-                FilePath filePathTemporary = (_fileCommands.ProjectDirectory! + fntFileName);
+                FilePath filePathTemporary = desiredFntFile;
                 string bmfcFileToSave = filePathTemporary.RemoveExtension() + ".bmfc";
                 System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
@@ -264,10 +425,15 @@ public class FontManager
 
                 var pngFileNameBase = desiredFntFile.RemoveExtension();
 
-                // we don't know how many files will be produced, so we just have to guess. For now, let's do 10, that should cover most cases:
-                for (int i = 0; i < 10; i++)
+                // we don't know how many files will be produced, so we just have to guess.
+                const int pagesToIgnore = 99;
+                for (int i = 0; i < pagesToIgnore; i++)
                 {
                     var pngWithNumber = $"{pngFileNameBase}_{i}.png";
+                    _fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
+                    
+                    // numbers can be 00 or 0
+                    pngWithNumber = $"{pngFileNameBase}_{i:00}.png";
                     _fileWatchManager.IgnoreNextChangeUntil(pngWithNumber);
                 }
 
@@ -283,7 +449,7 @@ public class FontManager
 
 
                 info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
-                    " -o \"" + _fileCommands.ProjectDirectory.FullPath + fntFileName + "\"";
+                    " -o \"" + desiredFntFile + "\"";
 
                 info.UseShellExecute = true;
 
@@ -298,17 +464,26 @@ public class FontManager
                 _guiCommands.PrintOutput(filenameAndArgs);
 
                 // This is okay on .NET 8 because it doesn't use the shell - it's a direct exe call
-                Process process = Process.Start(info);
-                if (createTask)
+                Process? process = Process.Start(info);
+
+                if(process != null)
                 {
-                    await WaitForExitAsync(process);
-                }
-                else
-                {
-                    process.WaitForExit();
+                    if (createTask)
+                    {
+                        await WaitForExitAsync(process);
+                    }
+                    else
+                    {
+                        process.WaitForExit();
+                    }
                 }
 
-                if(desiredFntFile.Exists())
+                if(process == null)
+                {
+                    toReturn.Succeeded = false;
+                    toReturn.Message = "Could not start bmfont.exe process.";
+                }
+                else if (desiredFntFile.Exists())
                 {
                     toReturn.Succeeded = true;
                     toReturn.Message = string.Empty;
@@ -329,7 +504,6 @@ public class FontManager
         return toReturn;
     }
 
-    string BmFontExeNoPath => "Gum.Libraries.bmfont.exe";
 
     string BmFontExeLocation
     {
@@ -404,27 +578,46 @@ public class FontManager
 
 
 
-    private void AssignEstimatedNeededSizeOn(BmfcSave bmfcSave)
+    private async Task AssignEstimatedNeededSizeOn(BmfcSave bmfcSave, bool iterativelyDetermineSize,
+         Action<string> updateCallback)
     {
-        int spacingHorizontal = bmfcSave.SpacingHorizontal;
-        int spacingVertical = bmfcSave.SpacingVertical;
-        int fontSize = bmfcSave.FontSize;
-        bool isBold = bmfcSave.IsBold;
+        bool handledIteratively = false;
 
-        int numberWide, numberTall;
-
-        var effectiveFontSize = fontSize + System.Math.Max(spacingHorizontal, spacingVertical) +
-            bmfcSave.OutlineThickness*2;
-        if (isBold)
+        if(iterativelyDetermineSize)
         {
-            effectiveFontSize += (int)(fontSize * 0.08);
+            var optimizedSize = await GetOptimizedSizeFor(bmfcSave, forceMonoSpacedNumber:false, updateCallback);
+
+            if(optimizedSize.Succeeded)
+            {
+                bmfcSave.OutputWidth = optimizedSize.Data;
+                bmfcSave.OutputHeight = optimizedSize.Data;
+
+                handledIteratively = true;
+            }
         }
+
+        if(!handledIteratively)
+        {
+            int spacingHorizontal = bmfcSave.SpacingHorizontal;
+            int spacingVertical = bmfcSave.SpacingVertical;
+            int fontSize = bmfcSave.FontSize;
+            bool isBold = bmfcSave.IsBold;
+
+            int numberWide, numberTall;
+
+            var effectiveFontSize = fontSize + System.Math.Max(spacingHorizontal, spacingVertical) +
+                bmfcSave.OutlineThickness*2;
+            if (isBold)
+            {
+                effectiveFontSize += (int)(fontSize * 0.08);
+            }
         
 
-        EstimateBlocksNeeded(out numberWide, out numberTall, effectiveFontSize);
+            EstimateBlocksNeeded(out numberWide, out numberTall, effectiveFontSize);
 
-        bmfcSave.OutputWidth = numberWide * 256;
-        bmfcSave.OutputHeight = numberTall * 256;
+            bmfcSave.OutputWidth = numberWide * 256;
+            bmfcSave.OutputHeight = numberTall * 256;
+        }
     }
 
     private void EstimateBlocksNeeded(out int numberWide, out int numberTall, int effectiveFontSize)

@@ -1,120 +1,131 @@
-﻿using System;
+﻿using Gum.Commands;
+using Gum.Managers;
+using Gum.Plugins.PropertiesWindowPlugin;
+using Gum.Services;
+using Gum.Services.Fonts;
+using RenderingLibrary.Graphics.Fonts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using Gum.Plugins.PropertiesWindowPlugin;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
-namespace Gum.Gui.Controls
+namespace Gum.Gui.Controls;
+
+/// <summary>
+/// Interaction logic for ProjectPropertiesControl.xaml
+/// </summary>
+public partial class ProjectPropertiesControl : UserControl
 {
-    /// <summary>
-    /// Interaction logic for ProjectPropertiesControl.xaml
-    /// </summary>
-    public partial class ProjectPropertiesControl : UserControl
+    public event EventHandler CloseClicked;
+
+    public ProjectPropertiesViewModel ViewModel
     {
-        public event EventHandler CloseClicked;
-
-        public ProjectPropertiesViewModel ViewModel
+        get
         {
-            get
+            return (ProjectPropertiesViewModel)DataGrid.Instance;
+        }
+        internal set
+        {
+            if(value != DataGrid.Instance)
             {
-                return DataGrid.Instance as ProjectPropertiesViewModel;
-            }
-            internal set
-            {
-                if(value != DataGrid.Instance)
-                {
-                    DataGrid.Instance = value;
+                DataGrid.Instance = value;
 
-                    UpdateToInstance();
-                }
+                UpdateToInstance();
             }
         }
+    }
 
-        public ProjectPropertiesControl()
+    public ProjectPropertiesControl()
+    {
+        InitializeComponent();
+    }
+
+    private void CancelButtonClicked(object sender, RoutedEventArgs e)
+    {
+        CloseClicked?.Invoke(this, null);
+    }
+
+    private void UpdateToInstance()
+    {
+        // Move all colors into their own category:
+        var allMembers = DataGrid.Categories.SelectMany(item => item.Members).ToArray();
+
+        foreach(var member in allMembers)
         {
-            InitializeComponent();
+            member.SupportsMakeDefault = false;
         }
 
-        private void CancelButtonClicked(object sender, RoutedEventArgs e)
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides");
+
+
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureLeft), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureTop), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureRight), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
+
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontRanges), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.UseFontCharacterFile), "Font Generation");
+        var useFontCharacterFileMember = DataGrid.GetInstanceMember(nameof(ViewModel.UseFontCharacterFile));
+        if (useFontCharacterFileMember != null)
         {
-            CloseClicked?.Invoke(this, null);
+            useFontCharacterFileMember.DisplayName = useFontCharacterFileMember.DisplayName + " (.gumfcs)";
+        }
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingHorizontal), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
+
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.AutoSizeFontOutputs), "Font Generation");
+        var autoSizeMember = DataGrid.GetInstanceMember(nameof(ViewModel.AutoSizeFontOutputs));
+        if(autoSizeMember != null)
+        {
+            autoSizeMember.DisplayName = "Auto-Size Font Outputs";
+            autoSizeMember.DetailText = "Fewer PNGs, but font generation can be much slower";
+            
         }
 
-        private void UpdateToInstance()
+        var textureFilterMember = DataGrid.GetInstanceMember(nameof(ViewModel.TextureFilter));
+        if(textureFilterMember != null)
         {
-            // Move all colors into their own category:
-            var allMembers = DataGrid.Categories.SelectMany(item => item.Members).ToArray();
-
-            foreach(var member in allMembers)
+            textureFilterMember.CustomOptions = new List<object>()
             {
-                member.SupportsMakeDefault = false;
-            }
+                TextureFilter.Point,
+                TextureFilter.Linear
+            };
+        }
 
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides");
-
-
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureLeft), "Single Pixel Texture");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureTop), "Single Pixel Texture");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureRight), "Single Pixel Texture");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
-
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.FontRanges), "Font Generation");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.UseFontCharacterFile), "Font Generation");
-            var useFontCharacterFileMember = DataGrid.GetInstanceMember(nameof(ViewModel.UseFontCharacterFile));
-            if (useFontCharacterFileMember != null)
+        foreach (var category in DataGrid.Categories)
+        {
+            foreach (var member in category.Members)
             {
-                useFontCharacterFileMember.DisplayName = useFontCharacterFileMember.DisplayName + " (.gumfcs)";
-            }
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingHorizontal), "Font Generation");
-            DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
+                member.DisplayName =
+                        ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(member.DisplayName);
 
-            var textureFilterMember = DataGrid.GetInstanceMember(nameof(ViewModel.TextureFilter));
-            if(textureFilterMember != null)
-            {
-                textureFilterMember.CustomOptions = new List<object>()
-                {
-                    TextureFilter.Point,
-                    TextureFilter.Linear
-                };
-            }
-
-            foreach (var category in DataGrid.Categories)
-            {
-                foreach (var member in category.Members)
-                {
-                    member.DisplayName =
-                            ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(member.DisplayName);
-
-                    if(IsColor(member))
-                    { 
-                        member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
-                    }
-
-                    if(member.Name == nameof(ViewModel.LocalizationFile))
-                    {
-                        member.PreferredDisplayer = typeof(FileSelectionDisplay);
-                    }
-                    else if(member.Name == nameof(ViewModel.SinglePixelTextureFile))
-                    {
-                        member.PreferredDisplayer = typeof(FileSelectionDisplay);
-                    }
+                if(IsColor(member))
+                { 
+                    member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                 }
 
-                var isUpdatingMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.IsUpdatingFromModel));
-                if(isUpdatingMember != null)
+                if(member.Name == nameof(ViewModel.LocalizationFile))
                 {
-                    category.Members.Remove(isUpdatingMember);
+                    member.PreferredDisplayer = typeof(FileSelectionDisplay);
+                }
+                else if(member.Name == nameof(ViewModel.SinglePixelTextureFile))
+                {
+                    member.PreferredDisplayer = typeof(FileSelectionDisplay);
                 }
             }
 
-            bool IsColor(InstanceMember member) => member.PropertyType.Name == "Microsoft.Xna.Framework.Color" || member.PropertyType.Name == "Color";
+            var isUpdatingMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.IsUpdatingFromModel));
+            if(isUpdatingMember != null)
+            {
+                category.Members.Remove(isUpdatingMember);
+            }
         }
 
-        
+        bool IsColor(InstanceMember member) => member.PropertyType.Name == "Microsoft.Xna.Framework.Color" || member.PropertyType.Name == "Color";
     }
 }
