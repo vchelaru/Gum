@@ -31,6 +31,7 @@ using Gum.Settings;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
 using Gum.Reflection;
+using Gum.Services.Fonts;
 
 namespace Gum.Services;
 

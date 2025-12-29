@@ -116,6 +116,12 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
+    public bool AutoSizeFontOutputs
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     public string SinglePixelTextureFile
     {
         get => Get<string>();
@@ -179,6 +185,7 @@ public class ProjectPropertiesViewModel : ViewModel
             FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
             FontSpacingVertical = this.gumProject.FontSpacingVertical;
             UseFontCharacterFile = this.gumProject.UseFontCharacterFile;
+            AutoSizeFontOutputs = this.gumProject.AutoSizeFontOutputs;
 
             RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
@@ -224,6 +231,7 @@ public class ProjectPropertiesViewModel : ViewModel
 
         this.gumProject.FontSpacingHorizontal = FontSpacingHorizontal;
         this.gumProject.FontSpacingVertical = FontSpacingVertical;
+        this.gumProject.AutoSizeFontOutputs = AutoSizeFontOutputs;
 
         this.gumProject.SinglePixelTextureFile = SinglePixelTextureFile;
         this.gumProject.SinglePixelTextureTop = SinglePixelTextureTop;
