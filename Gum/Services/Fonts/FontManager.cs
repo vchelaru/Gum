@@ -22,17 +22,20 @@ namespace Gum.Services.Fonts;
 
 public class FontManager 
 {
-    int[] availableSizes = new int[]
+    System.Drawing.Point[] availableSizes = new System.Drawing.Point[]
     {
-        32,
-        64,
-        128,
-        256,
-        512,
-        1024,
-        2048,
-        4096,
-        8192
+        new (32, 32),
+        new (64, 64),
+        new (128, 128),
+        new (256, 256),
+        new (512, 512),
+        new (1024, 1024),
+        new (2048, 1024),
+        new (2048, 2048),
+        new (4096, 2048),
+        new (4096, 4096),
+        new (8192, 4096),
+        new (8192, 8192)
     };
 
     private readonly IGuiCommands _guiCommands;
@@ -126,26 +129,12 @@ public class FontManager
             TrySaveBmFontExe(assembly);
         }
 
-        if(project.AutoSizeFontOutputs)
+
+        foreach (var item in bitmapFonts)
         {
-            foreach (var item in bitmapFonts)
-            {
-                System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
+            System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
 
-                // this is really heavy, so let's just do one at a time:
-                await TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true, project.AutoSizeFontOutputs);
-            }
-
-        }
-        else
-        {
-            foreach (var item in bitmapFonts)
-            {
-                System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
-
-                tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true, project.AutoSizeFontOutputs));
-            }
-
+            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true, project.AutoSizeFontOutputs));
         }
 
 
@@ -237,7 +226,7 @@ public class FontManager
 
         if(force || GetFilePath(bmfcSave, null).Exists() == false)
         {
-           await AssignEstimatedNeededSizeOn(bmfcSave, iterativelyDetermineSize, null);
+           await AssignEstimatedNeededSizeOn(bmfcSave, iterativelyDetermineSize, _guiCommands.PrintOutput);
         }
 
         var response = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask, null);
@@ -260,7 +249,7 @@ public class FontManager
     }
 
 
-    public async Task<GeneralResponse<int>> GetOptimizedSizeFor(BmfcSave bmfcSave,
+    public async Task<GeneralResponse<System.Drawing.Point>> GetOptimizedSizeFor(BmfcSave bmfcSave,
         bool forceMonoSpacedNumber, Action<string>? callback)
     {
         // todo finish here
@@ -272,12 +261,12 @@ public class FontManager
         var guess = availableSizes[index];
         int bestIndexAt1Page = maxIndex;
 
-        while(minIndex < maxIndex)
+        while(minIndex <= maxIndex)
         {
-            bmfcSave.OutputWidth = guess;
-            bmfcSave.OutputHeight = guess;
+            bmfcSave.OutputWidth = guess.X;
+            bmfcSave.OutputHeight = guess.Y;
 
-            callback?.Invoke($"Testing {bmfcSave}, guessing {guess}x{guess}...");
+            callback?.Invoke($"Testing {bmfcSave}, guessing {guess.X}x{guess.Y}...");
 
             var pageCount = await GetPageCountFor(bmfcSave, forceMonoSpacedNumber, showSpinner:false, createTask:true);
 
@@ -285,11 +274,11 @@ public class FontManager
 
             if (pageCount.Succeeded == false)
             {
-                return GeneralResponse<int>.UnsuccessfulWith(pageCount.Message);
+                return GeneralResponse<System.Drawing.Point>.UnsuccessfulWith(pageCount.Message);
             }
             else
             {
-                callback?.Invoke($"{guess}x{guess} requires {pageCount.Data} page(s)");
+                callback?.Invoke($"{guess.X}x{guess.Y} requires {pageCount.Data} page(s)");
                 if(pageCount.Data == 1)
                 {
                     bestIndexAt1Page = Math.Min(bestIndexAt1Page, index);
@@ -305,11 +294,14 @@ public class FontManager
                 index = (minIndex + maxIndex) / 2;
                 guess = availableSizes[index];
 
-                callback?.Invoke($"Trying again...");
+                if(minIndex <= maxIndex)
+                {
+                    callback?.Invoke($"Trying again with new guess {guess.X}x{guess.Y}...");
+                }
             }
         }
 
-        var toReturn = new GeneralResponse<int>();
+        var toReturn = new GeneralResponse<System.Drawing.Point>();
         toReturn.Succeeded = true;
         toReturn.Data = availableSizes[bestIndexAt1Page];
         return toReturn;
@@ -589,8 +581,8 @@ public class FontManager
 
             if(optimizedSize.Succeeded)
             {
-                bmfcSave.OutputWidth = optimizedSize.Data;
-                bmfcSave.OutputHeight = optimizedSize.Data;
+                bmfcSave.OutputWidth = optimizedSize.Data.X;
+                bmfcSave.OutputHeight = optimizedSize.Data.Y;
 
                 handledIteratively = true;
             }
