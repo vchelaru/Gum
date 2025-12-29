@@ -23,6 +23,7 @@ using Gum.Graphics;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Undo;
+using Gum.Services.Fonts;
 
 namespace Gum.PropertyGridHelpers;
 

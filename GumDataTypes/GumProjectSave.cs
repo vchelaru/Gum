@@ -83,6 +83,11 @@ public class GumProjectSave
     public int FontSpacingVertical { get; set; } = 1;
     public int FontSpacingHorizontal { get; set; } = 1;
     public bool UseFontCharacterFile { get; set; }
+
+    public bool AutoSizeFontOutputs { get; set; } =
+        // Default to false - it's too expensive for large character sets
+        false;
+
     public int Version { get; set; }
 
     public int DefaultCanvasWidth
