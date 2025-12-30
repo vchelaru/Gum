@@ -109,8 +109,6 @@ Next, add FnaGum as a project reference in your game project. Your project might
 {% endtab %}
 {% endtabs %}
 
-
-
 ## Adding Gum to Game
 
 Gum can be added to a Game/Core class with a few lines of code. Projects are encouraged to create a local GumService property called GumUI for convenience.
@@ -127,6 +125,7 @@ Add code to your Game class to Initialize, Update, and Draw Gum as shown in the 
 using Microsoft.Xna.Framework.Graphics;
 <strong>using MonoGameGum;
 </strong><strong>using Gum.Forms;
+</strong><strong>using Gum.Forms.Controls;
 </strong>
 namespace MonoGameGum1;
 
