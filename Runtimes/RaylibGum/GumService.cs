@@ -248,7 +248,8 @@ public class GumService
         this.SystemManagers.Initialize();
 #endif
 
-        FormsUtilities.InitializeDefaults(defaultVisualsVersion: defaultVisualsVersion);
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
+            defaultVisualsVersion: defaultVisualsVersion);
 
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
