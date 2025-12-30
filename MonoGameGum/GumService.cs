@@ -34,7 +34,7 @@ public class GumService
     {
         get
         {
-            if(_default == null)
+            if (_default == null)
             {
                 _default = new GumService();
             }
@@ -107,7 +107,7 @@ public class GumService
         Root.Name = "Main Root";
         Root.HasEvents = false;
 
-        Root.Children.CollectionChanged += (o,e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root,e);
+        Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
         DeferredQueue = new DeferredActionQueue();
     }
@@ -135,8 +135,8 @@ public class GumService
                 "so that the Game has a valid GrahicsDevice");
         }
         return InitializeInternal(
-            game, game.GraphicsDevice, 
-            gumProjectFile, 
+            game, game.GraphicsDevice,
+            gumProjectFile,
             defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
 #else
         return InitializeInternal(
@@ -156,7 +156,7 @@ public class GumService
                 "so that the Game has a valid GrahicsDevice");
         }
 
-        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion:defaultVisualsVersion);
+        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion: defaultVisualsVersion);
     }
     public void Initialize(Game game, SystemManagers systemManagers)
     {
@@ -181,7 +181,7 @@ public class GumService
         {
             var animation = TryLoadAnimation(element);
 
-            if(animation != null)
+            if (animation != null)
             {
                 project.ElementAnimations.Add(animation);
             }
@@ -196,7 +196,7 @@ public class GumService
 
         var fileName = prefix + element.Name + "Animations.ganx";
 
-        if(FileManager.FileExists(fileName))
+        if (FileManager.FileExists(fileName))
         {
             var animation = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
             animation.ElementName = element.Name;
@@ -220,11 +220,11 @@ public class GumService
 #if MONOGAME || KNI || FNA
         Game game, GraphicsDevice graphicsDevice,
 #endif
-        string? gumProjectFile = null, 
-        SystemManagers? systemManagers = null, 
-        Gum.Forms.DefaultVisualsVersion defaultVisualsVersion = Gum.Forms.DefaultVisualsVersion.Newest)
+        string? gumProjectFile = null,
+        SystemManagers? systemManagers = null,
+        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.Newest)
     {
-        if(IsInitialized)
+        if (IsInitialized)
         {
             throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
         }
@@ -248,7 +248,7 @@ public class GumService
         this.SystemManagers.Initialize();
 #endif
 
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
+        FormsUtilities.InitializeDefaults(systemManagers:this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
@@ -267,7 +267,7 @@ public class GumService
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
             var absoluteFile = gumProjectFile;
-            if(FileManager.IsRelative(absoluteFile))
+            if (FileManager.IsRelative(absoluteFile))
             {
                 absoluteFile = FileManager.MakeAbsolute(gumProjectFile);
             }
@@ -290,7 +290,7 @@ public class GumService
 
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
 
-        float GetFloat (string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
+        float GetFloat(string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
         string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
@@ -308,7 +308,7 @@ public class GumService
         // Get all types in the assembly
         var types = executingAssembly?.GetTypes();
 
-        if(types != null)
+        if (types != null)
         {
             foreach (Type type in types)
             {
@@ -429,7 +429,7 @@ public static class GraphicalUiElementExtensionMethods
         element.Children.Add(child.Visual);
     }
 
-    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
+    public static void AddToRoot(this FrameworkElement element)
     {
         GumService.Default.Root.Children.Add(element.Visual);
     }
