@@ -91,7 +91,7 @@ public class GumService
     }
 
 #if MONOGAME || KNI || FNA
-    Game _game;
+    public Game Game { get; private set; }
 #endif
 
     #region Initialize
@@ -205,7 +205,7 @@ public class GumService
         }
         IsInitialized = true;
 
-        _game = game;
+        Game = game;
         RegisterRuntimeTypesThroughReflection();
 
         this.SystemManagers = systemManagers ?? new SystemManagers();
@@ -305,7 +305,7 @@ public class GumService
 
     public void Update(GameTime gameTime)
     {
-        Update(_game, gameTime);
+        Update(Game, gameTime);
     }
 
     public void Update(Game game, GameTime gameTime)
