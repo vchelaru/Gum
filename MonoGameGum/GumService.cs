@@ -46,6 +46,8 @@ public class GumService
 
 #if MONOGAME || KNI || FNA
     public GameTime GameTime { get; private set; }
+#else
+    public float GameTime { get; private set; }
 #endif
 
     public Cursor Cursor => FormsUtilities.Cursor;
@@ -118,7 +120,11 @@ public class GumService
 #endif
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
+#if MONOGAME || KNI || FNA
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
+#else
+    public GumProjectSave Initialize(string gumProjectFile)
+#endif
     {
 #if MONOGAME || KNI || FNA
         if (game.GraphicsDevice == null)
@@ -128,13 +134,18 @@ public class GumService
                 "Be sure to call Initialize in the Game's Initialize method or later " +
                 "so that the Game has a valid GrahicsDevice");
         }
+        return InitializeInternal(
+            game, game.GraphicsDevice, 
+            gumProjectFile, 
+            defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
+#else
+        return InitializeInternal(
+            gumProjectFile,
+            defaultVisualsVersion: DefaultVisualsVersion.Newest)!;
 #endif
-
-        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile, defaultVisualsVersion:
-            Gum.Forms.DefaultVisualsVersion.Newest);
     }
 
-
+#if MONOGAME || KNI || FNA
     public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
     {
         if (game.GraphicsDevice == null)
@@ -147,11 +158,19 @@ public class GumService
 
         InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion:defaultVisualsVersion);
     }
-
     public void Initialize(Game game, SystemManagers systemManagers)
     {
         InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
     }
+#else
+    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
+    {
+        InitializeInternal(
+            gumProjectFile: null,
+            systemManagers: SystemManagers.Default,
+            defaultVisualsVersion: defaultVisualsVersion);
+    }
+#endif
 
     [Obsolete("Experimental - this API may change in future versions")]
     public void LoadAnimations()
@@ -186,18 +205,24 @@ public class GumService
         return null;
     }
 
+#if MONOGAME || KNI || FNA
     [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +
-        "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in future versions of Gum")]
+        "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in June 2026")]
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
         return InitializeInternal(null, graphicsDevice, gumProjectFile);
     }
+#endif
 
     public bool IsInitialized { get; private set; }
-    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, 
+
+    GumProjectSave? InitializeInternal(
+#if MONOGAME || KNI || FNA
+        Game game, GraphicsDevice graphicsDevice,
+#endif
         string? gumProjectFile = null, 
         SystemManagers? systemManagers = null, 
-        Gum.Forms.DefaultVisualsVersion defaultVisualsVersion = Gum.Forms.DefaultVisualsVersion.V1)
+        Gum.Forms.DefaultVisualsVersion defaultVisualsVersion = Gum.Forms.DefaultVisualsVersion.Newest)
     {
         if(IsInitialized)
         {
@@ -205,26 +230,25 @@ public class GumService
         }
         IsInitialized = true;
 
+#if MONOGAME || KNI || FNA
         Game = game;
         RegisterRuntimeTypesThroughReflection();
+#endif
 
         this.SystemManagers = systemManagers ?? new SystemManagers();
         if (systemManagers == null)
         {
             SystemManagers.Default = this.SystemManagers;
-#if NET6_0_OR_GREATER
             ISystemManagers.Default = this.SystemManagers;
-#endif
         }
 
 #if MONOGAME || FNA || KNI
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-#elif raylib
-
+#elif RAYLIB
+        this.SystemManagers.Initialize();
 #endif
 
         FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
-
 
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
@@ -237,7 +261,6 @@ public class GumService
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-
             gumProject = GumProjectSave.Load(gumProjectFile);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
@@ -266,12 +289,12 @@ public class GumService
         ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
 
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
-        NineSliceRuntime.DefaultSourceFile = GetString("SourceFile");
 
         float GetFloat (string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
         string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
+#if MONOGAME || KNI || FNA
     // In December 31, 2024 we moved to using ModuleInitializer 
     // More info: https://github.com/vchelaru/Gum/issues/275
     // Therefore, this is no longer needed. However, old projects
@@ -298,16 +321,27 @@ public class GumService
             }
         }
     }
-
-#endregion
+#endif
+    #endregion
 
     #region Update
 
+#if MONOGAME || KNI || FNA
     public void Update(GameTime gameTime)
+#else
+    public void Update(float gameTime)
+#endif
     {
-        Update(Game, gameTime);
+        Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
+
+#if MONOGAME || KNI || FNA
+        Update(Game, gameTime, this.Root);
+#else
+        Update(gameTime, this.Root);
+#endif
     }
 
+#if MONOGAME || KNI || FNA
     public void Update(Game game, GameTime gameTime)
     {
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
@@ -317,43 +351,65 @@ public class GumService
 
     public void Update(Game game, GameTime gameTime, FrameworkElement root) =>
         Update(game, gameTime, root.Visual);
+#endif
 
+    List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
+
+#if MONOGAME || KNI || FNA
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
+#else
+    public void Update(float gameTime, GraphicalUiElement root)
+#endif
     {
+        roots.Clear();
+        roots.Add(root);
+
+#if MONOGAME || KNI || FNA
+        Update(game, gameTime, roots);
+#else
+        Update(gameTime, roots);
+#endif
+    }
+
+#if MONOGAME || KNI || FNA
+    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
+#else
+    public void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
+#endif
+    {
+#if MONOGAME || KNI || FNA
+        var difference = gameTime.ElapsedGameTime.TotalSeconds;
+#else
+        var difference = GameTime - gameTime;
+#endif
+
         DeferredQueue.ProcessPending();
         GameTime = gameTime;
-        Gum.Forms.FormsUtilities.Update(game, gameTime, root);
+#if MONOGAME || KNI || FNA
+        FormsUtilities.Update(game, gameTime, roots);
+#else
+        FormsUtilities.Update(gameTime, roots);
+#endif
         // SystemManagers.Activity (as of Sept 13, 2025) only 
         // performs Sprite animation internally. This is not a 
         // critical system, but unit tests cannot initialize a SystemManagers
         // because these require a graphics device. Therefore, we can tolerate
         // a null SystemManagers to simplify unit tests.
+#if MONOGAME || KNI || FNA
         this.SystemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
-        root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
-    }
-
-    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
-    {
-        DeferredQueue.ProcessPending();
-        GameTime = gameTime;
-        Gum.Forms.FormsUtilities.Update(game, gameTime, roots);
-        this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
-        foreach(var item in roots)
+#endif
+        foreach (var item in roots)
         {
-            item.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+            item.AnimateSelf(difference);
         }
     }
 
     #endregion
 
-    #region Draw
-
     public void Draw()
     {
         SystemManagers.Default.Draw();
     }
-
-    #endregion
 }
 
 public static class GraphicalUiElementExtensionMethods
@@ -367,7 +423,6 @@ public static class GraphicalUiElementExtensionMethods
     {
         element.Parent = null;
     }
-
 
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
     {
@@ -386,9 +441,4 @@ public static class ElementSaveExtensionMethods
     {
         return elementSave.ToGraphicalUiElement(systemManagers ?? SystemManagers.Default, addToManagers: false);
     }
-}
-
-public static class FrameworkElementExtensionMethods
-{
-
 }
