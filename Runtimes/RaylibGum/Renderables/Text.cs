@@ -643,22 +643,40 @@ public class Text : IVisible, IRenderableIpso,
 
             if (TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
             {
+                // 2025-12 JUSTIN: Changes to vertical alignment resulted fractional
+                // origin values which cause baseline misalignment and broken text.
+                // Applied the same rounding used for position to origin, which fixes
+                // the problem but may cause weird artifacts or "sizzle" for really
+                // small pixel fonts
+                
                 switch (TextPositionRoundingMode)
                 {
                     case TextPositionRoundingMode.Floor:
                         linePosition = new Vector2(
                             (int)Math.Floor(linePosition.X),
                             (int)Math.Floor(linePosition.Y));
+                        origin = new Vector2(
+                            (int)Math.Floor(origin.X),
+                            (int)Math.Floor(origin.Y)
+                        );
                         break;
                     case TextPositionRoundingMode.Ceiling:
                         linePosition = new Vector2(
                             (int)Math.Ceiling(linePosition.X),
                             (int)Math.Ceiling(linePosition.Y));
+                        origin = new Vector2(
+                            (int)Math.Ceiling(origin.X),
+                            (int)Math.Ceiling(origin.Y)
+                        );
                         break;
                     default:
                         linePosition = new Vector2(
                             MathFunctions.RoundToInt(linePosition.X),
                             MathFunctions.RoundToInt(linePosition.Y));
+                        origin = new Vector2(
+                            MathFunctions.RoundToInt(origin.X),
+                            MathFunctions.RoundToInt(origin.Y)
+                        );
                         break;
                 }
             }
