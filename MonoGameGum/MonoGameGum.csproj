@@ -9,7 +9,6 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2025.12.9.1</Version>
 
-
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>MONOGAME</DefineConstants>
 		<LangVersion>12</LangVersion>
