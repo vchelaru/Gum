@@ -482,8 +482,8 @@ public abstract class RenderableShapeBase : RenderableBase
             var effectiveGradientX2 = effectiveGradientX1 + _gradientOuterRadius;
             var effectiveGradientY2 = effectiveGradientY1;
 
-            float aOffset = 40;
-
+            float aOffset = this.GradientInnerRadius;
+            
             return new Gradient(new Vector2(effectiveGradientX1, effectiveGradientY1), 
                 firstColor,
                 new Vector2(effectiveGradientX2, effectiveGradientY2),
