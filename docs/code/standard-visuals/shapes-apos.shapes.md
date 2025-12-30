@@ -62,9 +62,20 @@ No additional setup is required to use shapes in Silk.NET.
 {% tab title="MonoGame / KNI" %}
 Whether you are using code-only or the Gum tool, you must add the following line of code in your Initialize method:
 
+If using December 2025 or earlier:
+
 ```csharp
+GumUI.Initialize(...);
+// Initialize ShapeRenderer after GumUI:
 ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-// initialize Gum now:
+```
+
+If using January 2026 or later:
+
+```csharp
+GumUI.Initialize(...);
+// Initialize ShapeRenderer after GumUI:
+ShapeRenderer.Self.Initialize();
 ```
 {% endtab %}
 
