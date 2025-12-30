@@ -3,11 +3,7 @@ using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
 using GumRuntime;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
-using MonoGameGum.Input;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -19,8 +15,14 @@ using Gum.Forms;
 using Gum.Threading;
 
 #if MONOGAME || KNI || FNA
+using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 namespace MonoGameGum;
 #elif RAYLIB
+using Gum.GueDeriving;
+using RaylibGum.Input;
 namespace RaylibGum;
 #endif
 
@@ -83,7 +85,14 @@ public class GumService
         Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
     }
 
-    Game _game;
+    public void UseGamepadDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+    }
+
+#if MONOGAME || KNI || FNA
+    public Game Game { get; private set; }
+#endif
 
     #region Initialize
 
@@ -104,11 +113,14 @@ public class GumService
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
+#if MONOGAME || KNI || FNA
     /// <param name="game">The game instance.</param>
+#endif
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
+#if MONOGAME || KNI || FNA
         if (game.GraphicsDevice == null)
         {
             throw new InvalidOperationException(
@@ -116,9 +128,10 @@ public class GumService
                 "Be sure to call Initialize in the Game's Initialize method or later " +
                 "so that the Game has a valid GrahicsDevice");
         }
+#endif
 
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile, defaultVisualsVersion:
-            Gum.Forms.DefaultVisualsVersion.V2);
+            Gum.Forms.DefaultVisualsVersion.Newest);
     }
 
 
@@ -192,7 +205,7 @@ public class GumService
         }
         IsInitialized = true;
 
-        _game = game;
+        Game = game;
         RegisterRuntimeTypesThroughReflection();
 
         this.SystemManagers = systemManagers ?? new SystemManagers();
@@ -292,7 +305,7 @@ public class GumService
 
     public void Update(GameTime gameTime)
     {
-        Update(_game, gameTime);
+        Update(Game, gameTime);
     }
 
     public void Update(Game game, GameTime gameTime)

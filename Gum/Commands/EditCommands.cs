@@ -34,7 +34,7 @@ public class EditCommands : IEditCommands
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
     private readonly ProjectCommands _projectCommands;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly PluginManager _pluginManager;
     private readonly DeleteLogic _deleteLogic;
 
@@ -46,7 +46,7 @@ public class EditCommands : IEditCommands
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
         IGuiCommands guiCommands,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         PluginManager pluginManager, 
         DeleteLogic deleteLogic)
     {

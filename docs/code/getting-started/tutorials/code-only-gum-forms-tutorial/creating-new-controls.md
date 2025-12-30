@@ -92,7 +92,7 @@ Before we look at the individual parts of the code, let's add an instance to our
 
 <pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
 {
-    GumUi.Initialize(this, DefaultVisualsVersion.V2);
+    GumUi.Initialize(this, DefaultVisualsVersion.V3);
 
 <strong>    var dialog = new TextInputDialog();
 </strong><strong>    dialog.AddToRoot();
@@ -202,7 +202,7 @@ For example, we could change our code in Game1 to set the prompt text as shown i
 ```csharp
 protected override void Initialize()
 {
-    GumUi.Initialize(this, DefaultVisualsVersion.V2);
+    GumUi.Initialize(this, DefaultVisualsVersion.V3);
 
     var dialog = new TextInputDialog();
     dialog.AddToRoot();
@@ -258,7 +258,7 @@ If we change our prompt, notice that the textBox adjusts appropriately:
 
 <pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
 {
-    GumUi.Initialize(this, DefaultVisualsVersion.V2);
+    GumUi.Initialize(this, DefaultVisualsVersion.V3);
 
     var dialog = new TextInputDialog();
     dialog.AddToRoot();

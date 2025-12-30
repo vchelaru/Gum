@@ -850,6 +850,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     /// <param name="popup">The popup to show, for example a dropdown from a ComboBox or MenuItem</param>
     /// <param name="listBoxParent">The parent visual, which would be something like the ComboBox.Visual</param>
+    /// <param name="forceAbsoluteSize">Whether to force the popup to have absolute WidthUnits and HeightUnits.</param>
     public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true)
     {
         popup.IsVisible = true;

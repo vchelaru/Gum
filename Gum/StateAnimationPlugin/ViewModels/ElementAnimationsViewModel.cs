@@ -32,8 +32,6 @@ public partial class ElementAnimationsViewModel : ViewModel
 {
     #region Fields
 
-    ObservableCollection<AnimationViewModel>? mAnimations;
-
     // 50 isn't smooth enough, we want more fps!
     //const int mTimerFrequencyInMs = 50;
     const int mTimerFrequencyInMs = 20;
@@ -58,23 +56,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         set => Set(value);
     }
 
-    public ObservableCollection<AnimationViewModel>? Animations
-    {
-        get { return mAnimations; }
-        set
-        {
-            if(mAnimations != null)
-            {
-                mAnimations.CollectionChanged -= HandleListChanged;
-            }
-            mAnimations = value;
-
-            if (mAnimations != null)
-            {
-                mAnimations.CollectionChanged += HandleListChanged;
-            }
-        }
-    }
+    public ObservableCollection<AnimationViewModel> Animations { get; private set; }
 
     public ObservableCollection<MenuItem> AnimationRightClickItems
     {
@@ -145,7 +127,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             if(SelectedAnimation == null || SelectedAnimation.Keyframes.Count == 0)
             {
-                return null;
+                return string.Empty;
             }
             else
             {
@@ -231,6 +213,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         CurrentGameSpeed = "100%";
 
         Animations = new ObservableCollection<AnimationViewModel>();
+        Animations.CollectionChanged += HandleListChanged;
 
         this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
 
@@ -272,7 +255,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         return toReturn;
     }
 
-    private void OnPropertyChanged(string propertyName)
+    private void OnPropertyChanged(string? propertyName)
     {
         OnAnyChange(this, propertyName);
     }
@@ -473,7 +456,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
     double? lastPlayTimerTickTime;
-    private void HandlePlayTimerTick(object sender, EventArgs e)
+    private void HandlePlayTimerTick(object? sender, EventArgs e)
     {
         var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
 

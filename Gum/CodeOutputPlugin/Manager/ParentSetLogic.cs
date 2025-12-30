@@ -27,7 +27,7 @@ public class ParentSetLogic
         _codeGenerator = codeGenerator;
     }
 
-    public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var currentState = _selectedState.SelectedStateSave;
         ///////////////////////Early Out//////////////////
@@ -112,7 +112,7 @@ public class ParentSetLogic
         }
     }
 
-    int CountInstancesWithParent(ElementSave element, string name)
+    int CountInstancesWithParent(ElementSave element, string? name)
     {
         int count = 0;
         var defaultVariables = element.DefaultState.Variables;
@@ -129,7 +129,7 @@ public class ParentSetLogic
         return count;
     }
 
-    private GeneralResponse CanInstanceRemainAsAChildOf(InstanceSave instance, InstanceSave newParent, ElementSave element)
+    private GeneralResponse CanInstanceRemainAsAChildOf(InstanceSave instance, InstanceSave? newParent, ElementSave element)
     {
         var toReturn = CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(instance, newParent, element);
 
@@ -160,7 +160,7 @@ public class ParentSetLogic
         return toReturn;
     }
 
-    private GeneralResponse CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(InstanceSave instance, InstanceSave newParent, ElementSave element)
+    private GeneralResponse CanInstanceBeChildBasedOnXamarinFormsSkiaRestrictions(InstanceSave instance, InstanceSave? newParent, ElementSave element)
     {
         VisualApi parentVisualApi;
         VisualApi childVisualApi = CodeGenerator.GetVisualApiForInstance(instance, element);

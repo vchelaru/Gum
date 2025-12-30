@@ -34,15 +34,15 @@ public partial class CodeWindow : UserControl
 
     bool HasClickedManualSetup;
 
-    CodeWindowViewModel ViewModel => DataContext as CodeWindowViewModel;
+    CodeWindowViewModel ViewModel => (CodeWindowViewModel)DataContext!;
 
-    public CodeOutputProjectSettings CodeOutputProjectSettings
+    public CodeOutputProjectSettings? CodeOutputProjectSettings
     {
         get; set;
     }
 
-    CodeOutputElementSettings codeOutputElementSettings;
-    public CodeOutputElementSettings CodeOutputElementSettings
+    CodeOutputElementSettings? codeOutputElementSettings;
+    public CodeOutputElementSettings? CodeOutputElementSettings
     {
         get => codeOutputElementSettings;
         set
@@ -60,9 +60,9 @@ public partial class CodeWindow : UserControl
 
     #region Events
 
-    public event EventHandler CodeOutputSettingsPropertyChanged;
-    public event EventHandler GenerateCodeClicked;
-    public event EventHandler GenerateAllCodeClicked;
+    public event EventHandler? CodeOutputSettingsPropertyChanged;
+    public event EventHandler? GenerateCodeClicked;
+    public event EventHandler? GenerateAllCodeClicked;
 
     #endregion
 
@@ -72,7 +72,7 @@ public partial class CodeWindow : UserControl
 
         this.DataContext = viewModel;
 
-        DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+        DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
 
         FullRefreshDataGrid();
     }
@@ -588,12 +588,12 @@ public partial class CodeWindow : UserControl
     private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
     {
 
-        GenerateCodeClicked(this, EventArgs.Empty);
+        GenerateCodeClicked?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleGenerateAllCodeClicked(object sender, RoutedEventArgs e)
     {
-        GenerateAllCodeClicked(this, EventArgs.Empty);
+        GenerateAllCodeClicked?.Invoke(this, EventArgs.Empty);
     }
 
     // maybe we'll bring this back later?
@@ -620,7 +620,8 @@ public partial class CodeWindow : UserControl
 
     private void HandleAutoSetupClicked(object sender, RoutedEventArgs e)
     {
-        bool shouldContinue = ViewModel.HandleAutoSetupClicked(CodeOutputProjectSettings);
+        bool shouldContinue = CodeOutputProjectSettings != null && 
+            ViewModel.HandleAutoSetupClicked(CodeOutputProjectSettings);
 
         if (shouldContinue)
         {

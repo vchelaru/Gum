@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 namespace Gum.PropertyGridHelpers;
 
-public class VariableInCategoryPropagationLogic
+public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagationLogic
 {
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;

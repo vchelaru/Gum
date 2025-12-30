@@ -8,6 +8,8 @@
 		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 		<NoWarn>$(NoWarn);CA1416</NoWarn>
 		<!-- Fixes github actions https://github.com/vchelaru/Gum/actions/runs/16967916954/job/48096714923?pr=1273: -->
+		<Nullable>enable</Nullable>
+		<GenerateResourceWarnOnBinaryFormatterUse>false</GenerateResourceWarnOnBinaryFormatterUse>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 

@@ -46,14 +46,23 @@ public enum DefaultVisualsVersion
     /// <summary>
     /// The third version introduced end of 2025. This version makes styling with colors easier.
     /// </summary>
-    V3
+    V3,
+
+    /// <summary>
+    /// Specifies that the newest version is used.
+    /// </summary>
+    /// <remarks>This value is an alias for the latest supported version. Use this option to ensure the most
+    /// recent features and updates are applied.</remarks>
+    Newest = V3,
 }
+
+
 
 public class FormsUtilities
 {
     static ICursor cursor;
 
-    public static Cursor Cursor => cursor as Cursor;
+    public static Cursor? Cursor => cursor as Cursor;
 
     public static void SetCursor(ICursor cursor)
     {

@@ -6,11 +6,12 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2025.12.9.1</Version>
-
-
-
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<NoWarn>1591</NoWarn>
+		<DefineConstants>KNI</DefineConstants>
+
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>

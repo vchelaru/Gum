@@ -68,9 +68,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public Styles() : base(new ContainerRuntime())
     {
 
-        this.Visual.Height = 0f;
+        this.Visual.Height = -0f;
         this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.Visual.Width = 0f;
+        this.Visual.Width = -0f;
         this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.Visual.X = 0f;
         this.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
@@ -235,7 +235,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.Colors.ChildrenLayout = global::Gum.Managers.ChildrenLayout.LeftToRightStack;
         this.Colors.Height = 69f;
         this.Colors.StackSpacing = 4f;
-        this.Colors.Width = 0f;
+        this.Colors.Width = -0f;
         this.Colors.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.Colors.X = 0f;
         this.Colors.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;

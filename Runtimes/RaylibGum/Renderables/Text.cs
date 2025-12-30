@@ -71,6 +71,9 @@ public enum TextPositionRoundingMode
 public class Text : IVisible, IRenderableIpso,
     IWrappedText
 {
+    /// <summary>
+    /// The line height as defined by the font, ignoring FontScale.
+    /// </summary>
     private int _lineHeightInPixels;
 
     /// <summary>
@@ -287,7 +290,7 @@ public class Text : IVisible, IRenderableIpso,
 
     public float DescenderHeight => 2;
 
-    public float FontScale => 1;
+    public float FontScale { get; set; } = 1;
 
     public object Tag { get; set; }
 
@@ -581,6 +584,11 @@ public class Text : IVisible, IRenderableIpso,
         this.UpdateLines(mWrappedText);
     }
 
+    /// <summary>
+    /// Returns the size of the string, ignoring font scale, but considering the bitmap font.
+    /// </summary>
+    /// <param name="whatToMeasure"></param>
+    /// <returns></returns>
     public float MeasureString(string whatToMeasure)
     {
         return MeasureTextEx(Font, whatToMeasure, _font.BaseSize, 0).X;
@@ -606,12 +614,12 @@ public class Text : IVisible, IRenderableIpso,
         if (VerticalAlignment == VerticalAlignment.Center)
         {
             position.Y += this.Height / 2;
-            origin.Y = mPreRenderHeight / 2 ?? 0;
+            origin.Y = FontScale * mPreRenderHeight / 2 ?? 0;
         }
         if (VerticalAlignment == VerticalAlignment.Bottom)
         {
             position.Y += this.Height;
-            origin.Y = mPreRenderHeight ?? 0;
+            origin.Y = FontScale * mPreRenderHeight ?? 0;
         }
 
         for(int i = 0; i < WrappedText.Count; i++)
@@ -623,12 +631,12 @@ public class Text : IVisible, IRenderableIpso,
             if(HorizontalAlignment == HorizontalAlignment.Center)
             {
                 position.X += (this.Width??32) / 2;
-                origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize, 0).X/2;
+                origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X/2;
             }
             else if (HorizontalAlignment == HorizontalAlignment.Right)
             {
                 position.X += this.Width??32;
-                origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize, 0).X;
+                origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X;
             }
             var linePosition = position;
             linePosition.Y += i * LineHeightInPixels;
@@ -656,7 +664,7 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
-            DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize, 0, Color);
+            DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * FontScale, 0, Color);
         }
 
         // todo - handle alignment

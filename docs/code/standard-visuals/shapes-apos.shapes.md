@@ -8,11 +8,11 @@ GumUI supports rendering vector shapes as visuals. The following shapes are supp
 * ColoredCircleRuntime
 * RoundedRectangleRuntime
 
-## Setup
+## Adding NuGet packages
 
 {% tabs %}
 {% tab title="MonoGame" %}
-The Apos.Shapes library is needed to render shapes in MonoGame projects.  Add the Gum.Shapes.MonoGame NuGet package ([https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)):
+The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.MonoGame NuGet package ([https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)):
 
 Modify csproj:
 
@@ -50,16 +50,47 @@ No additional setup is required to use shapes in .NET MAUI
 {% tab title="raylib" %}
 Shape visuals are not currently supported in raylib. Please create an issue on GitHub or chat with us on Discord to let us know you need this feature.
 {% endtab %}
+
+{% tab title="Silk.NET" %}
+No additional setup is required to use shapes in Silk.NET.
+{% endtab %}
 {% endtabs %}
 
 ## Setup in Code
 
+{% tabs %}
+{% tab title="MonoGame / KNI" %}
 Whether you are using code-only or the Gum tool, you must add the following line of code in your Initialize method:
 
+If using December 2025 or earlier:
+
 ```csharp
+GumUI.Initialize(...);
+// Initialize ShapeRenderer after GumUI:
 ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-// initialize Gum now:
 ```
+
+If using January 2026 or later:
+
+```csharp
+GumUI.Initialize(...);
+// Initialize ShapeRenderer after GumUI:
+ShapeRenderer.Self.Initialize();
+```
+{% endtab %}
+
+{% tab title=".NET MAUI" %}
+No additional setup is needed if you have already added SkiaSharp and Gum to your project. For more information see the [.NET Maui Initializing Gum](../getting-started/setup/adding-initializing-gum/.net-maui.md) page.
+{% endtab %}
+
+{% tab title="raylib" %}
+Shape visuals are not currently supported in raylib. Please create an issue on GitHub or chat with us on Discord to let us know you need this feature.
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+No additional setup is needed if you have already added Gum to your project. For more information see the [Silk.NET Initializing Gum](../getting-started/setup/adding-initializing-gum/silk.net.md) page.
+{% endtab %}
+{% endtabs %}
 
 ### Code Example: Rendering Shapes in Code
 
@@ -81,10 +112,9 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
         // Initialize shape renderer:
         Renderables.ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
-
 
         GumUI.Draw();
 

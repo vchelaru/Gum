@@ -73,7 +73,7 @@ internal class Arc : RenderableShapeBase
                 center: dropshadowCenter, 
                 radius: radius,
                 antiAliasSize: MathFunctions.RoundToInt(DropshadowBlurX),
-                lineThickness: Thickness,
+                lineThickness: Thickness - DropshadowBlurX,
                 forcedColor: DropshadowColor);
         }
 

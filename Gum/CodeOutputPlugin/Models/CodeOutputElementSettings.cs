@@ -22,9 +22,9 @@ namespace CodeOutputPlugin.Models
 
     public class CodeOutputElementSettings
     {
-        public string Namespace { get; set; }
-        public string UsingStatements { get; set; }
-        public string GeneratedFileName { get; set; }
+        public string Namespace { get; set; } = string.Empty;
+        public string UsingStatements { get; set; } = string.Empty;
+        public string GeneratedFileName { get; set; } = string.Empty;
 
         public GenerationBehavior GenerationBehavior { get; set; }
 

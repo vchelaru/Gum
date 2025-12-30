@@ -1,18 +1,28 @@
 ﻿using Gum.DataTypes;
-using Gum.Forms;
-using Gum.Forms.Controls;
-using Gum.GueDeriving;
 using Gum.Managers;
+using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
 using GumRuntime;
-using RaylibGum.Input;
+using Gum.Forms.Controls;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using ToolsUtilities;
+using Gum.Forms;
+using Gum.Threading;
 
 #if MONOGAME || KNI || FNA
+using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 namespace MonoGameGum;
 #elif RAYLIB
+using Gum.GueDeriving;
+using RaylibGum.Input;
 namespace RaylibGum;
 #endif
 
@@ -48,6 +58,8 @@ public class GumService
 
     public SystemManagers SystemManagers { get; private set; }
 
+    public DeferredActionQueue DeferredQueue { get; private set; }
+
     public float CanvasWidth
     {
         get => GraphicalUiElement.CanvasWidth;
@@ -60,7 +72,29 @@ public class GumService
         set => GraphicalUiElement.CanvasHeight = value;
     }
 
+    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
+
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
+    /// <inheritdoc/>
+    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+    /// <inheritdoc/>
+    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+
+    public void UseKeyboardDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+    }
+
+    public void UseGamepadDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+    }
+
+#if MONOGAME || KNI || FNA
+    Game _game;
+#endif
+
+    #region Initialize
 
     public GumService()
     {
@@ -73,7 +107,22 @@ public class GumService
 
         Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
-        //DeferredQueue = new DeferredActionQueue();
+        DeferredQueue = new DeferredActionQueue();
+    }
+
+    /// <summary>
+    /// Initializes Gum, optionally loading a Gum project.
+    /// </summary>
+#if MONOGAME || KNI || FNA
+    /// <param name="game">The game instance.</param>
+#endif
+    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
+    /// <returns>The loaded project, or null if no project is loaded</returns>
+    public GumProjectSave Initialize(string gumProjectFile)
+    {
+        return InitializeInternal(
+            gumProjectFile: gumProjectFile,
+            defaultVisualsVersion: DefaultVisualsVersion.Newest)!;
     }
 
     public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
@@ -82,13 +131,6 @@ public class GumService
             gumProjectFile: null,
             systemManagers: SystemManagers.Default,
             defaultVisualsVersion: defaultVisualsVersion);
-    }
-
-    public GumProjectSave Initialize(string gumprojectFile)
-    {
-        return InitializeInternal(
-            gumProjectFile: gumprojectFile,
-            defaultVisualsVersion: DefaultVisualsVersion.V2)!;
     }
 
     public bool IsInitialized { get; private set; }
@@ -158,6 +200,8 @@ public class GumService
         return gumProject;
     }
 
+#endregion
+
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)
     {
         var current = gumProject.StandardElements.Find(item => item.Name == "ColoredRectangle");
@@ -176,6 +220,7 @@ public class GumService
     List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
     public void Update(float seconds)
     {
+        DeferredQueue.ProcessPending();
         roots.Clear();
         roots.Add(Root);
         FormsUtilities.Update(seconds, roots);

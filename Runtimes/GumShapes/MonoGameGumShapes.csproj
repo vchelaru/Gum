@@ -4,20 +4,25 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<BaseIntermediateOutputPath>obj\MonoGame\</BaseIntermediateOutputPath>
-		<BaseOutputPath>bin\MonoGame\</BaseOutputPath>
+		
 		<PackageId>Gum.Shapes.MonoGame</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		
 		<Version>2025.12.9.1</Version>
 		<NoWarn>1591</NoWarn>
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="bin\**" />
 	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="bin\**" />
 	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="bin\**" />
 	  <None Remove="obj\**" />
 	</ItemGroup>
 
@@ -26,8 +31,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes" Version="0.5.0" />
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" PrivateAssets="All"/>
+		<PackageReference Include="Apos.Shapes" Version="0.5.2" />
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

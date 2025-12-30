@@ -9,6 +9,7 @@ using Gum.Commands;
 using ToolsUtilities;
 using Gum.Messages;
 using Gum.Extensions;
+using Gum.Services.Fonts;
 
 namespace Gum.CommandLine
 {

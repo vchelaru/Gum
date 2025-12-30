@@ -40,7 +40,7 @@ namespace StateAnimationPlugin.Views
     {
         #region Properties
 
-        ElementAnimationsViewModel ViewModel => DataContext as ElementAnimationsViewModel;
+        ElementAnimationsViewModel ViewModel => (ElementAnimationsViewModel)DataContext;
 
         public GridLength FirstRowWidth
         {

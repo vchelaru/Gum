@@ -114,7 +114,7 @@ StackPanel stackPanel;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V3);
 
     stackPanel = new StackPanel();
     stackPanel.AddToRoot();
@@ -153,7 +153,7 @@ The following code creates buttons which all share the height of their parent St
 StackPanel stackPanel;
 protected override void Initialize()
 {
-    GumUI.Initialize(this, DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, DefaultVisualsVersion.V3);
 
     stackPanel = new StackPanel();
     stackPanel.AddToRoot();

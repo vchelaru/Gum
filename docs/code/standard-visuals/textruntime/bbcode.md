@@ -25,10 +25,6 @@ The following variables can be used without creating custom fonts:
 
 ## Custom Functions
 
-{% hint style="warning" %}
-The Custom tag is planned for the October 2025 release of Gum. It is currently available only if your game links to Gum source.
-{% endhint %}
-
 TextRuntime instances can use the `Custom` tag to define a custom function to be used when rendering a Text. This tag can be used to customize letters in a TextRuntime using custom code, allowing for effects such as wavy, rainbow, or shaking text.
 
 The following variables can be modified on each letter. This list also includes their default values:
@@ -118,7 +114,7 @@ GrowShrinkCustomFunction _growShrink;
 
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
 
     _growShrink = new GrowShrinkCustomFunction();
     // The function must be registered before it is used

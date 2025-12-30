@@ -1,6 +1,5 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
-using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
 using Gum.ToolStates;
@@ -9,6 +8,7 @@ using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
 using System.Diagnostics;
+using Gum.Services.Fonts;
 
 namespace Gum.Plugins.Fonts;
 

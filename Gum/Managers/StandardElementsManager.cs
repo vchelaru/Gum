@@ -452,7 +452,7 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
                 AddPositioningVariables(stateSave);
-                AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.ExcludeFileOptions);
+                AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.AllowFileOptions);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
@@ -810,8 +810,14 @@ namespace Gum.Managers
 
                 if (customState == null && throwExceptionOnMissing)
                 {
-                    throw new InvalidOperationException(
-                        $"Could not get the default state for type {type} in either the default or through plugins");
+                    var message = $"Could not get the default state for type {type} in either the default or through plugins";
+
+                    if(type == "Arc")
+                    {
+                        message += "\nIf using MonoGame/KNI, FNA, did you remember to initialize the shapes library?";
+                    }
+
+                    throw new InvalidOperationException(message);
                 }
                 else
                 {

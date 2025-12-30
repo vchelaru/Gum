@@ -1,9 +1,15 @@
-﻿using Microsoft.Xna.Framework.Input;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if RAYLIB
+using RaylibGum.Input;
+using Keys = Raylib_cs.KeyboardKey;
+#else
+using Microsoft.Xna.Framework.Input;
+#endif
 
 // Needs to be in this namespace since it was originally
 // added as a class in this namespace in the FrameworkElement.cs
@@ -19,9 +25,10 @@ public struct KeyCombo
 
 public static class KeyComboExtensions
 {
-
     public static bool IsComboPushed(this KeyCombo keyCombo)
     {
+#if !RAYLIB
+// requires keyboards to have KeyDown etc, which requires them to be generic
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(keyCombo.HeldKey.Value);
@@ -31,11 +38,14 @@ public static class KeyComboExtensions
                     (keyboard.KeysTyped?.Contains(keyCombo.PushedKey) == true && keyCombo.IsTriggeredOnRepeat);
             }
         }
+#endif
         return false;
     }
 
     public static bool IsComboReleased(this KeyCombo keyCombo)
     {
+#if !RAYLIB
+// requires keyboards to have KeyDown etc, which requires them to be generic
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             if (keyCombo.HeldKey == null)
@@ -55,17 +65,21 @@ public static class KeyComboExtensions
                         keyboard.KeyDown(keyCombo.HeldKey.Value));
             }
         }
+#endif
         return false;
     }
 
     public static bool IsComboDown(this KeyCombo keyCombo)
     {
+#if !RAYLIB
+// requires keyboards to have KeyDown etc, which requires them to be generic
         foreach (var keyboard in FrameworkElement.KeyboardsForUiControl)
         {
             var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(keyCombo.HeldKey.Value);
 
             return isHeld && keyboard.KeyDown(keyCombo.PushedKey);
         }
+#endif
         return false;
     }
-}
+    }

@@ -16,8 +16,6 @@
 
 `Dock` can also adjust both vertical and horizontal values.
 
-
-
 <figure><img src="../../.gitbook/assets/17_06 12 46.png" alt=""><figcaption><p>Fill and SizeToChildren adjusts both Width and Height values</p></figcaption></figure>
 
 ## Code Example: Calling Anchor and Dock
@@ -228,7 +226,7 @@ button2.Text = "Bottom Docked Button";
 button2.Click += (_, _) => panel.Height -= 20;
 </code></pre>
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Buttons with 0 width, wrapping their text</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Buttons with 0 width, wrapping their text</p></figcaption></figure>
 
 We can resolve this by bringing back the code to make `panel` be sized with absolute units (pixels), or we can size everything bottom-up as shown in the next section.
 

@@ -17,6 +17,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 
 namespace Gum.Plugins.PropertiesWindowPlugin;
 

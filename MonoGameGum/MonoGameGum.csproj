@@ -2,13 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0-ios</TargetFrameworks>
-		<!-- Gum UI tool is still .NET 4 and doesn't use this so let's disable it-->
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2025.12.9.1</Version>
-
 
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>MONOGAME</DefineConstants>
@@ -160,7 +159,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303">
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 		

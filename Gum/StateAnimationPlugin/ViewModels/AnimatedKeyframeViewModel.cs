@@ -49,9 +49,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         set => Set(value);
     }
 
-    public string EventName
+    public string? EventName
     {
-        get => Get<string>(); 
+        get => Get<string?>(); 
         set => Set(value); 
     }
 
@@ -125,9 +125,13 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
             {
                 return AnimationName;
             }
-            else
+            else if(EventName != null)
             {
                 return EventName;
+            }
+            else
+            {
+                return "Unknown Animation";
             }
         }
     }
@@ -189,17 +193,14 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
             if (HasValidState)
             {
                 return Brushes.Black;
-
             }
             else
             {
-
                 return Brushes.Red;
             }
         }
     }
 
-    public KeyframeRuntime KeyframeRuntime { get; set; }
 
     public System.Windows.Visibility InterpolationElementVisibility
     {
@@ -272,10 +273,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         newInstance.SubAnimationViewModel = SubAnimationViewModel;
 
         newInstance.HasValidState = HasValidState;
-
-        // do we assign this?
-        newInstance.KeyframeRuntime = new KeyframeRuntime();
-    
+            
         return newInstance;
     }
 

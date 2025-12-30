@@ -26,8 +26,8 @@ public class ElementCommands : IElementCommands
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly PluginManager _pluginManager;
 
     #endregion
@@ -35,8 +35,8 @@ public class ElementCommands : IElementCommands
     public ElementCommands(ISelectedState selectedState, 
         IGuiCommands guiCommands, 
         IFileCommands fileCommands,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        WireframeObjectManager wireframeObjectManager,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IWireframeObjectManager wireframeObjectManager,
         PluginManager pluginManager)
     {
         _selectedState = selectedState;
@@ -59,7 +59,7 @@ public class ElementCommands : IElementCommands
         return AddInstance(elementToAddTo, instanceSave, parentName, desiredIndex);
     }
 
-    public InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null)
+    public InstanceSave? AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null)
     {
         if (elementToAddTo == null)
         {

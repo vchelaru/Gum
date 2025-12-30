@@ -14,6 +14,14 @@ public class Keyboard : IInputReceiverKeyboard
 
     public bool IsAltDown => false;
 
+    IEnumerable<int> IInputReceiverKeyboard.KeysTyped
+    {
+        get
+        {
+            return Enumerable.Empty<int>();
+        }
+    }
+
     public void Activity(float gameTime)
     {
         // todo:
@@ -22,5 +30,10 @@ public class Keyboard : IInputReceiverKeyboard
     public string GetStringTyped()
     {
         return string.Empty;
+    }
+
+    string IInputReceiverKeyboard.GetStringTyped()
+    {
+        throw new NotImplementedException();
     }
 }

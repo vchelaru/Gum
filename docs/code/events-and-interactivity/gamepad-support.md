@@ -4,6 +4,8 @@
 
 Gum Forms supports using a gamepad to control the UI. In general, when using a gamepad a single UI control has focus. Pressing up or down on the gamepad moves focus to the next item. Each forms control can support different interaction. For example, Buttons can be clicked, but a ListBox supports selecting items within the ListBox.
 
+For information on using gamepads for tabbing, see the [Tabbing](tabbing-moving-focus.md) page.
+
 ## Enabling Gamepad Controls
 
 To enable gamepad support in your screen:

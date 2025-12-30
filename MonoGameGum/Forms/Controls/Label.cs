@@ -12,7 +12,7 @@ namespace Gum.Forms.Controls;
 #endif
 
 public class Label :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement
 #else
     Gum.Forms.Controls.FrameworkElement

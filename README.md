@@ -36,6 +36,11 @@ https://docs.flatredball.com/gum/
 
 [![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
 
+### Contributors
+
+<a href="https://github.com/vchelaru/gum/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=vchelaru/gum" />
+</a>
 
 ## Need Help?
 

@@ -14,7 +14,7 @@ namespace StateAnimationPlugin.Managers
 {
     class CopiedData
     {
-        public AnimationViewModel CopiedAnimation;
+        public AnimationViewModel? CopiedAnimation;
     }
 
     internal static class AnimationCopyPasteManager

@@ -6,6 +6,10 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## Upgrading Gum Tool
 
+{% hint style="warning" %}
+For Linux users - this version of Gum upgrades to .NET 8. The Linux install script does not properly install .NET 8. We now recommend setup using Bottles. For more information, see the [Setup page](../setup/).
+{% endhint %}
+
 To upgrade the Gum tool:
 
 1. Download Gum.zip from the release on Github: [https://github.com/vchelaru/Gum/releases/tag/Release\_November\_30\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_November_30_2025)
@@ -43,7 +47,7 @@ FlatRedBall Projects which link to source will have a broken reference to SkiaIn
 
 Previous versions of Gum would not report errors if a Screen or Component included an invalid variable. The current version of Gum reports these.
 
-These type of errors are primiarly reported becase they can have an impact on code generation. Although the code generator handles these types of variables in most cases, they can sometimes cause confusing code generation or compile errors.
+These type of errors are primarily reported becase they can have an impact on code generation. Although the code generator handles these types of variables in most cases, they can sometimes cause confusing code generation or compile errors.
 
 Currently these errors must be fixed manually in XML files, but this may change in future versions of Gum.
 
@@ -110,4 +114,4 @@ Adjust the dimensions, positions of controls if desired. Some of the controls ha
 
 **The following changes have been made to V3:**
 
-<table><thead><tr><th width="256.7999267578125">Visual Element</th><th width="121.3997802734375">Variable</th><th width="115.400146484375">V2</th><th>V3</th></tr></thead><tbody><tr><td>CheckBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>ListBoxItem</td><td>Height</td><td>0</td><td>6 (RelativeToChildren)</td></tr><tr><td>ListBox</td><td>Height</td><td>150</td><td>256</td></tr><tr><td>ListBox</td><td>Width</td><td>150</td><td>256</td></tr><tr><td>ListBox.FocusedIndicator</td><td>Y</td><td>-2</td><td>2 (fixed overlap bug)</td></tr><tr><td>MenuItem</td><td>Width</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem</td><td>Height</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem.TextInstance</td><td>X</td><td>2</td><td>0</td></tr><tr><td>MenuItem.TextInstance</td><td>Height</td><td>2</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem<br>.SubmenuIndicatorInstance</td><td>Width</td><td>2</td><td>0</td></tr><tr><td>PasswordBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Background</td><td>Background</td><td>Renamed to RadioBackground</td></tr><tr><td>RadioButton</td><td>InnerCheck</td><td>InnerCheck</td><td>Ranamed to Radio</td></tr><tr><td>TextBox</td><td>Width</td><td>100</td><td>256</td></tr></tbody></table>
+<table><thead><tr><th width="256.7999267578125">Visual Element</th><th width="121.3997802734375">Variable</th><th width="115.400146484375">V2</th><th>V3</th></tr></thead><tbody><tr><td>CheckBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>ListBoxItem</td><td>Height</td><td>0</td><td>6 (RelativeToChildren)</td></tr><tr><td>ListBox</td><td>Height</td><td>150</td><td>256</td></tr><tr><td>ListBox</td><td>Width</td><td>150</td><td>256</td></tr><tr><td>ListBox.FocusedIndicator</td><td>Y</td><td>-2</td><td>2 (fixed overlap bug)</td></tr><tr><td>MenuItem</td><td>Width</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem</td><td>Height</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem.TextInstance</td><td>X</td><td>2</td><td>0</td></tr><tr><td>MenuItem.TextInstance</td><td>Height</td><td>2</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem<br>.SubmenuIndicatorInstance</td><td>Width</td><td>2</td><td>0</td></tr><tr><td>PasswordBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Background</td><td>Background</td><td>Renamed to RadioBackground</td></tr><tr><td>RadioButton</td><td>InnerCheck</td><td>InnerCheck</td><td>Renamed to Radio</td></tr><tr><td>TextBox</td><td>Width</td><td>100</td><td>256</td></tr></tbody></table>

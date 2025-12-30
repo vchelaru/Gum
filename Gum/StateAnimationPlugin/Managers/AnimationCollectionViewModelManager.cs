@@ -56,13 +56,13 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
 
     }
 
-    public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
+    public ElementAnimationsSave? GetElementAnimationsSave(ElementSave element)
     {
-        ElementAnimationsSave model = null;
+        ElementAnimationsSave? model = null;
         var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
 
 
-        if (fileName.Exists())
+        if (fileName?.Exists() == true)
         {
             try
             {
@@ -81,6 +81,11 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
     public void Save(ElementAnimationsViewModel viewModel)
     {
         var currentElement = _selectedState.SelectedElement;
+
+        if (currentElement == null)
+        {
+            return;
+        }
 
         var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(currentElement);
 

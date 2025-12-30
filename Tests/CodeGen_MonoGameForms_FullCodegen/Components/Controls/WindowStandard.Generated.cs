@@ -115,9 +115,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.Background.SetProperty("ColorCategoryState", "Primary");
         this.Background.SetProperty("StyleCategoryState", "Panel");
 
-        this.InnerPanelInstance.Visual.Height = 0f;
+        this.InnerPanelInstance.Visual.Height = -0f;
         this.InnerPanelInstance.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.InnerPanelInstance.Visual.Width = 0f;
+        this.InnerPanelInstance.Visual.Width = -0f;
         this.InnerPanelInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.InnerPanelInstance.Visual.X = 0f;
         this.InnerPanelInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
@@ -127,7 +127,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.InnerPanelInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
 
         this.TitleBarInstance.Visual.Height = 24f;
-        this.TitleBarInstance.Visual.Width = 0f;
+        this.TitleBarInstance.Visual.Width = -0f;
         this.TitleBarInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.TitleBarInstance.Visual.X = 0f;
         this.TitleBarInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
@@ -149,7 +149,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.BorderTopRightInstance.Visual.Height = 10f;
         this.BorderTopRightInstance.Visual.Width = 10f;
         this.BorderTopRightInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        this.BorderTopRightInstance.Visual.X = 0f;
+        this.BorderTopRightInstance.Visual.X = -0f;
         this.BorderTopRightInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
         this.BorderTopRightInstance.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
         this.BorderTopRightInstance.Visual.Y = 0f;
@@ -162,17 +162,17 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.BorderBottomLeftInstance.Visual.X = 0f;
         this.BorderBottomLeftInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
         this.BorderBottomLeftInstance.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        this.BorderBottomLeftInstance.Visual.Y = 0f;
+        this.BorderBottomLeftInstance.Visual.Y = -0f;
         this.BorderBottomLeftInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
         this.BorderBottomLeftInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
         this.BorderBottomRightInstance.Visual.Height = 10f;
         this.BorderBottomRightInstance.Visual.Width = 10f;
         this.BorderBottomRightInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        this.BorderBottomRightInstance.Visual.X = 0f;
+        this.BorderBottomRightInstance.Visual.X = -0f;
         this.BorderBottomRightInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
         this.BorderBottomRightInstance.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
-        this.BorderBottomRightInstance.Visual.Y = 0f;
+        this.BorderBottomRightInstance.Visual.Y = -0f;
         this.BorderBottomRightInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
         this.BorderBottomRightInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
@@ -192,7 +192,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.BorderBottomInstance.Visual.X = 0f;
         this.BorderBottomInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         this.BorderBottomInstance.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        this.BorderBottomInstance.Visual.Y = 0f;
+        this.BorderBottomInstance.Visual.Y = -0f;
         this.BorderBottomInstance.Visual.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
         this.BorderBottomInstance.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
 
@@ -211,7 +211,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.BorderRightInstance.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.BorderRightInstance.Visual.Width = 10f;
         this.BorderRightInstance.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-        this.BorderRightInstance.Visual.X = 0f;
+        this.BorderRightInstance.Visual.X = -0f;
         this.BorderRightInstance.Visual.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
         this.BorderRightInstance.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromLarge;
         this.BorderRightInstance.Visual.Y = 0f;

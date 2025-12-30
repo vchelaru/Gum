@@ -4,10 +4,10 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<BaseIntermediateOutputPath>obj\KNI\</BaseIntermediateOutputPath>
-		<BaseOutputPath>bin\KNI\</BaseOutputPath>
 
 		<PackageId>Gum.Shapes.KNI</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
 		<Version>2025.12.9.1</Version>
 		<NoWarn>1591</NoWarn>
 
@@ -18,9 +18,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="obj\**" />
-	  <EmbeddedResource Remove="obj\**" />
-	  <None Remove="obj\**" />
+		<Compile Remove="bin\**" />
+		<Compile Remove="obj\**" />
+		<EmbeddedResource Remove="bin\**" />
+		<EmbeddedResource Remove="obj\**" />
+		<None Remove="bin\**" />
+		<None Remove="obj\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -28,7 +31,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.5.0" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.5.2" />
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />

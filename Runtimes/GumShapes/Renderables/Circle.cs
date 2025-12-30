@@ -27,19 +27,20 @@ public class Circle : RenderableShapeBase
 
         if(HasDropshadow)
         {
-            var shadowLeft = absoluteLeft + DropshadowOffsetX ;
-            var shadowTop = absoluteTop + DropshadowOffsetY;
+            var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX;
+            var shadowTop = absoluteTop + DropshadowOffsetY + DropshadowBlurY;
 
             var dropshadowCenter = center;
             dropshadowCenter.X += DropshadowOffsetX;
             dropshadowCenter.Y += DropshadowOffsetY;
 
-            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius, 
+            RenderInternal(sb, shadowLeft, shadowTop, dropshadowCenter, radius - DropshadowBlurX / 2f, 
                 MathFunctions.RoundToInt(DropshadowBlurX),
+                StrokeWidth - DropshadowBlurX,
                 DropshadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1);
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, 1, StrokeWidth);
     }
 
     private void RenderInternal(ShapeBatch sb, 
@@ -48,6 +49,7 @@ public class Circle : RenderableShapeBase
         Microsoft.Xna.Framework.Vector2 center, 
         float radius,
         int antiAliasSize,
+        float strokeWidth,
         Color? forcedColor = null)
     {
         if (IsFilled)
@@ -94,7 +96,7 @@ public class Circle : RenderableShapeBase
                     radius,
                     transparentGradient,
                     gradient,
-                    StrokeWidth,
+                    strokeWidth,
                     aaSize: antiAliasSize);
             }
             else
@@ -108,7 +110,7 @@ public class Circle : RenderableShapeBase
                     radius,
                     transparentColor,
                     color,
-                    StrokeWidth,
+                    strokeWidth,
                     aaSize: antiAliasSize);
             }
         }

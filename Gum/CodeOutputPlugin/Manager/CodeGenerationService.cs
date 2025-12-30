@@ -22,12 +22,14 @@ internal class CodeGenerationService
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
 
-    public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator, IDialogService dialogService,
-        CustomCodeGenerator customCodeGenerator)
+    public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator, 
+        IDialogService dialogService,
+        CustomCodeGenerator customCodeGenerator,
+        CodeGenerationNameVerifier nameVerifier)
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, nameVerifier);
         _guiCommands = guiCommands;
         _dialogService = dialogService;
     }
