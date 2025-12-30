@@ -4,8 +4,6 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<BaseIntermediateOutputPath>obj\KNI\</BaseIntermediateOutputPath>
-		<BaseOutputPath>bin\KNI\</BaseOutputPath>
 
 		<PackageId>Gum.Shapes.KNI</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,9 +18,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="obj\**" />
-	  <EmbeddedResource Remove="obj\**" />
-	  <None Remove="obj\**" />
+		<Compile Remove="bin\**" />
+		<Compile Remove="obj\**" />
+		<EmbeddedResource Remove="bin\**" />
+		<EmbeddedResource Remove="obj\**" />
+		<None Remove="bin\**" />
+		<None Remove="obj\**" />
 	</ItemGroup>
 
 	<ItemGroup>
