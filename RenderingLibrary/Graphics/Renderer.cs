@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if MONOGAME || XNA || KNI || FNA
+#define XNALIKE
+#endif
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
@@ -42,9 +45,12 @@ public class Renderer : IRenderer
 
 
     List<Layer> _layers = new List<Layer>();
-    ReadOnlyCollection<Layer> mLayersReadOnly;
+    ReadOnlyCollection<Layer> _layersReadOnly;
 
+#if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
+#endif
+
 
     RenderStateVariables mRenderStateVariables = new RenderStateVariables();
 
@@ -85,13 +91,8 @@ public class Renderer : IRenderer
         }
     }
 
-    public ReadOnlyCollection<Layer> Layers
-    {
-        get
-        {
-            return mLayersReadOnly;
-        }
-    }
+    public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
+
 
     /// <summary>
     /// The texture used to render solid objects. If SinglePixelSourceRectangle is null, the entire texture is used. Otherwise
@@ -255,7 +256,9 @@ public class Renderer : IRenderer
 
     public Renderer()
     {
-        mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
+
+        _layers = new List<Layer>();
+        _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         mCamera = new RenderingLibrary.Camera();
 
     }
@@ -937,7 +940,11 @@ public class Renderer : IRenderer
 
     }
 
-
+    public override bool Equals(object? obj)
+    {
+        return obj is Renderer renderer &&
+               EqualityComparer<ReadOnlyCollection<Layer>>.Default.Equals(_layersReadOnly, renderer._layersReadOnly);
+    }
 }
 
 #region RenderTargetService

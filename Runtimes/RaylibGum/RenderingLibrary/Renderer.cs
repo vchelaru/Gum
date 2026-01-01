@@ -20,6 +20,13 @@ public class Renderer : IRenderer
     /// </summary>
     public static bool RenderUsingHierarchy = true;
 
+    List<Layer> _layers;
+    ReadOnlyCollection<Layer> _layersReadOnly;
+
+#if XNALIKE
+    SpriteRenderer spriteRenderer = new SpriteRenderer();
+#endif
+
     public static Renderer Self
     {
         get
@@ -49,11 +56,9 @@ public class Renderer : IRenderer
         set;
     } = BlendState.NonPremultiplied;
 
-    List<Layer> _layers;
-    ReadOnlyCollection<Layer> _layersReadOnly;
-    public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
 
     public Layer MainLayer => _layers[0];
+    public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
 
     public Renderer()
     {
