@@ -136,19 +136,25 @@ public class FormsUtilities
                 TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
+#if !RAYLIB
                 TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.ItemsControlVisual));
+#endif
                 TryAdd(typeof(Label), typeof(DefaultVisuals.LabelVisual));
                 TryAdd(typeof(ListBox), typeof(DefaultVisuals.ListBoxVisual));
                 TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.ListBoxItemVisual));
+#if !RAYLIB
                 TryAdd(typeof(Menu), typeof(DefaultVisuals.MenuVisual));
                 TryAdd(typeof(MenuItem), typeof(DefaultVisuals.MenuItemVisual));
                 TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.PasswordBoxVisual));
+#endif
                 TryAdd(typeof(RadioButton), typeof(DefaultVisuals.RadioButtonVisual));
                 TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.ScrollViewerVisual));
-                TryAdd(typeof(TextBox), typeof(DefaultVisuals.TextBoxVisual));
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
+#if !RAYLIB
+                TryAdd(typeof(TextBox), typeof(DefaultVisuals.TextBoxVisual));
+#endif
                 TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
 
@@ -162,13 +168,17 @@ public class FormsUtilities
                 TryAdd(typeof(Label), typeof(DefaultVisuals.V3.LabelVisual));
                 TryAdd(typeof(ListBox), typeof(DefaultVisuals.V3.ListBoxVisual));
                 TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.V3.ListBoxItemVisual));
+#if !RAYLIB
                 TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
                 TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
                 TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+#endif
                 TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
                 TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
+#if !RAYLIB
                 TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
+#endif
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
                 TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
@@ -178,7 +188,6 @@ public class FormsUtilities
             default:
                 throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
         }
-
 
         void TryAdd(Type formsType, Type runtimeType)
         {
@@ -237,8 +246,6 @@ public class FormsUtilities
 
         container.AddToManagers(systemManagers);
 
-
-
         return container;
     }
 
@@ -271,7 +278,6 @@ public class FormsUtilities
                         InteractiveGue.CurrentInputReceiver = null;
                     }
                 }
-
             }
         }
     }
@@ -291,11 +297,13 @@ public class FormsUtilities
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
     static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
 
+#if XNALIKE
     [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
     public static void Update(GameTime gameTime, GraphicalUiElement rootGue)
     {
         Update(null, gameTime, rootGue);
     }
+#endif
 
     public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
     {
@@ -325,10 +333,15 @@ public class FormsUtilities
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
 
-
+#if XNALIKE
         cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
         keyboard.Activity(gameTime.TotalGameTime.TotalSeconds, game);
         UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
+#else
+        cursor.Activity(gameTime);
+        keyboard.Activity(gameTime);
+        UpdateGamepads(gameTime);
+#endif
         innerList.Clear();
 
         var didModalsProcessInput = false;
@@ -355,11 +368,10 @@ public class FormsUtilities
             for(int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
             {
                 var item = FrameworkElement.ModalRoot.Children[i];
-
-                if (item.Visible && item is GraphicalUiElement itemAsGue)
+                if (item.Visible)
                 {
                     didModalsProcessInput = true;
-                    innerList.Add(itemAsGue);
+                    innerList.Add(item);
                     // only the top-most element receives input
                     break;
                 }
@@ -388,7 +400,8 @@ public class FormsUtilities
                 // make sure this is the last:
                 foreach (var layer in SystemManagers.Default.Renderer.Layers)
                 {
-                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
+                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && 
+                        layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
                     {
                         layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
                         layer.Add(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
@@ -397,20 +410,24 @@ public class FormsUtilities
 
                 foreach (var item in FrameworkElement.PopupRoot.Children)
                 {
-                    if (item is GraphicalUiElement itemAsGue)
-                    {
-                        innerList.Add(itemAsGue);
-                    }
+                    innerList.Add(item);
                 }
             }
         }
 
-        //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+#if XNALIKE
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList, 
             cursor, 
             keyboard, 
             gameTime.TotalGameTime.TotalSeconds);
+#else
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            innerList, 
+            cursor, 
+            keyboard, 
+            gameTime);
+#endif
 
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
@@ -432,7 +449,6 @@ public class FormsUtilities
             }
         }
 
-
         var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
 
         if(frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
@@ -447,6 +463,7 @@ public class FormsUtilities
 
     private static void UpdateGamepads(double time)
     {
+#if XNALIKE
         for (int i = 0; i < Gamepads.Length; i++)
         {
 #if FNA
@@ -456,6 +473,7 @@ public class FormsUtilities
 #endif
             Gamepads[i].Activity(gamepadState, time);
         }
+#endif
 
 #if FULL_DIAGNOSTICS
         var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
@@ -564,7 +582,6 @@ public class FormsUtilities
             else if (behaviorNames.Contains("MenuItemBehavior"))
             {
 #if !RAYLIB
-
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
@@ -579,7 +596,6 @@ public class FormsUtilities
             else if (behaviorNames.Contains("PasswordBoxBehavior"))
             {
 #if !RAYLIB
-
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
@@ -624,7 +640,6 @@ public class FormsUtilities
             else if (behaviorNames.Contains("TextBoxBehavior"))
             {
 #if !RAYLIB
-
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);

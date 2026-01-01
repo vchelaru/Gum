@@ -136,16 +136,26 @@ public class FormsUtilities
                 TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
+#if !RAYLIB
+                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.ItemsControlVisual));
+#endif
                 TryAdd(typeof(Label), typeof(DefaultVisuals.LabelVisual));
                 TryAdd(typeof(ListBox), typeof(DefaultVisuals.ListBoxVisual));
                 TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.ListBoxItemVisual));
+#if !RAYLIB
+                TryAdd(typeof(Menu), typeof(DefaultVisuals.MenuVisual));
+                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.MenuItemVisual));
+                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.PasswordBoxVisual));
+#endif
                 TryAdd(typeof(RadioButton), typeof(DefaultVisuals.RadioButtonVisual));
                 TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.ScrollViewerVisual));
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
+#if !RAYLIB
+                TryAdd(typeof(TextBox), typeof(DefaultVisuals.TextBoxVisual));
+#endif
                 TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
-
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
@@ -158,13 +168,17 @@ public class FormsUtilities
                 TryAdd(typeof(Label), typeof(DefaultVisuals.V3.LabelVisual));
                 TryAdd(typeof(ListBox), typeof(DefaultVisuals.V3.ListBoxVisual));
                 TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.V3.ListBoxItemVisual));
-                //TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
-                //TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
-                //TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+#if !RAYLIB
+                TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
+                TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
+                TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+#endif
                 TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
                 TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
-                //TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
+#if !RAYLIB
+                TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
+#endif
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
                 TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
@@ -264,7 +278,6 @@ public class FormsUtilities
                         InteractiveGue.CurrentInputReceiver = null;
                     }
                 }
-
             }
         }
     }
@@ -284,6 +297,14 @@ public class FormsUtilities
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
     static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
 
+#if XNALIKE
+    [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
+    public static void Update(GameTime gameTime, GraphicalUiElement rootGue)
+    {
+        Update(null, gameTime, rootGue);
+    }
+#endif
+
     public static void Update(float gameTime, GraphicalUiElement rootGue)
     {
         innerRootList.Clear();
@@ -293,10 +314,16 @@ public class FormsUtilities
         }
         Update(gameTime, innerRootList);
     }
+
     public static void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
     {
+#if XNALIKE
+        // tolerate null games for now...
+        var shouldProcess = game == null || game.IsActive;
+#else
         var shouldProcess = true;
-        
+#endif
+
         if (!shouldProcess)
         {
             return;
@@ -306,12 +333,18 @@ public class FormsUtilities
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
 
+#if XNALIKE
+        cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
+        keyboard.Activity(gameTime.TotalGameTime.TotalSeconds, game);
+        UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
+#else
         cursor.Activity(gameTime);
         keyboard.Activity(gameTime);
         UpdateGamepads(gameTime);
+#endif
         innerList.Clear();
 
-
+        var didModalsProcessInput = false;
         if (FrameworkElement.ModalRoot.Children.Count > 0)
         {
 #if FULL_DIAGNOSTICS
@@ -335,18 +368,18 @@ public class FormsUtilities
             for (int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
             {
                 var item = FrameworkElement.ModalRoot.Children[i];
-                if (item is GraphicalUiElement itemAsGue)
+                if (item.Visible)
                 {
-                    innerList.Add(itemAsGue);
+                    didModalsProcessInput = true;
+                    innerList.Add(item);
                     // only the top-most element receives input
                     break;
                 }
             }
         }
-        else
+
+        if (!didModalsProcessInput)
         {
-
-
             if (roots != null)
             {
                 innerList.AddRange(roots);
@@ -367,7 +400,8 @@ public class FormsUtilities
                 // make sure this is the last:
                 foreach (var layer in SystemManagers.Default.Renderer.Layers)
                 {
-                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
+                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && 
+                        layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
                     {
                         layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
                         layer.Add(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
@@ -376,25 +410,28 @@ public class FormsUtilities
 
                 foreach (var item in FrameworkElement.PopupRoot.Children)
                 {
-                    if (item is GraphicalUiElement itemAsGue)
-                    {
-                        innerList.Add(itemAsGue);
-                    }
+                    innerList.Add(item);
                 }
             }
         }
 
+#if XNALIKE
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList, 
             cursor, 
             keyboard, 
+            gameTime.TotalGameTime.TotalSeconds);
+#else
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(
+            innerList,
+            cursor,
+            keyboard,
             gameTime);
-
+#endif
 
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
-
 
         // It's possible that a cursor pushes on a control, which would set its state to Pushed. After the cursor releases,
         // the control is no longer pushed, so it should update its state to reflect that it is no longer pushed, such as
@@ -423,9 +460,30 @@ public class FormsUtilities
             cursor.CustomCursor = Cursors.Arrow;
         }
     }
+
     private static void UpdateGamepads(double time)
     {
-        // todo
+#if XNALIKE
+        for (int i = 0; i < Gamepads.Length; i++)
+        {
+#if FNA
+            var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((PlayerIndex)i);
+#else
+            var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
+#endif
+            Gamepads[i].Activity(gamepadState, time);
+        }
+#endif
+
+#if FULL_DIAGNOSTICS
+        var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
+
+        if (hashSet.Count != FrameworkElement.GamePadsForUiControl.Count)
+        {
+            throw new InvalidOperationException("The same gamepad has been added to FrameworkElement.GamePadsForUiControl multiple times. " +
+                "This should not be done");
+        }
+#endif
     }
 
     internal static void SetDimensionsToCanvas(InteractiveGue container)
@@ -524,7 +582,6 @@ public class FormsUtilities
             else if (behaviorNames.Contains("MenuItemBehavior"))
             {
 #if !RAYLIB
-
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
@@ -539,7 +596,6 @@ public class FormsUtilities
             else if (behaviorNames.Contains("PasswordBoxBehavior"))
             {
 #if !RAYLIB
-
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
@@ -584,7 +640,6 @@ public class FormsUtilities
             else if (behaviorNames.Contains("TextBoxBehavior"))
             {
 #if !RAYLIB
-
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
