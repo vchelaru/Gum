@@ -316,7 +316,11 @@ public class FormsUtilities
         {
             innerRootList.Add(rootGue);
         }
+#if XNALIKE
+        Update(game, gameTime, innerRootList);
+#else
         Update(gameTime, innerRootList);
+#endif
     }
 
 #if XNALIKE
