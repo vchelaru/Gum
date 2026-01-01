@@ -105,10 +105,6 @@ $"chars count=223\r\n";
         char firstCharacterInSecondLine = text.WrappedText[1][0];
         firstCharacterInSecondLine.ShouldBe((char)(lastLine0 + 1));
     }
-    //Hyphens and dashes - These are natural break points where you can wrap
-    //After punctuation - Periods, commas, semicolons, etc. (though be careful with decimal points)
-    //Between different character types - Like between letters and numbers, or letters and symbols
-    //Zero-width spaces - HTML &zwj; or Unicode characters specifically for this purpose
 
     [Fact]
     public void WrappedText_ShouldWrapMidWord_WithMultipleLines()
@@ -190,7 +186,6 @@ $"chars count=223\r\n";
         substrings[1].Variables[0].VariableName.ShouldBe("IsBold");
         substrings[1].Variables[0].Value.ShouldBe(true);
     }
-
 
     [Fact]
     public void GetStyledSubstrings_ShouldReturnThreeEntries_IfTextHasCodeInMiddle()
@@ -317,7 +312,6 @@ $"chars count=223\r\n";
         substrings[4].Variables.Count.ShouldBe(0);
     }
 
-
     #endregion
 
     #region Text (including bbcode and localization)
@@ -340,6 +334,57 @@ $"chars count=223\r\n";
         inlineVariables[1].StartIndex.ShouldBe(3, "Because \\r character should not be included, so the newline 0 character starts at index 3");
         inlineVariables[1].CharacterCount.ShouldBe(1);
     }
+
+    [Fact]
+    public void Text_WithCustom_ShouldAssignMethodCall()
+    {
+        var method = (int index, string block) =>
+        {
+            return new LetterCustomization();
+        };
+        Text.Customizations["CustomMethod"] = method;
+
+        string text = $"Hello [Custom=CustomMethod]custom[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        var inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(6);
+        foreach(var variable in inlineVariables)
+        {
+            ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)variable.Value;
+            asCall.Function.ShouldBe(method);
+        }
+    }
+
+    [Fact]
+    public void Text_WithCustom_ShouldAssignMethods()
+    {
+        string text = $"Hello [Custom=CustomMethod]custom[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        var method = (int index, string block) =>
+        {
+            return new LetterCustomization();
+        };
+        Text.Customizations["CustomMethod"] = method;
+
+        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        var inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(6);
+        foreach (var variable in inlineVariables)
+        {
+            ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)variable.Value;
+            asCall.Function.ShouldBe(method);
+        }
+    }
+
 
     [Fact]
     public void Text_ShouldUseLocalization()
@@ -399,6 +444,7 @@ $"chars count=223\r\n";
 
     #endregion
 
+    #region Clone
     [Fact]
     public void Clone_ShouldCreateClonedText()
     {
@@ -406,6 +452,8 @@ $"chars count=223\r\n";
         var clone = sut.Clone();
         clone.ShouldNotBeNull();
     }
+
+    #endregion
 
     [Fact]
     public void IsBold_ShouldChangeFont_OnFontPropertiesSet()
