@@ -477,6 +477,7 @@ public class MainStateAnimationPlugin : PluginBase
                     }
                 }
             }
+            currentlyReferencedElement = element;
         }
         
         if (_viewModel == null)
