@@ -1444,7 +1444,8 @@ public class CustomEffectManager
         // Loads the Shader.xnb effect file. The shader is optional; if missing, 
         // the application won't be able to use custom effects.
         // Use of try-catch avoids using platform specific code.
-        try 
+        // Shader should be capitalized.
+        try
         { 
             Effect = mContentManager.Load<Effect>("Content/Shader");
         } 
