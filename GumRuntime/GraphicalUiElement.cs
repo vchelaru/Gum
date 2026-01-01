@@ -6536,7 +6536,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void UpdateToFontValues()
     {
-        if(mCategories is IText asText)
+        if(this.mContainedObjectAsIpso is IText asText)
         {
             UpdateFontFromProperties?.Invoke(asText, this);
         }
