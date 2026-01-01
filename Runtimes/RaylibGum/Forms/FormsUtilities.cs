@@ -305,7 +305,11 @@ public class FormsUtilities
     }
 #endif
 
+#if XNALIKE
+    public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
+#else
     public static void Update(float gameTime, GraphicalUiElement rootGue)
+#endif
     {
         innerRootList.Clear();
         if (rootGue != null)
@@ -315,7 +319,11 @@ public class FormsUtilities
         Update(gameTime, innerRootList);
     }
 
+#if XNALIKE
+    public static void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
+#else
     public static void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
+#endif
     {
 #if XNALIKE
         // tolerate null games for now...
