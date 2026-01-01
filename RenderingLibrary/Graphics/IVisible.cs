@@ -44,18 +44,17 @@ public interface IVisible
     /// An object is only absolutely visible if both its own <see cref="Visible"/> property 
     /// is <c>true</c> and all of its parents are absolutely visible.
     /// </remarks>
-    public bool AbsoluteVisible
+    bool AbsoluteVisible { get; }
+
+    public bool GetAbsoluteVisible()
     {
-        get
+        if (Parent == null)
         {
-            if (Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && Parent.AbsoluteVisible;
-            }
+            return Visible;
+        }
+        else
+        {
+            return Visible && Parent.AbsoluteVisible;
         }
     }
 }

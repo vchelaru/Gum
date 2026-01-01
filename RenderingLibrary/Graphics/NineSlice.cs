@@ -949,7 +949,7 @@ public class NineSlice : SpriteBatchRenderableBase,
     }
 
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
 
     /// <inheritdoc/>
     IVisible? IVisible.Parent

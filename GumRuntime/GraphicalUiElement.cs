@@ -244,7 +244,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
 
     /// <inheritdoc/>
     public bool Visible
@@ -331,6 +331,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
             }
+        }
+    }
+
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent
+    {
+        get
+        {
+            return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
 
@@ -1057,6 +1066,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+
+    IRenderableIpso? IRenderableIpso.Parent { get => Parent; set => this.Parent = value as GraphicalUiElement; }
 
     // Made obsolete November 4, 2017
     [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
@@ -6533,27 +6544,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
-    #region IVisible Implementation
-
-    bool IVisible.AbsoluteVisible
-    {
-        get
-        {
-            bool explicitParentVisible = true;
-            if (ExplicitIVisibleParent != null)
-            {
-                explicitParentVisible = ExplicitIVisibleParent.AbsoluteVisible;
-            }
-
-            return explicitParentVisible && mContainedObjectAsIVisible?.AbsoluteVisible == true;
-        }
-    }
-
-    IVisible? IVisible.Parent => this.Parent as IVisible;
-
-    IRenderableIpso? IRenderableIpso.Parent { get => Parent; set => this.Parent = (GraphicalUiElement)value; }
-
-    #endregion
 
     #region AnimationChain 
 

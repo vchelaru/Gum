@@ -1531,7 +1531,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     }
 
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     #endregion

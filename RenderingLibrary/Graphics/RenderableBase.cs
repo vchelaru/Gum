@@ -12,7 +12,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 {
     public bool IsRenderTarget { get; set; }
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
     /// <inheritdoc/>
     IVisible? IVisible.Parent { get { return Parent as IVisible; } }
 

@@ -202,7 +202,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
     }
 
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
 
     /// <inheritdoc/>
     IVisible? IVisible.Parent =>((IRenderableIpso)this).Parent as IVisible;

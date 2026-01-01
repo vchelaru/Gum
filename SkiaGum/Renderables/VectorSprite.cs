@@ -303,7 +303,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
     }
 
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
     /// <inheritdoc/>
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
