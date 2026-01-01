@@ -1,15 +1,20 @@
-﻿using Gum.Forms.Controls;
+﻿#if MONOGAME || KNI || FNA
+#define XNALIKE
+#endif
+using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
-using Gum.GueDeriving;
-
+using System.Linq;
 
 #if RAYLIB
+using Gum.GueDeriving;
 using Raylib_cs;
 using RaylibGum.Input;
 #else
@@ -45,6 +50,7 @@ public enum DefaultVisualsVersion
     /// The third version introduced end of 2025. This version makes styling with colors easier.
     /// </summary>
     V3,
+
     /// <summary>
     /// Specifies that the newest version is used.
     /// </summary>
@@ -71,18 +77,23 @@ public class FormsUtilities
 
     public static GamePad[] Gamepads { get; private set; } = new GamePad[4];
 
-
     /// <summary>
     /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
     /// </summary>
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
+#if XNALIKE
     /// <param name="game">The Game instance, used for creating and updating input such as the Keyboard and Mouse</param>
+#endif
     /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
     /// do not need to provide one.</param>
     /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
-    internal static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
+#if XNALIKE
+    public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+#else
+    public static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
+#endif
     {
         systemManagers = systemManagers ?? SystemManagers.Default;
 
@@ -92,14 +103,36 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        // Is this needed?
+#if RAYLIB
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
-
+#else
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
+#endif
 
         switch (defaultVisualsVersion)
         {
+#if XNALIKE
+            case DefaultVisualsVersion.V1:
+                TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
+                TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
+                TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
+                TryAdd(typeof(Label), typeof(DefaultLabelRuntime));
+                TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
+                TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
+                TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
+                TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
+                TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
+                TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
+                TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
+                TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
+                TryAdd(typeof(Splitter), typeof(DefaultSplitterRuntime));
+                TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
+                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
+                break;
+#endif
             case DefaultVisualsVersion.V2:
-                DefaultVisuals.Styling.ActiveStyle = new DefaultVisuals.Styling(uiSpriteSheet);
                 TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
                 TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
@@ -148,12 +181,27 @@ public class FormsUtilities
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
+#if XNALIKE
+            // This is needed until MonoGameGum.Forms goes away completely. It's now marked as obsolete with error as of November 2025
+            if(formsType.FullName.StartsWith("MonoGameGum.Forms."))
+            {
+                var baseType = formsType.BaseType;
+
+                if(baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
+                {
+                    FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
+                }
+            }
+#endif
         }
 
         cursor = new Cursor();
 
+#if XNALIKE
+        keyboard = new Keyboard(game);
+#else
         keyboard = new Keyboard();
-
+#endif
 
         for (int i = 0; i < Gamepads.Length; i++)
         {
@@ -347,6 +395,23 @@ public class FormsUtilities
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
 
+
+        // It's possible that a cursor pushes on a control, which would set its state to Pushed. After the cursor releases,
+        // the control is no longer pushed, so it should update its state to reflect that it is no longer pushed, such as
+        // by showing hover or focused state. This need was uncovered by the MonoGame iOS sample which focused the slider when
+        // hovering, but the state never got updated on release.
+        if (cursor.PrimaryClick)
+        {
+            if (InteractiveGue.CurrentInputReceiver is FrameworkElement frameworkElementInputReceiver)
+            {
+                frameworkElementInputReceiver.UpdateState();
+            }
+            if (frameworkElementOver != null && frameworkElementOver != InteractiveGue.CurrentInputReceiver)
+            {
+                frameworkElementOver.UpdateState();
+            }
+        }
+
         var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
 
         if (frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
@@ -357,6 +422,10 @@ public class FormsUtilities
         {
             cursor.CustomCursor = Cursors.Arrow;
         }
+    }
+    private static void UpdateGamepads(double time)
+    {
+        // todo
     }
 
     internal static void SetDimensionsToCanvas(InteractiveGue container)
@@ -370,10 +439,6 @@ public class FormsUtilities
         container.Height = GraphicalUiElement.CanvasHeight;
     }
 
-    private static void UpdateGamepads(double time)
-    {
-        // todo
-    }
     public static void RegisterFromFileFormRuntimeDefaults()
     {
 #if FULL_DIAGNOSTICS

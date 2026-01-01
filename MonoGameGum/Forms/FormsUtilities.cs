@@ -1,4 +1,7 @@
-﻿using Gum.Forms.Controls;
+﻿#if MONOGAME || KNI || FNA
+#define XNALIKE
+#endif
+using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -11,6 +14,7 @@ using System.Collections.Specialized;
 using System.Linq;
 
 #if RAYLIB
+using Gum.GueDeriving;
 using Raylib_cs;
 using RaylibGum.Input;
 #else
@@ -26,7 +30,6 @@ namespace MonoGameGum.Forms;
 #else
 namespace Gum.Forms;
 #endif
-
 
 /// <summary>
 /// The version to use for default visuals in a code-only project.
@@ -56,8 +59,6 @@ public enum DefaultVisualsVersion
     Newest = V3,
 }
 
-
-
 public class FormsUtilities
 {
     static ICursor cursor;
@@ -82,11 +83,17 @@ public class FormsUtilities
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
+#if XNALIKE
     /// <param name="game">The Game instance, used for creating and updating input such as the Keyboard and Mouse</param>
+#endif
     /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
     /// do not need to provide one.</param>
     /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
+#if XNALIKE
     public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+#else
+    public static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+#endif
     {
         systemManagers = systemManagers ?? SystemManagers.Default;
 
@@ -96,11 +103,15 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png");
-        
+#if RAYLIB
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
+#else
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
+#endif   
 
         switch (defaultVisualsVersion)
         {
+#if XNALIKE
             case DefaultVisualsVersion.V1:
                 TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
                 TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
@@ -120,6 +131,7 @@ public class FormsUtilities
                 TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
                 break;
+#endif
             case DefaultVisualsVersion.V2:
                 TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
                 TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
@@ -174,6 +186,7 @@ public class FormsUtilities
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
+#if XNALIKE
             // This is needed until MonoGameGum.Forms goes away completely. It's now marked as obsolete with error as of November 2025
             if(formsType.FullName.StartsWith("MonoGameGum.Forms."))
             {
@@ -184,11 +197,16 @@ public class FormsUtilities
                     FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
                 }
             }
+#endif
         }
 
         cursor = new Cursor();
 
-        keyboard = new MonoGameGum.Input.Keyboard(game);
+#if XNALIKE
+        keyboard = new Keyboard(game);
+#else
+        keyboard = new Keyboard();
+#endif
 
         for (int i = 0; i < Gamepads.Length; i++)
         {
@@ -271,6 +289,7 @@ public class FormsUtilities
     }
 
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
+    static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
 
     [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
     public static void Update(GameTime gameTime, GraphicalUiElement rootGue)
@@ -278,7 +297,6 @@ public class FormsUtilities
         Update(null, gameTime, rootGue);
     }
 
-    static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
     public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
     {
         innerRootList.Clear();
@@ -290,11 +308,15 @@ public class FormsUtilities
     }
 
     public static void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
-    { 
+    {
+#if XNALIKE
         // tolerate null games for now...
         var shouldProcess = game == null || game.IsActive;
+#else
+        var shouldProcess = true;
+#endif
 
-        if(!shouldProcess)
+        if (!shouldProcess)
         {
             return;
         }
@@ -385,7 +407,8 @@ public class FormsUtilities
 
         //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
-            innerList, cursor, 
+            innerList, 
+            cursor, 
             keyboard, 
             gameTime.TotalGameTime.TotalSeconds);
 
@@ -532,15 +555,20 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains("MenuBehavior"))
             {
+#if !RAYLIB
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
+#endif
             }
             else if (behaviorNames.Contains("MenuItemBehavior"))
             {
+#if !RAYLIB
+
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
+#endif
             }
             else if (behaviorNames.Contains("PanelBehavior"))
             {
@@ -550,9 +578,12 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains("PasswordBoxBehavior"))
             {
+#if !RAYLIB
+
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
+#endif
             }
             else if (behaviorNames.Contains("RadioButtonBehavior"))
             {
@@ -592,9 +623,12 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains("TextBoxBehavior"))
             {
+#if !RAYLIB
+
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
+#endif
             }
             else if (behaviorNames.Contains("WindowBehavior"))
             {
