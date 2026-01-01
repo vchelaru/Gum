@@ -241,29 +241,16 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
         }
     }
 
-
-    public bool AbsoluteVisible
+    /// <inheritdoc/>
+    public bool Visible
     {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
+        get;
+        set;
     }
-
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
@@ -272,11 +259,6 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
 
     void IRenderable.PreRender() { }
 
-    public bool Visible
-    {
-        get;
-        set;
-    }
 
     public override string ToString()
     {

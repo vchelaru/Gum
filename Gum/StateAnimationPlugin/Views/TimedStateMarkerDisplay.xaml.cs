@@ -138,7 +138,7 @@ namespace StateAnimationPlugin.Views
 
         private static void MarkerItemSourceChangeCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            TimedStateMarkerDisplay instance = d as TimedStateMarkerDisplay;
+            TimedStateMarkerDisplay instance = (TimedStateMarkerDisplay)d;
             var oldValues = e.OldValue as IEnumerable<AnimatedKeyframeViewModel>;
 
             if(oldValues != null)

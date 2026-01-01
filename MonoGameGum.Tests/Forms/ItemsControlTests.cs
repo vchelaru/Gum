@@ -110,7 +110,7 @@ public class ItemsControlTests : BaseTestClass
     public void ItemsControl_Orientation_ShouldSetInnerPanelChildrenLayout()
     {
         var itemsControl = new ItemsControl();
-        var innerPanel = itemsControl.GetVisual("InnerPanelInstance");
+        var innerPanel = itemsControl.GetVisual("InnerPanelInstance")!;
 
         itemsControl.Orientation = Orientation.Horizontal;
         innerPanel.ChildrenLayout.ShouldBe(ChildrenLayout.LeftToRightStack);
