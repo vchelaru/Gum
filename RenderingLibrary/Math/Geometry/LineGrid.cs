@@ -233,16 +233,10 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     }
 
     /// <inheritdoc/>
-    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
-    
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+
     /// <inheritdoc/>
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     bool IRenderableIpso.IsRenderTarget => false;
 

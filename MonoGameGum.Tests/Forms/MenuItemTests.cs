@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
-public class MenuItemTests
+public class MenuItemTests : BaseTestClass
 {
     [Fact]
     public void SubmenuIndicatorInstanceVisible_ShouldBeFalse_ByDefault()

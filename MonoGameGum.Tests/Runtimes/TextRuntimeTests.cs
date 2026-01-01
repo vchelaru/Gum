@@ -408,14 +408,38 @@ $"chars count=223\r\n";
     }
 
     [Fact]
+    public void IsBold_ShouldChangeFont_OnFontPropertiesSet()
+    {
+        // file name is:
+        // FontCache\Font18SomeFont_Italic_Bold.fnt
+        var italicBoldFont = new BitmapFont((Texture2D)null!, fontPattern);
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase: true, makeAbsolute: true);
+        loaderManager.AddDisposable(fileName, italicBoldFont);
+
+        TextRuntime sut = new();
+        sut.UseCustomFont = true;
+        // set up all the properties:
+        sut.FontSize = 18;
+        sut.Font = "SomeFont";
+        sut.IsItalic = true;
+
+        sut.UseCustomFont = false;
+
+        sut.IsBold = true;
+
+        sut.BitmapFont.ShouldBe(italicBoldFont);
+    }
+
+    [Fact]
     public void UseCustomFont_ShouldChangeFont_OnFontPropertiesSet()
     {
         // file name is:
         // FontCache\Font18SomeFont_Italic_Bold.fnt
-        var bitmapFont = new BitmapFont((Texture2D)null!, fontPattern);
+        var italicBoldFont = new BitmapFont((Texture2D)null!, fontPattern);
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
         string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase:true, makeAbsolute:true);
-        loaderManager.AddDisposable(fileName, bitmapFont);
+        loaderManager.AddDisposable(fileName, italicBoldFont);
 
         TextRuntime sut = new();
         sut.UseCustomFont = true;
@@ -427,7 +451,7 @@ $"chars count=223\r\n";
 
         sut.UseCustomFont = false;
 
-        sut.BitmapFont.ShouldBe(bitmapFont);
+        sut.BitmapFont.ShouldBe(italicBoldFont);
     }
 
     [Fact]

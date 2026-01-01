@@ -206,9 +206,13 @@ public class CustomSetPropertyOnRenderable
                 {
                     (renderableIpso as InvisibleRenderable).Alpha = asInt;
                 }
+                else if(value is float asFloat)
+                {
+                    (renderableIpso as InvisibleRenderable).Alpha = (int)asFloat;
+                }
                 else
                 {
-                    (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 255;
+                    (renderableIpso as InvisibleRenderable).Alpha = 255;
                 }
                 didSet = true;
                 break;
