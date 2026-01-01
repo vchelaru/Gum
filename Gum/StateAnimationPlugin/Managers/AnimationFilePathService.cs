@@ -18,9 +18,12 @@ internal class AnimationFilePathService
         _selectedState = _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
     
-    public FilePath GetAbsoluteAnimationFileNameFor(string elementName)
+    public FilePath? GetAbsoluteAnimationFileNameFor(string elementName)
     {
-        var fullPathXmlForElement = ElementSaveExtensionMethodsGumTool.GetFullPathXmlFile(_selectedState.SelectedElement, elementName);
+        var selectedElement = _selectedState.SelectedElement;
+        var fullPathXmlForElement = 
+            selectedElement != null ? ElementSaveExtensionMethodsGumTool.GetFullPathXmlFile(selectedElement, elementName)
+            : null;
 
         if (fullPathXmlForElement == null)
         {

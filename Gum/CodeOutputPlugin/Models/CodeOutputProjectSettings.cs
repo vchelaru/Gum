@@ -8,12 +8,12 @@ namespace CodeOutputPlugin.Models;
 
 public enum OutputLibrary
 {
-    XamarinForms,
-    WPF,
-    Skia,
-    Maui,
-    MonoGame,
-    MonoGameForms
+    XamarinForms = 0,
+    WPF = 1,
+    Skia = 2,
+    Maui = 3,
+    MonoGame = 4,
+    MonoGameForms = 5
 }
 
 public enum ObjectInstantiationType
