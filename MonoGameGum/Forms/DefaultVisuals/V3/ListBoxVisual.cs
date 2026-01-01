@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
+using Raylib_cs;
 using Gum.GueDeriving;
 
 #else

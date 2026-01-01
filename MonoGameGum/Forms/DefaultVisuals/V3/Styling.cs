@@ -461,7 +461,7 @@ public static class ColorExtensions
     public static Color Adjust(this Color color, float amount)
     {
         // Clamp amount / 100 to [-1, 1]
-        amount = MathHelper.Clamp(amount / 100, -1f, 1f);
+        amount = System.Math.Clamp(amount / 100, -1f, 1f);
 
         float r = color.R;
         float g = color.G;

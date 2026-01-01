@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 #if RAYLIB
 using Gum.GueDeriving;
+using Raylib_cs;
 #else
 using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;

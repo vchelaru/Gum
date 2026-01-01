@@ -14,6 +14,7 @@ using Gum.DataTypes;
 
 #if RAYLIB
 using Gum.GueDeriving;
+using Raylib_cs;
 #else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
