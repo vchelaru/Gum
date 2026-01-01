@@ -412,7 +412,7 @@ $"chars count=223\r\n";
     {
         // file name is:
         // FontCache\Font18SomeFont_Italic_Bold.fnt
-        var bitmapFont = new BitmapFont((Texture2D)null, fontPattern);
+        var bitmapFont = new BitmapFont((Texture2D)null!, fontPattern);
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
         string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase:true, makeAbsolute:true);
         loaderManager.AddDisposable(fileName, bitmapFont);

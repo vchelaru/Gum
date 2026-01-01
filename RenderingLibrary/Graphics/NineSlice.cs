@@ -941,28 +941,18 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
 
-    IVisible IVisible.Parent
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent
     {
         get
         {

@@ -11,20 +11,10 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
     ISetClipsChildren
 {
     public bool IsRenderTarget { get; set; }
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent { get { return Parent as IVisible; } }
 
     public BlendState BlendState { get; set; } = BlendState.NonPremultiplied;
 
@@ -94,7 +84,6 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     int IRenderableIpso.Alpha => 255;
 
-    IVisible? IVisible.Parent { get { return Parent as IVisible; } }
 
     public virtual string BatchKey => string.Empty;
 

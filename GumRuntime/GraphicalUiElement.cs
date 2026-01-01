@@ -221,19 +221,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         set;
     }
 
-    public ISystemManagers Managers
-    {
-        get
-        {
-            return mManagers;
-        }
-    }
+    public ISystemManagers? Managers => mManagers;
 
     /// <summary>
     /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
     /// until a non-null SystemsManager is found. Otherwise, returns null.
     /// </summary>
-    public ISystemManagers EffectiveManagers
+    public ISystemManagers? EffectiveManagers
     {
         get
         {
@@ -249,6 +243,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).AbsoluteVisible;
+
+    /// <inheritdoc/>
     public bool Visible
     {
         get
@@ -269,7 +267,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 mContainedObjectAsIVisible.Visible = value;
 
-                var absoluteVisible = ((IVisible)this).AbsoluteVisible;
+                var absoluteVisible = AbsoluteVisible;
                 // See if this has a parent that stacks children. If so, update its layout:
 
                 var didUpdate = false;
@@ -6525,7 +6523,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public void UpdateToFontValues() => UpdateFontFromProperties?.Invoke(mContainedObjectAsIpso as IText, this);
+    public void UpdateToFontValues()
+    {
+        if(mCategories is IText asText)
+        {
+            UpdateFontFromProperties?.Invoke(asText, this);
+        }
+    }
 
     #endregion
 
@@ -6545,10 +6549,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    IVisible IVisible.Parent
-    {
-        get { return this.Parent as IVisible; }
-    }
+    IVisible? IVisible.Parent => this.Parent as IVisible;
 
     #endregion
 
@@ -6609,7 +6610,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             // update this texture coordinates:
 
-            UpdateTextureValuesFrom(asSprite);
+            UpdateTextureValuesFrom(asSprite!);
         }
 
         if (Children != null)

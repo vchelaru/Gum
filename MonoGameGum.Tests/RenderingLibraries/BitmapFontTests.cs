@@ -70,7 +70,7 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     [InlineData("BMF binary not yet supported")]
     public void Constructor_ShouldErrorWhenInvalidFileFormat(string bmFontData)
     {
-        Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null, bmFontData));
+        Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null!, bmFontData));
     }
 
     const string bmfontTextDataMissingCommon =
@@ -123,7 +123,7 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     [InlineData(bmfontXMLDataMissingCommon)]
     public void Constructor_ShouldErrorWhenMissingInfoOrCommon(string bmFontData)
     {
-        Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null, bmFontData));
+        Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null!, bmFontData));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     public void MeasureString_ShouldIgnoreTrailingNewlines()
     {
 
-        BitmapFont font = new BitmapFont((Texture2D)null, basicBMFontFileData);
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
 
         var character = font.Characters['\n'];
         character.XAdvance = 10;
