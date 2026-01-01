@@ -135,6 +135,7 @@
   * [Add Variable](gum-tool/variables/add-variable.md)
 * [Bitmap font generator (.fnt)](gum-tool/bitmap-font-generator-.fnt.md)
 * [Upgrading](gum-tool/upgrading/README.md)
+  * [Migrating to 2026 January](gum-tool/upgrading/migrating-to-2026-january.md)
   * [Migrating to 2025 December](gum-tool/upgrading/migrating-to-2025-december.md)
   * [Migrating to 2025 November](gum-tool/upgrading/migrating-to-2025-november.md)
   * [Migrating to 2025 October](gum-tool/upgrading/migrating-to-2025-october.md)
