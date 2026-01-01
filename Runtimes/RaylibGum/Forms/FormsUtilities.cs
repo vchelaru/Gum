@@ -1,36 +1,23 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultFromFileVisuals;
+using Gum.Managers;
 using Gum.Wireframe;
+using GumRuntime;
 using RenderingLibrary;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Raylib_cs;
-using Gum.Forms.DefaultVisuals;
 using RenderingLibrary.Graphics;
-
-
-
+using System.Collections.Specialized;
+using Gum.GueDeriving;
 
 
 #if RAYLIB
+using Raylib_cs;
 using RaylibGum.Input;
-using GumRuntime;
-
-using Gum.Managers;
-using Gum.Forms.DefaultFromFileVisuals;
-using System.Collections.Specialized;
-
-
-
 #else
-using  MonoGameGum.GueDeriving;
-#endif
-
-
-#if !FRB
-using Gum.GueDeriving;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.Forms.DefaultVisuals;
+using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
 #endif
 
 #if FRB
@@ -54,7 +41,10 @@ public enum DefaultVisualsVersion
     /// and respects a centralized styling.
     /// </summary>
     V2,
-
+    /// <summary>
+    /// The third version introduced end of 2025. This version makes styling with colors easier.
+    /// </summary>
+    V3,
     /// <summary>
     /// Specifies that the newest version is used.
     /// </summary>
@@ -82,7 +72,16 @@ public class FormsUtilities
     public static GamePad[] Gamepads { get; private set; } = new GamePad[4];
 
 
-
+    /// <summary>
+    /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
+    /// </summary>
+    /// <remarks>
+    /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
+    /// </remarks>
+    /// <param name="game">The Game instance, used for creating and updating input such as the Keyboard and Mouse</param>
+    /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
+    /// do not need to provide one.</param>
+    /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
     internal static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
     {
         systemManagers = systemManagers ?? SystemManagers.Default;
@@ -100,23 +99,47 @@ public class FormsUtilities
         switch (defaultVisualsVersion)
         {
             case DefaultVisualsVersion.V2:
-                Styling.ActiveStyle = new Styling(uiSpriteSheet);
-                TryAdd(typeof(Button), typeof(ButtonVisual));
-                TryAdd(typeof(CheckBox), typeof(CheckBoxVisual));
-                TryAdd(typeof(ComboBox), typeof(ComboBoxVisual));
-                TryAdd(typeof(Label), typeof(LabelVisual));
-                TryAdd(typeof(ListBox), typeof(ListBoxVisual));
-                TryAdd(typeof(ListBoxItem), typeof(ListBoxItemVisual));
-                TryAdd(typeof(RadioButton), typeof(RadioButtonVisual));
-                TryAdd(typeof(ScrollBar), typeof(ScrollBarVisual));
-                TryAdd(typeof(ScrollViewer), typeof(ScrollViewerVisual));
-                TryAdd(typeof(Slider), typeof(SliderVisual));
-                TryAdd(typeof(Splitter), typeof(SplitterVisual));
-                TryAdd(typeof(Window), typeof(WindowVisual));
+                DefaultVisuals.Styling.ActiveStyle = new DefaultVisuals.Styling(uiSpriteSheet);
+                TryAdd(typeof(Button), typeof(DefaultVisuals.ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.ComboBoxVisual));
+                TryAdd(typeof(Label), typeof(DefaultVisuals.LabelVisual));
+                TryAdd(typeof(ListBox), typeof(DefaultVisuals.ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.ListBoxItemVisual));
+                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.RadioButtonVisual));
+                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.ScrollViewerVisual));
+                TryAdd(typeof(Slider), typeof(DefaultVisuals.SliderVisual));
+                TryAdd(typeof(Splitter), typeof(DefaultVisuals.SplitterVisual));
+                TryAdd(typeof(Window), typeof(DefaultVisuals.WindowVisual));
 
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
+
+            case DefaultVisualsVersion.V3:
+                TryAdd(typeof(Button), typeof(DefaultVisuals.V3.ButtonVisual));
+                TryAdd(typeof(CheckBox), typeof(DefaultVisuals.V3.CheckBoxVisual));
+                TryAdd(typeof(ComboBox), typeof(DefaultVisuals.V3.ComboBoxVisual));
+                TryAdd(typeof(ItemsControl), typeof(DefaultVisuals.V3.ItemsControlVisual));
+                TryAdd(typeof(Label), typeof(DefaultVisuals.V3.LabelVisual));
+                TryAdd(typeof(ListBox), typeof(DefaultVisuals.V3.ListBoxVisual));
+                TryAdd(typeof(ListBoxItem), typeof(DefaultVisuals.V3.ListBoxItemVisual));
+                //TryAdd(typeof(Menu), typeof(DefaultVisuals.V3.MenuVisual));
+                //TryAdd(typeof(MenuItem), typeof(DefaultVisuals.V3.MenuItemVisual));
+                //TryAdd(typeof(PasswordBox), typeof(DefaultVisuals.V3.PasswordBoxVisual));
+                TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
+                TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
+                TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
+                //TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
+                TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
+                TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
+                TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
+                Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
         }
 
         void TryAdd(Type formsType, Type runtimeType)
