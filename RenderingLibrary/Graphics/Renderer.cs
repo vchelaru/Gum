@@ -1128,7 +1128,7 @@ public class GumBatch
 /// <item><description>Texture filtering (Point/Linear)</description></item>
 /// <item><description>Color source (VertexColor/ColorModifier)</description></item>
 /// <item><description>Color operation (Add, Subtract, Modulate, etc.)</description></item>
-/// <item><description>Gamma correction (Linearize methods)</description></item>
+/// <item><description>Gamma correction (Linearize)</description></item>
 /// </list>
 /// </description></item>
 /// </list>
