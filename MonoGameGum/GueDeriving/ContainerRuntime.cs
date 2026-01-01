@@ -26,7 +26,7 @@ namespace MonoGameGum.GueDeriving;
 
 public class ContainerRuntime : InteractiveGue
 {
-    public float Alpha
+    public int Alpha
     {
         get => (RenderableComponent as InvisibleRenderable)?.Alpha ?? 255;
         set
@@ -115,7 +115,7 @@ public class ContainerRuntime : InteractiveGue
 
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
-    public virtual string BatchKey => Children?.LastOrDefault()?.BatchKey ?? string.Empty;
+    public override string BatchKey => Children?.LastOrDefault()?.BatchKey ?? string.Empty;
 
     public virtual void StartBatch(ISystemManagers systemManagers) => Children?.FirstOrDefault()?.StartBatch(systemManagers);
     public virtual void EndBatch(ISystemManagers systemManagers) => Children?.FirstOrDefault()?.EndBatch(systemManagers);

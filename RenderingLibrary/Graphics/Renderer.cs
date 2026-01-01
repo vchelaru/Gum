@@ -714,8 +714,8 @@ public class Renderer : IRenderer
 
                 if(renderTarget != null)
                 {
-                    var renderableAlpha = (int)renderable.Alpha;
-                    renderableAlpha = System.Math.Min(255, (int)renderableAlpha);
+                    var renderableAlpha = renderable.Alpha;
+                    renderableAlpha = System.Math.Min(255, renderableAlpha);
                     renderableAlpha = System.Math.Max(0, renderableAlpha);
 
                     var color = System.Drawing.Color.FromArgb(

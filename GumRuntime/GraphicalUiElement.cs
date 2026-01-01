@@ -541,7 +541,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
-    public int Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
+    int IRenderableIpso.Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
 
     public GeneralUnitType XUnits
     {
@@ -1041,7 +1041,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (_parent?.Children?.Contains(this) == true)
                 {
                     _parent.Children.Remove(this);
-                    _parent.UpdateLayout();
+                    oldParent?.UpdateLayout();
                 }
                 _parent = value;
 
@@ -3137,8 +3137,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             else
             {
-                parentWidth = Parent.Width;
-                parentHeight = Parent.Height;
+                parentWidth = Parent.GetAbsoluteWidth();
+                parentHeight = Parent.GetAbsoluteHeight();
             }
         }
         else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
