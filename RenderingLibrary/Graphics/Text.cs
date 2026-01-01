@@ -94,11 +94,22 @@ public struct LetterCustomization
 
 public class ParameterizedLetterCustomizationCall
 {
-    public Func<int, string, LetterCustomization> Function { get; set; }
+    public string FunctionName { get; set; } = string.Empty;
+    public Func<int, string, LetterCustomization>? Function
+    {
+        get
+        {
+            if(!string.IsNullOrEmpty(FunctionName) && Text.Customizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; }
-
 }
 
 #endregion

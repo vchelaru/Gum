@@ -60,5 +60,7 @@ public class BaseTestClass : IDisposable
         RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
 
         FileManager.CustomGetStreamFromFile = null;
+
+        RenderingLibrary.Graphics.Text.Customizations.Clear();
     }
 }
