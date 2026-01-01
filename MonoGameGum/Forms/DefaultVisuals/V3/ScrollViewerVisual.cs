@@ -47,7 +47,7 @@ public class ScrollViewerVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if(value != _backgroundColor)
+            if(!value.Equals(_backgroundColor))
             {
                 _backgroundColor = value;
                 Background.Color = _backgroundColor;
@@ -61,7 +61,7 @@ public class ScrollViewerVisual : InteractiveGue
         get => _focusedIndicatorColor;
         set
         {
-            if (value != _focusedIndicatorColor)
+            if (!value.Equals(_focusedIndicatorColor))
             {
                 _focusedIndicatorColor = value;
                 FocusedIndicator.Color = value;

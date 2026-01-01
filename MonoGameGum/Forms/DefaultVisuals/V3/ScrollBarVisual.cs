@@ -55,7 +55,7 @@ public class ScrollBarVisual : InteractiveGue
         get => _trackBackgroundColor;
         set
         {
-            if (value != _trackBackgroundColor)
+            if (!value.Equals(_trackBackgroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -72,7 +72,7 @@ public class ScrollBarVisual : InteractiveGue
         get => _scrollArrowColor;
         set
         {
-            if (value != _scrollArrowColor)
+            if (!value.Equals(_scrollArrowColor))
             {
                 _scrollArrowColor = value;
                 FormsControl?.UpdateState();

@@ -55,7 +55,7 @@ public class ComboBoxVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (!value.Equals(_backgroundColor))
             {
                 _backgroundColor = value;
                 FormsControl?.UpdateState();
@@ -68,7 +68,7 @@ public class ComboBoxVisual : InteractiveGue
         get => _foregroundColor;
         set
         {
-            if (value != _foregroundColor)
+            if (!value.Equals(_foregroundColor))
             {
                 _foregroundColor = value;
                 FormsControl?.UpdateState();
@@ -82,7 +82,7 @@ public class ComboBoxVisual : InteractiveGue
         get => _dropdownIndicatorColor;
         set
         {
-            if (value != _dropdownIndicatorColor)
+            if (!value.Equals(_dropdownIndicatorColor))
             {
                 _dropdownIndicatorColor = value;
                 FormsControl?.UpdateState();
@@ -96,7 +96,7 @@ public class ComboBoxVisual : InteractiveGue
         get => _focusedIndicatorColor;
         set
         {
-            if (value != _focusedIndicatorColor)
+            if (!value.Equals(_focusedIndicatorColor))
             {
                 _focusedIndicatorColor = value;
                 FormsControl?.UpdateState();

@@ -28,7 +28,7 @@ public class SplitterVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (!value.Equals(_backgroundColor))
             {
                 _backgroundColor = value;
                 //FormsControl?.UpdateState();

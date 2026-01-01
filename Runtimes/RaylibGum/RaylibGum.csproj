@@ -120,7 +120,7 @@
 
 	<ItemGroup>
 		<Folder Include="Forms\Data\" />
-		<Folder Include="Forms\DefaultVisuals\" />
+		<Folder Include="Forms\DefaultVisuals\V3\" />
 		<Folder Include="Threading\" />
 	</ItemGroup>
 
