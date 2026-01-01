@@ -11,7 +11,6 @@ using System.Linq;
 
 
 
-
 #if FRB
 using MonoGameGum.Forms.Controls;
 using FlatRedBall.Forms.Input;
@@ -636,7 +635,7 @@ public abstract class TextBoxBase :
     /// <param name="isShiftDown"></param>
     /// <param name="isAltDown"></param>
     /// <param name="isCtrlDown"></param>
-    public void HandleKeyDown(Microsoft.Xna.Framework.Input.Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
+    public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
         //////////////////////////Early Out////////////////////////
         if (!isFocused) return;

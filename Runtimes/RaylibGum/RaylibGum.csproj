@@ -98,6 +98,7 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />

@@ -107,7 +107,7 @@ public class FormsUtilities
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
 #else
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
-#endif   
+#endif
 
         switch (defaultVisualsVersion)
         {
@@ -191,17 +191,17 @@ public class FormsUtilities
 
         void TryAdd(Type formsType, Type runtimeType)
         {
-            if(!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
+            if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
 #if XNALIKE
             // This is needed until MonoGameGum.Forms goes away completely. It's now marked as obsolete with error as of November 2025
-            if(formsType.FullName.StartsWith("MonoGameGum.Forms."))
+            if (formsType.FullName.StartsWith("MonoGameGum.Forms."))
             {
                 var baseType = formsType.BaseType;
 
-                if(baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
+                if (baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
                 {
                     FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(runtimeType);
                 }
@@ -225,7 +225,7 @@ public class FormsUtilities
         // Do an initial update to update connectivity
         UpdateGamepads(0);
 
-        FrameworkElement.MainCursor = cursor;   
+        FrameworkElement.MainCursor = cursor;
         FrameworkElement.MainKeyboard = keyboard;
 
 
@@ -237,7 +237,7 @@ public class FormsUtilities
     {
         var container = new ContainerRuntime();
 
-        container.Children.CollectionChanged += (o,e) => HandleRootCollectionChanged (container, e);
+        container.Children.CollectionChanged += (o, e) => HandleRootCollectionChanged(container, e);
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.Width = GraphicalUiElement.CanvasWidth;
@@ -312,7 +312,7 @@ public class FormsUtilities
 #endif
     {
         innerRootList.Clear();
-        if(rootGue != null)
+        if (rootGue != null)
         {
             innerRootList.Add(rootGue);
         }
@@ -377,7 +377,7 @@ public class FormsUtilities
                 }
             }
 
-            for(int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
+            for (int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
             {
                 var item = FrameworkElement.ModalRoot.Children[i];
                 if (item.Visible)
@@ -389,10 +389,10 @@ public class FormsUtilities
                 }
             }
         }
-        
-        if(!didModalsProcessInput)
+
+        if (!didModalsProcessInput)
         {
-            if(roots != null)
+            if (roots != null)
             {
                 innerList.AddRange(roots);
             }
@@ -412,7 +412,7 @@ public class FormsUtilities
                 // make sure this is the last:
                 foreach (var layer in SystemManagers.Default.Renderer.Layers)
                 {
-                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && 
+                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) &&
                         layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
                     {
                         layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
@@ -429,15 +429,15 @@ public class FormsUtilities
 
 #if XNALIKE
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
-            innerList, 
-            cursor, 
-            keyboard, 
+            innerList,
+            cursor,
+            keyboard,
             gameTime.TotalGameTime.TotalSeconds);
 #else
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
-            innerList, 
-            cursor, 
-            keyboard, 
+            innerList,
+            cursor,
+            keyboard,
             gameTime);
 #endif
 
@@ -449,13 +449,13 @@ public class FormsUtilities
         // the control is no longer pushed, so it should update its state to reflect that it is no longer pushed, such as
         // by showing hover or focused state. This need was uncovered by the MonoGame iOS sample which focused the slider when
         // hovering, but the state never got updated on release.
-        if(cursor.PrimaryClick)
+        if (cursor.PrimaryClick)
         {
             if (InteractiveGue.CurrentInputReceiver is FrameworkElement frameworkElementInputReceiver)
             {
                 frameworkElementInputReceiver.UpdateState();
             }
-            if(frameworkElementOver != null && frameworkElementOver != InteractiveGue.CurrentInputReceiver)
+            if (frameworkElementOver != null && frameworkElementOver != InteractiveGue.CurrentInputReceiver)
             {
                 frameworkElementOver.UpdateState();
             }
@@ -463,11 +463,11 @@ public class FormsUtilities
 
         var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
 
-        if(frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
+        if (frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
         {
             cursor.CustomCursor = frameworkElementOver?.CustomCursor;
         }
-        else if(didChangeFrameworkElement)
+        else if (didChangeFrameworkElement)
         {
             cursor.CustomCursor = Cursors.Arrow;
         }
@@ -536,7 +536,7 @@ public class FormsUtilities
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
-                    typeof(DefaultFromFileButtonRuntime), overwriteIfAlreadyExists:false);
+                    typeof(DefaultFromFileButtonRuntime), overwriteIfAlreadyExists: false);
             }
             else if (behaviorNames.Contains("CheckBoxBehavior"))
             {
@@ -550,7 +550,7 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("ItemsControlBehavior"))
+            else if (behaviorNames.Contains("ItemsControlBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -558,7 +558,7 @@ public class FormsUtilities
             }
             else if (categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
             {
-                if(component.BaseType == "Text")
+                if (component.BaseType == "Text")
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
