@@ -1,4 +1,8 @@
-﻿using Gum.RenderingLibrary;
+﻿#if MONOGAME || FNA || KNI
+#define XNALIKE
+#endif
+
+using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -8,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if MONOGAME || FNA || KNI
+#if XNALIKE
 using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 #endif
 
@@ -49,7 +53,7 @@ public class ContainerRuntime : InteractiveGue
 
     public BlendState BlendState
     {
-#if MONOGAME || FNA || KNI
+#if XNALIKE
         get => RenderableComponent.BlendState.ToXNA();
 #else
         get => RenderableComponent.BlendState;
@@ -58,7 +62,7 @@ public class ContainerRuntime : InteractiveGue
         {
             if (RenderableComponent is InvisibleRenderable invisibleRenderable)
             {
-#if MONOGAME || FNA || KNI
+#if XNALIKE
                 invisibleRenderable.BlendState = value.ToGum();
 #else
                 invisibleRenderable.BlendState = value;
@@ -77,7 +81,7 @@ public class ContainerRuntime : InteractiveGue
         }
         set
         {
-#if MONOGAME || FNA || KNI
+#if XNALIKE
             BlendState = value.ToBlendState().ToXNA();
 #else
             BlendState = value.ToBlendState();

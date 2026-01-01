@@ -1,4 +1,7 @@
-﻿using Gum.Content.AnimationChain;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
@@ -71,7 +74,7 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnText(renderableIpso, graphicalUiElement, propertyName, value);
         }
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
         else if (renderableIpso is LineCircle)
         {
             handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
@@ -516,7 +519,7 @@ public class CustomSetPropertyOnRenderable
 
             ReactToFontValueChange();
         }
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
         else if (propertyName == nameof(textRuntime.UseCustomFont))
         {
             if (textRuntime != null)
@@ -599,7 +602,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == nameof(Blend))
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
             var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -611,7 +614,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Alpha")
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             int valueAsInt = (int)value;
             ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
             handled = true;
@@ -637,7 +640,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Color")
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             //var valueAsColor = (Color)value;
             //((Text)mContainedObjectAsIpso).Color = valueAsColor;
             //handled = true;
@@ -666,7 +669,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "MaxLettersToShow")
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
             handled = true;
 #endif
@@ -1804,7 +1807,7 @@ public class CustomSetPropertyOnRenderable
 
     public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)
     {
-#if MONOGAME || KNI
+#if XNALIKE
         // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
         // and the end result of all values determines which file to load. For example, an object may set the following
         // variables one-by-one:

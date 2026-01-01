@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
+using Raylib_cs;
 using Gum.GueDeriving;
 
 #else
@@ -50,7 +51,7 @@ public class ListBoxVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (!value.Equals(_backgroundColor))
             {
                 _backgroundColor = value;
                 FormsControl?.UpdateState();
@@ -64,7 +65,7 @@ public class ListBoxVisual : InteractiveGue
         get => _focusedIndicatorColor;
         set
         {
-            if (value != _focusedIndicatorColor)
+            if (!value.Equals(_focusedIndicatorColor))
             {
                 _focusedIndicatorColor = value;
                 FormsControl?.UpdateState();

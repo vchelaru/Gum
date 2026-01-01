@@ -33,7 +33,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (!value.Equals(_backgroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -49,7 +49,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _foregroundColor;
         set
         {
-            if (value != _foregroundColor)
+            if (!value.Equals(_foregroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -66,7 +66,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _selectionBackgroundColor;
         set
         {
-            if (value != _selectionBackgroundColor)
+            if (!value.Equals(_selectionBackgroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -83,7 +83,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _placeholderColor;
         set
         {
-            if (value != _placeholderColor)
+            if (!value.Equals(_placeholderColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -100,7 +100,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _caretColor;
         set
         {
-            if (value != _caretColor)
+            if (!value.Equals(_caretColor))
             {
                 _caretColor = value;
                 (FormsControlAsObject as FrameworkElement)?.UpdateState();
@@ -115,7 +115,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _focusedIndicatorColor;
         set
         {
-            if (value != _focusedIndicatorColor)
+            if (!value.Equals(_focusedIndicatorColor))
             {
                 _focusedIndicatorColor = value;
                 (FormsControlAsObject as FrameworkElement)?.UpdateState();

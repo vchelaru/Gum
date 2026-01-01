@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.raylib</PackageId>
@@ -82,7 +82,23 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SliderVisual.cs" Link="Forms\DefaultVisuals\SliderVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SplitterVisual.cs" Link="Forms\DefaultVisuals\SplitterVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ItemsControlVisual.cs" Link="Forms\DefaultVisuals\V3\ItemsControlVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
@@ -120,7 +136,7 @@
 
 	<ItemGroup>
 		<Folder Include="Forms\Data\" />
-		<Folder Include="Forms\DefaultVisuals\" />
+		<Folder Include="Forms\DefaultVisuals\V3\" />
 		<Folder Include="Threading\" />
 	</ItemGroup>
 

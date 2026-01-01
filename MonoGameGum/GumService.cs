@@ -1,4 +1,7 @@
-﻿using Gum.DataTypes;
+﻿#if MONOGAME || KNI || FNA
+#define XNALIKE
+#endif
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
@@ -14,7 +17,7 @@ using ToolsUtilities;
 using Gum.Forms;
 using Gum.Threading;
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using Microsoft.Xna.Framework;
@@ -44,7 +47,7 @@ public class GumService
 
     #endregion
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public GameTime GameTime { get; private set; }
 #else
     public float GameTime { get; private set; }
@@ -92,7 +95,7 @@ public class GumService
         Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
     }
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public Game Game { get; private set; }
 #endif
 
@@ -115,18 +118,18 @@ public class GumService
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     /// <param name="game">The game instance.</param>
 #endif
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
 #else
     public GumProjectSave Initialize(string gumProjectFile)
 #endif
     {
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         if (game.GraphicsDevice == null)
         {
             throw new InvalidOperationException(
@@ -145,7 +148,7 @@ public class GumService
 #endif
     }
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
     {
         if (game.GraphicsDevice == null)
@@ -205,7 +208,7 @@ public class GumService
         return null;
     }
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +
         "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in June 2026")]
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
@@ -217,7 +220,7 @@ public class GumService
     public bool IsInitialized { get; private set; }
 
     GumProjectSave? InitializeInternal(
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         Game game, GraphicsDevice graphicsDevice,
 #endif
         string? gumProjectFile = null,
@@ -230,7 +233,7 @@ public class GumService
         }
         IsInitialized = true;
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         Game = game;
         RegisterRuntimeTypesThroughReflection();
 #endif
@@ -242,7 +245,7 @@ public class GumService
             ISystemManagers.Default = this.SystemManagers;
         }
 
-#if MONOGAME || FNA || KNI
+#if XNALIKE
         this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
 #elif RAYLIB
         this.SystemManagers.Initialize();
@@ -295,7 +298,7 @@ public class GumService
         string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     // In December 31, 2024 we moved to using ModuleInitializer 
     // More info: https://github.com/vchelaru/Gum/issues/275
     // Therefore, this is no longer needed. However, old projects
@@ -327,7 +330,7 @@ public class GumService
 
     #region Update
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public void Update(GameTime gameTime)
 #else
     public void Update(float gameTime)
@@ -335,14 +338,14 @@ public class GumService
     {
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         Update(Game, gameTime, this.Root);
 #else
         Update(gameTime, this.Root);
 #endif
     }
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public void Update(Game game, GameTime gameTime)
     {
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
@@ -356,7 +359,7 @@ public class GumService
 
     List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
 #else
     public void Update(float gameTime, GraphicalUiElement root)
@@ -365,20 +368,20 @@ public class GumService
         roots.Clear();
         roots.Add(root);
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         Update(game, gameTime, roots);
 #else
         Update(gameTime, roots);
 #endif
     }
 
-#if MONOGAME || KNI || FNA
+#if XNALIKE
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
 #else
     public void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
 #endif
     {
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 #else
         var difference = GameTime - gameTime;
@@ -386,7 +389,7 @@ public class GumService
 
         DeferredQueue.ProcessPending();
         GameTime = gameTime;
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         FormsUtilities.Update(game, gameTime, roots);
 #else
         FormsUtilities.Update(gameTime, roots);
@@ -396,7 +399,7 @@ public class GumService
         // critical system, but unit tests cannot initialize a SystemManagers
         // because these require a graphics device. Therefore, we can tolerate
         // a null SystemManagers to simplify unit tests.
-#if MONOGAME || KNI || FNA
+#if XNALIKE
         this.SystemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
 #endif
         foreach (var item in roots)
