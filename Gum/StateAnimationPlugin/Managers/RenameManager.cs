@@ -48,7 +48,7 @@ namespace StateAnimationPlugin.Managers
                 {
                     var oldFileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(oldName);
 
-                    if (oldFileName.Exists())
+                    if (oldFileName?.Exists() == true)
                     {
                         System.IO.File.Delete(oldFileName.FullPath);
                     }

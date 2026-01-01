@@ -22,7 +22,15 @@ namespace StateAnimationPlugin.Managers
         
         public void HandleDuplicate(ElementSave oldElement, ElementSave newElement)
         {
-            var projectDirectory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            var project = ProjectManager.Self.GumProjectSave;
+            //////////////////////Early Out////////////////////
+            if(project == null)
+            {
+                return;
+            }
+            //////////////////////End Early Out////////////////////
+            ///
+            var projectDirectory = FileManager.GetDirectory(project.FullFileName);
 
             var oldFile = new FilePath(projectDirectory + oldElement.Subfolder + "/" + oldElement.Name + "Animations.ganx");
             var newFile = new FilePath(projectDirectory + newElement.Subfolder + "/" + newElement.Name + "Animations.ganx");

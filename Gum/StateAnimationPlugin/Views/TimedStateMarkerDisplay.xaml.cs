@@ -98,7 +98,7 @@ namespace StateAnimationPlugin.Views
 
         private static void SelectedKeyframeChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var instance = d as TimedStateMarkerDisplay;
+            var instance = (TimedStateMarkerDisplay)d;
 
             //var oldKeyframeViewModel = e.OldValue as AnimatedKeyframeViewModel;
 
@@ -160,7 +160,7 @@ namespace StateAnimationPlugin.Views
             instance.RefreshRectangles();
         }
 
-        private void HandleItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void HandleItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             RefreshRectangles();
         }
