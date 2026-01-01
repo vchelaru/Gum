@@ -66,6 +66,13 @@ public class Renderer : IRenderer
 
     internal void Draw(SystemManagers systemManagers)
     {
+        //ClearPerformanceRecordingVariables();
+
+        if (systemManagers == null)
+        {
+            systemManagers = SystemManagers.Default;
+        }
+
         Draw(systemManagers, _layers);
     }
 
