@@ -205,7 +205,7 @@ public class PluginManager : IPluginManager
     internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
 
-    internal void ProjectPropertySet(string propertyName) =>
+    public void ProjectPropertySet(string propertyName) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
     internal void ProjectSave(GumProjectSave savedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
@@ -463,7 +463,7 @@ public class PluginManager : IPluginManager
     internal void BehaviorReferencesChanged(ElementSave elementSave) => 
         CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
 
-    internal void WireframeRefreshed() =>
+    public void WireframeRefreshed() =>
         CallMethodOnPlugin(
             plugin => plugin.CallWireframeRefreshed());
 
