@@ -85,7 +85,7 @@ public partial class EditorViewModel : ViewModel
         get => Get<CustomGuide>();
         set
         {
-            if(Set(value))
+            if(Set(value ?? DefaultGuides[0]))
             {
                 RefreshCanvasSize();
 
