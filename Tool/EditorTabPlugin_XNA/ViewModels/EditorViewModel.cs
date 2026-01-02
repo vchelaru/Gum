@@ -63,29 +63,29 @@ public partial class EditorViewModel : ViewModel
         new ZoomLevel{Value = 5 }
     };
 
-    public CustomGuide[] CustomGuides 
+    public CustomCanvasSize[] CustomCanvasSizes 
     {
-        get => Get<CustomGuide[]>();
+        get => Get<CustomCanvasSize[]>();
         set => Set(value);
     }
 
-    static readonly CustomGuide[] DefaultGuides = new CustomGuide[]
+    static readonly CustomCanvasSize[] DefaultCanvasSizes = new CustomCanvasSize[]
     {
-        new CustomGuide{ Width = null, Height=null,   FriendlyName="Project Default" },
-        new CustomGuide{ Width = 640, Height=480,   FriendlyName="480p" },
-        new CustomGuide{ Width = 1280, Height=720,   FriendlyName="720p" },
-        new CustomGuide{ Width = 1280, Height=800,   FriendlyName="Steam Deck" },
-        new CustomGuide{ Width = 1920, Height=1080,   FriendlyName="1080p" },
-        new CustomGuide{ Width = 3840, Height=2160,   FriendlyName="4k" },
+        new CustomCanvasSize{ Width = null, Height=null,   FriendlyName="Project Default" },
+        new CustomCanvasSize{ Width = 640, Height=480,   FriendlyName="480p" },
+        new CustomCanvasSize{ Width = 1280, Height=720,   FriendlyName="720p" },
+        new CustomCanvasSize{ Width = 1280, Height=800,   FriendlyName="Steam Deck" },
+        new CustomCanvasSize{ Width = 1920, Height=1080,   FriendlyName="1080p" },
+        new CustomCanvasSize{ Width = 3840, Height=2160,   FriendlyName="4k" },
     };
 
 
-    public CustomGuide SelectedCustomGuide
+    public CustomCanvasSize SelectedCustomCanvasSize
     {
-        get => Get<CustomGuide>();
+        get => Get<CustomCanvasSize>();
         set
         {
-            if(Set(value ?? DefaultGuides[0]))
+            if(Set(value ?? DefaultCanvasSizes[0]))
             {
                 RefreshCanvasSize();
 
@@ -99,9 +99,9 @@ public partial class EditorViewModel : ViewModel
     {
         int? width = null;
         int? height = null;
-        var customGuide = SelectedCustomGuide;
+        var customSize = SelectedCustomCanvasSize;
 
-        if (customGuide.Width == null || customGuide.Height == null)
+        if (customSize.Width == null || customSize.Height == null)
         {
             if (ObjectFinder.Self.GumProjectSave != null)
             {
@@ -111,8 +111,8 @@ public partial class EditorViewModel : ViewModel
         }
         else
         {
-            width = customGuide.Width;
-            height = customGuide.Height;
+            width = customSize.Width;
+            height = customSize.Height;
         }
 
         if (width != null && height != null)
@@ -171,9 +171,9 @@ public partial class EditorViewModel : ViewModel
         _wireframeObjectManager = wireframeObjectManager;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
 
-        CustomGuides = DefaultGuides;
+        CustomCanvasSizes = DefaultCanvasSizes;
 
-        SetWithoutNotifying(CustomGuides[0], nameof(SelectedCustomGuide));
+        SetWithoutNotifying(CustomCanvasSizes[0], nameof(SelectedCustomCanvasSize));
     }
 
     public void InitializeXnaView(SystemManagers systemManagers, Ruler topRuler, Ruler leftRuler)
@@ -229,16 +229,16 @@ public partial class EditorViewModel : ViewModel
     {
         RefreshCanvasSize();
 
-        if(save.CustomGuides == null || save.CustomGuides.Count == 0)
+        if(save.CustomCanvasSizes == null || save.CustomCanvasSizes.Count == 0)
         {
-            save.CustomGuides = DefaultGuides.ToList();
+            save.CustomCanvasSizes = DefaultCanvasSizes.ToList();
 
             _fileCommands.TryAutoSaveProject();
         }
 
-        this.CustomGuides = save.CustomGuides.ToArray();
+        this.CustomCanvasSizes = save.CustomCanvasSizes.ToArray();
 
-        this.SelectedCustomGuide = this.CustomGuides[0];
+        this.SelectedCustomCanvasSize = this.CustomCanvasSizes[0];
     }
 }
 

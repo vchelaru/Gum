@@ -54,7 +54,7 @@ public class GumLoadResult
 
 #region Custom Guide class
 
-public class CustomGuide
+public class CustomCanvasSize
 {
     public int? Width { get; set; }
     public int? Height { get; set; }
@@ -117,7 +117,7 @@ public class GumProjectSave
         set;
     }
 
-    public List<CustomGuide>? CustomGuides { get; set; }
+    public List<CustomCanvasSize>? CustomCanvasSizes { get; set; }
 
     public bool ShowOutlines
     {
