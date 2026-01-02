@@ -175,8 +175,12 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
-        _editorViewModel = new EditorViewModel();
+        _editorViewModel = new EditorViewModel(
+            pluginManager, 
+            _fileCommands, 
+            _wireframeObjectManager);
 
         Locator.GetRequiredService<IMessenger>().RegisterAll(this);
     }
@@ -341,6 +345,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     private void HandleWireframeRefreshed()
     {
+        _editorViewModel.RefreshCanvasSize();
+
         _wireframeControl.UpdateCanvasBoundsToProject();
 
         _selectionManager.Refresh();
@@ -414,9 +420,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     private void HandleProjectLoad(GumProjectSave save)
     {
-        GraphicalUiElement.CanvasWidth = save.DefaultCanvasWidth;
-        GraphicalUiElement.CanvasHeight = save.DefaultCanvasHeight;
-
+        _editorViewModel.HandleProjectLoad(save);
 
         _wireframeControl.UpdateCanvasBoundsToProject();
 

@@ -1,11 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Mvvm;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +19,10 @@ namespace EditorTabPlugin_XNA.ViewModels;
 
 public partial class EditorViewModel : ViewModel
 {
+    private readonly PluginManager _pluginManager;
+    private readonly IFileCommands _fileCommands;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
+
     SystemManagers? SystemManagers
     {
         get; set;
@@ -53,6 +63,67 @@ public partial class EditorViewModel : ViewModel
         new ZoomLevel{Value = 5 }
     };
 
+    public CustomGuide[] CustomGuides 
+    {
+        get => Get<CustomGuide[]>();
+        set => Set(value);
+    }
+
+    static readonly CustomGuide[] DefaultGuides = new CustomGuide[]
+    {
+        new CustomGuide{ Width = null, Height=null,   FriendlyName="Project Default" },
+        new CustomGuide{ Width = 640, Height=480,   FriendlyName="480p" },
+        new CustomGuide{ Width = 1280, Height=720,   FriendlyName="720p" },
+        new CustomGuide{ Width = 1280, Height=800,   FriendlyName="Steam Deck" },
+        new CustomGuide{ Width = 1920, Height=1080,   FriendlyName="1080p" },
+        new CustomGuide{ Width = 3840, Height=2160,   FriendlyName="4k" },
+    };
+
+
+    public CustomGuide SelectedCustomGuide
+    {
+        get => Get<CustomGuide>();
+        set
+        {
+            if(Set(value))
+            {
+                RefreshCanvasSize();
+
+                // We need to tell the view to refresh:
+                _wireframeObjectManager.RefreshAll(forceLayout: true);
+            }
+        }
+    }
+
+    public void RefreshCanvasSize()
+    {
+        int? width = null;
+        int? height = null;
+        var customGuide = SelectedCustomGuide;
+
+        if (customGuide.Width == null || customGuide.Height == null)
+        {
+            if (ObjectFinder.Self.GumProjectSave != null)
+            {
+                width = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
+                height = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
+            }
+        }
+        else
+        {
+            width = customGuide.Width;
+            height = customGuide.Height;
+        }
+
+        if (width != null && height != null)
+        {
+            GraphicalUiElement.CanvasWidth = width.Value;
+            GraphicalUiElement.CanvasHeight = height.Value;
+
+
+        }
+    }
+
     [DependsOn(nameof(PercentZoomLevel))]
     public int CurrentZoomIndex
     {
@@ -91,21 +162,18 @@ public partial class EditorViewModel : ViewModel
         }
     }
 
-
-    private void SetZoomOnCamera()
+    public EditorViewModel(PluginManager pluginManager, 
+        IFileCommands fileCommands,
+        IWireframeObjectManager wireframeObjectManager)
     {
-        var zoomRatio = PercentZoomLevel.Value / 100.0f;
-        if (SystemManagers != null)
-        {
-            SystemManagers.Renderer.Camera.Zoom = zoomRatio;
-            LeftRuler!.ZoomValue = zoomRatio;
-            TopRuler!.ZoomValue = zoomRatio;
-        }
-    }
-
-    public EditorViewModel()
-    {
+        _pluginManager = pluginManager;
+        _fileCommands = fileCommands;
+        _wireframeObjectManager = wireframeObjectManager;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
+
+        CustomGuides = DefaultGuides;
+
+        SetWithoutNotifying(CustomGuides[0], nameof(SelectedCustomGuide));
     }
 
     public void InitializeXnaView(SystemManagers systemManagers, Ruler topRuler, Ruler leftRuler)
@@ -120,6 +188,17 @@ public partial class EditorViewModel : ViewModel
         TopRuler = topRuler;
 
         SetZoomOnCamera();
+    }
+
+    private void SetZoomOnCamera()
+    {
+        var zoomRatio = PercentZoomLevel.Value / 100.0f;
+        if (SystemManagers != null)
+        {
+            SystemManagers.Renderer.Camera.Zoom = zoomRatio;
+            LeftRuler!.ZoomValue = zoomRatio;
+            TopRuler!.ZoomValue = zoomRatio;
+        }
     }
 
     [RelayCommand]
@@ -144,6 +223,22 @@ public partial class EditorViewModel : ViewModel
             index--;
             CurrentZoomIndex = index;
         }
+    }
+
+    internal void HandleProjectLoad(GumProjectSave save)
+    {
+        RefreshCanvasSize();
+
+        if(save.CustomGuides == null || save.CustomGuides.Count == 0)
+        {
+            save.CustomGuides = DefaultGuides.ToList();
+
+            _fileCommands.TryAutoSaveProject();
+        }
+
+        this.CustomGuides = save.CustomGuides.ToArray();
+
+        this.SelectedCustomGuide = this.CustomGuides[0];
     }
 }
 

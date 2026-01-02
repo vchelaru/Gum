@@ -192,6 +192,8 @@ public class WireframeControl : GraphicsDeviceControl
                 AfterXnaInitialize(this, null);
             }
 
+            editorViewModel.RefreshCanvasSize();
+
             UpdateCanvasBoundsToProject();
 
             mHasInitialized = true;
@@ -310,11 +312,12 @@ public class WireframeControl : GraphicsDeviceControl
     /// </summary>
     public void UpdateCanvasBoundsToProject()
     {
+
         var gumProject = ProjectManager.Self.GumProjectSave;
         if (mCanvasBounds != null && gumProject != null)
         {
-            mCanvasBounds.Width = gumProject.DefaultCanvasWidth;
-            mCanvasBounds.Height = gumProject.DefaultCanvasHeight;
+            mCanvasBounds.Width = GraphicalUiElement.CanvasWidth;
+            mCanvasBounds.Height = GraphicalUiElement.CanvasHeight;
 
             CanvasBoundsVisible = gumProject.ShowCanvasOutline;
             RulersVisible = gumProject.ShowRuler;

@@ -5,12 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:EditorTabPlugin_XNA.Views"
              mc:Ignorable="d" >
-    <Grid VerticalAlignment="Top" HorizontalAlignment="Left">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left">
         <Button Content="-" Width="20" Command="{Binding ZoomOutCommand}"/>
         <ComboBox Grid.Column="1" Width="100"
                   SelectedItem="{Binding PercentZoomLevel}"
@@ -19,5 +14,13 @@
                   />
         <Button Grid.Column="2" Width="20" Content="+" Command="{Binding ZoomInCommand}"/>
 
-    </Grid>
+        <ComboBox
+            Margin="10,0,0,0"
+            Width="180"
+            SelectedItem="{Binding SelectedCustomGuide}"
+            ItemsSource="{Binding CustomGuides}"
+            DisplayMemberPath="FriendlyName"
+            />
+
+    </StackPanel>
 </UserControl>

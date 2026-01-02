@@ -94,6 +94,11 @@ public abstract class PluginBase : IPlugin
     /// more natural and less error prone.
     /// </summary>
     public event Func<VariableSave, RecursiveVariableFinder, bool>? VariableExcluded;
+
+    /// <summary>
+    /// Event raised after the wireframe has refreshed itself. This can be used to inspect
+    /// values of GraphicalUiElements, such as their final positions or sizes.
+    /// </summary>
     public event Action? WireframeRefreshed;
     public event Action<string>? WireframePropertyChanged;
     public event Func<bool>? GetIfShouldSuppressRemoveEditorHighlight;
