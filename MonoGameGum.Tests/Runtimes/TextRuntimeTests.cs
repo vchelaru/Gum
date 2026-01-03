@@ -65,12 +65,10 @@ $"chars count=223\r\n";
 
         textRuntime.Text = "This is a long text that should wrap within the fixed width of 100 units.";
 
-        var innerText = (Text)textRuntime.RenderableComponent;
+        textRuntime.WrappedText.Count.ShouldBeGreaterThan(1);
 
-        innerText.WrappedText.Count.ShouldBeGreaterThan(1);
-
-        innerText.WrappedText[0].ShouldStartWith("This is a");
-        innerText.WrappedText[1].ShouldNotStartWith("This is a");
+        textRuntime.WrappedText[0].ShouldStartWith("This is a");
+        textRuntime.WrappedText[1].ShouldNotStartWith("This is a");
     }
 
     [Fact]
@@ -81,11 +79,11 @@ $"chars count=223\r\n";
         textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         textRuntime.Width = 100; // Set a fixed width
         textRuntime.Text = "abcdefghijklmnopqrstuvwxyz 1abcdefghijklmnopqrstuvwxyz 12abcdefghijklmnopqrstuvwxyz";
-        var innerText = (Text)textRuntime.RenderableComponent;
-        innerText.WrappedText.Count.ShouldBe(3);
-        innerText.WrappedText[0].ShouldBe("abcdefghijklmnopqrstuvwxyz ");
-        innerText.WrappedText[1].ShouldBe("1abcdefghijklmnopqrstuvwxyz ");
-        innerText.WrappedText[2].ShouldBe("12abcdefghijklmnopqrstuvwxyz");
+        
+        textRuntime.WrappedText.Count.ShouldBe(3);
+        textRuntime.WrappedText[0].ShouldBe("abcdefghijklmnopqrstuvwxyz ");
+        textRuntime.WrappedText[1].ShouldBe("1abcdefghijklmnopqrstuvwxyz ");
+        textRuntime.WrappedText[2].ShouldBe("12abcdefghijklmnopqrstuvwxyz");
     }
 
     [Fact]

@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
+/// <summary>
+/// Represents a text element in the Gum UI framework.
+/// </summary>
 public class TextRuntime : InteractiveGue
 {
     Text? mContainedText;
@@ -27,7 +30,10 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-    // Shouldn't this be an XNA blend state?
+    /// <summary>
+    /// The XNA blend state used when rendering the text. This controls how 
+    /// color and alpha values blend with the background.
+    /// </summary>
     public Microsoft.Xna.Framework.Graphics.BlendState BlendState
     {
         get => ContainedText.BlendState.ToXNA();
@@ -52,31 +58,45 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// The red component of the text color. Ranges from 0 to 255.
+    /// </summary>
     public int Red
     {
         get => mContainedText.Red;
         set => mContainedText.Red = value;
     }
 
+    /// <summary>
+    /// The green component of the text color. Ranges from 0 to 255.
+    /// </summary>
     public int Green
     {
         get => mContainedText.Green;
         set => mContainedText.Green = value;
     }
 
+    /// <summary>
+    /// The blue component of the text color. Ranges from 0 to 255.
+    /// </summary>
     public int Blue
     {
         get => mContainedText.Blue;
         set => mContainedText.Blue = value;
     }
 
+    /// <summary>
+    /// The alpha (opacity) component of the text color. Ranges from 0 (fully transparent) to 255 (fully opaque).
+    /// </summary>
     public int Alpha
     {
         get => mContainedText.Alpha;
         set => mContainedText.Alpha = value;
     }
 
-
+    /// <summary>
+    /// Gets or sets the color used to render the contained text. This includes color and alpha (opacity) components.
+    /// </summary>
     public Microsoft.Xna.Framework.Color Color
     {
         get
@@ -90,6 +110,9 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// The horizontal alignment of the text within its bounding box.
+    /// </summary>
     public HorizontalAlignment HorizontalAlignment
     {
         get => ContainedText.HorizontalAlignment;
@@ -100,6 +123,9 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// The vertical alignment of the text within its bounding box.
+    /// </summary>
     public VerticalAlignment VerticalAlignment
     {
         get => ContainedText.VerticalAlignment;
@@ -286,6 +312,12 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.OverrideTextRenderingPositionMode = value;
     }
 
+    /// <summary>
+    /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
+    /// </summary>
+    /// <remarks>Setting this property updates the displayed text and may trigger layout changes if the text
+    /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
+    /// width is specified, the text will not be line-wrapped.</remarks>
     public string? Text
     {
         get
@@ -323,6 +355,11 @@ public class TextRuntime : InteractiveGue
             }
         }
     }
+
+    /// <summary>
+    /// The lines of text after wrapping and bbcode parsing have been applied.
+    /// </summary>
+    public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
 
     public OverlapDirection OverlapDirection
     {
