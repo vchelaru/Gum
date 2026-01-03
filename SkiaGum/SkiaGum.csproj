@@ -28,6 +28,10 @@
 	  <DefineConstants>TRACE;SKIA</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>TRACE;SKIA</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<Compile Remove="Content\LoaderManager.cs" />
 	</ItemGroup>
