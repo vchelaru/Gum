@@ -1076,7 +1076,8 @@ public class GumBatch
 
         State = GumBatchState.BeginCalled;
 
-
+        systemManagers.Renderer.Camera.ClientWidth = systemManagers.Renderer.GraphicsDevice.Viewport.Width;
+        systemManagers.Renderer.Camera.ClientHeight = systemManagers.Renderer.GraphicsDevice.Viewport.Height;
 
         systemManagers.Renderer.Begin(spriteBatchMatrix);
     }
