@@ -24,6 +24,8 @@ public class GrabbedState
 {
 
     private readonly ISelectedState _selectedState;
+    private readonly WireframeObjectManager _wireframeObjectManager;
+
     public StateSave StateSave { get; private set; }
 
     public XOrY? AxisMovedFurthestAlong
@@ -118,6 +120,7 @@ public class GrabbedState
     public GrabbedState()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
 
     public void HandlePush()
@@ -145,7 +148,7 @@ public class GrabbedState
 
         if (_selectedState.SelectedInstances.Count() == 0 && _selectedState.SelectedElement != null)
         {
-            var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
+            var graphicalUiElement = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
 
             ComponentPosition = new Vector2(graphicalUiElement.X, graphicalUiElement.Y);
             ComponentSize = new Vector2(graphicalUiElement.Width, graphicalUiElement.Height);
@@ -155,7 +158,7 @@ public class GrabbedState
             var stateSave = _selectedState.SelectedStateSave;
             foreach(var instance in _selectedState.SelectedInstances)
             {
-                var instanceGue = WireframeObjectManager.Self.GetRepresentation(instance);
+                var instanceGue = _wireframeObjectManager.GetRepresentation(instance);
 
                 if(instanceGue != null)
                 {

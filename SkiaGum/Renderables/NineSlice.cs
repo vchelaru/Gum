@@ -10,6 +10,12 @@ public class NineSlice : IRenderable
 
     public bool Wrap => false;
 
+    public string BatchKey => string.Empty;
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
+
     public void PreRender()
     {
 
@@ -18,5 +24,9 @@ public class NineSlice : IRenderable
     public void Render(ISystemManagers managers)
     {
         throw new System.NotImplementedException("NineSlices are not yet supported in Skia. Please complain on Discord or in a github issue");
+    }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
     }
 }

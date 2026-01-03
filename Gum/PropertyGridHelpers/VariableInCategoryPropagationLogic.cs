@@ -9,10 +9,11 @@ using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
 using Gum.Services.Dialogs;
+using System.Collections.Generic;
 
 namespace Gum.PropertyGridHelpers;
 
-public class VariableInCategoryPropagationLogic
+public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagationLogic
 {
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
@@ -39,6 +40,11 @@ public class VariableInCategoryPropagationLogic
         }
         ///////////////////End Early Out////////////////////////
 
+        PropagateVariablesInCategory(memberName, element, categoryToPropagate.States);
+    }
+
+    public void PropagateVariablesInCategory(string memberName, ElementSave element, List<StateSave> states)
+    { 
         var defaultState = element.DefaultState;
         var defaultVariable = defaultState.GetVariableSave(memberName);
         if (defaultVariable == null)
@@ -113,7 +119,7 @@ public class VariableInCategoryPropagationLogic
             defaultValue = element.DefaultState.GetValueRecursive(memberName);
         }
 
-        foreach (var state in categoryToPropagate.States)
+        foreach (var state in states)
         {
 
             if(defaultVariable != null)
@@ -131,7 +137,7 @@ public class VariableInCategoryPropagationLogic
                         state.Variables.Add(newVariable);
 
                         _guiCommands.PrintOutput(
-                            $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
+                            $"Adding {memberName} to {state.Name}");
                     }
                 }
                 else if (existingVariable.SetsValue == false)
@@ -152,7 +158,7 @@ public class VariableInCategoryPropagationLogic
                         newVariableList.Name = memberName;
                         state.VariableLists.Add(newVariableList);
                         _guiCommands.PrintOutput(
-                            $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
+                            $"Adding {memberName} to {state.Name}");
                     }
                 }
             }

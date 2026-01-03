@@ -14,7 +14,7 @@ namespace RenderingLibrary.Math.Geometry
         TopLeft
     }
 
-    public class LineCircle : IVisible, IRenderableIpso
+    public class LineCircle : SpriteBatchRenderableBase, IVisible, IRenderableIpso
     {
         #region Fields
         float mRadius;
@@ -24,7 +24,7 @@ namespace RenderingLibrary.Math.Geometry
 
         bool mVisible;
 
-        ObservableCollection<IRenderableIpso> mChildren;
+        ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
         CircleOrigin mCircleOrigin;
 
@@ -47,15 +47,6 @@ namespace RenderingLibrary.Math.Geometry
         {
             get;
             set;
-        }
-
-        public bool Visible
-        {
-            get { return mVisible; }
-            set
-            {
-                mVisible = value;
-            }
         }
 
         public float Radius
@@ -181,7 +172,7 @@ namespace RenderingLibrary.Math.Geometry
         public LineCircle(SystemManagers managers)
         {
 
-            mChildren = new ObservableCollection<IRenderableIpso>();
+            mChildren = new ();
 
             mRadius = 32;
             Visible = true;
@@ -234,9 +225,10 @@ namespace RenderingLibrary.Math.Geometry
             return distanceSquared <= radiusSquared;
         }
 
-        void IRenderable.Render(ISystemManagers managers)
+        public override void Render(ISystemManagers managers)
         {
-            if (AbsoluteVisible)
+            // See NineSlice for explanation of this Visible check
+            //if (AbsoluteVisible)
             {
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();
@@ -287,28 +279,20 @@ namespace RenderingLibrary.Math.Geometry
 
         public object Tag { get; set; }
 
-        public bool AbsoluteVisible
+        /// <inheritdoc/>
+        public bool Visible
         {
-            get
+            get { return mVisible; }
+            set
             {
-                if (((IVisible)this).Parent == null)
-                {
-                    return Visible;
-                }
-                else
-                {
-                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-                }
+                mVisible = value;
             }
         }
 
-        IVisible IVisible.Parent
-        {
-            get
-            {
-                return ((IRenderableIpso)this).Parent as IVisible;
-            }
-        }
+        /// <inheritdoc/>
+        public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+        /// <inheritdoc/>
+        IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
         void IRenderable.PreRender() { }
 

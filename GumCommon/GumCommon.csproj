@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>12.0</LangVersion>
@@ -9,7 +9,9 @@
 		<Title>GumCommon</Title>
 		<Description>Flexible layout tool for graphics in any .NET environment</Description>
 		<PackageId>FlatRedBall.GumCommon</PackageId>
-		<Version>2025.9.27.1</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+		<Version>2025.12.9.1</Version>
 
 
 
@@ -23,6 +25,7 @@
 		<LangVersion>12.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+		<RootNamespace>Gum</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -99,8 +102,10 @@
 		<Compile Include="..\RenderingLibrary\Graphics\IRenderer.cs" Link="RenderingLibrary\IRenderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ISetClipsChildren.cs" Link="RenderingLibrary\ISetClipsChildren.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IText.cs" Link="RenderingLibrary\IText.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\IWrappedText.cs" Link="RenderingLibrary\IWrappedText.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ITextureCoordinate.cs" Link="RenderingLibrary\ITextureCoordinate.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="RenderingLibrary\NineSliceExtensions.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\RenderableBase.cs" Link="RenderingLibrary\RenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
 		<Compile Include="..\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />

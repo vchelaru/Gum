@@ -22,7 +22,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
     public object Tag { get; set; }
 
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -116,7 +116,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
 
     public LottieAnimation()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
         Loops = true;
         TimeAnimationStarted = DateTime.Now;
     }
@@ -169,6 +169,14 @@ internal class LottieAnimation : IRenderableIpso, IVisible
             Animation.Render(canvas, boundingRect);
         }
     }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
 #else
     public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
     {
@@ -186,34 +194,20 @@ internal class LottieAnimation : IRenderableIpso, IVisible
 
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
 
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent =>((IRenderableIpso)this).Parent as IVisible;
 
-#endregion
+    public string BatchKey => string.Empty;
+
+    #endregion
 }

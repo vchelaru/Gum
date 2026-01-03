@@ -48,7 +48,7 @@ public class StandardWireframeEditor : WireframeEditor
     private readonly IElementCommands _elementCommands;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly SelectionManager _selectionManager;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public InputLibrary.Cursor Cursor
     {
@@ -82,7 +82,7 @@ public class StandardWireframeEditor : WireframeEditor
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         WireframeObjectManager wireframeObjectManager)
         : base(
               hotkeyManager, 
@@ -618,6 +618,26 @@ public class StandardWireframeEditor : WireframeEditor
         return hasChangeOccurred;
     }
 
+    private void RefreshSideOver()
+    {
+        var worldX = Cursor.GetWorldX();
+        var worldY = Cursor.GetWorldY();
+
+        if (mResizeHandles.Visible == false)
+        {
+            SideOver = ResizeSide.None;
+        }
+        else
+        {
+            // If the user is already dragging then there's
+            // no need to re-check which side the user is over
+            if (Cursor.PrimaryPush || (!Cursor.PrimaryDown && !Cursor.PrimaryClick))
+            {
+                SideOver = mResizeHandles.GetSideOver(worldX, worldY);
+            }
+        }
+    }
+
     #endregion
 
     #region Moving (Changing X and Y)
@@ -732,7 +752,6 @@ public class StandardWireframeEditor : WireframeEditor
         {
             mResizeHandles.Visible = false;
             rotationHandle.Visible = false;
-
         }
         else
         {
@@ -743,6 +762,8 @@ public class StandardWireframeEditor : WireframeEditor
     }
 
     #endregion
+
+    #region Changing the cursor (for resizing
 
     public override System.Windows.Forms.Cursor GetWindowsCursorToShow(
         System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
@@ -775,25 +796,7 @@ public class StandardWireframeEditor : WireframeEditor
         return cursorToSet;
     }
 
-    private void RefreshSideOver()
-    {
-        var worldX = Cursor.GetWorldX();
-        var worldY = Cursor.GetWorldY();
-
-        if (mResizeHandles.Visible == false)
-        {
-            SideOver = ResizeSide.None;
-        }
-        else
-        {
-            // If the user is already dragging then there's
-            // no need to re-check which side the user is over
-            if (Cursor.PrimaryPush || (!Cursor.PrimaryDown && !Cursor.PrimaryClick))
-            {
-                SideOver = mResizeHandles.GetSideOver(worldX, worldY);
-            }
-        }
-    }
+    #endregion
 
     private void CalculateMultipliers(InstanceSave instanceSave, List<ElementWithState> elementStack, out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier)
     {

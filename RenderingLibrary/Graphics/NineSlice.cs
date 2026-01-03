@@ -19,13 +19,17 @@ using System.Runtime.CompilerServices;
 
 namespace RenderingLibrary.Graphics;
 
-public class NineSlice : IRenderableIpso, 
-    IVisible, ITextureCoordinate, IAnimatable, ICloneable
+public class NineSlice : SpriteBatchRenderableBase, 
+    IRenderableIpso, 
+    IVisible, 
+    IAspectRatio,
+    ITextureCoordinate, 
+    IAnimatable, ICloneable
 {
     #region Fields
 
 
-    ObservableCollection<IRenderableIpso> mChildren = new ObservableCollection<IRenderableIpso>();
+    ObservableCollectionNoReset<IRenderableIpso> mChildren = new ();
 
     //Sprites which make up NineSlice indexed by NineSliceSections enum
     private Sprite[] mSprites;
@@ -256,6 +260,8 @@ public class NineSlice : IRenderableIpso,
         set;
     }
 
+    bool IsOnlyRenderingCenterSprite => CustomFrameTextureCoordinateWidth <= 0;
+
     public Texture2D TopLeftTexture 
     {
         get { return mSprites[(int)NineSliceSections.TopLeft].Texture; }
@@ -301,6 +307,8 @@ public class NineSlice : IRenderableIpso,
         get { return mSprites[(int)NineSliceSections.Center].Texture; }
         set { mSprites[(int)NineSliceSections.Center].Texture = value; }
     }
+
+
 
     public bool Wrap
     {
@@ -442,10 +450,34 @@ public class NineSlice : IRenderableIpso,
         }
     }
 
+
+    float IAspectRatio.AspectRatio
+    {
+        get
+        {
+            // EVentually we'll add this:
+            //if (RenderTargetTextureSource != null)
+            //{
+            //    return (RenderTargetTextureSource.Width / (float)RenderTargetTextureSource.Height);
+            //}
+            //else 
+            var texture = mSprites[(int)NineSliceSections.Center].Texture;
+            if (texture != null)
+            {
+                return (texture.Width / (float)texture.Height);
+            }
+            else
+            {
+                return 1;
+            }
+        }
+    }
+
     #endregion
 
     #region Methods
 
+    [Obsolete("Do not use this, it's called automatically in rendering")]
     public void RefreshTextureCoordinatesAndSpriteSizes()
     {
         RefreshSourceRectangles();
@@ -453,164 +485,189 @@ public class NineSlice : IRenderableIpso,
         RefreshSpriteDimensions();
     }
 
-    void IRenderable.Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
-        if (AbsoluteVisible && Width > 0 && Height > 0)
+        //if (AbsoluteVisible && Width > 0 && Height > 0)
+        // Why do we check absolute visible?
+        // This seems to have problems:
+        // 1. It's expensive
+        // 2. The caller should be responsible for this
+        // 3. This prevents render target rendering when the parent is invisible
+        if (Width > 0 && Height > 0)
         {
             RefreshSourceRectangles();
 
             RefreshSpriteDimensions();
 
-            float x = this.GetAbsoluteX();
-            float y = this.GetAbsoluteY();
-            float offsetX = 0;
-            float offsetY = 0;
-
-            Vector3 right;
-            Vector3 up;
-
-            var rotationInDegrees = this.GetAbsoluteRotation();
-
-            // September 19, 2023
-            // It is possible to have
-            // rotations which are very 
-            // close to 80, 180, or 270
-            // degrees. In this situation,
-            // we should hardcode the vectors
-            // to avoid floating point errors. Otherwise
-            // we can get small seams or overlaps in our nineslice
-            // rendering
-
-            var quarterRotations = rotationInDegrees / (float)90;
-            var radiansFromPerfectRotation = System.Math.Abs(quarterRotations - MathFunctions.RoundToInt(quarterRotations));
-
-            // 1/90 would be 1 degree. Let's go 1/10th of a degree
-            const float errorToTolerate = .1f / 90f;
-
-            if(radiansFromPerfectRotation < errorToTolerate)
-            {
-                var quarterRotationsAsInt = MathFunctions.RoundToInt(quarterRotations) % 4;
-                if(quarterRotationsAsInt < 0)
-                {
-                    quarterRotationsAsInt += 4;
-                }
-
-                // invert it to match how rotation works with the CreateRotationZ method:
-                quarterRotationsAsInt = 4 - quarterRotationsAsInt;
-
-                right = Vector3Extensions.Right;
-                up = Vector3Extensions.Up;
-
-                switch (quarterRotationsAsInt)
-                {
-                    case 0:
-                        right = Vector3Extensions.Right;
-                        up = Vector3Extensions.Up;
-                        break;
-                    case 1:
-                        right = Vector3Extensions.Up;
-                        up = Vector3Extensions.Left;
-                        break;
-                    case 2:
-                        right = Vector3Extensions.Left;
-                        up = Vector3Extensions.Down;
-                        break;
-
-                    case 3:
-                        right = Vector3Extensions.Down;
-                        up = Vector3Extensions.Right;
-                        break;
-                }
-
-
-            }
-            else
-            {
-                var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationInDegrees));
-
-                right = matrix.Right();
-                up = matrix.Up();
-            }
-
-            mSprites[(int)NineSliceSections.TopLeft].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.TopLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.TopLeft].Rotation = rotationInDegrees;
-
-            offsetX = mSprites[(int)NineSliceSections.TopLeft].Width;
-
-            mSprites[(int)NineSliceSections.Top].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.Top].Y = y + offsetX * right.Y + offsetY * up.Y;
-            mSprites[(int)NineSliceSections.Top].Rotation = rotationInDegrees;
-
-            offsetX = mSprites[(int)NineSliceSections.TopLeft].Width + mSprites[(int)NineSliceSections.Top].Width;
-
-            mSprites[(int)NineSliceSections.TopRight].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.TopRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.TopRight].Rotation = rotationInDegrees;
-
-            offsetX = 0;
-            offsetY = mSprites[(int)NineSliceSections.TopLeft].Height;
-
-            mSprites[(int)NineSliceSections.Left].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.Left].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.Left].Rotation = rotationInDegrees;
-
-            offsetX = mSprites[(int)NineSliceSections.Left].Width;
-
-            mSprites[(int)NineSliceSections.Center].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.Center].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.Center].Rotation = rotationInDegrees;
-
-            offsetX = mSprites[(int)NineSliceSections.Left].Width + mSprites[(int)NineSliceSections.Center].Width;
-
-            mSprites[(int)NineSliceSections.Right].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.Right].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.Right].Rotation = rotationInDegrees;
-
-
-            offsetX = 0;
-            offsetY = mSprites[(int)NineSliceSections.TopLeft].Height + mSprites[(int)NineSliceSections.Left].Height;
-
-            mSprites[(int)NineSliceSections.BottomLeft].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.BottomLeft].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.BottomLeft].Rotation = rotationInDegrees;
-
-            offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width;
-
-            mSprites[(int)NineSliceSections.Bottom].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.Bottom].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.Bottom].Rotation = rotationInDegrees;
-
-            offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width + mSprites[(int)NineSliceSections.Bottom].Width;
-
-            mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
-            mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y; 
-            mSprites[(int)NineSliceSections.BottomRight].Rotation = rotationInDegrees;
-
             var systemManagers = managers as SystemManagers;
             var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
 
-            Render(mSprites[(int)NineSliceSections.TopLeft], systemManagers, spriteRenderer);
-            if (mSprites[(int)NineSliceSections.Center].Width > 0)
-            {
-                Render(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer);
-                Render(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer);
+            float x = this.GetAbsoluteX();
+            float y = this.GetAbsoluteY();
+            var rotationInDegrees = this.GetAbsoluteRotation();
 
-                if (mSprites[(int)NineSliceSections.Center].Height > 0)
+            if (IsOnlyRenderingCenterSprite)
+            {
+                var centerSprite = mSprites[(int)NineSliceSections.Center];
+
+                centerSprite.X = x;
+                centerSprite.Y = y;
+                centerSprite.Rotation = rotationInDegrees;
+
+                if (centerSprite.Height > 0 && centerSprite.Width > 0)
                 {
-                    Render(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer);
+                    Render(centerSprite, systemManagers, spriteRenderer);
+                }
+            }
+            else 
+            {
+                float offsetX = 0;
+                float offsetY = 0;
+
+                Vector3 right;
+                Vector3 up;
+
+
+                // September 19, 2023
+                // It is possible to have
+                // rotations which are very 
+                // close to 80, 180, or 270
+                // degrees. In this situation,
+                // we should hardcode the vectors
+                // to avoid floating point errors. Otherwise
+                // we can get small seams or overlaps in our nineslice
+                // rendering
+
+                var quarterRotations = rotationInDegrees / (float)90;
+                var radiansFromPerfectRotation = System.Math.Abs(quarterRotations - MathFunctions.RoundToInt(quarterRotations));
+
+                // 1/90 would be 1 degree. Let's go 1/10th of a degree
+                const float errorToTolerate = .1f / 90f;
+
+                if (radiansFromPerfectRotation < errorToTolerate)
+                {
+                    var quarterRotationsAsInt = MathFunctions.RoundToInt(quarterRotations) % 4;
+                    if (quarterRotationsAsInt < 0)
+                    {
+                        quarterRotationsAsInt += 4;
+                    }
+
+                    // invert it to match how rotation works with the CreateRotationZ method:
+                    quarterRotationsAsInt = 4 - quarterRotationsAsInt;
+
+                    right = Vector3Extensions.Right;
+                    up = Vector3Extensions.Up;
+
+                    switch (quarterRotationsAsInt)
+                    {
+                        case 0:
+                            right = Vector3Extensions.Right;
+                            up = Vector3Extensions.Up;
+                            break;
+                        case 1:
+                            right = Vector3Extensions.Up;
+                            up = Vector3Extensions.Left;
+                            break;
+                        case 2:
+                            right = Vector3Extensions.Left;
+                            up = Vector3Extensions.Down;
+                            break;
+
+                        case 3:
+                            right = Vector3Extensions.Down;
+                            up = Vector3Extensions.Right;
+                            break;
+                    }
+                }
+                else
+                {
+                    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationInDegrees));
+
+                    right = matrix.Right();
+                    up = matrix.Up();
                 }
 
-            }
-            if (mSprites[(int)NineSliceSections.Center].Height > 0)
-            {
-                Render(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer);
-                Render(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer);
-            }
+                mSprites[(int)NineSliceSections.TopLeft].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.TopLeft].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.TopLeft].Rotation = rotationInDegrees;
 
-            Render(mSprites[(int)NineSliceSections.TopRight], systemManagers, spriteRenderer);
-            Render(mSprites[(int)NineSliceSections.BottomLeft], systemManagers, spriteRenderer);
-            Render(mSprites[(int)NineSliceSections.BottomRight], systemManagers, spriteRenderer);
+                offsetX = mSprites[(int)NineSliceSections.TopLeft].Width;
+
+                mSprites[(int)NineSliceSections.Top].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.Top].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.Top].Rotation = rotationInDegrees;
+
+                offsetX = mSprites[(int)NineSliceSections.TopLeft].Width + mSprites[(int)NineSliceSections.Top].Width;
+
+                mSprites[(int)NineSliceSections.TopRight].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.TopRight].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.TopRight].Rotation = rotationInDegrees;
+
+                offsetX = 0;
+                offsetY = mSprites[(int)NineSliceSections.TopLeft].Height;
+
+                mSprites[(int)NineSliceSections.Left].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.Left].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.Left].Rotation = rotationInDegrees;
+
+                offsetX = mSprites[(int)NineSliceSections.Left].Width;
+
+                mSprites[(int)NineSliceSections.Center].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.Center].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.Center].Rotation = rotationInDegrees;
+
+                offsetX = mSprites[(int)NineSliceSections.Left].Width + mSprites[(int)NineSliceSections.Center].Width;
+
+                mSprites[(int)NineSliceSections.Right].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.Right].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.Right].Rotation = rotationInDegrees;
+
+
+                offsetX = 0;
+                offsetY = mSprites[(int)NineSliceSections.TopLeft].Height + mSprites[(int)NineSliceSections.Left].Height;
+
+                mSprites[(int)NineSliceSections.BottomLeft].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.BottomLeft].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.BottomLeft].Rotation = rotationInDegrees;
+
+                offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width;
+
+                mSprites[(int)NineSliceSections.Bottom].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.Bottom].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.Bottom].Rotation = rotationInDegrees;
+
+                offsetX = mSprites[(int)NineSliceSections.BottomLeft].Width + mSprites[(int)NineSliceSections.Bottom].Width;
+
+                mSprites[(int)NineSliceSections.BottomRight].X = x + offsetX * right.X + offsetY * up.X;
+                mSprites[(int)NineSliceSections.BottomRight].Y = y + offsetX * right.Y + offsetY * up.Y;
+                mSprites[(int)NineSliceSections.BottomRight].Rotation = rotationInDegrees;
+            
+
+
+
+
+                Render(mSprites[(int)NineSliceSections.TopLeft], systemManagers, spriteRenderer);
+                if (mSprites[(int)NineSliceSections.Center].Width > 0)
+                {
+                    Render(mSprites[(int)NineSliceSections.Top], systemManagers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Bottom], systemManagers, spriteRenderer);
+
+                    if (mSprites[(int)NineSliceSections.Center].Height > 0)
+                    {
+                        Render(mSprites[(int)NineSliceSections.Center], systemManagers, spriteRenderer);
+                    }
+
+                }
+                if (mSprites[(int)NineSliceSections.Center].Height > 0)
+                {
+                    Render(mSprites[(int)NineSliceSections.Left], systemManagers, spriteRenderer);
+                    Render(mSprites[(int)NineSliceSections.Right], systemManagers, spriteRenderer);
+                }
+
+                Render(mSprites[(int)NineSliceSections.TopRight], systemManagers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.BottomLeft], systemManagers, spriteRenderer);
+                Render(mSprites[(int)NineSliceSections.BottomRight], systemManagers, spriteRenderer);
+            }
         }
     }
 
@@ -623,51 +680,78 @@ public class NineSlice : IRenderableIpso,
 
         if (usesMulti == false)
         {
-            // single source file for each part of the NineSlice:
-            var fullBorderWidth = mFullOutsideWidth * 2 * _borderScale;
-
-            if (Width >= fullBorderWidth)
+            if(IsOnlyRenderingCenterSprite)
             {
-                desiredMiddleWidth = this.Width - fullBorderWidth;
+                // No need to update the non-center sprites because they aren't rendered anyway.
+                desiredMiddleHeight = this.Height;
+                desiredMiddleWidth = this.Width;
 
-                mSprites[(int)NineSliceSections.TopLeft].Width = 
-                    mSprites[(int)NineSliceSections.TopRight].Width = 
-                    mSprites[(int)NineSliceSections.Left].Width = 
+                mSprites[(int)NineSliceSections.TopLeft].Width =
+                    mSprites[(int)NineSliceSections.Top].Width =
+                    mSprites[(int)NineSliceSections.TopRight].Width =
+                    mSprites[(int)NineSliceSections.Left].Width =
                     mSprites[(int)NineSliceSections.Right].Width =
-                    mSprites[(int)NineSliceSections.BottomLeft].Width = 
-                    mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth*_borderScale;
-            }
-            else
-            {
-                desiredMiddleWidth = 0;
-                mSprites[(int)NineSliceSections.TopLeft].Width = 
-                    mSprites[(int)NineSliceSections.TopRight].Width = 
-                    mSprites[(int)NineSliceSections.Left].Width = 
-                    mSprites[(int)NineSliceSections.Right].Width =
-                    mSprites[(int)NineSliceSections.BottomLeft].Width = 
-                    mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
-            }
+                    mSprites[(int)NineSliceSections.BottomLeft].Width =
+                    mSprites[(int)NineSliceSections.Bottom].Width =
+                    mSprites[(int)NineSliceSections.BottomRight].Width = 0;
 
-            float fullBorderHeight = mFullOutsideHeight * 2 * _borderScale;
-            if (Height >= fullBorderHeight)
-            {
-                desiredMiddleHeight = this.Height - fullBorderHeight;
-                mSprites[(int)NineSliceSections.TopLeft].Height = 
-                    mSprites[(int)NineSliceSections.Top].Height =
-                    mSprites[(int)NineSliceSections.TopRight].Height =
-                    mSprites[(int)NineSliceSections.BottomLeft].Height =
-                    mSprites[(int)NineSliceSections.Bottom].Height =
-                    mSprites[(int)NineSliceSections.BottomRight].Height = mFullOutsideHeight * _borderScale;
-            }
-            else
-            {
-                desiredMiddleHeight = 0;
                 mSprites[(int)NineSliceSections.TopLeft].Height =
                     mSprites[(int)NineSliceSections.Top].Height =
                     mSprites[(int)NineSliceSections.TopRight].Height =
+                    mSprites[(int)NineSliceSections.Left].Height =
+                    mSprites[(int)NineSliceSections.Right].Height =
                     mSprites[(int)NineSliceSections.BottomLeft].Height =
                     mSprites[(int)NineSliceSections.Bottom].Height =
-                    mSprites[(int)NineSliceSections.BottomRight].Height = Height/2.0f;
+                    mSprites[(int)NineSliceSections.BottomRight].Height = 0;
+            }
+            else
+            {
+                // single source file for each part of the NineSlice:
+                var fullBorderWidth = mFullOutsideWidth * 2 * _borderScale;
+
+                if (Width >= fullBorderWidth)
+                {
+                    desiredMiddleWidth = this.Width - fullBorderWidth;
+
+                    mSprites[(int)NineSliceSections.TopLeft].Width = 
+                        mSprites[(int)NineSliceSections.TopRight].Width = 
+                        mSprites[(int)NineSliceSections.Left].Width = 
+                        mSprites[(int)NineSliceSections.Right].Width =
+                        mSprites[(int)NineSliceSections.BottomLeft].Width = 
+                        mSprites[(int)NineSliceSections.BottomRight].Width = mFullOutsideWidth*_borderScale;
+                }
+                else
+                {
+                    desiredMiddleWidth = 0;
+                    mSprites[(int)NineSliceSections.TopLeft].Width = 
+                        mSprites[(int)NineSliceSections.TopRight].Width = 
+                        mSprites[(int)NineSliceSections.Left].Width = 
+                        mSprites[(int)NineSliceSections.Right].Width =
+                        mSprites[(int)NineSliceSections.BottomLeft].Width = 
+                        mSprites[(int)NineSliceSections.BottomRight].Width = Width / 2.0f;
+                }
+
+                float fullBorderHeight = mFullOutsideHeight * 2 * _borderScale;
+                if (Height >= fullBorderHeight)
+                {
+                    desiredMiddleHeight = this.Height - fullBorderHeight;
+                    mSprites[(int)NineSliceSections.TopLeft].Height = 
+                        mSprites[(int)NineSliceSections.Top].Height =
+                        mSprites[(int)NineSliceSections.TopRight].Height =
+                        mSprites[(int)NineSliceSections.BottomLeft].Height =
+                        mSprites[(int)NineSliceSections.Bottom].Height =
+                        mSprites[(int)NineSliceSections.BottomRight].Height = mFullOutsideHeight * _borderScale;
+                }
+                else
+                {
+                    desiredMiddleHeight = 0;
+                    mSprites[(int)NineSliceSections.TopLeft].Height =
+                        mSprites[(int)NineSliceSections.Top].Height =
+                        mSprites[(int)NineSliceSections.TopRight].Height =
+                        mSprites[(int)NineSliceSections.BottomLeft].Height =
+                        mSprites[(int)NineSliceSections.Bottom].Height =
+                        mSprites[(int)NineSliceSections.BottomRight].Height = Height/2.0f;
+                }
             }
         }
         else
@@ -736,88 +820,100 @@ public class NineSlice : IRenderableIpso,
                 bottomCoordinate = SourceRectangle.Value.Bottom;
             }
 
-            int usedWidth = rightCoordinate - leftCoordinate;
-            int usedHeight = bottomCoordinate - topCoordinate;
-
-            if(CustomFrameTextureCoordinateWidth != null)
+            if(IsOnlyRenderingCenterSprite)
             {
-                mFullOutsideWidth = MathFunctions.RoundToInt( CustomFrameTextureCoordinateWidth.Value);
-                mFullOutsideHeight = mFullOutsideWidth;
-
+                mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(
+                    leftCoordinate,
+                    topCoordinate,
+                    rightCoordinate - leftCoordinate,
+                    bottomCoordinate - topCoordinate);
             }
             else
             {
-                mFullOutsideWidth = (usedWidth + 1) / 3;
-                mFullOutsideHeight = (usedHeight + 1) / 3;
-            }
 
-            mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
-            mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
+                int usedWidth = rightCoordinate - leftCoordinate;
+                int usedHeight = bottomCoordinate - topCoordinate;
 
-            int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2));
-            int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(Height / 2));
+                if (CustomFrameTextureCoordinateWidth != null)
+                {
+                    mFullOutsideWidth = MathFunctions.RoundToInt(CustomFrameTextureCoordinateWidth.Value);
+                    mFullOutsideHeight = mFullOutsideWidth;
 
-            int topHeight = outsideHeight;
-            int bottomHeight = outsideHeight;
+                }
+                else
+                {
+                    mFullOutsideWidth = (usedWidth + 1) / 3;
+                    mFullOutsideHeight = (usedHeight + 1) / 3;
+                }
 
-            int insideWidth = mFullInsideWidth;
-            int insideHeight = mFullInsideHeight;
+                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
+                mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
 
-            if(Height <= mFullOutsideHeight*2 && Height%2 == 1)
-            {
-                // If this is an odd (not even) height
-                // and if the middle has 0 height, then one of the nineslices needs to be 1 pixel shorter
-                // We'll arbitrarily choose the bottom one
-                bottomHeight--;
-            }
+                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2));
+                int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(Height / 2));
 
-            mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(
-                leftCoordinate + 0,
-                topCoordinate + 0,
-                outsideWidth,
-                topHeight);
-            mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(
-                leftCoordinate + outsideWidth,
-                topCoordinate + 0,
-                insideWidth,
-                topHeight);
-            mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
-                rightCoordinate - outsideWidth,
-                topCoordinate + 0,
-                outsideWidth,
-                topHeight);
+                int topHeight = outsideHeight;
+                int bottomHeight = outsideHeight;
 
-            mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(
-                leftCoordinate + 0,
-                topCoordinate + outsideHeight,
-                outsideWidth,
-                insideHeight);
-            mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(
-                leftCoordinate + outsideWidth,
-                topCoordinate + outsideHeight,
-                insideWidth,
-                insideHeight);
-            mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(
-                rightCoordinate - outsideWidth,
-                topCoordinate + outsideHeight,
-                outsideWidth,
-                insideHeight);
+                int insideWidth = mFullInsideWidth;
+                int insideHeight = mFullInsideHeight;
 
-            mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
-                leftCoordinate + 0,
-                bottomCoordinate - bottomHeight,
-                outsideWidth,
-                bottomHeight);
-            mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
-                leftCoordinate + outsideWidth,
-                bottomCoordinate - bottomHeight,
-                insideWidth,
-                bottomHeight);
-            mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
-                rightCoordinate - outsideWidth,
-                bottomCoordinate - bottomHeight,
-                outsideWidth,
-                bottomHeight);
+                if (Height <= mFullOutsideHeight * 2 && Height % 2 == 1)
+                {
+                    // If this is an odd (not even) height
+                    // and if the middle has 0 height, then one of the nineslices needs to be 1 pixel shorter
+                    // We'll arbitrarily choose the bottom one
+                    bottomHeight--;
+                }
+
+                mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + 0,
+                    outsideWidth,
+                    topHeight);
+                mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + 0,
+                    insideWidth,
+                    topHeight);
+                mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
+                    rightCoordinate - outsideWidth,
+                    topCoordinate + 0,
+                    outsideWidth,
+                    topHeight);
+
+                mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    topCoordinate + outsideHeight,
+                    outsideWidth,
+                    insideHeight);
+                mSprites[(int)NineSliceSections.Center].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    topCoordinate + outsideHeight,
+                    insideWidth,
+                    insideHeight);
+                mSprites[(int)NineSliceSections.Right].SourceRectangle = new Rectangle(
+                    rightCoordinate - outsideWidth,
+                    topCoordinate + outsideHeight,
+                    outsideWidth,
+                    insideHeight);
+
+                mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
+                    leftCoordinate + 0,
+                    bottomCoordinate - bottomHeight,
+                    outsideWidth,
+                    bottomHeight);
+                mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
+                    leftCoordinate + outsideWidth,
+                    bottomCoordinate - bottomHeight,
+                    insideWidth,
+                    bottomHeight);
+                mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
+                    rightCoordinate - outsideWidth,
+                    bottomCoordinate - bottomHeight,
+                    outsideWidth,
+                    bottomHeight);
+            }            
         }
     }
 
@@ -845,28 +941,18 @@ public class NineSlice : IRenderableIpso,
 
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
 
-    IVisible IVisible.Parent
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent
     {
         get
         {
@@ -968,13 +1054,13 @@ public class NineSlice : IRenderableIpso,
         }
     }
 
-        void IRenderable.PreRender() { }
+    void IRenderable.PreRender() { }
 
     public NineSlice Clone()
     {
         var newInstance = (NineSlice)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

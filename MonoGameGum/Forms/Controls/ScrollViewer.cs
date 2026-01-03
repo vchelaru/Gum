@@ -64,7 +64,7 @@ public class ScrollChangedEventArgs : EventArgs
 /// FrameworkElements (Forms) or regular visuals (GraphicalUiElements).
 /// </summary>
 public class ScrollViewer :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement,
 #else
     Gum.Forms.Controls.FrameworkElement, 
@@ -141,6 +141,10 @@ public class ScrollViewer :
         }
     }
 
+    /// <inheritdoc cref="Gum.Forms.Controls.Primitives.RangeBase.SmallChange"/>
+    /// <remarks>
+    /// This property sets the SmallChange value for both vertical and horizontal scroll bars.
+    /// </remarks>
     public double SmallChange
     {
         get => verticalScrollBar.SmallChange;
@@ -267,6 +271,52 @@ public class ScrollViewer :
         }
     }
 
+    SizeMode _verticalSizeMode;
+    /// <summary>
+    /// Sets whether Vertical sizing is fixed (based on the size of the ScrollViewer's Visual) or 
+    /// auto (based on the size of the inner panel's contents).
+    /// </summary>
+    /// <remarks>
+    /// This property depends on the underlying Visual implementing the VerticalSizeMode category
+    /// with an Auto state. If this is not set, then this property simply prevents the ScrollBarVisibility 
+    /// category from being set.
+    /// </remarks>
+    public SizeMode VerticalSizeMode
+    {
+        get => _verticalSizeMode;
+        set
+        {
+            if (_verticalSizeMode != value)
+            {
+                _verticalSizeMode = value;
+                UpdateToSizeMode();
+            }
+        }
+    }
+
+    SizeMode _horizontalSizeMode;
+    /// <summary>
+    /// Sets whether Horizontal sizing is fixed (based on the size of the ScrollViewer's Visual) or
+    /// auto (based on the size of the inner panel's contents).
+    /// </summary>
+    /// <remarks>
+    /// This property depends on the underlying Visual implementing the HorizontalSizeMode category
+    /// with an Auto state. If this is not set, then this property simply prevents the ScrollBarVisibility
+    /// category from being set.
+    /// </remarks>
+    public SizeMode HorizontalSizeMode
+    {
+        get => _horizontalSizeMode;
+        set
+        {
+            if(_horizontalSizeMode != value)
+            {
+                _horizontalSizeMode = value;
+                UpdateToSizeMode();
+            }
+        }
+    }
+
     #endregion
 
     #region Initialize
@@ -372,6 +422,8 @@ public class ScrollViewer :
         UpdateHorizontalScrollBarValues();
 
         base.ReactToVisualChanged();
+
+        UpdateState();
     }
 
     protected virtual void RefreshInternalVisualReferences()
@@ -543,8 +595,14 @@ public class ScrollViewer :
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
-            UpdateVerticalScrollBarValues();
-            UpdateHorizontalScrollBarValues();
+            if(this.VerticalSizeMode == SizeMode.Fixed)
+            {
+                UpdateHorizontalScrollBarValues();
+            }
+            if(this.VerticalSizeMode == SizeMode.Fixed)
+            {
+                UpdateVerticalScrollBarValues();
+            }
         }
     }
 
@@ -552,8 +610,14 @@ public class ScrollViewer :
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
-            UpdateVerticalScrollBarValues();
-            UpdateHorizontalScrollBarValues();
+            if(this.HorizontalSizeMode == SizeMode.Fixed)
+            {
+                UpdateHorizontalScrollBarValues();
+            }
+            if (this.VerticalSizeMode == SizeMode.Fixed)
+            {
+                UpdateVerticalScrollBarValues();
+            }
         }
     }
 
@@ -706,6 +770,23 @@ public class ScrollViewer :
 
     #region UpdateTo methods
 
+    private void UpdateToSizeMode()
+    {
+        if(VerticalSizeMode == SizeMode.Auto)
+        {
+            string state = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+            const string category = "VerticalSizeModeState";
+            Visual.SetProperty(category, state);
+        }
+        if(HorizontalSizeMode == SizeMode.Auto)
+        {
+            string state = VerticalSizeMode == SizeMode.Fixed ? "Fixed" : "Auto";
+            const string category = "HorizontalSizeModeState";
+            Visual.SetProperty(category, state);
+        }
+
+    }
+
     // Currently this is public because Gum objects don't have events
     // when positions and sizes change. Eventually, we'll have this all
     // handled internally and this can be made private.
@@ -740,6 +821,7 @@ public class ScrollViewer :
         }
         SetScrollBarState();
 
+
         // now that we've set the visibility state, let's see if the height has changed
         var didHeightChange = innerPanel.GetAbsoluteHeight() != innerPanelHeight;
         if (didHeightChange)
@@ -761,6 +843,12 @@ public class ScrollViewer :
 
             verticalScrollBar.Maximum = maxValue;
         }
+
+        var oldReact = reactToInnerPanelPositionOrSizeChanged;
+        reactToInnerPanelPositionOrSizeChanged = false;
+        UpdateToSizeMode();
+
+        reactToInnerPanelPositionOrSizeChanged = oldReact;
     }
 
     private void SetScrollBarState()

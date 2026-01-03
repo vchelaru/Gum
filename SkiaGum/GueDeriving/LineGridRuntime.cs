@@ -7,7 +7,7 @@ namespace SkiaGum.GueDeriving;
 
 public class LineGridRuntime: SkiaShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => mContainedLineGrid;
+    protected override RenderableShapeBase ContainedRenderable => mContainedLineGrid;
 
     public ushort CellWidth
     {
@@ -51,6 +51,8 @@ public class LineGridRuntime: SkiaShapeRuntime
     {
         SetContainedObject(new LineGrid());
         ContainedLineGrid = this.RenderableComponent as LineGrid;
+
+        StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
 
         // Make defaults 100 to match Glue
         Width = 100;

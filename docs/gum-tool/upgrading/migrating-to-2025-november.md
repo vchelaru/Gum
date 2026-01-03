@@ -1,0 +1,117 @@
+# Migrating to 2025 November
+
+## Introduction
+
+This page discusses breaking changes and other considerations when migrating from `2025 October` to `2025 November` .
+
+## Upgrading Gum Tool
+
+{% hint style="warning" %}
+For Linux users - this version of Gum upgrades to .NET 8. The Linux install script does not properly install .NET 8. We now recommend setup using Bottles. For more information, see the [Setup page](../setup/).
+{% endhint %}
+
+To upgrade the Gum tool:
+
+1. Download Gum.zip from the release on Github: [https://github.com/vchelaru/Gum/releases/tag/Release\_November\_30\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_November_30_2025)
+2. Delete the old tool from your machine
+3. Unzip the gum tool to the same location as to not break any file associations
+
+## Upgrading Runtime
+
+Upgrade your Gum NuGet packages to version 2025.11.30.1. For more information, see the NuGet packages for your particular platform:
+
+* MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
+* KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
+* FNA - [https://www.nuget.org/packages/Gum.FNA/](https://www.nuget.org/packages/Gum.FNA/)
+* raylib - [https://www.nuget.org/packages/Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
+* SkiaSharp - [https://www.nuget.org/packages/Gum.SkiaSharp/](https://www.nuget.org/packages/Gum.SkiaSharp/)
+
+For other platforms you need to build Gum from source
+
+See below for breaking changes and updates.
+
+## Moved .csproj Files
+
+A number of csproj files have been moved. If your project depends on any of these (if you link to source), you will need to adjust your file references.
+
+| Old Location                                           | New Location                                               |
+| ------------------------------------------------------ | ---------------------------------------------------------- |
+| \<Gum Root>\SkiaGum.Wpf\SkiaGum.Wpf.csproj             | \<Gum Root>\Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj        |
+| \<Gum Root>\SvgPlugin\SkiaInGumShared\SkiaInGum.csproj | \<Gum Root>\Gum\SvgPlugin\SkiaInGumShared\SkiaInGum.csproj |
+
+{% hint style="warning" %}
+FlatRedBall Projects which link to source will have a broken reference to SkiaInGum.csproj. Add an extra "Gum\\" to the path to resolve the issue.
+{% endhint %}
+
+## Warnings on Invalid Variables
+
+Previous versions of Gum would not report errors if a Screen or Component included an invalid variable. The current version of Gum reports these.
+
+These type of errors are primarily reported becase they can have an impact on code generation. Although the code generator handles these types of variables in most cases, they can sometimes cause confusing code generation or compile errors.
+
+Currently these errors must be fixed manually in XML files, but this may change in future versions of Gum.
+
+A typical error indicates which variable is causing the problem, as shown in the following screenshot:
+
+<figure><img src="../../.gitbook/assets/30_09 14 58.png" alt=""><figcaption></figcaption></figure>
+
+To solve these:
+
+1. Right-click on the Screen or Component with the invalid variable and select **View in Explorer**.
+2. Open the file in a text editor
+3. Locate the variable in the XML structure
+4. Delete or modify the variable
+   1. If the variable is an old variable which is not used, delete the variable
+   2. If the variable should be used, modify the type or name according to the error displayed. Often these can be modified by appending the word "State" to the variable name
+
+## V3 Visuals
+
+The November 2025 release of Gum introduces an improvement to the default code-only controls. These new V3 visuals add the following improvements over V2:
+
+* Simplified styling - new color properties can be assigned without needing to make changes to states.
+* Better consistency with the Gum UI tool - code-only projects look even more similar to projects which use the Gum UI tool
+
+### Upgrading to V3
+
+To upgrade a project to V3, make the changes listed below.
+
+First, find the initialize method and change it from V2 to V3:
+
+```csharp
+//GumUI.Initialize(this, DefaultVisualsVersion.V2);
+GumUI.Initialize(this, DefaultVisualsVersion.V3);
+```
+
+Replace usage of the default Visuals namespace with V3:
+
+```csharp
+//using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
+```
+
+Replace any explicit qualification of Visuals. If you are relying on namespaces this is not necessary, but if you are using explicit visual types, you need to switch to the V3 version. For example, the following code shows how to change a ButtonVisual reference from V2 to V3:
+
+```csharp
+var button = new Button();
+//var buttonVisual = (Gum.Forms.DefaultVisuals.ButtonVisual)button.Visual;
+var buttonVisual = (Gum.Forms.DefaultVisuals.V3.ButtonVisual)button.Visual;
+```
+
+Optionally, your code can remove state assignments on visual colors since V3 now simplifies setting colors.
+
+For example, the following code can be used to set a button's background:
+
+```csharp
+var button = new Button();
+button.AddToRoot();
+var buttonVisual = (ButtonVisual)button.Visual;
+buttonVisual.BackgroundColor = Color.Red;
+```
+
+For more information on working with the new Visuals, see the [Code-Only Styling](../../code/styling/code-only-styling/) section;
+
+Adjust the dimensions, positions of controls if desired. Some of the controls have changed size to match the Gum UI tool more closely. Note that a few names have also been changed to match the naming of the visuals in the Gum tool.
+
+**The following changes have been made to V3:**
+
+<table><thead><tr><th width="256.7999267578125">Visual Element</th><th width="121.3997802734375">Variable</th><th width="115.400146484375">V2</th><th>V3</th></tr></thead><tbody><tr><td>CheckBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>ListBoxItem</td><td>Height</td><td>0</td><td>6 (RelativeToChildren)</td></tr><tr><td>ListBox</td><td>Height</td><td>150</td><td>256</td></tr><tr><td>ListBox</td><td>Width</td><td>150</td><td>256</td></tr><tr><td>ListBox.FocusedIndicator</td><td>Y</td><td>-2</td><td>2 (fixed overlap bug)</td></tr><tr><td>MenuItem</td><td>Width</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem</td><td>Height</td><td>6</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem.TextInstance</td><td>X</td><td>2</td><td>0</td></tr><tr><td>MenuItem.TextInstance</td><td>Height</td><td>2</td><td>0 (still RelativeToChildren)</td></tr><tr><td>MenuItem<br>.SubmenuIndicatorInstance</td><td>Width</td><td>2</td><td>0</td></tr><tr><td>PasswordBox</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Height</td><td>32</td><td>24</td></tr><tr><td>RadioButton</td><td>Background</td><td>Background</td><td>Renamed to RadioBackground</td></tr><tr><td>RadioButton</td><td>InnerCheck</td><td>InnerCheck</td><td>Renamed to Radio</td></tr><tr><td>TextBox</td><td>Width</td><td>100</td><td>256</td></tr></tbody></table>

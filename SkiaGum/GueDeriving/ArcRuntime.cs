@@ -9,7 +9,7 @@ namespace SkiaGum.GueDeriving;
 
 public class ArcRuntime : SkiaShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => ContainedArc;
+    protected override Renderables.RenderableShapeBase ContainedRenderable => ContainedArc;
 
     Arc mContainedArc;
     Arc ContainedArc
@@ -31,8 +31,8 @@ public class ArcRuntime : SkiaShapeRuntime
 
     public float Thickness
     {
-        get => ContainedArc.Thickness;
-        set => ContainedArc.Thickness = value;
+        get => base.StrokeWidth;
+        set => base.StrokeWidth = value;
     }
 
     public float StartAngle

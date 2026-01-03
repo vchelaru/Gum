@@ -10,7 +10,7 @@ namespace SkiaGum.GueDeriving;
 public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
 {
     #region Contained Renderable
-    protected override RenderableBase ContainedRenderable => ContainedRoundedRectangle;
+    protected override Renderables.RenderableShapeBase ContainedRenderable => ContainedRoundedRectangle;
 
     RoundedRectangle mContainedRoundedRectangle;
     RoundedRectangle ContainedRoundedRectangle

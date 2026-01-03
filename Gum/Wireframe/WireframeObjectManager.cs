@@ -4,7 +4,8 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
 using Gum.Services;
-using Gum.Services.Dialogs; 
+using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 using Gum.ToolStates;
 using GumRuntime;
 using RenderingLibrary;
@@ -29,72 +30,61 @@ public enum InstanceFetchType
 
 #endregion
 
-public partial class WireframeObjectManager
+public partial class WireframeObjectManager : IWireframeObjectManager
 {
-    #region Fields
-
-    ElementSave mElementShowing;
-
-    static WireframeObjectManager mSelf;
-
-    GraphicalUiElementManager gueManager;
-    private LocalizationManager _localizationManager;
-
-    #endregion
-
     #region Properties
 
     public List<GraphicalUiElement> AllIpsos { get; private set; } = new List<GraphicalUiElement>();
 
-    public ElementSave ElementShowing
+    public ElementSave? ElementShowing
     {
         get;
         private set;
     }
 
-    [Obsolete("Inject this through constructors, or grab from locator at the root of plugins/views")]
-    public static WireframeObjectManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new WireframeObjectManager();
-            }
-            return mSelf;
-        }
-    }
 
-    public GraphicalUiElement RootGue
+    public GraphicalUiElement? RootGue
     {
         get;
         private set;
     }
 
-    public System.Windows.Forms.Cursor AddCursor { get; private set; }
 
     #endregion
 
     #region Constructor/Initialize
 
 
-    FontManager _fontManager;
-    private ISelectedState _selectedState;
-    private IDialogService _dialogService;
-    private IGuiCommands _guiCommands;
+    private readonly FontManager _fontManager;
+    private readonly ISelectedState _selectedState;
+    private readonly IDialogService _dialogService;
+    private readonly IGuiCommands _guiCommands;
+    GraphicalUiElementManager gueManager;
+    private LocalizationManager _localizationManager;
+    private readonly PluginManager _pluginManager;
 
-    public WireframeObjectManager() { }
-
-    // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
-    public void Initialize()
+    public WireframeObjectManager(FontManager fontManager,
+        ISelectedState selectedState,
+        IDialogService dialogService,
+        IGuiCommands guiCommands,
+        LocalizationManager localizationManager, 
+        PluginManager pluginManager)
     {
-        _fontManager = Locator.GetRequiredService<FontManager>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _fontManager = fontManager;
+        _selectedState = selectedState;
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
+        _localizationManager = localizationManager;
+        _pluginManager = pluginManager;
 
         gueManager = new GraphicalUiElementManager();
+    }
+
+    // This method will eventually move up to the constructor, but we can't do it yet until we get rid of all Self usages
+    // Update - self usages are gone, but not sure if these can be moved up, need to run some tests
+    public void Initialize()
+    {
+
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
         GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
 
@@ -109,7 +99,7 @@ public partial class WireframeObjectManager
 
 #if GUM
         containedObject =
-            Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
+            _pluginManager.CreateRenderableForType(type);
 #endif
 
         return containedObject;
@@ -142,7 +132,7 @@ public partial class WireframeObjectManager
 
     public void RefreshAll(bool forceLayout, bool forceReloadTextures = false)
     {
-        ElementSave elementSave = null;
+        ElementSave? elementSave = null;
 
         // If mulitple elements are selected then we can't show them all, so act as if nothing is selected.
         if(_selectedState.SelectedElements.Count() == 1)
@@ -153,16 +143,12 @@ public partial class WireframeObjectManager
 
         RefreshAll(forceLayout, forceReloadTextures, elementSave);
 
-        PluginManager.Self.WireframeRefreshed();
+        _pluginManager.WireframeRefreshed();
     }
 
-    private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
+    private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave? elementSave)
     {
         bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
-        //bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
-        bool shouldReloadTextures =
-            false;
-            //forceReloadTextures || elementSave != ElementShowing;
 
         if (elementSave == null || elementSave.IsSourceFileMissing)
         {
@@ -194,7 +180,7 @@ public partial class WireframeObjectManager
 
                 try
                 {
-                    RootGue = PluginManager.Self.CreateGraphicalUiElement(elementSave);
+                    RootGue = _pluginManager.CreateGraphicalUiElement(elementSave);
 
                     if(RootGue != null)
                     {
@@ -326,7 +312,12 @@ public partial class WireframeObjectManager
             var stringId = forcedId;
             if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is IText asText)
             {
-                stringId = asText.RawText;
+                stringId = asText.StoredMarkupText;
+                if(string.IsNullOrEmpty(stringId))
+                {
+                    stringId =  asText.RawText;
+                }
+
             }
 
             // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
@@ -372,7 +363,7 @@ public partial class WireframeObjectManager
     }
 
 
-    public GraphicalUiElement GetSelectedRepresentation()
+    public GraphicalUiElement? GetSelectedRepresentation()
     {
         if (_selectedState.SelectedIpso == null)
         {
@@ -468,7 +459,8 @@ public partial class WireframeObjectManager
     /// </summary>
     /// <param name="representation">The representation in question.</param>
     /// <returns>The InstanceSave or null if one isn't found.</returns>
-    public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, List<ElementWithState> elementStack)
+    public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, 
+        List<ElementWithState> elementStack)
     {
         ElementSave selectedElement = _selectedState.SelectedElement;
 
@@ -482,7 +474,8 @@ public partial class WireframeObjectManager
         return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
     }
 
-    public InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
+    public InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer, 
+        string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
     {
         if (instanceContainer == null)
         {

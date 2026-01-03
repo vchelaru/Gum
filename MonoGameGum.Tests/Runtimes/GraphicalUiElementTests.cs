@@ -18,6 +18,20 @@ using System.Collections.ObjectModel;
 namespace MonoGameGum.Tests.Runtimes;
 public class GraphicalUiElementTests
 {
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_ShouldCreateValidInstance()
+    {
+        GraphicalUiElement sut = new();
+
+
+        sut.Children.ShouldNotBeNull();
+    }
+
+    #endregion
+
     #region Animation
     static (ComponentSave element, AnimationRuntime animation) CreateElementAndAnimation()
     {
@@ -171,7 +185,56 @@ public class GraphicalUiElementTests
     }
     #endregion
 
-    #region Parent and ParentChanged 
+    #region Parent/Children related
+
+    [Fact]
+    public void AddChild_ShouldSetParentOnChild()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        parent.AddChild(child);
+        child.Parent.ShouldBe(parent);
+    }
+
+    [Fact]
+    public void AddChild_ShouldPopulateChildren()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        parent.AddChild(child);
+        parent.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ShouldAddToParentsChildren()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        child.Parent = parent;
+        parent.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ShouldRemoveFromOldParentsChildren()
+    {
+        ContainerRuntime parent1 = new ();
+        ContainerRuntime parent2 = new ();
+        ContainerRuntime child = new ();
+        parent1.AddChild(child);
+        child.Parent = parent2;
+        parent1.Children.ShouldNotContain(child);
+        parent2.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ToNull_ShouldRemoveFromOldParentsChildren()
+    {
+        ContainerRuntime parent1 = new ();
+        ContainerRuntime child = new ();
+        parent1.AddChild(child);
+        child.Parent = null;
+        parent1.Children.ShouldNotContain(child);
+    }
 
     [Fact]
     public void ParentChanged_ShouldRaiseWhenParentChanges()
@@ -213,6 +276,21 @@ public class GraphicalUiElementTests
         parent.Children.Remove(child);
         parentChangedCount.ShouldBeGreaterThan(startingPoint);
 
+    }
+
+    [Fact]
+    public void ChildrenClear_ShouldSetChildParentsToNull()
+    {
+        ContainerRuntime parent = new ();
+
+        ContainerRuntime child1 = new ();
+        parent.AddChild(child1);
+
+        child1.Parent.ShouldBe(parent);
+
+        parent.Children!.Clear();
+
+        child1.Parent.ShouldBeNull();
     }
 
     #endregion
@@ -366,6 +444,72 @@ public class GraphicalUiElementTests
         child2.AbsoluteTop.ShouldBe(100);
     }
 
+    [Fact]
+    public void MaxHeight_ShouldNotWrapVerticalStack_UntilExceeded()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.MaxHeight = 300;
+        parent.WrapsChildren = true;
+
+        for(int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new ();
+            child.Height = 100;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+        }
+
+        parent.GetAbsoluteHeight().ShouldBe(200);
+    }
+
+    [Fact]
+    public void MaxHeight_ShouldWrapVerticalStack_IfExceeded()
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.Name = "Parent";
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.MaxHeight = 150;
+        parent.WrapsChildren = true;
+
+        for (int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new();
+            child.Name = "Child " + i;
+            child.Height = 100;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+        }
+
+        parent.GetAbsoluteHeight().ShouldBe(100);
+    }
+
+    [Fact]
+    public void MaxWidth_ShouldWrapHorizontalStack_IfExceeded()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.Name = "Parent";
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 150;
+        parent.WrapsChildren = true;
+
+        for (int i = 0; i < 2; i++)
+        {
+            ContainerRuntime child = new();
+            child.Name = "Child " + i;
+            child.Width = 100;
+            child.WidthUnits = DimensionUnitType.Absolute;
+            parent.AddChild(child);
+        }
+
+        parent.GetAbsoluteWidth().ShouldBe(100);
+    }
 
     #endregion
 

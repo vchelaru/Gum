@@ -4,7 +4,7 @@
 
 Render targets and blend modes can be combined to create a silhouette of any shape. This example uses a Sprite with transparency. It uses the Bear.png file:
 
-<figure><img src="../../../.gitbook/assets/Bear.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/Bear (1).png" alt=""><figcaption></figcaption></figure>
 
 ## Creating a Silhouette Component
 

@@ -17,6 +17,14 @@ using ToolsUtilitiesStandard.Helpers;
 
 namespace FlatRedBall.SpecializedXnaControls;
 
+public enum ZoomDirection
+{
+    // Zoom in, making everything bigger
+    ZoomIn,
+    // Zoom out, making everything smaller
+    ZoomOut
+}
+
 public class ImageRegionSelectionControl : GraphicsDeviceControl
 {
     #region Fields
@@ -245,6 +253,9 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         }
     }
 
+    /// <summary>
+    /// A zoom value in percent, where 100 means 100% zoom (native scale)
+    /// </summary>
     public int ZoomValue
     {
         get
@@ -265,10 +276,8 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
     /// </summary>
     public IList<int> AvailableZoomLevels
     {
-        set
-        {
-            mAvailableZoomLevels = value;
-        }
+        get => mAvailableZoomLevels;
+        set => mAvailableZoomLevels = value;
     }
 
     public int ZoomIndex
@@ -349,6 +358,11 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
         base.Initialize();
 
+    }
+
+    public void DisableHotkeyPanning()
+    {
+        mCameraPanningLogic.IsHotkeyPanningEnabled = false;
     }
 
     public void CreateDefaultZoomLevels()
@@ -447,6 +461,18 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
     private void HandlePanning()
     {
+        var cameraWidth = this.Camera.ClientWidth / this.Camera.Zoom;
+        var cameraHeight = this.Camera.ClientHeight / this.Camera.Zoom;
+
+        this.Camera.X = Math.Max(Camera.X, -cameraWidth / 2.0f);
+        this.Camera.Y = Math.Max(Camera.Y, -cameraHeight / 2.0f);
+
+        if(CurrentTexture != null)
+        {
+            this.Camera.X = Math.Min(Camera.X, CurrentTexture.Width + -cameraWidth / 2f);
+            this.Camera.Y = Math.Min(Camera.Y, CurrentTexture.Height + -cameraHeight / 2f);
+        }
+
         if (Panning != null)
         {
             Panning();
@@ -500,45 +526,70 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
     {
         if (mAvailableZoomLevels != null)
         {
-            int index = ZoomIndex;
-            if (index != -1)
+            if (ZoomIndex != -1)
             {
                 float value = e.Delta;
 
-                float worldX = mCursor.GetWorldX(mManagers);
-                float worldY = mCursor.GetWorldY(mManagers);
 
-                float oldCameraX = Camera.X;
-                float oldCameraY = Camera.Y;
+                ZoomDirection? zoomDirection = null;
 
-                float oldZoom = ZoomValue / 100.0f;
-
-                bool didZoom = false;
-
-                if (value < 0 && index < mAvailableZoomLevels.Count - 1)
+                if (value < 0)
                 {
-                    ZoomValue = mAvailableZoomLevels[ index + 1];
-
-                    didZoom = true;
+                    zoomDirection = ZoomDirection.ZoomOut;
                 }
-                else if (value > 0 && index > 0)
+                else if (value > 0)
                 {
-                    ZoomValue = mAvailableZoomLevels[ index - 1];
-
-                    didZoom = true;
+                    zoomDirection = ZoomDirection.ZoomIn;
                 }
 
-
-                if (didZoom)
+                if(zoomDirection != null)
                 {
-                    AdjustCameraPositionAfterZoom(worldX, worldY, 
-                        oldCameraX, oldCameraY, oldZoom, ZoomValue, Camera);
-
-                    if (MouseWheelZoom != null)
-                    {
-                        MouseWheelZoom(this, null);
-                    }
+                    HandleZoom(zoomDirection.Value, true);
                 }
+            }
+        }
+    }
+
+    public void HandleZoom(ZoomDirection zoomDirection, bool considerCursor)
+    {
+        bool didZoom = false;
+        float oldZoom = ZoomValue / 100.0f;
+        int index = ZoomIndex;
+
+        float worldX = mCursor.GetWorldX(mManagers);
+        float worldY = mCursor.GetWorldY(mManagers);
+
+        if (!considerCursor)
+        {
+            worldX = Camera.X + Camera.ClientWidth / (2 * Camera.Zoom);
+            worldY = Camera.Y + Camera.ClientHeight / (2 * Camera.Zoom);
+        }
+
+        if (zoomDirection == ZoomDirection.ZoomIn && index > 0)
+        {
+            ZoomValue = mAvailableZoomLevels[index - 1];
+
+            didZoom = true;
+        }
+        else if (zoomDirection == ZoomDirection.ZoomOut && index < mAvailableZoomLevels.Count - 1)
+        {
+            ZoomValue = mAvailableZoomLevels[index + 1];
+
+            didZoom = true;
+        }
+
+
+        if (didZoom)
+        {
+            float oldCameraX = Camera.X;
+            float oldCameraY = Camera.Y;
+
+            AdjustCameraPositionAfterZoom(worldX, worldY,
+                oldCameraX, oldCameraY, oldZoom, ZoomValue, Camera);
+
+            if (MouseWheelZoom != null)
+            {
+                MouseWheelZoom(this, null);
             }
         }
     }

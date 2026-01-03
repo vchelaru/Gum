@@ -18,6 +18,7 @@ using Gum.Undo;
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Services.Dialogs;
+using Gum.Wireframe;
 
 namespace Gum.Managers;
 
@@ -35,7 +36,7 @@ public partial class PropertyGridManager
     private readonly IDialogService _dialogService;
     private readonly LocalizationManager _localizationManager;
     private readonly ITabManager _tabManager;
-    
+    private readonly WireframeObjectManager _wireframeObjectManager;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -115,6 +116,7 @@ public partial class PropertyGridManager
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
+        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -648,7 +650,7 @@ public partial class PropertyGridManager
         var stateSave = _selectedState.SelectedStateSave;
         if (stateSave != null)
         {
-            GetMemberCategoriesForState(instanceOwner, instance, categories, stateSave, stateCategory);
+            GetMemberCategoriesForState(instanceOwner, instance, ref categories, stateSave, stateCategory);
         }
         else if(stateCategory != null)
         {
@@ -658,10 +660,10 @@ public partial class PropertyGridManager
 
     }
 
-    private void GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    private void GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, ref List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
     {
         categories.Clear();
-        mPropertyGridDisplayer.GetCategories(instanceOwner, instance, categories, stateSave, stateSaveCategory);
+        categories = mPropertyGridDisplayer.GetCategories(instanceOwner, instance, categories, stateSave, stateSaveCategory);
 
         foreach (var category in categories)
         {
@@ -674,7 +676,6 @@ public partial class PropertyGridManager
             }
         }
 
-        ReorganizeCategories(categories);
         CustomizeVariables(categories, stateSave, instanceOwner, instance);
     }
 
@@ -761,22 +762,7 @@ public partial class PropertyGridManager
         //}
     }
 
-    private static void ReorganizeCategories(List<MemberCategory> categories)
-    {
-        MemberCategory categoryToMove = categories.FirstOrDefault(item => item.Name == "Position");
-        if (categoryToMove != null)
-        {
-            categories.Remove(categoryToMove);
-            categories.Insert(1, categoryToMove);
-        }
 
-        categoryToMove = categories.FirstOrDefault(item => item.Name == "Dimensions");
-        if (categoryToMove != null)
-        {
-            categories.Remove(categoryToMove);
-            categories.Insert(2, categoryToMove);
-        }
-    }
 
     internal void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
     {

@@ -12,6 +12,8 @@ namespace WpfDataUi.DataTypes
 
         public string Name { get; set; }
 
+        public System.Windows.Media.Brush? HeaderColor { get; set; } = null;
+
         public Visibility Visibility
         {
             get
@@ -79,6 +81,8 @@ namespace WpfDataUi.DataTypes
         {
             get; set;
         } = true;
+
+
 
         #endregion
 

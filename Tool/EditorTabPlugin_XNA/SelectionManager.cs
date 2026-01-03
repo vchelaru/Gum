@@ -79,7 +79,7 @@ public class SelectionManager
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public bool IsOverBody
     {
@@ -185,6 +185,9 @@ public class SelectionManager
         set => highlightManager.AreHighlightsVisible = value;
     }
 
+    // This is used to punch through the selected and go back up to the top. More info here:
+    // https://github.com/vchelaru/Gum/issues/1810
+    public bool IsComponentNoInstanceSelected => _selectedState.SelectedInstance == null && _selectedState.SelectedComponent != null;
 
     #endregion
 
@@ -195,7 +198,7 @@ public class SelectionManager
         EditingManager editingManager, 
         IDialogService dialogService,
         HotkeyManager hotkeyManager,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         WireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
@@ -331,7 +334,7 @@ public class SelectionManager
                             elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
 
                             representationOver =
-                                GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
+                                GetRepresentationAt(worldXAt, worldYAt, IsComponentNoInstanceSelected, elementStack);
 
                             if (representationOver != null)
                             {
@@ -392,7 +395,7 @@ public class SelectionManager
         highlightManager.UpdateHighlightObjects();
     }
 
-    public GraphicalUiElement GetRepresentationAt(float x, float y, bool skipSelected, List<ElementWithState> elementStack)
+    public GraphicalUiElement GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
     {
         GraphicalUiElement ipsoOver = null;
 
@@ -400,7 +403,7 @@ public class SelectionManager
         var selectedRepresentations = _wireframeObjectManager.GetSelectedRepresentations();
 
         int indexToStartAt = -1;
-        if (skipSelected)
+        if (trySkipSelected)
         {
             if (selectedRepresentations?.Length > 0)
             {
@@ -478,6 +481,12 @@ public class SelectionManager
             }
 
             #endregion
+        }
+
+        // If we didn't find anything and we are skipping selected, try again without skipping selected:
+        if(trySkipSelected && ipsoOver == null)
+        {
+            ipsoOver = GetRepresentationAt(x, y, trySkipSelected: false, elementStack);
         }
 
         // Right now we're going to assume that we only want to select IPSOs that represent the current
@@ -733,7 +742,7 @@ public class SelectionManager
 
 
                 IRenderableIpso representation =
-                    GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick, elementStack);
+                    GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick || IsComponentNoInstanceSelected, elementStack);
                 bool hasChanged = true;
 
                 if (representation != null)

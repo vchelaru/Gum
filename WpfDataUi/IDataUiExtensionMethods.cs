@@ -8,7 +8,7 @@ namespace WpfDataUi;
 
 // This class lets us inspect the Click event for equality so we only have to replace items if they really do differ.
 // By doing this, Refresh calls can be much faster:
-class MenuItemExposedClick : MenuItem
+public class MenuItemExposedClick : MenuItem
 {
     public IDataUi Owner { get; set; }
 

@@ -19,14 +19,15 @@ public class ProjectCommands
 {
     #region Fields
 
-    static ProjectCommands mSelf;
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
 
     #endregion
     
-    public ProjectCommands(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands)
+    public ProjectCommands(ISelectedState selectedState, 
+        IGuiCommands guiCommands, 
+        IFileCommands fileCommands)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;

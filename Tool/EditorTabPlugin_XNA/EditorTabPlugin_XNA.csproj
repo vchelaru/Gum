@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
+
+
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<LangVersion>12.0</LangVersion>
@@ -9,6 +11,8 @@
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<DefineConstants>GUM; MONOGAME</DefineConstants>
+		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -30,21 +34,11 @@
 		<Compile Update="Views\WireframeControl.cs">
 			<SubType>Component</SubType>
 		</Compile>
-		<Compile Update="Views\WireframeEditControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
-		<Compile Update="Views\WireframeEditControl.designer.cs">
-			<DependentUpon>WireframeEditControl.cs</DependentUpon>
-		</Compile>
-	</ItemGroup>
-	<ItemGroup>
-		<EmbeddedResource Update="Views\WireframeEditControl.resx">
-			<DependentUpon>WireframeEditControl.cs</DependentUpon>
-		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
 		<ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace SkiaGum.GueDeriving;
 public class CircleRuntime : SkiaShapeRuntime
 {
-    protected override RenderableBase ContainedRenderable => ContainedCircle;
+    protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
 
     Circle mContainedCircle;
     Circle ContainedCircle
@@ -31,6 +31,8 @@ public class CircleRuntime : SkiaShapeRuntime
         {
             SetContainedObject(new Circle());
             ContainedCircle.StrokeWidth = 1;
+            StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+
             ContainedCircle.IsFilled = false;
             this.Color = SKColors.White;
             Width = 100;

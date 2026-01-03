@@ -1,4 +1,4 @@
-﻿using Gum.Managers;
+﻿using Gum.Services.Fonts;
 using Moq.AutoMock;
 using System;
 using System.Collections.Generic;

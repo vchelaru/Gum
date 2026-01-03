@@ -80,7 +80,8 @@ public partial class InteractiveGue : BindableGue
     /// </summary>
     public static double CurrentGameTime { get; internal set; }
 
-    static IInputReceiver currentInputReceiver;
+    public static InteractiveGue? LastVisualPushed { get; set; }
+    static IInputReceiver? currentInputReceiver;
 
     
     public static IInputReceiver? CurrentInputReceiver
@@ -169,77 +170,24 @@ public partial class InteractiveGue : BindableGue
     #region Events 
 
     /// <summary>
-    /// Event raised whenever this is clicked by a cursor. A click occurs
+    /// Event raised when this is clicked by a cursor. A click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// </summary>
     public event EventHandler? Click;
 
+    /// <summary>
+    /// Event raised when this is clicked by a cursor. A click occurs
+    /// when the cursor is over this and is first pushed, then released.
+    /// Preview events are received by parents before children, and if the event
+    /// is handled, children do not receive the event.
+    /// </summary>
     public event EventHandler<RoutedEventArgs>? ClickPreview;
-    public event EventHandler<RoutedEventArgs>? PushPreview;
 
     /// <summary>
-    /// Event raised whenever this is double-clicked by a cursor. A double-click occurs
+    /// Event raised when this is double-clicked by a cursor. A double-click occurs
     /// when the cursor is over this and the left mouse button is clicked twice in rapid succession.
     /// </summary>
     public event EventHandler? DoubleClick;
-
-    /// <summary>
-    /// Event which is raised whenever this is right-clicked by a cursor. A right-click occurs
-    /// when the cursor is over this and is first pushed, then released.
-    /// </summary>
-    public event EventHandler? RightClick;
-
-    /// <summary>
-    /// Event which is raised whenever this is pushed by a cursor. A push occurs
-    /// when the cursor is over this and the left mouse button is pushed (not down last frame,
-    /// down this frame).
-    /// </summary>
-    public event EventHandler? Push;
-
-    /// <summary>
-    /// Event which is raised whenever this loses a push. A push occurs when the
-    /// cursor is over this window and the left mouse button is pushed. A push is lost
-    /// if the left mouse button is released or if the user moves the cursor so that it
-    /// is no longer over this while the mouse button is pressed. 
-    /// </summary>
-    /// <remarks>
-    /// LosePush is often used to change the state of a button back to its regular state.
-    /// </remarks>
-    //public event EventHandler LosePush;
-    public event EventHandler? LosePush
-    {
-        add
-        {
-            _losePush += value;
-            TrySubscribeToLosePushEvents();
-        }
-        remove
-        {
-            _losePush -= value;
-        }
-    }
-    private EventHandler? _losePush;
-
-
-    /// <summary>
-    /// Event raised when the cursor first moves over this object.
-    /// </summary>
-    public event EventHandler? RollOn;
-    /// <summary>
-    /// Event when the cursor first leaves this object.
-    /// </summary>
-    public event EventHandler? RollOff;
-    /// <summary>
-    /// Event raised every frame the cursor is over this object and the Cursor has changed position.
-    /// This event is not raized if the cursor has moved off of the object. For events raised when the 
-    /// cursor is not over this instance, see Dragging.
-    /// </summary>
-    public event EventHandler? RollOver;
-
-    /// <summary>
-    /// Event raised every frame the cursor is over this object whether the Cursor has changed positions or not.
-    /// </summary>
-    public event EventHandler? HoverOver;
 
     /// <summary>
     /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, 
@@ -255,26 +203,94 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler? EnabledChange;
 
     /// <summary>
-    /// Eent raised when the mouse wheel has been scrolled while the cursor is over this instance.
-    /// This event is raised bottom-up, with the root object having the opportunity to handle the roll over.
-    /// If a control sets the argument RoutedEventArgs Handled to true, the children objects 
-    /// will not have this event raised.
+    /// Event raised every frame the cursor is over this object whether the cursor has changed positions or not.
+    /// </summary>
+    public event EventHandler? HoverOver;
+
+    private EventHandler? _losePush;
+    /// <summary>
+    /// Event raised when this loses a push. A push occurs when the
+    /// cursor is over this window and the left mouse button is pushed. A push is lost
+    /// if the left mouse button is released or if the user moves the cursor so that it
+    /// is no longer over this while the mouse button is pressed. 
+    /// </summary>
+    /// <remarks>
+    /// LosePush is often used to change the state of a button back to its regular state.
+    /// </remarks>
+    public event EventHandler? LosePush
+    {
+        add
+        {
+            _losePush += value;
+            TrySubscribeToLosePushEvents();
+        }
+        remove
+        {
+            _losePush -= value;
+        }
+    }
+
+    /// <summary>
+    /// Event raised when the mouse wheel has been scrolled while the cursor is over this instance.
+    /// This event is first raised on children, then bubbles up to parents. If a control sets the argument
+    /// Handled to true, then parent objects will not receive this event.
     /// </summary>
     public event Action<object, RoutedEventArgs>? MouseWheelScroll;
 
     /// <summary>
-    /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
-    /// child object having the opportunity to handle the roll over first. If a control sets the argument 
-    /// RoutedEventArgs Handled to true,
-    /// then parent objects will not have this event raised.
+    /// Event raised when this is pushed by a cursor. A push occurs
+    /// when the cursor is over this and the left mouse button is pushed (not down last frame,
+    /// down this frame). Preview events are received by parents before children, and if the event
+    /// is handled, children do not receive the event.
     /// </summary>
-    public event Action<object, RoutedEventArgs>? RollOverBubbling;
+    public event EventHandler<RoutedEventArgs>? PushPreview;
+
+    /// <summary>
+    /// Event raised when this is pushed by a cursor. A push occurs
+    /// when the cursor is over this and the left mouse button is pushed (not down last frame,
+    /// down this frame).
+    /// </summary>
+    public event EventHandler? Push;
 
     /// <summary>
     /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
     /// This can be used to detect the end of a drag operation, or to reset the state of a button.
     /// </summary>
     public event EventHandler? RemovedAsPushed;
+
+    /// <summary>
+    /// Event raised when this is right-clicked by a cursor. A right-click occurs
+    /// when the cursor is over this and is first pushed, then released.
+    /// </summary>
+    public event EventHandler? RightClick;
+
+    /// <summary>
+    /// Event raised when the cursor first leaves this object.
+    /// </summary>
+    public event EventHandler? RollOff;
+
+    /// <summary>
+    /// Event raised when the cursor first moves over this object. This is only received if the
+    /// cursor is moved directly over this object. If it is instead moved over a child object
+    /// which has its own events, then the parent will receive this event.
+    /// </summary>
+    public event EventHandler? RollOn;
+
+    /// <summary>
+    /// Event raised every frame the cursor is over this object and the Cursor has changed position.
+    /// This event is not raised if the cursor has moved off of the object. For events raised when the 
+    /// cursor is not over this instance, see Dragging.
+    /// </summary>
+    public event EventHandler? RollOver;
+
+    /// <summary>
+    /// Event raised when the mouse rolls over this instance. Bubbling events are raised top-down, with the
+    /// child object having the opportunity to handle the roll over first. If a control sets the argument 
+    /// RoutedEventArgs Handled to true,
+    /// then parent objects will not receive this event raised.
+    /// </summary>
+    public event Action<object, RoutedEventArgs>? RollOverBubbling;
+
 
     public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
     public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  
@@ -336,6 +352,8 @@ public partial class InteractiveGue : BindableGue
                     if(args.Handled)
                     {
                         cursor.WindowPushed = asInteractive;
+                        LastVisualPushed = asInteractive;
+
                         handledActions.HandledClickPreview = true;
                     }
                 }
@@ -455,6 +473,7 @@ public partial class InteractiveGue : BindableGue
                         {
 
                             cursor.WindowPushed = asInteractive;
+                            LastVisualPushed = asInteractive;
 
                             if (asInteractive.Push != null)
                                 asInteractive.Push(asInteractive, EventArgs.Empty);
@@ -770,6 +789,12 @@ public partial class InteractiveGue : BindableGue
     // See DoNextClickAndPushActions for details on why this is needed
     static List<Action> nextClickActionHoldingList = new();
 
+    public static void ClearNextClickActions()
+    {
+        nextClickActionHoldingList.Clear();
+        nextClickActions.Clear();
+    }
+
     /// <summary>
     /// Adds an action to be called the next time the Cursor performs a click action
     /// (the left button was down last frame and is released this frame). The argument
@@ -819,7 +844,7 @@ public partial class InteractiveGue : BindableGue
             }
         }
 
-        // Whenever AddNextPushAction or AddNextClickAction are called, the user expects:
+        // When AddNextPushAction or AddNextClickAction are called, the user expects:
         // 1. That it will not be raised immediately if added inside a push/click event
         // 2. That it will have access to the WindowPushed/WindowOver
         // This means that we cannot immediately run new events, but that all events should
@@ -881,7 +906,7 @@ public interface IInputReceiver
 
     /// <summary>
     /// Called every frame before OnFocusUpdate with the root-most control calling this first, then
-    /// down to its children. If this is handled, children do not recieve this event.
+    /// down to its children. If this is handled, children do not receive this event.
     /// </summary>
     /// <param name="args">Args, which if IsHandled is set to true prevent children from receiving this </param>
     void OnFocusUpdatePreview(RoutedEventArgs args);
@@ -948,7 +973,11 @@ public interface ICursor
     bool MiddleClick { get; }
     bool MiddleDoubleClick { get; }
 
+    /// <summary>
+    /// Returns the visual that was last pushed.
+    /// </summary>
     InteractiveGue? WindowPushed { get; set; }
+
     InteractiveGue? VisualRightPushed { get; set; }
     InteractiveGue? WindowOver { get; set; }
 
@@ -956,16 +985,22 @@ public interface ICursor
 }
 
 public interface IInputReceiverKeyboard
+    //<T> where T : struct, System.Enum
 {
     bool IsShiftDown { get; }
     bool IsCtrlDown { get; }
     bool IsAltDown { get; }
 
     // FRB has this, but we don't have access to XNA-likes here, so we can't include it
-    //IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+    // Update - we can make this use int instead of the specific enum, and then cast it to
+    // the enum based on the platform
+    // Update2 - this is going to change to a specific key type when we get the generic type in
+    IEnumerable<int> KeysTyped { get; }
+
 
     string GetStringTyped();
 }
+
 
 
 class HandledActions
@@ -1076,6 +1111,7 @@ public static class GueInteractiveExtensionMethods
         }
         if(cursor.PrimaryDown == false)
         {
+            InteractiveGue.LastVisualPushed = null;
             cursor.WindowPushed = null;
         }
         if(cursor.SecondaryDown == false)

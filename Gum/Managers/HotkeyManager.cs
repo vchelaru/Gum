@@ -7,6 +7,7 @@ using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -202,9 +203,11 @@ public class HotkeyManager
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
+    private readonly DeleteLogic _deleteLogic;
+    private readonly ReorderLogic _reorderLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
-    
+
     public HotkeyManager(IGuiCommands guiCommands, 
         ISelectedState selectedState, 
         IElementCommands elementCommands,
@@ -213,7 +216,9 @@ public class HotkeyManager
         SetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
         CopyPasteLogic copyPasteLogic,
-        IUndoManager undoManager)
+        IUndoManager undoManager,
+        DeleteLogic deleteLogic,
+        ReorderLogic reorderLogic)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -224,6 +229,8 @@ public class HotkeyManager
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
         _undoManager = undoManager;
+        _deleteLogic = deleteLogic;
+        _reorderLogic = reorderLogic;
     }
 
     #region App Wide Keys
@@ -236,7 +243,7 @@ public class HotkeyManager
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
-            _ when ZoomDirection() is { } dir => () => _uiSettingsService.Scale += dir,
+            _ when ZoomDirection() is { } dir => () => _uiSettingsService.BaseFontSize += dir,
             _ => null
         };
 
@@ -249,8 +256,8 @@ public class HotkeyManager
         return match is not null;
 
         double? ZoomDirection() =>
-            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 0.1 :
-            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -0.1 :
+            ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
+            ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 :
             null;
     }
 
@@ -326,12 +333,12 @@ public class HotkeyManager
     {
         if(ReorderUp.IsPressed(e))
         {
-            ReorderLogic.Self.MoveSelectedInstanceBackward();
+            _reorderLogic.MoveSelectedInstanceBackward();
             e.Handled = true;
         }
         if(ReorderDown.IsPressed(e))
         {
-            ReorderLogic.Self.MoveSelectedInstanceForward();
+            _reorderLogic.MoveSelectedInstanceForward();
             e.Handled = true;
         }
     }
@@ -340,7 +347,8 @@ public class HotkeyManager
     {
         if (Delete.IsPressed(e))
         {
-            DeleteLogic.Self.HandleDeleteCommand();
+            using var undoLock = _undoManager.RequestLock();
+            _deleteLogic.HandleDeleteCommand();
 
             e.Handled = true;
             e.SuppressKeyPress = true;
@@ -412,8 +420,19 @@ public class HotkeyManager
         HandleReorder(e);
 
         HandleGoToDefinition(e);
-
     }
+
+    public void HandleKeyUpWireframe(KeyEventArgs e)
+    {
+        if (_isNudging)
+        {
+            _isNudging = false;
+            _undoManager.RecordUndo();
+            _fileCommands.TryAutoSaveCurrentElement();
+        }
+    }
+
+    bool _isNudging;
 
     public bool ProcessCmdKeyWireframe(ref Message msg, Keys keyData)
     {
@@ -444,6 +463,11 @@ public class HotkeyManager
 
         if (nudgeX != 0 || nudgeY != 0)
         {
+            if(!_isNudging)
+            {
+                _isNudging = true;
+                _undoManager.RecordState();
+            }
             var instance = _selectedState.SelectedInstance;
 
             var element = _selectedState.SelectedElement;
@@ -466,9 +490,6 @@ public class HotkeyManager
             {
                 PluginManager.Self.VariableSet(element, instance, "Y", oldY);
             }
-
-
-            _fileCommands.TryAutoSaveCurrentElement();
         }
         return handled;
     }

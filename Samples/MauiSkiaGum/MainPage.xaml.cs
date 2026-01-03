@@ -1,4 +1,6 @@
-﻿using SkiaGum.GueDeriving;
+﻿using MauiSkiaGum.Components;
+using SkiaGum.Content;
+using SkiaGum.GueDeriving;
 using SkiaGum.Maui;
 using SkiaSharp;
 
@@ -22,6 +24,7 @@ namespace MauiSkiaGum
             SkiaGumCanvasView.AddChild(MainStack);
             MainStack.Dock(Gum.Wireframe.Dock.Fill);
             MainStack.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            MainStack.WrapsChildren = true;
             MainStack.StackSpacing = 16;
 
             var roundedRectangle = new RoundedRectangleRuntime();
@@ -48,6 +51,9 @@ namespace MauiSkiaGum
             text.Text = "Click the button to add circles below:";
             text.Color = SKColors.Black;
             text.FontSize = 24;
+
+            var component = new TestComponentRuntime();
+            MainStack.AddChild(component);
 
             SkiaGumCanvasView.InvalidateSurface();
         }

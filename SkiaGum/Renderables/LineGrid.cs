@@ -3,7 +3,7 @@ using System;
 
 namespace SkiaGum.Renderables; 
 
-public class LineGrid: RenderableBase 
+public class LineGrid: RenderableShapeBase 
 {
     public ushort CellWidth { get; set; }
     public ushort CellHeight { get; set; }

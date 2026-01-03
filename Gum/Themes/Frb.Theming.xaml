@@ -1,0 +1,10 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:themes="clr-namespace:Gum.Themes">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Converters.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <themes:AppScale x:Key="Scale" BaseFontSize="12" />
+</ResourceDictionary>

@@ -5,8 +5,8 @@ namespace Gum.DataTypes
 {
     public class InstanceSave
     {
-        public string Name;
-        public string BaseType;
+        public string Name = string.Empty;
+        public string BaseType = string.Empty;
         public bool DefinedByBase;
 
         public bool Locked
@@ -41,7 +41,7 @@ namespace Gum.DataTypes
 
         public override string ToString()
         {
-            ElementSave parentContainer = ParentContainer;
+            ElementSave? parentContainer = ParentContainer;
 
             if (parentContainer == null)
             {

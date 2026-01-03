@@ -1,11 +1,12 @@
-﻿using Gum.Wireframe;
-using Gum.Forms.Controls;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
+using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MonoGameGum.Input;
+using ToolsUtilities;
 
 namespace MonoGameGum.Tests;
 public class BaseTestClass : IDisposable
@@ -47,9 +48,19 @@ public class BaseTestClass : IDisposable
         FrameworkElement.MainCursor = new Cursor();
 
         InteractiveGue.CurrentInputReceiver = null;
+        InteractiveGue.ClearNextClickActions();
 
-        GumService.Default.Root.Children.Clear();
-        GumService.Default.ModalRoot.Children.Clear();
-        GumService.Default.PopupRoot.Children.Clear();
+        GumService.Default.Root.Children!.Clear();
+        GumService.Default.ModalRoot.Children!.Clear();
+        GumService.Default.PopupRoot.Children!.Clear();
+
+        CustomSetPropertyOnRenderable.LocalizationService = null;
+
+        RenderingLibrary.Content.LoaderManager.Self.CacheTextures = false;
+        RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
+
+        FileManager.CustomGetStreamFromFile = null;
+
+        RenderingLibrary.Graphics.Text.Customizations.Clear();
     }
 }

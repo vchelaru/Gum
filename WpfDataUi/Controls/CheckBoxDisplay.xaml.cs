@@ -54,12 +54,10 @@ namespace WpfDataUi.Controls
             if (force)
             {
                 this.ForceRefreshContextMenu(CheckBox.ContextMenu);
-                this.ForceRefreshContextMenu(StackPanel.ContextMenu);
             }
             else
             {
                 this.RefreshContextMenu(CheckBox.ContextMenu);
-                this.RefreshContextMenu(StackPanel.ContextMenu);
             }
         }
 
@@ -129,7 +127,14 @@ namespace WpfDataUi.Controls
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
 
-            SetForeground(DesiredForegroundBrush);
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+
+                    SetForeground(DesiredForegroundBrush);
+                }
+            });
 
             RefreshIsEnabled();
 
@@ -190,7 +195,13 @@ namespace WpfDataUi.Controls
             {
                 this.TrySetValueOnInstance();
 
-                SetForeground(DesiredForegroundBrush);
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (!DataUiGrid.GetOverridesIsDefaultStyling(this))
+                    {
+                        SetForeground(DesiredForegroundBrush);
+                    }
+                });
             }
         }
 

@@ -41,6 +41,8 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using Gum.Converters;
+
 #endif
 
 
@@ -62,6 +64,15 @@ public enum TabbingFocusBehavior
     FocusableIfInputReceiver,
     SkipOnTab
 }
+
+
+public enum SizeMode
+{
+    Fixed,
+    Auto
+}
+
+
 #endregion
 
 #region Events
@@ -83,6 +94,7 @@ public class FrameworkElement : INotifyPropertyChanged
 {
     #region Fields/Properties
 
+
 #if FRB
     public static Cursor MainCursor => GuiManager.Cursor;
 
@@ -100,8 +112,16 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
-#if MONOGAME || KNI || FNA
-    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new List<IInputReceiverKeyboardMonoGame>();
+#if !FRB
+
+#if RAYLIB
+    public static List<IInputReceiverKeyboard> KeyboardsForUiControl { get; private set; } = new ();
+#else
+    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new ();
+
+#endif
+
+
 #endif
 
 #endif
@@ -212,46 +232,6 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public float AbsoluteTop => Visual.AbsoluteTop;
 
-    public float Height
-    {
-        get { return Visual.Height; }
-        set
-        {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new Exception("NaN value not supported for FrameworkElement Height");
-            }
-            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
-            {
-                throw new Exception();
-            }
-#endif
-            Visual.Height = value;
-        }
-    }
-    public float Width
-    {
-        get { return Visual.Width; }
-        set
-        {
-#if FULL_DIAGNOSTICS
-            if (float.IsNaN(value))
-            {
-                throw new Exception("NaN value not supported for FrameworkElement Width");
-            }
-            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
-            {
-                throw new Exception();
-            }
-            if(Visual == null)
-            {
-                throw new NullReferenceException($"Cannot set Width because Visual hasn't yet been set on this {GetType()}");
-            }
-#endif
-            Visual.Width = value;
-        }
-    }
 
 #if FRB
     /// <summary>
@@ -269,13 +249,116 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public float X
     {
-        get { return Visual.X; }
-        set { Visual.X = value; }
+        get => Visual.X; 
+        set => Visual.X = value;
     }
+
+    public global::Gum.Converters.GeneralUnitType XUnits
+    {
+        get => Visual.XUnits;
+        set => Visual.XUnits = value;
+    }
+
     public float Y
     {
-        get { return Visual.Y; }
-        set { Visual.Y = value; }
+        get => Visual.Y;
+        set => Visual.Y = value;
+    }
+
+    public global::Gum.Converters.GeneralUnitType YUnits
+    {
+        get => Visual.YUnits;
+        set => Visual.YUnits = value;
+    }
+
+    public HorizontalAlignment XOrigin
+    {
+        get => Visual.XOrigin;
+        set => Visual.XOrigin = value;
+    }
+
+    public VerticalAlignment YOrigin
+    {
+        get => Visual.YOrigin;
+        set => Visual.YOrigin = value;
+    }
+
+
+    public float Height
+    {
+        get => Visual.Height;
+        set
+        {
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
+            {
+                throw new Exception("NaN value not supported for FrameworkElement Height");
+            }
+            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
+            {
+                throw new Exception();
+            }
+#endif
+            Visual.Height = value;
+        }
+    }
+    public global::Gum.DataTypes.DimensionUnitType HeightUnits
+    {
+        get => Visual.HeightUnits;
+        set => Visual.HeightUnits = value;
+    }
+
+    public float? MinHeight
+    {
+        get => Visual.MinHeight;
+        set => Visual.MinHeight = value;
+    }
+
+    public float? MaxHeight
+    {
+        get => Visual.MaxHeight;
+        set => Visual.MaxHeight = value;
+    }
+
+    public float Width
+    {
+        get => Visual.Width;
+        set
+        {
+#if FULL_DIAGNOSTICS
+            if (float.IsNaN(value))
+            {
+                throw new Exception("NaN value not supported for FrameworkElement Width");
+            }
+            if (float.IsPositiveInfinity(value) || float.IsNegativeInfinity(value))
+            {
+                throw new Exception();
+            }
+            if (Visual == null)
+            {
+                throw new NullReferenceException($"Cannot set Width because Visual hasn't yet been set on this {GetType()}");
+            }
+#endif
+            Visual.Width = value;
+        }
+    }
+
+    public global::Gum.DataTypes.DimensionUnitType WidthUnits
+    {
+        get => Visual.WidthUnits;
+        set => Visual.WidthUnits = value;
+    }
+
+    public float? MinWidth
+    {
+        get => Visual.MinWidth;
+        set => Visual.MinWidth = value;
+    }
+
+    public float? MaxWidth
+    {
+        get => Visual.MaxWidth;
+        set => Visual.MaxWidth = value;
     }
 
     public void Anchor(Anchor anchor) => Visual.Anchor(anchor);
@@ -737,13 +820,14 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <summary>
     /// Calls the loaded event. This should not be called in custom code, but instead is called by Gum
     /// </summary>
-    public virtual void CallLoaded() => Loaded?.Invoke(this, null);
+    public virtual void CallLoaded() => Loaded?.Invoke(this, EventArgs.Empty);
 
     protected void RaiseKeyDown(KeyEventArgs e)
     {
         KeyDown?.Invoke(this, e);
     }
 
+#if FRB
     /// <summary>
     /// Every-frame logic. This will automatically be called if this element is added to the FrameworkElementManager
     /// </summary>
@@ -751,6 +835,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
 
     }
+#endif
 
     public void RepositionToKeepInScreen()
     {
@@ -777,6 +862,8 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
+    #region Visual Changed Methods
+
     protected virtual void ReactToVisualChanged() { }
 
     protected virtual void RefreshInternalVisualReferences() { }
@@ -789,6 +876,10 @@ public class FrameworkElement : INotifyPropertyChanged
     {
 
     }
+
+    #endregion
+
+    #region GetVisual Methods
 
     public T? GetVisual<T>(string? name = null) where T : GraphicalUiElement
     {
@@ -808,7 +899,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             foreach (var child in currentItem.Children)
             {
-                var found = GetVisual<T>(name, child as GraphicalUiElement);
+                var found = GetVisual<T>(name, child);
                 if (found != null)
                 {
                     return found;
@@ -819,7 +910,7 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             foreach(var item in currentItem.ContainedElements)
             {
-                var found = GetVisual<T>(name, item as GraphicalUiElement);
+                var found = GetVisual<T>(name, item);
                 if (found != null)
                 {
                     return found;
@@ -845,7 +936,7 @@ public class FrameworkElement : INotifyPropertyChanged
     public GraphicalUiElement? GetVisual(string name) =>
         Visual.GetGraphicalUiElementByName(name) as GraphicalUiElement;
 
-
+    #endregion
 
     public StateSave GetState(string stateName)
     {
@@ -882,9 +973,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
-    protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
+    protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
-        OnPropertyChanged(uiPropertyName);
+        OnPropertyChanged(uiPropertyName ?? string.Empty);
     }
 
     #endregion
@@ -964,7 +1055,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public virtual bool IsTabNavigationEnabled => true;
 
-#if !FRB && (MONOGAME || KNI || FNA)
+#if !FRB
 
     /// <summary>
     /// List of key combinations that will trigger shifting focus
@@ -1035,7 +1126,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <param name="requestingElement">The element which is requesting the tab. This can be a parent of the current element. If null is passed, then this element is 
     /// treated as the origin of the tab action.</param>
     /// <param name="loop">Whether to loop around to the beginning or end if at the last focusable item.</param>
-    public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null, bool loop = false)
+    public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement? requestingElement = null, bool loop = false)
     {
         requestingElement = requestingElement ?? this;
 
@@ -1063,18 +1154,20 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <param name="loop"></param>
     /// <returns></returns>
     // This should stay public so that it can be called with a null requestingVisual to select the first child.
-    public static bool HandleTab(TabDirection tabDirection, InteractiveGue requestingVisual,
-        InteractiveGue parentVisual, bool shouldAskParent, bool loop)
+    public static bool HandleTab(TabDirection tabDirection, InteractiveGue? requestingVisual,
+        InteractiveGue? parentVisual, bool shouldAskParent, bool loop)
     {
         void UnFocusRequestingVisual()
         {
-            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement)
+            if (requestingVisual?.FormsControlAsObject is FrameworkElement requestingFrameworkElement && 
+                // this can happen if the only input receiver requests next tab and it loops back on itself.
+                InteractiveGue.CurrentInputReceiver != requestingFrameworkElement)
             {
                 requestingFrameworkElement.IsFocused = false;
             }
         }
 
-        IList<GraphicalUiElement> requestingVisualSiblings = parentVisual?.Children.Cast<GraphicalUiElement>().ToList();
+        IList<GraphicalUiElement>? requestingVisualSiblings = parentVisual?.Children;
         if (requestingVisualSiblings == null && requestingVisual != null)
         {
             requestingVisualSiblings = requestingVisual.ElementGueContainingThis?.ContainedElements.Where(item => item.Parent == null).ToList();
@@ -1143,7 +1236,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
                 if (CanElementBeFocused(elementAtI))
                 {
-                    elementAtI.IsFocused = true;
+                    elementAtI!.IsFocused = true;
 
                     UnFocusRequestingVisual();
 
@@ -1238,7 +1331,7 @@ public class FrameworkElement : INotifyPropertyChanged
         return didChildHandle;
     }
 
-    static bool CanElementBeFocused(FrameworkElement element)
+    static bool CanElementBeFocused(FrameworkElement? element)
     {
         return element is IInputReceiver &&
                     element.IsVisible == true &&
@@ -1256,6 +1349,28 @@ public class FrameworkElement : INotifyPropertyChanged
     /// to refresh the Visual's appearance.
     /// </summary>
     public virtual void UpdateState() { }
+
+    public void UpdateStateRecursively()
+    {
+        UpdateStateRecursively(this.Visual);
+    }
+
+    private static void UpdateStateRecursively(GraphicalUiElement gue)
+    { 
+        if(gue is InteractiveGue interactiveGue &&
+            interactiveGue.FormsControlAsObject is FrameworkElement frameworkElement)
+        {
+            frameworkElement.UpdateState();
+        }
+
+        if (gue.Children != null)
+        {
+            foreach (var child in gue.Children)
+            {
+                UpdateStateRecursively(child);
+            }
+        }
+    }
 
 
     [Obsolete("Use DisabledStateName")]
@@ -1283,7 +1398,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public const string SelectedStateName = "Selected";
 
-
+    // These are used in ScrollBarVisual for the OrientationCategory
+    public const string VerticalStateName = "Vertical";
+    public const string HorizontalStateName = "Horizontal";
 
     protected string GetDesiredState()
     {
@@ -1375,22 +1492,23 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             isPushInputHeldDown = isPushInputHeldDown || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
         }
+#endif
 
-#if (MONOGAME || KNI) && !FRB
+#if !FRB
         if (!isPushInputHeldDown)
         {
             for (int i = 0; i < KeyboardsForUiControl.Count; i++)
             {
                 foreach (var combo in FrameworkElement.ClickCombos)
                 {
-                    if (combo.IsComboDown())
+                    if (combo.IsComboDown() && InteractiveGue.LastVisualPushed == this.Visual)
                     {
                         isPushInputHeldDown = true;
+                        break;
                     }
                 }
             }
         }
-#endif
 #endif
         return isPushInputHeldDown;
     }
@@ -1430,10 +1548,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
         foreach(var child in gue.Children)
         {
-            if(child is GraphicalUiElement childGue)
-            {
-                CallLoadedRecursively(childGue);
-            }
+            CallLoadedRecursively(child);
         }
     }
 

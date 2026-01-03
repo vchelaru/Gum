@@ -6,10 +6,33 @@
 
 set -e
 
-GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
+GUM_WINE_PREFIX_PATH="${1:-$HOME/.wine_gum_dotnet8/}"
+INSTALL_LOG_FILE="/tmp/gum_install.log"
+
+write_log_section_header() {
+    echo "#############################################" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "$@" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "#############################################" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "" >> "$INSTALL_LOG_FILE" 2>&1
+}
+
+run_and_write_log() {
+    eval "$@" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "" >> "$INSTALL_LOG_FILE" 2>&1
+}
+
+run_winetricks() {
+    write_log_section_header "Running WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" winetricks \"$@\""
+    run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks "$@"
+}
+
+echo "" > $INSTALL_LOG_FILE # clear the log file
+write_log_section_header "Starting installation process..."
 
 echo "This is an experimental script."
-echo "Script last updated on the 4th of October 2025!"
+echo "Script last updated on the 23rd of November 2025!"
+echo "This will set up a new Wine prefix for gum in $GUM_WINE_PREFIX_PATH"
+echo "Install logs will be written to $INSTALL_LOG_FILE"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -18,7 +41,7 @@ case "$choice" in
   * ) echo "Invalid option. Exiting."; exit 1;;
 esac
 
-echo "Verifying that WINE is installed..."
+echo -e "\nVerifying that WINE is installed..."
 WINE_VERSION=$(wine --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
 INSTALL_OR_UPGRADE_NEEDED="N"
 if [[ ! "${WINE_VERSION}" ]]; then
@@ -28,26 +51,27 @@ elif [[ "${WINE_VERSION}" -lt 10 ]]; then
     echo "Wine is version [${WINE_VERSION}] and must be at least 10!"
     INSTALL_OR_UPGRADE_NEEDED="Y"
 else
-    echo "Wine version [${WINE_VERSION}] found!" 
+    echo "Wine version [${WINE_VERSION}] found!"
 fi
+
+DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[0-9\.]/}" 2>/dev/null || name ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
+VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release 2>/dev/null || echo "${OSTYPE//[A-Za-z]/}" 2>/dev/null | cut -d '.' -f1 || sw_vers --productVersion ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
 
 # Install or update wine
 if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
+    echo ""
     read -p "Do you wish to install the latest version of wine? (Y/n): " choice
     case "$choice" in
         ""|y|Y ) echo "INFO: Installing latest Wine";;
         n|N ) echo "WARN: Unable to continue, GUM requires Wine on Linux!"; exit 0;;
           * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
     esac
-    
-    DISTRO=$(( lsb_release -si 2>/dev/null || grep '^ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | tr '[:upper:]'  '[:lower:]')
-    VERSION=$(( lsb_release -sr 2>/dev/null || grep '^VERSION_ID=' /etc/os-release ) | cut -d= -f2 | tr -d '"' | cut -c1-2 )
 
     case "$DISTRO" in
         ubuntu)
             if [[ "$VERSION" == "22" ]]; then
                 echo "Installing Wine for Ubuntu 22.xx"
-                sudo dpkg --add-architecture i386 
+                sudo dpkg --add-architecture i386
                 sudo mkdir -pm755 /etc/apt/keyrings
                 wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
                 sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
@@ -55,7 +79,7 @@ if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
                 sudo apt install --install-recommends winehq-stable -y
             elif [[ "$VERSION" == "24" ]]; then
                 echo "Installing Wine for Ubuntu 24.xx"
-                sudo dpkg --add-architecture i386 
+                sudo dpkg --add-architecture i386
                 sudo mkdir -pm755 /etc/apt/keyrings
                 wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
                 sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
@@ -90,16 +114,40 @@ if [[ "${INSTALL_OR_UPGRADE_NEEDED}" == "Y" ]]; then
             ;;
 
         darwin)
-            echo "Detected macOS"
-            echo "Please install Wine-stable manually:"
-            echo "brew install --cask --no-quarantine wine-stable"
-            exit 1
+            echo -e "\nDetected macOS Version ${VERSION}"
+
+            echo -e "\nVerifying that BREW is installed..."
+            BREW_VERSION=$(brew --version 2>/dev/null | grep -Eo '[0-9]+' | head -n1)
+            BREW_INSTALL_REQUIRED="N"
+            if [[ ! "${BREW_VERSION}" ]]; then
+                echo "Brew is not installed!"
+                BREW_INSTALL_REQUIRED="Y"
+            else
+                echo "Brew version [${BREW_VERSION}] found!"
+            fi
+
+            if [[ "${BREW_INSTALL_REQUIRED}" == "Y" ]]; then
+                read -p "Do you wish to install brew (home brew)? (Y/n): " choice
+                case "$choice" in
+                    ""|y|Y ) echo "INFO: Installing brew";;
+                    n|N ) echo "WARN: Unable to continue, GUM requires Wine on Mac which is installed with brew!"; exit 0;;
+                    * ) echo "ERROR: Invalid option. Exiting."; exit 1;;
+                esac
+
+                echo -e "\nAttempting to install brew..."
+
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+
+
+            echo -e "\nAttempting to install Wine-stable"
+            brew install --cask --no-quarantine wine-stable
             ;;
 
         *)
-            echo "Unsupported or unknown distribution: $DISTRO"
-  			echo "Please install wine manually!"
-			echo "https://duckduckgo.com/?t=h_&q=Insert+Your+Linux+Distro+Here+How+To+Install+Wine"
+            echo "ERROR: Unsupported or unknown distribution: $DISTRO"
+  			echo "ERROR: Please install wine manually!"
+			echo "ERROR: https://duckduckgo.com/?t=h_&q=Insert+Your+Linux+Distro+Here+How+To+Install+Wine"
             exit 1
             ;;
     esac
@@ -109,7 +157,7 @@ fi
 ### Check if winetricks is installed
 ################################################################################
 if ! winetricks --version &> /dev/null; then
-    echo "Winetricks is not installed. Attempting to install..."
+    echo -e "\nWinetricks is not installed. Attempting to install..."
 
     case "$DISTRO" in
         ubuntu|linuxmint)
@@ -119,12 +167,10 @@ if ! winetricks --version &> /dev/null; then
             sudo dnf install -y winetricks
             ;;
         darwin)
-            echo "Please install Winetricks manually:"
-            echo "brew install winetricks"
-            exit 1
+            brew install winetricks
             ;;
         *)
-            echo "Unsupported distribution for automated winetricks install."
+            echo "ERROR: Unsupported distribution [${DISTRO}] for automated winetricks install."
             exit 1
             ;;
     esac
@@ -133,21 +179,76 @@ fi
 echo "Winetricks is installed"
 
 ################################################################################
-### Install windows allfonts with winetricks.  They can take a few minutes to finish, please be patient
+### Check if winetricks is newer than version 2024
+###   The 2025 version has the new dotnetdesktop8 verb
 ################################################################################
-echo "Installing all fonts using winetricks"
-echo "An installer dialog may appear, follow the steps to install"
-echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks allfonts &> /dev/null
+echo "Verifying winetricks version..."
+WINETRICKS_YEAR=$(winetricks --version 2>/dev/null | grep -Eo '[0-9]{4}' | head -n1)
+if [[ ! "${WINETRICKS_YEAR}" || "${WINETRICKS_YEAR}" -le 2024 ]]; then
+    echo "Winetricks version is older than 2024 or could not be determined."
+    echo " - A newer version is required for dotnet 8. Attempting to update..."
+    echo " - Attempting to self update winetricks..."
+
+    case "$DISTRO" in
+        ubuntu|linuxmint)
+            sudo winetricks --self-update
+            ;;
+        fedora|nobara)
+            sudo winetricks --self-update
+            ;;
+        darwin)
+            brew winetricks --self-update
+            ;;
+        *)
+            echo "Unsupported distribution [${DISTRO}] for automated winetricks update."
+            exit 1
+            ;;
+    esac
+else
+    echo "Winetricks version is new enough ${WINETRICKS_YEAR}."
+fi
+
+
+################################################################################
+### Make sure gum prefix is clear
+################################################################################
+if [ -d "$GUM_WINE_PREFIX_PATH" ]; then
+    echo "Error: The gum wine prefix directory '$GUM_WINE_PREFIX_PATH' already exists."
+    echo "This script can only be used on the initial creation of the gum wine prefix."
+    echo "Call '~/bin/gum.sh upgrade' if upgrading the gum version, or call this script with a different directory to setup gum in (e.g. './setup_gum_linux.sh ~/home/.other_gum_wine_prefix')"
+    exit 1
+fi
+
+################################################################################
+### Install two fonts with winetricks.
+################################################################################
+echo "Checking and Installing Some fonts using winetricks"
+echo " - They may take a few minutes to install, please be patient"
+run_winetricks arial
+run_winetricks tahoma
+run_winetricks courier
+run_winetricks calibri
+#run_winetricks micross # not available in 2024 winetricks
+echo " - Fonts installed"
 
 ################################################################################
 ### Install dotnet48 with winetricks. This will cause two installation prompts
 ### to appear.  They can take a few minutes to finish, please be patient
 ################################################################################
-echo "Installing .NET Framework 4.8 using winetricks"
-echo "Two installer dialogs will appear, follow the steps for both to install"
-echo "They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
+#echo "Installing .NET Framework 4.8 using winetricks"
+#echo " - Two installer dialogs will appear, follow the steps for both to install"
+#echo " - They may take a few minutes to install, please be patient"
+#$RUN_WINETRICKS dotnet48
+
+################################################################################
+### Install dotnetdeskop8 with winetricks. This will cause two installation prompts
+### to appear.  They can take a few minutes to finish, please be patient
+################################################################################
+
+echo "Installing .NET 8 using winetricks"
+echo " - Two installer dialogs will appear, follow the steps for both to install"
+echo " - They may take a few minutes to install, please be patient"
+run_winetricks dotnetdesktop8
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
@@ -155,8 +256,15 @@ WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
 ################################################################################
 echo "Installing GUM Tool..."
 GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
-wget -O "$GUM_ZIP_FILE" "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
-    && echo "Download completed." || { echo "Download failed."; exit 1; }
+GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
+
+if ! curl --version &> /dev/null; then
+    wget -O "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
+        && echo " - Download completed." || { echo "Download failed using WGET."; exit 1; }
+else
+    curl -L -o "$GUM_ZIP_FILE" "$GUM_ZIP_DOWNLOAD" \
+        && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
+fi
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
@@ -166,18 +274,16 @@ GUM_WINE_EXTRACT_DIR="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum"
 rm -rf "$GUM_WINE_EXTRACT_DIR"
 unzip -q "$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
     && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
-echo "Cleaning up..."
+echo " - Cleaning up..."
 rm -f "$GUM_ZIP_FILE" \
     && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
 
-echo "Adding Gum to path"
 
 ################################################################################
-### Define the script content
+### Define the script variables
 ################################################################################
+echo "Creating gum script and adding to path"
 GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f)
-SCRIPT_CONTENT="#!/bin/bash
-WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" wine \"$GUM_EXE_PATH\""
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
@@ -185,9 +291,56 @@ WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" wine \"$GUM_EXE_PATH\""
 mkdir -p ~/bin &> /dev/null
 
 ################################################################################
-### Create the Gum script in the ~/bin directory
+### Create the Gum script in the ~/bin directory using a HEREDOC
+### Some variables are escaped lke GUM_ZIP_FILE so the variable is expanded at runtime
 ################################################################################
-printf "%s\n" "$SCRIPT_CONTENT" > ~/bin/gum
+
+cat > ~/bin/gum <<EOF
+#!/bin/bash
+
+# Setup Env vars (harmless if unsupported)
+export WINE_NO_WM_DECORATION=1
+export PROTON_NO_WM_DECORATION=1
+
+# If no arguments were passed in, then just run gum
+if [ \$# -eq 0 ]; then
+
+    # Attempt to add registry keys
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\X11 Driver" /v Decorated /t REG_SZ /d N /f
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Mac Driver" /v Decorated /t REG_SZ /d N /f
+
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine "$GUM_EXE_PATH"
+    exit 0
+fi
+
+# If the first argument was 'upgrade', then upgrade gum
+if [ "\$1" = "upgrade" ]; then
+    GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
+    GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
+
+    if ! curl --version &> /dev/null; then
+        wget -O "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
+            && echo " - Download completed." || { echo "Download failed using WGET."; exit 1; }
+    else
+        curl -L -o "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
+            && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
+    fi
+
+    rm -rf "$GUM_WINE_EXTRACT_DIR"
+    unzip -q "\$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
+        && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
+    echo " - Cleaning up..."
+    rm -f "\$GUM_ZIP_FILE" \
+        && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
+
+    echo "Latest version of gum extracted successfully."
+    exit 0
+fi
+
+# Unknown argument
+echo "Unknown argument: \$1"
+exit 1
+EOF
 
 ################################################################################
 ### Make the Gum script executable
@@ -220,11 +373,17 @@ elif [[ $SHELL == *"fish"* ]]; then
     fi
     echo "Reloading config.fish, please wait..."
     source ~/.config/fish/config.fish &> /dev/null
+else
+    echo "WARNING: Unable to determine shell type. Please ensure ~/bin is in your PATH manually."
 fi
 
 ################################################################################
 ### Finished
 ################################################################################
-echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
-echo "Pro Tip: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
-echo "You may need to close and reopen the terminal if it doesn't work at first, due to the update to your PATH."
+echo "SUCCESS: Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'gum'."
+echo "TIP: To start Gum: in a terminal type ~/bin/gum"
+echo "TIP: You may need to restart the terminal or your computer if it doesn't work at first"
+echo "-------------------"
+echo "OPTIONAL: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
+echo "-------------------"
+echo "Enjoy using GUM!"

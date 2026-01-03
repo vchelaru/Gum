@@ -1,12 +1,20 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+
+#if RAYLIB
+using Gum.Renderables;
+using Raylib_cs;
+
+#else
+using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary.Math.Geometry;
+#endif
 
 namespace Gum.Wireframe
 {
@@ -19,28 +27,31 @@ namespace Gum.Wireframe
             IRenderable containedObject = null;
             switch (baseType)
             {
-#if MONOGAME || KNI || FNA
+#if MONOGAME || KNI || FNA || RAYLIB
 
                 case "Container":
                 case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
-                    if (GraphicalUiElement.ShowLineRectangles)
+
+                    var showComponentLineRectangles = GraphicalUiElement.ShowLineRectangles;
+
+#if RAYLIB
+                    showComponentLineRectangles = false;
+#endif
+
+                    if (showComponentLineRectangles)
                     {
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
-                        lineRectangle.Color = System.Drawing.Color.FromArgb(
+                        lineRectangle.Color = System.Drawing.Color.FromArgb(255,255,255,255);
 #if GUM
+                        lineRectangle.IsDotted = true;
+
+                        lineRectangle.Color = System.Drawing.Color.FromArgb(
                             255,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
                             Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB
-#else
-                        255,255,255,255
-#endif
                             );
-
-#if GUM
-                        lineRectangle.IsDotted = true;
 #endif
-
                         containedObject = lineRectangle;
                     }
                     else
@@ -68,7 +79,7 @@ namespace Gum.Wireframe
                     containedObject = solidRectangle;
                     break;
                 case "Sprite":
-                    Texture2D texture = null;
+                    Texture2D? texture = null;
 
                     Sprite sprite = new Sprite(texture);
                     containedObject = sprite;
@@ -82,7 +93,8 @@ namespace Gum.Wireframe
                     break;
                 case "Text":
                     {
-                        Text text = new Text(systemManagers, "");
+                        Text text = new Text(systemManagers);
+                        text.RawText = string.Empty;
                         containedObject = text;
                     }
                     break;

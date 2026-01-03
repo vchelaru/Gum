@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace SkiaGum.Renderables;
 
-class Polygon : RenderableBase
+class Polygon : RenderableShapeBase
 {
     public bool IsClosed { get; set; } = true;
 

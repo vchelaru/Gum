@@ -7,7 +7,6 @@ namespace SkiaGum.Content
 {
     public class EmbeddedResourceContentLoader : IContentLoader
     {
-        public Func<string, string> AdjustContentName;
         public void AddDisposable(string contentName, IDisposable disposable)
         {
             throw new NotImplementedException();
@@ -36,21 +35,21 @@ namespace SkiaGum.Content
 
         private SKSvg LoadSKSvg(string contentName)
         {
-            var modifiedContentName = AdjustContentName?.Invoke(contentName) ?? contentName;
+            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
 
             return SkiaResourceManager.GetSvg(modifiedContentName);
         }
 
         private SKBitmap LoadSKBitmap(string contentName)
         {
-            var modifiedContentName = AdjustContentName?.Invoke(contentName) ?? contentName;
+            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
 
             return SkiaResourceManager.GetSKBitmap(modifiedContentName);
         }
 
         private SKTypeface LoadSKTypeface(string contentName)
         {
-            var modifiedContentName = AdjustContentName?.Invoke(contentName) ?? contentName;
+            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
 
             return SkiaResourceManager.GetTypeface(modifiedContentName);
         }

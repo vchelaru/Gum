@@ -20,6 +20,12 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
           submodules: recursive # allows us to download kni and fna linked submodules
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'   # matches your net10.0 TFM
+
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
@@ -38,8 +44,9 @@ jobs:
         #if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path .\.sonar\scanner -ItemType Directory
-          dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+          $dir = ".\.sonar\scanner"
+          if (-not (Test-Path $dir)) { New-Item -Path $dir -ItemType Directory | Out-Null }
+          dotnet tool update dotnet-sonarscanner --tool-path $dir
       - name: Install dotnet-coverage
         run: dotnet tool install --global dotnet-coverage
       - name: Build and analyze

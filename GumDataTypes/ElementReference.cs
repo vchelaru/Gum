@@ -103,11 +103,14 @@ namespace Gum.DataTypes
                 containedReferenceName = ToolsUtilities.FileManager.RelativeDirectory + containedReferenceName.Original;
             }
 
-            var isMobileOrWeb = false;
+            var usesTitleContainer = false;
 #if ANDROID || IOS
-            isMobileOrWeb = true;
+            usesTitleContainer = true;
 #elif NET6_0_OR_GREATER
-            isMobileOrWeb = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS() || System.OperatingSystem.IsBrowser();
+            usesTitleContainer = System.OperatingSystem.IsAndroid() ||
+                                 System.OperatingSystem.IsIOS() ||
+                                 System.OperatingSystem.IsBrowser() ||
+                                 FileManager.CustomGetStreamFromFile != null;
 #endif
 
 
@@ -120,7 +123,7 @@ namespace Gum.DataTypes
 #if ANDROID || IOS
             else if (containedReferenceName != null && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #else
-            else if (  ((isMobileOrWeb && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+            else if (  ((usesTitleContainer && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #endif
             {
 

@@ -16,7 +16,22 @@ public class Text : IRenderableIpso, IVisible, IText
 {
     #region Fields/Properties
 
-    public static decimal ScreenDensity = 1;
+    [Obsolete("Use GlobalTextScale instead")]
+    public static decimal ScreenDensity
+    {
+        get => GlobalTextScale;
+        set => GlobalTextScale = value;
+    }
+
+    /// <summary>
+    /// Global font scale, used to increase font size according to user settings, such as 
+    /// font scale at the OS level.
+    /// </summary>
+    public static decimal GlobalTextScale
+    {
+        get;
+        set;
+    }
 
     public bool IsRenderTarget => false;
 
@@ -131,6 +146,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
     Vector2 Position;
     IRenderableIpso mParent;
+    public string? StoredMarkupText => null;
 
     public IRenderableIpso Parent
     {
@@ -152,7 +168,7 @@ public class Text : IRenderableIpso, IVisible, IText
         }
     }
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -331,7 +347,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
         this.Visible = true;
         Color = SKColors.Black;
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
     }
 
     public void Render(ISystemManagers managers)
@@ -490,36 +506,29 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public void PreRender() { }
 
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
+
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent =>((IRenderableIpso)this).Parent as IVisible;
 
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    public string BatchKey => string.Empty;
 
     #endregion
 }

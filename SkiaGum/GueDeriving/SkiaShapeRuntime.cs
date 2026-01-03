@@ -9,7 +9,7 @@ namespace SkiaGum.GueDeriving;
 
 public abstract class SkiaShapeRuntime : BindableGue
 {
-    protected abstract RenderableBase ContainedRenderable { get; }
+    protected abstract Renderables.RenderableShapeBase ContainedRenderable { get; }
 
     #region Solid colors
 
@@ -46,7 +46,6 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     #region Gradient Colors
 
-    #region Gradient Colors
 
     public int Blue1
     {
@@ -66,6 +65,24 @@ public abstract class SkiaShapeRuntime : BindableGue
         set => ContainedRenderable.Red1 = value;
     }
 
+    public int Alpha1
+    {
+        get => ContainedRenderable.Alpha1;
+        set => ContainedRenderable.Alpha1 = value;
+    }
+
+    public SKColor Color1
+    {
+        get => new SKColor((byte)Red1, (byte)Green1, (byte)Blue1, (byte)Alpha1);
+        set
+        {
+            Red1 = value.Red;
+            Green1 = value.Green;
+            Blue1 = value.Blue;
+            Alpha1 = value.Alpha;
+        }
+    }
+
 
     public int Blue2
     {
@@ -83,6 +100,24 @@ public abstract class SkiaShapeRuntime : BindableGue
     {
         get => ContainedRenderable.Red2;
         set => ContainedRenderable.Red2 = value;
+    }
+
+    public int Alpha2
+    {
+        get => ContainedRenderable.Alpha2;
+        set => ContainedRenderable.Alpha2 = value;
+    }
+
+    public SKColor Color2
+    {
+        get => new SKColor((byte)Red2, (byte)Green2, (byte)Blue2, (byte)Alpha2);
+        set
+        {
+            Red2 = value.Red;
+            Green2 = value.Green;
+            Blue2 = value.Blue;
+            Alpha2 = value.Alpha;
+        }
     }
 
     public float GradientX1
@@ -163,7 +198,6 @@ public abstract class SkiaShapeRuntime : BindableGue
         set => ContainedRenderable.GradientOuterRadiusUnits = value;
     }
 
-    #endregion
 
 
     #endregion
@@ -176,6 +210,9 @@ public abstract class SkiaShapeRuntime : BindableGue
         set => ContainedRenderable.IsFilled = value;
     }
 
+    // This should NOT modify the contained renderable stroke width directly.
+    // Rather it should be a value that does not affect the underlying object until
+    // pre-render happens where the StrokeWidthUnits can be adjusted too:
     public float StrokeWidth
     {
         get;
@@ -249,23 +286,23 @@ public abstract class SkiaShapeRuntime : BindableGue
 
     public override void PreRender()
     {
-        if(this.EffectiveManagers != null)
+        var strokeWidth = StrokeWidth;
+
+        switch (StrokeWidthUnits)
         {
-            var camera = this.EffectiveManagers.Renderer.Camera;
-            var strokeWidth = StrokeWidth;
-
-            switch(StrokeWidthUnits)
-            {
-                case DimensionUnitType.Absolute:
-                    // do nothing
-                    break;
-                case DimensionUnitType.ScreenPixel:
+            case DimensionUnitType.Absolute:
+                // do nothing
+                break;
+            case DimensionUnitType.ScreenPixel:
+                if (this.EffectiveManagers != null)
+                {
+                    var camera = this.EffectiveManagers.Renderer.Camera;
                     strokeWidth /= camera.Zoom;
-                    break;
-            }
-
-            ContainedRenderable.StrokeWidth = strokeWidth;
+                }
+                break;
         }
+
+        ContainedRenderable.StrokeWidth = strokeWidth;
         base.PreRender();
     }
 }

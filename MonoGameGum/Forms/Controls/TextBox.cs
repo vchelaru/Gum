@@ -24,6 +24,11 @@ public class TextBox : TextBoxBase
     /// <summary>
     /// Gets and sets the displayed Text. If the text exceeds MaxLength, it will be truncated.
     /// </summary>
+    // Note: This is not marked virtual because it has additional logic
+    // beyond just getting/setting the core text object.
+    // Making this virtual would eliminate the OnTextChanged call.
+    // We need to come up with a good solution for this so that codegen
+    // TextBoxes do not have warnings
     public string? Text
     {
         get => coreTextObject.RawText;
@@ -50,7 +55,7 @@ public class TextBox : TextBoxBase
     /// The maximum letters to display. This can be used to 
     /// create an effect where the text prints out letter-by-letter.
     /// </summary>
-    public int? MaxLettersToShow
+    public virtual int? MaxLettersToShow
     {
         get => coreTextObject.MaxLettersToShow;
         set
@@ -66,7 +71,7 @@ public class TextBox : TextBoxBase
     /// The maximum number of lines to display. This can be used to 
     /// limit how many lines of text are displayed at one time.
     /// </summary>
-    public int? MaxNumberOfLines
+    public virtual int? MaxNumberOfLines
     {
         get => coreTextObject.MaxNumberOfLines;
         set
@@ -279,7 +284,7 @@ public class TextBox : TextBoxBase
 
     protected override void HandlePaste()
     {
-        var whatToPaste = Clipboard.ClipboardImplementation.GetText();
+        var whatToPaste = Clipboard.ClipboardImplementation.GetText(HandlePaste);
         //////////////////////Early Out////////////////////
         if (string.IsNullOrEmpty(whatToPaste)) return;
         ///////////////////End Early Out///////////////////

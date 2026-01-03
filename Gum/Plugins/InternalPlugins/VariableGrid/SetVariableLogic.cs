@@ -23,11 +23,36 @@ using Gum.Graphics;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Undo;
+using Gum.Services.Fonts;
 
 namespace Gum.PropertyGridHelpers;
 
+public enum VariableRefreshType
+{
+    FullGridRefresh,
+    FullGridValueRefresh,
+    ThisVariableRefresh
+}
+
 public class SetVariableLogic
 {
+    Dictionary<string, VariableRefreshType> VariablesRequiringRefresh = new ()
+    {
+        {"Parent",                                                 VariableRefreshType.FullGridRefresh   },
+        {"Name",                                                   VariableRefreshType.FullGridRefresh   },
+        {"UseCustomFont",                                          VariableRefreshType.FullGridRefresh   },
+        {"TextureAddress",                                         VariableRefreshType.FullGridRefresh   },
+        {"BaseType",                                               VariableRefreshType.FullGridRefresh   },
+        {"IsRenderTarget",                                         VariableRefreshType.FullGridRefresh   },
+        {"TextOverflowVerticalMode",                               VariableRefreshType.FullGridRefresh   },
+        // These are handled in the SubtextLogic
+        //{"XUnits",                                                 VariableRefreshType.FullGridRefresh   },
+        //{ "YUnits",                                                 VariableRefreshType.FullGridRefresh }
+
+    };
+
+
+
     private readonly VariableReferenceLogic _variableReferenceLogic;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly FontManager _fontManager;
@@ -39,8 +64,10 @@ public class SetVariableLogic
     private readonly IUndoManager _undoManager;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IDialogService _dialogService;
+    private readonly PluginManager _pluginManager;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     public SetVariableLogic(ISelectedState selectedState, 
         INameVerifier nameVerifier, 
@@ -53,8 +80,10 @@ public class SetVariableLogic
         FontManager fontManager,
         IFileCommands fileCommands,
         CircularReferenceManager circularReferenceManager,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        IDialogService dialogService)
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IDialogService dialogService,
+        PluginManager pluginManager,
+        WireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -69,6 +98,8 @@ public class SetVariableLogic
         _circularReferenceManager = circularReferenceManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _dialogService = dialogService;
+        _pluginManager = pluginManager;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -123,9 +154,10 @@ public class SetVariableLogic
     /// <param name="oldValue"></param>
     /// <param name="parentElement"></param>
     /// <param name="instance"></param>
+    /// <param name="currentState">The state where the variable was set - the current state save</param>
     /// <param name="refresh"></param>
     public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, IInstanceContainer instanceContainer,
-        InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
+        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true)
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
         ObjectFinder.Self.EnableCache();
@@ -141,7 +173,7 @@ public class SetVariableLogic
             // So does that mean that we want to call this code before we update variable references, but
             // we can still raise the plugin event after? If so, I'm going to move the plugin manager call
             // out of ReactToChangedMember and call it here.
-            response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
+            response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, currentState);
             var parentElement = instanceContainer as ElementSave;
 
             bool didSetDeepReference = false;
@@ -154,7 +186,7 @@ public class SetVariableLogic
                     qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                 }
 
-                _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, stateSave, qualifiedName, trySave);
+                _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave);
 
                 _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
                     // This code used to not specify the category, so it defaulted to the selected category.
@@ -178,7 +210,7 @@ public class SetVariableLogic
             // see comment by ReactToChangedMember about why we make this call here
             // Also this should happen after we update the wireframe so that plugins like
             // the texture window which depend on the wireframe will have the correct values
-            PluginManager.Self.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
+            _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
 
             // This used to only check if values have changed. However, this can cause problems
             // because an intermediary value may change the value, then it gets a full commit. On
@@ -186,7 +218,7 @@ public class SetVariableLogic
             // Update July 22, 2025
             // Plugins may make modifications
             // to the element, so save *after*
-            // calling PluginManager.Self.VariableSet
+            // calling _pluginManager.VariableSet
             if (trySave)
             {
                 _fileCommands.TryAutoSaveElement(parentElement);
@@ -205,12 +237,24 @@ public class SetVariableLogic
         InstanceSave instance, string qualifiedName)
     {
 
-        var needsToRefreshEntireElement = ExclusionsPlugin.VariablesRequiringRefresh.Contains(unqualifiedMember);
+        var needsToRefreshEntireElement = VariablesRequiringRefresh.ContainsKey(unqualifiedMember);
 
         if (needsToRefreshEntireElement)
         {
-            _guiCommands.RefreshElementTreeView(parentElement);
-            _guiCommands.RefreshVariables(force: true);
+            var refreshType = VariablesRequiringRefresh[unqualifiedMember];
+            if(refreshType == VariableRefreshType.FullGridRefresh)
+            {
+                _guiCommands.RefreshElementTreeView(parentElement);
+            }
+
+            if(refreshType == VariableRefreshType.FullGridValueRefresh || refreshType == VariableRefreshType.ThisVariableRefresh)
+            {
+                _guiCommands.RefreshVariableValues();
+            }
+            else
+            {
+                _guiCommands.RefreshVariables(force: true);
+            }
         }
     }
 
@@ -267,7 +311,7 @@ public class SetVariableLogic
             {
                 var parentElement = instanceContainer as ElementSave;
 
-                if(_circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
+                if(parentElement != null && _circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
                 {
                     _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
                     //stateSave.SetValue("BaseType", oldValue, instance);
@@ -339,8 +383,10 @@ public class SetVariableLogic
                 {
                     elementStack.Add(new ElementWithState(instanceElement));
                 }
-                var rfv = new RecursiveVariableFinder(elementStack);
 
+                StateSave stateSave = _selectedState.SelectedStateSave;
+
+                var rfv = new RecursiveVariableFinder(elementStack);
 
                 var forcedValues = new StateSave();
 
@@ -361,7 +407,6 @@ public class SetVariableLogic
                 TryAddForced("IsItalic");
                 TryAddForced("IsBold");
 
-                StateSave stateSave = _selectedState.SelectedStateSave;
 
                 // If the user has a category selected but no state in the category, then use the default:
                 if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
@@ -401,7 +446,7 @@ public class SetVariableLogic
             if (UnitConverter.TryConvertToGeneralUnit(oldValueAsObject, out oldValue))
             {
                 IRenderableIpso currentIpso =
-                    WireframeObjectManager.Self.GetSelectedRepresentation();
+                    _wireframeObjectManager.GetSelectedRepresentation();
 
                 float parentWidth = ObjectFinder.Self.GumProjectSave.DefaultCanvasWidth;
                 float parentHeight = ObjectFinder.Self.GumProjectSave.DefaultCanvasHeight;
@@ -501,7 +546,7 @@ public class SetVariableLogic
             stateSave.SetValue(variableToSet, valueToSet, instanceSave);
 
             // Force update everything on the spot. We know we can just set this value instead of forcing a full refresh:
-            var gue = WireframeObjectManager.Self.GetSelectedRepresentation();
+            var gue = _wireframeObjectManager.GetSelectedRepresentation();
 
             if (gue != null)
             {
@@ -631,7 +676,7 @@ public class SetVariableLogic
 
         if (!isValidExtension)
         {
-            var fromPluginManager = PluginManager.Self.GetIfExtensionIsValid(extension, parentElement, instance, changedMember);
+            var fromPluginManager = _pluginManager.GetIfExtensionIsValid(extension, parentElement, instance, changedMember);
             if (fromPluginManager == true)
             {
                 isValidExtension = true;
@@ -640,7 +685,7 @@ public class SetVariableLogic
 
         if (!isValidExtension)
         {
-            whyInvalid = "The extension " + extension + " is not supported for textures";
+            whyInvalid = "The extension " + extension + " is not supported";
         }
 
         if (string.IsNullOrEmpty(whyInvalid))
@@ -657,44 +702,43 @@ public class SetVariableLogic
         return whyInvalid;
     }
 
-    private static bool? AskIfShouldCopy(VariableSave variable, string value)
+    private bool? AskIfShouldCopy(VariableSave variable, string value)
     {
-        // Ask the user what to do - make it relative?
-        MultiButtonMessageBox mbmb = new
-            MultiButtonMessageBox();
-
-        mbmb.StartPosition = FormStartPosition.CenterParent;
-
-        mbmb.MessageText = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
-        mbmb.AddButton("Reference the file in its current location", DialogResult.OK);
-        mbmb.AddButton("Copy the file relative to the Gum project and reference the copy", DialogResult.Yes);
-
-        var dialogResult = mbmb.ShowDialog();
-
         bool? shouldCopy = false;
 
-        string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
-        string targetAbsoluteFile = directory + FileManager.RemovePath(value);
-
-        if (dialogResult == DialogResult.Yes)
+        // Ask the user what to do - make it relative?
+        string message = "The file\n" + value + "\nis not relative to the project.  What would you like to do?";
+        
+        DialogChoices<string> choices = new()
         {
+            ["reference-current"] = "Reference the file in its current location",
+            ["copy-relative"] = "Copy the file relative to the Gum project and reference the copy"
+        };
+
+        string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+        
+        if (result == "copy-relative")
+        {
+            string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+            string targetAbsoluteFile = directory + FileManager.RemovePath(value);
+
             shouldCopy = true;
 
             // If the destination already exists, we gotta ask the user what they want to do.
             if (System.IO.File.Exists(targetAbsoluteFile))
             {
-                mbmb = new MultiButtonMessageBox();
-                mbmb.MessageText = "The destination file already exists.  Would you like to overwrite it?";
-                mbmb.AddButton("Yes", DialogResult.Yes);
-                mbmb.AddButton("No, use the original file", DialogResult.No);
+                message = "The destination file already exists.  Would you like to overwrite it?";
+                choices.Clear();
+                choices["yes"] = "Yes, overwrite the file";
+                choices["no"] = "No, use the original file";
 
-                var overwriteResult = mbmb.ShowDialog();
+                result = _dialogService.ShowChoices(message, choices, canCancel:true);
 
-                if (overwriteResult == DialogResult.Yes)
+                if (result == "yes")
                 {
                     shouldCopy = true;
                 }
-                else if (overwriteResult == DialogResult.No)
+                else if (result == "no")
                 {
                     shouldCopy = false;
                 }
@@ -704,7 +748,7 @@ public class SetVariableLogic
                 }
             }
         }
-        else if (dialogResult == DialogResult.OK)
+        else if (result == "reference-current")
         {
             shouldCopy = false;
         }
@@ -712,6 +756,7 @@ public class SetVariableLogic
         {
             shouldCopy = null;
         }
+
         return shouldCopy;
     }
 

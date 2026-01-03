@@ -7,19 +7,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.Dialogs;
 using Gum.Services;
+using Gum.Settings;
 
 namespace EditorTabPlugin_XNA.Services;
-internal class BackgroundSpriteService
+internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
 {
     private readonly WireframeCommands _wireframeCommands;
+    private readonly IMessenger _messenger;
+    
     Sprite BackgroundSprite;
     SolidRectangle BackgroundSolidColor;
 
     public BackgroundSpriteService()
     {
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _messenger = Locator.GetRequiredService<IMessenger>();
+        _messenger.RegisterAll(this);
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -73,28 +80,25 @@ internal class BackgroundSpriteService
             new System.Drawing.Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
 
         systemManagers.SpriteManager.Add(BackgroundSprite);
+
+        var themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
+        ApplyThemingSettings(themeSettings);
     }
 
     public void Activity()
     {
         BackgroundSprite.Visible =
                 _wireframeCommands.IsBackgroundGridVisible;
+    }
 
-        if (ProjectManager.Self.GeneralSettingsFile != null)
-        {
-            BackgroundSolidColor.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor1B
-            );
-
-
-            BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
-            );
-
-        }
+    private void ApplyThemingSettings(IEffectiveThemeSettings settings)
+    {
+        BackgroundSolidColor.Color = settings.CheckerA;
+        BackgroundSprite.Color = settings.CheckerB;
+    }
+    
+    void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
+    {
+        ApplyThemingSettings(message.settings);
     }
 }

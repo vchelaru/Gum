@@ -21,7 +21,7 @@ Sprite element is selected in the image above. Notice that since a **SourceFile*
 ### Standard Types
 
 * ![](<../../../.gitbook/assets/image (51).png>) Circle - circle outline. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (53).png>) ColoredRectangle - filled-in rectangle. These are often used for solid-colored backgrounds and frames.
+* ![](<../../../.gitbook/assets/image (53) (1).png>) ColoredRectangle - filled-in rectangle. These are often used for solid-colored backgrounds and frames.
 * ![](<../../../.gitbook/assets/image (54).png>) Container - invisible object used to contain other objects. These are used to provide margins, change layouts (such as vertical vs horizontal stacking), and to organize your UI.
 * ![](<../../../.gitbook/assets/image (55).png>) NineSlice - visual object which uses nine sprites to create a resizable object from a source PNG (or portion of a PNG). The corner sprites (4) are not resized. The top, bottom, left, and right sprites are stretched on one axis. The middle sprite stretches both horizontally and vertically. These are used to create resizable frames.
 * ![](<../../../.gitbook/assets/image (56).png>) Polygon - polygon outline which can have any number of points. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
@@ -53,7 +53,7 @@ To create a screen:
 
 1.  Right-click on the Screens tree item and select **Add Screen**
 
-    <figure><img src="../../../.gitbook/assets/image (9) (2).png" alt=""><figcaption><p>Right-click, Add Screen option</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (9) (2) (1).png" alt=""><figcaption><p>Right-click, Add Screen option</p></figcaption></figure>
 2. Enter the name of the new screen - such as **MainMenu**
 3.  Click OK. The newly-created screen is created and selected
 

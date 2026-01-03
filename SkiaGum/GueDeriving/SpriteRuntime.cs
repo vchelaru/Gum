@@ -42,13 +42,13 @@ public class SpriteRuntime : BindableGue
         }
     }
 
-    public SKBitmap Texture
+    public SKBitmap? Texture
     {
         get => ContainedSprite.Texture;
         set => ContainedSprite.Texture = value;
     }
 
-    public SKImage Image
+    public SKImage? Image
     {
         get => ContainedSprite.Image;
         set => ContainedSprite.Image = value;

@@ -1,16 +1,29 @@
-﻿<UserControl
+<UserControl
     x:Class="Gum.Plugins.AlignmentButtons.DockControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
     mc:Ignorable="d">
-    <GroupBox VerticalAlignment="Top" Header="Dock">
-        <StackPanel>
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type Button}" />
+    </UserControl.Resources>
+    <Grid>
 
-            <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Border
+            Margin="0,0,8,0"
+            BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+            BorderThickness="1"
+            CornerRadius="4">
+            <Grid x:Name="DockGrid">
+                <!--  Base 3x3 + buttons  -->
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -22,122 +35,290 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Button
-                    x:Name="TopButton"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Margin="3"
-                    Click="TopButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/TopSide.png" />
-                    <Button.ToolTip>
-                        Dock Top
-                    </Button.ToolTip>
-                </Button>
-                <Button
-                    x:Name="SizeToChildrenButton"
-                    Grid.Row="0"
-                    Grid.Column="2"
-                    Margin="3"
-                    Click="SizeToChildren_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/SizeToChildren.png" />
-                    <Button.ToolTip>
-                        Size to Children
-                    </Button.ToolTip>
-                </Button>
+                <!--  Buttons (unchanged)  -->
                 <Button
                     x:Name="LeftButton"
                     Grid.Row="1"
                     Grid.Column="0"
-                    Margin="3"
-                    Click="LeftButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/LeftSide.png" />
-                    <Button.ToolTip>
-                        Dock Left
-                    </Button.ToolTip>
+                    Click="LeftButton_Click"
+                    Content="{wpf:FluentIcon Icon=AlignStartHorizontal}">
+                    <Button.ToolTip>Dock Left</Button.ToolTip>
+                </Button>
+                <Button
+                    x:Name="TopButton"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Click="TopButton_Click"
+                    Content="{wpf:FluentIcon Icon=AlignStartVertical}">
+                    <Button.ToolTip>Dock Top</Button.ToolTip>
+                </Button>
+                <Button
+                    x:Name="RightButton"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Click="RightButton_Click"
+                    Content="{wpf:FluentIcon Icon=AlignEndHorizontal}">
+                    <Button.ToolTip>Dock Right</Button.ToolTip>
+                </Button>
+                <Button
+                    x:Name="BottomButton"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Click="BottomButton_Click"
+                    Content="{wpf:FluentIcon Icon=AlignEndVertical}">
+                    <Button.ToolTip>Dock Bottom</Button.ToolTip>
                 </Button>
                 <Button
                     x:Name="FillButton"
                     Grid.Row="1"
                     Grid.Column="1"
-                    Margin="3"
-                    Click="FillButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/Fill.png" />
-                    <Button.ToolTip>
-                        Fill
-                    </Button.ToolTip>
-                </Button>
-                <Button
-                    x:Name="FillVerticallyButton"
-                    Grid.Row="1"
-                    Grid.Column="2"
-                    Margin="3"
-                    Click="FillVerticallyButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/FillVertically.png" />
-                    <Button.ToolTip>
-                        Fill Vertically
-                    </Button.ToolTip>
-                </Button>
-                <Button
-                    x:Name="RightButton"
-                    Grid.Row="1"
-                    Grid.Column="3"
-                    Margin="3"
-                    Click="RightButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/RightSide.png" />
-                    <Button.ToolTip>
-                        Dock Right
-                    </Button.ToolTip>
+                    Click="FillButton_Click"
+                    Content="{wpf:FluentIcon Icon=ArrowMove}">
+                    <Button.ToolTip>Fill</Button.ToolTip>
                 </Button>
 
-                <Button
-                    x:Name="FillHorizontallyButton"
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    Margin="3"
-                    Click="FillHorizontallyButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/FillHorizontally.png" />
-                    <Button.ToolTip>
-                        Fill Horizontally
-                    </Button.ToolTip>
-                </Button>
+                <!--  Overlay shade layer  -->
+                <Grid
+                    Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    IsHitTestVisible="False">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                <Button
-                    x:Name="BottomButton"
-                    Grid.Row="3"
-                    Grid.Column="1"
-                    Margin="3"
-                    Click="BottomButton_Click">
-                    <Image
-                        Width="32"
-                        Height="32"
-                        Source="/Gum;component/Content/Icons/Sizing/BottomSide.png" />
-                    <Button.ToolTip>
-                        Dock Bottom
-                    </Button.ToolTip>
-                </Button>
+                    <Grid.Resources>
 
+                        <Style x:Key="ShadeRectStyle" TargetType="Rectangle">
+                            <Setter Property="Fill" Value="{DynamicResource Frb.Brushes.Primary}" />
+                            <Setter Property="Opacity" Value="0" />
+                        </Style>
+                    </Grid.Resources>
+
+                    <!--  Top row shade  -->
+                    <Rectangle
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3">
+                        <Rectangle.Style>
+                            <Style BasedOn="{StaticResource ShadeRectStyle}" TargetType="Rectangle">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=TopButton}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.15"
+                                                        Duration="0:0:0.08" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0"
+                                                        Duration="0:0:0.12" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+
+                    <!--  Bottom row shade  -->
+                    <Rectangle
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3">
+                        <Rectangle.Style>
+                            <Style BasedOn="{StaticResource ShadeRectStyle}" TargetType="Rectangle">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=BottomButton}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.15"
+                                                        Duration="0:0:0.08" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0"
+                                                        Duration="0:0:0.12" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+
+                    <!--  Left column shade  -->
+                    <Rectangle
+                        Grid.Row="0"
+                        Grid.RowSpan="3"
+                        Grid.Column="0">
+                        <Rectangle.Style>
+                            <Style BasedOn="{StaticResource ShadeRectStyle}" TargetType="Rectangle">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=LeftButton}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.15"
+                                                        Duration="0:0:0.08" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0"
+                                                        Duration="0:0:0.12" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+
+                    <!--  Right column shade  -->
+                    <Rectangle
+                        Grid.Row="0"
+                        Grid.RowSpan="3"
+                        Grid.Column="2">
+                        <Rectangle.Style>
+                            <Style BasedOn="{StaticResource ShadeRectStyle}" TargetType="Rectangle">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=RightButton}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.15"
+                                                        Duration="0:0:0.08" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0"
+                                                        Duration="0:0:0.12" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+
+                    <!--  Center / fill shade (entire grid)  -->
+                    <Rectangle
+                        Grid.Row="0"
+                        Grid.RowSpan="3"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3">
+                        <Rectangle.Style>
+                            <Style BasedOn="{StaticResource ShadeRectStyle}" TargetType="Rectangle">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=FillButton}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0.15"
+                                                        Duration="0:0:0.08" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation
+                                                        Storyboard.TargetProperty="Opacity"
+                                                        To="0"
+                                                        Duration="0:0:0.12" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
+                </Grid>
             </Grid>
+        </Border>
+
+
+        <StackPanel Grid.Column="1">
+            <Button
+                x:Name="FillHorizontallyButton"
+                Grid.Row="0"
+                Grid.Column="3"
+                Click="FillHorizontallyButton_Click"
+                Content="{wpf:FluentIcon Icon=AlignStretchHorizontal}">
+                <Button.ToolTip>
+                    Fill Horizontally
+                </Button.ToolTip>
+            </Button>
+            <Button
+                x:Name="FillVerticallyButton"
+                Grid.Row="1"
+                Grid.Column="3"
+                Click="FillVerticallyButton_Click"
+                Content="{wpf:FluentIcon Icon=AlignStretchVertical}">
+                <Button.ToolTip>
+                    Fill Vertically
+                </Button.ToolTip>
+            </Button>
+
+            <Button
+                x:Name="SizeToChildrenButton"
+                Grid.Row="2"
+                Grid.Column="3"
+                Click="SizeToChildren_Click"
+                Content="{wpf:FluentIcon Icon=ArrowMoveInward}">
+                <Button.ToolTip>
+                    Size to Children
+                </Button.ToolTip>
+            </Button>
+
         </StackPanel>
-    </GroupBox>
+
+
+
+
+
+    </Grid>
 </UserControl>

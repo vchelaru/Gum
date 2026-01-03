@@ -1,4 +1,4 @@
-﻿using FlatRedBall.AnimationEditorForms.Controls;
+﻿using EditorTabPlugin_XNA.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
@@ -34,7 +34,6 @@ public class WireframeControl : GraphicsDeviceControl
     
     private HotkeyManager _hotkeyManager;
 
-    WireframeEditControl mWireframeEditControl;
     private SelectionManager _selectionManager;
     private DragDropManager _dragDropManager;
     LineRectangle mCanvasBounds;
@@ -43,8 +42,8 @@ public class WireframeControl : GraphicsDeviceControl
 
     bool mHasInitialized = false;
 
-    Ruler mTopRuler;
-    Ruler mLeftRuler;
+    public Ruler TopRuler { get; private set; }
+    public Ruler LeftRuler { get; private set; }
 
     public event Action CameraChanged;
 
@@ -59,11 +58,11 @@ public class WireframeControl : GraphicsDeviceControl
 
     public bool RulersVisible
     {
-        get => mLeftRuler.Visible;
+        get => LeftRuler.Visible;
         set
         {
-            mLeftRuler.Visible = value;
-            mTopRuler.Visible = value;
+            LeftRuler.Visible = value;
+            TopRuler.Visible = value;
         }
     }
 
@@ -73,6 +72,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     #region Properties
 
+    public Microsoft.Xna.Framework.Color BackgroundColor { get; set; } = new(75, 75, 75);
 
     public LineRectangle ScreenBounds
     {
@@ -99,11 +99,15 @@ public class WireframeControl : GraphicsDeviceControl
     #region Event Methods
 
 
-    void OnKeyDown(object sender, KeyEventArgs e)
+    void HandleKeyDown(object sender, KeyEventArgs e)
     {
         _hotkeyManager.HandleKeyDownWireframe(e);
         _cameraController.HandleKeyPress(e);
+    }
 
+    private void HandleKeyUp(object? sender, KeyEventArgs e)
+    {
+        _hotkeyManager.HandleKeyUpWireframe(e);
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -126,11 +130,11 @@ public class WireframeControl : GraphicsDeviceControl
     #region Initialize Methods
 
     public void Initialize(
-        WireframeEditControl wireframeEditControl, 
         Panel wireframeParentPanel,
         HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        DragDropManager dragDropManager)
+        DragDropManager dragDropManager,
+        EditorViewModel editorViewModel)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
@@ -138,11 +142,6 @@ public class WireframeControl : GraphicsDeviceControl
         try
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
-
-            mWireframeEditControl = wireframeEditControl;
-
-
-            mWireframeEditControl.ZoomChanged += HandleZoomChanged;
 
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(GraphicsDevice);
@@ -157,7 +156,7 @@ public class WireframeControl : GraphicsDeviceControl
             _cameraController = new CameraController();
 
             LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-            _cameraController.Initialize(Camera, mWireframeEditControl, Width, Height, hotkeyManager);
+            _cameraController.Initialize(Camera, editorViewModel, Width, Height, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
             InputLibrary.Cursor.Self.Initialize(this);
@@ -173,7 +172,8 @@ public class WireframeControl : GraphicsDeviceControl
             var camera = SystemManagers.Default.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
-            KeyDown += OnKeyDown;
+            KeyDown += HandleKeyDown;
+            KeyUp += HandleKeyUp;
             MouseDown += _cameraController.HandleMouseDown;
             MouseMove += _cameraController.HandleMouseMove;
             MouseWheel += _cameraController.HandleMouseWheel;
@@ -192,6 +192,8 @@ public class WireframeControl : GraphicsDeviceControl
                 AfterXnaInitialize(this, null);
             }
 
+            editorViewModel.RefreshCanvasSize();
+
             UpdateCanvasBoundsToProject();
 
             mHasInitialized = true;
@@ -203,11 +205,16 @@ public class WireframeControl : GraphicsDeviceControl
         }
     }
 
+
     private void InitializeDefaultTypeInstantiation()
     {
         ElementSaveExtensions.RegisterGueInstantiation(
             "Text",
             () => new TextRuntime(systemManagers: this.SystemManagers));
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Sprite",
+            () => new SpriteRuntime());
     }
 
     public void ShareLayerReferences(LayerService layerService)
@@ -216,29 +223,21 @@ public class WireframeControl : GraphicsDeviceControl
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
 
 
-        mTopRuler = new Ruler(this, 
+        TopRuler = new Ruler(this, 
             SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService,
             _hotkeyManager);
-        mLeftRuler = new Ruler(this, SystemManagers.Default,
+        LeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService,
             _hotkeyManager);
-        mLeftRuler.RulerSide = RulerSide.Left;
+        LeftRuler.RulerSide = RulerSide.Left;
 
-    }
-
-    void HandleZoomChanged(object sender, EventArgs e)
-    {
-        mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
-        mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
-
-        Invalidate();
     }
 
     #endregion
@@ -269,8 +268,8 @@ public class WireframeControl : GraphicsDeviceControl
                 //{
 
                 //}
-                bool isOver = mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
-                    mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
+                bool isOver = TopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
+                    LeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
 
 
                 // But we want the selection to update the handles to the selected object
@@ -284,7 +283,7 @@ public class WireframeControl : GraphicsDeviceControl
                 // has not entered so things don't stay highlighted when exiting the control
                 // Update 2 - yea, we def need to pass in mouseHasEntered == false to force no highlight
 
-                if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
+                if (TopRuler.IsCursorOver == false && LeftRuler.IsCursorOver == false)
                 {
                     var shouldForceNoHighlight = mouseHasEntered == false &&
                         PluginManager.Self.GetIfShouldSuppressRemoveEditorHighlight() == false;
@@ -294,7 +293,6 @@ public class WireframeControl : GraphicsDeviceControl
 
                     _selectionManager.LateActivity();
                 }
-                _dragDropManager.Activity();
 
                 InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
             }
@@ -314,11 +312,12 @@ public class WireframeControl : GraphicsDeviceControl
     /// </summary>
     public void UpdateCanvasBoundsToProject()
     {
+
         var gumProject = ProjectManager.Self.GumProjectSave;
         if (mCanvasBounds != null && gumProject != null)
         {
-            mCanvasBounds.Width = gumProject.DefaultCanvasWidth;
-            mCanvasBounds.Height = gumProject.DefaultCanvasHeight;
+            mCanvasBounds.Width = GraphicalUiElement.CanvasWidth;
+            mCanvasBounds.Height = GraphicalUiElement.CanvasHeight;
 
             CanvasBoundsVisible = gumProject.ShowCanvasOutline;
             RulersVisible = gumProject.ShowRuler;
@@ -337,20 +336,7 @@ public class WireframeControl : GraphicsDeviceControl
     {
         if (mHasInitialized)
         {
-            var backgroundColor = new Microsoft.Xna.Framework.Color();
-            if (ProjectManager.Self.GeneralSettingsFile != null)
-            {
-                backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;
-                backgroundColor.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor1G;
-                backgroundColor.B = ProjectManager.Self.GeneralSettingsFile.CheckerColor1B;
-            }
-            else
-            {
-                backgroundColor.R = 150;
-                backgroundColor.G = 150;
-                backgroundColor.B = 150;
-            }
-            GraphicsDevice.Clear(backgroundColor);
+            GraphicsDevice.Clear(BackgroundColor);
 
             PluginManager.Self.BeforeRender();
 
@@ -361,11 +347,9 @@ public class WireframeControl : GraphicsDeviceControl
         }
     }
 
-    public void RefreshGuides()
+    internal void SetGuideColors(Color guidelineColor, Color guideTextColor)
     {
-        // setting GuideValues forces a refresh
-        mTopRuler.GuideValues = mTopRuler.GuideValues.ToArray();
-
-        mLeftRuler.GuideValues = mLeftRuler.GuideValues.ToArray();
+        TopRuler.SetGuideColors(guidelineColor, guideTextColor);
+        LeftRuler.SetGuideColors(guidelineColor, guideTextColor);
     }
 }

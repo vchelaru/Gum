@@ -245,7 +245,7 @@ public class MenuItem : ItemsControl
         // I wanted to make this
         // work the same as the ListBox,
         // but children added to ListBox are
-        // kept on the list. Here, the MenuItem 
+        // kept in the ListBox.Visual's inner panel children. Here, the MenuItem 
         // doesn't actually have a proper list of 
         // children to add to. For it to do so, we would
         // need to have a ListBox just like ComboBox has, and
@@ -401,7 +401,7 @@ public class MenuItem : ItemsControl
         }
     }
 
-    #region Popup
+    #region Popup ListBox (sub-items)
 
     internal void TryShowPopup()
     {
@@ -487,6 +487,19 @@ public class MenuItem : ItemsControl
             ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
             if(visualTemplateVisual == null)
             {
+                // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
+                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+                GraphicalUiElement.IsAllLayoutSuspended = true;
+
+                var oldHorizontalScrollBarVisibility = itemsPopup.HorizontalScrollBarVisibility;
+                var oldVerticalScrollBarVisibility = itemsPopup.VerticalScrollBarVisibility;
+
+                itemsPopup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                itemsPopup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+
+                itemsPopup.VerticalSizeMode = SizeMode.Auto;
+                itemsPopup.HorizontalSizeMode = SizeMode.Auto;
+
                 itemsPopup.Width = 200;
                 itemsPopup.Height = 400;
 
@@ -502,6 +515,12 @@ public class MenuItem : ItemsControl
                 itemsPopup.ClipContainer.Width = 0;
                 itemsPopup.InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 itemsPopup.InnerPanel.Width = 0;
+
+                GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+                if(!wasSuppressed)
+                {
+                    itemsPopup.Visual.UpdateLayout();
+                }
             }
 
 #if FRB

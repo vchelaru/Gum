@@ -214,18 +214,18 @@ namespace Gum.Graphics.Animation
     public static class AnimationFrameExtensionMethods
     {
 
-        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, string contentManagerName)
+        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave)
         {
-            return animationFrameSave.ToAnimationFrame(contentManagerName, true);
+            return animationFrameSave.ToAnimationFrame(true);
         }
 
-        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, string contentManagerName, bool loadTexture)
+        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, bool loadTexture)
         {
 
-            return animationFrameSave.ToAnimationFrame(contentManagerName, loadTexture, TextureCoordinateType.UV);
+            return animationFrameSave.ToAnimationFrame(loadTexture, TextureCoordinateType.UV);
         }
 
-        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, string contentManagerName, bool loadTexture, TextureCoordinateType coordinateType)
+        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, bool loadTexture, TextureCoordinateType coordinateType)
         {
             AnimationFrame frame = new AnimationFrame();
 

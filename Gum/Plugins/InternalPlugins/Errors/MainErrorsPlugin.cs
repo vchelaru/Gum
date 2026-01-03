@@ -1,10 +1,15 @@
-﻿using Gum.Plugins.BaseClasses;
-using System.ComponentModel.Composition;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Messages;
+using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.Errors.Views;
+using Gum.Reflection;
+using Gum.Services;
 using Gum.ToolStates;
 using System;
-using Gum.Commands;
-using Gum.Plugins.InternalPlugins.Errors.Views;
+using System.Collections.ObjectModel;
+using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.Errors;
 
@@ -14,10 +19,13 @@ public class MainErrorsPlugin : InternalPlugin
     #region Fields/Properties
 
     AllErrorsViewModel viewModel;
+    private PluginManager _pluginManager;
     ErrorChecker errorChecker;
+    private IMessenger _messenger;
     ErrorDisplay control;
     PluginTab tabPage;
     private ErrorTabHeader _tabPageHeader;
+    private ISelectedState _selectedState;
 
     #endregion
 
@@ -25,11 +33,48 @@ public class MainErrorsPlugin : InternalPlugin
     {
         viewModel = new AllErrorsViewModel();
 
-        errorChecker = new ErrorChecker();
+        TypeManager typeManager = Locator.GetRequiredService<TypeManager>();
+
+        _pluginManager = Locator.GetRequiredService<PluginManager>();
+
+        errorChecker = new ErrorChecker(typeManager, _pluginManager);
+
+        _messenger = Locator.GetRequiredService<IMessenger>();
+
+        _messenger.Register<RequestErrorRefreshMessage>(
+            this,
+            (_, message) => HandleErrorRefreshRequest(message));
+
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         CreateViews();
 
         AssignEvents();
+    }
+
+    private void HandleErrorRefreshRequest(RequestErrorRefreshMessage message)
+    {
+        var element = _selectedState.SelectedElement;
+
+        /////////////////////Early Out/////////////////////
+        if(element == null)
+        {
+            return;
+        }
+        ///////////////////End Early Out///////////////////
+
+        if (message.RequestingPlugin != null)
+        {
+            viewModel.Errors.RemoveAll(item => item.OwnerPlugin == message.RequestingPlugin);
+
+            var errors = errorChecker.GetErrorsFor(element, message.RequestingPlugin);
+
+            viewModel.Errors.AddRange(errors);
+        }
+        else
+        {
+            UpdateErrorsForElement(element);
+        }
     }
 
     private void CreateViews()
@@ -38,7 +83,7 @@ public class MainErrorsPlugin : InternalPlugin
         control.DataContext = viewModel;
         tabPage = _tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
 
-        _tabPageHeader = new ErrorTabHeader();
+        _tabPageHeader = new ErrorTabHeader { DataContext = viewModel };
         tabPage.CustomHeaderContent = _tabPageHeader;
     }
 
@@ -63,7 +108,7 @@ public class MainErrorsPlugin : InternalPlugin
         UpdateErrorsForElement(element);
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
     {
         UpdateErrorsForElement(element);
     }
@@ -78,12 +123,12 @@ public class MainErrorsPlugin : InternalPlugin
         UpdateErrorsForElement(element);
     }
 
-    private void HandleElementSelected(ElementSave element)
+    private void HandleElementSelected(ElementSave? element)
     {
         UpdateErrorsForElement(element);
     }
 
-    private void UpdateErrorsForElement(ElementSave element)
+    private void UpdateErrorsForElement(ElementSave? element)
     {
         var errors = errorChecker.GetErrorsFor(element, ProjectState.Self.GumProjectSave);
 
@@ -92,7 +137,5 @@ public class MainErrorsPlugin : InternalPlugin
         {
             viewModel.Errors.Add(item);
         }
-
-        _tabPageHeader.SetErrorCount(errors.Length);
     }
 }

@@ -147,6 +147,7 @@ public class NameVerifier : INameVerifier
     ];
 
     private readonly StandardElementsManager _standardElementsManager;
+    private readonly VariableSaveLogic _variableSaveLogic;
     
     #endregion
     
@@ -155,6 +156,7 @@ public class NameVerifier : INameVerifier
     public NameVerifier()
     {
         _standardElementsManager = StandardElementsManager.Self;
+        _variableSaveLogic = new VariableSaveLogic();
     }
     public bool IsFolderNameValid(string folderName, out string whyNotValid)
     {
@@ -297,7 +299,7 @@ public class NameVerifier : INameVerifier
             // leftovers from a type change
             if(existingVariable != null && elementSave != null)
             {
-                var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable,
+                var isActive = _variableSaveLogic.GetIfVariableIsActive(existingVariable,
                     elementSave, null);
                 if(isActive)
                 {

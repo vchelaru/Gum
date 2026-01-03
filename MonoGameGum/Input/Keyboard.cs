@@ -11,18 +11,7 @@ using ToolsUtilities;
 
 namespace MonoGameGum.Input;
 
-#region IInputReceiverKeyboardMonoGame Interface
 
-public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
-{
-    IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
-    bool KeyDown(Keys key);
-    bool KeyPushed(Keys key);
-    bool KeyReleased(Keys key);
-    bool KeyTyped(Keys key);
-}
-
-#endregion
 
 public class Keyboard : IInputReceiverKeyboardMonoGame
 {
@@ -74,6 +63,18 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
                 }
             }
             return keysTypedInternal;
+        }
+    }
+
+    // temporary - to help unify raylib
+    IEnumerable<int> IInputReceiverKeyboard.KeysTyped
+    {
+        get
+        {
+            foreach (var item in KeysTyped)
+            {
+                yield return (int)item;
+            }
         }
     }
 
@@ -154,7 +155,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             // are returned for certain hotkey combinations like '\u0001' for CTRL+A.
             // We need to ignore these:
 
-            System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
+            //System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
             if(ignoredWindowTextInputCharacters.Contains(e.Character) == false)
             {
                 windowTextInputBuffer.Append(e.Character);
@@ -569,6 +570,19 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     }
 
 }
+
+#region IInputReceiverKeyboardMonoGame Interface
+
+public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
+{
+    IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+    bool KeyDown(Keys key);
+    bool KeyPushed(Keys key);
+    bool KeyReleased(Keys key);
+    bool KeyTyped(Keys key);
+}
+
+#endregion
 
 #region KeyboardStateProcessor
 

@@ -10,14 +10,14 @@ using System;
 
 namespace RenderingLibrary.Graphics;
 
-public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
+public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisible, ICloneable
 {
     #region Fields
     
     Vector2 Position;
     IRenderableIpso mParent;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     private static Texture2D mTexture;
     public static Rectangle SinglePixelTextureSourceRectangle;
 
@@ -173,7 +173,7 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
 
     public SolidRectangle()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
         Color = Color.White;
         Visible = true;
 
@@ -210,9 +210,10 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
         return texture;
     }
 
-    void IRenderable.Render(ISystemManagers managers)
+    public override void Render(ISystemManagers managers)
     {
-        if (this.AbsoluteVisible && this.Width > 0 && this.Height > 0)
+        // See NineSlice for explanation of this Visible check
+        if (this.Width > 0 && this.Height > 0)
         {
             Renderer renderer = null;
             if (managers == null)
@@ -240,29 +241,16 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
         }
     }
 
-
-    public bool AbsoluteVisible
+    /// <inheritdoc/>
+    public bool Visible
     {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
+        get;
+        set;
     }
-
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
@@ -271,11 +259,6 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
 
     void IRenderable.PreRender() { }
 
-    public bool Visible
-    {
-        get;
-        set;
-    }
 
     public override string ToString()
     {
@@ -286,7 +269,7 @@ public class SolidRectangle : IRenderableIpso, IVisible, ICloneable
     {
         var newInstance = (SolidRectangle)this.MemberwiseClone();
         newInstance.mParent = null;
-        newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+        newInstance.mChildren = new ();
 
         return newInstance;
     }

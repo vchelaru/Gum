@@ -4,6 +4,24 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>string</Type>
+      <Name>CircleInstance.Parent</Name>
+      <Value xsi:type="xsd:string">LabelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>CircleInstance.X</Name>
+      <Value xsi:type="xsd:float">197</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>CircleInstance.Y</Name>
+      <Value xsi:type="xsd:float">110</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>HorizontalAlignment</Type>
       <Name>LabelInstance.HorizontalAlignment</Name>
       <Value xsi:type="xsd:int">1</Value>
@@ -52,6 +70,11 @@
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
+  <Instance>
+    <Name>CircleInstance</Name>
+    <BaseType>Circle</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
   <Instance>
     <Name>LabelInstance</Name>
     <BaseType>Controls/Label</BaseType>

@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Graphics;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -210,6 +211,15 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public string Font
     {
+        get => FontFamily;
+        set => FontFamily = value;
+    }
+
+    /// <summary>
+    /// The font name, such as "Arial", which is used to load fonts from 
+    /// </summary>
+    public string FontFamily
+    {
         get { return font; }
         set { font = value; UpdateToFontValues(); }
     }
@@ -288,8 +298,15 @@ public class TextRuntime : InteractiveGue
             var heightBefore = ContainedText.WrappedTextHeight;
             if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
             {
-                // make it have no line wrap width before assignign the text:
-                ContainedText.Width = null;
+                if(this.MaxWidth == null)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    ContainedText.Width = null;
+                }
+                else
+                {
+                    ContainedText.Width = this.MaxWidth;
+                }
             }
 
             // Use SetProperty so it goes through the BBCode-checking methods
@@ -305,6 +322,12 @@ public class TextRuntime : InteractiveGue
                     Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
             }
         }
+    }
+
+    public OverlapDirection OverlapDirection
+    {
+        get => ContainedText.OverlapDirection;
+        set => ContainedText.OverlapDirection = value;
     }
 
     #region Defaults

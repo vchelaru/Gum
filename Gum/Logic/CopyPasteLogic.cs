@@ -1,18 +1,21 @@
-﻿using Gum.DataTypes;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Gum.Commands;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Messages;
 using Gum.Plugins;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Gum.Commands;
-using Gum.Services;
-using Gum.Services.Dialogs;
 using ToolsUtilities;
-using Gum.Undo;
 
 namespace Gum.Logic;
 
@@ -57,20 +60,16 @@ public class CopyPasteLogic
     private readonly IFileCommands _fileCommands;
     private readonly ProjectCommands _projectCommands;
     private readonly IUndoManager _undoManager;
+    private readonly DeleteLogic _deleteLogic;
+    private readonly PluginManager _pluginManager;
+    private readonly IMessenger _messenger;
+    private readonly WireframeObjectManager _wireframeObjectManager;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
     CopyType mCopyType;
 
-    // If the user copies/pastes, the pasted object
-    // becomes the newly-selected instance. A user may
-    // want to copy/paste multiple times to create multiple
-    // (sibling) instances, but by default this would cause each
-    // new instance to be the child of the previously-pasted instance.
-    // This is not desirable, so we'll special-case pasting. If the user
-    // is pasting on the last pasted object, paste on the parent of the last 
-    // pasted object
-    List<InstanceSave> LastPastedInstances = new List<InstanceSave>();
+    bool _hasChangedSelectionSinceCopy;
 
     #endregion
 
@@ -80,9 +79,14 @@ public class CopyPasteLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         ProjectCommands projectCommands,
-        IUndoManager undoManager
+        IUndoManager undoManager,
+        DeleteLogic deleteLogic,
+        PluginManager pluginManager,
+        WireframeObjectManager wireframeObjectManager,
+        IMessenger messenger
         )
     {
+        _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _dialogService = dialogService;
@@ -90,13 +94,43 @@ public class CopyPasteLogic
         _fileCommands = fileCommands;
         _projectCommands = projectCommands;
         _undoManager = undoManager;
+        _deleteLogic = deleteLogic;
+        _pluginManager = pluginManager;
+        _messenger = messenger;
 
+
+        _messenger.Register<SelectionChangedMessage>(
+            this,
+            (_, message) => HandleSelectionChanged());
+
+
+    }
+
+    private void HandleSelectionChanged()
+    {
+        if(!isSelectionCausedByPaste)
+        {
+            _hasChangedSelectionSinceCopy = true;
+
+            if (lastPasteOriginalToParentAssociation.Count > 0)
+            {
+                lastPasteOriginalToParentAssociation = new Dictionary<InstanceSave, object>();
+            }
+            instancesSinceLastCopyOrSelection.Clear();
+        }
     }
 
     #region Copy
     public void OnCopy(CopyType copyType)
     {
         StoreCopiedObject(copyType);
+
+        _hasChangedSelectionSinceCopy = false;
+        if(lastPasteOriginalToParentAssociation.Count > 0)
+        {
+            lastPasteOriginalToParentAssociation = new Dictionary<InstanceSave, object>();
+        }
+        instancesSinceLastCopyOrSelection.Clear();
     }
 
 
@@ -142,7 +176,7 @@ public class CopyPasteLogic
             var state = _selectedState.SelectedStateSave;
 
             // a state may not be selected if the user selected a category.
-            if(state == null)
+            if (state == null)
             {
                 state = element?.DefaultState;
             }
@@ -151,17 +185,17 @@ public class CopyPasteLogic
 
             var baseElementsDerivedFirst = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
             // reverse loop:
-            for(int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
+            for (int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
             {
                 CopiedData.CopiedStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
             }
 
-            if(state != null)
+            if (state != null)
             {
                 CopiedData.CopiedStates.Add(state.Clone());
             }
 
-            if(_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null && element != null)
+            if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null && element != null)
             {
                 // it's categorized, so add the default:
                 CopiedData.CopiedStates.Add(element.DefaultState.Clone());
@@ -176,10 +210,10 @@ public class CopyPasteLogic
             CopiedData.CopiedInstancesSelected.AddRange(_selectedState.SelectedInstances);
 
             var parentContainer = selected.FirstOrDefault()?.ParentContainer;
-            if(parentContainer != null)
+            if (parentContainer != null)
             {
                 CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
-                    // Sort by index in parent at the end so the children are sorted properly:
+                            // Sort by index in parent at the end so the children are sorted properly:
                             .OrderBy(item =>
                             {
                                 return element?.Instances.IndexOf(item) ?? 0;
@@ -195,7 +229,7 @@ public class CopyPasteLogic
 
 
             // Clear out any variables that don't pertain to the selected instance:
-            foreach(var copiedState in CopiedData.CopiedStates)
+            foreach (var copiedState in CopiedData.CopiedStates)
             {
                 for (int i = copiedState.Variables.Count - 1; i > -1; i--)
                 {
@@ -241,20 +275,20 @@ public class CopyPasteLogic
 
         ElementSave sourceElement = _selectedState.SelectedElement;
 
-        if(CopiedData.CopiedInstancesRecursive.Any())
+        if (CopiedData.CopiedInstancesRecursive.Any())
         {
-            foreach(var clone in CopiedData.CopiedInstancesRecursive)
+            foreach (var clone in CopiedData.CopiedInstancesRecursive)
             {
                 // copied instances is a clone, so need to find by name:
                 var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
                 if (sourceElement.Instances.Contains(originalForCopy))
                 {
-                    _elementCommands.RemoveInstance(originalForCopy, sourceElement);
+                    _deleteLogic.RemoveInstance(originalForCopy, sourceElement);
                 }
             }
 
             _fileCommands.TryAutoSaveElement(sourceElement);
-            WireframeObjectManager.Self.RefreshAll(true);
+            _wireframeObjectManager.RefreshAll(true);
             _guiCommands.RefreshVariables();
             _guiCommands.RefreshElementTreeView();
         }
@@ -269,7 +303,7 @@ public class CopyPasteLogic
     public void OnPaste(CopyType copyType, TopOrRecursive topOrRecursive = TopOrRecursive.Recursive)
     {
         ////////////////////Early Out
-        if(mCopyType != copyType)
+        if (mCopyType != copyType)
         {
             return;
         }
@@ -302,11 +336,11 @@ public class CopyPasteLogic
     {
         var selectedElement = _selectedState.SelectedElement;
 
-        if(selectedElement == null)
+        if (selectedElement == null)
         {
             _dialogService.ShowMessage("Select a target Screen or component to paste the copied instance(s).");
         }
-        else if(topOrRecursive == TopOrRecursive.Recursive)
+        else if (topOrRecursive == TopOrRecursive.Recursive)
         {
             PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance);
         }
@@ -315,7 +349,7 @@ public class CopyPasteLogic
             PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance);
         }
 
-        if(selectedElement != null)
+        if (selectedElement != null)
         {
             _elementCommands.SortVariables(selectedElement);
             _fileCommands.TryAutoSaveElement(selectedElement);
@@ -324,7 +358,7 @@ public class CopyPasteLogic
 
     private void PastedCopiedState()
     {
-        ElementSave container = _selectedState.SelectedElement;
+        var container = _selectedState.SelectedElement;
         var targetCategory = _selectedState.SelectedStateCategorySave;
 
         /////////////////////Early Out//////////////////
@@ -336,66 +370,146 @@ public class CopyPasteLogic
 
         StateSave newStateSave = CopiedData.CopiedStates.First().Clone();
 
-        newStateSave.Variables.RemoveAll(item => item.CanOnlyBeSetInDefaultState);
+        var validationResponse = ValidateStatePaste(targetCategory, container, newStateSave);
 
-
-        newStateSave.ParentContainer = container;
-
-        string name = CopiedData.CopiedStates.First().Name + "Copy";
-
-
-        if(targetCategory != null)
+        if (validationResponse.Succeeded == false)
         {
-            name = StringFunctions.MakeStringUnique(name, targetCategory.States.Select(item => item.Name));
-            newStateSave.Name = name;
-
-            targetCategory.States.Add(newStateSave);
+            _dialogService.ShowMessage(validationResponse.Message, "Failed to paste state");
         }
         else
         {
-            name = StringFunctions.MakeStringUnique(name, container.States.Select(item => item.Name));
-            newStateSave.Name = name;
-            container.States.Add(newStateSave);
+
+            newStateSave.Variables.RemoveAll(item => item.CanOnlyBeSetInDefaultState);
+
+
+            newStateSave.ParentContainer = container;
+
+            string name = CopiedData.CopiedStates.First().Name;
+
+
+
+            if (targetCategory != null)
+            {
+                if (targetCategory.States.Any(item => item.Name == name))
+                {
+                    name = name + "Copy";
+                }
+
+                name = StringFunctions.MakeStringUnique(name, targetCategory.States.Select(item => item.Name));
+                newStateSave.Name = name;
+
+                targetCategory.States.Add(newStateSave);
+            }
+            else
+            {
+                // no longer alowd to paste here
+            }
+
+            _guiCommands.RefreshStateTreeView();
+
+            //_selectedState.SelectedInstance = targetInstance;
+            _selectedState.SelectedStateSave = newStateSave;
+
+            _fileCommands.TryAutoSaveElement(container);
         }
-
-        _guiCommands.RefreshStateTreeView();
-
-
-
-        //_selectedState.SelectedInstance = targetInstance;
-        _selectedState.SelectedStateSave = newStateSave;
-
-        _fileCommands.TryAutoSaveElement(container);
     }
 
-    public void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
+    private GeneralResponse ValidateStatePaste(StateSaveCategory targetCategory, ElementSave targetElement, StateSave newState)
     {
-        if(targetElement is StandardElementSave)
+        var toReturn = GeneralResponse.SuccessfulResponse;
+
+        if (targetCategory.States.Count > 0)
+        {
+            HashSet<string> existingVariables = targetCategory.States.SelectMany(item => item.Variables.Select(variable => variable.Name)).ToHashSet();
+
+            var newVariablesNotPresentInTarget = newState.Variables
+                .Where(item => !existingVariables.Contains(item.Name))
+                .ToArray();
+
+            if (newVariablesNotPresentInTarget.Length > 0)
+            {
+                toReturn.Succeeded = false;
+
+                string variableVariables = newVariablesNotPresentInTarget.Length == 1 ? "variable" : "variables";
+                string isAre = newVariablesNotPresentInTarget.Length == 1 ? "is" : "are";
+
+                toReturn.Message = $"The state {newState.Name} can not be pasted in {targetCategory.Name} because " +
+                    $"the state has the following {variableVariables} which {isAre} not already set in the category:\n";
+
+                foreach (var item in newVariablesNotPresentInTarget)
+                {
+                    toReturn.Message += item.Name + "\n";
+                }
+            }
+        }
+
+        if (toReturn.Succeeded)
+        {
+            var newStateVariableNames = newState.Variables.Select(item => item.Name).ToArray();
+
+            List<string> newUnsupportedVariables = new List<string>();
+
+            foreach (var variableName in newStateVariableNames)
+            {
+                // this variable better exist..somewhere:
+                var existingVariable = targetElement.DefaultState.GetVariableRecursive(variableName);
+
+                if (existingVariable == null)
+                {
+                    newUnsupportedVariables.Add(variableName);
+                }
+            }
+
+            if (newUnsupportedVariables.Count > 0)
+            {
+                toReturn.Succeeded = false;
+
+                toReturn.Message = $"The state {newState.Name} can not be pasted in {targetCategory.Name} because " +
+                    $"the state has the following unsupported variable(s):\n";
+
+                foreach (var variableName in newUnsupportedVariables)
+                {
+                    toReturn.Message += variableName + "\n";
+                }
+            }
+        }
+
+        return toReturn;
+    }
+
+    // This keeps track of the parent of the pasted objects, where the key is the original instance
+    // and the value is the parent, which could be an element or an instance.
+    // This is used in situations where the user:
+    // 1. Copies
+    // 2. Selects a new instance
+    // 3. Pastes (which uses the selection)
+    // 4. Pastes again, which should not use the selection, but should also not use the original parents because we did select in step (2)
+    Dictionary<InstanceSave, object> lastPasteOriginalToParentAssociation = new();
+    List<InstanceSave> instancesPastedSinceLastSelection = new List<InstanceSave>();
+    bool isSelectionCausedByPaste = false;
+    List<InstanceSave> instancesSinceLastCopyOrSelection = new();
+
+    public void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave? selectedInstance)
+    {
+        if (targetElement is StandardElementSave)
         {
             _dialogService.ShowMessage($"Cannot create an instance in {targetElement} because it is a standard element");
             return;
         }
 
-        if(LastPastedInstances.Contains(selectedInstance))
-        {
-            selectedInstance = selectedInstance?.GetParentInstance();
-        }
         Dictionary<string, string> oldNewNameDictionary = new Dictionary<string, string>();
 
         List<InstanceSave> newInstances = new List<InstanceSave>();
+        Dictionary<object, int> nextIndexByParent = new();
+        Dictionary<InstanceSave, object> newInstanceToParentDictionary = new();
+
+        bool shouldFillLastPasteOriginalToParentAssociation = _hasChangedSelectionSinceCopy;
 
         #region Create the new instance and add it to the target element
-
-        List<string> sourceElementInstanceNames = null;
 
         foreach (var sourceInstance in instancesToCopy)
         {
             ElementSave sourceElement = sourceInstance.ParentContainer;
-
-            if(sourceElementInstanceNames == null)
-            {
-                sourceElementInstanceNames = sourceElement?.Instances.Select(item => item.Name).ToList();
-            }
 
             // This could be an instance in a behavior, so we can't clone:
             //InstanceSave newInstance = sourceInstance.Clone();
@@ -411,6 +525,7 @@ public class CopyPasteLogic
 
             newInstances.Add(newInstance);
 
+
             if (targetElement != null)
             {
 
@@ -420,38 +535,113 @@ public class CopyPasteLogic
 
                 oldNewNameDictionary[oldName] = newName;
 
+                newInstance.ParentContainer = targetElement;
+                int newIndex = -1;
 
-                if(targetElement == sourceElement)
+                object? parent;
+
+                // The logic for selecting the parent is:
+
+                if(!_hasChangedSelectionSinceCopy)
                 {
-                    int newIndex = -1;
-                    if(sourceElementInstanceNames?.Contains(sourceInstance.Name) == true)
+                    if(lastPasteOriginalToParentAssociation.ContainsKey(sourceInstance))
                     {
-                        newIndex = sourceElementInstanceNames.IndexOf(sourceInstance.Name);
-                    }
-
-                    // The user is pasting again, so let's use the index of that:
-                    // This pastes the new instance after the last pasted instance.
-                    if(LastPastedInstances?.Count > 0 && sourceElement.Instances.ContainsAny(LastPastedInstances) && 
-                        // But if we are coyping multiple instances, so let's skip this if there's more than one object
-                        instancesToCopy.Count == 1)
-                    {
-                        newIndex = LastPastedInstances.Select(item => sourceElement.Instances.IndexOf(item)).Max();
-                    }
-                    if(newIndex != -1)
-                    {
-                        targetElement.Instances.Insert(newIndex+1, newInstance);
-                        sourceElementInstanceNames?.Insert(newIndex + 1, newInstance.Name);
-
+                        parent = lastPasteOriginalToParentAssociation[sourceInstance];
                     }
                     else
                     {
-                        targetElement.Instances.Add(newInstance);
-                        sourceElementInstanceNames.Add(newInstance.Name);
+                        parent = GetParentElementOrInstanceFor(sourceInstance);
                     }
                 }
                 else
                 {
+                    var originalParent = GetParentElementOrInstanceFor(sourceInstance);
+                    // is this attached to any of the copied instances? If so, we need to 
+                    // preserve that:
+                    var shouldAttacheToPasted =
+                        originalParent is InstanceSave originalParentInstance && instancesToCopy.Any(item => item.Name == originalParentInstance.Name);
+                    if (shouldAttacheToPasted)
+                    {
+                        parent = originalParent;
+                    }
+                    else
+                    {
+                        parent = (object?)_selectedState.SelectedInstance ??
+                            _selectedState.SelectedElement;
+                    }
+                }
+
+                newInstanceToParentDictionary[newInstance] = parent;
+
+                if(shouldFillLastPasteOriginalToParentAssociation)
+                {
+                    lastPasteOriginalToParentAssociation[sourceInstance] = parent;
+                }
+
+                if (nextIndexByParent.ContainsKey(parent))
+                {
+                    newIndex = nextIndexByParent[parent];
+                }
+                else
+                {
+                    if (parent is ElementSave parentElement)
+                    {
+                        newIndex = instancesToCopy.Max(item => GetIndexOfInstanceByName(parentElement, item));
+
+                        foreach (var item in _selectedState.SelectedInstances)
+                        {
+                            if (GetParentElementOrInstanceFor(item) == parentElement)
+                            {
+                                newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                            }
+                        }
+                    }
+                    else if (parent is InstanceSave parentInstance)
+                    {
+                        if(_hasChangedSelectionSinceCopy)
+                        {
+                            // add it to the end:
+                            foreach(var item in targetElement.Instances)
+                            {
+                                if(GetParentElementOrInstanceFor(item) == parentInstance)
+                                {
+                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            List<InstanceSave> instancesWithThisParent = new();
+                            foreach (var item in instancesToCopy)
+                            {
+                                if (GetParentElementOrInstanceFor(item) == parentInstance)
+                                {
+                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                }
+                            }
+                            // also make sure that we go after selection, in case we are copy/pasting multiple times
+                            foreach(var item in _selectedState.SelectedInstances)
+                            {
+                                if(GetParentElementOrInstanceFor(item) == parentInstance)
+                                {
+                                    newIndex = System.Math.Max(newIndex, GetIndexOfInstanceByName(targetElement, item));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (newIndex != -1)
+                {
+                    targetElement.Instances.Insert(newIndex + 1, newInstance);
+
+                    nextIndexByParent[parent] = newIndex + 1;
+                }
+                else
+                {
                     targetElement.Instances.Add(newInstance);
+
+                    nextIndexByParent[parent] = targetElement.Instances.Count-1;
                 }
 
             }
@@ -461,31 +651,21 @@ public class CopyPasteLogic
 
         foreach (var sourceInstance in instancesToCopy)
         {
-            ElementSave sourceElement = sourceInstance.ParentContainer;
+            var sourceElement = sourceInstance.ParentContainer;
 
             var isPastingInNewElement = sourceElement != targetElement;
-            var isSelectedInstancePartOfCopied = selectedInstance != null && instancesToCopy.Any(item => 
+            var isSelectedInstancePartOfCopied = selectedInstance != null && instancesToCopy.Any(item =>
                 item.Name == selectedInstance.Name &&
                 item.ParentContainer == selectedInstance.ParentContainer);
 
-            var shouldAttachToSelectedInstance = isPastingInNewElement || !isSelectedInstancePartOfCopied;
-            var newParentName = selectedInstance?.Name;
+            var shouldAttachToSelectedInstance = _hasChangedSelectionSinceCopy && (isPastingInNewElement || !isSelectedInstancePartOfCopied);
 
-            if(selectedInstance != null)
-            {
-                var childName = ObjectFinder.Self.GetDefaultChildName(selectedInstance, _selectedState.SelectedStateSave);
-
-                if(!string.IsNullOrEmpty(childName))
-                {
-                    newParentName += "." + childName;
-                }
-            }
 
             var newInstance = newInstances.First(item => item.Name == oldNewNameDictionary[sourceInstance.Name]);
 
             if (targetElement != null)
-            { 
-                foreach(var stateSave in copiedStates)
+            {
+                foreach (var stateSave in copiedStates)
                 {
 
                     StateSave targetState;
@@ -503,17 +683,18 @@ public class CopyPasteLogic
                     {
                         var selectedElement = _selectedState.SelectedElement;
 
-                        targetState = selectedElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ?? 
+                        targetState = selectedElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ??
                             _selectedState.SelectedElement.DefaultState;
-                            //_selectedState.SelectedStateSave ?? _selectedState.SelectedElement.DefaultState;
+                        //_selectedState.SelectedStateSave ?? _selectedState.SelectedElement.DefaultState;
 
                     }
 
-                    var variablesOnSourceInstance = stateSave.Variables.Where(item => item.SourceObject == sourceInstance.Name).ToArray();
+                    var variablesOnSourceInstance = stateSave.Variables.Where(item => item.SourceObject == sourceInstance.Name && 
+                        // we handle parents down below, so skip it here:
+                        item.GetRootName() != "Parent").ToArray();
                     // why reverse loop?
                     for (int i = variablesOnSourceInstance.Length - 1; i > -1; i--)
                     {
-
                         // We may have copied over a group of instances.  If so
                         // the copied state may have variables for multiple instances.
                         // We only want to apply the variables that work for the selected
@@ -522,39 +703,6 @@ public class CopyPasteLogic
 
                         VariableSave copiedVariable = sourceVariable.Clone();
                         copiedVariable.Name = newInstance.Name + "." + copiedVariable.GetRootName();
-
-                        var valueAsString = copiedVariable.Value as string;
-
-                        if (copiedVariable.GetRootName() == "Parent" && 
-                            string.IsNullOrWhiteSpace(valueAsString) == false)
-                        {
-                            var valueWithoutSubItem = valueAsString;
-                            if(valueWithoutSubItem.Contains("."))
-                            {
-                                valueWithoutSubItem = valueWithoutSubItem.Substring(0, valueWithoutSubItem.IndexOf("."));
-                            }
-                                
-                            if(oldNewNameDictionary.ContainsKey(valueWithoutSubItem))
-                            {
-                                // this is a parent and it may be attached to a copy, so update the value
-                                var newValue = oldNewNameDictionary[valueWithoutSubItem];
-                                if(valueAsString.Contains("."))
-                                {
-                                    newValue += valueAsString.Substring(valueAsString.IndexOf("."));
-                                }
-                                copiedVariable.Value = newValue;
-                                shouldAttachToSelectedInstance = false;
-
-                            }
-
-                        }
-                        // Not sure why we are doing this. If the old contains the key, then attach to that every time (see above)
-                        //if(copiedVariable.GetRootName() == "Parent" && shouldAttachToSelectedInstance && selectedInstance == null)
-                        //{
-                        //    // don't assign it because we're not pasting onto a particular instance and
-                        //    // the copied instance already has a parent.
-                        //    shouldAttachToSelectedInstance = false;
-                        //}
 
                         // We don't want to copy exposed variables.
                         // If we did, the user would have 2 variables exposed with the same.
@@ -579,10 +727,45 @@ public class CopyPasteLogic
                         }
                     }
 
-                    if(shouldAttachToSelectedInstance)
+                    var desiredParent = newInstanceToParentDictionary[newInstance];
+
+                    string? newParentName = null;
+
+                    if(desiredParent is InstanceSave desiredParentInstance)
                     {
-                        targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
+                        newParentName = desiredParentInstance.Name;
+
+                        var childName = ObjectFinder.Self.GetDefaultChildName(desiredParentInstance, _selectedState.SelectedStateSave);
+
+                        if (!string.IsNullOrEmpty(childName))
+                        {
+                            newParentName += "." + childName;
+                        }
                     }
+
+                    var desiredParentName = newParentName;
+
+                    // do parent attachment here:
+                    var desiredParentNameWithoutSubItem = desiredParentName;
+                    if (desiredParentNameWithoutSubItem?.Contains(".") == true)
+                    {
+                        desiredParentNameWithoutSubItem = desiredParentNameWithoutSubItem.Substring(0, desiredParentNameWithoutSubItem.IndexOf("."));
+                    }
+
+                    if (desiredParentNameWithoutSubItem != null && oldNewNameDictionary.ContainsKey(desiredParentNameWithoutSubItem))
+                    {
+                        // this is a parent and it may be attached to a copy, so update the value
+                        newParentName = oldNewNameDictionary[desiredParentNameWithoutSubItem];
+                        if (desiredParentName.Contains("."))
+                        {
+                            newParentName += desiredParentName.Substring(desiredParentName.IndexOf("."));
+                        }
+                        
+                    }
+                    targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
+
+
+                    
                 }
 
                 // This used to be done here when we paste, but now we're
@@ -601,18 +784,53 @@ public class CopyPasteLogic
                 newInstance.ParentContainer = targetElement;
                 // We need to call InstanceAdd before we select the new object - the Undo manager expects it
                 // This includes before other managers refresh
-                PluginManager.Self.InstanceAdd(targetElement, newInstance);
+                _pluginManager.InstanceAdd(targetElement, newInstance);
             }
         }
 
-
-        WireframeObjectManager.Self.RefreshAll(true);
+        _wireframeObjectManager.RefreshAll(true);
         _guiCommands.RefreshElementTreeView(targetElement);
         _fileCommands.TryAutoSaveElement(targetElement);
-        _selectedState.SelectedInstances = newInstances;
 
-        LastPastedInstances.Clear();
-        LastPastedInstances.AddRange(newInstances);
+        //var hasSelectionChangedStore = _hasChangedSelectionSinceCopy;
+
+        isSelectionCausedByPaste = true;
+        _selectedState.SelectedInstances = newInstances;
+        _hasChangedSelectionSinceCopy = false;
+        isSelectionCausedByPaste = false;
+    }
+
+    int GetIndexOfInstanceByName(ElementSave element, InstanceSave instance)
+    {
+        for(int i = 0; i < element.Instances.Count; i++)
+        {
+            if (element.Instances[i].Name == instance.Name)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    object GetParentElementOrInstanceFor(InstanceSave instance)
+    {
+        var element = instance.ParentContainer;
+
+        if(element == null)
+        {
+            throw new InvalidOperationException($"The instance {instance} must have a valid parent (its ParentContainer must be non-null)");
+        }
+
+        var parentName = element.DefaultState.GetValueRecursive($"{instance.Name}.Parent") as string;
+
+        if(string.IsNullOrEmpty(parentName))
+        {
+            return element;
+        }
+        else
+        {
+            return (object?)element.GetInstance(parentName) ?? element;
+        }
     }
 
     private void PasteCopiedElement()
@@ -637,13 +855,13 @@ public class CopyPasteLogic
 
         var selectedNode = _selectedState.SelectedTreeNode;
 
-        if(toAdd is ScreenSave && selectedNode.IsScreensFolderTreeNode())
+        if (toAdd is ScreenSave && selectedNode.IsScreensFolderTreeNode())
         {
             var path = selectedNode.FullPath.Substring("Screens\\".Length);
 
             toAdd.Name = (path + "/" + strippedName).Replace("\\", "/");
         }
-        else if(toAdd is ComponentSave && selectedNode.IsComponentsFolderTreeNode())
+        else if (toAdd is ComponentSave && selectedNode.IsComponentsFolderTreeNode())
         {
             var path = selectedNode.FullPath.Substring("Components\\".Length);
 
@@ -683,9 +901,9 @@ public class CopyPasteLogic
     {
         List<InstanceSave> listToFill = new List<InstanceSave>();
 
-        foreach(var instance in explicitlySelectedInstances)
+        foreach (var instance in explicitlySelectedInstances)
         {
-            if(listToFill.Any(item => item.Name == instance.Name) == false)
+            if (listToFill.Any(item => item.Name == instance.Name) == false)
             {
                 listToFill.Add(instance);
 
@@ -700,17 +918,17 @@ public class CopyPasteLogic
     {
         var defaultState = container.DefaultState;
 
-        foreach(var variable in defaultState.Variables)
+        foreach (var variable in defaultState.Variables)
         {
-            if(variable.GetRootName() == "Parent")
+            if (variable.GetRootName() == "Parent")
             {
                 var value = variable.Value as string;
 
-                if(!string.IsNullOrEmpty(value) && (value == instance.Name || value.StartsWith(instance.Name + ".") ))
+                if (!string.IsNullOrEmpty(value) && (value == instance.Name || value.StartsWith(instance.Name + ".")))
                 {
                     var foundObject = container.GetInstance(variable.SourceObject);
 
-                    if(foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
+                    if (foundObject != null && listToFill.Any(item => item.Name == foundObject.Name) == false)
                     {
                         listToFill.Add(foundObject);
                         FillWithChildrenOf(foundObject, listToFill, container);

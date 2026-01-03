@@ -1,0 +1,20 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "TestComponent (Container).gum-logo-reverse",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-10-19T11:50:30.145201Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestComponent (Container).Sprite gum-logo-reverse in TestComponent (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2025-10-19T11:50:34.3285105Z"
+      }
+    ]
+  }
+}

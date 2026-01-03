@@ -39,7 +39,7 @@ namespace Gum.Gui.Plugins
             {
                 string fileName = obj.FullFileName;
 
-                vm.Title = "Gum: " + fileName;
+                vm.Title = fileName;
             }
             else
             {

@@ -1,6 +1,5 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
-using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
 using Gum.ToolStates;
@@ -8,6 +7,8 @@ using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
+using System.Diagnostics;
+using Gum.Services.Fonts;
 
 namespace Gum.Plugins.Fonts;
 
@@ -80,7 +81,14 @@ public class MainFontPlugin : InternalPlugin
         {
             System.IO.Directory.CreateDirectory(_fontManager.AbsoluteFontCacheFolder);
         }
-        System.Diagnostics.Process.Start(_fontManager.AbsoluteFontCacheFolder);
+
+        var processStartInfo = new ProcessStartInfo
+        {
+            FileName = _fontManager.AbsoluteFontCacheFolder,
+            UseShellExecute = true
+        };
+
+        System.Diagnostics.Process.Start(processStartInfo);
     }
 
     private async Task HandleRefreshFontCache(bool forceRecreate)

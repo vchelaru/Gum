@@ -54,6 +54,9 @@
             this.Succeeded = generalResponse.Succeeded;
             this.DidAttempt = generalResponse.DidAttempt;
         }
+
+        public static new OptionallyAttemptedGeneralResponse UnsuccessfulWith(string message)  =>
+            new OptionallyAttemptedGeneralResponse { Succeeded = false, DidAttempt = true, Message = message };
     }
 
 

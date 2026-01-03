@@ -81,7 +81,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     //public IReadOnlyCollection<BindableGue> GumElements => GumElementsInternal;
 
     // this is public to support adding GUE's directly in gencode.
-    public ObservableCollection<BindableGue> Children { get; private set; } = new ObservableCollection<BindableGue>();
+    public ObservableCollection<BindableGue> Children { get; private set; } = new ObservableCollectionNoReset<BindableGue>();
 
     SystemManagers SystemManagers;
     public Renderer Renderer => SystemManagers.Renderer;
@@ -107,11 +107,23 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 
     InteractiveGue elementPushed;
 
+    static float _globalScale = 1;
     /// <summary>
     /// The scale used when rendering the visuals. This is usually the device density.
     /// Leaving this at 1 will make everything draw to-the-pixel regardles of device density.
     /// </summary>
-    public static float GlobalScale { get; set; } = 1;
+    public static float GlobalScale 
+    {
+        get => _globalScale;
+        set
+        {
+            if(value == 0)
+            {
+                throw new InvalidOperationException("Cannot set global scale to 0, it must be a positive value");
+            }
+            _globalScale = value;
+        }
+    }
 
     // Device density which is used to divide the height and width request 
     public static float DeviceDensity { get; set; } = 1;

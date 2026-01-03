@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Gum.Commands;
+using Gum.Services;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Gum.Commands;
-using Gum.Services;
+using ControlzEx;
 
 namespace Gum.Gui.Windows
 {
     /// <summary>
     /// Interaction logic for DeleteOptionsWindow.xaml
     /// </summary>
-    public partial class DeleteOptionsWindow : System.Windows.Window
+    public partial class DeleteOptionsWindow : WindowChromeWindow
     {
         /// <summary>
         /// The stack panel for plugins to add additional controls for options like
@@ -20,14 +21,15 @@ namespace Gum.Gui.Windows
 
         public string Message
         {
-            get => (string)LabelInstance.Content;
-            set => LabelInstance.Content = value;
+            get => (string)LabelInstance.Text;
+            set => LabelInstance.Text = value;
         }
 
         public Array ObjectsToDelete { get; set; }
 
         public DeleteOptionsWindow()
         {
+            this.Owner = Application.Current.MainWindow;
             InitializeComponent();
         }
 

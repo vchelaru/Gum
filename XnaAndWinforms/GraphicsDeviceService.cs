@@ -66,7 +66,11 @@ namespace XnaAndWinforms
             graphicsDevice = new GraphicsDevice(GraphicsAdapter.DefaultAdapter,
                                                 // It's 2016, so pretty much every computer should support hidef
                                                 // We do this to support 4k textures
-                                                GraphicsProfile.HiDef,
+                                                // Actually it's 2025! And KNI supports 8192 so let's do that:
+                                                // There are even higher feature levels supported which can go 
+                                                // to 16384, but we probably don't need that...yet?
+                                                // https://github.com/kniEngine/kni/blob/e0dce132bccf36bb02dd0007fa5ce6a3e3c620bf/Platforms/Graphics/.DX11/ConcreteGraphicsCapabilities.cs#L29
+                                                GraphicsProfile.FL10_0,
                                                 parameters);
         }
 

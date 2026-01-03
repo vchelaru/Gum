@@ -494,14 +494,23 @@ namespace WpfDataUi.Controls
 
         private void SyncForegroundWithState()
         {
-            if (InstanceMember.IsDefault)
+            Dispatcher.BeginInvoke(() =>
             {
-                ComboBox.Foreground = Brushes.Green;
-            }
-            else
-            {
-                ComboBox.ClearValue(Control.ForegroundProperty);
-            }
+                if (DataUiGrid.GetOverridesIsDefaultStyling(this))
+                {
+                    return;
+                }
+
+                if (InstanceMember.IsDefault)
+                {
+                    ComboBox.Foreground = Brushes.Green;
+                }
+                else
+                {
+                    ComboBox.ClearValue(Control.ForegroundProperty);
+                }
+            });
+
         }
     }
 }

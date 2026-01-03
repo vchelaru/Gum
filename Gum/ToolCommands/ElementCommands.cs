@@ -26,44 +26,54 @@ public class ElementCommands : IElementCommands
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly PluginManager _pluginManager;
 
     #endregion
 
     public ElementCommands(ISelectedState selectedState, 
         IGuiCommands guiCommands, 
         IFileCommands fileCommands,
-        VariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        WireframeObjectManager wireframeObjectManager)
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IWireframeObjectManager wireframeObjectManager,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _pluginManager = pluginManager;
     }
 
     #region Instance
 
-    public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string type = null, string parentName = null)
+    public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null)
     {
         InstanceSave instanceSave = new InstanceSave();
         instanceSave.Name = name;
         instanceSave.ParentContainer = elementToAddTo;
         instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
 
-        return AddInstance(elementToAddTo, instanceSave, parentName);
+        return AddInstance(elementToAddTo, instanceSave, parentName, desiredIndex);
     }
 
-    public InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string parentName = null)
+    public InstanceSave? AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null)
     {
         if (elementToAddTo == null)
         {
             throw new Exception("Could not add instance named " + instanceSave.Name + " because no element is selected");
         }
 
-        elementToAddTo.Instances.Add(instanceSave);
+        if(desiredIndex == null)
+        {
+            elementToAddTo.Instances.Add(instanceSave);
+        }
+        else
+        {
+            elementToAddTo.Instances.Insert(desiredIndex.Value, instanceSave);
+        }
 
         _guiCommands.RefreshElementTreeView(elementToAddTo);
 
@@ -77,7 +87,7 @@ public class ElementCommands : IElementCommands
         }
 
         // We need to call InstanceAdd before we select the new object - the Undo manager expects it
-        PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+        _pluginManager.InstanceAdd(elementToAddTo, instanceSave);
 
         // a plugin may have removed this instance. If so, we need to refresh the tree node again:
         if (elementToAddTo.Instances.Contains(instanceSave) == false)
@@ -101,50 +111,7 @@ public class ElementCommands : IElementCommands
         return instanceSave;
     }
 
-    /// <summary>
-    /// Removes the argument instance from the argument elementToRemoveFrom, and detaches any
-    /// object that was attached to this parent.
-    /// </summary>
-    /// <param name="instanceToRemove">The instance to remove.</param>
-    /// <param name="elementToRemoveFrom">The element to remove from.</param>
-    public void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
-    {
-        if (!elementToRemoveFrom.Instances.Contains(instanceToRemove))
-        {
-            throw new Exception("Could not find the instance " + instanceToRemove.Name + " in " + elementToRemoveFrom.Name);
-        }
 
-        elementToRemoveFrom.Instances.Remove(instanceToRemove);
-
-        RemoveParentReferencesToInstance(instanceToRemove, elementToRemoveFrom);
-
-        elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instanceToRemove.Name);
-
-
-        PluginManager.Self.InstanceDelete(elementToRemoveFrom, instanceToRemove);
-
-        if (_selectedState.SelectedInstance == instanceToRemove)
-        {
-            _selectedState.SelectedInstance = null;
-        }
-    }
-
-    public void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom)
-    {
-        foreach(var instance in instances)
-        {
-            elementToRemoveFrom.Instances.Remove(instance);
-            RemoveParentReferencesToInstance(instance, elementToRemoveFrom);
-            elementToRemoveFrom.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-        }
-
-
-        PluginManager.Self.InstancesDelete(elementToRemoveFrom, instances.ToArray());
-
-        var newSelection = _selectedState.SelectedInstances.ToList()
-            .Except(instances);
-        _selectedState.SelectedInstances = newSelection;
-    }
 
     #endregion
 
@@ -161,7 +128,7 @@ public class ElementCommands : IElementCommands
 
         StateSave stateSave = new StateSave();
         stateSave.Name = name;
-        AddState(stateContainer, category, stateSave);
+        AddState(stateContainer!, category, stateSave);
 
         return stateSave;
     }
@@ -181,7 +148,7 @@ public class ElementCommands : IElementCommands
         }
 
 
-        PluginManager.Self.StateAdd(stateSave);
+        _pluginManager.StateAdd(stateSave);
 
         _guiCommands.RefreshStateTreeView();
 
@@ -223,25 +190,6 @@ public class ElementCommands : IElementCommands
         }
     }
 
-    public void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom)
-    {
-        
-        elementToRemoveFrom.UncategorizedStates.Remove(stateSave);
-
-        foreach (var category in elementToRemoveFrom.Categories.Where(item => item.States.Contains(stateSave)))
-        {
-            category.States.Remove(stateSave);
-        }
-
-        if(elementToRemoveFrom is BehaviorSave behaviorSave)
-        {
-            _fileCommands.TryAutoSaveBehavior(behaviorSave);
-        }
-        else if(elementToRemoveFrom is ElementSave elementSave)
-        {
-            _fileCommands.TryAutoSaveElement(elementSave);
-        }
-    }
     #endregion
 
     #region Variables
@@ -389,7 +337,7 @@ public class ElementCommands : IElementCommands
 
             float currentValue = (float)currentValueAsObject;
 
-            string unitsVariableName = baseVariableName + " Units";
+            string unitsVariableName = baseVariableName + "Units";
             string unitsNameWithInstance;
             object unitsVariableAsObject;
             GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
@@ -661,7 +609,7 @@ public class ElementCommands : IElementCommands
 
         _guiCommands.RefreshStateTreeView();
 
-        PluginManager.Self.CategoryAdd(category);
+        _pluginManager.CategoryAdd(category);
 
         _fileCommands.TryAutoSaveCurrentObject();
 
@@ -698,7 +646,7 @@ public class ElementCommands : IElementCommands
         //}
 
         // We need to call InstanceAdd before we select the new object - the Undo manager expects it
-        //PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
+        //_pluginManager.InstanceAdd(elementToAddTo, instanceSave);
 
         // a plugin may have removed this instance. If so, we need to refresh the tree node again:
         //if (elementToAddTo.Instances.Contains(instanceSave) == false)
@@ -740,7 +688,7 @@ public class ElementCommands : IElementCommands
 
             AddCategoriesFromBehavior(behaviorSave, componentSave);
 
-            PluginManager.Self.BehaviorReferencesChanged(componentSave);
+            _pluginManager.BehaviorReferencesChanged(componentSave);
 
             _guiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
 
@@ -789,35 +737,5 @@ public class ElementCommands : IElementCommands
 
     #endregion
 
-    public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
-    {
-        foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
-        {
-            for (int i = stateSave.Variables.Count - 1; i > -1; i--)
-            {
-                var variable = stateSave.Variables[i];
-
-                if (variable.SourceObject == instanceToRemove.Name)
-                {
-                    // this is a variable that assigns a value on the removed object. The object
-                    // is gone, so the variable should be removed too.
-                    stateSave.Variables.RemoveAt(i);
-                }
-                else if (variable.GetRootName() == "Parent" && variable.Value as string == instanceToRemove.Name)
-                {
-                    // This is a variable that assigns the Parent to the removed object. Since the object is
-                    // gone, the parent value shouldn't be assigned anymore.
-                    stateSave.Variables.RemoveAt(i);
-                }
-            }
-            for (int i = stateSave.VariableLists.Count - 1; i > -1; i--)
-            {
-                if (stateSave.VariableLists[i].SourceObject == instanceToRemove.Name)
-                {
-                    stateSave.VariableLists.RemoveAt(i);
-                }
-            }
-        }
-    }
 
 }

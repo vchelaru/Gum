@@ -45,6 +45,21 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>ComponentWithChangedTypes</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>ComponentWithExposedVariables</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>ContainerOfFormsObjects</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Controls/ButtonClose</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>

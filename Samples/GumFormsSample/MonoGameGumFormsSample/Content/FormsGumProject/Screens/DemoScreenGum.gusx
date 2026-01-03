@@ -491,6 +491,66 @@
     </Variable>
     <Variable>
       <Type>string</Type>
+      <Name>ClearResolutionsButton.ButtonDisplayText</Name>
+      <Value xsi:type="xsd:string">Clear Resolutions</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClearResolutionsButton.Height</Name>
+      <Value xsi:type="xsd:float">24</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ClearResolutionsButton.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClearResolutionsButton.Width</Name>
+      <Value xsi:type="xsd:float">156</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClearResolutionsButton.X</Name>
+      <Value xsi:type="xsd:float">-0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>ClearResolutionsButton.XOrigin</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>ClearResolutionsButton.XUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ClearResolutionsButton.Y</Name>
+      <Value xsi:type="xsd:float">28</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>ClearResolutionsButton.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>ClearResolutionsButton.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
       <Name>ComboBoxInstance.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
@@ -3086,6 +3146,11 @@
   </Instance>
   <Instance>
     <Name>DetectResolutionsButton</Name>
+    <BaseType>Controls/ButtonStandard</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ClearResolutionsButton</Name>
     <BaseType>Controls/ButtonStandard</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>

@@ -1,0 +1,142 @@
+# Tabbing (Moving Focus)
+
+## Introduction
+
+Gum supports tabbing focus between controls. Tabbing can be performed with the keyboard or gamepad.
+
+{% hint style="info" %}
+Keyboard and Gamepad input is currently not supported in raylib Gum. If you need this feature or would like to help with its implementation or testing, please send us a message in Discord.
+{% endhint %}
+
+## Keyboard Tabbing
+
+The keyboard can be used to interact with controls. Keyboards can be used to:
+
+* Tab forward and back to pass focus to new controls
+* To click controls by pressing enter
+* To perform control-specific actions such as changing the value of a slider
+
+To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
+
+```csharp
+GumUI.UseKeyboardDefaults();
+```
+
+Keep in mind that a control must first be explicitly set to receive keyboard input.
+
+For example, the following code gives a Button focus assuming MyButton is a valid button:
+
+```csharp
+MyButton.IsFocused = true;
+```
+
+Note that TextBox and PasswordBox automatically have IsFocused set to true when clicked on.
+
+Controls can be skipped when tabbed by setting `GamepadTabbingFocusBehavior`. For example the following code results in a button being skipped if it receives focus from tabbing:
+
+```csharp
+MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
+```
+
+{% hint style="info" %}
+Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
+{% endhint %}
+
+## Gamepad Tabbing
+
+To enable gamepad support in your game:
+
+1. Be sure to have a gamepad plugged in. Any gamepad that is usable in MonoGame will also work as a gamepad in Gum Forms
+2. Add the gamepad to the FrameworkElement.GamepadsForUiControl. You can add multiple gamepads for multiplayer games.
+3. Set the initial control to have focus by setting its `IsFocused = true`
+
+For example, the following code enables gamepad control for a game assuming MyButton is a valid button:
+
+```csharp
+// The first gamepad:
+var gamepad = GumUI.Gamepads[0];
+// If this code is run multiple times then the gamepad
+// may get added multiple times as well. To be safe, clear
+// the list:
+FrameworkElement.GamePadsForUiControl.Clear();
+FrameworkElement.GamePadsForUiControl.Add(gamepad);
+MyButton.IsFocused = true;
+```
+
+Gamepad navigation uses the following input for tabbing to the next item:
+
+* DPad down
+* DPad right
+* Left stick down
+* Left stick right
+
+Gamepad navigation uses the following input for tabbing to the previous item:
+
+* DPad up
+* DPad left
+* Left stick up
+* Left stick left
+
+Left and right navigation can be enabled or disabled on a control by setting `IsUsingLeftAndRightGamepadDirectionsForNavigation` to false. For example the following code adds a button which can only be navigated from by pressing up/down on the gamepad:
+
+```csharp
+var button = new Button();
+myStackPanel.AddChild(button);
+button.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
+```
+
+`IsUsingLeftAndRightGamepadDirectionsForNavigation` is set to true on all controls except on `Sliders`, which use left/right input for changing the `Slider`'s `Value`.
+
+## Getting Focused Item (CurrentInputReceiver)
+
+The static `InteractiveGue.CurrentInputReceiver` returns the current item that has focus. This can be used to diagnose problems.
+
+The following code shows how to display which button has focus with a label:
+
+```csharp
+Label label;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+
+    // Enables tabbing with the keyboard
+    GumUI.UseKeyboardDefaults();
+
+    StackPanel stackPanel = new();
+    stackPanel.AddToRoot();
+    stackPanel.Anchor(Anchor.Center);
+    stackPanel.Spacing = 6;
+
+    for(int i = 0; i < 5; i++)
+    {
+        Button button = new();
+        stackPanel.AddChild(button);
+        button.Text = $"Button {i + 1}";
+        button.Name = button.Text;
+        if(i == 0)
+        {
+            button.IsFocused = true;
+        }
+    }
+
+    label = new ();
+    stackPanel.AddChild(label);
+
+    base.Initialize();
+}
+
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    label.Text = 
+        $"Focused Control: {InteractiveGue.CurrentInputReceiver?.ToString() ?? "null"}";
+
+    base.Update(gameTime);
+}
+```
+
+<figure><img src="../../.gitbook/assets/17_05 01 49.gif" alt=""><figcaption><p><code>CurrentInputReceiver</code> displayed on a <code>Label</code></p></figcaption></figure>
+

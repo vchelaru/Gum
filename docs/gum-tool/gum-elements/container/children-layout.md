@@ -66,22 +66,16 @@ This effect is easy to notice when dragging an object inside a stack, as shown i
 
 ### Stacking and Units
 
-If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack.&#x20;
+If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack.
 
-* `Top to Bottom Stack` containers control the Y value of their children.&#x20;
-* `Left to Right Stack` containers control the X value of their children.&#x20;
+* `Top to Bottom Stack` containers control the Y value of their children.
+* `Left to Right Stack` containers control the X value of their children.
 
 The position value which is not controlled by the stack can be changed freely without any impact on the stacking.
 
 For example, if a container stacks its children using a `Top to Bottom Stack`, the children in the stack are free to change their X values. The following animation shows how children can be left, center, or right anchored (which changes their `X Units` and `X Origin`) without affecting the other children in the stack.
 
 <figure><img src="../../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption><p>Changing horizontal layout values does not affect siblings in a Top to Bottom Stack</p></figcaption></figure>
-
-An object stacks only if its position unit values are top or left for vertical or horizontal stacks. For example, if a child is part of a `Top to Bottom Stack`, it only stacks if its `Y Units` is set to `Pixels from Top`. Otherwise it ignores its parents stacking behavior.
-
-<figure><img src="../../../.gitbook/assets/04_19 41 43.gif" alt=""><figcaption><p>Top to Bottom Stack is only respected if the child has its Y Units set to Pixels from Top</p></figcaption></figure>
-
-In general this can cause unexpected behavior, especially if additional siblings follow the child which is not using the default `Pixels from Top` or `Pixels from Left`, so changing this value on the primary stacking direction is not recommended.
 
 ### Stack Spacing
 
@@ -121,7 +115,7 @@ Children of a container which uses the `Top To Bottom Stack` or `Left To Right S
 
 Children can be reordered using the right-click menu on an instance.
 
-![](<../../../.gitbook/assets/ReorderStackedChildren (1).gif>)
+![](<../../../.gitbook/assets/ReorderStackedChildren (1) (1).gif>)
 
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 
@@ -135,7 +129,7 @@ For more information on ordering, see the [Order](../general-properties/order.md
 
 The following image shows a container with 4x4 auto grid. Each child is positioned relative to the top-left corner of each grid. In this case, each child has an `Absolute` `Width` and `Height` of `50` and the parent container is sized `256x256`. This results in each rectangle leaving a gap between itself and its neighbor.
 
-<figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal </p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal</p></figcaption></figure>
 
 The following shows a container with an `Auto Grid Horizontal` and `Vertical Cells` of 2, resulting in a 2x2 grid. As children are added to the container through copy/paste, each child is placed in its own cell.
 

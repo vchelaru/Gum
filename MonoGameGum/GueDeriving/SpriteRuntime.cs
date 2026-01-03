@@ -1,5 +1,6 @@
 ﻿using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving;
 
-public class SpriteRuntime : global::Gum.Wireframe.BindableGue
+public class SpriteRuntime : global::Gum.Wireframe.BindableGue, IRenderTargetTextureReferencer
 {
     #region Contained Sprite
     RenderingLibrary.Graphics.Sprite mContainedSprite;
@@ -235,6 +236,23 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue
         }
     }
 
+    public IRenderableIpso? RenderTargetTextureSource
+    {
+        get => ContainedSprite.RenderTargetTextureSource;
+        set
+        {
+            if (ContainedSprite.RenderTargetTextureSource != value)
+            {
+                ContainedSprite.RenderTargetTextureSource = value;
+                UpdateLayout();
+            }
+        }
+    }
+
+    IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource => 
+        ContainedSprite.RenderTargetTextureSource;
+
+
     #endregion
 
     public SpriteRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -251,7 +269,5 @@ public class SpriteRuntime : global::Gum.Wireframe.BindableGue
     }
 
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
-
-
 
 }

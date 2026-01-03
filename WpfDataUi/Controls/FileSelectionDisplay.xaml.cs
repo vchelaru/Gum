@@ -100,9 +100,14 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         this.Label.Text = InstanceMember.DisplayName;
 
         RefreshAllContextMenus();
-
+        RefreshViewInExplorerButton();
 
         SuppressSettingProperty = false;
+    }
+
+    private void RefreshViewInExplorerButton()
+    {
+        ViewInExplorerButton.IsEnabled = !string.IsNullOrEmpty(InstanceMember.Value as string);
     }
 
     private void RefreshAllContextMenus(bool force = false)
@@ -151,6 +156,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
                 this.IsEnabled = false;
             }
 
+            RefreshViewInExplorerButton();
         }
     }
 
@@ -205,15 +211,6 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
             {
                 Process.Start("explorer.exe", "/select," + fileToOpen);
             }
-
-            //if (isFile)
-            {
-            }
-            //else
-            //{
-            //    Process.Start("explorer.exe", "/root," + locationToShow);
-            //}
-
         }
     }
 

@@ -10,7 +10,7 @@ public class PolygonRuntime : SkiaShapeRuntime
 {
     #region Fields/Properties
 
-    protected override RenderableBase ContainedRenderable => ContainedPolygon;
+    protected override RenderableShapeBase ContainedRenderable => ContainedPolygon;
 
 
     Polygon mContainedPolygon;
@@ -62,6 +62,7 @@ public class PolygonRuntime : SkiaShapeRuntime
             // If width and height are 0, it won't draw
             Width = 1;
             Height = 1;
+            StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
         }
     }
 

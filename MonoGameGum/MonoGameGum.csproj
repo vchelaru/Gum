@@ -2,13 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0-ios</TargetFrameworks>
-		<!-- Gum UI tool is still .NET 4 and doesn't use this so let's disable it-->
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
-		<Version>2025.9.27.1</Version>
-
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2025.12.9.1</Version>
 
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>MONOGAME</DefineConstants>
@@ -112,6 +111,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
+		<Compile Include="..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="Renderables\SpriteBatchRenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
@@ -132,7 +132,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Include="..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="Content\UISpriteSheet.png" />
+	  <EmbeddedResource Include="..\Gum\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="Content\UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -159,7 +159,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303">
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 		

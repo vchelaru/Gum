@@ -25,7 +25,7 @@ public class StateTreeViewRightClickService
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
-    private readonly EditCommands _editCommands;
+    private readonly IEditCommands _editCommands;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
@@ -34,7 +34,7 @@ public class StateTreeViewRightClickService
 
     public StateTreeViewRightClickService(ISelectedState selectedState, 
         IElementCommands elementCommands, 
-        EditCommands editCommands,
+        IEditCommands editCommands,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands)
@@ -91,9 +91,10 @@ public class StateTreeViewRightClickService
                 if (!isDefault)
                 {
                     AddSplitter();
-                    AddMenuItem("Rename State", RenameStateClick);
+                    AddMenuItem("Rename [" + _selectedState.SelectedStateSave.Name + "]", RenameStateClick);
                     AddMenuItem("Delete [" + _selectedState.SelectedStateSave.Name + "]", DeleteStateClick);
-                    AddMenuItem("Duplicate State", DuplicateStateClick);
+                    AddMenuItem("Duplicate [" + _selectedState.SelectedStateSave.Name + "]", DuplicateStateClick);
+                    AddMenuItem("Set [" + _selectedState.SelectedStateSave.Name + "] variables to default", AssignToDefault);
 
                     AddMoveToCategoryItems();
 
@@ -128,6 +129,8 @@ public class StateTreeViewRightClickService
 
         //NewMenuStrip.Visibility = (NewMenuStrip.Items.Count > 0).ToVisibility();
     }
+
+
 
     private void AddSplitter()
     {
@@ -362,4 +365,16 @@ public class StateTreeViewRightClickService
         _editCommands.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 
+    private void AssignToDefault()
+    {
+        var selectedStateSave = _selectedState.SelectedStateSave;
+        var selectedStateContainer = _selectedState.SelectedStateContainer;
+
+        if (selectedStateSave == null || selectedStateContainer == null)
+        {
+            return;
+        }
+
+        _editCommands.SetSetValuesToDefault(selectedStateSave, selectedStateContainer);
+    }
 }

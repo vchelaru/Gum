@@ -29,7 +29,7 @@ namespace Gum.Forms.Controls.Primitives;
 /// This is the base class for ScrollBar and Slider.
 /// </summary>
 public abstract class RangeBase :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement
 #else
     Gum.Forms.Controls.FrameworkElement
@@ -64,7 +64,7 @@ public abstract class RangeBase :
 
     /// <summary>
     /// The amount to change Value when the user presses the up or down buttons on a scrollbar, 
-    /// per mouse wheel tick on a scrollbar, and the amount to change the value in response
+    /// per mouse wheel tick on a scrollbar, or the amount to change the value in response
     /// to left/right presses on gamepad or keyboard on a Slider.
     /// </summary>
     public double SmallChange { get; set; }

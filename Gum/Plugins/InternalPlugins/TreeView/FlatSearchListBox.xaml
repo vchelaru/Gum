@@ -1,27 +1,68 @@
 ﻿<UserControl
-    x:Class="Gum.Plugins.InternalPlugins.TreeView.FlatSearchListBox"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.TreeView"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="450"
-    d:DesignWidth="300"
-    mc:Ignorable="d">
-    <Grid>
+  x:Class="Gum.Plugins.InternalPlugins.TreeView.FlatSearchListBox"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:behaviors="clr-namespace:Gum.DataTypes.Behaviors;assembly=GumCommon"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:dataTypes="clr-namespace:Gum.DataTypes;assembly=GumCommon"
+  xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.TreeView"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:viewModels="clr-namespace:Gum.Plugins.InternalPlugins.TreeView.ViewModels"
+  xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
+  d:DataContext="{d:DesignInstance Type={x:Type viewModels:SearchItemViewModel},
+                                   IsDesignTimeCreatable=False}"
+  d:DesignHeight="450"
+  d:DesignWidth="300"
+  mc:Ignorable="d">
+  <UserControl.Resources>
+    <local:ObjectToFluentIconConverter x:Key="FluentIconConverter" />
+    <local:TypeIsConverter x:Key="TypeIsConverter" />
+  </UserControl.Resources>
+  <Grid>
 
-        <ListBox x:Name="FlatList" PreviewMouseLeftButtonDown="FlatList_MouseLeftButtonDown">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <Image VerticalAlignment="Center" Source="{Binding Image}" />
-                        <TextBlock
-                            Margin="4,0,0,0"
-                            VerticalAlignment="Center"
-                            Text="{Binding Display}" />
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </Grid>
+    <ListBox x:Name="FlatList" PreviewMouseLeftButtonUp="FlatList_MouseLeftButtonUp">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <StackPanel Orientation="Horizontal">
+            <wpf:FluentIcon
+              VerticalAlignment="Center"
+              FontSize="{Binding IconInline, Source={StaticResource Scale}}"
+              Icon="{Binding BackingObject, Converter={StaticResource FluentIconConverter}}">
+              <wpf:FluentIcon.Style>
+                <Style TargetType="{x:Type wpf:FluentIcon}">
+                  <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+                  <Style.Triggers>
+                    <!--  Component  -->
+                    <DataTrigger Binding="{Binding BackingObject, Converter={StaticResource TypeIsConverter}, ConverterParameter={x:Type dataTypes:ComponentSave}}" Value="True">
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Icon.Green}" />
+                    </DataTrigger>
+                    <!--  Screen  -->
+                    <DataTrigger Binding="{Binding BackingObject, Converter={StaticResource TypeIsConverter}, ConverterParameter={x:Type dataTypes:ScreenSave}}" Value="True">
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Icon.Red}" />
+                    </DataTrigger>
+                    <!--  Instance  -->
+                    <DataTrigger Binding="{Binding BackingObject, Converter={StaticResource TypeIsConverter}, ConverterParameter={x:Type dataTypes:InstanceSave}}" Value="True">
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Icon.Blue}" />
+                    </DataTrigger>
+                    <!--  Behavior  -->
+                    <DataTrigger Binding="{Binding BackingObject, Converter={StaticResource TypeIsConverter}, ConverterParameter={x:Type behaviors:BehaviorSave}}" Value="True">
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Icon.Manilla}" />
+                    </DataTrigger>
+                    <!--  Standard Element  -->
+                    <DataTrigger Binding="{Binding BackingObject, Converter={StaticResource TypeIsConverter}, ConverterParameter={x:Type dataTypes:StandardElementSave}}" Value="True">
+                      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Icon.Purple}" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </wpf:FluentIcon.Style>
+            </wpf:FluentIcon>
+            <TextBlock
+              Margin="4,0,0,0"
+              VerticalAlignment="Center"
+              Text="{Binding Display}" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
 </UserControl>

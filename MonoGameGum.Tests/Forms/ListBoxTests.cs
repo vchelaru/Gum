@@ -15,20 +15,6 @@ public class ListBoxTests : BaseTestClass
 {
 
     [Fact]
-    public void Items_ShoudAddListBoxItem_WhenAdding()
-    {
-        ListBox listBox = new ();
-        listBox.Items.Add(1);
-        listBox.ListBoxItems.Count.ShouldBe(1);
-        (listBox.ListBoxItems[0] is ListBoxItem).ShouldBeTrue();
-
-        listBox.InnerPanel.Children.Count.ShouldBe(1);
-        (listBox.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
-        (listBox.InnerPanel.Children[0] as InteractiveGue).FormsControlAsObject
-            .ShouldBeOfType<ListBoxItem>();
-    }
-
-    [Fact]
     public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
     {
         bool didSet = false;
@@ -109,7 +95,7 @@ public class ListBoxTests : BaseTestClass
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             listBox.Visual,
             mockCursor.Object,
-            null,
+            null!,
             0);
 
 
@@ -127,6 +113,111 @@ public class ListBoxTests : BaseTestClass
             throw new Exception(diagnostics);
         }
 
+    }
+
+    [Fact]
+    public void Items_ShoudAddListBoxItem_WhenAdding()
+    {
+        ListBox listBox = new ();
+        listBox.Items.Add(1);
+        listBox.ListBoxItems.Count.ShouldBe(1);
+        (listBox.ListBoxItems[0] is ListBoxItem).ShouldBeTrue();
+
+        listBox.InnerPanel.Children.Count.ShouldBe(1);
+        (listBox.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
+        (listBox.InnerPanel.Children[0] as InteractiveGue)!.FormsControlAsObject
+            .ShouldBeOfType<ListBoxItem>();
+    }
+
+    [Fact]
+    public void Items_Add_ShouldAddListBoxItems()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 10; i++)
+        {
+            listBox.Items.Add("Item " + i);
+        }
+        listBox.ListBoxItems.Count.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Items_Remove_ShouldRemoveListBoxItems()
+    {
+
+        ListBox listBox = new();
+        for (int i = 0; i < 10; i++)
+        {
+            listBox.Items.Add("Item " + i);
+        }
+
+        for(int i = 0; i < 10; i++)
+        {
+            listBox.Items.Remove("Item " + i);
+            listBox.ListBoxItems.Count.ShouldBe(9 - i);
+        }
+    }
+
+    [Fact]
+    public void Items_RemoveAt_ShouldRemoveListBoxItems()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 10; i++)
+        {
+            listBox.Items.Add("Item " + i);
+        }
+
+        for (int i = 0; i < 10; i++)
+        {
+            listBox.Items.RemoveAt(0);
+            listBox.ListBoxItems.Count.ShouldBe(9 - i);
+        }
+    }
+
+    [Fact]
+    public void Items_Clear_ShouldClearListBoxItems()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 10; i++)
+        {
+            listBox.Items.Add("Item " + i);
+        }
+        listBox.Items.Clear();
+        listBox.ListBoxItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_InsertAt_ShouldProperlyInsert()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 10; i++)
+        {
+            listBox.Items.Add("Item " + i);
+        }
+
+        var itemToRemove = listBox.Items[5];
+        listBox.Items.RemoveAt(5);
+        listBox.Items.Insert(0, itemToRemove);
+
+        listBox.ListBoxItems.Count.ShouldBe(10);
+        var item5 = listBox.ListBoxItems[0];
+        item5.BindingContext.ShouldBe("Item 5");
+    }
+
+    [Fact]
+    public void ListBoxItems_ShouldReflectBackingObjects_WhenRemoving()
+    {
+        ListBox listBox = new();
+        for (int i = 0; i < 2; i++)
+        {
+            listBox.Items.Add("Item " + i);
+        }
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.Items.Remove("Item 1");
+        listBox.ListBoxItems.Count.ShouldBe(1);
+        foreach(var listBoxItem in listBox.ListBoxItems)
+        {
+            listBoxItem.BindingContext.ShouldNotBe("Item 1");
+        }
     }
 
     private static Mock<ICursor> SetupForPush()

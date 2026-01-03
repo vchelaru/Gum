@@ -31,7 +31,7 @@ namespace Gum.Forms.Controls.Primitives;
 #endif
 
 public class ButtonBase :
-#if RAYLIB || FRB
+#if FRB
     FrameworkElement,
 #else
     Gum.Forms.Controls.FrameworkElement, 
@@ -305,6 +305,8 @@ public class ButtonBase :
 
             if(wasPushed)
             {
+                InteractiveGue.LastVisualPushed = this.Visual;
+
                 wasPushedOnCurrentHold = true;
 
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
@@ -346,12 +348,9 @@ public class ButtonBase :
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-#if RAYLIB
-#else
-        var asKeyboard = keyboard as IInputReceiverKeyboardMonoGame;
-        if(asKeyboard != null)
+        if(keyboard != null)
         {
-            foreach(var key in asKeyboard.KeysTyped)
+            foreach(Keys key in keyboard.KeysTyped)
             {
                 HandleKeyDown(key, 
                     keyboard.IsShiftDown,
@@ -359,7 +358,6 @@ public class ButtonBase :
                     keyboard.IsCtrlDown);
             }
         }
-#endif
     }
 #endif
 

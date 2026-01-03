@@ -173,6 +173,7 @@ namespace WpfDataUi.DataTypes
                 LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
             }
             OnPropertyChanged("Value");
+            OnPropertyChanged(nameof(IsDefault));
             return result;
         }
 
@@ -444,6 +445,7 @@ namespace WpfDataUi.DataTypes
         public void SimulateValueChanged()
         {
             OnPropertyChanged("Value");
+            OnPropertyChanged(nameof(IsDefault));
         }
 
         protected virtual void OnPropertyChanged(string propertyName)

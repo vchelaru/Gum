@@ -1,4 +1,7 @@
-﻿using Gum.Content.AnimationChain;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
@@ -24,6 +27,7 @@ using MonoGameGum.Localization;
 using System.Security.Policy;
 using Gum.Managers;
 using Microsoft.Xna.Framework.Graphics;
+using Gum.Converters;
 
 #if GUM
 using Gum.Services;
@@ -41,10 +45,12 @@ namespace Gum.Wireframe;
 
 public class CustomSetPropertyOnRenderable
 {
-    public static ILocalizationService LocalizationService { get; set; }
+    public static ILocalizationService? LocalizationService { get; set; }
 #if GUM
     private static readonly FontManager _fontManager;
 #endif
+
+    public static event Action<string>? PropertyAssignmentError;
 
     static CustomSetPropertyOnRenderable()
     {
@@ -53,17 +59,22 @@ public class CustomSetPropertyOnRenderable
 #endif
     }
 
+    /// <summary>
+    /// Additional logic to perform before falling back to reflection. This can be added by libraries adding additional runtime types
+    /// </summary>
+    public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
+
     public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
         // First try special-casing.  
 
-        if (renderableIpso is Text)
+        if (renderableIpso is Text renderableText)
         {
-            handled = TrySetPropertyOnText(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
         else if (renderableIpso is LineCircle)
         {
             handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
@@ -145,6 +156,11 @@ public class CustomSetPropertyOnRenderable
         }
 #endif
 
+        if(!handled && AdditionalPropertyOnRenderable != null)
+        {
+            handled = AdditionalPropertyOnRenderable(renderableIpso, graphicalUiElement, propertyName, value);
+        }
+
         // If special case didn't work, let's try reflection
         if (!handled)
         {
@@ -158,10 +174,17 @@ public class CustomSetPropertyOnRenderable
 
                 if (propertyInfo != null && propertyInfo.CanWrite)
                 {
-
-                    if (value.GetType() != propertyInfo.PropertyType)
+                    var valueType = value.GetType();
+                    if (valueType != propertyInfo.PropertyType)
                     {
-                        value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                        if(valueType == typeof(PositionUnitType) && propertyInfo.PropertyType == typeof(GeneralUnitType))
+                        {
+                            value = UnitConverter.ConvertToGeneralUnit((PositionUnitType)value);
+                        }
+                        else
+                        {
+                            value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                        }
                     }
                     propertyInfo.SetValue(renderableIpso, value, null);
                 }
@@ -183,9 +206,13 @@ public class CustomSetPropertyOnRenderable
                 {
                     (renderableIpso as InvisibleRenderable).Alpha = asInt;
                 }
+                else if(value is float asFloat)
+                {
+                    (renderableIpso as InvisibleRenderable).Alpha = (int)asFloat;
+                }
                 else
                 {
-                    (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 255;
+                    (renderableIpso as InvisibleRenderable).Alpha = 255;
                 }
                 didSet = true;
                 break;
@@ -407,7 +434,7 @@ public class CustomSetPropertyOnRenderable
 
     #region Text
 
-    public static bool TrySetPropertyOnText(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    public static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
@@ -420,42 +447,49 @@ public class CustomSetPropertyOnRenderable
 
         void ReactToFontValueChange()
         {
-            UpdateToFontValues(mContainedObjectAsIpso as IText, graphicalUiElement);
+            UpdateToFontValues(textRenderable, graphicalUiElement);
 
             handled = true;
         }
 
         if (propertyName == "Text" || propertyName == "TextNoTranslate")
         {
-            var asText = ((Text)mContainedObjectAsIpso);
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
                 graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
                 // make it have no line wrap width before assignign the text:
-                asText.Width = null;
+                textRenderable.Width = null;
             }
 
             var valueAsString = value as string;
 
 
-            asText.InlineVariables.Clear();
+            textRenderable.InlineVariables.Clear();
             if (valueAsString?.Contains("[") == true)
             {
 
-                // todo - eventually support localization here:
-                asText.StoredMarkupText = valueAsString;
-                SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+                textRenderable.StoredMarkupText = valueAsString;
+                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
             }
             else
             {
-                asText.StoredMarkupText = null;
+                textRenderable.StoredMarkupText = null;
                 var rawText = valueAsString;
                 if(LocalizationService != null && propertyName == "Text")
                 {
                     rawText = LocalizationService.Translate(rawText);
                 }
-                asText.RawText = rawText;
+
+                if(rawText?.Contains("[") == true)
+                {
+                    textRenderable.StoredMarkupText = rawText;
+                    SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
+                }
+                else
+                {
+                    textRenderable.RawText = rawText;
+                }
             }
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
@@ -468,7 +502,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")
         {
-            ((Text)mContainedObjectAsIpso).FontScale = (float)value;
+            textRenderable.FontScale = (float)value;
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
@@ -488,18 +522,17 @@ public class CustomSetPropertyOnRenderable
 
             ReactToFontValueChange();
         }
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
         else if (propertyName == nameof(textRuntime.UseCustomFont))
         {
             if (textRuntime != null)
             {
                 textRuntime.UseCustomFont = (bool)value;
             }
-            var asText = ((Text)mContainedObjectAsIpso);
 
-            if (!string.IsNullOrEmpty(asText.StoredMarkupText))
+            if (!string.IsNullOrEmpty(textRenderable.StoredMarkupText))
             {
-                SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
             }
             ReactToFontValueChange();
         }
@@ -558,8 +591,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "LineHeightMultiplier")
         {
-            var asText = ((Text)mContainedObjectAsIpso);
-            asText.LineHeightMultiplier = (float)value;
+            textRenderable.LineHeightMultiplier = (float)value;
         }
         else if (propertyName == nameof(textRuntime.UseFontSmoothing))
         {
@@ -571,56 +603,55 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == nameof(Blend))
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
             var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-            var text = mContainedObjectAsIpso as Text;
-            text.BlendState = valueAsXnaBlend;
+            textRenderable.BlendState = valueAsXnaBlend;
             handled = true;
 #endif
         }
         else if (propertyName == "Alpha")
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             int valueAsInt = (int)value;
-            ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
+            textRenderable.Alpha = valueAsInt;
             handled = true;
 #endif
         }
         else if (propertyName == "Red")
         {
             int valueAsInt = (int)value;
-            ((Text)mContainedObjectAsIpso).Red = valueAsInt;
+            textRenderable.Red = valueAsInt;
             handled = true;
         }
         else if (propertyName == "Green")
         {
             int valueAsInt = (int)value;
-            ((Text)mContainedObjectAsIpso).Green = valueAsInt;
+            textRenderable.Green = valueAsInt;
             handled = true;
         }
         else if (propertyName == "Blue")
         {
             int valueAsInt = (int)value;
-            ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
+            textRenderable.Blue = valueAsInt;
             handled = true;
         }
         else if (propertyName == "Color")
         {
-#if MONOGAME || KNI || XNA4 || FNA
+#if XNALIKE
             //var valueAsColor = (Color)value;
             //((Text)mContainedObjectAsIpso).Color = valueAsColor;
             //handled = true;
             if (value is System.Drawing.Color drawingColor)
             {
-                ((Text)mContainedObjectAsIpso).Color = drawingColor;
+                textRenderable.Color = drawingColor;
                 handled = true;
             }
             else if (value is Microsoft.Xna.Framework.Color xnaColor)
             {
-                ((Text)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
+                textRenderable.Color = xnaColor.ToSystemDrawing();
                 handled = true;
             }
 #endif
@@ -628,24 +659,24 @@ public class CustomSetPropertyOnRenderable
 
         else if (propertyName == "HorizontalAlignment")
         {
-            ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
+            textRenderable.HorizontalAlignment = (HorizontalAlignment)value;
             handled = true;
         }
         else if (propertyName == "VerticalAlignment")
         {
-            ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
+            textRenderable.VerticalAlignment = (VerticalAlignment)value;
             handled = true;
         }
         else if (propertyName == "MaxLettersToShow")
         {
-#if MONOGAME || KNI || XNA4 || FNA
-            ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
+#if XNALIKE
+            textRenderable.MaxLettersToShow = (int?)value;
             handled = true;
 #endif
         }
         else if (propertyName == "MaxNumberOfLines")
         {
-            ((Text)mContainedObjectAsIpso).MaxNumberOfLines = (int?)value;
+            textRenderable.MaxNumberOfLines = (int?)value;
             handled = true;
         }
 
@@ -655,11 +686,11 @@ public class CustomSetPropertyOnRenderable
 
             if (textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
             {
-                ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = true;
+                textRenderable.IsTruncatingWithEllipsisOnLastLine = true;
             }
             else
             {
-                ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = false;
+                textRenderable.IsTruncatingWithEllipsisOnLastLine = false;
             }
         }
         else if (propertyName == nameof(TextOverflowVerticalMode))
@@ -716,7 +747,11 @@ public class CustomSetPropertyOnRenderable
         // be explicitly added for textboxes
         // with multiple lines:
         //bbcode?.Replace("\n", "");
-        bbcode;
+        // Update November 15, 2025
+        // The rendering code ignores
+        // the \r character so we need
+        // to remove that:
+        bbcode?.Replace("\r\n", "\n");
 
         var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
         var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
@@ -812,10 +847,8 @@ public class CustomSetPropertyOnRenderable
                     }
                     break;
                 case "Custom":
-                    if(castedValue is string functionName && Text.Customizations.ContainsKey(functionName))
+                    if(castedValue is string functionName)
                     {
-                        var function = Text.Customizations[functionName];
-
                         var startStripped = item.Open.StartStrippedIndex;
 
                         var substring = strippedText.Substring(startStripped, item.Close.StartStrippedIndex - startStripped);
@@ -826,7 +859,7 @@ public class CustomSetPropertyOnRenderable
                         {
                             var call = new ParameterizedLetterCustomizationCall
                             {
-                                Function = function,
+                                FunctionName = functionName,
                                 CharacterIndex = startStripped + i,
                                 TextBlock = substring
                             };
@@ -1169,8 +1202,16 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(textRuntime.CustomFontFile))
                     {
-                        font = new BitmapFont(textRuntime.CustomFontFile);
-                        loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                        try
+                        {
+                            font = new BitmapFont(textRuntime.CustomFontFile);
+                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+
+                        }
+                        catch(System.Text.DecoderFallbackException exception)
+                        {
+                            throw new Exception($"Error trying to load font from file {textRuntime.CustomFontFile}:\n" + exception, exception);
+                        }
                     }
 #endif
                 }
@@ -1235,10 +1276,15 @@ public class CustomSetPropertyOnRenderable
                             loaderManager.Dispose(fullFileName);
                         }
 
-                        font = new BitmapFont(fullFileName);
-
-
-                        loaderManager.AddDisposable(fullFileName, font);
+                        try
+                        {
+                            font = new BitmapFont(fullFileName);
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                        catch (System.Text.DecoderFallbackException exception)
+                        {
+                            throw new Exception($"Error trying to load font from file {fullFileName}:\n" + exception, exception);
+                        }
                     }
 #endif
                 }
@@ -1531,9 +1577,37 @@ public class CustomSetPropertyOnRenderable
         }
         else if (value.EndsWith(".achx"))
         {
-            AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+            AnimationChainList? animationChainList = null;
+            try
+            {
+                animationChainList = GetAnimationChainList(ref value, loaderManager);
+                sprite.AnimationChains = animationChainList;
+            }
+            catch(Exception ex)
+            {
+                string message = $"Error setting SourceFile to on Sprite";
 
-            sprite.AnimationChains = animationChainList;
+                if (graphicalUiElement.Tag != null)
+                {
+                    message += $" in {graphicalUiElement.Tag}";
+                }
+                message += $"\n{value}";
+                message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                {
+                    if (ObjectFinder.Self.GumProjectSave == null)
+                    {
+                        message += "\nNo Gum project has been loaded";
+                    }
+
+                    throw new System.IO.FileNotFoundException(message, ex);
+                }
+                sprite.AnimationChains = null;
+
+                PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
+            }
+
 
             sprite.RefreshCurrentChainToDesiredName();
 
@@ -1572,17 +1646,17 @@ public class CustomSetPropertyOnRenderable
                 // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
                 //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
                 {
+                    string message = $"Error setting SourceFile on Sprite";
+
+                    if(graphicalUiElement.Tag != null)
+                    {
+                        message += $" in {graphicalUiElement.Tag}";
+                    }
+                    message += $"\n{value}";
+                    message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                    message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
                     if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                     {
-                        string message = $"Error setting SourceFile on Sprite";
-
-                        if(graphicalUiElement.Tag != null)
-                        {
-                            message += $" in {graphicalUiElement.Tag}";
-                        }
-                        message += $"\n{value}";
-                        message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
-                        message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
                         if(ObjectFinder.Self.GumProjectSave == null)
                         {
                             message += "\nNo Gum project has been loaded";
@@ -1591,6 +1665,8 @@ public class CustomSetPropertyOnRenderable
                         throw new System.IO.FileNotFoundException(message, ex);
                     }
                     sprite.Texture = null;
+
+                    PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
                 }
                 graphicalUiElement.UpdateLayout();
             }
@@ -1599,7 +1675,7 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static AnimationChainList GetAnimationChainList(ref string value, 
+    private static AnimationChainList? GetAnimationChainList(ref string value, 
         // fully qualify to avoid Android namign conflicts
         global::RenderingLibrary.Content.LoaderManager loaderManager)
     {
@@ -1610,7 +1686,7 @@ public class CustomSetPropertyOnRenderable
             value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
         }
 
-        AnimationChainList animationChainList = null;
+        AnimationChainList? animationChainList = null;
 
         if (loaderManager.CacheTextures)
         {
@@ -1620,7 +1696,7 @@ public class CustomSetPropertyOnRenderable
         if (animationChainList == null)
         {
             var animationChainListSave = AnimationChainListSave.FromFile(value);
-            animationChainList = animationChainListSave.ToAnimationChainList(null);
+            animationChainList = animationChainListSave.ToAnimationChainList();
             if (loaderManager.CacheTextures)
             {
                 loaderManager.AddDisposable(value, animationChainList);
@@ -1681,39 +1757,39 @@ public class CustomSetPropertyOnRenderable
 
     public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
     {
-        var managers = iSystemManagers as SystemManagers;
+        var managers = (SystemManagers)iSystemManagers;
 
-        if (renderable is Sprite)
+        if (renderable is Sprite asSprite)
         {
-            managers.SpriteManager.Remove(renderable as Sprite);
+            managers.SpriteManager.Remove(asSprite);
         }
-        else if (renderable is NineSlice)
+        else if (renderable is NineSlice asNineSlice)
         {
-            managers.SpriteManager.Remove(renderable as NineSlice);
+            managers.SpriteManager.Remove(asNineSlice);
         }
-        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle asLineRectangle)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+            managers.ShapeManager.Remove(asLineRectangle);
         }
-        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon)
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon asLinePolygon)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LinePolygon);
+            managers.ShapeManager.Remove(asLinePolygon);
         }
-        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle)
+        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle solidRectangle)
         {
-            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Graphics.SolidRectangle);
+            managers.ShapeManager.Remove(solidRectangle);
         }
-        else if (renderable is Text)
+        else if (renderable is Text asText)
         {
-            managers.TextManager.Remove(renderable as Text);
+            managers.TextManager.Remove(asText);
         }
-        else if (renderable is LineCircle)
+        else if (renderable is LineCircle asLineCircle)
         {
-            managers.ShapeManager.Remove(renderable as LineCircle);
+            managers.ShapeManager.Remove(asLineCircle);
         }
-        else if (renderable is InvisibleRenderable)
+        else if (renderable is InvisibleRenderable asInvisibleRenderable)
         {
-            managers.SpriteManager.Remove(renderable as InvisibleRenderable);
+            managers.SpriteManager.Remove(asInvisibleRenderable);
         }
         else if (renderable != null)
         {
@@ -1729,7 +1805,7 @@ public class CustomSetPropertyOnRenderable
 
     public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)
     {
-#if MONOGAME || KNI
+#if XNALIKE
         // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
         // and the end result of all values determines which file to load. For example, an object may set the following
         // variables one-by-one:

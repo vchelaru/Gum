@@ -6,9 +6,8 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.FNA</PackageId>
-		<Version>2025.9.27.1</Version>
-
-
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2025.12.9.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -63,6 +62,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="Renderables\SpriteBatchRenderableBase.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
@@ -78,7 +78,6 @@
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineRectangle.cs" Link="Renderables\LineRectangle.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
-		<Compile Include="..\..\RenderingLibrary\Math\MathFunctions.cs" Link="Utilities\MathFunctions.cs" />
 		<Compile Include="..\..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
 
 		<Compile Include="..\**\*.cs" />
@@ -97,7 +96,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Include="..\..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
+	  <EmbeddedResource Include="..\..\Gum\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>

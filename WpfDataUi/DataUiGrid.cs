@@ -90,6 +90,30 @@ namespace WpfDataUi
             set => SetValue(OrientationProperty, value);
         }
 
+
+
+        public static void SetOverridesIsDefaultStyling(DependencyObject element, bool value)
+        {
+            element.SetValue(OverridesIsDefaultStylingProperty, value);
+        }
+        public static bool GetOverridesIsDefaultStyling(DependencyObject element)
+        {
+            return (bool)element.GetValue(OverridesIsDefaultStylingProperty);
+        }
+
+        // Using a DependencyProperty as the backing store for OverridesIsDefaultStyling.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty OverridesIsDefaultStylingProperty =
+            DependencyProperty.RegisterAttached("OverridesIsDefaultStyling", typeof(bool), typeof(DataUiGrid), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
+
+        public static readonly DependencyProperty InstanceMemberItemTemplateProperty = DependencyProperty.Register(
+            nameof(InstanceMemberItemTemplate), typeof(DataTemplate), typeof(DataUiGrid), new PropertyMetadata(default(DataTemplate?)));
+
+        public DataTemplate? InstanceMemberItemTemplate
+        {
+            get { return (DataTemplate?)GetValue(InstanceMemberItemTemplateProperty); }
+            set { SetValue(InstanceMemberItemTemplateProperty, value); }
+        }
+
         #endregion
 
         #region Properties
@@ -615,9 +639,13 @@ namespace WpfDataUi
             {
                 foreach (var category in instance)
                 {
-                    var newCategory = new MemberCategory();
-                    newCategory.Name = category.Name;
-                    effectiveCategory.Add(newCategory);
+                    var currentCategory = effectiveCategory.FirstOrDefault(existing => existing.Name == category.Name);
+                    if(currentCategory == null)
+                    {
+                        currentCategory = new MemberCategory();
+                        currentCategory.Name = category.Name;
+                        effectiveCategory.Add(currentCategory);
+                    }
 
                     foreach (var member in category.Members)
                     {
@@ -628,7 +656,7 @@ namespace WpfDataUi
                             var multiSelectInstanceMember = TryCreateMultiGroup(listOfCategoryLists, member);
                             if (multiSelectInstanceMember != null)
                             {
-                                newCategory.Members.Add(multiSelectInstanceMember);
+                                currentCategory.Members.Add(multiSelectInstanceMember);
                             }
                         }
                     }

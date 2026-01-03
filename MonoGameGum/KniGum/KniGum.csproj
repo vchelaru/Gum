@@ -6,11 +6,12 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2025.9.27.1</Version>
-
-
-
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2025.12.9.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<NoWarn>1591</NoWarn>
+		<DefineConstants>KNI</DefineConstants>
+
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -66,6 +67,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchRenderableBase.cs" Link="RenderingLibrary\SpriteBatchRenderableBase.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
@@ -81,7 +83,6 @@
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineRectangle.cs" Link="Renderables\LineRectangle.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
-		<Compile Include="..\..\RenderingLibrary\Math\MathFunctions.cs" Link="Utilities\MathFunctions.cs" />
 		<Compile Include="..\..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
 
 		<Compile Include="..\**\*.cs" />
@@ -107,7 +108,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="..\..\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
+		<EmbeddedResource Include="..\..\Gum\GumFormsPlugin\Content\FormsGumProject\UISpriteSheet.png" Link="UISpriteSheet.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -133,16 +134,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" PrivateAssets="All" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>

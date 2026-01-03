@@ -5,7 +5,8 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.SkiaSharp</PackageId>
-		<Version>2025.9.27.1</Version>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2025.12.9.1</Version>
 
 		<NoWarn>1591</NoWarn>
 
@@ -16,11 +17,15 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;SKIA</DefineConstants>
+		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE;SKIA</DefineConstants>
+		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>TRACE;SKIA</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
@@ -35,14 +40,14 @@
 		<Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
 			<Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
 		</Compile>
-		<Compile Include="..\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
+		<Compile Include="..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
 
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SkiaSharp" Version="3.119.0" />
-		<PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
-		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.0" />
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
 		<PackageReference Include="Topten.RichTextKit" Version="0.4.167" />
 	</ItemGroup>

@@ -23,20 +23,23 @@ public class FileCommands : IFileCommands
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
-
+    private readonly IOutputManager _outputManager;
 
     public FileCommands(ISelectedState selectedState, 
         Lazy<IUndoManager> undoManager, 
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager)
+        LocalizationManager localizationManager,
+        IOutputManager outputManager,
+        FileWatchManager fileWatchManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _localizationManager = localizationManager;
-        _fileWatchManager = FileWatchManager.Self;
+        _fileWatchManager = fileWatchManager;
+        _outputManager = outputManager;
     }
 
     /// <summary>
@@ -69,7 +72,7 @@ public class FileCommands : IFileCommands
     }
 
 
-    public void TryAutoSaveElement(ElementSave elementSave)
+    public void TryAutoSaveElement(ElementSave? elementSave)
     {
         if (ProjectManager.Self.GeneralSettingsFile.AutoSave && elementSave != null)
         {
@@ -112,7 +115,6 @@ public class FileCommands : IFileCommands
 
         _guiCommands.RefreshStateTreeView();
         _guiCommands.RefreshVariables();
-        WireframeObjectManager.Self.RefreshAll(true);
     }
 
     /// <summary>
@@ -134,16 +136,29 @@ public class FileCommands : IFileCommands
 
     public void ForceSaveProject(bool forceSaveContainedElements = false)
     {
-        if (!ProjectManager.Self.HaveErrorsOccurredLoadingProject)
-        {
-            ProjectManager.Self.SaveProject(forceSaveContainedElements);
-            OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
-            CreateDefaultFontCharacterFile();
-        }
-        else
+        if (ProjectManager.Self.HaveErrorsOccurredLoadingProject)
         {
             _dialogService.ShowMessage("Cannot save project because of earlier errors");
+            return;
         }
+
+        var succeeded = ProjectManager.Self.SaveProject(forceSaveContainedElements);
+
+        if (string.IsNullOrEmpty(ProjectState.Self.GumProjectSave.FullFileName))
+        {
+            // The user most likely canceled the save, as such, we have no filename
+            // Do nothing, do not error.
+            return;
+        }
+
+        if (!succeeded)
+        {
+            _dialogService.ShowMessage("Cannot save project because of earlier errors");
+            return;
+        }
+
+        _outputManager.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
+        CreateDefaultFontCharacterFile();
     }
 
     /// <summary>
@@ -262,7 +277,7 @@ public class FileCommands : IFileCommands
                 }
                 if (succeeded)
                 {
-                    OutputManager.Self.AddOutput("Saved " + elementSave + " to " + fileName);
+                    _outputManager.AddOutput("Saved " + elementSave + " to " + fileName);
                     PluginManager.Self.AfterElementSave(elementSave);
                 }
             }
@@ -374,7 +389,7 @@ public class FileCommands : IFileCommands
                 }
                 if (succeeded)
                 {
-                    OutputManager.Self.AddOutput("Saved " + behavior + " to " + fileName);
+                    _outputManager.AddOutput("Saved " + behavior + " to " + fileName);
                     //PluginManager.Self.AfterBehaviorSave(behavior);
                 }
             }

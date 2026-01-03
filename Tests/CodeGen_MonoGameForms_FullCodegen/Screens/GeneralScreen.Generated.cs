@@ -41,6 +41,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
             return gue;
         });
     }
+    public CircleRuntime CircleInstance { get; protected set; }
     public Label LabelInstance { get; protected set; }
 
     public HorizontalAlignment LabelInstanceHorizontalAlignment
@@ -96,16 +97,29 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
+        CircleInstance = new global::MonoGameGum.GueDeriving.CircleRuntime();
+        CircleInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Circle");
+        if (CircleInstance.ElementSave != null) CircleInstance.AddStatesAndCategoriesRecursivelyToGue(CircleInstance.ElementSave);
+        if (CircleInstance.ElementSave != null) CircleInstance.SetInitialState();
+        CircleInstance.Name = "CircleInstance";
         LabelInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.Label();
         LabelInstance.Name = "LabelInstance";
         base.RefreshInternalVisualReferences();
     }
     protected virtual void AssignParents()
     {
+        LabelInstance.AddChild(CircleInstance);
         this.AddChild(LabelInstance);
     }
     private void ApplyDefaultVariables()
     {
+        this.Visual.Width = 0f;
+        this.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.Visual.Height = 0f;
+        this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.CircleInstance.X = 197f;
+        this.CircleInstance.Y = 110f;
+
         ((TextRuntime)this.LabelInstance.Visual).HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
         ((TextRuntime)this.LabelInstance.Visual).MaxLettersToShow = 55;
         ((TextRuntime)this.LabelInstance.Visual).MaxNumberOfLines = 3;

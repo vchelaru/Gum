@@ -29,7 +29,14 @@ namespace Gum.RenderingLibrary
             fileWidth = 32;
             fileHeight = 32;
 
-            if (ipso is ITextureCoordinate iTextureCoordinate)
+            var iTextureCoordinate = ipso as ITextureCoordinate;
+
+            if(iTextureCoordinate == null && ipso is GraphicalUiElement graphicalUiElement)
+            {
+                iTextureCoordinate = graphicalUiElement.RenderableComponent as ITextureCoordinate;
+            }
+
+            if (iTextureCoordinate != null)
             {
                 fileWidth = iTextureCoordinate.TextureWidth ?? 0;
                 fileHeight = iTextureCoordinate.TextureHeight ?? 0;

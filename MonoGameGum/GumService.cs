@@ -1,29 +1,33 @@
-﻿using Gum.DataTypes;
+﻿#if MONOGAME || KNI || FNA
+#define XNALIKE
+#endif
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
 using GumRuntime;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
-using MonoGameGum.Input;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using ToolsUtilities;
 using Gum.Forms;
-using System.Collections.Specialized;
 using Gum.Threading;
 
+#if XNALIKE
+using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 namespace MonoGameGum;
+#elif RAYLIB
+using Gum.GueDeriving;
+using RaylibGum.Input;
+namespace RaylibGum;
+#endif
 
 public class GumService
 {
@@ -33,7 +37,7 @@ public class GumService
     {
         get
         {
-            if(_default == null)
+            if (_default == null)
             {
                 _default = new GumService();
             }
@@ -43,11 +47,15 @@ public class GumService
 
     #endregion
 
+#if XNALIKE
     public GameTime GameTime { get; private set; }
+#else
+    public float GameTime { get; private set; }
+#endif
 
-    public Cursor Cursor => Gum.Forms.FormsUtilities.Cursor;
+    public Cursor Cursor => FormsUtilities.Cursor;
 
-    public Keyboard Keyboard => Gum.Forms.FormsUtilities.Keyboard;
+    public Keyboard Keyboard => FormsUtilities.Keyboard;
 
     public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
 
@@ -82,7 +90,14 @@ public class GumService
         Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
     }
 
-    Game _game;
+    public void UseGamepadDefaults()
+    {
+        Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+    }
+
+#if XNALIKE
+    public Game Game { get; private set; }
+#endif
 
     #region Initialize
 
@@ -95,7 +110,7 @@ public class GumService
         Root.Name = "Main Root";
         Root.HasEvents = false;
 
-        Root.Children.CollectionChanged += (o,e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root,e);
+        Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
         DeferredQueue = new DeferredActionQueue();
     }
@@ -103,11 +118,18 @@ public class GumService
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
+#if XNALIKE
     /// <param name="game">The game instance.</param>
+#endif
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
+#if XNALIKE
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
+#else
+    public GumProjectSave Initialize(string gumProjectFile)
+#endif
     {
+#if XNALIKE
         if (game.GraphicsDevice == null)
         {
             throw new InvalidOperationException(
@@ -115,12 +137,18 @@ public class GumService
                 "Be sure to call Initialize in the Game's Initialize method or later " +
                 "so that the Game has a valid GrahicsDevice");
         }
-
-        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile, defaultVisualsVersion:
-            Gum.Forms.DefaultVisualsVersion.V2);
+        return InitializeInternal(
+            game, game.GraphicsDevice,
+            gumProjectFile,
+            defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
+#else
+        return InitializeInternal(
+            gumProjectFile,
+            defaultVisualsVersion: DefaultVisualsVersion.Newest)!;
+#endif
     }
 
-
+#if XNALIKE
     public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
     {
         if (game.GraphicsDevice == null)
@@ -131,13 +159,21 @@ public class GumService
                 "so that the Game has a valid GrahicsDevice");
         }
 
-        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion:defaultVisualsVersion);
+        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion: defaultVisualsVersion);
     }
-
     public void Initialize(Game game, SystemManagers systemManagers)
     {
         InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
     }
+#else
+    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
+    {
+        InitializeInternal(
+            gumProjectFile: null,
+            systemManagers: SystemManagers.Default,
+            defaultVisualsVersion: defaultVisualsVersion);
+    }
+#endif
 
     [Obsolete("Experimental - this API may change in future versions")]
     public void LoadAnimations()
@@ -148,7 +184,7 @@ public class GumService
         {
             var animation = TryLoadAnimation(element);
 
-            if(animation != null)
+            if (animation != null)
             {
                 project.ElementAnimations.Add(animation);
             }
@@ -163,7 +199,7 @@ public class GumService
 
         var fileName = prefix + element.Name + "Animations.ganx";
 
-        if(FileManager.FileExists(fileName))
+        if (FileManager.FileExists(fileName))
         {
             var animation = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
             animation.ElementName = element.Name;
@@ -172,38 +208,51 @@ public class GumService
         return null;
     }
 
+#if XNALIKE
     [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +
-        "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in future versions of Gum")]
+        "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in June 2026")]
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
         return InitializeInternal(null, graphicsDevice, gumProjectFile);
     }
+#endif
 
-    bool hasBeenInitialized = false;
-    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, 
-        string? gumProjectFile = null, 
-        SystemManagers? systemManagers = null, 
-        Gum.Forms.DefaultVisualsVersion defaultVisualsVersion = Gum.Forms.DefaultVisualsVersion.V1)
+    public bool IsInitialized { get; private set; }
+
+    GumProjectSave? InitializeInternal(
+#if XNALIKE
+        Game game, GraphicsDevice graphicsDevice,
+#endif
+        string? gumProjectFile = null,
+        SystemManagers? systemManagers = null,
+        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.Newest)
     {
-        if(hasBeenInitialized)
+        if (IsInitialized)
         {
             throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
         }
-        hasBeenInitialized = true;
+        IsInitialized = true;
 
-        _game = game;
+#if XNALIKE
+        Game = game;
         RegisterRuntimeTypesThroughReflection();
+#endif
+
         this.SystemManagers = systemManagers ?? new SystemManagers();
         if (systemManagers == null)
         {
             SystemManagers.Default = this.SystemManagers;
-#if NET6_0_OR_GREATER
             ISystemManagers.Default = this.SystemManagers;
-#endif
         }
-        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-        Gum.Forms.FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers, defaultVisualsVersion: defaultVisualsVersion);
 
+#if XNALIKE
+        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+#elif RAYLIB
+        this.SystemManagers.Initialize();
+#endif
+
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
+            defaultVisualsVersion: defaultVisualsVersion);
 
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
@@ -212,21 +261,17 @@ public class GumService
         mainLayer.Remove(Root.RenderableComponent as IRenderableIpso);
         mainLayer.Insert(0, Root.RenderableComponent as IRenderableIpso);
 
-        // make sure the Root is the first in the list:
-
-
         GumProjectSave? gumProject = null;
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-
             gumProject = GumProjectSave.Load(gumProjectFile);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
             var absoluteFile = gumProjectFile;
-            if(FileManager.IsRelative(absoluteFile))
+            if (FileManager.IsRelative(absoluteFile))
             {
                 absoluteFile = FileManager.MakeAbsolute(gumProjectFile);
             }
@@ -248,12 +293,12 @@ public class GumService
         ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
 
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
-        NineSliceRuntime.DefaultSourceFile = GetString("SourceFile");
 
-        float GetFloat (string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
+        float GetFloat(string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
         string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
+#if XNALIKE
     // In December 31, 2024 we moved to using ModuleInitializer 
     // More info: https://github.com/vchelaru/Gum/issues/275
     // Therefore, this is no longer needed. However, old projects
@@ -267,7 +312,7 @@ public class GumService
         // Get all types in the assembly
         var types = executingAssembly?.GetTypes();
 
-        if(types != null)
+        if (types != null)
         {
             foreach (Type type in types)
             {
@@ -280,16 +325,27 @@ public class GumService
             }
         }
     }
-
+#endif
     #endregion
 
     #region Update
 
+#if XNALIKE
     public void Update(GameTime gameTime)
+#else
+    public void Update(float gameTime)
+#endif
     {
-        Update(_game, gameTime);
+        Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
+
+#if XNALIKE
+        Update(Game, gameTime, this.Root);
+#else
+        Update(gameTime, this.Root);
+#endif
     }
 
+#if XNALIKE
     public void Update(Game game, GameTime gameTime)
     {
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
@@ -299,43 +355,65 @@ public class GumService
 
     public void Update(Game game, GameTime gameTime, FrameworkElement root) =>
         Update(game, gameTime, root.Visual);
+#endif
 
+    List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
+
+#if XNALIKE
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
+#else
+    public void Update(float gameTime, GraphicalUiElement root)
+#endif
     {
+        roots.Clear();
+        roots.Add(root);
+
+#if XNALIKE
+        Update(game, gameTime, roots);
+#else
+        Update(gameTime, roots);
+#endif
+    }
+
+#if XNALIKE
+    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
+#else
+    public void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
+#endif
+    {
+#if XNALIKE
+        var difference = gameTime.ElapsedGameTime.TotalSeconds;
+#else
+        var difference = GameTime - gameTime;
+#endif
+
         DeferredQueue.ProcessPending();
         GameTime = gameTime;
-        Gum.Forms.FormsUtilities.Update(game, gameTime, root);
+#if XNALIKE
+        FormsUtilities.Update(game, gameTime, roots);
+#else
+        FormsUtilities.Update(gameTime, roots);
+#endif
         // SystemManagers.Activity (as of Sept 13, 2025) only 
         // performs Sprite animation internally. This is not a 
         // critical system, but unit tests cannot initialize a SystemManagers
         // because these require a graphics device. Therefore, we can tolerate
         // a null SystemManagers to simplify unit tests.
+#if XNALIKE
         this.SystemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
-        root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
-    }
-
-    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
-    {
-        DeferredQueue.ProcessPending();
-        GameTime = gameTime;
-        Gum.Forms.FormsUtilities.Update(game, gameTime, roots);
-        this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
-        foreach(var item in roots)
+#endif
+        foreach (var item in roots)
         {
-            item.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+            item.AnimateSelf(difference);
         }
     }
 
     #endregion
 
-    #region Draw
-
     public void Draw()
     {
         SystemManagers.Default.Draw();
     }
-
-    #endregion
 }
 
 public static class GraphicalUiElementExtensionMethods
@@ -350,13 +428,12 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
-
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }
 
-    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
+    public static void AddToRoot(this FrameworkElement element)
     {
         GumService.Default.Root.Children.Add(element.Visual);
     }
@@ -368,9 +445,4 @@ public static class ElementSaveExtensionMethods
     {
         return elementSave.ToGraphicalUiElement(systemManagers ?? SystemManagers.Default, addToManagers: false);
     }
-}
-
-public static class FrameworkElementExtensionMethods
-{
-
 }

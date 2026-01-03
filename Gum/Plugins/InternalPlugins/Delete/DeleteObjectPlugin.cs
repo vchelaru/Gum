@@ -24,11 +24,13 @@ public class DeleteObjectPlugin : InternalPlugin
     private RadioButton deleteAllContainedObjects;
     private readonly IElementCommands _elementCommands;
     private readonly WireframeCommands _wireframeCommands;
+    private readonly DeleteLogic _deleteLogic;
 
     public DeleteObjectPlugin()
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
     }
 
     public override void StartUp()
@@ -109,7 +111,7 @@ public class DeleteObjectPlugin : InternalPlugin
 
         if (shouldDetachChildren)
         {
-            _elementCommands.RemoveParentReferencesToInstance(instance, element);
+            _deleteLogic.RemoveParentReferencesToInstance(instance, element);
         }
         if (shouldDeleteChildren)
         {
@@ -138,11 +140,11 @@ public class DeleteObjectPlugin : InternalPlugin
         var parentContainer = instance.ParentContainer;
         if (parentContainer.Instances.Contains(instance))
         {
-            _elementCommands.RemoveInstance(instance, parentContainer);
+            _deleteLogic.RemoveInstance(instance, parentContainer);
         }
         else
         {
-            _elementCommands.RemoveParentReferencesToInstance(instance, parentContainer);
+            _deleteLogic.RemoveParentReferencesToInstance(instance, parentContainer);
         }
     }
 

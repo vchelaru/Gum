@@ -384,7 +384,7 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 if(item is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem)
                 {
-                    this.Items.Add(item as ListBoxItem);
+                    this.Items.Add(listBoxItem);
                     if(this.Items is not INotifyCollectionChanged )
                     {
                         ListBoxItemsInternal.Add(listBoxItem);
@@ -426,22 +426,39 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 item = CreateNewListBoxItem(visual);
             }
-            if(!string.IsNullOrEmpty(DisplayMemberPath))
-            {
-                var display = o.GetType()
-                    .GetProperty(DisplayMemberPath)
-                    .GetValue(o, null) as string;
-                item.UpdateToObject(display);
 
-            }
-            else
-            {
-                item.UpdateToObject(o);
-            }
+            CallUpdateToObject(o, item);
+
             item.BindingContext = o;
         }
 
         return item;
+    }
+
+    protected override void HandleCreatedItemVisual(GraphicalUiElement newVisual, object item)
+    {
+        var listBoxItem = (newVisual as InteractiveGue)?.FormsControlAsObject as ListBoxItem;
+
+        if(listBoxItem != null)
+        {
+            CallUpdateToObject(item, listBoxItem);
+        }
+    }
+
+    private void CallUpdateToObject(object objectToUpdateTo, ListBoxItem listBoxItem)
+    {
+        if (!string.IsNullOrEmpty(DisplayMemberPath))
+        {
+            var display = objectToUpdateTo.GetType()
+                .GetProperty(DisplayMemberPath)
+                .GetValue(objectToUpdateTo, null) as string;
+            listBoxItem.UpdateToObject(display);
+
+        }
+        else
+        {
+            listBoxItem.UpdateToObject(objectToUpdateTo);
+        }
     }
 
     private ListBoxItem CreateNewListBoxItem(InteractiveGue visual)
@@ -833,6 +850,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     /// <param name="popup">The popup to show, for example a dropdown from a ComboBox or MenuItem</param>
     /// <param name="listBoxParent">The parent visual, which would be something like the ComboBox.Visual</param>
+    /// <param name="forceAbsoluteSize">Whether to force the popup to have absolute WidthUnits and HeightUnits.</param>
     public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true)
     {
         popup.IsVisible = true;

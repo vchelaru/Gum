@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -22,6 +23,7 @@ public class UndoManagerTests : BaseTestClass
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IMessenger> _messenger;
+    private readonly Mock<PluginManager> _pluginManager;
     private readonly UndoManager _undoManager;
 
     public UndoManagerTests()
@@ -31,6 +33,8 @@ public class UndoManagerTests : BaseTestClass
         _guiCommands = new Mock<IGuiCommands>();
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
+        _pluginManager = new Mock<PluginManager>();
+        _pluginManager.Object.Plugins = new List<PluginBase>();
 
         ComponentSave component = new();
         component.States.Add(new Gum.DataTypes.Variables.StateSave 
@@ -57,14 +61,15 @@ public class UndoManagerTests : BaseTestClass
             _renameLogic.Object,
             _guiCommands.Object,
             _fileCommands.Object,
-            _messenger.Object
+            _messenger.Object,
+            _pluginManager.Object
             );
     }
 
     [Fact]
     public void PerformUndo_ShouldRestoreValue()
     {
-        ComponentSave component = _selectedState.Object.SelectedComponent;
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
         component.DefaultState.SetValue("X", 10f);
 
@@ -81,11 +86,87 @@ public class UndoManagerTests : BaseTestClass
         component.DefaultState.GetValueOrDefault<float>("X").ShouldBe(10.0f);
     }
 
+    [Fact]
+    public void PerformUndo_ShouldAddRemovedInstance()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        var instance = new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        };
+
+        component.Instances.Add(instance);
+
+        _undoManager.RecordState();
+
+        component.Instances.Clear();
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.Instances.Count.ShouldBe(1);
+        component.Instances[0].Name.ShouldBe("Instance1");
+        component.Instances[0].BaseType.ShouldBe("Sprite");
+        component.Instances[0].ParentContainer.ShouldBe(component);
+    }
+
+    [Fact]
+    public void PerformUndo_OnDeletedInstance_ShouldNotifyPluginOfInstanceAdd()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        var instance = new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        };
+
+        component.Instances.Add(instance);
+
+        _undoManager.RecordState();
+
+        component.Instances.Clear();
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _pluginManager.Verify(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void PerformUndo_OnAddedInstance_ShouldNotifyPluginOfInstanceAdd()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        _undoManager.RecordState();
+
+        var instance = new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        };
+
+        component.Instances.Add(instance);
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _pluginManager.Verify(
+            x => x.InstancesDelete(It.IsAny<ElementSave>(), It.IsAny<InstanceSave[]>()),
+            Times.Once);
+    }
+
 
     [Fact]
     public void CurrentElementHistory_ShouldReportVariableChanges()
     {
-        ComponentSave component = _selectedState.Object.SelectedComponent;
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
 
         component.DefaultState.SetValue("X", 10f);
 
@@ -109,7 +190,7 @@ public class UndoManagerTests : BaseTestClass
     public void CurrentElementHistory_ShouldReportExposedVariables()
     {
         {
-            ComponentSave component = _selectedState.Object.SelectedComponent;
+            ComponentSave component = _selectedState.Object.SelectedComponent!;
 
             component.DefaultState.SetValue("X", 10f);
 
@@ -170,4 +251,5 @@ public class UndoManagerTests : BaseTestClass
 
         _undoManager.RecordUndo();
     }
+
 }

@@ -20,7 +20,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public bool IsRenderTarget => false;
 
-    ObservableCollection<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
     {
         get { return mChildren; }
@@ -104,7 +104,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public CanvasRenderable()
     {
-        mChildren = new ObservableCollection<IRenderableIpso>();
+        mChildren = new ();
 
         Visible = true;
         Width = 100;
@@ -136,6 +136,14 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
             canvas.Restore();
         }
     }
+
+    public void StartBatch(ISystemManagers systemManagers)
+    {
+    }
+
+    public void EndBatch(ISystemManagers systemManagers)
+    {
+    }
 #else
     public void Render(SpriteRenderer spriteRenderer, SystemManagers managers)
     {
@@ -152,34 +160,19 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    public string BatchKey => string.Empty;
 
     #endregion
 

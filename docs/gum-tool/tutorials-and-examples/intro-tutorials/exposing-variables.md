@@ -25,7 +25,7 @@ To do this:
 3. Right-click on the text box and select **Expose Variable**
 4. Enter the name "Text" for the variable name
 
-<figure><img src="../../../.gitbook/assets/Gum_1efsktPMgR (1).png" alt=""><figcaption><p>Right-click to expose a variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/Gum_1efsktPMgR (1) (1).png" alt=""><figcaption><p>Right-click to expose a variable</p></figcaption></figure>
 
 You can verify that the `Text` variable is exposed by clicking on the the **Button** component and seeing the `Text` variable under the **Exposed** category:
 

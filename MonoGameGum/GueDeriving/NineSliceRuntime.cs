@@ -15,6 +15,7 @@ namespace MonoGameGum.GueDeriving
     public class NineSliceRuntime : InteractiveGue
     {
         #region Static Defaults
+        [Obsolete("This is not currently functional")]
         public static string DefaultSourceFile { get; set; }
         public static int DefaultTextureLeft;
         public static int DefaultTextureTop;
@@ -162,17 +163,11 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
-        public float? CustomFrameTextureCoordinateWidth
-        {
-            get => ContainedNineSlice.CustomFrameTextureCoordinateWidth;
-            set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
-        }
-
         #endregion
 
         #region Source File / Texture
 
-        [Obsolete("Use Texture")]
+        [Obsolete("Use Texture to set Texture2D, or use SourceFileName to set the file")]
         public Microsoft.Xna.Framework.Graphics.Texture2D? SourceFile
         {
             get => Texture;
@@ -201,6 +196,17 @@ namespace MonoGameGum.GueDeriving
         }
 
         #endregion
+
+        /// <summary>
+        /// Sets the width or height of the nine slice edges in pixels. If null,
+        /// the NineSlice uses 1/3 of the texture size. If set, this overrides the
+        /// 1/3 width and uses the specified value.
+        /// </summary>
+        public float? CustomFrameTextureCoordinateWidth
+        {
+            get => ContainedNineSlice.CustomFrameTextureCoordinateWidth;
+            set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
+        }
 
         public float BorderScale
         {

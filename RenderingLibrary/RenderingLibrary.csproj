@@ -1,9 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<Nullable>enable</Nullable>
+
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
 		<DefineConstants>TRACE;DEBUG;MONOGAME; HAS_SYSTEM_DRAWING_IMAGE</DefineConstants>
@@ -17,7 +21,8 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>Libraries\TargaImage.dll</HintPath>
@@ -50,6 +55,7 @@
 		<Compile Remove="Content\IContentLoader.cs" />
 		<Compile Remove="Content\LoaderManager.cs" />
 		<Compile Remove="Graphics\Fonts\BmfcSave.cs" />
+		<Compile Remove="Graphics\Fonts\ParsedFontFile.cs" />
 		<Compile Remove="Graphics\GradientType.cs" />
 		<Compile Remove="Graphics\HorizontalAlignment.cs" />
 		<Compile Remove="Graphics\IAnimatable.cs" />
@@ -62,6 +68,7 @@
 		<Compile Remove="Graphics\IText.cs" />
 		<Compile Remove="Graphics\ITextureCoordinate.cs" />
 		<Compile Remove="Graphics\IVisible.cs" />
+		<Compile Remove="Graphics\IWrappedText.cs" />
 		<Compile Remove="Graphics\Layer.cs" />
 		<Compile Remove="Graphics\LayerCameraSettings.cs" />
 		<Compile Remove="Graphics\NineSliceExtensions.cs" />
@@ -79,6 +86,7 @@
 	<ItemGroup>
 	  <Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="Graphics\BlendExtensions.cs" />
 	  <Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	  <Compile Include="..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="Runtimes\SpriteRuntime.cs" />
 	  <Compile Include="..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="Runtimes\TextRuntime.cs" />
 	</ItemGroup>
 	<ItemGroup>

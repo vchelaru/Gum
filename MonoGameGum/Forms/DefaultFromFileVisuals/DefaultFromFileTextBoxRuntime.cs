@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 
+#if !RAYLIB
+
 public class DefaultFromFileTextBoxRuntime : InteractiveGue
 {
     public DefaultFromFileTextBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
@@ -25,3 +27,4 @@ public class DefaultFromFileTextBoxRuntime : InteractiveGue
 
     public TextBox FormsControl => FormsControlAsObject as TextBox;
 }
+#endif

@@ -26,12 +26,8 @@ public enum ResizeBehavior
 /// <summary>
 /// Control which allows the user to resize two adjacent siblings.
 /// </summary>
-public class Splitter :
-#if RAYLIB
-    FrameworkElement
-#else
-    Gum.Forms.Controls.FrameworkElement
-#endif
+public class Splitter : Gum.Forms.Controls.FrameworkElement
+
 {
     /// <summary>
     /// The explicitly-set resize behavior. If null, resize behavior is determined
