@@ -3196,7 +3196,7 @@ public class CodeGenerator
 
         #region Animation Fields
 
-        GenerateAnimationFields(context);
+        GenerateAnimationProperties(context);
 
         #endregion
 
@@ -3337,9 +3337,9 @@ public class CodeGenerator
     }
 
     /// <summary>
-    /// Generates AnimationRuntime fields for all animations defined for the element.
+    /// Generates AnimationRuntime properties for all animations defined for the element.
     /// </summary>
-    private void GenerateAnimationFields(CodeGenerationContext context)
+    private void GenerateAnimationProperties(CodeGenerationContext context)
     {
         var elementAnimations = GetElementAnimationsSave(context.Element);
         
@@ -3359,7 +3359,7 @@ public class CodeGenerator
             }
 
             var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
-            context.StringBuilder.AppendLine(context.Tabs + $"public AnimationRuntime {fieldName};");
+            context.StringBuilder.AppendLine(context.Tabs + $"public AnimationRuntime {fieldName} {{get; protected set;}}");
         }
 
         context.StringBuilder.AppendLine(context.Tabs + "#endregion");

@@ -3,6 +3,8 @@ using GumRuntime;
 using System.Linq;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
+using Gum.StateAnimation.Runtime;
+using Gum.Wireframe;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -67,6 +69,10 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         }
     }
 
+
+    #region Animation Fields
+    public AnimationRuntime Animation1 {get; protected set;}
+    #endregion
     public AnimatedComponent(InteractiveGue visual) : base(visual)
     {
     }
@@ -79,6 +85,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
+        Animation1 = this.Visual.GetAnimation("Animation1");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
