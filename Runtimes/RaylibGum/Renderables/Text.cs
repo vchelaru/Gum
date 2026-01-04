@@ -188,6 +188,10 @@ public class Text : IVisible, IRenderableIpso,
 
     private void UpdateLineHeightInPixels()
     {
+        if (IsWindowReady() == false)
+        {
+            throw new InvalidOperationException("Cannot measure text because IsWindowReady() is false - did you remember to call InitWindow first?");
+        }
         _lineHeightInPixels = (int)(MeasureTextEx(_font, "M", _font.BaseSize, 0).Y + .5);
     }
 

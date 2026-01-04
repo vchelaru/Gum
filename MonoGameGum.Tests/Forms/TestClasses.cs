@@ -49,7 +49,7 @@ public class TestViewModel : ViewModel
         set => Set(value);
     }
 
-    public override string ToString() => Text;
+    public override string ToString() => Text ?? string.Empty;
 }
 
 public class AuxTestViewModel : ViewModel

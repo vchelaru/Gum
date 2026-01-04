@@ -5179,12 +5179,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 foreach (var newItem in e.NewItems)
                 {
-    #if FULL_DIAGNOSTICS
+#if FULL_DIAGNOSTICS
                     if (newItem == null)
                     {
                         throw new InvalidOperationException($"Attempting to add a null child to {this}");
                     }
-    #endif
+                    if(newItem == this)
+                    {
+                        throw new InvalidOperationException($"{this} cannot be added as a child of itself");
+                    }
+#endif
                     var ipso = (GraphicalUiElement)newItem;
 
                     if (ipso.Parent != this)

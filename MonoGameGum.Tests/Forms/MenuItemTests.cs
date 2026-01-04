@@ -17,7 +17,7 @@ public class MenuItemTests : BaseTestClass
 
         MenuItem menuItem = new();
         menu.Items.Add(menuItem);
-        var submenuIndicator = menuItem.GetVisual("SubmenuIndicatorInstance");
+        var submenuIndicator = menuItem.GetVisual("SubmenuIndicatorInstance")!;
 
         submenuIndicator.Visible.ShouldBeFalse();
     }

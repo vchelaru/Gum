@@ -59,8 +59,8 @@ public  class ComboBoxTests : BaseTestClass
 
     public class CGComboBox : InteractiveGue
     {
-        public MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime ListBoxInstance;
-        public RectangleRuntime FocusedIndicator { get; private set; }
+        public MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime? ListBoxInstance;
+        public RectangleRuntime? FocusedIndicator { get; private set; }
 
         public CGComboBox(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {

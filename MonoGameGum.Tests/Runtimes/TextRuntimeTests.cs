@@ -32,6 +32,22 @@ $"chars count=223\r\n";
 
     }
 
+    #region AbsoluteWidth
+
+    [Fact]
+    public void AbsoluteWidth_ShouldBeChangedByText_IfRelativeToChildren()
+    {
+        TextRuntime sut = new();
+        sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.Width = 0;
+        sut.Text = "Short";
+        float shortWidth = sut.GetAbsoluteWidth();
+
+        sut.Text = "This is much longer";
+        float longWidth = sut.GetAbsoluteWidth();
+
+        longWidth.ShouldBeGreaterThan(shortWidth);
+    }
 
     [Fact]
     public void AbsoluteWidth_ShouldNotIncludeNewlines()
@@ -51,6 +67,8 @@ $"chars count=223\r\n";
 
         widthBefore.ShouldBe(widthAfter, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
     }
+
+    #endregion
 
     #region WrappedText
 
@@ -449,6 +467,25 @@ $"chars count=223\r\n";
         Text sut = new();
         var clone = sut.Clone();
         clone.ShouldNotBeNull();
+    }
+
+    #endregion
+
+    #region PropertyChanged
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenTextChanges()
+    {
+        bool wasChanged = false;
+        TextRuntime textRuntime = new();
+        textRuntime.PropertyChanged += (_, _) =>
+        {
+            wasChanged = true;
+        };
+
+        textRuntime.Text = "Hello 1234";
+
+        wasChanged.ShouldBeTrue();
     }
 
     #endregion

@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace RaylibGum.Renderables;
 
-internal static class CustomSetPropertyOnRenderable
+public static class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
 

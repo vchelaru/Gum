@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace MonoGameGum.GueDeriving;
 
 /// <summary>
-/// Represents a text element in the Gum UI framework.
+/// Represents a text element which can display a string.
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
@@ -30,6 +30,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
     /// <summary>
     /// The XNA blend state used when rendering the text. This controls how 
     /// color and alpha values blend with the background.
@@ -57,6 +58,8 @@ public class TextRuntime : InteractiveGue
             // NotifyPropertyChanged handled by BlendState:
         }
     }
+#endif
+
 
     /// <summary>
     /// The red component of the text color. Ranges from 0 to 255.
@@ -132,6 +135,34 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
+#if !RAYLIB
+    /// <summary>
+    /// The maximum letters to display. This can be used to 
+    /// create an effect where the text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => mContainedText.MaxLettersToShow;
+        set
+        {
+            mContainedText.MaxLettersToShow = value;
+        }
+    }
+
+    /// <summary>
+    /// The maximum number of lines to display. This can be used to 
+    /// limit how many lines of text are displayed at one time.
+    /// </summary>
+    public int? MaxNumberOfLines
+    {
+        get => mContainedText.MaxNumberOfLines;
+        set
+        {
+            mContainedText.MaxNumberOfLines = value;
+        }
+    }
+#endif
+
     public BitmapFont BitmapFont
     {
         get => ContainedText.BitmapFont;
@@ -174,31 +205,6 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-    /// <summary>
-    /// The maximum letters to display. This can be used to 
-    /// create an effect where the text prints out letter-by-letter.
-    /// </summary>
-    public int? MaxLettersToShow
-    {
-        get => mContainedText.MaxLettersToShow;
-        set
-        {
-            mContainedText.MaxLettersToShow = value;
-        }
-    }
-
-    /// <summary>
-    /// The maximum number of lines to display. This can be used to 
-    /// limit how many lines of text are displayed at one time.
-    /// </summary>
-    public int? MaxNumberOfLines
-    {
-        get => mContainedText.MaxNumberOfLines;
-        set
-        {
-            mContainedText.MaxNumberOfLines = value;
-        }
-    }
 
     bool useCustomFont;
     /// <summary>
