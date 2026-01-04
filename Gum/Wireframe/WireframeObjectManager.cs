@@ -132,7 +132,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     public void RefreshAll(bool forceLayout, bool forceReloadTextures = false)
     {
-        ElementSave elementSave = null;
+        ElementSave? elementSave = null;
 
         // If mulitple elements are selected then we can't show them all, so act as if nothing is selected.
         if(_selectedState.SelectedElements.Count() == 1)
@@ -146,13 +146,9 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         _pluginManager.WireframeRefreshed();
     }
 
-    private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
+    private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave? elementSave)
     {
         bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
-        //bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
-        bool shouldReloadTextures =
-            false;
-            //forceReloadTextures || elementSave != ElementShowing;
 
         if (elementSave == null || elementSave.IsSourceFileMissing)
         {

@@ -40,7 +40,7 @@ public class WindowVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if(value != _backgroundColor)
+            if(!value.Equals(_backgroundColor))
             {
                 _backgroundColor = value;
                 // Window doesn't have states...

@@ -70,7 +70,7 @@ public abstract class AposShapeRuntime : BindableGue
     /// The value range is 0-255. This value
     /// is ignored if a gradient is being used.
     /// </summary>
-    public new int Alpha
+    public int Alpha
     {
         get => ContainedRenderable.Alpha;
         set => ContainedRenderable.Alpha = value;

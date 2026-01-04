@@ -49,7 +49,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
         }
     }
 
-    public AnimationViewModel AnimationToExclude { get; internal set; }
+    public AnimationViewModel? AnimationToExclude { get; internal set; }
 
     public override bool CanExecuteAffirmative() => SelectedAnimation is not null;
 

@@ -6,11 +6,13 @@
 
 set -e
 
-GUM_WINE_PREFIX_PATH=$HOME/.wine_gum_prefix/
+GUM_WINE_PREFIX_PATH="${1:-$HOME/.wine_gum_dotnet8/}"
 
-echo "This is an experimental script to remove the automated install of wine, winetricks, and GUM on Linux systems."
+echo "This will attempt to remove the automated install of wine, winetricks, and GUM on Linux systems."
 echo "If you did not install GUM using the setup_gum_linux.sh script, please do not run this script !!!!"
-echo "Script last updated on the 15th of November 2025!"
+echo "Script last updated on the 29th of December 2025!"
+echo "Using WINE PREFIX: $GUM_WINE_PREFIX_PATH"
+echo ""
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in

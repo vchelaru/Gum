@@ -70,7 +70,7 @@ public class ListBoxTests : BaseTestClass
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             listBox.Visual,
             mockCursor.Object,
-            null,
+            null!,
             0);
 
         listBox.SelectedObject.ShouldBeNull();
@@ -95,7 +95,7 @@ public class ListBoxTests : BaseTestClass
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             listBox.Visual,
             mockCursor.Object,
-            null,
+            null!,
             0);
 
 

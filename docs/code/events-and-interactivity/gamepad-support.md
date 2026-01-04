@@ -47,7 +47,7 @@ Pressing the A button raises the focused button's Click event.
 
 <figure><img src="../../.gitbook/assets/09_09 57 16.gif" alt=""><figcaption><p>Pressing the A button clicks the highlighted Button</p></figcaption></figure>
 
-Handling buttons specifically can be handled by subscribing to ControllerButtonPushed.
+Handling buttons specifically can be handled by subscribing to `ControllerButtonPushed`.
 
 ```csharp
 TopButton.ControllerButtonPushed += (button) =>
@@ -59,7 +59,7 @@ TopButton.ControllerButtonPushed += (button) =>
 The Click event may be raised with InputEventArgs containing the gamepad. Remember, clicks can happen a variety of ways including the mouse or even being directly invoked, so you need to check whether the second parameter is of type `InputEventArgs` and if the device is a GamePad.
 
 ```csharp
-TopButton.FormsControl.Click += HandleClick;
+TopButton.Click += HandleClick;
 
 // later, define the Click event:
 private void HandleClick(object sender, EventArgs args)

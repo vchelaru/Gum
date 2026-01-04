@@ -12,7 +12,7 @@ public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
 
     // Is this actually needed publicly?
     // Yes, it is set by CustomSetPropertyOnRenderable
-    public float Alpha { get; set; } = 255;
+    public int Alpha { get; set; } = 255;
 
     int IRenderableIpso.Alpha => (int)this.Alpha;
 

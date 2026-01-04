@@ -51,6 +51,7 @@ public class TextBox : TextBoxBase
         }
     }
 
+#if !RAYLIB
     /// <summary>
     /// The maximum letters to display. This can be used to 
     /// create an effect where the text prints out letter-by-letter.
@@ -66,6 +67,7 @@ public class TextBox : TextBoxBase
             }
         }
     }
+#endif
 
     /// <summary>
     /// The maximum number of lines to display. This can be used to 
@@ -87,7 +89,7 @@ public class TextBox : TextBoxBase
 
 
 
-    #endregion
+#endregion
 
     #region Events
 

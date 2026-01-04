@@ -49,15 +49,6 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        public bool Visible
-        {
-            get { return mVisible; }
-            set
-            {
-                mVisible = value;
-            }
-        }
-
         public float Radius
         {
             get
@@ -288,28 +279,20 @@ namespace RenderingLibrary.Math.Geometry
 
         public object Tag { get; set; }
 
-        public bool AbsoluteVisible
+        /// <inheritdoc/>
+        public bool Visible
         {
-            get
+            get { return mVisible; }
+            set
             {
-                if (((IVisible)this).Parent == null)
-                {
-                    return Visible;
-                }
-                else
-                {
-                    return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-                }
+                mVisible = value;
             }
         }
 
-        IVisible IVisible.Parent
-        {
-            get
-            {
-                return ((IRenderableIpso)this).Parent as IVisible;
-            }
-        }
+        /// <inheritdoc/>
+        public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+        /// <inheritdoc/>
+        IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
         void IRenderable.PreRender() { }
 

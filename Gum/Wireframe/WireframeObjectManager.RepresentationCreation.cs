@@ -125,7 +125,7 @@ public partial class WireframeObjectManager
 
                 if (!string.IsNullOrEmpty(parentName) && parentName != StandardElementsManager.ScreenBoundsName)
                 {
-                    IRenderableIpso newParent = elements.FirstOrDefault(item => item.Name == parentName);
+                    var newParent = elements.FirstOrDefault(item => item.Name == parentName);
 
                     // This may have bad XML so if it doesn't exist, then let's ignore this:
                     if (newParent != null)

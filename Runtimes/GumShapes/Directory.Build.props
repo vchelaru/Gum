@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'KniGumShapes'">obj\KNI\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'KniGumShapes'">bin\KNI\</BaseOutputPath>
+    
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'MonoGameGumShapes'">obj\MonoGame\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'MonoGameGumShapes'">bin\MonoGame\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

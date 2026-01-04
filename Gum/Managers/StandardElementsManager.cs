@@ -810,8 +810,14 @@ namespace Gum.Managers
 
                 if (customState == null && throwExceptionOnMissing)
                 {
-                    throw new InvalidOperationException(
-                        $"Could not get the default state for type {type} in either the default or through plugins");
+                    var message = $"Could not get the default state for type {type} in either the default or through plugins";
+
+                    if(type == "Arc")
+                    {
+                        message += "\nIf using MonoGame/KNI, FNA, did you remember to initialize the shapes library?";
+                    }
+
+                    throw new InvalidOperationException(message);
                 }
                 else
                 {

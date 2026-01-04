@@ -38,7 +38,7 @@ public class ListBoxItemTests : BaseTestClass
 
 public class InGameListBoxItemRuntime : ContainerRuntime
 {
-    public TextRuntime nameText { get; protected set; }
+    public TextRuntime? nameText { get; protected set; }
 
     public InGameListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {

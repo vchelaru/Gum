@@ -20,7 +20,7 @@ namespace Gum.DataTypes
         }
 
 
-        public static FilePath GetFullPathXmlFile(this ElementSave elementSave, string elementSaveName)
+        public static FilePath? GetFullPathXmlFile(this ElementSave elementSave, string elementSaveName)
         {
             var gumProject = ProjectManager.Self.GumProjectSave;
             if (string.IsNullOrEmpty(gumProject.FullFileName))
