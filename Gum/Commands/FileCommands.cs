@@ -9,6 +9,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using ToolsUtilities;
@@ -50,6 +51,28 @@ public class FileCommands : IFileCommands
 
     public void DeleteDirectory(FilePath directory) => 
         FileManager.DeleteDirectory(directory.FullPath);
+
+    public void MoveDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+
+        // Move files
+        foreach (string file in Directory.GetFiles(source))
+        {
+            string destFile = Path.Combine(destination, Path.GetFileName(file));
+            File.Move(file, destFile, overwrite: true); // .NET 6+
+        }
+
+        // Move subdirectories recursively
+        foreach (string dir in Directory.GetDirectories(source))
+        {
+            string destDir = Path.Combine(destination, Path.GetFileName(dir));
+            MoveDirectory(dir, destDir);
+        }
+
+        // Clean up empty source directory
+        Directory.Delete(source);
+    }
 
     public void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName) =>
                 FileManager.SaveEmbeddedResource(assembly, resourceName, targetFileName);

@@ -20,6 +20,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly IRenameLogic _renameLogic;
     private readonly IGuiCommands _guiCommands;
     private readonly FileLocations _fileLocations;
+    private readonly IFileCommands _fileCommands;
 
     public ITreeNode? FolderNode { get; set; }
     
@@ -27,13 +28,14 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         INameVerifier nameVerifier, 
         IRenameLogic renameLogic,
         IGuiCommands guiCommands,
-        FileLocations fileLocations)
+        FileLocations fileLocations,
+        IFileCommands fileCommands)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
         _fileLocations = fileLocations;
-
+        _fileCommands = fileCommands;
     }
 
     public override void OnAffirmative()
@@ -80,7 +82,9 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
 
         if (FolderNode.IsScreensFolderTreeNode())
         {
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            // rename logic may adjust the order so let's get a copy:
+            var screensCopy = ProjectState.Self.GumProjectSave.Screens.ToArray();
+            foreach (var screen in screensCopy)
             {
                 if (screen.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
                 {
@@ -94,7 +98,8 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         }
         else if (FolderNode.IsComponentsFolderTreeNode())
         {
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            var componentsCopy = ProjectState.Self.GumProjectSave.Components.ToArray();
+            foreach (var component in componentsCopy)
             {
                 if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
                 {
@@ -109,7 +114,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
 
         try
         {
-            Directory.Move(oldFullPath.FullPath, newFullPath.FullPath);
+            _fileCommands.MoveDirectory(oldFullPath.FullPath, newFullPath.FullPath);
             _guiCommands.RefreshElementTreeView();
         }
         catch (Exception e)

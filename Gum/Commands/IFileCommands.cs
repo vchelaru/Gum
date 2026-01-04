@@ -15,6 +15,8 @@ public interface IFileCommands
 
     void DeleteDirectory(FilePath filePath);
 
+    void MoveDirectory(string source, string destination);
+
     void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName);
 
     /// <summary>
