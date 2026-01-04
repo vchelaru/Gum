@@ -286,6 +286,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly DeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly FileLocations _fileLocations;
 
     public bool HasMouseOver
     {
@@ -314,6 +315,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _fileLocations = Locator.GetRequiredService<FileLocations>();
+
 
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
@@ -1099,9 +1102,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         foreach(var element in project.AllElements)
         {
             var rootDirectoryForElementType =
-                element is ScreenSave ? FileLocations.Self.ScreensFolder
-                : element is ComponentSave ? FileLocations.Self.ComponentsFolder
-                : element is StandardElementSave ? FileLocations.Self.StandardsFolder
+                element is ScreenSave ? _fileLocations.ScreensFolder
+                : element is ComponentSave ? _fileLocations.ComponentsFolder
+                : element is StandardElementSave ? _fileLocations.StandardsFolder
                 : string.Empty;
 
             string fullPath = rootDirectoryForElementType + FileManager.GetDirectory(element.Name);
@@ -1219,7 +1222,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             var treeNode = GetTreeNodeFor(screenSave);
             if (treeNode == null && ShouldShow(screenSave))
             {
-                string fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
+                string fullPath = _fileLocations.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
                 TreeNode parentNode = GetTreeNodeFor(fullPath);
 
                 treeNode = AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
@@ -1230,7 +1233,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             if (GetTreeNodeFor(componentSave) == null && ShouldShow(componentSave))
             {
-                string fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
+                string fullPath = _fileLocations.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
                 TreeNode parentNode = GetTreeNodeFor(fullPath);
 
                 if(parentNode == null)
@@ -1257,11 +1260,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             if(GetTreeNodeFor(behaviorSave) == null && ShouldShow(behaviorSave))
             {
-                string fullPath = FileLocations.Self.BehaviorsFolder;
+                string fullPath = _fileLocations.BehaviorsFolder;
                 
                 if(behaviorSave.Name != null)
                 {
-                    fullPath = FileLocations.Self.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
+                    fullPath = _fileLocations.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
                 }
                 TreeNode parentNode = GetTreeNodeFor(fullPath);
 
@@ -1782,11 +1785,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             string fullPath = null;
             if(elementSave is ScreenSave)
             {
-                fullPath = FileLocations.Self.ScreensFolder + FileManager.GetDirectory(elementSave.Name);
+                fullPath = _fileLocations.ScreensFolder + FileManager.GetDirectory(elementSave.Name);
             }
             else
             {
-                fullPath = FileLocations.Self.ComponentsFolder + FileManager.GetDirectory(elementSave.Name);
+                fullPath = _fileLocations.ComponentsFolder + FileManager.GetDirectory(elementSave.Name);
             }
             TreeNode desiredNode = GetTreeNodeFor(fullPath);
             var parentNode = node.Parent;

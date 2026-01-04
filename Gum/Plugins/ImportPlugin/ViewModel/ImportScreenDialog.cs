@@ -38,7 +38,7 @@ public class ImportScreenDialog : ImportBaseDialogViewModel
         UnfilteredFiles.AddRange(screenFilesNotInProject.Select(item => item.FullPath));
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
 
         foreach (var file in SelectedFiles)
