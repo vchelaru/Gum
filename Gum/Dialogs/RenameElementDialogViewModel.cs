@@ -47,8 +47,8 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
             }
         };
     }
-    
-    protected override void OnAffirmative()
+
+    public override void OnAffirmative()
     {
         if (Value is null || ElementSave is null || Error is not null) return;
         

@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 namespace GumToolUnitTests.ViewModels.Dialogs;
 public class AddCategoryDialogViewModelTests : BaseTestClass
 {
-    private readonly AutoMocker mocker;
+    private readonly AutoMocker _mocker;
 
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<INameVerifier> _nameVerifier;
@@ -25,12 +25,12 @@ public class AddCategoryDialogViewModelTests : BaseTestClass
 
     public AddCategoryDialogViewModelTests()
     {
-        mocker = new();
+        _mocker = new();
 
-        _viewModel = mocker.CreateInstance<AddCategoryDialogViewModel>();
+        _viewModel = _mocker.CreateInstance<AddCategoryDialogViewModel>();
 
-        _selectedState = mocker.GetMock<ISelectedState>();
-        _nameVerifier = mocker.GetMock<INameVerifier>();
+        _selectedState = _mocker.GetMock<ISelectedState>();
+        _nameVerifier = _mocker.GetMock<INameVerifier>();
     }
 
     [Fact]

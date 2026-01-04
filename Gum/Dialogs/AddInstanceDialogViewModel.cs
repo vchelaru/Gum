@@ -32,7 +32,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         _elementCommands = elementCommands;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         if (Value is null || Error is not null) return;
         

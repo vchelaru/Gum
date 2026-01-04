@@ -44,8 +44,8 @@ internal class AddStateKeyframeDialog : DialogViewModel
     }
 
     public override bool CanExecuteAffirmative() => !string.IsNullOrWhiteSpace(SelectedState);
-    
-    protected override void OnAffirmative()
+
+    public override void OnAffirmative()
     {
         Result = new AnimatedKeyframeViewModel()
         {

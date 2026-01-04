@@ -1,31 +1,16 @@
 ﻿using ToolsUtilities;
 
-namespace Gum.Managers
+namespace Gum.Managers;
+
+public class FileLocations
 {
-    public class FileLocations
-    {
-        static FileLocations mSelf;
+    public string ScreensFolder => ProjectFolder + "Screens/";
 
-        public static FileLocations Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new FileLocations();
-                }
-                return mSelf;
-            }
-        }
+    public string ComponentsFolder => ProjectFolder + "Components/";
 
-        public string ScreensFolder => ProjectFolder + "Screens/";
+    public string StandardsFolder => ProjectFolder + "Standards/";
 
-        public string ComponentsFolder => ProjectFolder + "Components/";
+    public string BehaviorsFolder => ProjectFolder + "Behaviors/";
 
-        public string StandardsFolder => ProjectFolder + "Standards/";
-
-        public string BehaviorsFolder => ProjectFolder + "Behaviors/";
-
-        public string ProjectFolder  => FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
-    }
+    public virtual string ProjectFolder  => FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 }

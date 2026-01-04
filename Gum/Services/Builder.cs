@@ -88,18 +88,19 @@ file static class ServiceCollectionExtensions
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 
         // singletons
-        services.AddSingleton<ISelectedState, SelectedState>();
-        services.AddSingleton<LocalizationManager>();
-        services.AddSingleton<INameVerifier, NameVerifier>();
-        services.AddSingleton<IUndoManager, UndoManager>();
-        services.AddSingleton<DeleteLogic>();
+        services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<CopyPasteLogic>();
+        services.AddSingleton<DeleteLogic>();
+        services.AddSingleton<FileLocations>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
+        services.AddSingleton<LocalizationManager>();
+        services.AddSingleton<ISelectedState, SelectedState>();
+        services.AddSingleton<INameVerifier, NameVerifier>();
+        services.AddSingleton<IUndoManager, UndoManager>();
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
-        services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<DragDropManager>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();

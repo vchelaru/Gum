@@ -31,7 +31,7 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
         _nameVerifier = nameVerifier;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         if (StateContainer is null || string.IsNullOrWhiteSpace(Value) || Error is not null) return;
         

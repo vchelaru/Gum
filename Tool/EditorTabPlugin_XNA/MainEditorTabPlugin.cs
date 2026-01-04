@@ -122,6 +122,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly SetVariableLogic _setVariableLogic;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
+    private readonly FileLocations _fileLocations;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -153,6 +154,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             Locator.GetRequiredService<ReorderLogic>());
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _fileLocations = Locator.GetRequiredService<FileLocations>();
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
@@ -785,7 +787,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
                 if (!_dragDropManager.IsValidExtensionForFileDrop(file))
                     continue;
 
-                string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
+                string fileName = FileManager.MakeRelative(file, _fileLocations.ProjectFolder);
                 AddNewInstanceForDrop(fileName, worldX, worldY);
                 shouldUpdate = true;
             }
@@ -834,7 +836,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
         if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
         {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
+            string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase:true);
 
             string message = "What do you want to do with the file " + fileName;
             DialogChoices<string> choices = new()
@@ -885,7 +887,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
         if (instance != null)
         {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder, preserveCase:true);
+            string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase:true);
 
             string message = "What do you want to do with the file " + fileName;
             DialogChoices<string> choices = new()

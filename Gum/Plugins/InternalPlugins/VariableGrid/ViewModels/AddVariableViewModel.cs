@@ -126,7 +126,7 @@ public class AddVariableViewModel : DialogViewModel
         SelectedItem = "float";
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         GeneralResponse response = Validate();
         if (!response.Succeeded)

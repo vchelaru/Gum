@@ -19,19 +19,26 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IRenameLogic _renameLogic;
     private readonly IGuiCommands _guiCommands;
+    private readonly FileLocations _fileLocations;
+    private readonly IFileCommands _fileCommands;
+
     public ITreeNode? FolderNode { get; set; }
     
     public RenameFolderDialogViewModel(
         INameVerifier nameVerifier, 
         IRenameLogic renameLogic,
-        IGuiCommands guiCommands)
+        IGuiCommands guiCommands,
+        FileLocations fileLocations,
+        IFileCommands fileCommands)
     {
         _nameVerifier = nameVerifier;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
+        _fileLocations = fileLocations;
+        _fileCommands = fileCommands;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         if (FolderNode is null ||
             Value is null ||
@@ -51,11 +58,11 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         string rootForElement;
         if (FolderNode.IsScreensFolderTreeNode())
         {
-            rootForElement = FileLocations.Self.ScreensFolder;
+            rootForElement = _fileLocations.ScreensFolder;
         }
         else if (FolderNode.IsComponentsFolderTreeNode())
         {
-            rootForElement = FileLocations.Self.ComponentsFolder;
+            rootForElement = _fileLocations.ComponentsFolder;
         }
         else
         {
@@ -66,45 +73,48 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         var oldFullPath = FolderNode.GetFullFilePath();
 
         string oldPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
-        var folderNodeAsTreeNode = FolderNode as TreeNode;
-        if(folderNodeAsTreeNode != null)
+        var folderNodeAsTreeNode = FolderNode as TreeNodeWrapper;
+        if(folderNodeAsTreeNode?.Node != null)
         {
-            folderNodeAsTreeNode.Text = Value;
+            folderNodeAsTreeNode.Node.Text = Value;
         }
         string newPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
 
         if (FolderNode.IsScreensFolderTreeNode())
         {
-            foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+            // rename logic may adjust the order so let's get a copy:
+            var screensCopy = ProjectState.Self.GumProjectSave.Screens.ToArray();
+            foreach (var screen in screensCopy)
             {
-                if (screen.Name.StartsWith(oldPathRelativeToElementsRoot))
+                if (screen.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
                 {
                     string oldVaue = screen.Name;
-                    string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
+                    string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length).Replace("\\", "/");
 
                     screen.Name = newName;
-                    _renameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                    _renameLogic.HandleRename(screen, (InstanceSave?)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                 }
             }
         }
         else if (FolderNode.IsComponentsFolderTreeNode())
         {
-            foreach (var component in ProjectState.Self.GumProjectSave.Components)
+            var componentsCopy = ProjectState.Self.GumProjectSave.Components.ToArray();
+            foreach (var component in componentsCopy)
             {
-                if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.ToLowerInvariant()))
+                if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
                 {
                     string oldVaue = component.Name;
-                    string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
+                    string newName = (newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length)).Replace("\\", "/");
                     component.Name = newName;
 
-                    _renameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                    _renameLogic.HandleRename(component, (InstanceSave?)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                 }
             }
         }
 
         try
         {
-            Directory.Move(oldFullPath.FullPath, newFullPath.FullPath);
+            _fileCommands.MoveDirectory(oldFullPath.FullPath, newFullPath.FullPath);
             _guiCommands.RefreshElementTreeView();
         }
         catch (Exception e)

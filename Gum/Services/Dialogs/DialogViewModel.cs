@@ -26,7 +26,7 @@ public abstract class DialogViewModel : ViewModel
         NegativeCommand = new RelayCommand(OnNegative, CanExecuteNegative);
     }
 
-    protected virtual void OnAffirmative()
+    public virtual void OnAffirmative()
     {
         RequestClose?.Invoke(this, true);
     }

@@ -110,7 +110,12 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         }
         try
         {
-            TrySubscribeToGameWindowInput(game);
+            var isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+            // this isn't supported on mobile:
+            if (!isMobile)
+            {
+                TrySubscribeToGameWindowInput(game);
+            }
         }
         catch
         {
@@ -134,7 +139,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 
             }
 
-            if(succeeded)
+            if (succeeded)
             {
                 windowTextInputBuffer = new StringBuilder();
             }
@@ -149,14 +154,14 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 #if !FNA
     private void HandleWindowTextInput(object? sender, TextInputEventArgs e)
     {
-        lock(windowTextInputBuffer)
+        lock (windowTextInputBuffer)
         {
             // In DirectX environments, which use Windows Forms, certain characters
             // are returned for certain hotkey combinations like '\u0001' for CTRL+A.
             // We need to ignore these:
 
             //System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
-            if(ignoredWindowTextInputCharacters.Contains(e.Character) == false)
+            if (ignoredWindowTextInputCharacters.Contains(e.Character) == false)
             {
                 windowTextInputBuffer.Append(e.Character);
             }
@@ -171,7 +176,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         //    return "";
 
         ///////////////////////////////////////early out//////////////////////////////////
-        if(windowTextInputBuffer != null)
+        if (windowTextInputBuffer != null)
         {
             return processedStringFromWindow;
         }
@@ -251,7 +256,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 
 
 
-        return 
+        return
             //!InputManager.CurrentFrameInputSuspended && 
             keyboardStateProcessor.IsKeyDown(key);
     }
@@ -270,7 +275,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         }
 #endif
 
-        return 
+        return
             //!InputManager.CurrentFrameInputSuspended && 
             mKeysTyped[(int)key];
     }
@@ -316,10 +321,15 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
 #if ANDROID
 			ProcessAndroidKeys();
 #endif
+
+        var isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+        // this isn't supported on mobile:
+
+
         // This could be done in initialize, we don't want
         // to break projects. Instead, GumService.Initialize
         // now has the GraphicsDevice version obsolete 
-        if (windowTextInputBuffer == null && game != null)
+        if (windowTextInputBuffer == null && game != null && !isMobile)
         {
             try
             {
@@ -337,7 +347,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         // which we will later handle in TextBox.HandleCharEntered() via Property GetStringTyped()
         if (windowTextInputBuffer != null)
         {
-            lock(windowTextInputBuffer)
+            lock (windowTextInputBuffer)
             {
                 processedStringFromWindow = windowTextInputBuffer.ToString();
                 windowTextInputBuffer.Clear();
@@ -410,7 +420,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     private void HandleNumPadEnter(int key)
     {
         if ((key == 13 || key == 10)
-            && !processedStringFromWindow.Contains('\n') 
+            && !processedStringFromWindow.Contains('\n')
             && !processedStringFromWindow.Contains('\r'))
         {
             processedStringFromWindow += '\n';
