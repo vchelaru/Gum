@@ -177,9 +177,9 @@ public class Cursor : ICursor
     /// </summary>
     public int YChange => Y - LastY;
 
-    public int ScrollWheelChange => 0;
+    public int ScrollWheelChange => (int)Raylib.GetMouseWheelMoveV().Y;
 
-    public float ZVelocity => 0;
+    public float ZVelocity => ScrollWheelChange;
 
     public bool PrimaryPush
     {
@@ -469,6 +469,7 @@ public class Cursor : ICursor
         state.LeftButton = Raylib.IsMouseButtonDown(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
         state.MiddleButton = Raylib.IsMouseButtonDown(MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
         state.RightButton = Raylib.IsMouseButtonDown(MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
+        
 
         return state;
     }
