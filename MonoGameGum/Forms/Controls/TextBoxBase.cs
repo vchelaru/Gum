@@ -743,6 +743,9 @@ public abstract class TextBoxBase :
                 }
                 break;
             case Keys.Back:
+#if RAYLIB
+            case Keys.Backspace:
+#endif
                 if (!IsReadOnly)
                 {
                     HandleBackspace(isCtrlDown);
