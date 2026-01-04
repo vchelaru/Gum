@@ -5,6 +5,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Reflection;
+using Gum.StateAnimation.SaveClasses;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using System;
@@ -309,6 +310,13 @@ public class CodeGenerator
                     neededUsings.Add(elementNamespace);
                 }
             }
+        }
+
+        // Add using statements for AnimationRuntime and GetAnimation extension method if element has animations
+        if (GetElementAnimationsSave(context.Element) != null)
+        {
+            neededUsings.Add("Gum.StateAnimation.Runtime");
+            neededUsings.Add("Gum.Wireframe");
         }
 
         foreach (var neededUsing in neededUsings)
@@ -1128,6 +1136,9 @@ public class CodeGenerator
             context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
 
         }
+
+        // Initialize animation fields
+        GenerateAnimationFieldInitializations(context);
 
         if (!isFullyInstantiatingInCode)
         {
@@ -3183,6 +3194,12 @@ public class CodeGenerator
 
         #endregion
 
+        #region Animation Fields
+
+        GenerateAnimationProperties(context);
+
+        #endregion
+
         if (projectSettings.GenerateGumDataTypes)
         {
             GenerateGumSaveObjects(context, stringBuilder);
@@ -3279,6 +3296,98 @@ public class CodeGenerator
 
         tabCount--;
         stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+    }
+
+    #endregion
+
+    #region Animation Fields
+
+    /// <summary>
+    /// Gets the ElementAnimationsSave for the specified element, if it exists.
+    /// </summary>
+    private ElementAnimationsSave? GetElementAnimationsSave(ElementSave element)
+    {
+        if (element == null)
+        {
+            return null;
+        }
+
+        var fullPathXmlForElement = element.GetFullPathXmlFile();
+        if (fullPathXmlForElement == null)
+        {
+            return null;
+        }
+
+        FilePath animationFileName = fullPathXmlForElement.RemoveExtension().FullPath + "Animations.ganx";
+        
+        if (!animationFileName.Exists())
+        {
+            return null;
+        }
+
+        try
+        {
+            return FileManager.XmlDeserialize<ElementAnimationsSave>(animationFileName.FullPath);
+        }
+        catch
+        {
+            // If deserialization fails, return null
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Generates AnimationRuntime properties for all animations defined for the element.
+    /// </summary>
+    private void GenerateAnimationProperties(CodeGenerationContext context)
+    {
+        var elementAnimations = GetElementAnimationsSave(context.Element);
+        
+        if (elementAnimations == null || elementAnimations.Animations == null || elementAnimations.Animations.Count == 0)
+        {
+            return;
+        }
+
+        context.StringBuilder.AppendLine();
+        context.StringBuilder.AppendLine(context.Tabs + "#region Animation Fields");
+
+        foreach (var animation in elementAnimations.Animations)
+        {
+            if (string.IsNullOrEmpty(animation.Name))
+            {
+                continue;
+            }
+
+            var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
+            context.StringBuilder.AppendLine(context.Tabs + $"public AnimationRuntime {fieldName} {{get; protected set;}}");
+        }
+
+        context.StringBuilder.AppendLine(context.Tabs + "#endregion");
+    }
+
+    /// <summary>
+    /// Generates initialization code for AnimationRuntime fields.
+    /// </summary>
+    private void GenerateAnimationFieldInitializations(CodeGenerationContext context)
+    {
+        var elementAnimations = GetElementAnimationsSave(context.Element);
+        
+        if (elementAnimations == null || elementAnimations.Animations == null || elementAnimations.Animations.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var animation in elementAnimations.Animations)
+        {
+            if (string.IsNullOrEmpty(animation.Name))
+            {
+                continue;
+            }
+
+            var fieldName = _codeGenerationNameVerifier.ToCSharpName(animation.Name);
+            var animationName = animation.Name;
+            context.StringBuilder.AppendLine(context.Tabs + $"{fieldName} = this.Visual.GetAnimation(\"{animationName}\");");
+        }
     }
 
     #endregion
