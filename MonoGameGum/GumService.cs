@@ -428,10 +428,12 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
+#if !RAYLIB
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }
+#endif
 
     public static void AddToRoot(this FrameworkElement element)
     {
