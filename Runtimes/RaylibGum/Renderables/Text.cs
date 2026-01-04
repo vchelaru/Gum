@@ -518,6 +518,8 @@ public class Text : IVisible, IRenderableIpso,
 
     public string? StoredMarkupText => null;
 
+    public float LineHeightMultiplier => 1;
+
 
     float IPositionedSizedObject.Width
     {

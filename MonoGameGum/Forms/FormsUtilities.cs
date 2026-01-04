@@ -176,9 +176,7 @@ public class FormsUtilities
                 TryAdd(typeof(RadioButton), typeof(DefaultVisuals.V3.RadioButtonVisual));
                 TryAdd(typeof(ScrollBar), typeof(DefaultVisuals.V3.ScrollBarVisual));
                 TryAdd(typeof(ScrollViewer), typeof(DefaultVisuals.V3.ScrollViewerVisual));
-#if !RAYLIB
                 TryAdd(typeof(TextBox), typeof(DefaultVisuals.V3.TextBoxVisual));
-#endif
                 TryAdd(typeof(Slider), typeof(DefaultVisuals.V3.SliderVisual));
                 TryAdd(typeof(Splitter), typeof(DefaultVisuals.V3.SplitterVisual));
                 TryAdd(typeof(Window), typeof(DefaultVisuals.V3.WindowVisual));
@@ -308,7 +306,7 @@ public class FormsUtilities
 #if XNALIKE
     public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
 #else
-    public static void Update(float gameTime, GraphicalUiElement rootGue)
+    public static void Update(double gameTime, GraphicalUiElement rootGue)
 #endif
     {
         innerRootList.Clear();
@@ -326,7 +324,7 @@ public class FormsUtilities
 #if XNALIKE
     public static void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
 #else
-    public static void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
+    public static void Update(double gameTime, IEnumerable<GraphicalUiElement> roots)
 #endif
     {
 #if XNALIKE
@@ -651,11 +649,9 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains("TextBoxBehavior"))
             {
-#if !RAYLIB
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
-#endif
             }
             else if (behaviorNames.Contains("WindowBehavior"))
             {

@@ -50,7 +50,7 @@ public class GumService
 #if XNALIKE
     public GameTime GameTime { get; private set; }
 #else
-    public float GameTime { get; private set; }
+    public double GameTime { get; private set; }
 #endif
 
     public Cursor Cursor => FormsUtilities.Cursor;
@@ -333,7 +333,7 @@ public class GumService
 #if XNALIKE
     public void Update(GameTime gameTime)
 #else
-    public void Update(float gameTime)
+    public void Update(double totalGameTime)
 #endif
     {
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
@@ -341,7 +341,7 @@ public class GumService
 #if XNALIKE
         Update(Game, gameTime, this.Root);
 #else
-        Update(gameTime, this.Root);
+        Update(totalGameTime, this.Root);
 #endif
     }
 
@@ -362,7 +362,7 @@ public class GumService
 #if XNALIKE
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
 #else
-    public void Update(float gameTime, GraphicalUiElement root)
+    public void Update(double totalGameTime, GraphicalUiElement root)
 #endif
     {
         roots.Clear();
@@ -371,14 +371,14 @@ public class GumService
 #if XNALIKE
         Update(game, gameTime, roots);
 #else
-        Update(gameTime, roots);
+        Update(totalGameTime, roots);
 #endif
     }
 
 #if XNALIKE
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
 #else
-    public void Update(float gameTime, IEnumerable<GraphicalUiElement> roots)
+    public void Update(double gameTime, IEnumerable<GraphicalUiElement> roots)
 #endif
     {
 #if XNALIKE
@@ -428,10 +428,12 @@ public static class GraphicalUiElementExtensionMethods
         element.Parent = null;
     }
 
+#if !RAYLIB
     public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child)
     {
         element.Children.Add(child.Visual);
     }
+#endif
 
     public static void AddToRoot(this FrameworkElement element)
     {

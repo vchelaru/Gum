@@ -39,6 +39,8 @@
 
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
 
+		<Compile Include="..\..\MonoGameGum\Clipboard\ClipboardImplementation.cs" Link="Clipboard\ClipboardImplementation.cs" />
+
 		<!--
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
@@ -96,12 +98,15 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\Controls\GraphicalUiElementFormsExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\TextWrapping.cs" Link="Forms\TextWrapping.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
@@ -118,8 +123,6 @@
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\PasswordBox.cs" />
-	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBox.cs" />
-	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -128,6 +131,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Raylib-cs" Version="7.0.1" />
+		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
+
 	</ItemGroup>
 
 	<ItemGroup>
@@ -137,7 +142,12 @@
 	<ItemGroup>
 		<Folder Include="Forms\Data\" />
 		<Folder Include="Forms\DefaultVisuals\V3\" />
+		<Folder Include="Clipboard\" />
 		<Folder Include="Threading\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" Link="Forms\Controls\TextBoxBase.cs" />
 	</ItemGroup>
 
 </Project>

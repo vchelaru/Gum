@@ -167,20 +167,6 @@ public class Cursor : ICursor
     /// </summary>
     public int LastY { get; private set; }
 
-    MouseState _mouseState;
-
-
-
-    MouseState mLastFrameMouseState = new MouseState();
-
-    TouchCollection _touchCollection;
-    TouchCollection _lastFrameTouchCollection = new TouchCollection();
-
-
-    public double LastPrimaryPushTime => 0;
-
-    public double LastPrimaryClickTime => 0;
-
     /// <summary>
     /// Returns the screen space (in pixels) change on the X axis since the last frame.
     /// </summary>
@@ -191,9 +177,9 @@ public class Cursor : ICursor
     /// </summary>
     public int YChange => Y - LastY;
 
-    public int ScrollWheelChange => 0;
+    public int ScrollWheelChange => (int)Raylib.GetMouseWheelMoveV().Y;
 
-    public float ZVelocity => 0;
+    public float ZVelocity => ScrollWheelChange;
 
     public bool PrimaryPush
     {
@@ -242,10 +228,11 @@ public class Cursor : ICursor
         }
     }
 
-    public bool PrimaryClickNoSlide => PrimaryClick;
-
     public bool PrimaryDoubleClick { get; private set; }
+
     public bool PrimaryDoublePush { get; private set; }
+
+    public bool PrimaryClickNoSlide => PrimaryClick;
 
     public bool SecondaryPush
     {
@@ -296,7 +283,6 @@ public class Cursor : ICursor
 
     public bool SecondaryDoubleClick { get; private set; }
 
-
     public bool MiddlePush
     {
         get
@@ -324,7 +310,6 @@ public class Cursor : ICursor
     }
 
     public bool MiddleDoubleClick { get; private set; }
-
 
     // This property follows the FRB naming conventions.
     // This is confusing for a number of reasons:
@@ -380,18 +365,29 @@ public class Cursor : ICursor
     /// </summary>
     public FrameworkElement? FrameworkElementOver => VisualOver?.FormsControlAsObject as FrameworkElement;
 
+    MouseState _mouseState;
+    MouseState mLastFrameMouseState = new MouseState();
+
+    TouchCollection _touchCollection;
+    TouchCollection _lastFrameTouchCollection = new TouchCollection();
+
+
+    public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
+    double mLastPrimaryClickTime = -999;
+    public double LastPrimaryClickTime => mLastPrimaryClickTime;
+    double mLastPrimaryPushTime = -999;
+    public double LastPrimaryPushTime => mLastPrimaryPushTime;
+    double mLastSecondaryClickTime = -999;
+    double mLastMiddleClickTime = -999;
+
+
     // todo - need to have this actually change the cursor. For now doing this to satisfy the interface:
     Cursors? ICursor.CustomCursor
     { 
         get; set;
     }
 
-    void ICursor.Activity(double currentGameTimeTotalSeconds)
-    {
-        Activity((float)currentGameTimeTotalSeconds);
-    }
-
-    internal void Activity(double gameTime)
+    public void Activity(double gameTime)
     {
         mLastFrameMouseState = _mouseState;
         _lastFrameTouchCollection = _touchCollection;
@@ -427,41 +423,41 @@ public class Cursor : ICursor
         {
             // do nothing
         }
-        //if (PrimaryPush)
-        //{
-        //    if (currentTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
-        //    {
-        //        PrimaryDoublePush = true;
-        //    }
-        //    mLastPrimaryPushTime = currentTime;
-        //}
+        if (PrimaryPush)
+        {
+            if (gameTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                PrimaryDoublePush = true;
+            }
+            mLastPrimaryPushTime = gameTime;
+        }
 
-        //if (PrimaryClick)
-        //{
-        //    if (currentTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
-        //    {
-        //        PrimaryDoubleClick = true;
-        //    }
-        //    mLastPrimaryClickTime = currentTime;
-        //}
+        if (PrimaryClick)
+        {
+            if (gameTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                PrimaryDoubleClick = true;
+            }
+            mLastPrimaryClickTime = gameTime;
+        }
 
-        //if (SecondaryClick)
-        //{
-        //    if (currentTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
-        //    {
-        //        SecondaryDoubleClick = true;
-        //    }
-        //    mLastSecondaryClickTime = currentTime;
-        //}
+        if (SecondaryClick)
+        {
+            if (gameTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                SecondaryDoubleClick = true;
+            }
+            mLastSecondaryClickTime = gameTime;
+        }
 
-        //if (MiddleClick)
-        //{
-        //    if (currentTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
-        //    {
-        //        MiddleDoubleClick = true;
-        //    }
-        //    mLastMiddleClickTime = currentTime;
-        //}
+        if (MiddleClick)
+        {
+            if (gameTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                MiddleDoubleClick = true;
+            }
+            mLastMiddleClickTime = gameTime;
+        }
     }
 
     private MouseState GetMouseState()
@@ -473,6 +469,7 @@ public class Cursor : ICursor
         state.LeftButton = Raylib.IsMouseButtonDown(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
         state.MiddleButton = Raylib.IsMouseButtonDown(MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
         state.RightButton = Raylib.IsMouseButtonDown(MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
+        
 
         return state;
     }
