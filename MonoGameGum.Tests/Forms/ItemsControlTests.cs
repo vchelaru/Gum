@@ -31,7 +31,7 @@ public class ItemsControlTests : BaseTestClass
 
         }
         (itemsControl.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
-        (itemsControl.InnerPanel.Children[0] as InteractiveGue).FormsControlAsObject
+        (itemsControl.InnerPanel.Children[0] as InteractiveGue)!.FormsControlAsObject
             .ShouldBeOfType<Label>();
     }
 

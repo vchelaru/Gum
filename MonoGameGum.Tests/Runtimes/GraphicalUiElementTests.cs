@@ -206,6 +206,24 @@ public class GraphicalUiElementTests
     }
 
     [Fact]
+    public void AddChild_ShouldThrowException_OnAddingSelf()
+    {
+        ContainerRuntime container = new();
+        bool didThrow = false;
+        try
+        {
+            container.AddChild(container);
+        }
+        catch(Exception e)
+        {
+            e.Message.ShouldContain("cannot be added as a child of itself");
+            didThrow = true;
+        }
+
+        didThrow.ShouldBeTrue();
+    }
+
+    [Fact]
     public void AssignParent_ShouldAddToParentsChildren()
     {
         ContainerRuntime parent = new ();

@@ -91,7 +91,7 @@ public class FrameworkElementTests : BaseTestClass
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             frameworkElement.Visual,
             cursor.Object,
-            null,
+            null!,
             0);
 
         cursor.VerifySet(c => c.WindowOver = frameworkElement.Visual);

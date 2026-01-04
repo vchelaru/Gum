@@ -68,6 +68,7 @@ public class ColoredCircleRuntime : AposShapeRuntime
     {
         var toReturn = (ColoredCircleRuntime)base.Clone();
 
+        // Should this call SetContainedObject?
         toReturn.mContainedCircle = null;
 
         return toReturn;

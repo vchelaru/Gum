@@ -46,7 +46,7 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     [InlineData(basicBMFontXMLData)]
     public void Constructor_ShouldParseFile(string bmFontData)
     {
-        BitmapFont font = new BitmapFont((Texture2D)null, bmFontData);
+        BitmapFont font = new BitmapFont((Texture2D)null!, bmFontData);
 
         // We have to explicitly set the font pattern because the
         // font doesn't know its own texture size:
