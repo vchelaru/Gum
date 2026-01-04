@@ -788,9 +788,6 @@ public class ElementSaveDisplayer
         nameProperty.IsReadOnly = isReadOnly;
 
 
-
-
-
         var isExcluded = false;
 
         if(instanceOwner != null)
