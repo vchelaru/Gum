@@ -87,10 +87,15 @@ public class ComboBox :
         }
     }
 
+    string _displayMemberPath;
     public string DisplayMemberPath
     {
-        get => listBox.DisplayMemberPath;
-        set => listBox.DisplayMemberPath = value;
+        get => _displayMemberPath;
+        set
+        {
+            _displayMemberPath = value;
+            UpdateToObject(SelectedObject);
+        }
     }
     
     public IList Items
@@ -474,7 +479,19 @@ public class ComboBox :
 
     public virtual void UpdateToObject(object o)
     {
-        coreTextObject.RawText = o?.ToString();
+        if(!string.IsNullOrEmpty(DisplayMemberPath ))
+        {
+            var display = o
+                ?.GetType()
+                ?.GetProperty(DisplayMemberPath)
+                ?.GetValue(o, null) as string;
+
+            coreTextObject.RawText = display?.ToString();
+        }
+        else
+        {
+            coreTextObject.RawText = o?.ToString();
+        }
     }
 
     private void HandleListBoxItemPushed(object sender, EventArgs args)
@@ -753,4 +770,4 @@ public class ComboBox :
 #endif
 
 #endregion
-    }
+}
