@@ -272,6 +272,8 @@ public class Renderer : IRenderer
         {
             mCamera.ClientWidth = graphicsDevice.Viewport.Width;
             mCamera.ClientHeight = graphicsDevice.Viewport.Height;
+            mCamera.ClientLeft = graphicsDevice.Viewport.X;
+            mCamera.ClientTop = graphicsDevice.Viewport.Y;
         }
 
                 // for open gl (desktop gl) this should be 0
@@ -310,6 +312,8 @@ public class Renderer : IRenderer
         {
             mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
             mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+            mCamera.ClientLeft = GraphicsDevice.Viewport.X;
+            mCamera.ClientTop = GraphicsDevice.Viewport.Y;
         }
     }
 
@@ -364,6 +368,8 @@ public class Renderer : IRenderer
             {
                 mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
                 mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+                mCamera.ClientLeft = GraphicsDevice.Viewport.X;
+                mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
             var oldSampler = GraphicsDevice.SamplerStates[0];
@@ -411,6 +417,8 @@ public class Renderer : IRenderer
             {
                 mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
                 mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+                mCamera.ClientLeft = GraphicsDevice.Viewport.X;
+                mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
             renderTargetService.ClearUnusedRenderTargetsLastFrame();
@@ -596,6 +604,9 @@ public class Renderer : IRenderer
         //}
         var oldCameraWidth = Camera.ClientWidth;
         var oldCameraHeight = Camera.ClientHeight;
+        var oldCameraClientLeft = Camera.ClientLeft;
+        var oldCameraClientTop = Camera.ClientTop;
+
         var oldCameraX = Camera.X;
         var oldCameraY = Camera.Y;
         var oldViewport = GraphicsDevice.Viewport;
@@ -613,9 +624,12 @@ public class Renderer : IRenderer
 
             var cameraLeft = Camera.AbsoluteLeft;
             var cameraTop = Camera.AbsoluteTop;
+            
 
             Camera.ClientWidth = (int)renderTarget.Width;
             Camera.ClientHeight = (int)renderTarget.Height;
+            Camera.ClientLeft = 0;
+            Camera.ClientTop = 0;
 
             var left = System.Math.Max(cameraLeft, oldX);
             var top = System.Math.Max(cameraTop, oldY);
@@ -671,6 +685,8 @@ public class Renderer : IRenderer
             Camera.ClientHeight = oldCameraHeight;
             Camera.X = oldCameraX;
             Camera.Y = oldCameraY;
+            Camera.ClientLeft = oldCameraClientLeft;
+            Camera.ClientTop = oldCameraClientTop;
 
             GraphicsDevice.Viewport = oldViewport;
 
@@ -1078,6 +1094,8 @@ public class GumBatch
 
         systemManagers.Renderer.Camera.ClientWidth = systemManagers.Renderer.GraphicsDevice.Viewport.Width;
         systemManagers.Renderer.Camera.ClientHeight = systemManagers.Renderer.GraphicsDevice.Viewport.Height;
+        systemManagers.Renderer.Camera.ClientLeft = systemManagers.Renderer.GraphicsDevice.Viewport.X;
+        systemManagers.Renderer.Camera.ClientTop = systemManagers.Renderer.GraphicsDevice.Viewport.Y;
 
         systemManagers.Renderer.Begin(spriteBatchMatrix);
     }
