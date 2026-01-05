@@ -47,7 +47,7 @@ public class StateReferencingInstanceMember : InstanceMember
     StateSave mStateSave;
     string mVariableName;
     public InstanceSave InstanceSave { get; private set; }
-    public ElementSave ElementSave { get; private set; }
+    public ElementSave? ElementSave { get; private set; }
 
     public object LastOldFullCommitValue { get; private set; }
 
@@ -246,22 +246,32 @@ public class StateReferencingInstanceMember : InstanceMember
     public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd,
         StateSave stateSave,
         StateSaveCategory stateSaveCategory,
-        string variableName, InstanceSave instanceSave,
+        string variableName, 
+        InstanceSave instanceSave,
         IStateContainer stateListCategoryContainer,
-        IUndoManager undoManager) :
+        IUndoManager undoManager,
+        IEditVariableService editVariableService,
+        IExposeVariableService exposeVariableService,
+        HotkeyManager hotkeyManager,
+        IDeleteVariableService deleteVariableService,
+        ISelectedState selectedState,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        SetVariableLogic setVariableLogic,
+        WireframeObjectManager wireframeObjectManager) :
         base(variableName, stateSave)
     {
-        _editVariablesService = Locator.GetRequiredService<IEditVariableService>();
-        _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
+        _editVariablesService = editVariableService;
+        _exposeVariableService = exposeVariableService;
         _objectFinder = ObjectFinder.Self;
-        _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
-        _deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
+        _hotkeyManager = hotkeyManager;
+        _deleteVariableLogic = deleteVariableService;
         _undoManager = undoManager;
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands =  Locator.GetRequiredService<IFileCommands>();
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _selectedState = selectedState;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
+        _wireframeObjectManager = wireframeObjectManager;
         StateSaveCategory = stateSaveCategory;
         InstanceSave = instanceSave;
         mStateSave = stateSave;
@@ -675,7 +685,7 @@ public class StateReferencingInstanceMember : InstanceMember
         object newValue = setPropertyArgs.Value;
         if (mPropertyDescriptor != null)
         {
-            StoreLastOldValue(setPropertyArgs, elementSave);
+            StoreLastOldValue(setPropertyArgs, instanceSave, elementSave);
             // <None> is a reserved 
             // value for when we want
             // to allow the user to reset
@@ -765,11 +775,11 @@ public class StateReferencingInstanceMember : InstanceMember
         }
     }
 
-    private void StoreLastOldValue(SetPropertyArgs setPropertyArgs, ElementSave? elementSave)
+    private void StoreLastOldValue(SetPropertyArgs setPropertyArgs, InstanceSave? instanceSave, ElementSave? elementSave)
     {
         object oldValue = base.Value;
 
-        if (elementSave != null && RootVariableName == "Name")
+        if (elementSave != null && instanceSave == null && RootVariableName == "Name")
         {
             // We want to treat the old value as having folder because
             // we display without the folder, but the actual name includes it:

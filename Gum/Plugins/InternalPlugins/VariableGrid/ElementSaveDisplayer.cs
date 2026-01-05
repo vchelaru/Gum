@@ -21,6 +21,7 @@ using System.Security.Principal;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using System.Collections;
+using Gum.Commands;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -420,16 +421,58 @@ public class ElementSaveDisplayer
                     type = typeof(List<string>);
                 }
 
+                // todo - eventually move these up to a constructor. 
+                var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
+                var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
+                var _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+                var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
+                var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+                var _fileCommands = Locator.GetRequiredService<IFileCommands>();
+                var _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+                var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+
                 var propertyDescriptor = new InstanceSavePropertyDescriptor(variableList.Name, type, null);
                 if (instance != null)
                 {
                     srim =
-                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, instanceOwner, _undoManager);
+                    new StateReferencingInstanceMember(
+                        propertyDescriptor, 
+                        stateSave, 
+                        stateSaveCategory, 
+                        instance.Name + "." + propertyDescriptor.Name, 
+                        instance, 
+                        instanceOwner, 
+                        _undoManager,
+                        _editVariableService,
+                        _exposeVariableService,
+                        _hotkeyManager,
+                        _deleteVariableService,
+                        _selectedState,
+                        _guiCommands,
+                        _fileCommands,
+                        _setVariableLogic,
+                        _wireframeObjectManager);
                 }
                 else
                 {
                     srim =
-                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, instanceOwner, _undoManager);
+                        new StateReferencingInstanceMember(
+                            propertyDescriptor, 
+                            stateSave, 
+                            stateSaveCategory, 
+                            propertyDescriptor.Name, 
+                            instance, 
+                            instanceOwner, 
+                            _undoManager,
+                            _editVariableService,
+                            _exposeVariableService,
+                            _hotkeyManager,
+                            _deleteVariableService,
+                            _selectedState,
+                            _guiCommands,
+                            _fileCommands,
+                            _setVariableLogic,
+                            _wireframeObjectManager);
                 }
 
                 // moved to internal
@@ -485,7 +528,34 @@ public class ElementSaveDisplayer
             variableName = propertyDescriptor.Name;
         }
 
-        srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, instanceOwner, _undoManager);
+        // todo - eventually move these up to a constructor. 
+        var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
+        var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
+        var _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
+        var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        var _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        var _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+
+        srim = new StateReferencingInstanceMember(
+            propertyDescriptor, 
+            stateSave, 
+            stateSaveCategory, 
+            variableName, 
+            instance, 
+            instanceOwner, 
+            _undoManager,
+            _editVariableService,
+            _exposeVariableService,
+            _hotkeyManager,
+            _deleteVariableService,
+            _selectedState,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _wireframeObjectManager
+            );
 
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
