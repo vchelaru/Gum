@@ -237,7 +237,7 @@ namespace RenderingLibrary
         {
             Matrix matrix = GetTransformationMatrix();
 
-            Vector3 position = new Vector3(worldX, worldY, 0);
+            Vector3 position = new Vector3(worldX + ClientLeft/Zoom, worldY + ClientTop/Zoom, 0);
             Vector3 transformed = Vector3.Transform(position, matrix);
 
             screenX = transformed.X;

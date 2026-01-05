@@ -50,8 +50,11 @@ public class CameraTests : BaseTestClass
         _sut.ClientHeight = 600;
         _sut.ClientLeft = 50;
         _sut.ClientTop = 75;
+
         _sut.ScreenToWorld(100, 150, out float worldX, out float worldY);
+
         _sut.WorldToScreen(worldX, worldY, out float screenX, out float screenY);
+
         screenX.ShouldBe(100);
         screenY.ShouldBe(150);
     }
