@@ -107,7 +107,8 @@ public class SetVariableLogic
 
 
     // added instance property so we can change values even if a tree view is selected
-    public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
+    public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue, 
+        InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
         bool trySave = true)
     {
         IInstanceContainer instanceContainer = null;
@@ -156,7 +157,7 @@ public class SetVariableLogic
     /// <param name="instance"></param>
     /// <param name="currentState">The state where the variable was set - the current state save</param>
     /// <param name="refresh"></param>
-    public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, IInstanceContainer instanceContainer,
+    public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer instanceContainer,
         InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true)
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
@@ -258,7 +259,7 @@ public class SetVariableLogic
         }
     }
 
-    private GeneralResponse ReactToChangedMember(string rootVariableName, object oldValue, IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave)
+    private GeneralResponse ReactToChangedMember(string rootVariableName, object? oldValue, IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave)
     {
         var response = ReactIfChangedMemberIsName(instanceContainer, instance, rootVariableName, oldValue);
 
@@ -354,7 +355,7 @@ public class SetVariableLogic
         return toReturn;
     }
 
-    private void ReactIfChangedMemberIsFont(List<ElementWithState> elementStack, InstanceSave instance, string changedMember, object oldValue, object newValue)
+    private void ReactIfChangedMemberIsFont(List<ElementWithState> elementStack, InstanceSave? instance, string changedMember, object oldValue, object newValue)
     {
         var handledByInner = false;
         var instanceElement = instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;

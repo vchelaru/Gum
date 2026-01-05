@@ -82,7 +82,7 @@ internal class CodeGenerationService
                     {
                         var settings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(item);
                         var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings, visualApi);
-                        return generatedFileName.Exists() == false;
+                        return generatedFileName?.Exists() == false;
                     }
                 })
                 .ToList();
