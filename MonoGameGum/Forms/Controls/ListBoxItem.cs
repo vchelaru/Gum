@@ -40,8 +40,8 @@ public class ListBoxItem :
         }
     }
 
-    GraphicalUiElement text;
-    protected global::RenderingLibrary.Graphics.IText coreText;
+    GraphicalUiElement? text;
+    protected global::RenderingLibrary.Graphics.IText? coreText;
 
     internal bool IsHighlightSuppressed { get; set; } = false;
 

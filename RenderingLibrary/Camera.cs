@@ -53,13 +53,7 @@ namespace RenderingLibrary
             }
         }
 
-        public float AbsoluteBottom
-        {
-            get
-            {
-                return AbsoluteTop + ClientHeight / Zoom;
-            }
-        }
+        public float AbsoluteBottom => AbsoluteTop + ClientHeight / Zoom;
 
         public float AbsoluteLeft
         {
@@ -87,32 +81,19 @@ namespace RenderingLibrary
             }
         }
 
-        public float AbsoluteRight
-        {
-            get
-            {
-
-                return AbsoluteLeft + ClientWidth / Zoom;
-            }
-        }
+        public float AbsoluteRight => AbsoluteLeft + ClientWidth / Zoom;
 
 
         public float X
         {
-            get { return Position.X; }
-            set 
-            { 
-                Position.X = value; 
-            }
+            get => Position.X;
+            set => Position.X = value;
         }
 
         public float Y
         {
-            get { return Position.Y; }
-            set 
-            { 
-                Position.Y = value; 
-            }
+            get => Position.Y; 
+            set => Position.Y = value; 
         }
 
         public int RenderingXOffset
@@ -134,18 +115,12 @@ namespace RenderingLibrary
         public static float PixelPerfectOffsetX = .0f;
         public static float PixelPerfectOffsetY = .0f;
 
-        public int ClientWidth
-        {
-            get;
-            set;
+        public int ClientWidth { get; set; }
 
-        }
+        public int ClientHeight { get; set; }
 
-        public int ClientHeight
-        {
-            get;
-            set;
-        }
+        public int ClientLeft { get; set; }
+        public int ClientTop { get; set; }
 
         /// <summary>
         /// The zoom value for everything on this camera. Default value of 1.
@@ -248,8 +223,14 @@ namespace RenderingLibrary
             Vector3 position = new Vector3(screenX, screenY, 0);
             Vector3 transformed = Vector3.Transform(position, matrix);
 
+#if FRB
+// FRB handles its own client offsets, so don't update those here:
             worldX = transformed.X;
             worldY = transformed.Y;
+#else
+            worldX = transformed.X - this.ClientLeft/this.Zoom;
+            worldY = transformed.Y - this.ClientTop/this.Zoom;
+#endif
         }
 
         public void WorldToScreen(float worldX, float worldY, out float screenX, out float screenY)
@@ -262,6 +243,6 @@ namespace RenderingLibrary
             screenX = transformed.X;
             screenY = transformed.Y;
         }
-        #endregion
+#endregion
     }
 }
