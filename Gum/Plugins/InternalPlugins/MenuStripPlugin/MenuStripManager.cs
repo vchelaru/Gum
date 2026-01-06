@@ -370,11 +370,14 @@ namespace Gum.Managers
             if (redoMenuItem != null) redoMenuItem.Enabled = _undoManager.CanRedo();
         }
 
-        private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
+        private void HanldeRemoveBehaviorVariableClicked(object? sender, EventArgs e)
         {
-            _editCommands.RemoveBehaviorVariable(
-                _selectedState.SelectedBehavior,
-                _selectedState.SelectedBehaviorVariable);
+            if(_selectedState.SelectedBehavior != null && _selectedState.SelectedBehaviorVariable != null)
+            {
+                _editCommands.RemoveBehaviorVariable(
+                    _selectedState.SelectedBehavior,
+                    _selectedState.SelectedBehaviorVariable);
+            }
         }
 
         public void RefreshUI()
@@ -420,13 +423,13 @@ namespace Gum.Managers
         }
 
 
-        private void RemoveElementClicked(object sender, EventArgs e)
+        private void RemoveElementClicked(object? sender, EventArgs e)
         {
             _projectCommands.RemoveElement(_selectedState.SelectedElement);
             _selectedState.SelectedElement = null;
         }
 
-        private void RemoveStateOrCategoryClicked(object sender, EventArgs e)
+        private void RemoveStateOrCategoryClicked(object? sender, EventArgs e)
         {
             if (_selectedState.SelectedStateSave != null)
             {

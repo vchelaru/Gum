@@ -143,7 +143,7 @@ public class MainVariableGridPlugin : InternalPlugin
         //PropertyGridManager.Self.RefreshVariablesDataGridValues();
     }
 
-    private void HandleTreeNodeSelected(TreeNode node)
+    private void HandleTreeNodeSelected(TreeNode? node)
     {
         var selectedState = _selectedState;
         var shouldShowButton = (selectedState.SelectedBehavior != null ||

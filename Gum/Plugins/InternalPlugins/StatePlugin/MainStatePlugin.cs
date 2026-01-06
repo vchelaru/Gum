@@ -207,7 +207,7 @@ public class MainStatePlugin : InternalPlugin
         RefreshUI(_selectedState.SelectedStateContainer);
     }
 
-    private void HandleTreeNodeSelected(TreeNode node)
+    private void HandleTreeNodeSelected(TreeNode? node)
     {
         RefreshTabHeaders();
         
