@@ -181,6 +181,28 @@ void UpdateLabelToTextBox(Label label, TextBox textBox)
 
 <figure><img src="../../.gitbook/assets/14_06 03 52.gif" alt=""><figcaption><p>CaretIndexChanged is invoked whenever the caret index changes, which updates the Label's text.</p></figcaption></figure>
 
+## Placeholder
+
+The `Placeholder` property sets the placeholder text which appears when there is no text in the TextBox.
+
+The placeholder text automatically disappears when the user has entered text.
+
+The following code shows how to set `Placeholder` :
+
+```csharp
+TextBox textBox = new();
+textBox.AddToRoot();
+textBox.Anchor(Anchor.Center);
+textBox.Width = 250;
+textBox.Placeholder = "Enter Name...";
+```
+
+Placeholder can be removed by assigning an empty string:
+
+```csharp
+textBox.Placeholder = string.Empty;
+```
+
 ## TextWrapping
 
 The `TextWrapping` property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
