@@ -2451,11 +2451,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                         var numberOfVisibleChildren = 0;
 
-                        if (mParent != null)
+                        if (_parent != null)
                         {
-                            for (int i = 0; i < mParent.Children.Count; i++)
+                            for (int i = 0; i < _parent.Children.Count; i++)
                             {
-                                var child = mParent.Children[i];
+                                var child = _parent.Children[i];
                                 if (child != this && child is GraphicalUiElement gue && gue.Visible)
                                 {
                                     if (gue.HeightUnits == DimensionUnitType.Absolute)
