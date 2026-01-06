@@ -364,7 +364,7 @@ public class PluginManager : IPluginManager
     internal void ElementSelected(ElementSave? elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
-    internal void TreeNodeSelected(TreeNode treeNode) =>
+    internal void TreeNodeSelected(TreeNode? treeNode) =>
         CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode));
 
     internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>

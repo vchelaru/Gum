@@ -138,7 +138,7 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave, string>? VariableDelete;
 
     public event Action<ElementSave?>? ElementSelected;
-    public event Action<TreeNode>? TreeNodeSelected;
+    public event Action<TreeNode?>? TreeNodeSelected;
     public event Action<TreeNode>? StateWindowTreeNodeSelected;
     public event Func<ITreeNode?>? GetTreeNodeOver;
     public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
@@ -421,7 +421,7 @@ public abstract class PluginBase : IPlugin
 
     public void CallElementSelected(ElementSave? element) => ElementSelected?.Invoke(element);
 
-    public void CallTreeNodeSelected(TreeNode treeNode) => TreeNodeSelected?.Invoke(treeNode);
+    public void CallTreeNodeSelected(TreeNode? treeNode) => TreeNodeSelected?.Invoke(treeNode);
 
     public void CallStateWindowTreeNodeSelected(TreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
 

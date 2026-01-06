@@ -2035,11 +2035,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     bool IsInUiInitiatedSelection = false;
-    internal void OnSelect(TreeNode selectedTreeNode)
+    internal void OnSelect(TreeNode? selectedTreeNode)
     {
-        TreeNode treeNode = ObjectTreeView.SelectedNode;
+        TreeNode? treeNode = ObjectTreeView.SelectedNode;
 
-        object selectedObject = null;
+        object? selectedObject = null;
 
         if (treeNode != null)
         {
@@ -2192,62 +2192,66 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if (shouldExpand)
         {
-            var filterTextLower = filterText?.ToLower();
+
             FlatList.FlatList.Items.Clear();
 
-            var project = GumState.Self.ProjectState.GumProjectSave;
-            foreach (var screen in project.Screens)
+            if(filterText != null)
             {
-                if (screen.Name.ToLower().Contains(filterTextLower))
+                var filterTextLower = filterText.ToLower();
+                var project = GumState.Self.ProjectState.GumProjectSave;
+                foreach (var screen in project.Screens)
                 {
-                    AddToFlatList(screen);
-                }
-
-                if (deepSearchCheckBox.IsChecked is true)
-                {
-                    SearchInstanceVariables(screen, filterTextLower);
-                }
-            }
-            foreach (var component in project.Components)
-            {
-                if (component.Name.ToLower().Contains(filterTextLower))
-                {
-                    AddToFlatList(component);
-                }
-
-                foreach (var instance in component.Instances)
-                {
-                    if (instance.Name.ToLower().Contains(filterTextLower))
+                    if (screen.Name.ToLower().Contains(filterTextLower))
                     {
-                        AddToFlatList(instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
+                        AddToFlatList(screen);
+                    }
+
+                    if (deepSearchCheckBox.IsChecked is true)
+                    {
+                        SearchInstanceVariables(screen, filterTextLower);
+                    }
+                }
+                foreach (var component in project.Components)
+                {
+                    if (component.Name.ToLower().Contains(filterTextLower))
+                    {
+                        AddToFlatList(component);
+                    }
+
+                    foreach (var instance in component.Instances)
+                    {
+                        if (instance.Name.ToLower().Contains(filterTextLower))
+                        {
+                            AddToFlatList(instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
+                        }
+                    }
+
+                    if (deepSearchCheckBox.IsChecked is true)
+                    {
+                        SearchInstanceVariables(component, filterTextLower);
+                    }
+                }
+                foreach (var standard in project.StandardElements)
+                {
+                    if (standard.Name.ToLower().Contains(filterTextLower))
+                    {
+                        AddToFlatList(standard);
+                    }
+
+                    if (deepSearchCheckBox.IsChecked is true)
+                    {
+                        SearchInstanceVariables(standard, filterTextLower);
                     }
                 }
 
-                if (deepSearchCheckBox.IsChecked is true)
+                foreach(var behavior in project.Behaviors)
                 {
-                    SearchInstanceVariables(component, filterTextLower);
-                }
-            }
-            foreach (var standard in project.StandardElements)
-            {
-                if (standard.Name.ToLower().Contains(filterTextLower))
-                {
-                    AddToFlatList(standard);
-                }
-
-                if (deepSearchCheckBox.IsChecked is true)
-                {
-                    SearchInstanceVariables(standard, filterTextLower);
-                }
-            }
-
-            foreach(var behavior in project.Behaviors)
-            {
-                // Feb 5, 2025 - at some point a behavior with an empty name
-                // snuck into a FRB project. We shouldn't crash here because of it...
-                if(behavior.Name?.ToLower().Contains(filterTextLower) == true)
-                {
-                    AddToFlatList(behavior);
+                    // Feb 5, 2025 - at some point a behavior with an empty name
+                    // snuck into a FRB project. We shouldn't crash here because of it...
+                    if(behavior.Name?.ToLower().Contains(filterTextLower) == true)
+                    {
+                        AddToFlatList(behavior);
+                    }
                 }
             }
 

@@ -5,9 +5,42 @@
   <FontSpacingVertical>1</FontSpacingVertical>
   <FontSpacingHorizontal>1</FontSpacingHorizontal>
   <UseFontCharacterFile>false</UseFontCharacterFile>
+  <AutoSizeFontOutputs>false</AutoSizeFontOutputs>
   <Version>1</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
+  <CustomCanvasSizes>
+    <CustomCanvasSize>
+      <Width xsi:nil="true" />
+      <Height xsi:nil="true" />
+      <FriendlyName>Project Default</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>640</Width>
+      <Height>480</Height>
+      <FriendlyName>480p</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>1280</Width>
+      <Height>720</Height>
+      <FriendlyName>720p</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>1280</Width>
+      <Height>800</Height>
+      <FriendlyName>Steam Deck</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>1920</Width>
+      <Height>1080</Height>
+      <FriendlyName>1080p</FriendlyName>
+    </CustomCanvasSize>
+    <CustomCanvasSize>
+      <Width>3840</Width>
+      <Height>2160</Height>
+      <FriendlyName>4k</FriendlyName>
+    </CustomCanvasSize>
+  </CustomCanvasSizes>
   <ShowOutlines>false</ShowOutlines>
   <ShowCanvasOutline>true</ShowCanvasOutline>
   <ShowRuler>true</ShowRuler>

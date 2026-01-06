@@ -320,25 +320,31 @@
     <Variable>
       <Type>float</Type>
       <Name>PlaceholderTextInstance.Width</Name>
-      <Value xsi:type="xsd:float">-8</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
       <Name>PlaceholderTextInstance.WidthUnits</Name>
-      <Value xsi:type="xsd:int">2</Value>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>PlaceholderTextInstance.X</Name>
+      <Value xsi:type="xsd:float">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
       <Name>PlaceholderTextInstance.XOrigin</Name>
-      <Value xsi:type="xsd:int">1</Value>
+      <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
       <Name>PlaceholderTextInstance.XUnits</Name>
-      <Value xsi:type="xsd:int">6</Value>
+      <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -664,6 +670,18 @@
       </Variable>
       <Variable>
         <Type>float</Type>
+        <Name>PlaceholderTextInstance.Width</Name>
+        <Value xsi:type="xsd:float">0</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>DimensionUnitType</Type>
+        <Name>PlaceholderTextInstance.WidthUnits</Name>
+        <Value xsi:type="xsd:int">4</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
         <Name>SelectionInstance.Height</Name>
         <Value xsi:type="xsd:float">-4</Value>
         <SetsValue>true</SetsValue>
@@ -699,6 +717,18 @@
         <Type>VerticalAlignment</Type>
         <Name>PlaceholderTextInstance.VerticalAlignment</Name>
         <Value xsi:type="xsd:int">0</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>PlaceholderTextInstance.Width</Name>
+        <Value xsi:type="xsd:float">-8</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>DimensionUnitType</Type>
+        <Name>PlaceholderTextInstance.WidthUnits</Name>
+        <Value xsi:type="xsd:int">2</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>

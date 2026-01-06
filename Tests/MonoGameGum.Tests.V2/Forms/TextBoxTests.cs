@@ -13,7 +13,7 @@ public class TextBoxTests
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
-        var textBox = new Gum.Forms.Controls.TextBox();
+        TextBox textBox = new ();
         textBox.Visual.ShouldNotBeNull();
         (textBox.Visual is Gum.Forms.DefaultVisuals.TextBoxVisual).ShouldBeTrue();
     }

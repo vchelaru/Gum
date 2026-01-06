@@ -7,6 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	  <Nullable>enable</Nullable>
 	  <!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 	  <NoWarn>$(NoWarn);CA1416</NoWarn>
 
@@ -35,7 +36,7 @@
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" >
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)FlatRedBall.SpecializedXnaControls.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\FlatRedBall.SpecializedXnaControls.dll&quot;" />
   </Target>
 </Project>

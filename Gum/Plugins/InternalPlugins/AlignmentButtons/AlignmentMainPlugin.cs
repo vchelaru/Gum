@@ -37,7 +37,7 @@ namespace Gum.Plugins.AlignmentButtons
             RefreshTabVisibility();
         }
 
-        private void HandleTreeNodeSelected(TreeNode treeNode)
+        private void HandleTreeNodeSelected(TreeNode? treeNode)
         {
             RefreshTabVisibility();
         }
