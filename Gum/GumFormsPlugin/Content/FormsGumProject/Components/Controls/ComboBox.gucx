@@ -161,7 +161,7 @@
     <Variable>
       <Type>float</Type>
       <Name>IconInstance.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -185,7 +185,7 @@
     <Variable>
       <Type>float</Type>
       <Name>IconInstance.Width</Name>
-      <Value xsi:type="xsd:float">24</Value>
+      <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
