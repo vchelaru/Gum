@@ -21,6 +21,7 @@ using System.Security.Principal;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using System.Collections;
+using Gum.Commands;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -42,6 +43,7 @@ public class ElementSaveDisplayer
     private readonly SubtextLogic _subtextLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
+    private readonly VariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
 
     #endregion
@@ -51,6 +53,7 @@ public class ElementSaveDisplayer
         _subtextLogic = subtextLogic;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _variableSaveLogic = new VariableSaveLogic();
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
     }
 
@@ -418,16 +421,58 @@ public class ElementSaveDisplayer
                     type = typeof(List<string>);
                 }
 
+                // todo - eventually move these up to a constructor. 
+                var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
+                var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
+                var _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+                var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
+                var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+                var _fileCommands = Locator.GetRequiredService<IFileCommands>();
+                var _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+                var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+
                 var propertyDescriptor = new InstanceSavePropertyDescriptor(variableList.Name, type, null);
                 if (instance != null)
                 {
                     srim =
-                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, instanceOwner, _undoManager);
+                    new StateReferencingInstanceMember(
+                        propertyDescriptor, 
+                        stateSave, 
+                        stateSaveCategory, 
+                        instance.Name + "." + propertyDescriptor.Name, 
+                        instance, 
+                        instanceOwner, 
+                        _undoManager,
+                        _editVariableService,
+                        _exposeVariableService,
+                        _hotkeyManager,
+                        _deleteVariableService,
+                        _selectedState,
+                        _guiCommands,
+                        _fileCommands,
+                        _setVariableLogic,
+                        _wireframeObjectManager);
                 }
                 else
                 {
                     srim =
-                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, instanceOwner, _undoManager);
+                        new StateReferencingInstanceMember(
+                            propertyDescriptor, 
+                            stateSave, 
+                            stateSaveCategory, 
+                            propertyDescriptor.Name, 
+                            instance, 
+                            instanceOwner, 
+                            _undoManager,
+                            _editVariableService,
+                            _exposeVariableService,
+                            _hotkeyManager,
+                            _deleteVariableService,
+                            _selectedState,
+                            _guiCommands,
+                            _fileCommands,
+                            _setVariableLogic,
+                            _wireframeObjectManager);
                 }
 
                 // moved to internal
@@ -483,7 +528,34 @@ public class ElementSaveDisplayer
             variableName = propertyDescriptor.Name;
         }
 
-        srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, instanceOwner, _undoManager);
+        // todo - eventually move these up to a constructor. 
+        var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
+        var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
+        var _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
+        var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        var _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        var _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+
+        srim = new StateReferencingInstanceMember(
+            propertyDescriptor, 
+            stateSave, 
+            stateSaveCategory, 
+            variableName, 
+            instance, 
+            instanceOwner, 
+            _undoManager,
+            _editVariableService,
+            _exposeVariableService,
+            _hotkeyManager,
+            _deleteVariableService,
+            _selectedState,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _wireframeObjectManager
+            );
 
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
@@ -669,7 +741,7 @@ public class ElementSaveDisplayer
         // Not sure why we were passing elementSave to this function:
         // I added a container object
         //bool shouldInclude = GetIfShouldInclude(defaultVariable, elementSave, instanceSave, ses);
-        bool shouldInclude = Gum.Logic.VariableSaveLogic.GetIfVariableIsActive(defaultVariable, container, instanceSave);
+        bool shouldInclude = _variableSaveLogic.GetIfVariableIsActive(defaultVariable, container, instanceSave);
 
         shouldInclude &= (
             string.IsNullOrEmpty(defaultVariable.SourceObject) || 
@@ -786,9 +858,6 @@ public class ElementSaveDisplayer
         nameProperty.IsReadOnly = isReadOnly;
 
 
-
-
-
         var isExcluded = false;
 
         if(instanceOwner != null)
@@ -825,7 +894,7 @@ public class ElementSaveDisplayer
         }
     }
 
-    private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance)
+    private bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance)
     {
         bool toReturn = (string.IsNullOrEmpty(variableList.SourceObject));
 
@@ -842,7 +911,7 @@ public class ElementSaveDisplayer
                 rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(container);
             }
 
-            toReturn = VariableSaveLogic.GetShouldIncludeBasedOnBaseType(variableList, container, rootElementSave);
+            toReturn = _variableSaveLogic.GetShouldIncludeBasedOnBaseType(variableList, container, rootElementSave);
         }
 
         return toReturn;

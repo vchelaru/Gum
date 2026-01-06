@@ -7,10 +7,32 @@
 set -e
 
 GUM_WINE_PREFIX_PATH="${1:-$HOME/.wine_gum_dotnet8/}"
+INSTALL_LOG_FILE="/tmp/gum_install.log"
+
+write_log_section_header() {
+    echo "#############################################" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "$@" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "#############################################" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "" >> "$INSTALL_LOG_FILE" 2>&1
+}
+
+run_and_write_log() {
+    eval "$@" >> "$INSTALL_LOG_FILE" 2>&1
+    echo "" >> "$INSTALL_LOG_FILE" 2>&1
+}
+
+run_winetricks() {
+    write_log_section_header "Running WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" winetricks \"$@\""
+    run_and_write_log WINEPREFIX="$GUM_WINE_PREFIX_PATH" winetricks "$@"
+}
+
+echo "" > $INSTALL_LOG_FILE # clear the log file
+write_log_section_header "Starting installation process..."
 
 echo "This is an experimental script."
 echo "Script last updated on the 23rd of November 2025!"
 echo "This will set up a new Wine prefix for gum in $GUM_WINE_PREFIX_PATH"
+echo "Install logs will be written to $INSTALL_LOG_FILE"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -202,11 +224,11 @@ fi
 ################################################################################
 echo "Checking and Installing Some fonts using winetricks"
 echo " - They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks arial &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks tahoma &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks courier &> /dev/null
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks calibri &> /dev/null
-#WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks micross &> /dev/null # not available in 2024 winetricks
+run_winetricks arial
+run_winetricks tahoma
+run_winetricks courier
+run_winetricks calibri
+#run_winetricks micross # not available in 2024 winetricks
 echo " - Fonts installed"
 
 ################################################################################
@@ -216,7 +238,7 @@ echo " - Fonts installed"
 #echo "Installing .NET Framework 4.8 using winetricks"
 #echo " - Two installer dialogs will appear, follow the steps for both to install"
 #echo " - They may take a few minutes to install, please be patient"
-#WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnet48 &> /dev/null
+#$RUN_WINETRICKS dotnet48
 
 ################################################################################
 ### Install dotnetdeskop8 with winetricks. This will cause two installation prompts
@@ -226,7 +248,7 @@ echo " - Fonts installed"
 echo "Installing .NET 8 using winetricks"
 echo " - Two installer dialogs will appear, follow the steps for both to install"
 echo " - They may take a few minutes to install, please be patient"
-WINEPREFIX=$GUM_WINE_PREFIX_PATH winetricks dotnetdesktop8 &> /dev/null
+run_winetricks dotnetdesktop8
 
 ################################################################################
 ### Download the gum.zip file from the FRB site into the Program Files directory
@@ -258,47 +280,10 @@ rm -f "$GUM_ZIP_FILE" \
 
 
 ################################################################################
-### Define the script content
+### Define the script variables
 ################################################################################
 echo "Creating gum script and adding to path"
 GUM_EXE_PATH=$(find "$GUM_WINE_EXTRACT_DIR" -name "Gum.exe" -type f)
-
-SCRIPT_CONTENT="#!/bin/bash
-
-# If no arguments were passed in, then just run gum
-if [ \$# -eq 0 ]; then
-    WINEPREFIX=\"$GUM_WINE_PREFIX_PATH\" WINE_NO_WM_DECORATION=1 wine \"$GUM_EXE_PATH\"
-    exit 0
-fi
-
-# If the first argument was 'upgrade', then upgrade gum
-if [ \"\$1\" = \"upgrade\" ]; then
-    GUM_ZIP_FILE=\"$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip\"
-    GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
-
-    if ! curl --version &> /dev/null; then
-        wget -O \"$GUM_ZIP_FILE\" \"$GUM_ZIP_DOWNLOAD\" \
-            && echo \" - Download completed.\" || { echo \"Download failed using WGET.\"; exit 1; }
-    else
-        curl -L -o \"$GUM_ZIP_FILE\" \"$GUM_ZIP_DOWNLOAD\" \
-            && echo \" - Download completed.\" || { echo \"Download failed using CURL.\"; exit 1; }
-    fi
-
-    rm -rf \"$GUM_WINE_EXTRACT_DIR\"
-    unzip -q \"$GUM_ZIP_FILE\" -d \"$GUM_WINE_EXTRACT_DIR\" \
-        && echo \"Extraction completed.\" || { echo \"Extraction failed.\"; exit 1; }
-    echo \" - Cleaning up...\"
-    rm -f \"$GUM_ZIP_FILE\" \
-        && echo \"Cleanup completed.\" || { echo \"Cleanup failed.\"; exit 1; }
-
-    echo \"Latest version of gum extracted successfully.\"
-    exit 0
-fi
-
-# Unknown argument
-echo \"Unknown argument: $1\"
-exit 1
-"
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
@@ -306,9 +291,56 @@ exit 1
 mkdir -p ~/bin &> /dev/null
 
 ################################################################################
-### Create the Gum script in the ~/bin directory
+### Create the Gum script in the ~/bin directory using a HEREDOC
+### Some variables are escaped lke GUM_ZIP_FILE so the variable is expanded at runtime
 ################################################################################
-printf "%s\n" "$SCRIPT_CONTENT" > ~/bin/gum
+
+cat > ~/bin/gum <<EOF
+#!/bin/bash
+
+# Setup Env vars (harmless if unsupported)
+export WINE_NO_WM_DECORATION=1
+export PROTON_NO_WM_DECORATION=1
+
+# If no arguments were passed in, then just run gum
+if [ \$# -eq 0 ]; then
+
+    # Attempt to add registry keys
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\X11 Driver" /v Decorated /t REG_SZ /d N /f
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine reg add "HKCU\\Software\\Wine\\Mac Driver" /v Decorated /t REG_SZ /d N /f
+
+    WINEPREFIX="$GUM_WINE_PREFIX_PATH" wine "$GUM_EXE_PATH"
+    exit 0
+fi
+
+# If the first argument was 'upgrade', then upgrade gum
+if [ "\$1" = "upgrade" ]; then
+    GUM_ZIP_FILE="$GUM_WINE_PREFIX_PATH/drive_c/Program Files/Gum.zip"
+    GUM_ZIP_DOWNLOAD="https://github.com/vchelaru/gum/releases/latest/download/gum.zip"
+
+    if ! curl --version &> /dev/null; then
+        wget -O "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
+            && echo " - Download completed." || { echo "Download failed using WGET."; exit 1; }
+    else
+        curl -L -o "\$GUM_ZIP_FILE" "\$GUM_ZIP_DOWNLOAD" \
+            && echo " - Download completed." || { echo "Download failed using CURL."; exit 1; }
+    fi
+
+    rm -rf "$GUM_WINE_EXTRACT_DIR"
+    unzip -q "\$GUM_ZIP_FILE" -d "$GUM_WINE_EXTRACT_DIR" \
+        && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
+    echo " - Cleaning up..."
+    rm -f "\$GUM_ZIP_FILE" \
+        && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
+
+    echo "Latest version of gum extracted successfully."
+    exit 0
+fi
+
+# Unknown argument
+echo "Unknown argument: \$1"
+exit 1
+EOF
 
 ################################################################################
 ### Make the Gum script executable

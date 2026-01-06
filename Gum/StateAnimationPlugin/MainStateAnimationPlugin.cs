@@ -140,7 +140,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (element != null && !pluginTab.IsVisible)
+        if (element != null && !pluginTab!.IsVisible)
         {
             var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
 
@@ -156,7 +156,7 @@ public class MainStateAnimationPlugin : PluginBase
         return true;
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave save2, string arg3, object arg4)
+    private void HandleVariableSet(ElementSave element, InstanceSave? save2, string arg3, object? arg4)
     {
         // This maybe a little inefficient but it should address all issues:
         // eventually this could be more targeted
@@ -477,6 +477,7 @@ public class MainStateAnimationPlugin : PluginBase
                     }
                 }
             }
+            currentlyReferencedElement = element;
         }
         
         if (_viewModel == null)

@@ -188,6 +188,10 @@ public class Text : IVisible, IRenderableIpso,
 
     private void UpdateLineHeightInPixels()
     {
+        if (IsWindowReady() == false)
+        {
+            throw new InvalidOperationException("Cannot measure text because IsWindowReady() is false - did you remember to call InitWindow first?");
+        }
         _lineHeightInPixels = (int)(MeasureTextEx(_font, "M", _font.BaseSize, 0).Y + .5);
     }
 
@@ -518,6 +522,8 @@ public class Text : IVisible, IRenderableIpso,
 
     public string? StoredMarkupText => null;
 
+    public float LineHeightMultiplier => 1;
+
 
     float IPositionedSizedObject.Width
     {
@@ -643,22 +649,40 @@ public class Text : IVisible, IRenderableIpso,
 
             if (TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
             {
+                // 2025-12 JUSTIN: Changes to vertical alignment resulted fractional
+                // origin values which cause baseline misalignment and broken text.
+                // Applied the same rounding used for position to origin, which fixes
+                // the problem but may cause weird artifacts or "sizzle" for really
+                // small pixel fonts
+                
                 switch (TextPositionRoundingMode)
                 {
                     case TextPositionRoundingMode.Floor:
                         linePosition = new Vector2(
                             (int)Math.Floor(linePosition.X),
                             (int)Math.Floor(linePosition.Y));
+                        origin = new Vector2(
+                            (int)Math.Floor(origin.X),
+                            (int)Math.Floor(origin.Y)
+                        );
                         break;
                     case TextPositionRoundingMode.Ceiling:
                         linePosition = new Vector2(
                             (int)Math.Ceiling(linePosition.X),
                             (int)Math.Ceiling(linePosition.Y));
+                        origin = new Vector2(
+                            (int)Math.Ceiling(origin.X),
+                            (int)Math.Ceiling(origin.Y)
+                        );
                         break;
                     default:
                         linePosition = new Vector2(
                             MathFunctions.RoundToInt(linePosition.X),
                             MathFunctions.RoundToInt(linePosition.Y));
+                        origin = new Vector2(
+                            MathFunctions.RoundToInt(origin.X),
+                            MathFunctions.RoundToInt(origin.Y)
+                        );
                         break;
                 }
             }
@@ -729,34 +753,17 @@ public class Text : IVisible, IRenderableIpso,
 
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
-
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     #endregion
 }

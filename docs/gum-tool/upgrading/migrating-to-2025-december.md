@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## Upgrading Runtime
 
-Upgrade your Gum NuGet packages to version 2025.12.9.1. For more information, see the NuGet packages for your particular platform:
+Upgrade your Gum NuGet packages to version 2025.12.28.1. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
@@ -133,7 +133,7 @@ var visualOver = GumUI.Cursor.WindowOver;
 
 ✅New:
 
-```
+```csharp
 var visualPushed = GumUI.Cursor.VisualPushed;
 var visualOver = GumUI.Cursor.VisualOver;
 ```

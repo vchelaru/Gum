@@ -30,7 +30,7 @@ public class AddStateDialogViewModel : GetUserStringDialogBaseViewModel
         _elementCommands = elementCommands;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         if (Error is not null) return;
         

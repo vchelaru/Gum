@@ -21,7 +21,17 @@ using RenderingLibrary.Content;
 namespace RenderingLibrary;
 public class SystemManagers : ISystemManagers
 {
-    public bool EnableTouchEvents { get; set; }
+    int mPrimaryThreadId;
+
+    static bool IsMobile =>
+#if NET6_0_OR_GREATER
+    System.OperatingSystem.IsAndroid() ||
+        System.OperatingSystem.IsIOS();
+#elif ANDROID || IOS
+    true;
+#else
+    false;
+#endif
 
     public static SystemManagers Default
     {
@@ -29,18 +39,78 @@ public class SystemManagers : ISystemManagers
         set;
     }
 
-    Renderer _renderer;
-    public Renderer Renderer => _renderer;
+    /// <summary>
+    /// The Renderer used by this SystemManagers. This is created automatically when
+    /// calling Initialize, and this should only be set in unit tests.
+    /// </summary>
+    public Renderer Renderer
+    {
+        get;
+        set;
+    }
 
     IRenderer ISystemManagers.Renderer => Renderer;
 
+#if !RAYLIB
+    public SpriteManager SpriteManager
+    {
+        get;
+        private set;
+    }
+
+    public ShapeManager ShapeManager
+    {
+        get;
+        private set;
+    }
+
+    public TextManager TextManager
+    {
+        get;
+        private set;
+    }
+#endif
+
+    public string Name
+    {
+        get;
+        set;
+    }
+
+    public bool IsCurrentThreadPrimary
+    {
+        get
+        {
+            int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+            return threadId == mPrimaryThreadId;
+        }
+    }
+
+    /// <summary>
+    /// The font scale value. This can be used to scale all fonts globally, 
+    /// generally in response to a font scaling value like the Android font scale setting.
+    /// </summary>
+    public static float GlobalFontScale { get; set; } = 1.0f;
+
+    public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+    public static Dictionary<string, byte[]> StreamByteDictionary { get; private set; } = new Dictionary<string, byte[]>();
+
     public static string AssemblyPrefix =>
+#if KNI
+        "KniGum";
+#elif FNA
+        "FnaGum";
+#elif RAYLIB
         "RaylibGum.Content";
+#else
+        "MonoGameGum.Content";
+#endif
 
 
     public SystemManagers()
     {
-        _renderer = new Renderer();
+        Renderer = new Renderer();
     }
 
     public void Initialize()
@@ -109,6 +179,25 @@ public class SystemManagers : ISystemManagers
         return texture;
     }
 
+    /// <summary>
+    /// Performs every-frame activity for all contained systems in the SystemManager.
+    /// </summary>
+    /// <param name="currentTime">The amount of time that has passed since the game started.</param>
+    /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
+    public void Activity(double currentTime)
+    {
+#if !RAYLIB
+#if FULL_DIAGNOSTICS
+        if (SpriteManager == null)
+        {
+            throw new InvalidOperationException("The SpriteManager is null - did you remember to initialize the SystemManagers?");
+        }
+#endif
+
+        SpriteManager.Activity(currentTime);
+#endif
+    }
+
     public void InvalidateSurface()
     {
 
@@ -118,6 +207,7 @@ public class SystemManagers : ISystemManagers
     {
         Renderer.Draw(this);
     }
+
 
     private void RegisterComponentRuntimeInstantiations()
     {

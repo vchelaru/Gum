@@ -51,7 +51,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         UnfilteredFiles.AddRange(behaviorFilesNotInProject.Select(item => item.FullPath));
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         BehaviorSave lastImportedBehavior = null;
 

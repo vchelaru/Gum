@@ -94,11 +94,22 @@ public struct LetterCustomization
 
 public class ParameterizedLetterCustomizationCall
 {
-    public Func<int, string, LetterCustomization> Function { get; set; }
+    public string FunctionName { get; set; } = string.Empty;
+    public Func<int, string, LetterCustomization>? Function
+    {
+        get
+        {
+            if(!string.IsNullOrEmpty(FunctionName) && Text.Customizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; }
-
 }
 
 #endregion
@@ -1523,34 +1534,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     #region IVisible Implementation
 
+    /// <inheritdoc/>
     public bool Visible
     {
         get;
         set;
     }
 
-    public bool AbsoluteVisible
-    {
-        get
-        {
-            if (((IVisible)this).Parent == null)
-            {
-                return Visible;
-            }
-            else
-            {
-                return Visible && ((IVisible)this).Parent.AbsoluteVisible;
-            }
-        }
-    }
-
-    IVisible IVisible.Parent
-    {
-        get
-        {
-            return ((IRenderableIpso)this).Parent as IVisible;
-        }
-    }
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+    IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     #endregion
 

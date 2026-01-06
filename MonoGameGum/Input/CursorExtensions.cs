@@ -9,7 +9,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+#if RAYLIB
+namespace RaylibGum.Input;
+#else
 namespace MonoGameGum.Input;
+#endif
 
 public static class CursorExtensions 
 {

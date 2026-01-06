@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if MONOGAME || XNA || KNI || FNA
+#define XNALIKE
+#endif
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
@@ -12,6 +15,7 @@ using Microsoft.Xna.Framework;
 using System.Linq;
 using RenderingLibrary.Math.Geometry;
 using Gum.Wireframe;
+using System.Diagnostics;
 
 namespace RenderingLibrary.Graphics;
 
@@ -42,9 +46,12 @@ public class Renderer : IRenderer
 
 
     List<Layer> _layers = new List<Layer>();
-    ReadOnlyCollection<Layer> mLayersReadOnly;
+    ReadOnlyCollection<Layer> _layersReadOnly;
 
+#if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
+#endif
+
 
     RenderStateVariables mRenderStateVariables = new RenderStateVariables();
 
@@ -85,13 +92,8 @@ public class Renderer : IRenderer
         }
     }
 
-    public ReadOnlyCollection<Layer> Layers
-    {
-        get
-        {
-            return mLayersReadOnly;
-        }
-    }
+    public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
+
 
     /// <summary>
     /// The texture used to render solid objects. If SinglePixelSourceRectangle is null, the entire texture is used. Otherwise
@@ -255,7 +257,9 @@ public class Renderer : IRenderer
 
     public Renderer()
     {
-        mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
+
+        _layers = new List<Layer>();
+        _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         mCamera = new RenderingLibrary.Camera();
 
     }
@@ -268,6 +272,8 @@ public class Renderer : IRenderer
         {
             mCamera.ClientWidth = graphicsDevice.Viewport.Width;
             mCamera.ClientHeight = graphicsDevice.Viewport.Height;
+            mCamera.ClientLeft = graphicsDevice.Viewport.X;
+            mCamera.ClientTop = graphicsDevice.Viewport.Y;
         }
 
                 // for open gl (desktop gl) this should be 0
@@ -306,6 +312,8 @@ public class Renderer : IRenderer
         {
             mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
             mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+            mCamera.ClientLeft = GraphicsDevice.Viewport.X;
+            mCamera.ClientTop = GraphicsDevice.Viewport.Y;
         }
     }
 
@@ -360,6 +368,8 @@ public class Renderer : IRenderer
             {
                 mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
                 mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+                mCamera.ClientLeft = GraphicsDevice.Viewport.X;
+                mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
             var oldSampler = GraphicsDevice.SamplerStates[0];
@@ -407,6 +417,8 @@ public class Renderer : IRenderer
             {
                 mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
                 mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
+                mCamera.ClientLeft = GraphicsDevice.Viewport.X;
+                mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
             renderTargetService.ClearUnusedRenderTargetsLastFrame();
@@ -592,6 +604,9 @@ public class Renderer : IRenderer
         //}
         var oldCameraWidth = Camera.ClientWidth;
         var oldCameraHeight = Camera.ClientHeight;
+        var oldCameraClientLeft = Camera.ClientLeft;
+        var oldCameraClientTop = Camera.ClientTop;
+
         var oldCameraX = Camera.X;
         var oldCameraY = Camera.Y;
         var oldViewport = GraphicsDevice.Viewport;
@@ -609,9 +624,12 @@ public class Renderer : IRenderer
 
             var cameraLeft = Camera.AbsoluteLeft;
             var cameraTop = Camera.AbsoluteTop;
+            
 
             Camera.ClientWidth = (int)renderTarget.Width;
             Camera.ClientHeight = (int)renderTarget.Height;
+            Camera.ClientLeft = 0;
+            Camera.ClientTop = 0;
 
             var left = System.Math.Max(cameraLeft, oldX);
             var top = System.Math.Max(cameraTop, oldY);
@@ -667,6 +685,8 @@ public class Renderer : IRenderer
             Camera.ClientHeight = oldCameraHeight;
             Camera.X = oldCameraX;
             Camera.Y = oldCameraY;
+            Camera.ClientLeft = oldCameraClientLeft;
+            Camera.ClientTop = oldCameraClientTop;
 
             GraphicsDevice.Viewport = oldViewport;
 
@@ -711,8 +731,8 @@ public class Renderer : IRenderer
 
                 if(renderTarget != null)
                 {
-                    var renderableAlpha = (int)renderable.Alpha;
-                    renderableAlpha = System.Math.Min(255, (int)renderableAlpha);
+                    var renderableAlpha = renderable.Alpha;
+                    renderableAlpha = System.Math.Min(255, renderableAlpha);
                     renderableAlpha = System.Math.Max(0, renderableAlpha);
 
                     var color = System.Drawing.Color.FromArgb(
@@ -937,7 +957,11 @@ public class Renderer : IRenderer
 
     }
 
-
+    public override bool Equals(object? obj)
+    {
+        return obj is Renderer renderer &&
+               EqualityComparer<ReadOnlyCollection<Layer>>.Default.Equals(_layersReadOnly, renderer._layersReadOnly);
+    }
 }
 
 #region RenderTargetService
@@ -1068,7 +1092,10 @@ public class GumBatch
 
         State = GumBatchState.BeginCalled;
 
-
+        systemManagers.Renderer.Camera.ClientWidth = systemManagers.Renderer.GraphicsDevice.Viewport.Width;
+        systemManagers.Renderer.Camera.ClientHeight = systemManagers.Renderer.GraphicsDevice.Viewport.Height;
+        systemManagers.Renderer.Camera.ClientLeft = systemManagers.Renderer.GraphicsDevice.Viewport.X;
+        systemManagers.Renderer.Camera.ClientTop = systemManagers.Renderer.GraphicsDevice.Viewport.Y;
 
         systemManagers.Renderer.Begin(spriteBatchMatrix);
     }
@@ -1117,229 +1144,289 @@ public class GumBatch
 
 #region Custom effect support
 
+/// <summary>
+/// Manages custom effects from the custom shader file. Main purposes:
+/// <list type="number">
+/// <item><description>Caches effect parameters and techniques to avoid lookups during rendering.</description></item>
+/// <item><description>Handles compatibility between old and new effect specifications with automatic fallback.</description></item>
+/// <item><description>Provides methods to retrieve techniques based on:
+/// <list type="bullet">
+/// <item><description>Texture filtering (Point/Linear)</description></item>
+/// <item><description>Color source (VertexColor/ColorModifier)</description></item>
+/// <item><description>Color operation (Add, Subtract, Modulate, etc.)</description></item>
+/// <item><description>Gamma correction (Linearize)</description></item>
+/// </list>
+/// </description></item>
+/// </list>
+/// This class is designed for use by renderers and custom graphics code.
+/// </summary>
 public class CustomEffectManager
 {
-    Effect mEffect;
+    Effect _effect = null!;
 
     // Cached effect members to avoid list lookups while rendering
-    public EffectParameter ParameterCurrentTexture;
-    public EffectParameter ParameterViewProj;
-    public EffectParameter ParameterColorModifier;
+    public EffectParameter ParameterCurrentTexture = null!;
+    public EffectParameter ParameterViewProj = null!;
+    public EffectParameter? ParameterColorModifier;
 
-    bool mEffectHasNewformat;
+    bool _effectHasNewformat;
 
-    EffectTechnique mTechniqueTexture;
-    EffectTechnique mTechniqueAdd;
-    EffectTechnique mTechniqueSubtract;
-    EffectTechnique mTechniqueModulate;
-    EffectTechnique mTechniqueModulate2X;
-    EffectTechnique mTechniqueModulate4X;
-    EffectTechnique mTechniqueInverseTexture;
-    EffectTechnique mTechniqueColor;
-    EffectTechnique mTechniqueColorTextureAlpha;
-    EffectTechnique mTechniqueInterpolateColor;
+    EffectTechnique? _techniqueTexture;
+    EffectTechnique? _techniqueAdd;
+    EffectTechnique? _techniqueSubtract;
+    EffectTechnique? _techniqueModulate;
+    EffectTechnique? _techniqueModulate2X;
+    EffectTechnique? _techniqueModulate4X;
+    EffectTechnique? _techniqueInverseTexture;
+    EffectTechnique? _techniqueColor;
+    EffectTechnique? _techniqueColorTextureAlpha;
+    EffectTechnique? _techniqueInterpolateColor;
 
-    EffectTechnique mTechniqueTexture_CM;
-    EffectTechnique mTechniqueAdd_CM;
-    EffectTechnique mTechniqueSubtract_CM;
-    EffectTechnique mTechniqueModulate_CM;
-    EffectTechnique mTechniqueModulate2X_CM;
-    EffectTechnique mTechniqueModulate4X_CM;
-    EffectTechnique mTechniqueInverseTexture_CM;
-    EffectTechnique mTechniqueColor_CM;
-    EffectTechnique mTechniqueColorTextureAlpha_CM;
-    EffectTechnique mTechniqueInterpolateColor_CM;
+    EffectTechnique? _techniqueTexture_CM;
+    EffectTechnique? _techniqueAdd_CM;
+    EffectTechnique? _techniqueSubtract_CM;
+    EffectTechnique? _techniqueModulate_CM;
+    EffectTechnique? _techniqueModulate2X_CM;
+    EffectTechnique? _techniqueModulate4X_CM;
+    EffectTechnique? _techniqueInverseTexture_CM;
+    EffectTechnique? _techniqueColor_CM;
+    EffectTechnique? _techniqueColorTextureAlpha_CM;
+    EffectTechnique? _techniqueInterpolateColor_CM;
 
-    EffectTechnique mTechniqueTexture_LN;
-    EffectTechnique mTechniqueAdd_LN;
-    EffectTechnique mTechniqueSubtract_LN;
-    EffectTechnique mTechniqueModulate_LN;
-    EffectTechnique mTechniqueModulate2X_LN;
-    EffectTechnique mTechniqueModulate4X_LN;
-    EffectTechnique mTechniqueInverseTexture_LN;
-    EffectTechnique mTechniqueColor_LN;
-    EffectTechnique mTechniqueColorTextureAlpha_LN;
-    EffectTechnique mTechniqueInterpolateColor_LN;
+    EffectTechnique? _techniqueTexture_LN;
+    EffectTechnique? _techniqueAdd_LN;
+    EffectTechnique? _techniqueSubtract_LN;
+    EffectTechnique? _techniqueModulate_LN;
+    EffectTechnique? _techniqueModulate2X_LN;
+    EffectTechnique? _techniqueModulate4X_LN;
+    EffectTechnique? _techniqueInverseTexture_LN;
+    EffectTechnique? _techniqueColor_LN;
+    EffectTechnique? _techniqueColorTextureAlpha_LN;
+    EffectTechnique? _techniqueInterpolateColor_LN;
 
-    EffectTechnique mTechniqueTexture_LN_CM;
-    EffectTechnique mTechniqueAdd_LN_CM;
-    EffectTechnique mTechniqueSubtract_LN_CM;
-    EffectTechnique mTechniqueModulate_LN_CM;
-    EffectTechnique mTechniqueModulate2X_LN_CM;
-    EffectTechnique mTechniqueModulate4X_LN_CM;
-    EffectTechnique mTechniqueInverseTexture_LN_CM;
-    EffectTechnique mTechniqueColor_LN_CM;
-    EffectTechnique mTechniqueColorTextureAlpha_LN_CM;
-    EffectTechnique mTechniqueInterpolateColor_LN_CM;
+    EffectTechnique? _techniqueTexture_LN_CM;
+    EffectTechnique? _techniqueAdd_LN_CM;
+    EffectTechnique? _techniqueSubtract_LN_CM;
+    EffectTechnique? _techniqueModulate_LN_CM;
+    EffectTechnique? _techniqueModulate2X_LN_CM;
+    EffectTechnique? _techniqueModulate4X_LN_CM;
+    EffectTechnique? _techniqueInverseTexture_LN_CM;
+    EffectTechnique? _techniqueColor_LN_CM;
+    EffectTechnique? _techniqueColorTextureAlpha_LN_CM;
+    EffectTechnique? _techniqueInterpolateColor_LN_CM;
 
-    EffectTechnique mTechniqueTexture_Linear;
-    EffectTechnique mTechniqueAdd_Linear;
-    EffectTechnique mTechniqueSubtract_Linear;
-    EffectTechnique mTechniqueModulate_Linear;
-    EffectTechnique mTechniqueModulate2X_Linear;
-    EffectTechnique mTechniqueModulate4X_Linear;
-    EffectTechnique mTechniqueInverseTexture_Linear;
-    EffectTechnique mTechniqueColor_Linear;
-    EffectTechnique mTechniqueColorTextureAlpha_Linear;
-    EffectTechnique mTechniqueInterpolateColor_Linear;
+    EffectTechnique? _techniqueTexture_Linear;
+    EffectTechnique? _techniqueAdd_Linear;
+    EffectTechnique? _techniqueSubtract_Linear;
+    EffectTechnique? _techniqueModulate_Linear;
+    EffectTechnique? _techniqueModulate2X_Linear;
+    EffectTechnique? _techniqueModulate4X_Linear;
+    EffectTechnique? _techniqueInverseTexture_Linear;
+    EffectTechnique? _techniqueColor_Linear;
+    EffectTechnique? _techniqueColorTextureAlpha_Linear;
+    EffectTechnique? _techniqueInterpolateColor_Linear;
 
-    EffectTechnique mTechniqueTexture_Linear_CM;
-    EffectTechnique mTechniqueAdd_Linear_CM;
-    EffectTechnique mTechniqueSubtract_Linear_CM;
-    EffectTechnique mTechniqueModulate_Linear_CM;
-    EffectTechnique mTechniqueModulate2X_Linear_CM;
-    EffectTechnique mTechniqueModulate4X_Linear_CM;
-    EffectTechnique mTechniqueInverseTexture_Linear_CM;
-    EffectTechnique mTechniqueColor_Linear_CM;
-    EffectTechnique mTechniqueColorTextureAlpha_Linear_CM;
-    EffectTechnique mTechniqueInterpolateColor_Linear_CM;
+    EffectTechnique? _techniqueTexture_Linear_CM;
+    EffectTechnique? _techniqueAdd_Linear_CM;
+    EffectTechnique? _techniqueSubtract_Linear_CM;
+    EffectTechnique? _techniqueModulate_Linear_CM;
+    EffectTechnique? _techniqueModulate2X_Linear_CM;
+    EffectTechnique? _techniqueModulate4X_Linear_CM;
+    EffectTechnique? _techniqueInverseTexture_Linear_CM;
+    EffectTechnique? _techniqueColor_Linear_CM;
+    EffectTechnique? _techniqueColorTextureAlpha_Linear_CM;
+    EffectTechnique? _techniqueInterpolateColor_Linear_CM;
 
-    EffectTechnique mTechniqueTexture_Linear_LN;
-    EffectTechnique mTechniqueAdd_Linear_LN;
-    EffectTechnique mTechniqueSubtract_Linear_LN;
-    EffectTechnique mTechniqueModulate_Linear_LN;
-    EffectTechnique mTechniqueModulate2X_Linear_LN;
-    EffectTechnique mTechniqueModulate4X_Linear_LN;
-    EffectTechnique mTechniqueInverseTexture_Linear_LN;
-    EffectTechnique mTechniqueColor_Linear_LN;
-    EffectTechnique mTechniqueColorTextureAlpha_Linear_LN;
-    EffectTechnique mTechniqueInterpolateColor_Linear_LN;
+    EffectTechnique? _techniqueTexture_Linear_LN;
+    EffectTechnique? _techniqueAdd_Linear_LN;
+    EffectTechnique? _techniqueSubtract_Linear_LN;
+    EffectTechnique? _techniqueModulate_Linear_LN;
+    EffectTechnique? _techniqueModulate2X_Linear_LN;
+    EffectTechnique? _techniqueModulate4X_Linear_LN;
+    EffectTechnique? _techniqueInverseTexture_Linear_LN;
+    EffectTechnique? _techniqueColor_Linear_LN;
+    EffectTechnique? _techniqueColorTextureAlpha_Linear_LN;
+    EffectTechnique? _techniqueInterpolateColor_Linear_LN;
 
-    EffectTechnique mTechniqueTexture_Linear_LN_CM;
-    EffectTechnique mTechniqueAdd_Linear_LN_CM;
-    EffectTechnique mTechniqueSubtract_Linear_LN_CM;
-    EffectTechnique mTechniqueModulate_Linear_LN_CM;
-    EffectTechnique mTechniqueModulate2X_Linear_LN_CM;
-    EffectTechnique mTechniqueModulate4X_Linear_LN_CM;
-    EffectTechnique mTechniqueInverseTexture_Linear_LN_CM;
-    EffectTechnique mTechniqueColor_Linear_LN_CM;
-    EffectTechnique mTechniqueColorTextureAlpha_Linear_LN_CM;
-    EffectTechnique mTechniqueInterpolateColor_Linear_LN_CM;
+    EffectTechnique? _techniqueTexture_Linear_LN_CM;
+    EffectTechnique? _techniqueAdd_Linear_LN_CM;
+    EffectTechnique? _techniqueSubtract_Linear_LN_CM;
+    EffectTechnique? _techniqueModulate_Linear_LN_CM;
+    EffectTechnique? _techniqueModulate2X_Linear_LN_CM;
+    EffectTechnique? _techniqueModulate4X_Linear_LN_CM;
+    EffectTechnique? _techniqueInverseTexture_Linear_LN_CM;
+    EffectTechnique? _techniqueColor_Linear_LN_CM;
+    EffectTechnique? _techniqueColorTextureAlpha_Linear_LN_CM;
+    EffectTechnique? _techniqueInterpolateColor_Linear_LN_CM;
 
     public Effect Effect
     {
-        get { return mEffect; }
-        private set
+        get { return _effect; }
+        set
         {
-            mEffect = value;
+            _effect = value;
 
-            ParameterViewProj = mEffect.Parameters["ViewProj"];
-            ParameterCurrentTexture = mEffect.Parameters["CurrentTexture"];
-            try { ParameterColorModifier = mEffect.Parameters["ColorModifier"]; } catch { }
+            var parameterViewProj = GetParameterSafe("ViewProj");
+            if (parameterViewProj == null) // ViewProj is required. Throw exception if null.
+            {
+                throw new InvalidOperationException("Shader.xnb must contain a parameter called ViewProj.");
+            }
+
+            ParameterViewProj = parameterViewProj;
+
+            var parameterCurrentTexture = GetParameterSafe("CurrentTexture");
+            if (parameterCurrentTexture == null) // CurrentTexture is required. Throw exception if null.
+            {
+                throw new InvalidOperationException("Shader.xnb must contain a parameter called CurrentTexture.");
+            }
+
+            ParameterCurrentTexture = parameterCurrentTexture;
+
+            ParameterColorModifier = GetParameterSafe("ColorModifier");
 
             // Let's check if the shader has the new format (which includes
             // separate versions of techniques for Point and Linear filtering).
             // We try to cache the first technique in order to do so.
-            try { mTechniqueTexture = mEffect.Techniques["Texture_Point"]; } catch { }
+            _techniqueTexture = GetTechniqueSafe("Texture_Point");
 
-            if (mTechniqueTexture != null)
+            if (_techniqueTexture != null)
             {
-                mEffectHasNewformat = true;
+                _effectHasNewformat = true;
 
-                //try { mTechniqueTexture = mEffect.Techniques["Texture_Point"]; } catch { } // This has been already cached
-                try { mTechniqueAdd = mEffect.Techniques["Add_Point"]; } catch { }
-                try { mTechniqueSubtract = mEffect.Techniques["Subtract_Point"]; } catch { }
-                try { mTechniqueModulate = mEffect.Techniques["Modulate_Point"]; } catch { }
-                try { mTechniqueModulate2X = mEffect.Techniques["Modulate2X_Point"]; } catch { }
-                try { mTechniqueModulate4X = mEffect.Techniques["Modulate4X_Point"]; } catch { }
-                try { mTechniqueInverseTexture = mEffect.Techniques["InverseTexture_Point"]; } catch { }
-                try { mTechniqueColor = mEffect.Techniques["Color_Point"]; } catch { }
-                try { mTechniqueColorTextureAlpha = mEffect.Techniques["ColorTextureAlpha_Point"]; } catch { }
-                try { mTechniqueInterpolateColor = mEffect.Techniques["InterpolateColor_Point"]; } catch { }
+                //_techniqueTexture = GetTechniqueSafe("Texture_Point"); // This has been already cached
+                _techniqueAdd = GetTechniqueSafe("Add_Point");
+                _techniqueSubtract = GetTechniqueSafe("Subtract_Point");
+                _techniqueModulate = GetTechniqueSafe("Modulate_Point");
+                _techniqueModulate2X = GetTechniqueSafe("Modulate2X_Point");
+                _techniqueModulate4X = GetTechniqueSafe("Modulate4X_Point");
+                _techniqueInverseTexture = GetTechniqueSafe("InverseTexture_Point");
+                _techniqueColor = GetTechniqueSafe("Color_Point");
+                _techniqueColorTextureAlpha = GetTechniqueSafe("ColorTextureAlpha_Point");
+                _techniqueInterpolateColor = GetTechniqueSafe("InterpolateColor_Point");
 
-                try { mTechniqueTexture_CM = mEffect.Techniques["Texture_Point_CM"]; } catch { }
-                try { mTechniqueAdd_CM = mEffect.Techniques["Add_Point_CM"]; } catch { }
-                try { mTechniqueSubtract_CM = mEffect.Techniques["Subtract_Point_CM"]; } catch { }
-                try { mTechniqueModulate_CM = mEffect.Techniques["Modulate_Point_CM"]; } catch { }
-                try { mTechniqueModulate2X_CM = mEffect.Techniques["Modulate2X_Point_CM"]; } catch { }
-                try { mTechniqueModulate4X_CM = mEffect.Techniques["Modulate4X_Point_CM"]; } catch { }
-                try { mTechniqueInverseTexture_CM = mEffect.Techniques["InverseTexture_Point_CM"]; } catch { }
-                try { mTechniqueColor_CM = mEffect.Techniques["Color_Point_CM"]; } catch { }
-                try { mTechniqueColorTextureAlpha_CM = mEffect.Techniques["ColorTextureAlpha_Point_CM"]; } catch { }
-                try { mTechniqueInterpolateColor_CM = mEffect.Techniques["InterpolateColor_Point_CM"]; } catch { }
+                _techniqueTexture_CM = GetTechniqueSafe("Texture_Point_CM");
+                _techniqueAdd_CM = GetTechniqueSafe("Add_Point_CM");
+                _techniqueSubtract_CM = GetTechniqueSafe("Subtract_Point_CM");
+                _techniqueModulate_CM = GetTechniqueSafe("Modulate_Point_CM");
+                _techniqueModulate2X_CM = GetTechniqueSafe("Modulate2X_Point_CM");
+                _techniqueModulate4X_CM = GetTechniqueSafe("Modulate4X_Point_CM");
+                _techniqueInverseTexture_CM = GetTechniqueSafe("InverseTexture_Point_CM");
+                _techniqueColor_CM = GetTechniqueSafe("Color_Point_CM");
+                _techniqueColorTextureAlpha_CM = GetTechniqueSafe("ColorTextureAlpha_Point_CM");
+                _techniqueInterpolateColor_CM = GetTechniqueSafe("InterpolateColor_Point_CM");
 
-                try { mTechniqueTexture_LN = mEffect.Techniques["Texture_Point_LN"]; } catch { }
-                try { mTechniqueAdd_LN = mEffect.Techniques["Add_Point_LN"]; } catch { }
-                try { mTechniqueSubtract_LN = mEffect.Techniques["Subtract_Point_LN"]; } catch { }
-                try { mTechniqueModulate_LN = mEffect.Techniques["Modulate_Point_LN"]; } catch { }
-                try { mTechniqueModulate2X_LN = mEffect.Techniques["Modulate2X_Point_LN"]; } catch { }
-                try { mTechniqueModulate4X_LN = mEffect.Techniques["Modulate4X_Point_LN"]; } catch { }
-                try { mTechniqueInverseTexture_LN = mEffect.Techniques["InverseTexture_Point_LN"]; } catch { }
-                try { mTechniqueColor_LN = mEffect.Techniques["Color_Point_LN"]; } catch { }
-                try { mTechniqueColorTextureAlpha_LN = mEffect.Techniques["ColorTextureAlpha_Point_LN"]; } catch { }
-                try { mTechniqueInterpolateColor_LN = mEffect.Techniques["InterpolateColor_Point_LN"]; } catch { }
+                _techniqueTexture_LN = GetTechniqueSafe("Texture_Point_LN");
+                _techniqueAdd_LN = GetTechniqueSafe("Add_Point_LN");
+                _techniqueSubtract_LN = GetTechniqueSafe("Subtract_Point_LN");
+                _techniqueModulate_LN = GetTechniqueSafe("Modulate_Point_LN");
+                _techniqueModulate2X_LN = GetTechniqueSafe("Modulate2X_Point_LN");
+                _techniqueModulate4X_LN = GetTechniqueSafe("Modulate4X_Point_LN");
+                _techniqueInverseTexture_LN = GetTechniqueSafe("InverseTexture_Point_LN");
+                _techniqueColor_LN = GetTechniqueSafe("Color_Point_LN");
+                _techniqueColorTextureAlpha_LN = GetTechniqueSafe("ColorTextureAlpha_Point_LN");
+                _techniqueInterpolateColor_LN = GetTechniqueSafe("InterpolateColor_Point_LN");
 
-                try { mTechniqueTexture_LN_CM = mEffect.Techniques["Texture_Point_LN_CM"]; } catch { }
-                try { mTechniqueAdd_LN_CM = mEffect.Techniques["Add_Point_LN_CM"]; } catch { }
-                try { mTechniqueSubtract_LN_CM = mEffect.Techniques["Subtract_Point_LN_CM"]; } catch { }
-                try { mTechniqueModulate_LN_CM = mEffect.Techniques["Modulate_Point_LN_CM"]; } catch { }
-                try { mTechniqueModulate2X_LN_CM = mEffect.Techniques["Modulate2X_Point_LN_CM"]; } catch { }
-                try { mTechniqueModulate4X_LN_CM = mEffect.Techniques["Modulate4X_Point_LN_CM"]; } catch { }
-                try { mTechniqueInverseTexture_LN_CM = mEffect.Techniques["InverseTexture_Point_LN_CM"]; } catch { }
-                try { mTechniqueColor_LN_CM = mEffect.Techniques["Color_Point_LN_CM"]; } catch { }
-                try { mTechniqueColorTextureAlpha_LN_CM = mEffect.Techniques["ColorTextureAlpha_Point_LN_CM"]; } catch { }
-                try { mTechniqueInterpolateColor_LN_CM = mEffect.Techniques["InterpolateColor_Point_LN_CM"]; } catch { }
+                _techniqueTexture_LN_CM = GetTechniqueSafe("Texture_Point_LN_CM");
+                _techniqueAdd_LN_CM = GetTechniqueSafe("Add_Point_LN_CM");
+                _techniqueSubtract_LN_CM = GetTechniqueSafe("Subtract_Point_LN_CM");
+                _techniqueModulate_LN_CM = GetTechniqueSafe("Modulate_Point_LN_CM");
+                _techniqueModulate2X_LN_CM = GetTechniqueSafe("Modulate2X_Point_LN_CM");
+                _techniqueModulate4X_LN_CM = GetTechniqueSafe("Modulate4X_Point_LN_CM");
+                _techniqueInverseTexture_LN_CM = GetTechniqueSafe("InverseTexture_Point_LN_CM");
+                _techniqueColor_LN_CM = GetTechniqueSafe("Color_Point_LN_CM");
+                _techniqueColorTextureAlpha_LN_CM = GetTechniqueSafe("ColorTextureAlpha_Point_LN_CM");
+                _techniqueInterpolateColor_LN_CM = GetTechniqueSafe("InterpolateColor_Point_LN_CM");
 
-                try { mTechniqueTexture_Linear = mEffect.Techniques["Texture_Linear"]; } catch { }
-                try { mTechniqueAdd_Linear = mEffect.Techniques["Add_Linear"]; } catch { }
-                try { mTechniqueSubtract_Linear = mEffect.Techniques["Subtract_Linear"]; } catch { }
-                try { mTechniqueModulate_Linear = mEffect.Techniques["Modulate_Linear"]; } catch { }
-                try { mTechniqueModulate2X_Linear = mEffect.Techniques["Modulate2X_Linear"]; } catch { }
-                try { mTechniqueModulate4X_Linear = mEffect.Techniques["Modulate4X_Linear"]; } catch { }
-                try { mTechniqueInverseTexture_Linear = mEffect.Techniques["InverseTexture_Linear"]; } catch { }
-                try { mTechniqueColor_Linear = mEffect.Techniques["Color_Linear"]; } catch { }
-                try { mTechniqueColorTextureAlpha_Linear = mEffect.Techniques["ColorTextureAlpha_Linear"]; } catch { }
-                try { mTechniqueInterpolateColor_Linear = mEffect.Techniques["InterpolateColor_Linear"]; } catch { }
+                _techniqueTexture_Linear = GetTechniqueSafe("Texture_Linear");
+                _techniqueAdd_Linear = GetTechniqueSafe("Add_Linear");
+                _techniqueSubtract_Linear = GetTechniqueSafe("Subtract_Linear");
+                _techniqueModulate_Linear = GetTechniqueSafe("Modulate_Linear");
+                _techniqueModulate2X_Linear = GetTechniqueSafe("Modulate2X_Linear");
+                _techniqueModulate4X_Linear = GetTechniqueSafe("Modulate4X_Linear");
+                _techniqueInverseTexture_Linear = GetTechniqueSafe("InverseTexture_Linear");
+                _techniqueColor_Linear = GetTechniqueSafe("Color_Linear");
+                _techniqueColorTextureAlpha_Linear = GetTechniqueSafe("ColorTextureAlpha_Linear");
+                _techniqueInterpolateColor_Linear = GetTechniqueSafe("InterpolateColor_Linear");
 
-                try { mTechniqueTexture_Linear_CM = mEffect.Techniques["Texture_Linear_CM"]; } catch { }
-                try { mTechniqueAdd_Linear_CM = mEffect.Techniques["Add_Linear_CM"]; } catch { }
-                try { mTechniqueSubtract_Linear_CM = mEffect.Techniques["Subtract_Linear_CM"]; } catch { }
-                try { mTechniqueModulate_Linear_CM = mEffect.Techniques["Modulate_Linear_CM"]; } catch { }
-                try { mTechniqueModulate2X_Linear_CM = mEffect.Techniques["Modulate2X_Linear_CM"]; } catch { }
-                try { mTechniqueModulate4X_Linear_CM = mEffect.Techniques["Modulate4X_Linear_CM"]; } catch { }
-                try { mTechniqueInverseTexture_Linear_CM = mEffect.Techniques["InverseTexture_Linear_CM"]; } catch { }
-                try { mTechniqueColor_Linear_CM = mEffect.Techniques["Color_Linear_CM"]; } catch { }
-                try { mTechniqueColorTextureAlpha_Linear_CM = mEffect.Techniques["ColorTextureAlpha_Linear_CM"]; } catch { }
-                try { mTechniqueInterpolateColor_Linear_CM = mEffect.Techniques["InterpolateColor_Linear_CM"]; } catch { }
+                _techniqueTexture_Linear_CM = GetTechniqueSafe("Texture_Linear_CM");
+                _techniqueAdd_Linear_CM = GetTechniqueSafe("Add_Linear_CM");
+                _techniqueSubtract_Linear_CM = GetTechniqueSafe("Subtract_Linear_CM");
+                _techniqueModulate_Linear_CM = GetTechniqueSafe("Modulate_Linear_CM");
+                _techniqueModulate2X_Linear_CM = GetTechniqueSafe("Modulate2X_Linear_CM");
+                _techniqueModulate4X_Linear_CM = GetTechniqueSafe("Modulate4X_Linear_CM");
+                _techniqueInverseTexture_Linear_CM = GetTechniqueSafe("InverseTexture_Linear_CM");
+                _techniqueColor_Linear_CM = GetTechniqueSafe("Color_Linear_CM");
+                _techniqueColorTextureAlpha_Linear_CM = GetTechniqueSafe("ColorTextureAlpha_Linear_CM");
+                _techniqueInterpolateColor_Linear_CM = GetTechniqueSafe("InterpolateColor_Linear_CM");
 
-                try { mTechniqueTexture_Linear_LN = mEffect.Techniques["Texture_Linear_LN"]; } catch { }
-                try { mTechniqueAdd_Linear_LN = mEffect.Techniques["Add_Linear_LN"]; } catch { }
-                try { mTechniqueSubtract_Linear_LN = mEffect.Techniques["Subtract_Linear_LN"]; } catch { }
-                try { mTechniqueModulate_Linear_LN = mEffect.Techniques["Modulate_Linear_LN"]; } catch { }
-                try { mTechniqueModulate2X_Linear_LN = mEffect.Techniques["Modulate2X_Linear_LN"]; } catch { }
-                try { mTechniqueModulate4X_Linear_LN = mEffect.Techniques["Modulate4X_Linear_LN"]; } catch { }
-                try { mTechniqueInverseTexture_Linear_LN = mEffect.Techniques["InverseTexture_Linear_LN"]; } catch { }
-                try { mTechniqueColor_Linear_LN = mEffect.Techniques["Color_Linear_LN"]; } catch { }
-                try { mTechniqueColorTextureAlpha_Linear_LN = mEffect.Techniques["ColorTextureAlpha_Linear_LN"]; } catch { }
-                try { mTechniqueInterpolateColor_Linear_LN = mEffect.Techniques["InterpolateColor_Linear_LN"]; } catch { }
+                _techniqueTexture_Linear_LN = GetTechniqueSafe("Texture_Linear_LN");
+                _techniqueAdd_Linear_LN = GetTechniqueSafe("Add_Linear_LN");
+                _techniqueSubtract_Linear_LN = GetTechniqueSafe("Subtract_Linear_LN");
+                _techniqueModulate_Linear_LN = GetTechniqueSafe("Modulate_Linear_LN");
+                _techniqueModulate2X_Linear_LN = GetTechniqueSafe("Modulate2X_Linear_LN");
+                _techniqueModulate4X_Linear_LN = GetTechniqueSafe("Modulate4X_Linear_LN");
+                _techniqueInverseTexture_Linear_LN = GetTechniqueSafe("InverseTexture_Linear_LN");
+                _techniqueColor_Linear_LN = GetTechniqueSafe("Color_Linear_LN");
+                _techniqueColorTextureAlpha_Linear_LN = GetTechniqueSafe("ColorTextureAlpha_Linear_LN");
+                _techniqueInterpolateColor_Linear_LN = GetTechniqueSafe("InterpolateColor_Linear_LN");
 
-                try { mTechniqueTexture_Linear_LN_CM = mEffect.Techniques["Texture_Linear_LN_CM"]; } catch { }
-                try { mTechniqueAdd_Linear_LN_CM = mEffect.Techniques["Add_Linear_LN_CM"]; } catch { }
-                try { mTechniqueSubtract_Linear_LN_CM = mEffect.Techniques["Subtract_Linear_LN_CM"]; } catch { }
-                try { mTechniqueModulate_Linear_LN_CM = mEffect.Techniques["Modulate_Linear_LN_CM"]; } catch { }
-                try { mTechniqueModulate2X_Linear_LN_CM = mEffect.Techniques["Modulate2X_Linear_LN_CM"]; } catch { }
-                try { mTechniqueModulate4X_Linear_LN_CM = mEffect.Techniques["Modulate4X_Linear_LN_CM"]; } catch { }
-                try { mTechniqueInverseTexture_Linear_LN_CM = mEffect.Techniques["InverseTexture_Linear_LN_CM"]; } catch { }
-                try { mTechniqueColor_Linear_LN_CM = mEffect.Techniques["Color_Linear_LN_CM"]; } catch { }
-                try { mTechniqueColorTextureAlpha_Linear_LN_CM = mEffect.Techniques["ColorTextureAlpha_Linear_LN_CM"]; } catch { }
-                try { mTechniqueInterpolateColor_Linear_LN_CM = mEffect.Techniques["InterpolateColor_Linear_LN_CM"]; } catch { }
+                _techniqueTexture_Linear_LN_CM = GetTechniqueSafe("Texture_Linear_LN_CM");
+                _techniqueAdd_Linear_LN_CM = GetTechniqueSafe("Add_Linear_LN_CM");
+                _techniqueSubtract_Linear_LN_CM = GetTechniqueSafe("Subtract_Linear_LN_CM");
+                _techniqueModulate_Linear_LN_CM = GetTechniqueSafe("Modulate_Linear_LN_CM");
+                _techniqueModulate2X_Linear_LN_CM = GetTechniqueSafe("Modulate2X_Linear_LN_CM");
+                _techniqueModulate4X_Linear_LN_CM = GetTechniqueSafe("Modulate4X_Linear_LN_CM");
+                _techniqueInverseTexture_Linear_LN_CM = GetTechniqueSafe("InverseTexture_Linear_LN_CM");
+                _techniqueColor_Linear_LN_CM = GetTechniqueSafe("Color_Linear_LN_CM");
+                _techniqueColorTextureAlpha_Linear_LN_CM = GetTechniqueSafe("ColorTextureAlpha_Linear_LN_CM");
+                _techniqueInterpolateColor_Linear_LN_CM = GetTechniqueSafe("InterpolateColor_Linear_LN_CM");
             }
             else
             {
-                mEffectHasNewformat = false;
+                _effectHasNewformat = false;
 
-                try { mTechniqueTexture = mEffect.Techniques["Texture"]; } catch { }
-                try { mTechniqueAdd = mEffect.Techniques["Add"]; } catch { }
-                try { mTechniqueSubtract = mEffect.Techniques["Subtract"]; } catch { }
-                try { mTechniqueModulate = mEffect.Techniques["Modulate"]; } catch { }
-                try { mTechniqueModulate2X = mEffect.Techniques["Modulate2X"]; } catch { }
-                try { mTechniqueModulate4X = mEffect.Techniques["Modulate4X"]; } catch { }
-                try { mTechniqueInverseTexture = mEffect.Techniques["InverseTexture"]; } catch { }
-                try { mTechniqueColor = mEffect.Techniques["Color"]; } catch { }
-                try { mTechniqueColorTextureAlpha = mEffect.Techniques["ColorTextureAlpha"]; } catch { }
-                try { mTechniqueInterpolateColor = mEffect.Techniques["InterpolateColor"]; } catch { }
+                _techniqueTexture = GetTechniqueSafe("Texture");
+                _techniqueAdd = GetTechniqueSafe("Add");
+                _techniqueSubtract = GetTechniqueSafe("Subtract");
+                _techniqueModulate = GetTechniqueSafe("Modulate");
+                _techniqueModulate2X = GetTechniqueSafe("Modulate2X");
+                _techniqueModulate4X = GetTechniqueSafe("Modulate4X");
+                _techniqueInverseTexture = GetTechniqueSafe("InverseTexture");
+                _techniqueColor = GetTechniqueSafe("Color");
+                _techniqueColorTextureAlpha = GetTechniqueSafe("ColorTextureAlpha");
+                _techniqueInterpolateColor = GetTechniqueSafe("InterpolateColor");
             }
         }
+    }
+
+    EffectParameter? GetParameterSafe(string parameterName)
+    {
+        if (_effect == null)
+            return null;
+
+        for (int i = 0; i < _effect.Parameters.Count; i++)
+        {
+            var parameter = _effect.Parameters[i];
+            if (parameter.Name == parameterName)
+                return parameter;
+        }
+
+        return null;
+    }
+
+    EffectTechnique? GetTechniqueSafe(string techniqueName)
+    {
+        if (_effect == null)
+            return null;
+
+        for (int i = 0; i < _effect.Techniques.Count; i++)
+        {
+            var technique = _effect.Techniques[i];
+            if (technique.Name == techniqueName)
+                return technique;
+        }
+
+        return null;
     }
 
     public class ServiceContainer : IServiceProvider
@@ -1380,8 +1467,18 @@ public class CustomEffectManager
                                    new DeviceManager(graphicsDevice)));
         }
 
-        // Shader should be capitalized
-        try { Effect = mContentManager.Load<Effect>("Content/Shader"); } catch { }
+        // Loads the Shader.xnb effect file. The shader is optional; if missing, 
+        // the application won't be able to use custom effects.
+        // Use of try-catch avoids using platform specific code.
+        // Shader should be capitalized.
+        try
+        { 
+            Effect = mContentManager.Load<Effect>("Content/Shader");
+        } 
+        catch
+        {
+            Debug.WriteLine("'Content/Shader.xnb' not found. Custom rendering is not available.");
+        }
     }
 
     static EffectTechnique GetTechniqueVariant(bool useDefaultOrPointFilter, EffectTechnique point, EffectTechnique pointLinearized, EffectTechnique linear, EffectTechnique linearLinearized)
@@ -1393,14 +1490,14 @@ public class CustomEffectManager
 
     public EffectTechnique GetVertexColorTechniqueFromColorOperation(ColorOperation value, bool? useDefaultOrPointFilter = null)
     {
-        if (mEffect == null)
-            throw new Exception("The effect hasn't been set.");
+        if (_effect == null)
+            throw new InvalidOperationException("The effect hasn't been set.");
 
-        EffectTechnique technique = null;
+        EffectTechnique technique = null!;
 
         bool useDefaultOrPointFilterInternal;
 
-        if (mEffectHasNewformat)
+        if (_effectHasNewformat)
         {
             // If the shader has the new format both point and linear are available
             if (!useDefaultOrPointFilter.HasValue)
@@ -1427,43 +1524,43 @@ public class CustomEffectManager
         {
             //case ColorOperation.Texture:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueTexture, mTechniqueTexture_LN, mTechniqueTexture_Linear, mTechniqueTexture_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueTexture, _techniqueTexture_LN, _techniqueTexture_Linear, _techniqueTexture_Linear_LN); break;
 
             //case ColorOperation.Add:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueAdd, mTechniqueAdd_LN, mTechniqueAdd_Linear, mTechniqueAdd_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueAdd, _techniqueAdd_LN, _techniqueAdd_Linear, _techniqueAdd_Linear_LN); break;
 
             //case ColorOperation.Subtract:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueSubtract, mTechniqueSubtract_LN, mTechniqueSubtract_Linear, mTechniqueSubtract_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueSubtract, _techniqueSubtract_LN, _techniqueSubtract_Linear, _techniqueSubtract_Linear_LN); break;
 
             case ColorOperation.Modulate:
                 technique = GetTechniqueVariant(
-                useDefaultOrPointFilterInternal, mTechniqueModulate, mTechniqueModulate_LN, mTechniqueModulate_Linear, mTechniqueModulate_Linear_LN); break;
+                useDefaultOrPointFilterInternal, _techniqueModulate, _techniqueModulate_LN, _techniqueModulate_Linear, _techniqueModulate_Linear_LN); break;
 
             //case ColorOperation.Modulate2X:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueModulate2X, mTechniqueModulate2X_LN, mTechniqueModulate2X_Linear, mTechniqueModulate2X_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueModulate2X, _techniqueModulate2X_LN, _techniqueModulate2X_Linear, _techniqueModulate2X_Linear_LN); break;
 
             //case ColorOperation.Modulate4X:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueModulate4X, mTechniqueModulate4X_LN, mTechniqueModulate4X_Linear, mTechniqueModulate4X_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueModulate4X, _techniqueModulate4X_LN, _techniqueModulate4X_Linear, _techniqueModulate4X_Linear_LN); break;
 
             //case ColorOperation.InverseTexture:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueInverseTexture, mTechniqueInverseTexture_LN, mTechniqueInverseTexture_Linear, mTechniqueInverseTexture_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueInverseTexture, _techniqueInverseTexture_LN, _techniqueInverseTexture_Linear, _techniqueInverseTexture_Linear_LN); break;
 
             //case ColorOperation.Color:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueColor, mTechniqueColor_LN, mTechniqueColor_Linear, mTechniqueColor_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueColor, _techniqueColor_LN, _techniqueColor_Linear, _techniqueColor_Linear_LN); break;
 
             case ColorOperation.ColorTextureAlpha:
                 technique = GetTechniqueVariant(
-                useDefaultOrPointFilterInternal, mTechniqueColorTextureAlpha, mTechniqueColorTextureAlpha_LN, mTechniqueColorTextureAlpha_Linear, mTechniqueColorTextureAlpha_Linear_LN); break;
+                useDefaultOrPointFilterInternal, _techniqueColorTextureAlpha, _techniqueColorTextureAlpha_LN, _techniqueColorTextureAlpha_Linear, _techniqueColorTextureAlpha_Linear_LN); break;
 
             //case ColorOperation.InterpolateColor:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueInterpolateColor, mTechniqueInterpolateColor_LN, mTechniqueInterpolateColor_Linear, mTechniqueInterpolateColor_Linear_LN); break;
+            //    useDefaultOrPointFilterInternal, _techniqueInterpolateColor, _techniqueInterpolateColor_LN, _techniqueInterpolateColor_Linear, _techniqueInterpolateColor_Linear_LN); break;
 
             default: throw new InvalidOperationException();
         }
@@ -1473,14 +1570,14 @@ public class CustomEffectManager
 
     public EffectTechnique GetColorModifierTechniqueFromColorOperation(ColorOperation value, bool? useDefaultOrPointFilter = null)
     {
-        if (mEffect == null)
-            throw new Exception("The effect hasn't been set.");
+        if (_effect == null)
+            throw new InvalidOperationException("The effect hasn't been set.");
 
-        EffectTechnique technique = null;
+        EffectTechnique technique = null!;
 
         bool useDefaultOrPointFilterInternal;
 
-        if (mEffectHasNewformat)
+        if (_effectHasNewformat)
         {
             // If the shader has the new format both point and linear are available
             if (!useDefaultOrPointFilter.HasValue)
@@ -1506,43 +1603,43 @@ public class CustomEffectManager
         {
             //case ColorOperation.Texture:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueTexture_CM, mTechniqueTexture_LN_CM, mTechniqueTexture_Linear_CM, mTechniqueTexture_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueTexture_CM, _techniqueTexture_LN_CM, _techniqueTexture_Linear_CM, _techniqueTexture_Linear_LN_CM); break;
 
             //case ColorOperation.Add:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueAdd_CM, mTechniqueAdd_LN_CM, mTechniqueAdd_Linear_CM, mTechniqueAdd_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueAdd_CM, _techniqueAdd_LN_CM, _techniqueAdd_Linear_CM, _techniqueAdd_Linear_LN_CM); break;
 
             //case ColorOperation.Subtract:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueSubtract_CM, mTechniqueSubtract_LN_CM, mTechniqueSubtract_Linear_CM, mTechniqueSubtract_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueSubtract_CM, _techniqueSubtract_LN_CM, _techniqueSubtract_Linear_CM, _techniqueSubtract_Linear_LN_CM); break;
 
             case ColorOperation.Modulate:
                 technique = GetTechniqueVariant(
-                useDefaultOrPointFilterInternal, mTechniqueModulate_CM, mTechniqueModulate_LN_CM, mTechniqueModulate_Linear_CM, mTechniqueModulate_Linear_LN_CM); break;
+                useDefaultOrPointFilterInternal, _techniqueModulate_CM, _techniqueModulate_LN_CM, _techniqueModulate_Linear_CM, _techniqueModulate_Linear_LN_CM); break;
 
             //case ColorOperation.Modulate2X:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueModulate2X_CM, mTechniqueModulate2X_LN_CM, mTechniqueModulate2X_Linear_CM, mTechniqueModulate2X_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueModulate2X_CM, _techniqueModulate2X_LN_CM, _techniqueModulate2X_Linear_CM, _techniqueModulate2X_Linear_LN_CM); break;
 
             //case ColorOperation.Modulate4X:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueModulate4X_CM, mTechniqueModulate4X_LN_CM, mTechniqueModulate4X_Linear_CM, mTechniqueModulate4X_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueModulate4X_CM, _techniqueModulate4X_LN_CM, _techniqueModulate4X_Linear_CM, _techniqueModulate4X_Linear_LN_CM); break;
 
             //case ColorOperation.InverseTexture:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueInverseTexture_CM, mTechniqueInverseTexture_LN_CM, mTechniqueInverseTexture_Linear_CM, mTechniqueInverseTexture_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueInverseTexture_CM, _techniqueInverseTexture_LN_CM, _techniqueInverseTexture_Linear_CM, _techniqueInverseTexture_Linear_LN_CM); break;
 
             //case ColorOperation.Color:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueColor_CM, mTechniqueColor_LN_CM, mTechniqueColor_Linear_CM, mTechniqueColor_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueColor_CM, _techniqueColor_LN_CM, _techniqueColor_Linear_CM, _techniqueColor_Linear_LN_CM); break;
 
             case ColorOperation.ColorTextureAlpha:
                 technique = GetTechniqueVariant(
-                useDefaultOrPointFilterInternal, mTechniqueColorTextureAlpha_CM, mTechniqueColorTextureAlpha_LN_CM, mTechniqueColorTextureAlpha_Linear_CM, mTechniqueColorTextureAlpha_Linear_LN_CM); break;
+                useDefaultOrPointFilterInternal, _techniqueColorTextureAlpha_CM, _techniqueColorTextureAlpha_LN_CM, _techniqueColorTextureAlpha_Linear_CM, _techniqueColorTextureAlpha_Linear_LN_CM); break;
 
             //case ColorOperation.InterpolateColor:
             //    technique = GetTechniqueVariant(
-            //    useDefaultOrPointFilterInternal, mTechniqueInterpolateColor_CM, mTechniqueInterpolateColor_LN_CM, mTechniqueInterpolateColor_Linear_CM, mTechniqueInterpolateColor_Linear_LN_CM); break;
+            //    useDefaultOrPointFilterInternal, _techniqueInterpolateColor_CM, _techniqueInterpolateColor_LN_CM, _techniqueInterpolateColor_Linear_CM, _techniqueInterpolateColor_Linear_LN_CM); break;
 
             default: throw new InvalidOperationException();
         }

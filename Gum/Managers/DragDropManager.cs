@@ -48,7 +48,6 @@ public class DragDropManager
 
     static DragDropManager mSelf;
 
-    ITreeNode? mDraggedItem;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
@@ -588,11 +587,6 @@ public class DragDropManager
             _setVariableLogic.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
             targetTreeNode?.Expand();
         }
-    }
-
-    internal void ClearDraggedItem()
-    {
-        mDraggedItem = null;
     }
 
     internal void HandleKeyPress(KeyPressEventArgs e)

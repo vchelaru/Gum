@@ -4,7 +4,6 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using Moq;
 using RenderingLibrary.Graphics;
@@ -60,8 +59,8 @@ public  class ComboBoxTests : BaseTestClass
 
     public class CGComboBox : InteractiveGue
     {
-        public MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime ListBoxInstance;
-        public RectangleRuntime FocusedIndicator { get; private set; }
+        public MonoGameGum.Forms.DefaultVisuals.DefaultListBoxRuntime? ListBoxInstance;
+        public RectangleRuntime? FocusedIndicator { get; private set; }
 
         public CGComboBox(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
@@ -109,15 +108,6 @@ public  class ComboBoxTests : BaseTestClass
                     currentState = state;
                 }
 
-                void AddVariable(string name, object value)
-                {
-                    currentState.Variables.Add(new VariableSave
-                    {
-                        Name = name,
-                        Value = value
-                    });
-                }
-
                 AddState(FrameworkElement.DisabledStateName);
 
                 AddState(FrameworkElement.DisabledFocusedStateName);
@@ -139,7 +129,7 @@ public  class ComboBoxTests : BaseTestClass
             }
         }
 
-        public ComboBox FormsControl => FormsControlAsObject as ComboBox;
+        public ComboBox FormsControl => (ComboBox)FormsControlAsObject;
 
     }
 }

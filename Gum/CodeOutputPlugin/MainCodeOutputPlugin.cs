@@ -65,9 +65,11 @@ public class MainCodeOutputPlugin : PluginBase
 
     public MainCodeOutputPlugin()
     {
-        _codeGenerator = new CodeGenerator();
+        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        CodeGenerationNameVerifier codeGenerationNameVerifier = new(_nameVerifier);
+        _codeGenerator = new CodeGenerator(codeGenerationNameVerifier);
 
-        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator);
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, codeGenerationNameVerifier);
 
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
@@ -75,10 +77,9 @@ public class MainCodeOutputPlugin : PluginBase
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _codeGenerator.LocalizationManager = _localizationManager;
 
-        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        var customCodeGenerator = new CustomCodeGenerator(_codeGenerator);
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator);
-        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator);
+        var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, codeGenerationNameVerifier);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, codeGenerationNameVerifier);
+        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator, codeGenerationNameVerifier);
         _messenger = Locator.GetRequiredService<IMessenger>();
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator);
@@ -86,10 +87,6 @@ public class MainCodeOutputPlugin : PluginBase
         _messenger.Register<RequestCodeGenerationMessage>(
             this, 
             (_, message) => HandleRequestCodeGeneration(message));
-
-        // The methos in CodeGenerator need to be changed to not be static then we can get rid
-        // of this:
-        CodeGenerator.NameVerifier = _nameVerifier;
     }
 
     private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)
@@ -437,7 +434,7 @@ public class MainCodeOutputPlugin : PluginBase
     private void HandleCodeOutputPropertyChanged()
     {
         var element = _selectedState.SelectedElement;
-        if(element != null)
+        if(element != null && control.CodeOutputElementSettings != null)
         {
             CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
 
@@ -536,10 +533,11 @@ public class MainCodeOutputPlugin : PluginBase
             // If user is using automatic generation, generate everything
             // If it's manual, don't check for missing files
 
-            var checkForMissing = settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
-
-
-            _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups, checkForMissing: checkForMissing);
+            if(settings != null)
+            {
+                var checkForMissing = settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
+                _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups, checkForMissing: checkForMissing);
+            }
         }
     }
 

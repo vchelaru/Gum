@@ -24,8 +24,8 @@ for(int i = 0; i < 20; i++)
 }
 ```
 
-<figure><img src="../../.gitbook/assets/13_09 10 37.gif" alt=""><figcaption><p>ListBoxItems created by adding ints to an Items</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/13_09 10 37.gif" alt=""><figcaption><p>ListBoxItems created by adding ints to an Items</p></figcaption></figure>
 
 ## Customizing ListBox Items
 
-To customize the displayed text of a ListBoxItem, see the [ListBox Items tutorial](../getting-started/tutorials/code-only-gum-forms-tutorial/listbox-items.md).
+To customize the displayed text of a ListBoxItem, see the [ListBox Items tutorial](../../getting-started/tutorials/code-only-gum-forms-tutorial/listbox-items.md).

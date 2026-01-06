@@ -50,7 +50,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
         UnfilteredFiles.AddRange(componentFilesNotInProject.Select(item => item.FullPath));
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         ComponentSave lastImportedComponent = null;
 

@@ -52,10 +52,25 @@ public class GumLoadResult
 }
 #endregion
 
+#region Custom Guide class
+
+public class CustomCanvasSize
+{
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+
+    public string FriendlyName { get; set; } = string.Empty;
+}
+
+#endregion
+
 /// <summary>
 /// Represents the data stored in a .gumx file. GumProjectSave
 /// instances can be XML Serialized to a .gumx file.
 /// </summary>
+/// <remarks>
+/// GumProjectSaves contain references to screens, components, standard elements, and behaviors.
+/// </remarks>
 public class GumProjectSave
 {
     public enum GumxVersions
@@ -83,6 +98,11 @@ public class GumProjectSave
     public int FontSpacingVertical { get; set; } = 1;
     public int FontSpacingHorizontal { get; set; } = 1;
     public bool UseFontCharacterFile { get; set; }
+
+    public bool AutoSizeFontOutputs { get; set; } =
+        // Default to false - it's too expensive for large character sets
+        false;
+
     public int Version { get; set; }
 
     public int DefaultCanvasWidth
@@ -96,6 +116,8 @@ public class GumProjectSave
         get;
         set;
     }
+
+    public List<CustomCanvasSize>? CustomCanvasSizes { get; set; }
 
     public bool ShowOutlines
     {
@@ -137,7 +159,9 @@ public class GumProjectSave
     public string ParentProjectRoot { get; set; }
 
     public string LocalizationFile { get; set; }
+
     public bool ShowLocalizationInGum { get; set; } = true;
+
     public int CurrentLanguageIndex { get; set; }
 
     [XmlIgnore]

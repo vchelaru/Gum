@@ -41,7 +41,7 @@ internal enum PluginCategories
 
 #endregion
 
-public class PluginManager
+public class PluginManager : IPluginManager
 {
     #region Fields
 
@@ -205,7 +205,7 @@ public class PluginManager
     internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
 
-    internal void ProjectPropertySet(string propertyName) =>
+    public void ProjectPropertySet(string propertyName) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
     internal void ProjectSave(GumProjectSave savedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
@@ -364,7 +364,7 @@ public class PluginManager
     internal void ElementSelected(ElementSave? elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
-    internal void TreeNodeSelected(TreeNode treeNode) =>
+    internal void TreeNodeSelected(TreeNode? treeNode) =>
         CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode));
 
     internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
@@ -422,10 +422,10 @@ public class PluginManager
         CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
 
 
-    internal void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
+    public virtual void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
 
-    internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
+    public virtual void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
         CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
 
     internal StateSave? GetDefaultStateFor(string type)
@@ -463,7 +463,7 @@ public class PluginManager
     internal void BehaviorReferencesChanged(ElementSave elementSave) => 
         CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
 
-    internal void WireframeRefreshed() =>
+    public void WireframeRefreshed() =>
         CallMethodOnPlugin(
             plugin => plugin.CallWireframeRefreshed());
 

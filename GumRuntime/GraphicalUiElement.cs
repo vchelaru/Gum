@@ -178,7 +178,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     protected float mHeight;
     float mRotation;
 
-    IRenderableIpso? mParent;
+    GraphicalUiElement? _parent;
 
     protected bool mIsLayoutSuspended = false;
     public bool IsLayoutSuspended => mIsLayoutSuspended;
@@ -221,19 +221,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         set;
     }
 
-    public ISystemManagers Managers
-    {
-        get
-        {
-            return mManagers;
-        }
-    }
+    public ISystemManagers? Managers => mManagers;
 
     /// <summary>
     /// Returns this instance's SystemManagers, or climbs up the parent/child relationship
     /// until a non-null SystemsManager is found. Otherwise, returns null.
     /// </summary>
-    public ISystemManagers EffectiveManagers
+    public ISystemManagers? EffectiveManagers
     {
         get
         {
@@ -249,6 +243,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <inheritdoc/>
+    public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
+
+    /// <inheritdoc/>
     public bool Visible
     {
         get
@@ -269,7 +267,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 mContainedObjectAsIVisible.Visible = value;
 
-                var absoluteVisible = ((IVisible)this).AbsoluteVisible;
+                var absoluteVisible = AbsoluteVisible;
                 // See if this has a parent that stacks children. If so, update its layout:
 
                 var didUpdate = false;
@@ -333,6 +331,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
             }
+        }
+    }
+
+    /// <inheritdoc/>
+    IVisible? IVisible.Parent
+    {
+        get
+        {
+            return ((IRenderableIpso)this).Parent as IVisible;
         }
     }
 
@@ -534,7 +541,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     #endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
-    public int Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
+    int IRenderableIpso.Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
 
     public GeneralUnitType XUnits
     {
@@ -1017,9 +1024,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IRenderableIpso? Parent
+    public GraphicalUiElement? Parent
     {
-        get { return mParent; }
+        get { return _parent; }
         set
         {
 #if FULL_DIAGNOSTICS
@@ -1028,20 +1035,20 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 throw new InvalidOperationException("Cannot attach an object to itself");
             }
 #endif
-            if (mParent != value)
+            if (_parent != value)
             {
-                var oldParent = mParent;
-                if (mParent != null && mParent.Children?.Contains(this) == true)
+                var oldParent = _parent;
+                if (_parent?.Children?.Contains(this) == true)
                 {
-                    mParent.Children.Remove(this);
-                    (mParent as GraphicalUiElement)?.UpdateLayout();
+                    _parent.Children.Remove(this);
+                    oldParent?.UpdateLayout();
                 }
-                mParent = value;
+                _parent = value;
 
                 // In case the object was added explicitly 
-                if (mParent?.Children != null && mParent.Children.Contains(this) == false)
+                if (_parent?.Children != null && _parent.Children.Contains(this) == false)
                 {
-                    mParent.Children.Add(this);
+                    _parent.Children.Add(this);
 
                 }
 
@@ -1059,6 +1066,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+
+    IRenderableIpso? IRenderableIpso.Parent { get => Parent; set => this.Parent = value as GraphicalUiElement; }
 
     // Made obsolete November 4, 2017
     [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
@@ -1751,7 +1760,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
-    HashSet<IRenderableIpso> fullyUpdatedChildren = new HashSet<IRenderableIpso>();
+    HashSet<GraphicalUiElement> fullyUpdatedChildren = new HashSet<GraphicalUiElement>();
 
     /// <summary>
     /// Performs an update to this, and optionally to its parent and children depending on the parameters.
@@ -1822,7 +1831,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // as well would result in a double-render. Instead, we'll set the parent
             // direct, so the parent doesn't know about this child:
             //mContainedObjectAsIpso.Parent = mParent;
-            mContainedObjectAsIpso.SetParentDirect(mParent);
+            mContainedObjectAsIpso.SetParentDirect(_parent);
         }
 
 
@@ -2482,18 +2491,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             }
                         }
 
-                        if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                        if (_parent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
                         {
                             var numberOfSpaces = numberOfVisibleChildren;
                             heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
                         }
 
                         float totalRatio = 0;
-                        if (mParent != null)
+                        if (_parent != null)
                         {
-                            for (int i = 0; i < mParent.Children.Count; i++)
+                            for (int i = 0; i < _parent.Children.Count; i++)
                             {
-                                var child = mParent.Children[i];
+                                var child = _parent.Children[i];
                                 if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
                                     totalRatio += gue.Height;
@@ -2829,11 +2838,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                         var numberOfVisibleChildren = 0;
 
-                        if (mParent != null)
+                        if (_parent != null)
                         {
-                            for (int i = 0; i < mParent.Children.Count; i++)
+                            for (int i = 0; i < _parent.Children.Count; i++)
                             {
-                                var child = mParent.Children[i];
+                                var child = _parent.Children[i];
                                 if (child != this && child is GraphicalUiElement gue && gue.Visible)
                                 {
                                     if (gue.WidthUnits == DimensionUnitType.Absolute)
@@ -2869,7 +2878,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             }
                         }
 
-                        if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+                        if (_parent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
                         {
                             var numberOfSpaces = numberOfVisibleChildren;
 
@@ -2877,11 +2886,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         }
 
                         float totalRatio = 0;
-                        if (mParent != null)
+                        if (_parent != null)
                         {
-                            for (int i = 0; i < mParent.Children.Count; i++)
+                            for (int i = 0; i < _parent.Children.Count; i++)
                             {
-                                var child = mParent.Children[i];
+                                var child = _parent.Children[i];
                                 if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
                                 {
                                     totalRatio += gue.Width;
@@ -3136,8 +3145,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             else
             {
-                parentWidth = Parent.Width;
-                parentHeight = Parent.Height;
+                parentWidth = Parent.GetAbsoluteWidth();
+                parentHeight = Parent.GetAbsoluteHeight();
             }
         }
         else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
@@ -3337,7 +3346,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         unitType == DimensionUnitType.MaintainFileAspectRatio ||
         unitType == DimensionUnitType.ScreenPixel;
 
-    private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
+    private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<GraphicalUiElement>? alreadyUpdated = null, HashSet<GraphicalUiElement>? newlyUpdated = null)
     {
         bool CanDoFullUpdate(ChildType thisChildUpdateType, GraphicalUiElement childGue)
         {
@@ -4139,11 +4148,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private int GetIndexInVisibleSiblings()
     {
-        System.Collections.IList siblings = null;
+        System.Collections.IList? siblings = null;
 
         if (this.Parent == null)
         {
-            siblings = this.ElementGueContainingThis.mWhatThisContains;
+            siblings = this.ElementGueContainingThis?.mWhatThisContains;
         }
         else if (this.Parent is GraphicalUiElement)
         {
@@ -4151,15 +4160,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         var thisIndex = 0;
-        for (int i = 0; i < siblings.Count; i++)
+        if(siblings != null)
         {
-            if (siblings[i] == this)
+            for (int i = 0; i < siblings.Count; i++)
             {
-                break;
-            }
-            if ((siblings[i] as IVisible).Visible)
-            {
-                thisIndex++;
+                if (siblings[i] == this)
+                {
+                    break;
+                }
+                if (((IVisible)siblings[i]).Visible)
+                {
+                    thisIndex++;
+                }
             }
         }
 
@@ -4227,12 +4239,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // if any siblings are ratio-based, then we need to
                 if (this.Parent == null)
                 {
-                    for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
+                    if(ElementGueContainingThis != null)
                     {
-                        var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
-                        if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                        for (int i = 0; i < this.ElementGueContainingThis.mWhatThisContains.Count; i++)
                         {
-                            return true;
+                            var sibling = this.ElementGueContainingThis.mWhatThisContains[i];
+                            if (sibling.WidthUnits == DimensionUnitType.Ratio || sibling.HeightUnits == DimensionUnitType.Ratio)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -5176,6 +5191,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (newItem == null)
                     {
                         throw new InvalidOperationException($"Attempting to add a null child to {this}");
+                    }
+                    if(newItem == this)
+                    {
+                        throw new InvalidOperationException($"{this} cannot be added as a child of itself");
                     }
 #endif
                     var ipso = (GraphicalUiElement)newItem;
@@ -6316,7 +6335,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return GetParentByName(this, name);
     }
 
-    private GraphicalUiElement? GetParentByName(IRenderableIpso element, string name)
+    private GraphicalUiElement? GetParentByName(GraphicalUiElement element, string name)
     {
         if (element.Parent != null)
         {
@@ -6340,17 +6359,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return GetParentByType(this, type);
     }
 
-    private GraphicalUiElement? GetParentByType(IRenderableIpso element, Type type)
+    private GraphicalUiElement? GetParentByType(GraphicalUiElement element, Type type)
     {
         if (element.Parent != null)
         {
             if (element.Parent.GetType().Equals(type))
             {
-                return element.Parent as GraphicalUiElement;
+                return element as GraphicalUiElement;
             }
             else
             {
-                return GetParentByType(element.Parent, type);
+                return GetParentByType(element, type);
             }
         }
         else
@@ -6372,7 +6391,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <summary>
     /// Returns a list with all the children matching the argument type. Performs the search in a recursive fashion.
     /// </summary>
-    /// <typeparam name="T">Type to search for. Must be an <see cref="IRenderableIpso"/>.</typeparam>
+    /// <typeparam name="T">Type to search for. Must be an <see cref="GraphicalUiElement"/>.</typeparam>
     /// <returns></returns>
     public List<T> FillListWithChildrenByTypeRecursively<T>() where T : GraphicalUiElement
     {
@@ -6527,32 +6546,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public void UpdateToFontValues() => UpdateFontFromProperties?.Invoke(mContainedObjectAsIpso as IText, this);
-
-    #endregion
-
-    #region IVisible Implementation
-
-    bool IVisible.AbsoluteVisible
+    public void UpdateToFontValues()
     {
-        get
+        if(this.mContainedObjectAsIpso is IText asText)
         {
-            bool explicitParentVisible = true;
-            if (ExplicitIVisibleParent != null)
-            {
-                explicitParentVisible = ExplicitIVisibleParent.AbsoluteVisible;
-            }
-
-            return explicitParentVisible && mContainedObjectAsIVisible?.AbsoluteVisible == true;
+            UpdateFontFromProperties?.Invoke(asText, this);
         }
     }
 
-    IVisible IVisible.Parent
-    {
-        get { return this.Parent as IVisible; }
-    }
-
     #endregion
+
 
     #region AnimationChain 
 
@@ -6611,7 +6614,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             // update this texture coordinates:
 
-            UpdateTextureValuesFrom(asSprite);
+            UpdateTextureValuesFrom(asSprite!);
         }
 
         if (Children != null)

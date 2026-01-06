@@ -3,14 +3,16 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
 
+
 #if RAYLIB
+using Gum.GueDeriving;
 using Raylib_cs;
 
 #else
+using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework;
 #endif
 
@@ -33,7 +35,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (!value.Equals(_backgroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -49,7 +51,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _foregroundColor;
         set
         {
-            if (value != _foregroundColor)
+            if (!value.Equals(_foregroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -66,7 +68,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _selectionBackgroundColor;
         set
         {
-            if (value != _selectionBackgroundColor)
+            if (!value.Equals(_selectionBackgroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -83,7 +85,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _placeholderColor;
         set
         {
-            if (value != _placeholderColor)
+            if (!value.Equals(_placeholderColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -100,7 +102,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _caretColor;
         set
         {
-            if (value != _caretColor)
+            if (!value.Equals(_caretColor))
             {
                 _caretColor = value;
                 (FormsControlAsObject as FrameworkElement)?.UpdateState();
@@ -115,7 +117,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         get => _focusedIndicatorColor;
         set
         {
-            if (value != _focusedIndicatorColor)
+            if (!value.Equals(_focusedIndicatorColor))
             {
                 _focusedIndicatorColor = value;
                 (FormsControlAsObject as FrameworkElement)?.UpdateState();
@@ -213,8 +215,13 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
         PlaceholderTextInstance.XOrigin = HorizontalAlignment.Left;
         PlaceholderTextInstance.YOrigin = VerticalAlignment.Center;
-        PlaceholderTextInstance.Width = -8f;
-        PlaceholderTextInstance.WidthUnits = DimensionUnitType.RelativeToParent;
+        // Update January 6, 2026
+        // By default placeholder text
+        // should extend off the edge unless
+        // in multi-line mode
+        //PlaceholderTextInstance.Width = -8f;
+        //PlaceholderTextInstance.WidthUnits = DimensionUnitType.RelativeToParent;
+        PlaceholderTextInstance.WidthUnits = DimensionUnitType.RelativeToChildren;
         PlaceholderTextInstance.Height = -4f;
         PlaceholderTextInstance.HeightUnits = DimensionUnitType.RelativeToParent;
         PlaceholderTextInstance.Text = "Text Placeholder";
@@ -318,6 +325,8 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         AddVariable(States.SingleLineMode, "TextInstance.Width", 0f);
         AddVariable(States.SingleLineMode, "TextInstance.WidthUnits", DimensionUnitType.RelativeToChildren);
         AddVariable(States.SingleLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Center);
+        AddVariable(States.SingleLineMode, "PlaceholderTextInstance.WidthUnits", DimensionUnitType.RelativeToChildren);
+
         AddVariable(States.SingleLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Center);
 
         LineModeCategory.States.Add(States.MultiLineMode);
@@ -326,6 +335,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         AddVariable(States.MultiLineMode, "TextInstance.Width", -8f);
         AddVariable(States.MultiLineMode, "TextInstance.WidthUnits", DimensionUnitType.RelativeToParent);
         AddVariable(States.MultiLineMode, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
+        AddVariable(States.MultiLineMode, "PlaceholderTextInstance.WidthUnits", DimensionUnitType.RelativeToParent);
         AddVariable(States.MultiLineMode, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
 
         LineModeCategory.States.Add(States.MultiLineModeNoWrap);
@@ -334,6 +344,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.Width", 0f);
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.WidthUnits", DimensionUnitType.RelativeToChildren);
         AddVariable(States.MultiLineModeNoWrap, "PlaceholderTextInstance.VerticalAlignment", VerticalAlignment.Top);
+        AddVariable(States.MultiLineModeNoWrap, "PlaceholderTextInstance.WidthUnits", DimensionUnitType.RelativeToChildren);
         AddVariable(States.MultiLineModeNoWrap, "TextInstance.VerticalAlignment", VerticalAlignment.Top);
     }
 

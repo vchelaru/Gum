@@ -4,7 +4,8 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
 using Gum.Services;
-using Gum.Services.Dialogs; 
+using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 using Gum.ToolStates;
 using GumRuntime;
 using RenderingLibrary;
@@ -29,11 +30,8 @@ public enum InstanceFetchType
 
 #endregion
 
-public partial class WireframeObjectManager
+public partial class WireframeObjectManager : IWireframeObjectManager
 {
-
-
-
     #region Properties
 
     public List<GraphicalUiElement> AllIpsos { get; private set; } = new List<GraphicalUiElement>();
@@ -134,7 +132,7 @@ public partial class WireframeObjectManager
 
     public void RefreshAll(bool forceLayout, bool forceReloadTextures = false)
     {
-        ElementSave elementSave = null;
+        ElementSave? elementSave = null;
 
         // If mulitple elements are selected then we can't show them all, so act as if nothing is selected.
         if(_selectedState.SelectedElements.Count() == 1)
@@ -148,13 +146,9 @@ public partial class WireframeObjectManager
         _pluginManager.WireframeRefreshed();
     }
 
-    private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)
+    private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave? elementSave)
     {
         bool shouldRecreateIpso = forceLayout || elementSave != ElementShowing;
-        //bool shouldReloadTextures = forceReloadTextures || elementSave != ElementShowing;
-        bool shouldReloadTextures =
-            false;
-            //forceReloadTextures || elementSave != ElementShowing;
 
         if (elementSave == null || elementSave.IsSourceFileMissing)
         {
@@ -369,7 +363,7 @@ public partial class WireframeObjectManager
     }
 
 
-    public GraphicalUiElement GetSelectedRepresentation()
+    public GraphicalUiElement? GetSelectedRepresentation()
     {
         if (_selectedState.SelectedIpso == null)
         {
@@ -465,7 +459,8 @@ public partial class WireframeObjectManager
     /// </summary>
     /// <param name="representation">The representation in question.</param>
     /// <returns>The InstanceSave or null if one isn't found.</returns>
-    public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, List<ElementWithState> elementStack)
+    public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, 
+        List<ElementWithState> elementStack)
     {
         ElementSave selectedElement = _selectedState.SelectedElement;
 
@@ -479,7 +474,8 @@ public partial class WireframeObjectManager
         return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
     }
 
-    public InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer, string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
+    public InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer, 
+        string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
     {
         if (instanceContainer == null)
         {

@@ -1,6 +1,5 @@
 ﻿using Gum.Commands;
 using Gum.Services;
-using SharpDX.XInput;
 using System;
 using System.Windows;
 using System.Windows.Controls;

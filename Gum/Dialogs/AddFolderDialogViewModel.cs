@@ -25,7 +25,7 @@ public class AddFolderDialogViewModel : GetUserStringDialogBaseViewModel
         _guiCommands = guiCommands;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         if (Value is null || Error is not null) return;
 

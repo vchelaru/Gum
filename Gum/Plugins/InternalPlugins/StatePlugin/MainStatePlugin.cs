@@ -37,7 +37,7 @@ public class MainStatePlugin : InternalPlugin
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
     private readonly ObjectFinder _objectFinder;
-    private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly CopyPasteLogic _copyPasteLogic;
 
     #endregion
@@ -60,7 +60,7 @@ public class MainStatePlugin : InternalPlugin
             _fileCommands);
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _objectFinder = ObjectFinder.Self;
-        _variableInCategoryPropagationLogic = Locator.GetRequiredService<VariableInCategoryPropagationLogic>();
+        _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
         _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
 
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,
@@ -207,7 +207,7 @@ public class MainStatePlugin : InternalPlugin
         RefreshUI(_selectedState.SelectedStateContainer);
     }
 
-    private void HandleTreeNodeSelected(TreeNode node)
+    private void HandleTreeNodeSelected(TreeNode? node)
     {
         RefreshTabHeaders();
         

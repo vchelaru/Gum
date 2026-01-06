@@ -130,7 +130,7 @@ namespace StateAnimationPlugin.Views
 
         private void AddStateKeyframeButton_Click(object sender, RoutedEventArgs e)
         {
-            AddStateKeyframeClicked?.Invoke(this, null);
+            AddStateKeyframeClicked?.Invoke(this, EventArgs.Empty);
         }
 
         private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)

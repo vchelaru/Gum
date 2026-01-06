@@ -31,6 +31,7 @@ using Gum.Settings;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
 using Gum.Reflection;
+using Gum.Services.Fonts;
 
 namespace Gum.Services;
 
@@ -87,23 +88,27 @@ file static class ServiceCollectionExtensions
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 
         // singletons
-        services.AddSingleton<ISelectedState, SelectedState>();
-        services.AddSingleton<LocalizationManager>();
-        services.AddSingleton<INameVerifier, NameVerifier>();
-        services.AddSingleton<IUndoManager, UndoManager>();
-        services.AddSingleton<DeleteLogic>();
+        services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<CopyPasteLogic>();
+        services.AddSingleton<DeleteLogic>();
+        services.AddSingleton<FileLocations>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
+        services.AddSingleton<LocalizationManager>();
+        services.AddSingleton<ISelectedState, SelectedState>();
+        services.AddSingleton<INameVerifier, NameVerifier>();
+        services.AddSingleton<IUndoManager, UndoManager>();
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
-        services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<DragDropManager>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();
         services.AddSingleton<MainOutputViewModel>();
+
+        // temporary while transitioning all usage from WireframeObjectManager to IWireframeObjectManager
         services.AddSingleton<WireframeObjectManager>();
+        services.AddSingleton<IWireframeObjectManager>(provider => provider.GetRequiredService<WireframeObjectManager>());
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<ReorderLogic>();
@@ -115,7 +120,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<IEditCommands, EditCommands>();
-        services.AddSingleton<VariableInCategoryPropagationLogic>();
+        services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<ProjectCommands>();

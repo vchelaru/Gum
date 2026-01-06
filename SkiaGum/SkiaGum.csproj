@@ -6,7 +6,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.SkiaSharp</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>2025.12.9.1</Version>
+		<Version>2026.1.5.1</Version>
 
 		<NoWarn>1591</NoWarn>
 
@@ -22,6 +22,10 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+	  <DefineConstants>TRACE;SKIA</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">

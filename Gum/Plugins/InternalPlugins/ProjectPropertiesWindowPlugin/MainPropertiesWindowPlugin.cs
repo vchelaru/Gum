@@ -17,6 +17,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Services.Fonts;
 
 namespace Gum.Plugins.PropertiesWindowPlugin;
 
@@ -110,9 +111,12 @@ class MainPropertiesWindowPlugin : InternalPlugin
         {
             viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
             control.ViewModel = viewModel;
-            _pluginTab?.Show();
-            _pluginTab.CanClose = true;
-            _pluginTab.IsSelected = true;
+            if(_pluginTab != null)
+            {
+                _pluginTab.Show();
+                _pluginTab.CanClose = true;
+                _pluginTab.IsSelected = true;
+            }
             RefreshFontRangeEditability();
         }
         catch (Exception ex)

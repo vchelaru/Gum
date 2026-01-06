@@ -138,22 +138,13 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         int y = (int)this.GetAbsoluteTop();
 
         var absoluteRotation = this.GetAbsoluteRotation();
-
-        if(SourceRectangle == null)
-        {
-            // todo - support scaling
-            DrawTextureEx(Texture.Value, new Vector2(x, y), -absoluteRotation, 1, Color);
-        }
-        else
-        {
-            var destinationRectangle = new Rectangle(
-                x, y, this.Width, this.Height);
-
-            DrawTexturePro(Texture.Value, SourceRectangle.Value, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
-        }
-
-
-
+        var destinationRectangle = new Rectangle(
+            x, y, this.Width, this.Height);
+        
+        // if we don't have a source rectangle, the source is the entire texture
+        var srcRect = SourceRectangle ?? new Rectangle(0, 0, TextureWidth.Value, TextureHeight.Value); 
+        
+        DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
     }
 
     public Sprite(Texture2D? texture = null)

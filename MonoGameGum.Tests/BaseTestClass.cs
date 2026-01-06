@@ -56,8 +56,12 @@ public class BaseTestClass : IDisposable
 
         CustomSetPropertyOnRenderable.LocalizationService = null;
 
+        RenderingLibrary.Content.LoaderManager.Self.CacheTextures = false;
+        RenderingLibrary.Content.LoaderManager.Self.CacheTextures = true;
+
         FileManager.CustomGetStreamFromFile = null;
 
         GraphicalUiElement.GlobalFontScale = 1;
+        RenderingLibrary.Graphics.Text.Customizations.Clear();
     }
 }

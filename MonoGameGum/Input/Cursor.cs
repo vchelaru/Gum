@@ -136,7 +136,7 @@ public class Cursor : ICursor
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
 
-        return (X / zoom) - renderer.GraphicsDevice?.Viewport.Bounds.Left ?? 0;
+        return ((X - renderer.GraphicsDevice?.Viewport.Bounds.Left) / zoom) ?? 0;
     }
 
     /// <summary>
@@ -154,7 +154,7 @@ public class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return (Y / zoom) - renderer.GraphicsDevice?.Viewport.Bounds.Top ?? 0;
+        return ((Y - renderer.GraphicsDevice?.Viewport.Bounds.Top) / zoom) ?? 0;
     }
 
     /// <summary>

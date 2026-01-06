@@ -15,17 +15,20 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
     private readonly ProjectCommands _projectCommands;
+    private readonly FileLocations _fileLocations;
 
     public AddComponentDialogViewModel(INameVerifier nameVerifier, 
         ISelectedState selectedState, 
-        ProjectCommands projectCommands)
+        ProjectCommands projectCommands,
+        FileLocations fileLocations)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _projectCommands = projectCommands;
+        _fileLocations = fileLocations;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         if (Value is null || Error is not null) return;
 
@@ -45,7 +48,7 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
         if (path != null)
         {
             string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
-                FileLocations.Self.ComponentsFolder, preserveCase: true);
+                _fileLocations.ComponentsFolder, preserveCase: true);
 
             relativeToComponents = relativeToComponents.Replace('\\', '/');
 

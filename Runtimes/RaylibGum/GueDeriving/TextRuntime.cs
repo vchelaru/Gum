@@ -1,4 +1,5 @@
-﻿using Gum.Renderables;
+﻿using Gum.DataTypes;
+using Gum.Renderables;
 using Gum.Renderables;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -11,6 +12,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.GueDeriving;
+
+
+/// <summary>
+/// Represents a text element which can display a string.
+/// </summary>
 public class TextRuntime : InteractiveGue
 {
     Text mContainedText;
@@ -26,44 +32,127 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
+    /// <summary>
+    /// The XNA blend state used when rendering the text. This controls how 
+    /// color and alpha values blend with the background.
+    /// </summary>
+    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    {
+        get => ContainedText.BlendState.ToXNA();
+        set
+        {
+            ContainedText.BlendState = value.ToGum();
+            NotifyPropertyChanged();
+            NotifyPropertyChanged(nameof(Blend));
+        }
+    }
+
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get
+        {
+            return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+        }
+        set
+        {
+            BlendState = value.ToBlendState().ToXNA();
+            // NotifyPropertyChanged handled by BlendState:
+        }
+    }
+#endif
+
+    /// <summary>
+    /// The red component of the text color. Ranges from 0 to 255.
+    /// </summary>
+    public int Red
+    {
+        get => ContainedText.Red;
+        set => ContainedText.Red = value;
+    }
+
+    /// <summary>
+    /// The green component of the text color. Ranges from 0 to 255.
+    /// </summary>
+    public int Green
+    {
+        get => ContainedText.Green;
+        set => ContainedText.Green = value;
+    }
+
+    /// <summary>
+    /// The blue component of the text color. Ranges from 0 to 255.
+    /// </summary>
+    public int Blue
+    {
+        get => ContainedText.Blue;
+        set => ContainedText.Blue = value;
+    }
+
+    /// <summary>
+    /// The alpha (opacity) component of the text color. Ranges from 0 (fully transparent) to 255 (fully opaque).
+    /// </summary>
+    public int Alpha
+    {
+        get => ContainedText.Alpha;
+        set => ContainedText.Alpha = value;
+    }
+
+    public Color Color
+    {
+        get => ContainedText.Color;
+        set
+        {
+            ContainedText.Color = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public HorizontalAlignment HorizontalAlignment
+    {
+        get => ContainedText.HorizontalAlignment;
+        set => ContainedText.HorizontalAlignment = value;
+    }
+
+    public VerticalAlignment VerticalAlignment
+    {
+        get => ContainedText.VerticalAlignment;
+        set => ContainedText.VerticalAlignment = value;
+    }
+
+#if !RAYLIB
+    /// <summary>
+    /// The maximum letters to display. This can be used to 
+    /// create an effect where the text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => mContainedText.MaxLettersToShow;
+        set
+        {
+            mContainedText.MaxLettersToShow = value;
+        }
+    }
+
+    /// <summary>
+    /// The maximum number of lines to display. This can be used to 
+    /// limit how many lines of text are displayed at one time.
+    /// </summary>
+    public int? MaxNumberOfLines
+    {
+        get => mContainedText.MaxNumberOfLines;
+        set
+        {
+            mContainedText.MaxNumberOfLines = value;
+        }
+    }
+#endif
+
     public Font CustomFont
     {
         get => ContainedText.Font;
 
         set => ContainedText.Font = value;
-    }
-
-    public string Text
-    {
-        get
-        {
-            return ContainedText.RawText;
-        }
-        set
-        {
-            var widthBefore = ContainedText.WrappedTextWidth;
-            var heightBefore = ContainedText.WrappedTextHeight;
-            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
-            {
-                // make it have no line wrap width before assignign the text:
-
-                // todo - Vic needs to fix this up!
-                //ContainedText.Width = null;
-            }
-
-            // Use SetProperty so it goes through the BBCode-checking methods
-            //ContainedText.RawText = value;
-            this.SetProperty("Text", value);
-
-            NotifyPropertyChanged();
-            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
-            if (shouldUpdate)
-            {
-                UpdateLayout(
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
-            }
-        }
     }
 
     public float FontScale
@@ -158,27 +247,63 @@ public class TextRuntime : InteractiveGue
         set { outlineThickness = value; UpdateToFontValues(); }
     }
 
-    public HorizontalAlignment HorizontalAlignment
+    /// <summary>
+    /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.
+    /// </summary>
+    /// <remarks>Setting this property updates the displayed text and may trigger layout changes if the text
+    /// size affects the control's dimensions. If the control's width is set relative to its children and no maximum
+    /// width is specified, the text will not be line-wrapped.</remarks>
+    public string? Text
     {
-        get => ContainedText.HorizontalAlignment;
-        set => ContainedText.HorizontalAlignment = value;
-    }
-
-    public VerticalAlignment VerticalAlignment
-    {
-        get => ContainedText.VerticalAlignment;
-        set => ContainedText.VerticalAlignment = value;
-    }
-
-    public Color Color
-    {
-        get => ContainedText.Color;
+        get
+        {
+            return ContainedText.RawText;
+        }
         set
         {
-            ContainedText.Color = value;
+            var widthBefore = ContainedText.WrappedTextWidth;
+            var heightBefore = ContainedText.WrappedTextHeight;
+            if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+            {
+                if (this.MaxWidth == null)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    ContainedText.Width = null;
+                }
+                else
+                {
+                    ContainedText.Width = this.MaxWidth;
+                }
+            }
+
+            // Use SetProperty so it goes through the BBCode-checking methods
+            //ContainedText.RawText = value;
+            this.SetProperty("Text", value);
+
             NotifyPropertyChanged();
+            var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+            if (shouldUpdate)
+            {
+                UpdateLayout(
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                    Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+            }
         }
     }
+
+    #region Defaults
+
+    // todo - add more here
+    //public static string DefaultFont = "Arial";
+    //public static int DefaultFontSize = 18;
+
+    public float DefaultWidth = 0;
+    public float DefaultHeight = 0;
+
+    public DimensionUnitType DefaultWidthUnits = DimensionUnitType.RelativeToChildren;
+    public DimensionUnitType DefaultHeightUnits = DimensionUnitType.RelativeToChildren;
+
+    #endregion
 
     public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
@@ -189,13 +314,13 @@ public class TextRuntime : InteractiveGue
 
             SetContainedObject(textRenderable);
 
-            //Width = DefaultWidth;
-            //WidthUnits = DefaultWidthUnits;
-            //Height = DefaultHeight;
-            //HeightUnits = DefaultHeightUnits;
+            Width = DefaultWidth;
+            WidthUnits = DefaultWidthUnits;
+            Height = DefaultHeight;
+            HeightUnits = DefaultHeightUnits;
             //this.FontSize = DefaultFontSize;
             //this.Font = DefaultFont;
-            //HasEvents = false;
+            HasEvents = false;
 
             textRenderable.RawText = "Hello World";
         }

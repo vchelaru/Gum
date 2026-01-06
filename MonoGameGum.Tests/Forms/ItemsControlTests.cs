@@ -31,7 +31,7 @@ public class ItemsControlTests : BaseTestClass
 
         }
         (itemsControl.InnerPanel.Children[0] is InteractiveGue).ShouldBeTrue();
-        (itemsControl.InnerPanel.Children[0] as InteractiveGue).FormsControlAsObject
+        (itemsControl.InnerPanel.Children[0] as InteractiveGue)!.FormsControlAsObject
             .ShouldBeOfType<Label>();
     }
 
@@ -110,7 +110,7 @@ public class ItemsControlTests : BaseTestClass
     public void ItemsControl_Orientation_ShouldSetInnerPanelChildrenLayout()
     {
         var itemsControl = new ItemsControl();
-        var innerPanel = itemsControl.GetVisual("InnerPanelInstance");
+        var innerPanel = itemsControl.GetVisual("InnerPanelInstance")!;
 
         itemsControl.Orientation = Orientation.Horizontal;
         innerPanel.ChildrenLayout.ShouldBe(ChildrenLayout.LeftToRightStack);

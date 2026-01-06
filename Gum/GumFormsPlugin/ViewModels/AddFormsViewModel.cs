@@ -38,7 +38,7 @@ public class AddFormsViewModel : DialogViewModel
         _importLogic = importLogic;
     }
 
-    protected override void OnAffirmative()
+    public override void OnAffirmative()
     {
         var sourceDestinations = _formsFileService.GetSourceDestinations(IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);

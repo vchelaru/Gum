@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 #if RAYLIB
 using Gum.GueDeriving;
+using Raylib_cs;
 #else
 using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;
@@ -44,7 +45,7 @@ public class SliderVisual : InteractiveGue
         get => _backgroundColor;
         set
         {
-            if (value != _backgroundColor)
+            if (!value.Equals(_backgroundColor))
             {
                 // Just in case FormsControl hasn't been set yet, do ?. to check for null
                 // UpdateState forcefully applies the current state, so it will work regardless of whether this is
@@ -61,7 +62,7 @@ public class SliderVisual : InteractiveGue
         get => _trackBackgroundColor;
         set
         {
-            if (value != _trackBackgroundColor)
+            if (!value.Equals(_trackBackgroundColor))
             {
                 _trackBackgroundColor = value;
                 FormsControl?.UpdateState();
@@ -76,7 +77,7 @@ public class SliderVisual : InteractiveGue
         get => _focusedIndicatorColor;
         set
         {
-            if (value != _focusedIndicatorColor)
+            if (!value.Equals(_focusedIndicatorColor))
             {
                 _focusedIndicatorColor = value;
                 FormsControl?.UpdateState();

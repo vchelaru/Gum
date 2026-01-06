@@ -155,7 +155,7 @@ public class MainTextureCoordinatePlugin : PluginBase
         }
     }
 
-    private void HandleTreeNodeSelected(TreeNode treeNode)
+    private void HandleTreeNodeSelected(TreeNode? treeNode)
     {
         RefreshControl();
 

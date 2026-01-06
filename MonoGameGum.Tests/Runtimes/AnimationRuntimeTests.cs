@@ -205,7 +205,7 @@ public class AnimationRuntimeTests : BaseTestClass
         {
             animation.GetStateToSet(0.5,
                 // Intentionally null, so we get an exception
-                element: null,
+                element: null!,
                 defaultIfNull: true);
         }
         catch
@@ -299,8 +299,8 @@ public class AnimationRuntimeTests : BaseTestClass
         {
             var stateNoY = noY.GetStateToSet(t, element, defaultIfNull: true);
             var stateWithY = withY.GetStateToSet(t, element, defaultIfNull: true);
-            var xNoY = (float)stateNoY.Variables.First(item => item.Name == "X").Value;
-            var xWithY = (float)stateWithY.Variables.First(item => item.Name == "X").Value;
+            var xNoY = (float)stateNoY.Variables.First(item => item.Name == "X").Value!;
+            var xWithY = (float)stateWithY.Variables.First(item => item.Name == "X").Value!;
             xNoY.ShouldBe(xWithY, $"At time {t}, expected X values to match");
         }
     }

@@ -94,6 +94,11 @@ public abstract class PluginBase : IPlugin
     /// more natural and less error prone.
     /// </summary>
     public event Func<VariableSave, RecursiveVariableFinder, bool>? VariableExcluded;
+
+    /// <summary>
+    /// Event raised after the wireframe has refreshed itself. This can be used to inspect
+    /// values of GraphicalUiElements, such as their final positions or sizes.
+    /// </summary>
     public event Action? WireframeRefreshed;
     public event Action<string>? WireframePropertyChanged;
     public event Func<bool>? GetIfShouldSuppressRemoveEditorHighlight;
@@ -133,7 +138,7 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave, string>? VariableDelete;
 
     public event Action<ElementSave?>? ElementSelected;
-    public event Action<TreeNode>? TreeNodeSelected;
+    public event Action<TreeNode?>? TreeNodeSelected;
     public event Action<TreeNode>? StateWindowTreeNodeSelected;
     public event Func<ITreeNode?>? GetTreeNodeOver;
     public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
@@ -416,7 +421,7 @@ public abstract class PluginBase : IPlugin
 
     public void CallElementSelected(ElementSave? element) => ElementSelected?.Invoke(element);
 
-    public void CallTreeNodeSelected(TreeNode treeNode) => TreeNodeSelected?.Invoke(treeNode);
+    public void CallTreeNodeSelected(TreeNode? treeNode) => TreeNodeSelected?.Invoke(treeNode);
 
     public void CallStateWindowTreeNodeSelected(TreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
 

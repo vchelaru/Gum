@@ -147,6 +147,7 @@ public class NameVerifier : INameVerifier
     ];
 
     private readonly StandardElementsManager _standardElementsManager;
+    private readonly VariableSaveLogic _variableSaveLogic;
     
     #endregion
     
@@ -155,8 +156,9 @@ public class NameVerifier : INameVerifier
     public NameVerifier()
     {
         _standardElementsManager = StandardElementsManager.Self;
+        _variableSaveLogic = new VariableSaveLogic();
     }
-    public bool IsFolderNameValid(string folderName, out string whyNotValid)
+    public bool IsFolderNameValid(string? folderName, out string whyNotValid)
     {
         IsNameValidCommon(folderName, out whyNotValid, out _);
         return string.IsNullOrEmpty(whyNotValid);
@@ -164,7 +166,7 @@ public class NameVerifier : INameVerifier
     
     #endregion
     
-    public bool IsElementNameValid(string? componentNameWithoutFolder, string? folderName, ElementSave? elementSave, out string whyNotValid)
+    public bool IsElementNameValid(string? componentNameWithoutFolder, string? folderName, ElementSave? elementSave, out string? whyNotValid)
     {
         IsNameValidCommon(componentNameWithoutFolder, out whyNotValid, out _);
         if (string.IsNullOrEmpty(whyNotValid))
@@ -175,7 +177,7 @@ public class NameVerifier : INameVerifier
         //{
         //    IsNameValidVariable(componentName, out whyNotValid);
         //}
-        if (string.IsNullOrEmpty(whyNotValid))
+        if (string.IsNullOrEmpty(whyNotValid) && componentNameWithoutFolder != null)
         {
             IsNameAnExistingElement(componentNameWithoutFolder, folderName, elementSave, out whyNotValid);
         }
@@ -297,7 +299,7 @@ public class NameVerifier : INameVerifier
             // leftovers from a type change
             if(existingVariable != null && elementSave != null)
             {
-                var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable,
+                var isActive = _variableSaveLogic.GetIfVariableIsActive(existingVariable,
                     elementSave, null);
                 if(isActive)
                 {
@@ -320,9 +322,9 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public bool IsNameValidCommon(string name, out string whyNotValid, out CommonValidationError commonValidationError)
+    public bool IsNameValidCommon(string? name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
-        whyNotValid = null;
+        whyNotValid = string.Empty;
         
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -366,10 +368,10 @@ public class NameVerifier : INameVerifier
             whyNotValid = "The name uses an invalid character";
         }
     }
-    private void IsFileNameWindowsReserved(string name, out string whyNotValid)
+    private void IsFileNameWindowsReserved(string? name, out string? whyNotValid)
     {
         whyNotValid = null;
-        if (InvalidWindowsFileNames.Contains(name?.ToLower()))
+        if (name != null && InvalidWindowsFileNames.Contains(name.ToLower()))
         {
             whyNotValid = $"The name {name} is a reserved file name in Windows";
         }
@@ -429,7 +431,7 @@ public class NameVerifier : INameVerifier
         //    whyNotValid = "There is a standard element named " + element.Name + " so this name can't be used.";
         //}
     }
-    private void IsNameAnExistingElement(string name, string? folderName, object? objectToIgnore, out string whyNotValid)
+    private void IsNameAnExistingElement(string name, string? folderName, object? objectToIgnore, out string? whyNotValid)
     {
         whyNotValid = null;
 

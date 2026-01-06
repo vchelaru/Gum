@@ -35,7 +35,7 @@ public partial class MultiSelectTreeView
     public Color ChevronColor { get; set; } = Color.Empty; // empty -> follows ForeColor
     public float ChevronThickness { get; set; } = 2.0f;    // DIP
     public int ChevronBoxSize => this.FontHeight;          // DIP
-    
+
 
     #endregion
 
@@ -57,11 +57,6 @@ public partial class MultiSelectTreeView
     private bool _eatRowClickSeq;
     private bool _eatGlyphSeq;
     private TreeNode? _mouseDownNode;
-
-    private bool _swallowSequence;
-    private Rectangle _lastGlyphRect;
-
-    private ImageAttributes ImageAttributes;
 
     /// <summary>
     /// Describes how a potential drop would be applied relative to a target node.
@@ -249,7 +244,7 @@ public partial class MultiSelectTreeView
     {
         e.DrawDefault = false;
 
-        bool isSelected = SelectedNodes.Contains(e.Node);
+        bool isSelected = e.Node != null && SelectedNodes.Contains(e.Node);
         bool isHot = e.Node == _hotNode;
 
         var g = e.Graphics;
@@ -266,54 +261,58 @@ public partial class MultiSelectTreeView
 
         // Single layout pass
         Rectangle rChevron, rState, rImage, rText;
-        LayoutNodeRow(e.Node, row, out rChevron, out rState, out rImage, out rText);
 
-        // Chevron (no SmoothingScope, no per-call pen allocations)
-        if (!rChevron.IsEmpty)
+        if (e.Node != null)
         {
-            var color = (e.Node == _hotChevronNode) ? SelectedBorderColor :
-                        (ChevronColor.IsEmpty ? ForeColor : ChevronColor);
+            LayoutNodeRow(e.Node, row, out rChevron, out rState, out rImage, out rText);
+            // Chevron (no SmoothingScope, no per-call pen allocations)
+            if (!rChevron.IsEmpty)
+            {
+                var color = (e.Node == _hotChevronNode) ? SelectedBorderColor :
+                            (ChevronColor.IsEmpty ? ForeColor : ChevronColor);
 
-            // Width already DPI-scaled once
-            float w = Math.Max(1f, DpiScaleF(ChevronThickness));
-            var pen = GetPen(color, w);
+                // Width already DPI-scaled once
+                float w = Math.Max(1f, DpiScaleF(ChevronThickness));
+                var pen = GetPen(color, w);
 
-            if (e.Node.IsExpanded)
-                DrawChevronDownFast(g, pen, rChevron);
-            else
-                DrawChevronRightFast(g, pen, rChevron);
+                if (e.Node.IsExpanded == true)
+                    DrawChevronDownFast(g, pen, rChevron);
+                else
+                    DrawChevronRightFast(g, pen, rChevron);
+            }
+            // State image – GDI path is fast
+            if (!rState.IsEmpty && StateImageList != null &&
+                e.Node.StateImageIndex >= 0 && e.Node.StateImageIndex < StateImageList.Images.Count)
+            {
+                StateImageList.Draw(g, rState.Location, e.Node.StateImageIndex);
+            }
+            // Node image – use ImageList.Draw only. No per-node quality switches.
+            if (!rImage.IsEmpty && ImageList != null)
+            {
+                int idx = e.Node.ImageIndex;
+                if (idx < 0 && !string.IsNullOrEmpty(e.Node.ImageKey))
+                    idx = ImageList.Images.IndexOfKey(e.Node.ImageKey);
+
+                if (idx >= 0 && idx < ImageList.Images.Count)
+                    ImageList.Draw(g, rImage.Location, idx);
+            }
+            // Text – TextRenderer is already the fast path
+            TextRenderer.DrawText(
+                g,
+                e.Node.Text,
+                e.Node.NodeFont ?? Font,
+                rText,
+                ForeColor,
+                Color.Transparent,
+                TextFormatFlags.NoClipping |
+                TextFormatFlags.GlyphOverhangPadding |
+                TextFormatFlags.EndEllipsis |
+                TextFormatFlags.VerticalCenter);
+
         }
 
-        // State image – GDI path is fast
-        if (!rState.IsEmpty && StateImageList != null &&
-            e.Node.StateImageIndex >= 0 && e.Node.StateImageIndex < StateImageList.Images.Count)
-        {
-            StateImageList.Draw(g, rState.Location, e.Node.StateImageIndex);
-        }
 
-        // Node image – use ImageList.Draw only. No per-node quality switches.
-        if (!rImage.IsEmpty && ImageList != null)
-        {
-            int idx = e.Node.ImageIndex;
-            if (idx < 0 && !string.IsNullOrEmpty(e.Node.ImageKey))
-                idx = ImageList.Images.IndexOfKey(e.Node.ImageKey);
 
-            if (idx >= 0 && idx < ImageList.Images.Count)
-                ImageList.Draw(g, rImage.Location, idx);
-        }
-
-        // Text – TextRenderer is already the fast path
-        TextRenderer.DrawText(
-            g,
-            e.Node.Text,
-            e.Node.NodeFont ?? Font,
-            rText,
-            ForeColor,
-            Color.Transparent,
-            TextFormatFlags.NoClipping |
-            TextFormatFlags.GlyphOverhangPadding |
-            TextFormatFlags.EndEllipsis |
-            TextFormatFlags.VerticalCenter);
 
         if (isSelected)
         {
@@ -323,13 +322,14 @@ public partial class MultiSelectTreeView
             g.DrawRectangle(pen, rr);
         }
 
-        if (_hotDropNode == e.Node && _dropKind != DropKind.None)
+        if (e.Node != null && _hotDropNode == e.Node && _dropKind != DropKind.None)
         {
             // Keep this light – thin pen only, no AA
             var pen = GetPen(SelectedBorderColor, 2f);
             switch (_dropKind)
             {
                 case DropKind.Into:
+
                 case DropKind.IntoFirst:
                     {
                         // Indent rectangle to the child insertion level (node.Level + 1)
@@ -341,8 +341,8 @@ public partial class MultiSelectTreeView
                 case DropKind.Before:
                     {
                         var prev = e.Node.PrevNode; // boundary between prev & current
-                        int y = prev != null && !prev.IsExpanded ? prev.Bounds.Bottom -1 : e.Bounds.Top + 1;
-                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level +1) * Indent);
+                        int y = prev != null && !prev.IsExpanded ? prev.Bounds.Bottom - 1 : e.Bounds.Top + 1;
+                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level + 1) * Indent);
                         g.DrawLine(pen, leftIndent, y, ClientSize.Width - 3, y);
                     }
                     break;
@@ -350,7 +350,7 @@ public partial class MultiSelectTreeView
                     {
                         // Draw lower half of split boundary inside this row so next row won't overwrite
                         int y = e.Bounds.Bottom - 1;
-                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level +1) * Indent);
+                        int leftIndent = Math.Max(0, DisplayRectangle.Left + (e.Node.Level + 1) * Indent);
                         g.DrawLine(pen, leftIndent, y, ClientSize.Width - 3, y);
                     }
                     break;
@@ -382,7 +382,7 @@ public partial class MultiSelectTreeView
         {
             // Use same pen thickness
             var pen = GetPen(SelectedBorderColor, 2f);
-            int yTop = e.Bounds.Top -1; // top boundary of this (next) row
+            int yTop = e.Bounds.Top - 1; // top boundary of this (next) row
             int leftIndent = Math.Max(0, DisplayRectangle.Left + (_hotDropNode.Level + 1) * Indent);
             g.DrawLine(pen, leftIndent, yTop, ClientSize.Width - 3, yTop);
         }
@@ -392,7 +392,7 @@ public partial class MultiSelectTreeView
     {
         if (node == null || node.Bounds == Rectangle.Empty) return Rectangle.Empty;
 
-        Rectangle row = new (0, node.Bounds.Top, ClientSize.Width, node.Bounds.Height);
+        Rectangle row = new(0, node.Bounds.Top, ClientSize.Width, node.Bounds.Height);
         Rectangle rChevron;
         LayoutNodeRow(node, row, out rChevron, out _, out _, out _);
         return rChevron;
@@ -531,15 +531,15 @@ public partial class MultiSelectTreeView
         return ia;
     }
 
-    private void TreeView_MouseDown(object sender, MouseEventArgs e)
+    private void TreeView_MouseDown(object? sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Left)
         {
-            TreeNode node = this.GetNodeAtRowY(e.Location.Y);
+            TreeNode? node = this.GetNodeAtRowY(e.Location.Y);
             _initiatedDrag = false;          // reset every left-press   
             _mouseDownPoint = e.Location;
             _dragCandidateNode = node;
-            if (!mSelectedNodes.Contains(node))
+            if (node != null && !mSelectedNodes.Contains(node))
             {
                 // These were commented out from hash 3e123616856be6717c66b49b4f5dfcd5f9136907   
                 // Uncommented because they appear to fix secondary issue in #1143   
@@ -611,11 +611,14 @@ public partial class MultiSelectTreeView
 
     protected override void OnDragEnter(DragEventArgs e)
     {
-        TreeNode[] dragged = ExtractDraggedNodes(e.Data);
-        e.Effect = dragged.Length > 0
-            ? ((e.AllowedEffect & DragDropEffects.Move) != 0 ? DragDropEffects.Move : DragDropEffects.Copy)
-            : DragDropEffects.None;
-
+        var data = e.Data;
+        if (data != null)
+        {
+            TreeNode[] dragged = ExtractDraggedNodes(data);
+            e.Effect = dragged.Length > 0
+                ? ((e.AllowedEffect & DragDropEffects.Move) != 0 ? DragDropEffects.Move : DragDropEffects.Copy)
+                : DragDropEffects.None;
+        }
         base.OnDragEnter(e);
     }
 
@@ -693,7 +696,7 @@ public partial class MultiSelectTreeView
                 base.OnDragDrop(e);
                 return;
             }
-            
+
             // Give consumer chance to intercept / cancel / adjust
             bool performNative = EnableNativeReorder; // capture current
             if (NodeSortingDropped != null)
@@ -972,7 +975,7 @@ public partial class MultiSelectTreeView
 
         int left = DisplayRectangle.Left + node.Level * Indent;
 
-        
+
         int chevronSize = Math.Min(chevronBox, row.Height - 2);
         int chevX = left + (chevronBox - chevronSize) / 2;
         int chevY = row.Top + (row.Height - chevronSize) / 2;
@@ -1055,9 +1058,9 @@ public partial class MultiSelectTreeView
                     int x = (short)(m.LParam.ToInt32() & 0xFFFF);
                     int y = (short)((m.LParam.ToInt32() >> 16) & 0xFFFF);
 
-                    if (!Focused) 
-                    { 
-                        Focus(); 
+                    if (!Focused)
+                    {
+                        Focus();
                     }
 
                     _modsAtMouseDown = ModsFromWParam(m.WParam);
@@ -1242,12 +1245,12 @@ public partial class MultiSelectTreeView
 
     #endregion
 
-    private static TreeNode[] ExtractDraggedNodes(IDataObject data)
+    private static TreeNode[] ExtractDraggedNodes(IDataObject? data)
     {
-        if (data.GetDataPresent(typeof(TreeNode[])))
-            return (TreeNode[])data.GetData(typeof(TreeNode[]));
-        if (data.GetDataPresent(typeof(TreeNode)))
-            return new[] { (TreeNode)data.GetData(typeof(TreeNode)) };
+        if (data?.GetDataPresent(typeof(TreeNode[])) == true)
+            return (TreeNode[])data.GetData(typeof(TreeNode[]))!;
+        if (data?.GetDataPresent(typeof(TreeNode)) == true)
+            return new[] { (TreeNode)data.GetData(typeof(TreeNode))! };
         return Array.Empty<TreeNode>();
     }
 

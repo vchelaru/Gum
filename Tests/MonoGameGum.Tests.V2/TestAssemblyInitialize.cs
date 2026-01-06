@@ -1,21 +1,5 @@
-﻿using Gum.Wireframe;
-using GumRuntime;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Renderables;
-using MonoGameGum.TestsCommon;
-using RenderingLibrary;
-using RenderingLibrary.Content;
-using RenderingLibrary.Graphics;
-using RenderingLibrary.Graphics.Fonts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ToolsUtilities;
+﻿using MonoGameGum.TestsCommon;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 
 [assembly: Xunit.TestFramework("MonoGameGum.Tests.V2.TestAssemblyInitialize", "MonoGameGum.Tests.V2")]
