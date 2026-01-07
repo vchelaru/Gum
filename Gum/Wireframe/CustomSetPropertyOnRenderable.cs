@@ -1158,7 +1158,7 @@ public class CustomSetPropertyOnRenderable
         // extra calls in generated code, or an "UpdateAll" method
         //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
 
-        // Residual properties could exist on a Text instnace, so we need to
+        // Residual properties could exist on a Text instance, so we need to
         // tolerate a missing item and not crash. 
 
 #if FRB

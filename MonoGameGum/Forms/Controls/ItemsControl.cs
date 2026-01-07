@@ -215,7 +215,15 @@ public class ItemsControl : ScrollViewer
 
     #region Events
 
+    /// <summary>
+    /// Occurs when an item is clicked. A click is defined by the cursor
+    /// primary button being pressed last frame, and released this frame.
+    /// </summary>
     public event EventHandler ItemClicked;
+    /// <summary>
+    /// Occurs when an item is pushed. A push is defined by the cursor
+    /// primary button being released last frame, and pressed this frame.
+    /// </summary>
     public event EventHandler ItemPushed;
 
     #endregion

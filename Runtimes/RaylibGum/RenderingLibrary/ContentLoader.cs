@@ -22,27 +22,7 @@ public class ContentLoader : IContentLoader
         }
         else if(typeof(T) == typeof(Font))
         {
-            // try loading locally first:
-            if(System.IO.File.Exists(contentName))
-            {
-                if(contentName.ToLower().EndsWith(".fnt"))
-                {
-                    return (T)(object)Raylib.LoadFont(contentName);
-                }
-                else
-                {
-                    return (T)(object)LoadFontEx(contentName, 24, null, 0);
-                }
-            }
-            if (System.IO.File.Exists(contentName + ".ttf"))
-            {
-                return (T)(object)LoadFontEx(contentName, 24, null, 0);
-            }
-
-            else
-            {
-                return (T)(object)LoadFontEx(GetSystemFontPath(contentName), 24, null, 0);
-            }
+            return (T)LoadFont(contentName);
         }
         else
         {
@@ -50,12 +30,77 @@ public class ContentLoader : IContentLoader
         }
     }
 
+    private object LoadFont(string contentName)
+    {
+        ///////////////////////////////Early Out////////////////////////////////////
+        string contentNameStandardized = StandardizeCaseSensitive(contentName);
+
+        if (LoaderManager.Self.CacheTextures)
+        {
+            var cached = LoaderManager.Self.GetDisposable(contentNameStandardized) as ManagedFont;
+            if(cached != null)
+            {
+                return cached.Font;
+            }
+        }
+        ///////////////////////////////End Early Out////////////////////////////////
+
+        Font? font = null;
+
+        var isFnt = contentName.ToLower().EndsWith(".fnt");
+        // try loading locally first:
+        if (System.IO.File.Exists(contentName))
+        {
+            if (isFnt)
+            {
+                font = Raylib.LoadFont(contentName);
+            }
+            else
+            {
+                font = LoadFontEx(contentName, 24, null, 0);
+            }
+        }
+
+        if (isFnt && font == null)
+        {
+            // If we got here, but we have an FNT file, then we should just return null:
+            font = default(Font);
+        }
+
+        if (System.IO.File.Exists(contentName + ".ttf") && font == null)
+        {
+            font = LoadFontEx(contentName, 24, null, 0);
+        }
+
+        if(font == null)
+        {
+            var systemFontPath = GetSystemFontPath(contentName);
+            if (File.Exists(systemFontPath))
+            {
+                font = LoadFontEx(systemFontPath, 24, null, 0);
+            }
+            else
+            {
+                font = default(Font);
+            }
+        }
+
+        if (LoaderManager.Self.CacheTextures && font != null)
+        {
+            var managedFont = new ManagedFont(font.Value);
+
+            LoaderManager.Self.AddDisposable(contentNameStandardized, managedFont);
+        }
+
+
+        return font;
+    }
+
     private static Texture2D? LoadTexture2D(string fileName)
     {
+        ///////////////////////////////Early Out////////////////////////////////////
+
         string fileNameStandardized = StandardizeCaseSensitive(fileName);
-
-        Texture2D? toReturn = null;
-
         if (LoaderManager.Self.CacheTextures)
         {
             var cached = LoaderManager.Self.GetDisposable(fileNameStandardized) as ManagedTexture;
@@ -64,7 +109,11 @@ public class ContentLoader : IContentLoader
                 return cached.Texture;
             }
         }
+        ///////////////////////////////End Early Out////////////////////////////////
 
+
+
+        Texture2D? toReturn = null;
         if (FileManager.IsUrl(fileName))
         {
             throw new NotImplementedException("Loading textures from URLs is not implemented yet.");
@@ -114,14 +163,23 @@ public class ContentLoader : IContentLoader
         {
             fontFileName = fontFileName + ".ttf";
         }
-        if (OperatingSystem.IsWindows())
-            return Path.Combine("C:/Windows/Fonts", fontFileName);
-        else if (OperatingSystem.IsLinux())
-            return Path.Combine("/usr/share/fonts/truetype", fontFileName);
-        else if (OperatingSystem.IsMacOS())
-            return Path.Combine("/System/Library/Fonts", fontFileName);
 
-        return fontFileName; // Fallback
+        var directory =
+            OperatingSystem.IsWindows() ? "C:/Windows/Fonts"
+            : OperatingSystem.IsLinux() ? "/usr/share/fonts/truetype"
+            : OperatingSystem.IsMacOS() ? "/System/Library/Fonts"
+            : string.Empty;
+
+        // first check no-space since that's what Windows does:
+        var noSpace = Path.Combine(directory, fontFileName.Replace(" ", ""));
+        if(System.IO.File.Exists(noSpace))
+        {
+            return noSpace;
+        }
+        else
+        {
+            return Path.Combine(directory, fontFileName);
+        }
     }
 
     public T TryLoadContent<T>(string contentName)
