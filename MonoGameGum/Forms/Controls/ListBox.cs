@@ -81,10 +81,25 @@ public enum RepositionDirections
 
 #endif
 
+/// <summary>
+/// Represents a control that displays a collection of selectable items in a list, allowing users to select one item at
+/// a time. Supports keyboard, gamepad, and pointer navigation, as well as item reordering and focus management.
+/// </summary>
+/// <remarks>The ListBox provides advanced selection and navigation features, including support for focus
+/// management between the list as a whole and individual items, drag-and-drop reordering (when enabled), and
+/// integration with various input devices. Selection changes raise the SelectionChanged event, and controller input is
+/// handled via the ControllerButtonPushed event. The ListBox can be customized to display items using different visual
+/// templates and supports both data-bound and manually managed item collections. Thread safety is not guaranteed; all
+/// interactions should occur on the UI thread.</remarks>
 public class ListBox : ItemsControl, IInputReceiver
 {
     #region Fields/Properties
 
+    /// <summary>
+    /// Provides internal storage for the collection of list box items.
+    /// </summary>
+    /// <remarks>This field is intended for internal use and should not be accessed directly from outside the
+    /// containing class. Use public members to interact with the list box items when available.</remarks>
     protected List<ListBoxItem> ListBoxItemsInternal = new List<ListBoxItem>();
 
     ReadOnlyCollection<ListBoxItem> listBoxItemsReadOnly;
