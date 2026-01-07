@@ -61,6 +61,7 @@ public class BaseTestClass : IDisposable
 
         FileManager.CustomGetStreamFromFile = null;
 
+        GraphicalUiElement.GlobalFontScale = 1;
         RenderingLibrary.Graphics.Text.Customizations.Clear();
     }
 }

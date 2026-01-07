@@ -9,6 +9,7 @@ using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum;
 using Gum.DataTypes;
+using Gum.Wireframe;
 
 namespace SkiaGum;
 
@@ -29,8 +30,8 @@ public class Text : IRenderableIpso, IVisible, IText
     /// </summary>
     public static decimal GlobalTextScale
     {
-        get;
-        set;
+        get => (decimal)GraphicalUiElement.GlobalFontScale;
+        set => GraphicalUiElement.GlobalFontScale = (float)value;
     }
 
     public bool IsRenderTarget => false;
