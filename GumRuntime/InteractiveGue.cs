@@ -329,7 +329,7 @@ public partial class InteractiveGue : BindableGue
 
     }
 
-    internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer layer)
+    internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer)
     { 
         handledActions = handledActions ?? new HandledActions();
         bool handledByChild = false;
@@ -575,7 +575,7 @@ public partial class InteractiveGue : BindableGue
         return HasCursorOver(cursor, this, layer);
     }
 
-    private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance, Layer layer)
+    private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance, Layer? layer)
     { 
         bool toReturn = false;
 
@@ -603,7 +603,7 @@ public partial class InteractiveGue : BindableGue
             float worldX;
             float worldY;
 
-            var managers = thisInstance.EffectiveManagers as ISystemManagers;
+            var managers = thisInstance.EffectiveManagers as ISystemManagers ?? ISystemManagers.Default;
 
 
             // If there are no managers, we an still fall back to the default:
@@ -1054,9 +1054,14 @@ public static class GueInteractiveExtensionMethods
         {
             var gue = gues[i];
 
+            // Other platforms besides FRB are more explicit on their additions to roots or GumBatch, so
+            // process this every time
+
+#if FRB
             // This check allows the user to remove a GUE from managers and not null it out.
             // Even though it might be proper to null it out, this removes "yet another thing to remember"
             if(gue.EffectiveManagers != null)
+#endif
             {
                 InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
             }

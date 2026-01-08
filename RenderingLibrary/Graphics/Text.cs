@@ -894,7 +894,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     void UpdateLinePrimitive()
     {
-        if(RenderBoundary)
+        if(RenderBoundary && this.mManagers != null)
         {
             if(mBounds == null)
             {
