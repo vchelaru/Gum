@@ -103,3 +103,38 @@ float parentX = ((IPositionedSizedObject)button.Visual).AbsoluteLeft;
 
 Previous versions of Gum runtime included a `ContainerRuntime` which has an `Alpha` value that was `float`. This caused confusion because the base class for `ContainerRuntime` also had an `Alpha` value of type int. The `float` version has been removed, so now only the `int` type remains.
 
+## Deprecated
+
+This section lists all deprecated types and members. Projects should migrate to the recommended types and members to avoid breaking changes in future versions.
+
+### Update&#x20;
+
+In MonoGame/KNI/FNA, GumService, often accessed through the GumUi property, no longer takes a Game instance as its first parameter. All versions of Update which take a Game instance are now obsolete.
+
+This change is being made to simplify the syntax, and to unify the syntax between XNA-likes and raylib.
+
+❌Old:
+
+```csharp
+// Update which takes a gameTime only
+GumUi.Update(this, gameTime);
+
+// Update which takes a custom GraphicalUiElement root
+GumUi.Update(this, gameTime, customRoot);
+
+// Update which takes a list of elements to update
+GumUi.Update(this, gameTime, listOfElements);
+```
+
+✅New:
+
+```csharp
+// Update which takes a gameTime only
+GumUi.Update(gameTime);
+
+// Update which takes a custom GraphicalUiElement root
+GumUi.Update(gameTime, customRoot);
+
+// Update which takes a list of elements to update
+GumUi.Update(gameTime, listOfElements);
+```
