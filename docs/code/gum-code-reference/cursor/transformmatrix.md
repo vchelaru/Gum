@@ -47,7 +47,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        GumUI.Update(this, gameTime);
+        GumUI.Update(gameTime);
         base.Update(gameTime);
     }
 

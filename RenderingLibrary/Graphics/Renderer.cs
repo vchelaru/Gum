@@ -1079,6 +1079,10 @@ public class GumBatch
     Text internalTextForRendering;
     public GumBatch()
     {
+        if(SystemManagers .Default == null)
+        {
+            throw new InvalidOperationException("SystemManagers is null - did you remember to initialize Gum?");
+        }
         systemManagers = SystemManagers.Default;
         internalTextForRendering = new Text(systemManagers);
     }

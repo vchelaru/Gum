@@ -26,6 +26,7 @@ namespace MonoGameGum;
 #elif RAYLIB
 using Gum.GueDeriving;
 using RaylibGum.Input;
+using GameTime = double;
 namespace RaylibGum;
 #endif
 
@@ -47,11 +48,7 @@ public class GumService
 
     #endregion
 
-#if XNALIKE
     public GameTime GameTime { get; private set; }
-#else
-    public double GameTime { get; private set; }
-#endif
 
     public Cursor Cursor => FormsUtilities.Cursor;
 
@@ -328,59 +325,46 @@ public class GumService
 #endif
     #endregion
 
+
     #region Update
 
 #if XNALIKE
+    [Obsolete("Use the version that does not take a Game")]
+    public void Update(Game game, GameTime gameTime, FrameworkElement root) => Update(gameTime, root.Visual);
+    [Obsolete("Use the version that does not take a Game")]
+    public void Update(Game game, GameTime gameTime) => Update(gameTime);
+    [Obsolete("Use the version which does not take a Game")]
+    public void Update(Game game, GameTime gameTime, GraphicalUiElement root) => Update(gameTime, root);
+    [Obsolete("Use the version of this method which does not take a Game")]
+    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots) => Update(gameTime, roots);
+#endif
+
+    /// <summary>
+    /// Performs every-frame updates including updating root sizes to fill the entire screen, cursor update, keyboard update, gamepad updates, and raising events on all controls.
+    /// </summary>
+#if XNALIKE
+    /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>
+#else
+    /// <param name="gameTime">The total number of seconds passed since the game has started.</param>
+#endif
     public void Update(GameTime gameTime)
-#else
-    public void Update(double totalGameTime)
-#endif
     {
         Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
 
-#if XNALIKE
-        Update(Game, gameTime, this.Root);
-#else
-        Update(totalGameTime, this.Root);
-#endif
+        Update(gameTime, this.Root);
     }
-
-#if XNALIKE
-    public void Update(Game game, GameTime gameTime)
-    {
-        Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
-        Update(game, gameTime, this.Root);
-
-    }
-
-    public void Update(Game game, GameTime gameTime, FrameworkElement root) =>
-        Update(game, gameTime, root.Visual);
-#endif
-
     List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
-
-#if XNALIKE
-    public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
-#else
-    public void Update(double totalGameTime, GraphicalUiElement root)
-#endif
+    public void Update(GameTime totalGameTime, GraphicalUiElement root)
     {
         roots.Clear();
         roots.Add(root);
 
-#if XNALIKE
-        Update(game, gameTime, roots);
-#else
         Update(totalGameTime, roots);
-#endif
     }
 
-#if XNALIKE
-    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
-#else
-    public void Update(double gameTime, IEnumerable<GraphicalUiElement> roots)
-#endif
-    {
+
+    public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
+    { 
 #if XNALIKE
         var difference = gameTime.ElapsedGameTime.TotalSeconds;
 #else
@@ -390,7 +374,7 @@ public class GumService
         DeferredQueue.ProcessPending();
         GameTime = gameTime;
 #if XNALIKE
-        FormsUtilities.Update(game, gameTime, roots);
+        FormsUtilities.Update(this.Game, gameTime, roots);
 #else
         FormsUtilities.Update(gameTime, roots);
 #endif
@@ -416,6 +400,7 @@ public class GumService
     }
 }
 
+#region GraphicalUiElementExtensionMethods Class
 public static class GraphicalUiElementExtensionMethods
 {
     public static void AddToRoot(this GraphicalUiElement element)
@@ -440,6 +425,8 @@ public static class GraphicalUiElementExtensionMethods
         GumService.Default.Root.Children.Add(element.Visual);
     }
 }
+
+#endregion
 
 public static class ElementSaveExtensionMethods
 {
