@@ -272,6 +272,8 @@ public partial class ElementTreeViewManager
                     }
 
                 }
+                AddCopyMenuItems();
+                AddCutMenuItems();
                 AddPasteMenuItems();
             }
 
@@ -300,6 +302,8 @@ public partial class ElementTreeViewManager
                 }
                 mMenuStrip.Items.Add(duplicateElement);
 
+                AddCopyMenuItems();
+                AddCutMenuItems();
                 AddPasteMenuItems();
 
                 mMenuStrip.Items.Add("-");
@@ -398,6 +402,16 @@ public partial class ElementTreeViewManager
         }
     }
 
+    private void AddCopyMenuItems()
+    {
+        mMenuStrip.Items.Add("Copy", null, HandleCopy);
+    }
+
+    private void AddCutMenuItems()
+    {
+        mMenuStrip.Items.Add("Cut", null, HandleCut);
+    }
+
     private void AddPasteMenuItems()
     {
         if (_copyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
@@ -407,7 +421,7 @@ public partial class ElementTreeViewManager
         if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
         {
             string text;
-            if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count == 0)
+            if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count == 1)
                 text = "Paste Top Level Instance";
             else
                 text = "Paste Top Level Instances";
@@ -434,6 +448,16 @@ public partial class ElementTreeViewManager
     private void HandlePaste(object? sender, EventArgs e)
     {
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive);
+    }
+
+    private void HandleCopy(object? sender, EventArgs e)
+    {
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+    }
+
+    private void HandleCut(object? sender, EventArgs e)
+    {
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
     }
 
     private void HandlePasteTopLevel(object? sender, EventArgs e)
