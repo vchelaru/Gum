@@ -48,7 +48,7 @@ The following code brings the clicked button to the front of all children:
 ## Manual Draw and Updates
 
 {% hint style="info" %}
-The code presented below requires version 2026.1.8 or newer.
+The code presented below requires version 2026.1.7.1 or newer.
 {% endhint %}
 
 A typical Gum project includes the following draw and update calls:
