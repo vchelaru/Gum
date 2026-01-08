@@ -13,6 +13,10 @@ namespace RaylibGum.Input;
 /// </summary>
 public class Keyboard : IInputReceiverKeyboard
 {
+    double _lastGameTime;
+    double _lastGetStringTypedCall = -999;
+    string _lastStringTyped = "";
+
     /// <summary>
     /// Returns true if either the left or right shift key is currently pressed down.
     /// </summary>
@@ -54,6 +58,7 @@ public class Keyboard : IInputReceiverKeyboard
     /// <param name="gameTime">The number of seconds since the start of the game.</param>
     public void Activity(double gameTime)
     {
+        _lastGameTime = gameTime;
     }
 
     /// <summary>
@@ -66,16 +71,31 @@ public class Keyboard : IInputReceiverKeyboard
     /// have been typed.</returns>
     public string GetStringTyped()
     {
-        // todo this needs to be fixed: https://github.com/vchelaru/Gum/issues/1958
-        string typedString = "";
-        int codepoint = Raylib.GetCharPressed();
-
-        while (codepoint > 0)
+        if(_lastGameTime != _lastGetStringTypedCall)
         {
-            // Convert the Unicode codepoint to a string
-            typedString += char.ConvertFromUtf32(codepoint);
-            codepoint = Raylib.GetCharPressed();
+            _lastGetStringTypedCall = _lastGameTime;
+            // todo this needs to be fixed: https://github.com/vchelaru/Gum/issues/1958
+            _lastStringTyped = "";
+            int codepoint = GetCharPressed();
+
+            while (codepoint > 0)
+            {
+                // Convert the Unicode codepoint to a string
+                _lastStringTyped += char.ConvertFromUtf32(codepoint);
+                codepoint = GetCharPressed();
+            }
         }
-        return typedString;
+
+
+        return _lastStringTyped;
     }
+
+    /// <summary>
+    /// Retrieves the next Unicode character code typed by the user since the last call to this method.
+    /// </summary>
+    /// <remarks>
+    /// This method exists for unit testing purposes.
+    /// </remarks>
+    /// <returns>The unicode character as an int</returns>
+    protected virtual int GetCharPressed() => Raylib.GetCharPressed();
 }
