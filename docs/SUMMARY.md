@@ -273,6 +273,8 @@
     * [Text Wrapping](code/standard-visuals/textruntime/text-wrapping.md)
     * [VerticalAlignment](code/standard-visuals/textruntime/verticalalignment.md)
   * [Rendering Custom Graphics](code/standard-visuals/rendering-custom-graphics.md)
+* [Ordering, Layers, and Popups](code/ordering-layers-and-popups/README.md)
+  * [Object Order](code/ordering-layers-and-popups/object-order.md)
 * [Files and Fonts](code/files-and-fonts/README.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
