@@ -302,6 +302,12 @@ cat > ~/bin/gum <<EOF
 export WINE_NO_WM_DECORATION=1
 export PROTON_NO_WM_DECORATION=1
 
+# Overwrite DOTNET environment variables that if set will break dotnet apps
+# https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-environment-variables#dotnet_root-dotnet_rootx86-dotnet_root_x86-dotnet_root_x64
+# https://github.com/vchelaru/Gum/issues/1957
+unset DOTNET_ROOT
+unset DOTNET_ROOT_X64
+
 # If no arguments were passed in, then just run gum
 if [ \$# -eq 0 ]; then
 
