@@ -20,21 +20,71 @@ using MonoGameGum;
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
+/// <summary>
+/// A code-only visual for a Window control.
+/// </summary>
 public class WindowVisual : InteractiveGue
 {
+    /// <summary>
+    /// The Background NineSlice for the Window. This is the visual frame.
+    /// </summary>
     public NineSliceRuntime Background { get; private set; }
+
+    /// <summary>
+    /// The panel which hosts the inner content of the window. Calling AddChild adds children to 
+    /// this panel.
+    /// </summary>
     public Panel InnerPanelInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the area which the user can push to drag the window.
+    /// </summary>
     public Panel TitleBarInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the top-left border for resizing.
+    /// </summary>
     public Panel BorderTopLeftInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the top-right border for resizing.
+    /// </summary>
     public Panel BorderTopRightInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the bottom-left border for resizing.
+    /// </summary>
     public Panel BorderBottomLeftInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the bottom-right border for resizing.
+    /// </summary>
     public Panel BorderBottomRightInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the top border for resizing.
+    /// </summary>
     public Panel BorderTopInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the bottom border for resizing.
+    /// </summary>
     public Panel BorderBottomInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the left border for resizing.
+    /// </summary>
     public Panel BorderLeftInstance { get; private set; }
+
+    /// <summary>
+    /// The panel which acts as the right border for resizing.
+    /// </summary>
     public Panel BorderRightInstance { get; private set; }
 
     Color _backgroundColor;
+    /// <summary>
+    /// The background color which is applied to the window's Background.
+    /// </summary>
     public Color BackgroundColor
     {
         get => _backgroundColor;
@@ -50,6 +100,17 @@ public class WindowVisual : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Instantiates a new WindowVisual, optionally creating an underlying Forms object.
+    /// </summary>
+    /// <remarks>
+    /// If using using a V3 code-only project, then creating a Window instance automatically creates
+    /// a WindowVisual for its Visual, so this is usually not explicitly instantiated.
+    /// </remarks>
+    /// <param name="fullInstantiation">This parameter is ignored and exists to match other runtime conventions.</param>
+    /// <param name="tryCreateFormsObject">Whether to create a new Visual instance. This should be true if
+    /// explicitly calling this constructor, but is false when called by the Window class when creating a new Window.
+    /// </param>
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         const float borderSize = 10f;
@@ -167,5 +228,35 @@ public class WindowVisual : InteractiveGue
         }
     }
 
-    public Window FormsControl => FormsControlAsObject as Window;
+    /// <summary>
+    /// Adjusts the size of the WindowVisual and its InnerPanel to fit around its children,
+    /// applying the specified margin on all sides.
+    /// </summary>
+    /// <param name="innerPanelMargin">The margin to apply on all sides.</param>
+    public void MakeSizedToChildren(float innerPanelMargin = 0) => 
+        MakeSizedToChildren(innerPanelMargin, innerPanelMargin, innerPanelMargin, innerPanelMargin);
+
+    /// <summary>
+    /// Adjusts the size of the WindowVisual and its InnerPanel to fit around its children,
+    /// applying the specified margins.
+    /// </summary>
+    /// <param name="leftMargin">The left margin in pixels</param>
+    /// <param name="topMargin">The top margin in pixels</param>
+    /// <param name="rightMargin">The right margin in pixels</param>
+    /// <param name="bottomMargin">The bottom margin in pixels</param>
+    public void MakeSizedToChildren(float leftMargin, float topMargin, 
+        float rightMargin, float bottomMargin)
+    {
+        InnerPanelInstance.Dock(Wireframe.Dock.SizeToChildren);
+        InnerPanelInstance.Anchor(Wireframe.Anchor.TopLeft);
+
+        InnerPanelInstance.X = leftMargin;
+        InnerPanelInstance.Y = topMargin;
+
+        this.Dock(Wireframe.Dock.SizeToChildren);
+        this.Width = rightMargin;
+        this.Height = bottomMargin;
+    }
+
+    public Window FormsControl => (Window)FormsControlAsObject;
 }

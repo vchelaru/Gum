@@ -14,6 +14,6 @@ namespace Gum.Forms.DefaultVisuals.V3
             }
         }
 
-        public PasswordBox FormsControl => FormsControlAsObject as PasswordBox;
+        public PasswordBox FormsControl => (PasswordBox)FormsControlAsObject;
     }
 }

@@ -240,5 +240,5 @@ public class ButtonVisual : InteractiveGue
         FocusedIndicator.Color = FocusedIndicatorColor;
     }
 
-    public Button FormsControl => FormsControlAsObject as Button;
+    public Button FormsControl => (Button)FormsControlAsObject;
 }

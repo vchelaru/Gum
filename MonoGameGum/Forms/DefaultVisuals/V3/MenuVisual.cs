@@ -107,5 +107,5 @@ public class MenuVisual : InteractiveGue
         }
     }
 
-    public Menu FormsControl => FormsControlAsObject as Menu;
+    public Menu FormsControl => (Menu)FormsControlAsObject;
 }

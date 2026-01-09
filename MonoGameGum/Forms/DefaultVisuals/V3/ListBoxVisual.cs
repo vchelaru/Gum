@@ -246,5 +246,5 @@ public class ListBoxVisual : InteractiveGue
 
     }
 
-    public ListBox FormsControl => FormsControlAsObject as ListBox;
+    public ListBox FormsControl => (ListBox)FormsControlAsObject;
 }

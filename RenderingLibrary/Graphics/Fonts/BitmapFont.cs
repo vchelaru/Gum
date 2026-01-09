@@ -617,6 +617,8 @@ public class BitmapFont : IDisposable
     /// <param name="overrideTextRenderingPositionMode"></param>
     /// <param name="lineHeightMultiplier"></param>
     /// <param name="shiftForOutline"></param>
+    /// <param name="overlapDirection">Controls which direction is letters are drawn, so that they can overlap 
+    /// with the letters to the right on top or the left on top.</param>
     /// <returns>The rectangle of the drawn text. This will return the same value regardless of alignment.</returns>
     public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment,
         object objectRequestingChange, int requiredWidth, List<int> widths,

@@ -319,5 +319,5 @@ public class ScrollViewerVisual : InteractiveGue
         }
     }
 
-    public ScrollViewer? FormsControl => this.FormsControlAsObject as ScrollViewer;
+    public ScrollViewer FormsControl => (ScrollViewer)this.FormsControlAsObject;
 }

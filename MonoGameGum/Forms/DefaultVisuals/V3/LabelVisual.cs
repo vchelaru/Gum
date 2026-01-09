@@ -37,5 +37,5 @@ public class LabelVisual : TextRuntime
         }
     }
 
-    public Label FormsControl => FormsControlAsObject as Label;
+    public Label FormsControl => (Label)FormsControlAsObject;
 }
