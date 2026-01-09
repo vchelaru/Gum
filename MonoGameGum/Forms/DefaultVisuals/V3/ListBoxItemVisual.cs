@@ -216,5 +216,5 @@ public class ListBoxItemVisual : InteractiveGue
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
-    public ListBoxItem FormsControl => FormsControlAsObject as ListBoxItem;
+    public ListBoxItem FormsControl => (ListBoxItem)FormsControlAsObject;
 }

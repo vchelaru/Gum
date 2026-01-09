@@ -287,6 +287,6 @@ public class ComboBoxVisual : InteractiveGue
         this.AddChild(listBoxInstance);
     }
 
-    public ComboBox FormsControl => FormsControlAsObject as ComboBox;
+    public ComboBox FormsControl => (ComboBox)FormsControlAsObject;
 
 }

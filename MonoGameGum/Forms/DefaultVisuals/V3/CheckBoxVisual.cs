@@ -352,5 +352,5 @@ public class CheckBoxVisual : InteractiveGue
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 
-    public CheckBox FormsControl => FormsControlAsObject as CheckBox;
+    public CheckBox FormsControl => (CheckBox)FormsControlAsObject;
 }

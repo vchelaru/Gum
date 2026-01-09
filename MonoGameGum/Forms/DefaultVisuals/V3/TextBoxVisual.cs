@@ -14,6 +14,6 @@ namespace Gum.Forms.DefaultVisuals.V3
             }
         }
 
-        public TextBox FormsControl => FormsControlAsObject as TextBox;
+        public TextBox FormsControl => (TextBox)FormsControlAsObject;
     }
 }

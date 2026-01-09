@@ -290,5 +290,5 @@ public class ScrollBarVisual : InteractiveGue
         }
     }
 
-    public ScrollBar FormsControl => this.FormsControlAsObject as ScrollBar;
+    public ScrollBar FormsControl => (ScrollBar)this.FormsControlAsObject;
 }

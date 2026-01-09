@@ -224,5 +224,5 @@ public class SliderVisual : InteractiveGue
 
     }
 
-    public Controls.Slider FormsControl => FormsControlAsObject as Controls.Slider;
+    public Controls.Slider FormsControl => (Slider)FormsControlAsObject;
 }

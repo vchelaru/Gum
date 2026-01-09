@@ -63,5 +63,5 @@ public class SplitterVisual : InteractiveGue
         }
     }
 
-    public Splitter FormsControl => FormsControlAsObject as Splitter;
+    public Splitter FormsControl => (Splitter)FormsControlAsObject;
 }

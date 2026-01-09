@@ -259,5 +259,5 @@ public class MenuItemVisual : InteractiveGue
     Gum.Forms.VisualTemplate DefaultScrollVisualTemplate => new (() =>
                 new ScrollViewerVisualSizedToChildren(fullInstantiation: true, tryCreateFormsObject: false));
 
-    public MenuItem FormsControl => FormsControlAsObject as MenuItem;
+    public MenuItem FormsControl => (MenuItem)FormsControlAsObject;
 }

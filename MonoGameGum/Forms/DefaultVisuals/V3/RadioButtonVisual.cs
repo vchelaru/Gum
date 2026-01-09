@@ -315,5 +315,5 @@ public class RadioButtonVisual : InteractiveGue
 
     }
 
-    public RadioButton FormsControl => FormsControlAsObject as RadioButton;
+    public RadioButton FormsControl => (RadioButton)FormsControlAsObject;
 }

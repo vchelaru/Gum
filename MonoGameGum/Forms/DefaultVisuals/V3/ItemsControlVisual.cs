@@ -20,5 +20,5 @@ public class ItemsControlVisual : ScrollViewerVisual
         }
     }
 
-    public new ItemsControl? FormsControl => this.FormsControlAsObject as ItemsControl;
+    public new ItemsControl? FormsControl => (ItemsControl)FormsControlAsObject;
 }

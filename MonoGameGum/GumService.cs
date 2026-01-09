@@ -339,12 +339,18 @@ public class GumService
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots) => Update(gameTime, roots);
 #endif
 
-    /// <summary>
-    /// Performs every-frame updates including updating root sizes to fill the entire screen, cursor update, keyboard update, gamepad updates, and raising events on all controls.
-    /// </summary>
+
 #if XNALIKE
+    /// <summary>
+    /// Performs every-frame updates including updating root sizes to fill the entire screen, 
+    /// cursor update, keyboard update, gamepad updates, and raising events on all controls.
+    /// </summary>
     /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>
 #else
+    /// <summary>
+    /// Performs every-frame updates including updating root sizes to fill the entire screen, 
+    /// cursor update, keyboard update, gamepad updates, and raising events on all controls.
+    /// </summary>
     /// <param name="gameTime">The total number of seconds passed since the game has started.</param>
 #endif
     public void Update(GameTime gameTime)
