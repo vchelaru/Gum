@@ -9,7 +9,8 @@ namespace MonoGameGum.Tests.V3;
 
 internal class TestAssemblyInitialize : TestAssemblyInitializeBase
 {
-    public TestAssemblyInitialize(IMessageSink messageSink) : base(messageSink, Gum.Forms.DefaultVisualsVersion.V3)
+    public TestAssemblyInitialize(IMessageSink messageSink) : 
+        base(messageSink, Gum.Forms.DefaultVisualsVersion.V3)
     {
     }
 }
