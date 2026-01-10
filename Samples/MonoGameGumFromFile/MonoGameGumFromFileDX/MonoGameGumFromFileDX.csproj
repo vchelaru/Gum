@@ -1,76 +1,76 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
+
+	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+
+		<!-- WinForms requires a Windows TFM -->
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+
 		<RollForward>Major</RollForward>
 		<PublishReadyToRun>false</PublishReadyToRun>
 		<TieredCompilation>false</TieredCompilation>
-	</PropertyGroup>
-	<PropertyGroup>
+
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<ApplicationIcon>Icon.ico</ApplicationIcon>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4.1" />
+		<PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Compile Remove="Content\obj\**" />
 		<EmbeddedResource Remove="Content\obj\**" />
 		<None Remove="Content\obj\**" />
 	</ItemGroup>
+
 	<ItemGroup>
 		<None Remove="Icon.ico" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.cs" Link="Components\ComponentWithExposedVariableRuntime.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.Generated.cs" Link="Components\ComponentWithExposedVariableRuntime.Generated.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Game1.cs" Link="Game1.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Managers\SingleThreadSynchronizationContext.cs" Link="Managers\SingleThreadSynchronizationContext.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.cs" Link="Screens\MvvmScreenRuntime.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.Generated.cs" Link="Screens\MvvmScreenRuntime.Generated.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Screens\StartScreenRuntime.cs" Link="Screens\StartScreenRuntime.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\Screens\StartScreenRuntime.Generated.cs" Link="Screens\StartScreenRuntime.Generated.cs" />
-	  <Compile Include="..\MonoGameGumFromFile\ViewModels\MvvmScreenViewModel.cs" Link="ViewModels\MvvmScreenViewModel.cs" />
-	</ItemGroup>
-	<ItemGroup>
 		<EmbeddedResource Include="Icon.ico" />
 	</ItemGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <RollForward>Major</RollForward>
-    <PublishReadyToRun>false</PublishReadyToRun>
-    <TieredCompilation>false</TieredCompilation>
-    <UseWindowsForms>true</UseWindowsForms>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.1.303" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
-  </ItemGroup>
-  <ItemGroup>
-		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+	<ItemGroup>
+		<Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.cs" Link="Components\ComponentWithExposedVariableRuntime.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.Generated.cs" Link="Components\ComponentWithExposedVariableRuntime.Generated.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Game1.cs" Link="Game1.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Managers\SingleThreadSynchronizationContext.cs" Link="Managers\SingleThreadSynchronizationContext.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.cs" Link="Screens\MvvmScreenRuntime.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.Generated.cs" Link="Screens\MvvmScreenRuntime.Generated.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Screens\StartScreenRuntime.cs" Link="Screens\StartScreenRuntime.cs" />
+		<Compile Include="..\MonoGameGumFromFile\Screens\StartScreenRuntime.Generated.cs" Link="Screens\StartScreenRuntime.Generated.cs" />
+		<Compile Include="..\MonoGameGumFromFile\ViewModels\MvvmScreenViewModel.cs" Link="ViewModels\MvvmScreenViewModel.cs" />
 	</ItemGroup>
-  <ItemGroup>
+
+	<ItemGroup>
 		<None Update="Content\**\*.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
-  <ItemGroup>
-    <Folder Include="Managers\" />
-    <Folder Include="Components\" />
-    <Folder Include="ViewModels\" />
-    <Folder Include="Screens\" />
-    <Folder Include="ScreenRuntimes\" />
-  </ItemGroup>
+
+	<!-- Optional: folders only matter for Solution Explorer organization -->
+	<ItemGroup>
+		<Folder Include="Managers\" />
+		<Folder Include="Components\" />
+		<Folder Include="ViewModels\" />
+		<Folder Include="Screens\" />
+		<Folder Include="ScreenRuntimes\" />
+	</ItemGroup>
+
 	<Target Name="RunContentBuilder" BeforeTargets="Build" Condition="'$(IsCIBuild)' != 'true'">
 		<!-- Intentionally empty to override -->
 		<Message Text="Skipping RunContentBuilder" Importance="High" />
 	</Target>
+
 	<Target Name="RestoreDotnetTools" BeforeTargets="Restore">
 		<Message Text="Restoring dotnet tools" Importance="High" />
 		<Exec Command="dotnet tool restore" />
 	</Target>
+
 </Project>
