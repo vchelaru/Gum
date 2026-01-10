@@ -1,7 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <!-- "17.0" corresponds to VS 2022 -->
-    <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
-    <VisualStudioVersion>17.0</VisualStudioVersion>
-  </PropertyGroup>
-</Project>
