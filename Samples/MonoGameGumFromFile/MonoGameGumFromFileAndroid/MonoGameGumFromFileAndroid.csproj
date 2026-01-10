@@ -22,8 +22,8 @@
     <Compile Include="..\MonoGameGumFromFile\ViewModels\MvvmScreenViewModel.cs" Link="ViewModels\MvvmScreenViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
-    <PackageReference Include="MonoGame.Framework.Android" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
+    <PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1" />
   </ItemGroup>
   <ItemGroup>
 		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />

@@ -1,18 +1,14 @@
-﻿using Gum.DataTypes;
-using Gum.Managers;
-using GumRuntime;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
 using MonoGameGumCodeGeneration.Screens;
-using RenderingLibrary;
 
 namespace MonoGameGumCodeGeneration
 {
     public class Game1 : Game
     {
         private readonly GraphicsDeviceManager _graphics;
-        private MainMenuFullGenerationRuntime _mainMenu;
+        private MainMenuFullGeneration _mainMenu;
         private bool _disposed;
         GumService GumUI => GumService.Default;
 
@@ -30,17 +26,17 @@ namespace MonoGameGumCodeGeneration
         protected override void Initialize()
         {
             GumUI.Initialize(this, "GumProject/GumProject.gumx");
-            _mainMenu = new MainMenuFullGenerationRuntime
+            _mainMenu = new MainMenuFullGeneration
             {
                 Name = "MainMenu"
             };
-            _mainMenu.AddToManagers();
+            _mainMenu.AddToRoot();
             base.Initialize();
         }
 
         protected override void Update(GameTime gameTime)
         {
-            GumUI.Update(this, gameTime);
+            GumUI.Update(gameTime);
             base.Update(gameTime);
         }
 
@@ -53,7 +49,8 @@ namespace MonoGameGumCodeGeneration
 
         protected override void UnloadContent()
         {
-            _mainMenu?.RemoveFromManagers();
+            GumUI.Root.Children.Clear();
+            //_mainMenu?.RemoveFromManagers(); // using GumUI.Root.Children.Clear(); instead
             base.UnloadContent();
         }
 
@@ -63,7 +60,8 @@ namespace MonoGameGumCodeGeneration
 
             if (disposing)
             {
-                _mainMenu?.RemoveFromManagers();
+                GumUI.Root.Children.Clear();
+                //_mainMenu?.RemoveFromManagers();
                 _mainMenu = null;
                 _graphics?.Dispose();
             }

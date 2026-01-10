@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>MainMenuFullGeneration</Name>
   <State>
     <Name>Default</Name>
@@ -53,13 +53,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>CircleInstance.X Origin</Name>
+      <Name>CircleInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>CircleInstance.X Units</Name>
+      <Name>CircleInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -71,13 +71,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>CircleInstance.Y Origin</Name>
+      <Name>CircleInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>CircleInstance.Y Units</Name>
+      <Name>CircleInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -150,7 +150,7 @@
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>PolygonInstance1.X Units</Name>
+      <Name>PolygonInstance1.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -246,7 +246,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextWithLotsOfPropertiesSet.Height Units</Name>
+      <Name>TextWithLotsOfPropertiesSet.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -306,7 +306,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextWithLotsOfPropertiesSet.Width Units</Name>
+      <Name>TextWithLotsOfPropertiesSet.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -318,13 +318,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TextWithLotsOfPropertiesSet.X Origin</Name>
+      <Name>TextWithLotsOfPropertiesSet.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextWithLotsOfPropertiesSet.X Units</Name>
+      <Name>TextWithLotsOfPropertiesSet.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -336,13 +336,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TextWithLotsOfPropertiesSet.Y Origin</Name>
+      <Name>TextWithLotsOfPropertiesSet.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextWithLotsOfPropertiesSet.Y Units</Name>
+      <Name>TextWithLotsOfPropertiesSet.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
