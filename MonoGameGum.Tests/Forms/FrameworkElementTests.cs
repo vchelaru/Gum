@@ -60,14 +60,13 @@ public class FrameworkElementTests : BaseTestClass
     #endregion
 
     [Fact]
-    public void EffectiveManagers_ShouldBeSet_IfAddedToRoot()
+    public void AddToRoot_ShouldAddToRootCorrectly()
     {
-        Button button = new();
-        button.Visual.EffectiveManagers.ShouldBeNull();
-        button.AddToRoot();
-        button.Visual.EffectiveManagers.ShouldNotBeNull();
-        button.Visual.Parent = null;
-        button.Visual.EffectiveManagers.ShouldBeNull();
+        Button child = new();
+        child.AddToRoot();
+
+        child.Visual.Parent.ShouldBe(GumService.Default.Root);
+        GumService.Default.Root.Children.ShouldContain(child.Visual);
     }
 
     [Fact]
@@ -95,6 +94,17 @@ public class FrameworkElementTests : BaseTestClass
             0);
 
         cursor.VerifySet(c => c.WindowOver = frameworkElement.Visual);
+    }
+
+    [Fact]
+    public void EffectiveManagers_ShouldBeSet_IfAddedToRoot()
+    {
+        Button button = new();
+        button.Visual.EffectiveManagers.ShouldBeNull();
+        button.AddToRoot();
+        button.Visual.EffectiveManagers.ShouldNotBeNull();
+        button.Visual.Parent = null;
+        button.Visual.EffectiveManagers.ShouldBeNull();
     }
 
     // CustomCursor cannot be properly tested because it requires a concrete Cursor class.
@@ -287,6 +297,17 @@ public class FrameworkElementTests : BaseTestClass
         button.Visual.Y.ShouldBe(14);
         button.Visual.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
         button.Visual.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+    }
+
+
+    [Fact]
+    public void RemoveFromRoot_ShouldRemoveFromRootCorrectly()
+    {
+        Button child = new();
+        child.AddToRoot();
+        child.RemoveFromRoot();
+        child.Visual.Parent.ShouldBeNull();
+        GumService.Default.Root.Children.ShouldNotContain(child.Visual);
     }
 
     [Fact]

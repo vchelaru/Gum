@@ -32,6 +32,20 @@ public class GraphicalUiElementTests : BaseTestClass
 
     #endregion
 
+    #region AddToRoot
+
+    [Fact]
+    public void AddToRoot_ShouldAddToRootCorrectly()
+    {
+        GraphicalUiElement child = new();
+        child.AddToRoot();
+
+        child.Parent.ShouldBe(GumService.Default.Root);
+        GumService.Default.Root.Children.ShouldContain(child);
+    }
+
+    #endregion
+
     #region Animation
     static (ComponentSave element, AnimationRuntime animation) CreateElementAndAnimation()
     {
@@ -185,133 +199,23 @@ public class GraphicalUiElementTests : BaseTestClass
     }
     #endregion
 
-    #region Parent/Children related
-
     [Fact]
-    public void AddChild_ShouldSetParentOnChild()
+    public void FillListWithChildrenByType_ShouldFillRecursively()
     {
-        ContainerRuntime parent = new ();
-        ContainerRuntime child = new ();
-        parent.AddChild(child);
-        child.Parent.ShouldBe(parent);
+        ContainerRuntime sut = new();
+
+        sut.Children.Add(new SpriteRuntime());
+        sut.Children.Add(new TextRuntime());
+        ContainerRuntime childContainer = new();
+        childContainer.Children.Add(new SpriteRuntime());
+        sut.Children.Add(childContainer);
+
+        var list = sut.FillListWithChildrenByTypeRecursively<SpriteRuntime>();
+
+        list.Count.ShouldBe(2);
+        list[0].ShouldBeOfType<SpriteRuntime>();
+        list[1].ShouldBeOfType<SpriteRuntime>();
     }
-
-    [Fact]
-    public void AddChild_ShouldPopulateChildren()
-    {
-        ContainerRuntime parent = new ();
-        ContainerRuntime child = new ();
-        parent.AddChild(child);
-        parent.Children.ShouldContain(child);
-    }
-
-    [Fact]
-    public void AddChild_ShouldThrowException_OnAddingSelf()
-    {
-        ContainerRuntime container = new();
-        bool didThrow = false;
-        try
-        {
-            container.AddChild(container);
-        }
-        catch(Exception e)
-        {
-            e.Message.ShouldContain("cannot be added as a child of itself");
-            didThrow = true;
-        }
-
-        didThrow.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void AssignParent_ShouldAddToParentsChildren()
-    {
-        ContainerRuntime parent = new ();
-        ContainerRuntime child = new ();
-        child.Parent = parent;
-        parent.Children.ShouldContain(child);
-    }
-
-    [Fact]
-    public void AssignParent_ShouldRemoveFromOldParentsChildren()
-    {
-        ContainerRuntime parent1 = new ();
-        ContainerRuntime parent2 = new ();
-        ContainerRuntime child = new ();
-        parent1.AddChild(child);
-        child.Parent = parent2;
-        parent1.Children.ShouldNotContain(child);
-        parent2.Children.ShouldContain(child);
-    }
-
-    [Fact]
-    public void AssignParent_ToNull_ShouldRemoveFromOldParentsChildren()
-    {
-        ContainerRuntime parent1 = new ();
-        ContainerRuntime child = new ();
-        parent1.AddChild(child);
-        child.Parent = null;
-        parent1.Children.ShouldNotContain(child);
-    }
-
-    [Fact]
-    public void ParentChanged_ShouldRaiseWhenParentChanges()
-    {
-        ContainerRuntime child = new ();
-
-        int parentChangedCount = 0;
-        child.ParentChanged += (_, _) => parentChangedCount++;
-        child.Name = "Child";
-
-        child.Parent = new ContainerRuntime() { Name = "ParentA" };
-        parentChangedCount.ShouldBe(1);
-        child.Parent = null;
-        parentChangedCount.ShouldBeGreaterThan(1);
-
-        // parent changes can be called multiple times, we want to make sure it was called
-        // by checking the starting point
-        var startingPoint = parentChangedCount;
-        // Setting to the same parent should not raise the event:
-        var parent = new ContainerRuntime();
-        child.Parent = parent;
-        parentChangedCount.ShouldBeGreaterThan(startingPoint);
-
-        startingPoint = parentChangedCount;
-        child.Parent = parent;
-        parentChangedCount.ShouldBe(startingPoint);
-
-        startingPoint = parentChangedCount;
-        child.Parent = null;
-        parentChangedCount.ShouldBeGreaterThan(startingPoint);
-
-
-        var parent2 = new ContainerRuntime();
-        startingPoint = parentChangedCount;
-        parent.AddChild(child);
-        parentChangedCount.ShouldBeGreaterThan(startingPoint);
-
-        startingPoint = parentChangedCount;
-        parent.Children.Remove(child);
-        parentChangedCount.ShouldBeGreaterThan(startingPoint);
-
-    }
-
-    [Fact]
-    public void ChildrenClear_ShouldSetChildParentsToNull()
-    {
-        ContainerRuntime parent = new ();
-
-        ContainerRuntime child1 = new ();
-        parent.AddChild(child1);
-
-        child1.Parent.ShouldBe(parent);
-
-        parent.Children!.Clear();
-
-        child1.Parent.ShouldBeNull();
-    }
-
-    #endregion
 
     #region Layout-related
 
@@ -552,22 +456,142 @@ public class GraphicalUiElementTests : BaseTestClass
 
     #endregion
 
+    #region Parent/Children related
+
     [Fact]
-    public void FillListWithChildrenByType_ShouldFillRecursively()
+    public void AddChild_ShouldSetParentOnChild()
     {
-        ContainerRuntime sut = new();
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        parent.AddChild(child);
+        child.Parent.ShouldBe(parent);
+    }
 
-        sut.Children.Add(new SpriteRuntime());
-        sut.Children.Add(new TextRuntime());
-        ContainerRuntime childContainer = new();
-        childContainer.Children.Add(new SpriteRuntime());
-        sut.Children.Add(childContainer);
+    [Fact]
+    public void AddChild_ShouldPopulateChildren()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        parent.AddChild(child);
+        parent.Children.ShouldContain(child);
+    }
 
-        var list = sut.FillListWithChildrenByTypeRecursively<SpriteRuntime>();
+    [Fact]
+    public void AddChild_ShouldThrowException_OnAddingSelf()
+    {
+        ContainerRuntime container = new();
+        bool didThrow = false;
+        try
+        {
+            container.AddChild(container);
+        }
+        catch(Exception e)
+        {
+            e.Message.ShouldContain("cannot be added as a child of itself");
+            didThrow = true;
+        }
 
-        list.Count.ShouldBe(2);
-        list[0].ShouldBeOfType<SpriteRuntime>();
-        list[1].ShouldBeOfType<SpriteRuntime>();
+        didThrow.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AssignParent_ShouldAddToParentsChildren()
+    {
+        ContainerRuntime parent = new ();
+        ContainerRuntime child = new ();
+        child.Parent = parent;
+        parent.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ShouldRemoveFromOldParentsChildren()
+    {
+        ContainerRuntime parent1 = new ();
+        ContainerRuntime parent2 = new ();
+        ContainerRuntime child = new ();
+        parent1.AddChild(child);
+        child.Parent = parent2;
+        parent1.Children.ShouldNotContain(child);
+        parent2.Children.ShouldContain(child);
+    }
+
+    [Fact]
+    public void AssignParent_ToNull_ShouldRemoveFromOldParentsChildren()
+    {
+        ContainerRuntime parent1 = new ();
+        ContainerRuntime child = new ();
+        parent1.AddChild(child);
+        child.Parent = null;
+        parent1.Children.ShouldNotContain(child);
+    }
+
+    [Fact]
+    public void ParentChanged_ShouldRaiseWhenParentChanges()
+    {
+        ContainerRuntime child = new ();
+
+        int parentChangedCount = 0;
+        child.ParentChanged += (_, _) => parentChangedCount++;
+        child.Name = "Child";
+
+        child.Parent = new ContainerRuntime() { Name = "ParentA" };
+        parentChangedCount.ShouldBe(1);
+        child.Parent = null;
+        parentChangedCount.ShouldBeGreaterThan(1);
+
+        // parent changes can be called multiple times, we want to make sure it was called
+        // by checking the starting point
+        var startingPoint = parentChangedCount;
+        // Setting to the same parent should not raise the event:
+        var parent = new ContainerRuntime();
+        child.Parent = parent;
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+        startingPoint = parentChangedCount;
+        child.Parent = parent;
+        parentChangedCount.ShouldBe(startingPoint);
+
+        startingPoint = parentChangedCount;
+        child.Parent = null;
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+
+        var parent2 = new ContainerRuntime();
+        startingPoint = parentChangedCount;
+        parent.AddChild(child);
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+        startingPoint = parentChangedCount;
+        parent.Children.Remove(child);
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+    }
+
+    [Fact]
+    public void ChildrenClear_ShouldSetChildParentsToNull()
+    {
+        ContainerRuntime parent = new ();
+
+        ContainerRuntime child1 = new ();
+        parent.AddChild(child1);
+
+        child1.Parent.ShouldBe(parent);
+
+        parent.Children!.Clear();
+
+        child1.Parent.ShouldBeNull();
+    }
+
+    #endregion
+
+    [Fact]
+    public void RemoveFromRoot_ShouldRemoveFromRootCorrectly()
+    {
+        GraphicalUiElement child = new();
+        child.AddToRoot();
+        child.RemoveFromRoot();
+        child.Parent.ShouldBeNull();
+        GumService.Default.Root.Children.ShouldNotContain(child);
     }
 
     [Fact]
