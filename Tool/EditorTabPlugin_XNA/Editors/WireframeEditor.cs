@@ -91,7 +91,7 @@ public abstract class WireframeEditor
         }
     }
 
-    public abstract void Activity(ICollection<GraphicalUiElement> selectedObjects);
+    public abstract void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers);
 
     public abstract System.Windows.Forms.Cursor GetWindowsCursorToShow(
         System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt);

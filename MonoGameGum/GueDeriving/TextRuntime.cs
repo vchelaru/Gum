@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace MonoGameGum.GueDeriving;
 
 /// <summary>
-/// Represents a text element which can display a string.
+/// A visual text element which can display a string.
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
@@ -98,7 +98,7 @@ public class TextRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Gets or sets the color used to render the contained text. This includes color and alpha (opacity) components.
+    /// Gets or sets the color used to render the text. This includes color and alpha (opacity) components.
     /// </summary>
     public Microsoft.Xna.Framework.Color Color
     {

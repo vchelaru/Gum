@@ -125,7 +125,7 @@ public class StandardWireframeEditor : WireframeEditor
 
     #region Activity
 
-    public override void Activity(ICollection<GraphicalUiElement> selectedObjects)
+    public override void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
     {
         if (selectedObjects.Count != 0 && _selectedState.SelectedStateSave != null && _selectedState.CustomCurrentStateSave == null)
         {
