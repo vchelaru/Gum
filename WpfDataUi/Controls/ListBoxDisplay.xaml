@@ -30,6 +30,7 @@
             <ListBox
                 x:Name="ListBox"
                 Grid.Row="0"
+                MouseDoubleClick="ListBox_MouseDoubleClick"
                 KeyDown="ListBox_KeyDown">
                 <ListBox.ContextMenu>
                     <ContextMenu />

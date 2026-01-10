@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using WpfDataUi.DataTypes;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WpfDataUi.Controls;
 
@@ -18,6 +19,18 @@ namespace WpfDataUi.Controls;
 public partial class ListBoxDisplay : UserControl, IDataUi
 {
     InstanceMember mInstanceMember;
+
+    int? indexEditing = -1;
+    int? IndexEditing
+    {
+        get => indexEditing;
+        set
+        {
+            indexEditing = value;
+            ListBox.IsEnabled = indexEditing == null;
+        }
+    }
+
     public InstanceMember InstanceMember
     { 
         get => mInstanceMember; 
@@ -223,6 +236,11 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
     private void AddButtonClicked(object sender, RoutedEventArgs e)
     {
+        ShowTextBoxUi();
+    }
+
+    private void ShowTextBoxUi()
+    {
         NewEntryGrid.Visibility = Visibility.Visible;
         NotEditingEntryStackPanel.Visibility = Visibility.Collapsed;
         NewTextBox.Focus();
@@ -282,20 +300,41 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         {
             if(listToAddTo is List<string> stringList)
             {
-                stringList.Add(text);
+                if (IndexEditing == null)
+                {
+                    stringList.Add(text);
+                }
+                else
+                {
+                    stringList[IndexEditing.Value] = text;
+                }
             }
             else if (listToAddTo is List<int> intList)
             {
                 if (int.TryParse(text, out int intResult))
                 {
-                    intList.Add(intResult);
+                    if(IndexEditing == null)
+                    {
+                        intList.Add(intResult);
+                    }
+                    else
+                    {
+                        intList[IndexEditing.Value] = intResult;
+                    }
                 }
             }
             else if (listToAddTo is List<float> floatList)
             {
                 if (float.TryParse(text, out float floatResult))
                 {
-                    floatList.Add(floatResult);
+                    if (IndexEditing == null)
+                    {
+                        floatList.Add(floatResult);
+                    }
+                    else
+                    {
+                        floatList[IndexEditing.Value] = floatResult;
+                    }
                 }
             }
             else if(listToAddTo is List<System.Numerics.Vector2> vector2List)
@@ -304,7 +343,14 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
                 if(TryParse(text, out toAdd))
                 {
-                    vector2List.Add(toAdd.Value);
+                    if (IndexEditing == null)
+                    {
+                        vector2List.Add(toAdd.Value);
+                    }
+                    else
+                    {
+                        vector2List[IndexEditing.Value] = toAdd.Value;
+                    }
                 }
                 else
                 {
@@ -316,6 +362,11 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         NewEntryGrid.Visibility = Visibility.Collapsed;
         NotEditingEntryStackPanel.Visibility = Visibility.Visible;
         this.TrySetValueOnInstance();
+        if(IndexEditing != null)
+        {
+            IndexEditing = null;
+            this.Refresh();
+        }
 
         TryDoManualRefresh();
     }
@@ -371,6 +422,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         NewTextBox.Text = null;
         NewEntryGrid.Visibility = Visibility.Collapsed;
         NotEditingEntryStackPanel.Visibility = Visibility.Visible;
+        IndexEditing = null;
     }
 
     private void NewTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -397,4 +449,29 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
+    private void ListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        IndexEditing = ((ListBox)sender).SelectedIndex;
+        if(IndexEditing < 0)
+        {
+            IndexEditing = null;
+        }
+        else
+        {
+            ShowTextBoxUi();
+
+            var textToAssign = ListBox.SelectedItem?.ToString();
+
+            if (textToAssign?.StartsWith("<") == true)
+            {
+                textToAssign = textToAssign.Substring(1);
+            }
+            if (textToAssign?.EndsWith(">") == true)
+            {
+                textToAssign = textToAssign.Substring(0, textToAssign.Length - 1);
+            }
+
+            this.NewTextBox.Text = textToAssign;
+        }
+    }
 }
