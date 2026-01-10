@@ -74,6 +74,7 @@
     * [Texture Left](gum-tool/gum-elements/nineslice/texture-left.md)
     * [Texture Top](gum-tool/gum-elements/nineslice/texture-top.md)
   * [Polygon](gum-tool/gum-elements/polygon/README.md)
+    * [Height and Width](gum-tool/gum-elements/polygon/height-and-width.md)
     * [Points](gum-tool/gum-elements/polygon/points.md)
   * [Skia Standard Elements](gum-tool/gum-elements/skia-standard-elements/README.md)
     * [General Properties](gum-tool/gum-elements/skia-standard-elements/general-properties/README.md)
