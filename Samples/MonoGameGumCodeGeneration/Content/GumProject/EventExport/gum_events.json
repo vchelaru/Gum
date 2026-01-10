@@ -1,13 +1,5 @@
 {
   "UserEvents": {
-    "Owner": [
-      {
-        "NewName": "MainMenuFullGeneration",
-        "OldName": "MainMenu",
-        "ElementType": "Screens",
-        "EventType": 2,
-        "TimestampUtc": "2024-12-31T13:59:15.6087122Z"
-      }
-    ]
+    "Owner": []
   }
 }

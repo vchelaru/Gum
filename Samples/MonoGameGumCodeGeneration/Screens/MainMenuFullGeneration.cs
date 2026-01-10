@@ -2,15 +2,16 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
-using RenderingLibrary.Graphics;
-
 using MonoGameGum.GueDeriving;
-using static MonoGameGumCodeGeneration.Components.ComponentWithStatesRuntime;
+using MonoGameGumCodeGeneration.Components;
+using RenderingLibrary.Graphics;
+using System.Linq;
+
+using static MonoGameGumCodeGeneration.Components.ComponentWithStates;
 
 namespace MonoGameGumCodeGeneration.Screens
 {
-    partial class MainMenuFullGenerationRuntime : GraphicalUiElement
+    partial class MainMenuFullGeneration : global::Gum.Forms.Controls.FrameworkElement
     {
         partial void CustomInitialize()
         {

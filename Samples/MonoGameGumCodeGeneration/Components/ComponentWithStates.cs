@@ -6,10 +6,11 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 
 using MonoGameGum.GueDeriving;
-
+using MonoGameGumCodeGeneration.Components;
+using System.Linq;
 namespace MonoGameGumCodeGeneration.Components
 {
-    partial class ComponentWithStatesRuntime : ContainerRuntime
+    partial class ComponentWithStates : global::Gum.Forms.Controls.FrameworkElement
     {
         partial void CustomInitialize()
         {
