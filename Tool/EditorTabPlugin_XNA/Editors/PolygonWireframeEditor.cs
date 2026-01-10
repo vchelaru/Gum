@@ -456,7 +456,8 @@ namespace Gum.Wireframe.Editors
 
             // So we don't get wacky coordinates, let's round the value to the nearest unit 
             // finish here:
-            var roundMultiple = 1 / systemManagers.Renderer.Camera.Zoom;
+            var camera = systemManagers.Renderer.Camera;
+            var roundMultiple =  1 / camera.Zoom;
             pointAtIndex.X = MathFunctions.RoundFloat(pointAtIndex.X, roundMultiple);
             pointAtIndex.Y = MathFunctions.RoundFloat(pointAtIndex.Y, roundMultiple);
 
