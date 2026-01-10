@@ -3,9 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using System;
 using System.Diagnostics;
-using ToolsUtilities;
 
 namespace FntLoading
 {
@@ -29,7 +27,9 @@ namespace FntLoading
             SystemManagers.Default = new SystemManagers(); 
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
-            bitmapFont = new BitmapFont("DummyFont.fnt", SystemManagers.Default);
+            bitmapFont = new BitmapFont("DummyFont.fnt");
+
+            System.Diagnostics.Debug.WriteLine("Press or hold SPACE...");
 
             base.Initialize();
         }
@@ -42,22 +42,22 @@ namespace FntLoading
 
             if(currentState.IsKeyDown(Keys.Space) && lastState.IsKeyUp(Keys.Space))
             {
-                Console.WriteLine("Loading font pattern...");
+                System.Diagnostics.Debug.WriteLine("Loading font pattern...");
 
                 // Load it before 
                 var stopWatch = Stopwatch.StartNew();
-                string fontContents = FileManager.FromFileText("FontMedievalSharp_Bold30.fnt");
                 var fileLoadTime = stopWatch.Elapsed;
 
                 // you can replace this with your own timing, but it's so slow
                 // that this is good enough resolution...
-                bitmapFont.SetFontPattern(fontContents);
+                bitmapFont.SetFontPatternFromFile("FontMedievalSharp_Bold30.fnt");
+
                 var totalTime = stopWatch.Elapsed;
                 stopWatch.Stop();
 
                 var fontPatternTime = totalTime - fileLoadTime;
 
-                Console.WriteLine(
+                System.Diagnostics.Debug.WriteLine(
                     $"Font times: {fileLoadTime.TotalMilliseconds:0.0}->{fontPatternTime.TotalMilliseconds:0.0} ");
             }
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
