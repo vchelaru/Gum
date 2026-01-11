@@ -23,3 +23,9 @@ We can see similar behavior if we place the Polygon in a stacking parent.
 
 
 <figure><img src="../../../.gitbook/assets/10_16 10 42.gif" alt=""><figcaption></figcaption></figure>
+
+A `Polygon's` height and width are measured from a `Polygon's` top left corner to the furthest down right point. Points which have a negative value do not affect a `Polygon's` effective height, so moving points above or to the left of the origin will not affect the layout of any object which depends on the `Polygon's` size.
+
+For example, if we move `Polygon` points in a stack up or to the left, this does not shift any of the Polygon's siblings.
+
+<figure><img src="../../../.gitbook/assets/11_04 54 40.gif" alt=""><figcaption><p>Moving points so they have negative values does not affect the effective size of a Polygon</p></figcaption></figure>
