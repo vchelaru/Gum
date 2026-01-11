@@ -26,9 +26,9 @@ The following image shows a child ColoredRectangle positioned 50 `Percentage Par
 
 ![ColoredRectangle with Y Units of Percentage Parent Height](<../../../.gitbook/assets/05_08 54 17.png>)
 
-### Pixels From Baseline
+## Pixels From Baseline
 
-`Pixels From Baseline` positions a child relative to the parent's baseline. If the parent is a Text instance, the baseline is the Y position of the bottom of letters which do not have descenders. For more information on the concept of text baseline, see the baseline Wikipedia page  [https://en.wikipedia.org/wiki/Baseline\_(typography)](https://en.wikipedia.org/wiki/Baseline_\(typography\))
+`Pixels From Baseline` positions a child relative to the parent's baseline. If the parent is a Text instance, the baseline is the Y position of the bottom of letters which do not have descenders. For more information on the concept of text baseline, see the baseline Wikipedia page [https://en.wikipedia.org/wiki/Baseline\_(typography)](https://en.wikipedia.org/wiki/Baseline_\(typography\))
 
 <figure><img src="../../../.gitbook/assets/Baseline2.png" alt=""><figcaption><p>Baseline Example</p></figcaption></figure>
 
@@ -40,7 +40,7 @@ When using `Pixels From Baseline`, the position depends on the font size, baseli
 
 <figure><img src="../../../.gitbook/assets/09_06 42 05.gif" alt=""><figcaption><p>Baseline Shifts when the parent Width changes</p></figcaption></figure>
 
-A text instance's baseline is defined by its `Font` and `Font Scale` values. These values ultimately create a .fnt file with a `base` value indicating the distance from the top of the text instance to the baseline. For example, an Arial font with Font Size 40 has a `base` value of 36 and a lineHeight of 45.&#x20;
+A text instance's baseline is defined by its `Font` and `Font Scale` values. These values ultimately create a .fnt file with a `base` value indicating the distance from the top of the text instance to the baseline. For example, an Arial font with Font Size 40 has a `base` value of 36 and a lineHeight of 45.
 
 <figure><img src="../../../.gitbook/assets/05_20 48 34.png" alt=""><figcaption><p>Arial with Font Size 40 has a base value of 36</p></figcaption></figure>
 
@@ -51,4 +51,3 @@ This means that 36 pixels fall above the baseline, and 9 pixels (45 - 36) below.
 Note that if the parent is not a Text instance, then the bottom of the parent is used as the baseline. The following image shows a Colored Rectangle using a `Y Units` of `Pixels From Baseline` with a Container parent.
 
 <figure><img src="../../../.gitbook/assets/05_09 18 28.png" alt=""><figcaption><p><code>Pixels from Baseline</code> uses the bottom of the parent if it is not a Text instance</p></figcaption></figure>
-
