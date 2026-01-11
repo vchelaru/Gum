@@ -99,6 +99,25 @@ panel.AddChild(button);
 float parentX = ((IPositionedSizedObject)button.Visual).AbsoluteLeft;
 ```
 
+## \[Breaking] PolygonRuntime Default Size Change
+
+Previously, new `PoylgonRuntime` instances created a 10x10 square polygon. The January version of Gum changes this to a 32x32 polygon which matches the dimensions of the default polygon in the Gum tool.
+
+Users who would like to keep the default `Polygon` behavior can explicitly set the points:
+
+```csharp
+polygon.SetPoints(new List<System.Numerics.Vector2>
+{
+    new (0,0),
+    new (10,0),
+    new (10,10),
+    new (0,10),
+    new (0,0)
+}); 
+```
+
+Practically speaking most `Polygons` are set either through the Gum tool, or their points are modified after creation so this change has a low likelihood of breaking projects.
+
 ## ContainerRuntime Alpha is now int instead of float
 
 Previous versions of Gum runtime included a `ContainerRuntime` which has an `Alpha` value that was `float`. This caused confusion because the base class for `ContainerRuntime` also had an `Alpha` value of type int. The `float` version has been removed, so now only the `int` type remains.
