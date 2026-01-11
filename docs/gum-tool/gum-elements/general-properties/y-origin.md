@@ -4,25 +4,25 @@
 
 The **Y Origin** variable controls the point which an object is positioned by. By default the **Y Origin** is **Top**. The **Y Origin** is shown visually as a white "X" in the editor.
 
-### Top
+## Top
 
 The following image shows a [ColoredRectangle](../coloredrectangle.md) with its **Y Origin** set to **Top**:
 
 ![ColoredRectangle with Top Y Origin](<../../../.gitbook/assets/25_19 38 16.png>)
 
-### Center
+## Center
 
 The following image shows a ColoredRectangle with its **Y Origin** set to **Center**:
 
 ![ColoredRectangle with Center Y Origin](<../../../.gitbook/assets/25_19 39 18.png>)
 
-### Bottom
+## Bottom
 
 The following image shows a ColoredRectangle with its **Y Origin** set to **Bottom**:
 
 ![ColoredRectangle with Bottom Y Origin](<../../../.gitbook/assets/25_19 39 56.png>)
 
-### Baseline
+## Baseline
 
 The following shows a Text with its Y Origin set to Baseline:
 
@@ -34,6 +34,6 @@ Baseline is often used to align fonts of different sizes. The following image sh
 
 <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>50,000 xp aligned by baseline</p></figcaption></figure>
 
-By contrast, the following image shows the same Text instances using bottom alignment.&#x20;
+By contrast, the following image shows the same Text instances using bottom alignment.
 
 <figure><img src="../../../.gitbook/assets/image (31).png" alt=""><figcaption></figcaption></figure>
