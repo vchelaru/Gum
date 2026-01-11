@@ -127,9 +127,10 @@ public class PolygonRuntime : InteractiveGue
             polygon.SetPoints(new Vector2[]
             {
                 new Vector2(0, 0),
-                new Vector2(0, 10),
-                new Vector2(10, 10),
-                new Vector2(10, 0)
+                new Vector2(0, 32),
+                new Vector2(32, 32),
+                new Vector2(32, 0),
+                new Vector2(0, 0),
             });
         }
     }
