@@ -567,9 +567,13 @@ public partial class InteractiveGue : BindableGue
     /// Returns whether the argument cursor is over this instance. If RaiseChildrenEventsOutsideOfBounds is set
     /// to true, then each of the individual chilren are also checked if the cursor is not inside this object's bounds.
     /// </summary>
+    /// <remarks>
+    /// This method is marked as virtual so that derived types can override it to provide custom
+    /// cursor hit detection.
+    /// </remarks>
     /// <param name="cursor">The cursor to check whether it is over this.</param>
     /// <returns>Whether the cursor is over this.</returns>
-    public bool HasCursorOver(ICursor cursor)
+    public virtual bool HasCursorOver(ICursor cursor)
     {
         var layer = (this.GetTopParent() as GraphicalUiElement).Layer;
         return HasCursorOver(cursor, this, layer);

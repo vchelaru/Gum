@@ -59,10 +59,8 @@ public class BitmapFont : IDisposable
 
     #region Properties
 
-    public AtlasedTexture AtlasedTexture
-    {
-        get { return mAtlasedTexture; }
-    }
+    [Obsolete("Atlased textures are no longer supported in Gum as of 2025")]
+    public AtlasedTexture AtlasedTexture => mAtlasedTexture; 
 
     public Texture2D Texture
     {
@@ -75,33 +73,33 @@ public class BitmapFont : IDisposable
         }
     }
 
-    public Texture2D[] Textures
-    {
-        get { return mTextures; }
-    }
+    public Texture2D[] Textures => mTextures; 
 
-    public string FontFile
-    {
-        get { return mFontFile; }
-    }
+    public string FontFile => mFontFile; 
 
-    public string TextureName
-    {
-        get { return mTextureNames[0]; }
-    }
+    public string TextureName => mTextureNames[0]; 
 
-    public int LineHeightInPixels
-    {
-        get { return mLineHeightInPixels; }
-    }
+    /// <summary>
+    /// The number of pixels from the top of the line to the bottom of the line, including ascenders and descenders.
+    /// </summary>
+    public int LineHeightInPixels => mLineHeightInPixels; 
 
+    /// <summary>
+    /// The number of pixels from the top of the line to the baseline.
+    /// </summary>
     public int BaselineY
     {
         get; set;
     }
 
+    /// <summary>
+    /// The number of pixels from the baseline to the bottom of the line.
+    /// </summary>
     public int DescenderHeight => LineHeightInPixels - BaselineY;
 
+    /// <summary>
+    /// An array holding information about each character in the font.
+    /// </summary>
     public BitmapCharacterInfo[] Characters => mCharacterInfo;
 
     #endregion

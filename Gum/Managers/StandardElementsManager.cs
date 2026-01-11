@@ -416,7 +416,15 @@ namespace Gum.Managers
                 var stateSave = new StateSave();
                 stateSave.Name = "Default";
 
-                AddPositioningVariables(stateSave, addOriginVariables: false);
+                // January 1, 2026
+                // Modifying this to
+                // include origin variables
+                // because they can be set using
+                // dock/anchor anyway, so we might
+                // as well have them available in the
+                // UI
+                //AddPositioningVariables(stateSave, addOriginVariables: false);
+                AddPositioningVariables(stateSave, addOriginVariables: true);
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
                 AddColorVariables(stateSave, true);
@@ -426,12 +434,12 @@ namespace Gum.Managers
                 var pointsVariable = new VariableListSave<Vector2>()
                 { Name = "Points", Category = "Points" , Type = "Vector2"};
 
-                pointsVariable.Value.Add(new Vector2(-32, -32));
-                pointsVariable.Value.Add(new Vector2(32, -32));
+                pointsVariable.Value.Add(new Vector2(0, 0));
+                pointsVariable.Value.Add(new Vector2(32, 0));
                 pointsVariable.Value.Add(new Vector2(32, 32));
-                pointsVariable.Value.Add(new Vector2(-32, 32));
+                pointsVariable.Value.Add(new Vector2(0, 32));
                 // close it:
-                pointsVariable.Value.Add(new Vector2(-32, -32));
+                pointsVariable.Value.Add(new Vector2(0, 0));
 
                 stateSave.VariableLists.Add(pointsVariable);
 

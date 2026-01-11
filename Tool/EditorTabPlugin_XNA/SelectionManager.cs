@@ -49,7 +49,7 @@ public class SelectionManager
 
     LayerService _layerService;
 
-    public WireframeEditor WireframeEditor;
+    public WireframeEditor? WireframeEditor;
 
     List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
     IPositionedSizedObject mHighlightedIpso;
@@ -263,9 +263,9 @@ public class SelectionManager
         }
     }
 
-    public void LateActivity()
+    public void LateActivity(SystemManagers systemManagers)
     {
-        WireframeEditor?.Activity(SelectedGues);
+        WireframeEditor?.Activity(SelectedGues, systemManagers);
     }
 
     public void Deselect()
@@ -629,11 +629,7 @@ public class SelectionManager
                 {
                     WireframeEditor.Destroy();
                 }
-                WireframeEditor = new PolygonWireframeEditor(
-                    _layerService.OverlayLayer,
-                    _hotkeyManager,
-                    this,
-                    _selectedState);
+                CreatePolygonWireframeEditor();
             }
         }
         else if (SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
@@ -652,11 +648,7 @@ public class SelectionManager
                 {
                     WireframeEditor.Destroy();
                 }
-                WireframeEditor = new PolygonWireframeEditor(
-                    _layerService.OverlayLayer,
-                    _hotkeyManager,
-                    this,
-                    _selectedState);
+                CreatePolygonWireframeEditor();
             }
             else
             {
@@ -688,10 +680,7 @@ public class SelectionManager
         }
         else if (WireframeEditor != null)
         {
-            if (WireframeEditor != null)
-            {
-                WireframeEditor.Destroy();
-            }
+            WireframeEditor.Destroy();
             WireframeEditor = null;
         }
 
@@ -707,6 +696,15 @@ public class SelectionManager
             }
             WireframeEditor.RestrictToUnitValues = RestrictToUnitValues;
         }
+    }
+
+    private void CreatePolygonWireframeEditor()
+    {
+        WireframeEditor = new PolygonWireframeEditor(
+            _layerService.OverlayLayer,
+            _hotkeyManager,
+            this,
+            _selectedState);
     }
 
     void SelectionActivity()

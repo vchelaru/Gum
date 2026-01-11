@@ -1140,6 +1140,12 @@ public class StateReferencingInstanceMember : InstanceMember
                 // Can't we use the component type?
                 toReturn = mPropertyDescriptor.ComponentType;
 
+                if(toReturn == null)
+                {
+                    // January 10, 2026
+                    // it seems that List of points on polygon does not return its type properly, not sure if this is intended, but this fixes it:
+                    toReturn = GetTypeFromVariableRecursively();
+                }
             }
 
             return toReturn;

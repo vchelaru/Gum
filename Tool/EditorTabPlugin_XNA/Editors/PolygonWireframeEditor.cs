@@ -15,6 +15,7 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
 using ToolsUtilitiesStandard.Helpers;
+using RenderingLibrary.Math;
 
 namespace Gum.Wireframe.Editors
 {
@@ -104,7 +105,8 @@ namespace Gum.Wireframe.Editors
         #region Constructor/Update To
 
         public PolygonWireframeEditor(
-            Layer layer, HotkeyManager hotkeyManager, 
+            Layer layer, 
+            HotkeyManager hotkeyManager, 
             SelectionManager selectionManager,
             ISelectedState selectedState) 
             : base(
@@ -208,7 +210,7 @@ namespace Gum.Wireframe.Editors
 
         #region Activity Functions
 
-        public override void Activity(ICollection<GraphicalUiElement> selectedObjects)
+        public override void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
         {
             if (selectedObjects.Count != 0)
             {
@@ -216,7 +218,7 @@ namespace Gum.Wireframe.Editors
 
                 ClickActivity();
 
-                HandlesActivity();
+                HandlesActivity(systemManagers);
 
                 BodyGrabbingActivity();
 
@@ -398,7 +400,7 @@ namespace Gum.Wireframe.Editors
             }
         }
 
-        private void HandlesActivity()
+        private void HandlesActivity(SystemManagers systemManagers)
         {
             var linePolygon = SelectedLinePolygon;
 
@@ -430,11 +432,11 @@ namespace Gum.Wireframe.Editors
 
             if(grabbedIndex != null && linePolygon != null && (cursor.XChange != 0 || cursor.YChange != 0))
             {
-                MoveGrabbedPoint(cursor);
+                MoveGrabbedPoint(cursor, systemManagers);
             }
         }
 
-        private void MoveGrabbedPoint(InputLibrary.Cursor cursor)
+        private void MoveGrabbedPoint(InputLibrary.Cursor cursor, SystemManagers systemManagers)
         {
             var linePolygon = SelectedLinePolygon;
             mHasChangedAnythingSinceLastPush = true;
@@ -451,6 +453,13 @@ namespace Gum.Wireframe.Editors
 
             pointAtIndex.X += change.X;
             pointAtIndex.Y += change.Y;
+
+            // So we don't get wacky coordinates, let's round the value to the nearest unit 
+            // finish here:
+            var camera = systemManagers.Renderer.Camera;
+            var roundMultiple =  1 / camera.Zoom;
+            pointAtIndex.X = MathFunctions.RoundFloat(pointAtIndex.X, roundMultiple);
+            pointAtIndex.Y = MathFunctions.RoundFloat(pointAtIndex.Y, roundMultiple);
 
             var shouldSetFirstAndLast = (grabbedIndex == 0 || grabbedIndex == linePolygon.PointCount - 1) &&
                 linePolygon.PointAt(0) == linePolygon.PointAt(linePolygon.PointCount - 1);

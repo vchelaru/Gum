@@ -147,27 +147,26 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
 
     }
 
-    public LinePolygon(SystemManagers managers)
+    public LinePolygon(SystemManagers? managers)
     {
 
         mChildren = new ();
 
         Visible = true;
 
-        if (managers != null)
-        {
-            mLinePrimitive = new LinePrimitive(managers.Renderer.SinglePixelTexture);
-        }
-        else
-        {
-            mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
-        }
+        managers = managers ?? SystemManagers.Default;
+
+        mLinePrimitive = new LinePrimitive(managers.Renderer.SinglePixelTexture);
 
         // todo - make it default to something - a rectangle?
     }
 
     #endregion
 
+    /// <summary>
+    /// Sets the relative points that make up the polygon.
+    /// </summary>
+    /// <param name="points">The points in relative space, where 0,0 is the origin of the polygon.</param>
     public void SetPoints(ICollection<Vector2> points)
     {
         mLinePrimitive.ClearVectors();
