@@ -1,5 +1,4 @@
 ﻿using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
@@ -154,6 +153,11 @@ public class ListBoxTests : BaseTestClass
         {
             listBox.Items.Remove("Item " + i);
             listBox.ListBoxItems.Count.ShouldBe(9 - i);
+            if( listBox.ListBoxItems.Count > 0)
+            {
+                var nextItem = listBox.ListBoxItems[0];
+                nextItem.BindingContext.ShouldBe("Item " + (i + 1));
+            }
         }
     }
 
@@ -183,6 +187,19 @@ public class ListBoxTests : BaseTestClass
         }
         listBox.Items.Clear();
         listBox.ListBoxItems.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_Clear_ShouldWorkWhenAddingButtonVisual()
+    {
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        button.Parent.ShouldBeNull();
+        listBox.Items.Add(button);
+        button.Parent.ShouldNotBeNull();
+        listBox.Items.Clear(); // should not throw
+        button.Parent.ShouldBeNull();
     }
 
     [Fact]

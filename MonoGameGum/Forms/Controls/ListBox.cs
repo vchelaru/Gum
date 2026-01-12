@@ -40,6 +40,9 @@ namespace Gum.Forms.Controls;
 
 
 #region ScrollIntoViewStyle Enums
+/// <summary>
+/// Specifies the scrolling behavior to use when bringing an item into view within a scrollable container.
+/// </summary>
 public enum ScrollIntoViewStyle
 {
     /// <summary>
@@ -50,16 +53,33 @@ public enum ScrollIntoViewStyle
     /// </summary>
     BringIntoView,
 
+    /// <summary>
+    /// Scrolls the item to the top of the visible area.
+    /// </summary>
     Top,
+    /// <summary>
+    /// Scrolls the item to the center of the visible area.
+    /// </summary>
     Center,
+    /// <summary>
+    /// Scrolls the item to the bottom of the visible area.
+    /// </summary>
     Bottom
 }
 #endregion
 
-
+/// <summary>
+/// Specifies the available modes for drag-and-drop reordering operations.
+/// </summary>
 public enum DragDropReorderMode
 {
+    /// <summary>
+    /// Drag+drop reordering is disabled.
+    /// </summary>
     NoReorder,
+    /// <summary>
+    /// Indicates that the operation should be performed immediately as dragging is happening.
+    /// </summary>
     Immediate
 }
 
@@ -99,7 +119,15 @@ public class ListBox : ItemsControl, IInputReceiver
     /// Provides internal storage for the collection of list box items.
     /// </summary>
     /// <remarks>This field is intended for internal use and should not be accessed directly from outside the
-    /// containing class. Use public members to interact with the list box items when available.</remarks>
+    /// containing class. Use public members to interact with the list box items when available.
+    /// 
+    /// In normal usage, where view models or primitives are added to the Items collection, this
+    /// list is automatically kept up-to-date. However, it is possible for the Items collection to
+    /// not be up-to-date with ListBoxItemsInternal. This can happen if a visual is added directly
+    /// to the Items collection. In this case, the ListBox assumes that the added visual should be directly
+    /// displayed. However, if the visual already has a forms control, such as a Button having been added to
+    /// the list box, then the control is used as-is, and it is not even added to the ListBoxItems.
+    /// </remarks>
     protected List<ListBoxItem> ListBoxItemsInternal = new List<ListBoxItem>();
 
     ReadOnlyCollection<ListBoxItem> listBoxItemsReadOnly;
@@ -732,10 +760,26 @@ public class ListBox : ItemsControl, IInputReceiver
     }
 
 
-
+    /// <summary>
+    /// Handles the removal of an item from the Items collection at the specified index by also
+    /// removing the corresponding ListBoxItem from the internal ListBoxItemsInternal collection.
+    /// </summary>
+    /// <param name="indexToRemoveFrom">The index in the Items collection.</param>
     protected override void HandleCollectionItemRemoved(int indexToRemoveFrom)
     {
-        ListBoxItemsInternal.RemoveAt(indexToRemoveFrom);
+        // indexToRemoveFrom is the index of the index in the Items list. 
+        // See the ListBoxItems for information on why this index many not
+        // align with ListBoxItemsInternal.
+        // A full solution should probably start from the top of the controls and count
+        // through all of them to find the ListBoxItems, but we can quickly solve this bug
+        // with a bounds check:
+        // https://github.com/vchelaru/Gum/issues/1380#issuecomment-3736165558
+        // This also is covered in a unit test:
+        // Items_Clear_ShouldWorkWhenAddingButtonVisual
+        if(indexToRemoveFrom < ListBoxItemsInternal.Count)
+        {
+            ListBoxItemsInternal.RemoveAt(indexToRemoveFrom);
+        }
     }
 
     protected override void HandleCollectionReset()
@@ -766,7 +810,7 @@ public class ListBox : ItemsControl, IInputReceiver
     #region Scroll Item into view
 
     /// <summary>
-    /// Scrolls the list view so that the argument item is in view. The amount of scrolling depends on the scrollIntoViewStyle argument.
+    /// Scrolls the ListBox so that the argument item is in view. The amount of scrolling depends on the scrollIntoViewStyle argument.
     /// </summary>
     /// <param name="item">The item to scroll into view.</param>
     /// <param name="scrollIntoViewStyle">The desired location of the item after scrolling.</param>
@@ -777,6 +821,11 @@ public class ListBox : ItemsControl, IInputReceiver
         ScrollIndexIntoView(itemIndex, scrollIntoViewStyle);
     }
 
+    /// <summary>
+    /// Scrolls the ListBox so that the item at the argument index is in view. The amount of scrolling depends on the scrollIntoViewStyle argument.
+    /// </summary>
+    /// <param name="itemIndex">The index of the item to scroll into view.</param>
+    /// <param name="scrollIntoViewStyle">The desired location of the item after scrolling.</param>
     public void ScrollIndexIntoView(int itemIndex, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView)
     {
         if (itemIndex != -1)
@@ -799,18 +848,27 @@ public class ListBox : ItemsControl, IInputReceiver
                     if (isAboveView)
                     {
                         amountToScroll = visualTop - viewTop;
-                        verticalScrollBar.Value += amountToScroll;
+                        if(verticalScrollBar != null)
+                        {
+                            verticalScrollBar.Value += amountToScroll;
+                        }
                     }
                     else if (isBelowView)
                     {
                         amountToScroll = visualBottom - viewBottom;
-                        verticalScrollBar.Value += amountToScroll;
+                        if (verticalScrollBar != null)
+                        {
+                            verticalScrollBar.Value += amountToScroll;
+                        }
                     }
 
                     break;
                 case ScrollIntoViewStyle.Top:
                     amountToScroll = visualTop - viewTop;
-                    verticalScrollBar.Value += amountToScroll;
+                    if (verticalScrollBar != null)
+                    {
+                        verticalScrollBar.Value += amountToScroll;
+                    }
                     break;
                 case ScrollIntoViewStyle.Center:
 
@@ -819,12 +877,17 @@ public class ListBox : ItemsControl, IInputReceiver
                     var desiredViewTop = viewHeight / 2.0f + visualTop - clipContainer.GetAbsoluteHeight() / 2;
 
                     amountToScroll = desiredViewTop - viewTop;
-                    verticalScrollBar.Value += amountToScroll;
-
+                    if (verticalScrollBar != null)
+                    {
+                        verticalScrollBar.Value += amountToScroll;
+                    }
                     break;
                 case ScrollIntoViewStyle.Bottom:
                     amountToScroll = visualBottom - viewBottom;
-                    verticalScrollBar.Value += amountToScroll;
+                    if (verticalScrollBar != null)
+                    {
+                        verticalScrollBar.Value += amountToScroll;
+                    }
                     break;
             }
         }
