@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Components\HyTaleComponents\Pieces\" />
     <Folder Include="Content\GumProject\Components\FrbClickerComponents\" />
     <Folder Include="DefsData\" />
 	  <None Update="Content\**\*.*">
