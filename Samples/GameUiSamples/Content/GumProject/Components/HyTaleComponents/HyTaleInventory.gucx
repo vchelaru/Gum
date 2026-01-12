@@ -114,36 +114,6 @@
     </Variable>
     <Variable>
       <Type>HasDamage</Type>
-      <Name>HyTaleItemSlotInstance.HasDamageState</Name>
-      <Value xsi:type="xsd:string">False</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HasItem</Type>
-      <Name>HyTaleItemSlotInstance.HasItemState</Name>
-      <Value xsi:type="xsd:string">True</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HasMoreThanOne</Type>
-      <Name>HyTaleItemSlotInstance.HasMoreThanOneState</Name>
-      <Value xsi:type="xsd:string">False</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IsHotBarItem</Type>
-      <Name>HyTaleItemSlotInstance.IsHotBarItemState</Name>
-      <Value xsi:type="xsd:string">False</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>HyTaleItemSlotInstance.Parent</Name>
-      <Value xsi:type="xsd:string">InventoryRow1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HasDamage</Type>
       <Name>HyTaleItemSlotInstance1.HasDamageState</Name>
       <Value xsi:type="xsd:string">False</Value>
       <SetsValue>true</SetsValue>
@@ -439,7 +409,7 @@
     <Variable>
       <Type>string</Type>
       <Name>HyTaleItemSlotInstance18.Parent</Name>
-      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -739,7 +709,7 @@
     <Variable>
       <Type>string</Type>
       <Name>HyTaleItemSlotInstance27.Parent</Name>
-      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1014,6 +984,36 @@
     </Variable>
     <Variable>
       <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance36.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance36.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance36.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance36.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance36.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
       <Name>HyTaleItemSlotInstance4.HasDamageState</Name>
       <Value xsi:type="xsd:string">False</Value>
       <SetsValue>true</SetsValue>
@@ -1189,7 +1189,7 @@
     <Variable>
       <Type>string</Type>
       <Name>HyTaleItemSlotInstance9.Parent</Name>
-      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1587,7 +1587,7 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>HyTaleItemSlotInstance</Name>
+    <Name>HyTaleItemSlotInstance1</Name>
     <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
@@ -1598,12 +1598,7 @@
   </Instance>
   <Instance>
     <Name>ContainerInstance2</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>HyTaleItemSlotInstance1</Name>
-    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <BaseType>Controls/PanelStandard</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -1687,7 +1682,7 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>HyTaleItemSlotInstance27</Name>
+    <Name>HyTaleItemSlotInstance18</Name>
     <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
@@ -1732,7 +1727,7 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>HyTaleItemSlotInstance18</Name>
+    <Name>HyTaleItemSlotInstance36</Name>
     <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
@@ -1773,6 +1768,11 @@
   </Instance>
   <Instance>
     <Name>HyTaleItemSlotInstance26</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance27</Name>
     <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>

@@ -55,7 +55,7 @@ partial class MainMenu
             }
             else if (item == InventoryHyTale)
             {
-                GoToScreen(new StardewInventoryScreen());
+                GoToScreen(new HyTaleInventoryScreen());
             }
         }
     }

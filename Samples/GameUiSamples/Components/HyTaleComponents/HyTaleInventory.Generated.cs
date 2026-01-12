@@ -45,10 +45,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public StackPanel InventoryRow3 { get; protected set; }
     public StackPanel InventoryRow4 { get; protected set; }
     public HyTaleHotbarRow HyTaleHotbarRowInstance { get; protected set; }
-    public HyTaleItemSlot HyTaleItemSlotInstance { get; protected set; }
-    public NineSliceRuntime NineSliceInstance { get; protected set; }
-    public ContainerRuntime ContainerInstance2 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance1 { get; protected set; }
+    public NineSliceRuntime NineSliceInstance { get; protected set; }
+    public PanelStandard ContainerInstance2 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance2 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance3 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance4 { get; protected set; }
@@ -65,7 +64,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public HyTaleItemSlot HyTaleItemSlotInstance15 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance16 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance17 { get; protected set; }
-    public HyTaleItemSlot HyTaleItemSlotInstance27 { get; protected set; }
+    public HyTaleItemSlot HyTaleItemSlotInstance18 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance28 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance29 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance30 { get; protected set; }
@@ -74,7 +73,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public HyTaleItemSlot HyTaleItemSlotInstance33 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance34 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance35 { get; protected set; }
-    public HyTaleItemSlot HyTaleItemSlotInstance18 { get; protected set; }
+    public HyTaleItemSlot HyTaleItemSlotInstance36 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance19 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance20 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance21 { get; protected set; }
@@ -83,6 +82,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public HyTaleItemSlot HyTaleItemSlotInstance24 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance25 { get; protected set; }
     public HyTaleItemSlot HyTaleItemSlotInstance26 { get; protected set; }
+    public HyTaleItemSlot HyTaleItemSlotInstance27 { get; protected set; }
     public HyTaleInventoryHeaderRow HyTaleInventoryHeaderRowInstance { get; protected set; }
     public ContainerRuntime ContainerInstance { get; protected set; }
 
@@ -103,10 +103,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         InventoryRow3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<StackPanel>(this.Visual,"InventoryRow3");
         InventoryRow4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<StackPanel>(this.Visual,"InventoryRow4");
         HyTaleHotbarRowInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleHotbarRow>(this.Visual,"HyTaleHotbarRowInstance");
-        HyTaleItemSlotInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance");
-        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        ContainerInstance2 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance2") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         HyTaleItemSlotInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance1");
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        ContainerInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PanelStandard>(this.Visual,"ContainerInstance2");
         HyTaleItemSlotInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance2");
         HyTaleItemSlotInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance3");
         HyTaleItemSlotInstance4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance4");
@@ -123,7 +122,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         HyTaleItemSlotInstance15 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance15");
         HyTaleItemSlotInstance16 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance16");
         HyTaleItemSlotInstance17 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance17");
-        HyTaleItemSlotInstance27 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance27");
+        HyTaleItemSlotInstance18 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance18");
         HyTaleItemSlotInstance28 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance28");
         HyTaleItemSlotInstance29 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance29");
         HyTaleItemSlotInstance30 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance30");
@@ -132,7 +131,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         HyTaleItemSlotInstance33 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance33");
         HyTaleItemSlotInstance34 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance34");
         HyTaleItemSlotInstance35 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance35");
-        HyTaleItemSlotInstance18 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance18");
+        HyTaleItemSlotInstance36 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance36");
         HyTaleItemSlotInstance19 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance19");
         HyTaleItemSlotInstance20 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance20");
         HyTaleItemSlotInstance21 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance21");
@@ -141,6 +140,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         HyTaleItemSlotInstance24 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance24");
         HyTaleItemSlotInstance25 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance25");
         HyTaleItemSlotInstance26 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance26");
+        HyTaleItemSlotInstance27 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleItemSlot>(this.Visual,"HyTaleItemSlotInstance27");
         HyTaleInventoryHeaderRowInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleInventoryHeaderRow>(this.Visual,"HyTaleInventoryHeaderRowInstance");
         ContainerInstance = this.Visual?.GetGraphicalUiElementByName("ContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
         CustomInitialize();

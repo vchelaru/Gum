@@ -9,10 +9,12 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 using System;
+using GameUiSamples.Data;
 namespace GameUiSamples.Components
 {
     partial class HyTaleItemSlot
     {
+        public HyTaleItem Item { get; set; }
         partial void CustomInitialize()
         {
         
