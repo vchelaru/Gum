@@ -1734,29 +1734,25 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             throw new ArgumentNullException(nameof(node));
         }
 
-        if (node.Tag is ElementSave)
+        if (node.Tag is ElementSave elementSave)
         {
-            ElementSave elementSave = node.Tag as ElementSave;
-
             RefreshElementTreeNode(node, elementSave);
         }
-        else if (node.Tag is InstanceSave)
+        else if (node.Tag is InstanceSave instanceSave)
         {
-            InstanceSave instanceSave = node.Tag as InstanceSave;
             // this if check improves speed quite a bit!
             if(instanceSave.Name != node.Text)
             {
                 node.Text = instanceSave.Name;
             }
         }
-        else if(node.Tag is BehaviorSave behaviorSave)
+        else if(node.Tag is BehaviorSave behavior)
         {
-            var behavior = node.Tag as BehaviorSave;
             if(behavior.Name != node.Text)
             {
                 node.Text = behavior.Name;
             }
-            RefreshBehaviorTreeNode(node, behaviorSave);
+            RefreshBehaviorTreeNode(node, behavior);
         }
 
         foreach (TreeNode treeNode in node.Nodes)
@@ -2413,8 +2409,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         var objectOver = this.ObjectTreeView.GetNodeAt(x, y);
 
-        ElementSave element = null;
-        InstanceSave instance = null;
+        ElementSave? element = null;
+        InstanceSave? instance = null;
 
         if(objectOver != null && objectOver.Tag != null)
         {
@@ -2428,7 +2424,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        GraphicalUiElement whatToHighlight = null;
+        GraphicalUiElement? whatToHighlight = null;
 
         if(element != null)
         {
