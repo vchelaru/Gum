@@ -14,9 +14,9 @@ public interface IWireframeObjectManager
 
     void RefreshAll(bool forceLayout, bool forceReloadTextures = false);
 
-    GraphicalUiElement GetRepresentation(ElementSave elementSave);
+    GraphicalUiElement? GetRepresentation(ElementSave elementSave);
 
-    GraphicalUiElement GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack = null);
+    GraphicalUiElement? GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack = null);
 
     GraphicalUiElement? GetSelectedRepresentation();
 

@@ -17,10 +17,10 @@ namespace Gum.Wireframe
         NineSlice mOverlayNineSlice;
         LinePolygon mOverlayLinePolygon;
 
-        public IPositionedSizedObject HighlightedIpso { get; set; }
+        public IPositionedSizedObject? HighlightedIpso { get; set; }
 
 
-        private Sprite HighlightedSprite
+        private Sprite? HighlightedSprite
         {
             get
             {
@@ -29,7 +29,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private NineSlice HighlightedNineSlice
+        private NineSlice? HighlightedNineSlice
         {
             get
             {
@@ -38,7 +38,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private LineRectangle HighlightedLineRectangle
+        private LineRectangle? HighlightedLineRectangle
         {
             get
             {
@@ -46,7 +46,7 @@ namespace Gum.Wireframe
             }
         }
 
-        private LinePolygon HighlightedLinePolygon
+        private LinePolygon? HighlightedLinePolygon
         {
             get
             {
