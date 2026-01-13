@@ -126,7 +126,7 @@ Previous versions of Gum runtime included a `ContainerRuntime` which has an `Alp
 
 This section lists all deprecated types and members. Projects should migrate to the recommended types and members to avoid breaking changes in future versions.
 
-### Update&#x20;
+### GumService.Update&#x20;
 
 In MonoGame/KNI/FNA, GumService, often accessed through the GumUi property, no longer takes a Game instance as its first parameter. All versions of Update which take a Game instance are now obsolete.
 
@@ -156,4 +156,30 @@ GumUi.Update(gameTime, customRoot);
 
 // Update which takes a list of elements to update
 GumUi.Update(gameTime, listOfElements);
+```
+
+### ListBox.ListBoxItemGumType and ListBox.ListBoxItemFormsType
+
+`ListBox.ListBoxItemGumType` and `ListBox.ListBoxItemFormsType` have been marked as obsolete because these require implementations to have specific constructors. Instead, VisualTemplate and FrameworkElementTemplate can provide delegates which return instances.
+
+❌Old:
+
+```csharp
+listBox.ListBoxItemGumType = typeof(SomeVisualType);
+
+otherListBox.ListBoxItemFormsType = typeof(SomeFormsType);
+```
+
+✅New:
+
+```csharp
+listBox.VisualTemplate = new VisualTemplate(typeof(SomeVisualType));
+// or
+listBox.VisualTemplate = new VisualTemplate(new SomeVisualType());
+
+otherListBox.FrameworkElementTemplate = 
+    new FrameworkElementTemplate(typeof(SomeFormsType));
+// or
+otherListBox.FrameworkElementTemplate = 
+    new FrameworkElementTemplate(() => new SomeFormsType()));
 ```
