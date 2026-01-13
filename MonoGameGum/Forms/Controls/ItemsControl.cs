@@ -19,35 +19,15 @@ public class ItemsControl : ScrollViewer
 {
     #region Fields/Properties
 
-    protected Type ItemGumType { get; set; }
-
-    Type itemFormsType = typeof(ListBoxItem);
+    [Obsolete("Use VisualTemplate")]
+    protected Type? ItemGumType { get; set; }
 
     public virtual string DisplayMemberPath
     {
         get;
         set;
-    }
+    } = string.Empty;
 
-    // There can be a logical conflict when dealing with list items.
-    // When creating a Gum list item, the Gum object may specify a Forms
-    // type. But the list can also specify a forms type. So which do we use?
-    // We'll use the list item forms type unless the list box has its value set
-    // explicitly. then we'll go to the list box type. This eventually should get
-    // marked as obsolete and we should instead go to a VM solution.
-    protected bool isItemTypeSetExplicitly = false;
-    protected Type ItemFormsType
-    {
-        get => itemFormsType;
-        set
-        {
-            if (value != itemFormsType)
-            {
-                isItemTypeSetExplicitly = true;
-                itemFormsType = value;
-            }
-        }
-    }
 
     IList items = new ObservableCollection<object>();
     /// <summary>

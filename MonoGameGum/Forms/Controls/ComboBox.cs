@@ -112,6 +112,8 @@ public class ComboBox :
         }
     }
 
+
+    [Obsolete("Use VisualTemplate")]
     public Type ListBoxItemGumType
     {
         get { return listBox.ListBoxItemGumType; }
@@ -127,6 +129,7 @@ public class ComboBox :
         }
     }
 
+    [Obsolete("Use FrameworkElementTemplate")]
     public Type ListBoxItemFormsType
     {
         get { return listBox.ListBoxItemFormsType; }
