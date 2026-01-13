@@ -13,8 +13,8 @@ namespace GameUiSamples.Services
         Dictionary<string, HyTaleItemDefinition> _hyTaleInventoryItemDefinitions;
         public IReadOnlyDictionary<string, HyTaleItemDefinition> HyTaleInventoryItemDefinitions => _hyTaleInventoryItemDefinitions;
 
-        public HyTaleItem?[] PlayerInventory { get; private set; } = new HyTaleItem?[9 * 4];
-        public HyTaleItem?[] PlayerHotbar { get; private set; } = new HyTaleItem?[9];
+        public HyTaleItem?[] PlayerInventory { get; private set; } = new HyTaleItem?[9 * 5];
+        //public HyTaleItem?[] PlayerHotbar { get; private set; } = new HyTaleItem?[9];
 
         public HyTaleInventoryService()
         {

@@ -52,9 +52,11 @@ namespace GameUiSamples.Screens
 
             InitializePlayerInventory();
 
-            //InitializeInventoryItems();
+            FillHotBar();
 
-            //UpdateToInventory();
+            InitializeInventoryItems();
+
+            UpdateToInventory();
         }
 
         private void CreateGrabbedIcon()
@@ -69,89 +71,6 @@ namespace GameUiSamples.Screens
             _grabbedIcon.Visual.YOrigin = VerticalAlignment.Center;
         }
 
-
-        //private void InitializeInventoryItems()
-        //{
-        //    foreach (var stackPanel in HyTaleInventoryInstance.ContainerInstance2.Children)
-        //    {
-        //        if (stackPanel is StackPanel)
-        //        {
-        //            foreach (HyTaleItemSlot item in ((StackPanel)stackPanel).Children)
-        //            {
-        //                item.Visual.Push += HandleInventoryItemPushed;
-
-        //                item.Visual.RemovedAsPushed += HandleInventoryItemRemovedAsPushed;
-        //            }
-        //        }
-        //    }
-        //}
-
-        //private void HandleInventoryItemPushed(object? sender, EventArgs e)
-        //{
-        //    var visualPushed = sender as InteractiveGue;
-        //    var itemSlotPushed = visualPushed?.FormsControlAsObject as HyTaleItemSlot;
-
-        //    if (itemSlotPushed != null)
-        //    {
-        //        var index = GetItemSlotIndex(itemSlotPushed);
-
-        //        if (index >= 0 && index < _inventoryService.PlayerInventory.Length)
-        //        {
-        //            var item = _inventoryService.PlayerInventory[index];
-        //            if (item != null)
-        //            {
-        //                itemSlotPushed.HyTaleItemIconInstance.IsVisible = false;
-        //                _grabbedIcon.IsVisible = true;
-        //                _grabbedIcon.ItemStartX = itemSlotPushed.ItemStartX;
-        //                _grabbedIcon.ItemStartY = itemSlotPushed.ItemStartY;
-        //            }
-        //        }
-
-        //    }
-        //}
-
-        //private void HandleInventoryItemRemovedAsPushed(object? sender, EventArgs e)
-        //{
-        //    var visualPushed = sender as InteractiveGue;
-        //    var itemSlotPushed = visualPushed?.FormsControlAsObject as HyTaleItemSlot;
-
-        //    var didSwap = false;
-
-        //    if (itemSlotPushed != null)
-        //    {
-        //        _grabbedIcon.IsVisible = false;
-
-        //        var visualOver = GumService.Default.Cursor.VisualOver;
-
-        //        var itemSlotDropped = visualOver?.FormsControlAsObject as HyTaleItemSlot;
-
-        //        if (itemSlotDropped != null)
-        //        {
-        //            var oldInventoryType = itemSlotPushed.Visual.Tag as string;
-        //            var newInventoryType = itemSlotDropped.Visual.Tag as string;
-        //            var oldIndex = GetItemSlotIndex(itemSlotPushed);
-        //            var newIndex = GetItemSlotIndex(itemSlotDropped);
-
-        //            // swap them in the inventory:
-        //            var inventory = _inventoryService.PlayerInventory;
-
-        //            inventory[oldIndex] = newInventoryType;
-        //            inventory[newIndex] = oldInventoryType;
-
-        //        }
-        //    }
-        //    UpdateToInventory();
-        //}
-
-        //int GetItemSlotIndex(HyTaleItemSlot itemSlot)
-        //{
-        //    // Made this hard for myself by having rows but the spacing for GRID was off
-
-        //    //return InventoryGridInstance.MainGrid.Children.IndexOf(itemSlot);
-
-        //    if (itemSlot.Name
-
-        //}
 
         private void InitializePlayerInventory()
         {
@@ -183,31 +102,220 @@ namespace GameUiSamples.Screens
             return new HyTaleItem(itemDef.Name, _random.Next(64), _random.Next(100));
         }
 
-        //private void UpdateToInventory()
-        //{
-        //    var inventory = _inventoryService.PlayerInventory;
+        private void FillHotBar()
+        {
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem1, "Pickaxe", 1, 75);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem2, "Axe", 1, 100);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem3, "Sword", 1, 25);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem4, "Bow", 1, 92);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem5, "IronIngot", 64);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem6, "Boards", 64);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem7, "Meat", 5);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem8);
+            AssignIconAndUpdateInventory(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem9, "Bread", 23);
 
-        //    for (int i = 0; i < inventory.Length; i++)
-        //    {
-        //        var item = inventory[i];
+        }
 
-        //        var itemSlot = this.InventoryGridInstance.GetItemSlotByIndex(i);
+        private void AssignIconAndUpdateInventory(HyTaleItemSlot slot, string itemName = null, int quantity = 1, int durabilityLeft = 100)
+        {
+            slot.IsHotBarItemState = HyTaleItemSlot.IsHotBarItem.True;
 
-        //        itemSlot.Visual.Tag = item;
+            if (String.IsNullOrEmpty(itemName))
+            {
+                slot.HasItemState = HyTaleItemSlot.HasItem.False;
+                slot.HasDamageState = HyTaleItemSlot.HasDamage.False;
+                slot.HasMoreThanOneState = HyTaleItemSlot.HasMoreThanOne.False;
+                slot.Quantity = "";
+                return;
+            }
 
-        //        if (item == null)
-        //        {
-        //            itemSlot.ItemIconInstance.IsVisible = false;
-        //        }
-        //        else
-        //        {
-        //            var definition = _inventoryService.InventoryItemDefinitions[item];
-        //            itemSlot.ItemIconInstance.IsVisible = true;
-        //            itemSlot.ItemIconInstance.TextureLeft = definition.PixelLeft;
-        //            itemSlot.ItemIconInstance.TextureTop = definition.PixelTop;
-        //        }
-        //    }
-        //}
+            // Add the item to the actual inventory
+            HyTaleItem item = new HyTaleItem(itemName, quantity, durabilityLeft);
+            int inventoryIndex = GetItemSlotIndex(slot);
+            _inventoryService.PlayerInventory[inventoryIndex] = item;
+
+            AssignIcon(slot, item);
+        }
+
+
+        private void AssignIcon(HyTaleItemSlot slot, HyTaleItem item)
+        {
+            if (item is null)
+            {
+                slot.HasItemState = HyTaleItemSlot.HasItem.False;
+                slot.HasDamageState = HyTaleItemSlot.HasDamage.False;
+                slot.HasMoreThanOneState = HyTaleItemSlot.HasMoreThanOne.False;
+                slot.Quantity = "";
+                return;
+            }
+
+            // Setup the visual for the item
+            slot.HasItemState = HyTaleItemSlot.HasItem.True;
+            slot.HasDamageState = HyTaleItemSlot.HasDamage.False;
+            slot.HasMoreThanOneState = HyTaleItemSlot.HasMoreThanOne.False;
+
+            HyTaleItemDefinition itemDefinition = _inventoryService.HyTaleInventoryItemDefinitions[item.Name];
+            if (itemDefinition != null)
+            {
+                slot.ItemName = item.Name;
+
+                slot.ItemStartX = (int)itemDefinition.TextureTopLeft.X;
+                slot.ItemStartY = (int)itemDefinition.TextureTopLeft.Y;
+
+                if (itemDefinition.ItemCatgegory == HytaleItemCatergories.Weapon || itemDefinition.ItemCatgegory == HytaleItemCatergories.Tool)
+                {
+                    if (item.Durability < 100)
+                    {
+                        slot.HasDamageState = HyTaleItemSlot.HasDamage.True;
+                        slot.DurabilityRatio = item.Durability;
+                    }
+                    else
+                    {
+                        slot.HasDamageState = HyTaleItemSlot.HasDamage.False;
+                        slot.DurabilityRatio = 100;
+                    }
+                }
+
+                if (item.Quantity > 1)
+                {
+                    slot.HasMoreThanOneState = HyTaleItemSlot.HasMoreThanOne.True;
+                    slot.Quantity = item.Quantity.ToString();
+                }
+                else
+                {
+                    slot.Quantity = "";
+                }
+            }
+        }
+
+        private void InitializeInventoryItems()
+        {
+            foreach (var container in HyTaleInventoryInstance.MainGrid.Children)
+            {
+                StackPanel stackPanel;
+
+                if (container is HyTaleHotbarRow)
+                {
+                    stackPanel = ((HyTaleHotbarRow)container).HotBarRowContainer;
+                } 
+                else //if (container is StackPanel)
+                {
+                    stackPanel = (StackPanel)container;
+                }
+
+                foreach (HyTaleItemSlot item in (stackPanel).Children)
+                {
+                    item.HasItemState = HyTaleItemSlot.HasItem.False;
+                    item.Visual.Push += HandleInventoryItemPushed;
+
+                    item.Visual.RemovedAsPushed += HandleInventoryItemRemovedAsPushed;
+                }
+            }
+        }
+
+        private void HandleInventoryItemPushed(object? sender, EventArgs e)
+        {
+            var visualPushed = sender as InteractiveGue;
+            var itemSlotPushed = visualPushed?.FormsControlAsObject as HyTaleItemSlot;
+            
+            if (itemSlotPushed != null)
+            {
+                var index = GetItemSlotIndex(itemSlotPushed);
+
+                if (index >= 0 && index < _inventoryService.PlayerInventory.Length)
+                {
+                    var item = _inventoryService.PlayerInventory[index];
+                    if (item != null)
+                    {
+                        itemSlotPushed.HyTaleItemIconInstance.IsVisible = false;
+                        _grabbedIcon.IsVisible = true;
+                        _grabbedIcon.ItemStartX = itemSlotPushed.ItemStartX;
+                        _grabbedIcon.ItemStartY = itemSlotPushed.ItemStartY;
+                    }
+                }
+            }
+        }
+
+        private void HandleInventoryItemRemovedAsPushed(object? sender, EventArgs e)
+        {
+            var visualPushed = sender as InteractiveGue;
+            var itemSlotPushed = visualPushed?.FormsControlAsObject as HyTaleItemSlot;
+
+            var didSwap = false;
+
+            if (itemSlotPushed != null)
+            {
+                _grabbedIcon.IsVisible = false;
+
+                var visualOver = GumService.Default.Cursor.VisualOver;
+
+                var itemSlotDropped = visualOver?.FormsControlAsObject as HyTaleItemSlot;
+
+                if (itemSlotDropped != null)
+                {
+                    var oldIndex = GetItemSlotIndex(itemSlotPushed);
+                    var newIndex = GetItemSlotIndex(itemSlotDropped);
+
+                    // swap them in the inventory:
+                    var inventory = _inventoryService.PlayerInventory;
+
+                    var oldItem = inventory[oldIndex];
+                    inventory[oldIndex] = inventory[newIndex];
+                    inventory[newIndex] = oldItem;
+
+                }
+            }
+            UpdateToInventory();
+        }
+
+        int GetItemSlotIndex(HyTaleItemSlot itemSlot)
+        {
+            // Assume hotbar starting values
+            // We're using 1 giant array for all items, so we'll just make the Hotbar items be 36, 37, 38, etc.
+            string parentName = itemSlot.ParentFrameworkElement.Name;
+            var slotNamePrefix = "HotBarItem";
+            int slotIndexOffset = 35;
+
+            // The normal inventory items will be 0, 1, 2, etc
+            if (parentName.Contains("InventoryRow"))
+            {
+                slotIndexOffset = -1;
+                slotNamePrefix = "HyTaleItemSlotInstance";
+            }
+
+            string numbersLeftover = itemSlot.Name.Replace(slotNamePrefix, "");
+            int slotIndex;
+            int.TryParse(numbersLeftover, out slotIndex);
+
+            return slotIndex + slotIndexOffset;
+
+        }
+
+
+        private void UpdateToInventory()
+        {
+            var inventory = _inventoryService.PlayerInventory;
+
+            for (int i = 0; i < inventory.Length; i++)
+            {
+                var item = inventory[i];
+
+                var itemSlot = this.HyTaleInventoryInstance.GetItemSlotByIndex(i);
+
+                if (item == null)
+                {
+                    itemSlot.HasItemState = HyTaleItemSlot.HasItem.False;
+                }
+                else
+                {
+                    AssignIcon(itemSlot, item);
+                    var definition = _inventoryService.HyTaleInventoryItemDefinitions[item.Name];
+                    //itemSlot.ItemIconInstance.IsVisible = true;
+                    //itemSlot.ItemIconInstance.TextureLeft = definition.PixelLeft;
+                    //itemSlot.ItemIconInstance.TextureTop = definition.PixelTop;
+                }
+            }
+        }
 
         public void Update(GameTime gameTime)
         {

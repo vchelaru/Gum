@@ -343,6 +343,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>HyTaleComponents/HyTaleInventory1</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>HyTaleComponents/HyTaleItemSlot</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
