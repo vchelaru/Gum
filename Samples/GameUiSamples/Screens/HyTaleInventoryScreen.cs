@@ -205,7 +205,6 @@ namespace GameUiSamples.Screens
 
                 foreach (HyTaleItemSlot item in (stackPanel).Children)
                 {
-                    item.HasItemState = HyTaleItemSlot.HasItem.False;
                     item.Visual.Push += HandleInventoryItemPushed;
 
                     item.Visual.RemovedAsPushed += HandleInventoryItemRemovedAsPushed;
