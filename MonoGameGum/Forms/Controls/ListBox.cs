@@ -197,16 +197,44 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+
+
+
+    [Obsolete("Use VisualTemplate")]
     public Type ListBoxItemGumType
     {
-        get => base.ItemGumType;
-        set => base.ItemGumType = value;
+        get => ItemGumType;
+        set => ItemGumType = value;
     }
 
+    [Obsolete("Use FrameworkElementTemplate")]
     public Type ListBoxItemFormsType
     {
-        get { return base.ItemFormsType; }
-        set { base.ItemFormsType = value; }
+        get { return ItemFormsType; }
+        set { ItemFormsType = value; }
+    }
+
+
+    // There can be a logical conflict when dealing with list items.
+    // When creating a Gum list item, the Gum object may specify a Forms
+    // type. But the list can also specify a forms type. So which do we use?
+    // We'll use the list item forms type unless the list box has its value set
+    // explicitly. then we'll go to the list box type. This eventually should get
+    // marked as obsolete and we should instead go to a VM solution.
+    protected bool isItemTypeSetExplicitly = false;
+    Type itemFormsType = typeof(ListBoxItem);
+
+    protected Type ItemFormsType
+    {
+        get => itemFormsType;
+        set
+        {
+            if (value != itemFormsType)
+            {
+                isItemTypeSetExplicitly = true;
+                itemFormsType = value;
+            }
+        }
     }
 
     public object SelectedObject
