@@ -159,8 +159,6 @@ partial class GameScreenHud
         this.SetBinding(
             nameof(this.IsLowHealth),
             nameof(ViewModel.IsLowHealth));
-
-
     }
 }
 
