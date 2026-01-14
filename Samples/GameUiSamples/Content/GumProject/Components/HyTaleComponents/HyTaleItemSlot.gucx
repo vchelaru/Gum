@@ -5,6 +5,12 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>bool</Type>
+      <Name>ExposeChildrenEvents</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>HasDamage</Type>
       <Name>HasDamageState</Name>
       <SetsValue>true</SetsValue>
@@ -314,6 +320,13 @@
       <Name>True</Name>
       <Variable>
         <Type>bool</Type>
+        <Name>HyTaleDurabilityBarInstance.Visible</Name>
+        <Value xsi:type="xsd:boolean">true</Value>
+        <Category>States and Visibility</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
         <Name>HyTaleItemIconInstance.Visible</Name>
         <Value xsi:type="xsd:boolean">true</Value>
         <Category>States and Visibility</Category>
@@ -346,13 +359,6 @@
       <Variable>
         <Type>bool</Type>
         <Name>QuantityValueText.Visible</Name>
-        <Value xsi:type="xsd:boolean">true</Value>
-        <Category>States and Visibility</Category>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>HyTaleDurabilityBarInstance.Visible</Name>
         <Value xsi:type="xsd:boolean">true</Value>
         <Category>States and Visibility</Category>
         <SetsValue>true</SetsValue>

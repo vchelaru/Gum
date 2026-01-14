@@ -43,6 +43,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         });
     }
     public HyTaleInventory HyTaleInventoryInstance { get; protected set; }
+    public ButtonStandard ExitButton { get; protected set; }
+    public ButtonStandard Random { get; protected set; }
 
     public HyTaleInventoryScreen(InteractiveGue visual) : base(visual)
     {
@@ -57,6 +59,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     {
         base.ReactToVisualChanged();
         HyTaleInventoryInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<HyTaleInventory>(this.Visual,"HyTaleInventoryInstance");
+        ExitButton = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ExitButton");
+        Random = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"Random");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

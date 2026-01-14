@@ -1,36 +1,15 @@
 using GameUiSamples.Components;
 using GameUiSamples.Services;
-using Gum.Converters;
-using Gum.DataTypes;
-using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
 using System.Linq;
-
-
-using Gum.Converters;
-using Gum.DataTypes;
-using Gum.Managers;
-using Gum.Wireframe;
-
-using RenderingLibrary.Graphics;
-
-using System.Linq;
-
-using MonoGameGum.GueDeriving;
-using RenderingLibrary;
-using System;
-using GameUiSamples.Services;
-using Microsoft.Xna.Framework;
-using MonoGameGum;
-using GameUiSamples.Components;
-using MonoGameGum.Forms;
-using MonoGameGum.ExtensionMethods;
 using GameUiSamples.Data;
+
+// for the troubleshooting
+using MonoGameGum.Input;
 
 namespace GameUiSamples.Screens
 {
@@ -40,7 +19,9 @@ namespace GameUiSamples.Screens
 
         HyTaleInventoryService _inventoryService;
 
-        HyTaleItemIcon _grabbedIcon;
+        HyTaleItemSlot _grabbedIcon;
+
+        //GumService GumUI => GumService.Default;
 
         partial void CustomInitialize()
         {
@@ -61,7 +42,7 @@ namespace GameUiSamples.Screens
 
         private void CreateGrabbedIcon()
         {
-            _grabbedIcon = new HyTaleItemIcon();
+            _grabbedIcon = new HyTaleItemSlot();
             _grabbedIcon.IsVisible = false;
             _grabbedIcon.Name = "Grabbed icon";
             // So that it doesn't register as the cursor being over it:
@@ -81,13 +62,11 @@ namespace GameUiSamples.Screens
                 inventory[i] = null;
             }
 
-            inventory[0] = PickRandomItemFromDictionary();
-            inventory[1] = PickRandomItemFromDictionary();
-            inventory[2] = PickRandomItemFromDictionary();
-            inventory[3] = PickRandomItemFromDictionary();
-            inventory[4] = PickRandomItemFromDictionary();
-            inventory[5] = PickRandomItemFromDictionary();
-
+            // Populate some random items
+            for (int i = 0; i< 23; i++)
+            {
+                inventory[i] = PickRandomItemFromDictionary();
+            }
         }
 
         private HyTaleItem PickRandomItemFromDictionary()
@@ -168,6 +147,22 @@ namespace GameUiSamples.Screens
                     {
                         slot.HasDamageState = HyTaleItemSlot.HasDamage.True;
                         slot.DurabilityRatio = item.Durability;
+
+                        //Set to green
+                        slot.HyTaleDurabilityBarInstance.BarPercent.Color = new Color(41, 142, 68);
+
+                        if (item.Durability < 5)
+                        {
+                            slot.HyTaleDurabilityBarInstance.BarPercent.Color = Color.Red;
+                        }
+                        else if (item.Durability < 25)
+                        {
+                            slot.HyTaleDurabilityBarInstance.BarPercent.Color = Color.Orange;
+                        }
+                        else if (item.Durability < 50)
+                        {
+                            slot.HyTaleDurabilityBarInstance.BarPercent.Color = Color.Yellow;
+                        }
                     }
                     else
                     {
@@ -175,16 +170,50 @@ namespace GameUiSamples.Screens
                         slot.DurabilityRatio = 100;
                     }
                 }
-
-                if (item.Quantity > 1)
-                {
-                    slot.HasMoreThanOneState = HyTaleItemSlot.HasMoreThanOne.True;
-                    slot.Quantity = item.Quantity.ToString();
-                }
                 else
                 {
-                    slot.Quantity = "";
+                    if (item.Quantity > 1)
+                    {
+                        slot.HasMoreThanOneState = HyTaleItemSlot.HasMoreThanOne.True;
+                        slot.Quantity = item.Quantity.ToString();
+                    }
+                    else
+                    {
+                        slot.Quantity = "";
+                    }
                 }
+            }
+        }
+
+        private void HideSlotItem(HyTaleItemSlot slot)
+        {
+            slot.HyTaleItemIconInstance.IsVisible = false;
+            slot.HyTaleDurabilityBarInstance.IsVisible = false;
+            slot.QuantityValueText.Visible = false;
+
+            if (slot.HasItemState == HyTaleItemSlot.HasItem.True)
+            {
+                slot.ItemStartX = 0;
+            }
+            else
+            {
+                slot.ItemStartX = 96;
+            }
+        }
+
+        private void UnhideSlotItem(HyTaleItemSlot slot)
+        {
+            slot.HyTaleItemIconInstance.IsVisible = true;
+            slot.QuantityValueText.Visible = true;
+            slot.HyTaleDurabilityBarInstance.IsVisible = true;
+
+            if (slot.HasItemState == HyTaleItemSlot.HasItem.True)
+            {
+                slot.ItemStartX = 96;
+            }
+            else
+            {
+                slot.ItemStartX = 0;
             }
         }
 
@@ -226,10 +255,15 @@ namespace GameUiSamples.Screens
                     var item = _inventoryService.PlayerInventory[index];
                     if (item != null)
                     {
-                        itemSlotPushed.HyTaleItemIconInstance.IsVisible = false;
+                        HideSlotItem(itemSlotPushed);
+
+                        AssignIcon(_grabbedIcon, item);
                         _grabbedIcon.IsVisible = true;
-                        _grabbedIcon.ItemStartX = itemSlotPushed.ItemStartX;
-                        _grabbedIcon.ItemStartY = itemSlotPushed.ItemStartY;
+                        _grabbedIcon.IsHotBarItemState = HyTaleItemSlot.IsHotBarItem.False;
+                        _grabbedIcon.HyTaleItemSlotBackground.Visible = false;
+
+                        //_grabbedIcon.ItemStartX = itemSlotPushed.ItemStartX;
+                        //_grabbedIcon.ItemStartY = itemSlotPushed.ItemStartY;
                     }
                 }
             }
@@ -325,6 +359,9 @@ namespace GameUiSamples.Screens
                 _grabbedIcon.X = cursor.XRespectingGumZoomAndBounds();
                 _grabbedIcon.Y = cursor.YRespectingGumZoomAndBounds();
             }
+
+            //var failureReason = GumUI.Cursor.GetEventFailureReason(HyTaleInventoryInstance.HyTaleHotbarRowInstance.HotBarItem1);
+            //System.Diagnostics.Debug.WriteLine(failureReason);
 
         }
     }

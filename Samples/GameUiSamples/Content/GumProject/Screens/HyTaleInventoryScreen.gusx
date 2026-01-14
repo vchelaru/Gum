@@ -4,6 +4,17 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>string</Type>
+      <Name>ExitButton.ButtonDisplayText</Name>
+      <Value xsi:type="xsd:string">Exit</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ExitButton.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>HyTaleInventoryInstance.Height</Name>
       <Value xsi:type="xsd:float">20</Value>
@@ -33,10 +44,43 @@
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>Random.ButtonDisplayText</Name>
+      <Value xsi:type="xsd:string">Random</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>Random.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Random.X</Name>
+      <Value xsi:type="xsd:float">133</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Random.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
   </State>
   <Instance>
     <Name>HyTaleInventoryInstance</Name>
     <BaseType>HyTaleComponents/HyTaleInventory</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ExitButton</Name>
+    <BaseType>Controls/ButtonStandard</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Random</Name>
+    <BaseType>Controls/ButtonStandard</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
