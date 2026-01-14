@@ -2295,7 +2295,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                                 // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                                 // at least that same size, so we multiply the size by the number of cells tall
-                                maxHeight *= numberOfVerticalCells;
+                                maxHeight = maxCellHeight * numberOfVerticalCells + (numberOfVerticalCells-1) * StackSpacing;
                             }
 
                         }
@@ -2689,7 +2689,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             }
                             // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                             // at least that same size, so we multiply the size by the number of cells wide
-                            maxWidth *= numberOfHorizontalCells;
+                            maxWidth = maxCellWidth * numberOfHorizontalCells + (numberOfHorizontalCells-1) * StackSpacing;
                         }
                     }
                     else
@@ -3111,37 +3111,38 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (this.Parent != null)
         {
-            if (Parent is GraphicalUiElement parentGue && (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal))
+            if (Parent.ChildrenLayout == ChildrenLayout.AutoGridVertical || Parent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
             {
-                var effectiveHorizontalCells = parentGue.AutoGridHorizontalCells;
+                var effectiveHorizontalCells = Parent.AutoGridHorizontalCells;
                 if (effectiveHorizontalCells < 1) effectiveHorizontalCells = 1;
-                var effectiveVerticalCells = parentGue.AutoGridVerticalCells;
+                var effectiveVerticalCells = Parent.AutoGridVerticalCells;
                 if (effectiveVerticalCells < 1) effectiveVerticalCells = 1;
 
                 var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
 
-                if (parentGue.Children?.Count > setCellCount)
+                if (Parent.Children?.Count > setCellCount)
                 {
-                    if (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    if (Parent.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                     {
                         // If stacking vertically, the number of rows (vertical cell count) depends on the children count
                         // if the parent's size depends on its children
-                        if (parentGue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                        if (Parent.HeightUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveVerticalCells = (int)System.Math.Ceiling((float)parentGue.Children.Count / effectiveHorizontalCells);
+                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveHorizontalCells);
                         }
                     }
                     else
                     {
-                        if (parentGue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                        if (Parent.WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)parentGue.Children.Count / effectiveVerticalCells);
+                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.Children.Count / effectiveVerticalCells);
                         }
                     }
                 }
 
-                parentWidth = parentGue.GetAbsoluteWidth() / effectiveHorizontalCells;
-                parentHeight = parentGue.GetAbsoluteHeight() / effectiveVerticalCells;
+                parentWidth = (Parent.GetAbsoluteWidth() - (effectiveHorizontalCells - 1) * Parent.StackSpacing) / effectiveHorizontalCells;
+
+                parentHeight = ( Parent.GetAbsoluteHeight() - (effectiveVerticalCells - 1) * Parent.StackSpacing ) / effectiveVerticalCells;
             }
             else
             {
@@ -4039,8 +4040,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             float cellWidth, cellHeight;
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
 
-            unitOffsetX += cellWidth * xIndex;
-            unitOffsetY += cellHeight * yIndex;
+            unitOffsetX += cellWidth * xIndex + Parent.StackSpacing * (xIndex);
+            unitOffsetY += cellHeight * yIndex + Parent.StackSpacing * (yIndex );
         }
     }
 
@@ -4127,11 +4128,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             yIndex = indexInSiblingList % yRows;
             xIndex = indexInSiblingList / yRows;
         }
-        var parentWidth = effectiveParent.GetAbsoluteWidth();
-        var parentHeight = effectiveParent.GetAbsoluteHeight();
+        var parentWidth = effectiveParent.GetAbsoluteWidth() - (xRows - 1) * effectiveParent.StackSpacing;
+        var parentHeight = effectiveParent.GetAbsoluteHeight() - (yRows - 1) * effectiveParent.StackSpacing;
 
-        cellWidth = parentWidth / xRows;
-        cellHeight = parentHeight / yRows;
+        cellWidth = (parentWidth / xRows) ;
+        cellHeight = (parentHeight / yRows);
 
         if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal &&
             effectiveParent.HeightUnits == DimensionUnitType.RelativeToChildren)
