@@ -52,8 +52,9 @@ public class ExclusionsPlugin : InternalPlugin
             case "BaseType":
                 return GetIfBaseTypeIsExcluded(finder);
             case "StackSpacing":
+                return GetIfStackSpacingIsExcluded(finder);
             case "WrapsChildren":
-                return GetIfSpacingAndWrapsChildrenIsExcluded(finder);
+                return GetIfWrapsChildrenIsExcluded(finder);
             case "TextOverflowHorizontalMode":
                 return GetIfOverflowHorizontalModeExcluded(finder);
             case "Wrap":
@@ -151,7 +152,24 @@ public class ExclusionsPlugin : InternalPlugin
         return false;
     }
 
-    private static bool GetIfSpacingAndWrapsChildrenIsExcluded(RecursiveVariableFinder finder)
+    private bool GetIfStackSpacingIsExcluded(RecursiveVariableFinder finder)
+    {
+        var childrenLayoutVariable = finder.GetVariable("ChildrenLayout");
+        var showSpacing = false;
+        if (childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
+        {
+            showSpacing =
+                childrenLayout == ChildrenLayout.LeftToRightStack ||
+                childrenLayout == ChildrenLayout.TopToBottomStack ||
+                childrenLayout == ChildrenLayout.AutoGridHorizontal ||
+                childrenLayout == ChildrenLayout.AutoGridVertical;
+
+                ;
+        }
+        return !showSpacing;
+    }
+
+    private bool GetIfWrapsChildrenIsExcluded(RecursiveVariableFinder finder)
     {
         var childrenLayoutVariable = finder.GetVariable("ChildrenLayout");
         var isStack = false;
@@ -162,7 +180,7 @@ public class ExclusionsPlugin : InternalPlugin
         return !isStack;
     }
 
-    private static bool GetIfAutoGridIsExcluded(RecursiveVariableFinder finder)
+    private bool GetIfAutoGridIsExcluded(RecursiveVariableFinder finder)
     {
         var childrenLayoutVariable = finder.GetVariable("ChildrenLayout");
 
