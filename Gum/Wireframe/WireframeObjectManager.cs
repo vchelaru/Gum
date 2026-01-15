@@ -433,7 +433,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         return null;
     }
 
-    public GraphicalUiElement GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack = null)
+    public GraphicalUiElement? GetRepresentation(InstanceSave instanceSave, List<ElementWithState>? elementStack = null)
     {
         if (instanceSave != null)
         {

@@ -161,6 +161,18 @@ When using `Auto Grid Horizontal`, the number of columns is fixed, but additiona
 
 When using `Auto Grid Vertical`, the number of rows is fixed, but additional columns can be added beyond the bounds of the container.
 
+### Stack Spacing
+
+{% hint style="info" %}
+Stack Spacing was added to Auto Grid in the January 2026 version of the Gum tool.
+{% endhint %}
+
+`Stack Spacing` can be used to separate cells in a grid. This is most commonly used when the grid's children use `Width Units` or `Height Units` of `Relative to Parent`.
+
+The following shows a grid with children which fill their cells. Changing the `Stack Spacing` adds gaps between each child.
+
+<figure><img src="../../../.gitbook/assets/14_06 11 58.gif" alt=""><figcaption><p>Stack Spacing in an Auto Grid</p></figcaption></figure>
+
 ### Auto Grid and Width/Height Units
 
 If a container's `Children Layout` is set to `Auto Grid Horizontal` or `Auto Grid Vertical`, it can size itself according to the largest cell by using `Width Units` or `Height Units` of `Relative To Children`. For more information see the [Width Units](../general-properties/width-units.md#relative-to-children-and-auto-grid-horizontal) and [Height Units](../general-properties/height-units.md#relative-to-children-and-auto-grid-vertical) pages.

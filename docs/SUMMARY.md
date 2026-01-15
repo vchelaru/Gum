@@ -285,6 +285,7 @@
   * [Tutorial - Task Screen](code/binding-viewmodels/tutorial-task-screen.md)
   * [Items Binding (ListBox, ComboBox, ItemsControl)](code/binding-viewmodels/items-binding-listbox-combobox-itemscontrol.md)
   * [Binding Deep Dive](code/binding-viewmodels/binding-deep-dive.md)
+  * [Binding Custom View Properties](code/binding-viewmodels/binding-custom-view-properties.md)
 * [Animation](code/animationruntime.md)
 * [Performance and Optimization](code/performance-and-optimization/README.md)
   * [Measuring Draw Calls](code/performance-and-optimization/lastframedrawstates.md)

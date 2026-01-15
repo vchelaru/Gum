@@ -52,7 +52,7 @@ public class SelectionManager
     public WireframeEditor? WireframeEditor;
 
     List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
-    IPositionedSizedObject mHighlightedIpso;
+    IPositionedSizedObject? mHighlightedIpso;
 
     GraphicalOutline mGraphicalOutline;
 
@@ -126,7 +126,7 @@ public class SelectionManager
         }
     }
 
-    public IPositionedSizedObject HighlightedIpso
+    public IPositionedSizedObject? HighlightedIpso
     {
         get
         {

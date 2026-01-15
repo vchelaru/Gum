@@ -128,8 +128,8 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     // Device density which is used to divide the height and width request 
     public static float DeviceDensity { get; set; } = 1;
 
-    public static event Action<BindableGue> ElementClicked;
-    public static event Action<BindableGue> ElementPushed;
+    //public static event Action<BindableGue> ElementClicked;
+    //public static event Action<BindableGue> ElementPushed;
 
 
     // There seems to be a bug in MAUI .NET 8 (preview) which will not resize a 

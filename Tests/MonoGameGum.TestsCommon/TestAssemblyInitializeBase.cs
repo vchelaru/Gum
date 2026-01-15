@@ -79,7 +79,7 @@ $"chars count=223\r\n";
         }
         fontPattern += stringBuilder.ToString();
 
-        var bitmapFont = new BitmapFont(fontTextureGraphic: null, fontPattern: fontPattern);
+        var bitmapFont = new BitmapFont(fontTextureGraphic: null!, fontPattern: fontPattern);
 
         // Since we don't have a Texture2D, the characters are set to null. Need to create them here:
         for (int i = 0; i < bitmapFont.Characters.Length; i++)
