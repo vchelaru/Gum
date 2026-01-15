@@ -27,6 +27,21 @@ namespace GameUiSamples.Screens
         {
             _inventoryService = Game1.ServiceContainer.GetService<HyTaleInventoryService>();
 
+            this.ExitButton.Click += (_, _) =>
+            {
+                GumService.Default.Root.Children.Clear();
+                var mainMenu = new MainMenu();
+                mainMenu.AddToRoot();
+            };
+
+            this.RandomButton.Click += (_, _) =>
+            {
+                ClearInventory();
+                PopulateInventory(9*5);
+                UpdateToInventory();
+            };
+
+
             CreateGrabbedIcon();
 
             GumService.Default.PopupRoot.AddChild(_grabbedIcon);
@@ -55,15 +70,32 @@ namespace GameUiSamples.Screens
 
         private void InitializePlayerInventory()
         {
+            ClearInventory();
+
+            PopulateInventory(26);
+        }
+
+        private void ClearInventory()
+        {
             var inventory = _inventoryService.PlayerInventory;
             // clear the inventory:
             for (int i = 0; i < inventory.Length; i++)
             {
                 inventory[i] = null;
             }
+        }
+
+        private void PopulateInventory(int maxSlot)
+        {
+            var inventory = _inventoryService.PlayerInventory;
+
+            if (maxSlot > inventory.Length)
+            {
+                maxSlot = inventory.Length;
+            }
 
             // Populate some random items
-            for (int i = 0; i< 23; i++)
+            for (int i = 0; i < maxSlot; i++)
             {
                 inventory[i] = PickRandomItemFromDictionary();
             }
