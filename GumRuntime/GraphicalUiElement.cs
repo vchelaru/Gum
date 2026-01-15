@@ -2287,7 +2287,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var numberOfVerticalCells =
                                     this.AutoGridVerticalCells;
 
-                                if (this.AutoGridHorizontalCells > 0)
+                                if (this.AutoGridHorizontalCells > 0 &&
+                                    this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                                 {
                                     var requiredRowCount = (int)Math.Ceiling((float)Children.Count / this.AutoGridHorizontalCells);
                                     numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
@@ -2682,7 +2683,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             var numberOfHorizontalCells =
                                 this.AutoGridHorizontalCells;
 
-                            if (this.AutoGridVerticalCells > 0)
+                            if (this.AutoGridVerticalCells > 0 && 
+                                // If auto grid vertical, then it can expand horizontally
+                                ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
                                 var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
                                 numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);

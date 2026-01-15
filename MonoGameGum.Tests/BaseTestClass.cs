@@ -13,6 +13,9 @@ public class BaseTestClass : IDisposable
 {
     public virtual void Dispose()
     {
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.ClickCombos.Clear();
         FrameworkElement.ClickCombos.Add(new KeyCombo
