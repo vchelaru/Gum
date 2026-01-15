@@ -153,25 +153,29 @@ If a parent sets its `Height Units` to `Relative to Children`, then it resizes i
 
 For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an `Absolute` `Width` and `Height` of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
 
-<figure><img src="../../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses <code>Relative to Children</code> height</p></figcaption></figure>
 
 The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent height adjusts in response.
 
 <figure><img src="../../../.gitbook/assets/11_15 50 47.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
-The height of a container is determined by the height of the largest cell multiplied by the number of rows. If the parent contains enough rows to support all of its children, then the `Auto Grid Vertical Cells` value is used to determine the number of rows displayed.
-
-For example, the following container has 4 columns and 3 rows, resulting in 12 cells. The height of the grid is based on 3 rows multiplied by the height of the largest cell.
+The height of a container is determined by the height of the largest cell multiplied by the number of rows. For example, the following container has 4 columns and 3 rows, resulting in 12 cells. The height of the grid is based on 3 rows multiplied by the height of the largest cell.
 
 <figure><img src="../../../.gitbook/assets/04_05 33 18.png" alt=""><figcaption><p>Auto Grid Horizontal with Height Units Relative To Children</p></figcaption></figure>
 
-If children are removed from the container, the container's height does not change - `Auto Grid Vertical Cells` acts as a minimum number of rows.
+If children are removed from the container, the container's height does not change - the `Auto Grid Vertical Cells` value determines the number of rows when calculating height, whether the cells contain children or are empty.
 
 <figure><img src="../../../.gitbook/assets/04_05 36 35.png" alt=""><figcaption><p>Removed children do not shrink the container beyond its minimum number of rows</p></figcaption></figure>
 
 Since `Auto Grid Vertical Cells` acts only as a minimum and not maximum, more children can be added and the container expands to support the newly-added children.
 
 <figure><img src="../../../.gitbook/assets/04_05 38 04.gif" alt=""><figcaption><p>Container expanding as more children are added to the grid</p></figcaption></figure>
+
+Setting a grid's `Height` value to a non-zero value increases the height of the on top of what is needed to contain its children. This additional height is distributed evenly to all cells, resulting in additional spacing between each child.
+
+For example, the following 3x3 grid contains children with an absolute height of 50. The grid's `Height Units` is set to `Relative to Children`. Notice that as the grid's `Height` increases, it grows vertically. This vertical growth results in a larger cell size, so each child is spaced apart.
+
+<figure><img src="../../../.gitbook/assets/15_06 22 27.gif" alt=""><figcaption><p>Increasing Height Relative to Children spreds the larger size across all cells</p></figcaption></figure>
 
 ### Relative to Children and Text
 

@@ -20,8 +20,6 @@ If an instance does not have a parent, then it uses the canvas size when using a
 
 <figure><img src="../../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 <code>Relative to Parent</code> with no direct parent</p></figcaption></figure>
 
-
-
 {% hint style="info" %}
 All relationships between parent and children depend only on the direct parent or child. Grandchildren and grandparents are not considered when performing calculations. For more information, see the [Parent](parent.md#children-outside-of-parent-bounds) page.
 {% endhint %}
@@ -115,7 +113,7 @@ A parent ignores its child if the child uses an `X Units` of `Percentage of Pare
 
 ### Relative to Children and Auto Grid Horizontal
 
-If a parent sets its `Width Units` to `Relative to Children`, then it must resize itself to contain its children. Normally the width of the entire parent is determined by the child which needs the most space horizontally. If the parent uses an `Auto Grid Horizontal` layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space horizontally determines the width of all cells.
+If a parent sets its `Width Units` to `Relative to Children`, then it resizes itself to contain its children. Normally the width of the entire parent is determined by the child which needs the most space horizontally. If the parent uses an `Auto Grid Horizontal` layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space horizontally determines the width of all cells.
 
 For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an `Absolute` `Width` and `Height` of `100`, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
 
@@ -125,19 +123,23 @@ The largest child determines the cell size for all other children. Therefore, if
 
 <figure><img src="../../../.gitbook/assets/11_15 34 05.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
-The width of a container is determined by the width of the largest cell multiplied by the number of columns. If the parent contains enough columns to support all of its children, then the `Auto Grid Horizontal Cells` value is used to determine the number of columns displayed.
-
-For example, the following container has 3 columns and 4 rows, resulting in 12 cells. The width of the grid is based on 3 columns multiplied by the width of the largest cell.
+The width of a container is determined by the width of the largest cell multiplied by the number of columns. For example, the following container has 3 columns and 4 rows, resulting in 12 cells. The width of the grid is based on 3 columns multiplied by the width of the largest cell.
 
 <figure><img src="../../../.gitbook/assets/04_05 48 27.png" alt=""><figcaption><p>Auto Grid vertical with Width Units Relative To Children</p></figcaption></figure>
 
-If children are removed from the container, the container's width does not change - `Auto Grid Horizontal Cells` acts as a minimum number of columns.
+If children are removed from the container, the container's width does not change - the `Auto Grid Horizontal Cells` value determines the number of columns when calculating width, whether the cells contain children or are empty.
 
 <figure><img src="../../../.gitbook/assets/04_05 50 13.png" alt=""><figcaption><p>Removed children do not shrink the container beyond its minimum number of columns</p></figcaption></figure>
 
 Since `Auto Grid Horizontal Cells` acts only as a minimum and not maximum, more children can be added and the container expands to support the newly-added children.
 
 <figure><img src="../../../.gitbook/assets/04_05 52 58.gif" alt=""><figcaption><p>Container expanding as more children are added to the grid</p></figcaption></figure>
+
+Setting a grid's `Width` value to a non-zero value increases the width of the container on top of what is needed to contain its children. This additional width is distributed evenly to all cells, resulting in additional spacing between each child.
+
+For example, the following 3x3 grid contains children with an absolute width of 50. The grid's `Width Units` is set to `Relative To Children`. Notice that as the grid's `Width` increases, it grows horizontally. This horizontal growth results in a larger cell size, so each child is spaced apart.
+
+<figure><img src="../../../.gitbook/assets/15_06 10 01.gif" alt=""><figcaption><p>Increasing Width Relative to Children spreads the larger size across all cells</p></figcaption></figure>
 
 ### Relative to Children and Text
 
@@ -171,7 +173,7 @@ For more information, see the Sprite [Texture Address](../sprite/texture-address
 
 ## Maintain File Aspect Ratio Width
 
-Sprites can select a `Width Unit` called `Maintain File Aspect Ratio Width`, which sets the effective width of the Sprite so that its aspect ratio matches its source file multiplied by the `Width` value. Usually `Maintain File Aspect Ratio Width` is used with a `Width` value of `100` so that the Sprite shows is source file at the correct aspect ratio.&#x20;
+Sprites can select a `Width Unit` called `Maintain File Aspect Ratio Width`, which sets the effective width of the Sprite so that its aspect ratio matches its source file multiplied by the `Width` value. Usually `Maintain File Aspect Ratio Width` is used with a `Width` value of `100` so that the Sprite shows is source file at the correct aspect ratio.
 
 {% hint style="info" %}
 Svgs also support using `Maintain File Aspect Ratio Width`. For more information on using Svgs see the [Skia Standard Elements](../skia-standard-elements/) page.
