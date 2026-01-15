@@ -211,7 +211,7 @@ public class ListBoxTests : BaseTestClass
         listBox.ListBoxItems[0].BindingContext.ShouldBe("Item 1");
         listBox.ListBoxItems[1].BindingContext.ShouldBe("Item 0");
 
-        var innerPanel = listBox.Visual.GetChildByNameRecursively("InnerPanelInstance");
+        var innerPanel = listBox.Visual.GetChildByNameRecursively("InnerPanelInstance")!;
         innerPanel.Children.Count.ShouldBe(10);
         for(int i = 0; i < 10; i++)
         {

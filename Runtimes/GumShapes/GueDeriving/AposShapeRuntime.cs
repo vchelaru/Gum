@@ -21,7 +21,10 @@ namespace MonoGameGum.GueDeriving;
 /// </summary>
 public abstract class AposShapeRuntime : BindableGue
 {
+#pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    // This is needed so we can register the shapes types
     [System.Runtime.CompilerServices.ModuleInitializer]
+#pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     public static void RegisterRuntimeTypes()
     {
 
