@@ -713,6 +713,45 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     [Fact]
+    public void AutoGridHorizontal_SizeRelativeToChildren_ShouldDistributExtraSize_ToAllCells()
+    {
+        ContainerRuntime container = new();
+        container.Width = 100;
+        container.WidthUnits = DimensionUnitType.RelativeToChildren;
+        container.Height = 100;
+        container.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        container.ChildrenLayout = Gum.Managers.ChildrenLayout.AutoGridHorizontal;
+        container.AutoGridHorizontalCells = 2;
+        container.AutoGridVerticalCells = 2;
+
+        ContainerRuntime absoluteContainer = new();
+        container.AddChild(absoluteContainer);
+        absoluteContainer.Width = 50;
+        absoluteContainer.WidthUnits = DimensionUnitType.Absolute;
+        absoluteContainer.Height = 50;
+        absoluteContainer.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime fillContainer = new();
+        container.AddChild(fillContainer);
+        fillContainer.Dock(Dock.Fill);
+
+        fillContainer.GetAbsoluteWidth().ShouldBe(100);
+        fillContainer.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer.AbsoluteLeft.ShouldBe(100);
+
+        ContainerRuntime fillContainer2 = new();
+        fillContainer2.Name = nameof(fillContainer2);
+        fillContainer2.Dock(Dock.Fill);
+        container.AddChild(fillContainer2);
+
+        fillContainer2.GetAbsoluteWidth().ShouldBe(100);
+        fillContainer2.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer2.AbsoluteLeft.ShouldBe(0);
+        fillContainer2.AbsoluteTop.ShouldBe(100);
+    }
+
+    [Fact]
     public void AutoGridVertical_ShouldSizeHeight_AccordingToRowCount()
     {
         ContainerRuntime container = new();
@@ -790,6 +829,46 @@ public class GraphicalUiElementTests : BaseTestClass
         }
     }
 
+
+    [Fact]
+    public void AutoGridVertical_SizeRelativeToChildren_ShouldDistributExtraSize_ToAllCells()
+    {
+        ContainerRuntime container = new();
+        container.Width = 100;
+        container.WidthUnits = DimensionUnitType.RelativeToChildren;
+        container.Height = 100;
+        container.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        container.ChildrenLayout = Gum.Managers.ChildrenLayout.AutoGridVertical;
+        container.AutoGridHorizontalCells = 2;
+        container.AutoGridVerticalCells = 2;
+
+        ContainerRuntime absoluteContainer = new();
+        container.AddChild(absoluteContainer);
+        absoluteContainer.Width = 50;
+        absoluteContainer.WidthUnits = DimensionUnitType.Absolute;
+        absoluteContainer.Height = 50;
+        absoluteContainer.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime fillContainer = new();
+        container.AddChild(fillContainer);
+        fillContainer.Dock(Dock.Fill);
+
+        fillContainer.GetAbsoluteWidth().ShouldBe(100);
+        fillContainer.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer.AbsoluteLeft.ShouldBe(0);
+        fillContainer.AbsoluteTop.ShouldBe(100);
+
+        ContainerRuntime fillContainer2 = new();
+        fillContainer2.Name = nameof(fillContainer2);
+        fillContainer2.Dock(Dock.Fill);
+        container.AddChild(fillContainer2);
+
+        fillContainer2.GetAbsoluteWidth().ShouldBe(100);
+        fillContainer2.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer2.AbsoluteLeft.ShouldBe(100);
+        fillContainer2.AbsoluteTop.ShouldBe(0);
+    }
 
     #endregion
 

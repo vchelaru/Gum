@@ -4137,16 +4137,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         cellWidth = (parentWidth / xRows) ;
         cellHeight = (parentHeight / yRows);
 
-        if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal &&
-            effectiveParent.HeightUnits == DimensionUnitType.RelativeToChildren)
-        {
-            cellHeight = effectiveParent.GetMaxCellHeight(true, 0);
-        }
-        if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridVertical &&
-            effectiveParent.WidthUnits == DimensionUnitType.RelativeToChildren)
-        {
-            cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
-        }
+        // January 15, 2025
+        // If a parent height
+        // is relative to children,
+        // then the largest child determines
+        // the cell size. By this point, the parent
+        // has already determined its own height, so we
+        // should respect that height instead of relying on
+        // the children to set it
+        //if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal &&
+        //    effectiveParent.HeightUnits == DimensionUnitType.RelativeToChildren)
+        //{
+        //    cellHeight = effectiveParent.GetMaxCellHeight(true, 0);
+        //}
+        //if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridVertical &&
+        //    effectiveParent.WidthUnits == DimensionUnitType.RelativeToChildren)
+        //{
+        //    cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
+        //}
 
     }
 
