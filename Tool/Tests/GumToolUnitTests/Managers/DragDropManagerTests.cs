@@ -1,4 +1,4 @@
-﻿using Gum.Services.Fonts;
+﻿using Gum.Managers;
 using Moq.AutoMock;
 using System;
 using System.Collections.Generic;
@@ -7,15 +7,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumToolUnitTests.Managers;
-public class FontManagerTests : BaseTestClass
+
+public class DragDropManagerTests : BaseTestClass
 {
     private readonly AutoMocker _mocker;
+    private readonly DragDropManager _dragDropManager;
 
-    private readonly FontManager _fontManager;
-
-    public FontManagerTests()
+    public DragDropManagerTests()
     {
         _mocker = new AutoMocker();
-        _fontManager = _mocker.CreateInstance<FontManager>();
+        _dragDropManager = _mocker.CreateInstance<DragDropManager>();
     }
+
+
 }

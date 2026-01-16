@@ -39,7 +39,7 @@ public class RenameElementDialogViewModelTests : BaseTestClass
             Name = "Folder/OldName"
         });
 
-        string whyNotValid = "Cannot be duplicate.";
+        string? whyNotValid = "Cannot be duplicate.";
 
         _nameVerifier
             .Setup(x => x.IsElementNameValid(

@@ -2588,7 +2588,7 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node</param>
     /// <returns>Whether this is a folder inside the screens folder structure</returns>
-    public static bool IsScreensFolderTreeNode(this ITreeNode treeNode) =>
+    public static bool IsScreensFolderTreeNode(this ITreeNode? treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsScreensFolderTreeNode()
         : false;
@@ -2648,7 +2648,7 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node</param>
     /// <returns>Whether this is a folder inside the screens folder structure</returns>
-    public static bool IsComponentsFolderTreeNode(this ITreeNode treeNode) =>
+    public static bool IsComponentsFolderTreeNode(this ITreeNode? treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsComponentsFolderTreeNode()
         : false;
