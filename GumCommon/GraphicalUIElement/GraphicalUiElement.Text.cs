@@ -1,10 +1,5 @@
 ﻿using Gum.DataTypes;
 using RenderingLibrary.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gum.Wireframe
 {
@@ -15,17 +10,11 @@ namespace Gum.Wireframe
 
         public void RefreshTextOverflowVerticalMode()
         {
-            var asIText = mContainedObjectAsIpso as IText;
-            if (asIText == null) return;
-
-            // we want to let it spill over if it is sized by its children:
-            if (this.HeightUnits == DimensionUnitType.RelativeToChildren)
+            if (mContainedObjectAsIpso is IText asIText)
             {
-                asIText.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
-            }
-            else
-            {
-                asIText.TextOverflowVerticalMode = TextOverflowVerticalMode;
+                asIText.TextOverflowVerticalMode = (HeightUnits == DimensionUnitType.RelativeToChildren)
+                    ? TextOverflowVerticalMode.SpillOver
+                    : TextOverflowVerticalMode;
             }
         }
 
@@ -115,28 +104,29 @@ namespace Gum.Wireframe
 
         public void UpdateFontRecursive()
         {
-            if (this.mContainedObjectAsIpso is IText asIText && isFontDirty)
+            // 1. Handle current node
+            if (isFontDirty && !IsLayoutSuspended)
             {
-
-                if (!this.IsLayoutSuspended)
-                {
-                    UpdateFontFromProperties?.Invoke(asIText, this);
-                    isFontDirty = false;
-                }
+                UpdateToFontValues();
+                isFontDirty = false;
             }
 
-            if (this.Children != null)
+            // 2. Determine the best collection to iterate
+            // If Children exists, we recurse. If not, we use the flat list but do NOT recurse.
+            if (Children != null)
             {
-                for (int i = 0; i < this.Children.Count; i++)
+                foreach (var child in Children)
                 {
-                    this.Children[i].UpdateFontRecursive();
+                    child.UpdateFontRecursive();
                 }
             }
-            else
+            else if (mWhatThisContains != null)
             {
-                for (int i = 0; i < this.mWhatThisContains.Count; i++)
+                foreach (var item in mWhatThisContains)
                 {
-                    mWhatThisContains[i].UpdateFontRecursive();
+                    // We call UpdateToFontValues directly because mWhatThisContains 
+                    // is already flat; recursing on it would be redundant.
+                    item.UpdateToFontValues();
                 }
             }
         }
