@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<LangVersion>12.0</LangVersion>
+		<AnalysisLevel>none</AnalysisLevel>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
+    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\Gum\CodeOutputPlugin\CodeOutputPlugin.csproj" />
+    <ProjectReference Include="..\Gum\CommonFormsAndControls\CommonFormsAndControls.csproj" />
+    <ProjectReference Include="..\Gum\CsvLibrary\CsvLibrary.csproj" />
+    <ProjectReference Include="..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
+    <ProjectReference Include="..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
+    <ProjectReference Include="..\Gum\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj" />
+    <ProjectReference Include="..\Gum\SvgPlugin\SkiaPlugin.csproj" />
+    <ProjectReference Include="..\Gum\TextureCoordinateSelectionPlugin\TextureCoordinateSelectionPlugin.csproj" />
+    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
+    <ProjectReference Include="..\Tool\EditorTabPlugin_XNA\EditorTabPlugin_XNA.csproj" />
+    <ProjectReference Include="..\Tool\Tests\GumToolUnitTests\GumToolUnitTests.csproj" />
+    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
+    <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
+  </ItemGroup>
+
+</Project>

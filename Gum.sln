@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumToolUnitTests", "Tool\Te
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SkiaInGumShared", "Gum\SvgPlugin\SkiaInGumShared\SkiaInGumShared.shproj", "{EE3C8564-6CB2-411C-A43C-19D33C819B90}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildWithPlugins", "BuildWithPlugins\BuildWithPlugins.csproj", "{B18192A2-D6AB-4CA2-9148-5107BCDE4C76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,10 @@ Global
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B18192A2-D6AB-4CA2-9148-5107BCDE4C76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B18192A2-D6AB-4CA2-9148-5107BCDE4C76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B18192A2-D6AB-4CA2-9148-5107BCDE4C76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B18192A2-D6AB-4CA2-9148-5107BCDE4C76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
