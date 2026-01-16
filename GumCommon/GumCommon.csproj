@@ -125,7 +125,7 @@
 		<Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
 			<Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
 		</Compile>
-		<Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
+		<Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUIElement\GraphicalUiElement.cs" />
 
 
 		<Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
