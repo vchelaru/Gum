@@ -2,15 +2,13 @@
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
+using System;
+using System.Collections.Generic;
 
 namespace SkiaGum.GueDeriving;
 
 public class TextRuntime : BindableGue
 {
-    public static int DefaultRed { get; set; } = 69;
-    public static int DefaultGreen { get; set; } = 90;
-    public static int DefaultBlue { get; set; } = 100;
-
 
     public enum ColorCategory
     {
@@ -26,150 +24,53 @@ public class TextRuntime : BindableGue
         get => mColorCategoryState;
         set
         {
+            if (mColorCategoryState == value) return;
             mColorCategoryState = value;
-            switch (value)
+
+            // Assign the entire color at once
+            Color = value switch
             {
-                case ColorCategory.White:
-                    this.Blue = 255;
-                    this.Green = 255;
-                    this.Red = 255;
-                    break;
-                case ColorCategory.DefaultColor:
-                    this.Blue = 100;
-                    this.Green = 90;
-                    this.Red = 69;
-                    break;
-                case ColorCategory.LightBlue:
-                    this.Blue = 193;
-                    this.Green = 145;
-                    this.Red = 0;
-                    break;
-                case ColorCategory.LightGray:
-                    this.Blue = 227;
-                    this.Green = 226;
-                    this.Red = 226;
-                    break;
-            }
+                ColorCategory.White => new SKColor(255, 255, 255),
+                ColorCategory.DefaultColor => new SKColor(69, 90, 100),
+                ColorCategory.LightBlue => new SKColor(0, 145, 193),
+                ColorCategory.LightGray => new SKColor(226, 226, 227),
+                _ => Color // No change for unknown categories
+            };
         }
     }
 
-    TextOverflowHorizontalMode textOverflowHorizontalMode;
+    private TextOverflowHorizontalMode textOverflowHorizontalMode;
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {
         get => textOverflowHorizontalMode;
         set
         {
             textOverflowHorizontalMode = value;
-            if (textOverflowHorizontalMode == TextOverflowHorizontalMode.EllipsisLetter)
-            {
-                ContainedText.IsTruncatingWithEllipsisOnLastLine = true;
-            }
-            else
-            {
-                ContainedText.IsTruncatingWithEllipsisOnLastLine = false;
-            }
+            GetContainedText().IsTruncatingWithEllipsisOnLastLine =
+                        (value == TextOverflowHorizontalMode.EllipsisLetter);
         }
     }
 
-    Text mContainedText;
-    Text ContainedText
+    private Text? mContainedText;
+
+    private Text GetContainedText()
     {
-        get
-        {
-            if(mContainedText == null)
-            {
-                mContainedText = this.RenderableComponent as Text;
-            }
-            return mContainedText;
-        }
+        if (RenderableComponent is not Text text)
+            throw new InvalidOperationException($"Expected RenderableComponent to be Text but was {RenderableComponent?.GetType().Name ?? "null"}.");
+
+        if (!ReferenceEquals(mContainedText, text))
+            mContainedText = text;
+
+        return text;
     }
 
-    public string Text
-    {
-        get => ContainedText.RawText;
-        set => ContainedText.RawText = value;
-    }
-    public SKColor Color
-    {
-        get => ContainedText.Color;
-        set => ContainedText.Color = value;
-    }
-
-    public int Blue
-    {
-        get => ContainedText.Blue;
-        set => ContainedText.Blue = value;
-    }
-
-    public int Green
-    {
-        get => ContainedText.Green;
-        set => ContainedText.Green = value;
-    }
-
-    public int Red
-    {
-        get => ContainedText.Red;
-        set => ContainedText.Red = value;
-    }
-
-    public int Alpha
-    {
-        get => ContainedText.Alpha;
-        set => ContainedText.Alpha = value;
-    }
-
-
-    public float FontScale
-    {
-        get => ContainedText.FontScale;
-        set => ContainedText.FontScale = value;
-    }
-
-    public float LineHeightMultiplier
-    {
-        get => ContainedText.LineHeightMultiplier;
-        set => ContainedText.LineHeightMultiplier = value;
-    }
-
-    public int? MaximumNumberOfLines
-    {
-        get => ContainedText.MaximumNumberOfLines;
-        set => ContainedText.MaximumNumberOfLines = value;
-    }
-
-    public bool IsBold
-    {
-        get => mContainedText.BoldWeight > 1;
-        set
-        {
-            if(value)
-            {
-                mContainedText.BoldWeight = 1.5f;
-            }
-            else
-            {
-                mContainedText.BoldWeight = 1;
-            }
-        }
-    }
-
-    public float BoldWeight
-    {
-        get => mContainedText.BoldWeight;
-        set => mContainedText.BoldWeight = value;
-    }
-    public HorizontalAlignment HorizontalAlignment
-    {
-        get => ContainedText.HorizontalAlignment;
-        set => ContainedText.HorizontalAlignment = value;
-    }
-
-    public VerticalAlignment VerticalAlignment
-    {
-        get => ContainedText.VerticalAlignment;
-        set => ContainedText.VerticalAlignment = value;
-    }
+    public string Text { get => GetContainedText().RawText; set => GetContainedText().RawText = value; }
+    public SKColor Color { get => GetContainedText().Color; set => GetContainedText().Color = value; }
+    public float FontScale { get => GetContainedText().FontScale; set => GetContainedText().FontScale = value; }
+    public bool IsBold { get => GetContainedText().BoldWeight > 1; set => GetContainedText().BoldWeight = value ? 1.5f : 1f; }
+    public float BoldWeight { get => GetContainedText().BoldWeight; set => GetContainedText().BoldWeight = value; }
+    public HorizontalAlignment HorizontalAlignment { get => GetContainedText().HorizontalAlignment; set => GetContainedText().HorizontalAlignment = value; }
+    public VerticalAlignment VerticalAlignment { get => GetContainedText().VerticalAlignment; set => GetContainedText().VerticalAlignment = value; }
 
     //public SKTypeface FontType
     //{
@@ -179,16 +80,12 @@ public class TextRuntime : BindableGue
 
     public int FontSize
     {
-        get => ContainedText.FontSize;
-        // July 10, 2023 - This is causing problems
-        // because the FontSize is not making it to the
-        // underyling object. I'm going to do both for now
-        // as a half-step to removing the usage of the ContainedText...
-        // or maybe we always use both?
-        //set => ContainedText.FontSize = value;
+        get => GetContainedText().FontSize;
         set
         {
-            ContainedText.FontSize = value;
+            var text = GetContainedText();
+            if (text.FontSize == value) return; // Optimization: Only update if changed
+            text.FontSize = value;
             UpdateToFontValues();
         }
     }
@@ -205,13 +102,9 @@ public class TextRuntime : BindableGue
     /// * UseFontSmoothing
     /// * OutlineThickness
     /// </summary>
-    public bool UseCustomFont
-    {
-        get { return useCustomFont; }
-        set { useCustomFont = value; UpdateToFontValues(); }
-    }
+    public bool UseCustomFont { get => useCustomFont; set => SetFontProperty(ref useCustomFont, value); }
 
-    string customFontFile;
+    string customFontFile = string.Empty;
     /// <summary>
     /// Specifies the name of the custom font. This can be specified relative to
     /// FileManager.RelativeDirectory, which is the Content folder for code-only projects,
@@ -224,22 +117,15 @@ public class TextRuntime : BindableGue
         set { customFontFile = value; UpdateToFontValues(); }
     }
 
-    string font;
+    string font = string.Empty;
     /// <summary>
     /// The font name, such as "Arial", which is used to load fonts from 
     /// </summary>
-    public string Font
-    {
-        get { return font; }
-        set { font = value; UpdateToFontValues(); }
-    }
+    public string Font { get => font; set => SetFontProperty(ref font, value); }
 
-    bool isItalic;
-    public bool IsItalic
-    {
-        get => isItalic;
-        set { isItalic = value; UpdateToFontValues(); }
-    }
+    private bool isItalic;
+    public bool IsItalic { get => isItalic; set => SetFontProperty(ref isItalic, value); }
+    
 
     //// Not sure if we need to make this a public value, but we do need to store it
     //// Update - yes we do need this to be public so it can be assigned in codegen:
@@ -257,28 +143,27 @@ public class TextRuntime : BindableGue
         set { outlineThickness = value; UpdateToFontValues(); }
     }
 
-    public TextRuntime (bool fullInstantiation = true)
+    public TextRuntime(bool fullInstantiation = true)
     {
-        if(fullInstantiation)
+        if (fullInstantiation)
         {
             SetContainedObject(new Text());
-
-            this.Height = 0;
-            this.HeightUnits = DimensionUnitType.RelativeToChildren;
-            this.Width = 0;
-            this.WidthUnits = DimensionUnitType.RelativeToChildren;
-
-            // These values are default values matching Gum defaults. Not sure how to handle this - ultimately the Gum project
-            // could change these values, in which case these would no longer be valid. We need a way to push the default states
-            // from Gum here. But...for now at least we'll match defaults:
-            FontSize = 18;
-
-            Red = 255;
-            Green = 255;
-            Blue = 255;
-
-            this.Text = "Hello";
+            ApplyDefaultGumState();
         }
+    }
+
+    private void ApplyDefaultGumState()
+    {
+        Height = 0;
+        HeightUnits = DimensionUnitType.RelativeToChildren;
+        Width = 0;
+        WidthUnits = DimensionUnitType.RelativeToChildren;
+
+        FontSize = 18;
+        Text = "Hello";
+
+        // Using simplified Color property
+        Color = SKColors.White;
     }
 
     public override GraphicalUiElement Clone()
@@ -288,5 +173,12 @@ public class TextRuntime : BindableGue
         toReturn.mContainedText = null;
 
         return toReturn;
+    }
+
+    private void SetFontProperty<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        UpdateToFontValues();
     }
 }
