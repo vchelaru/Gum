@@ -1128,13 +1128,3 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
 
-#region Interfaces
-
-// additional interfaces, added here to make it easier to manage multiple projects.
-public interface IManagedObject
-{
-    void AddToManagers();
-    void RemoveFromManagers();
-}
-
-#endregion
