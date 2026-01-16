@@ -89,7 +89,8 @@ namespace RenderingLibrary
             {
                 asText.FontName = textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;
-                asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f;
+                // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700) here.
+                asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f; 
                 asText.FontSize = textRuntime.FontSize;
             }
         }
