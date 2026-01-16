@@ -7,6 +7,7 @@ namespace SkiaGum.Content
 {
     public class EmbeddedResourceContentLoader : IContentLoader
     {
+        
         public void AddDisposable(string contentName, IDisposable disposable)
         {
             throw new NotImplementedException();
@@ -14,44 +15,14 @@ namespace SkiaGum.Content
 
         public T LoadContent<T>(string contentName)
         {
-            if (typeof(T) == typeof(SKTypeface))
+            var name = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
+            return typeof(T) switch
             {
-                return (T)(object)LoadSKTypeface(contentName);
-            }
-            else if (typeof(T) == typeof(SKSvg))
-            {
-                return (T)(object)LoadSKSvg(contentName);
-            }
-            else if (typeof(T) == typeof(SKBitmap))
-            {
-                return (T)(object)LoadSKBitmap(contentName);
-            }
-            else
-
-            {
-                return default(T);
-            }
-        }
-
-        private SKSvg LoadSKSvg(string contentName)
-        {
-            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-
-            return SkiaResourceManager.GetSvg(modifiedContentName);
-        }
-
-        private SKBitmap LoadSKBitmap(string contentName)
-        {
-            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-
-            return SkiaResourceManager.GetSKBitmap(modifiedContentName);
-        }
-
-        private SKTypeface LoadSKTypeface(string contentName)
-        {
-            var modifiedContentName = SkiaResourceManager.AdjustContentName?.Invoke(contentName) ?? contentName;
-
-            return SkiaResourceManager.GetTypeface(modifiedContentName);
+                Type t when t == typeof(SKTypeface) => (T)(object)SkiaResourceManager.GetTypeface(name),
+                Type t when t == typeof(SKSvg) => (T)(object)SkiaResourceManager.GetSvg(name),
+                Type t when t == typeof(SKBitmap) => (T)(object)SkiaResourceManager.GetSKBitmap(name),
+                _ => throw new NotImplementedException($"Type {typeof(T).Name} is not implemented by LoadContent yet.")
+            };
         }
 
         public T TryGetCachedDisposable<T>(string contentName)
