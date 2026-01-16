@@ -32,11 +32,22 @@ namespace StateAnimationPlugin.Managers
         {
             if (elementSave == viewModel?.Element)
             {
+                var oldFileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(oldName);
+
+                // save if we had an old file, or if there are any animations.
+                // We still want to save if there are no animations because the
+                // user may explicitly remove animations and we want that to save
+                // so it can overwrite old files that might have animations.
+                var shouldSave = oldFileName?.Exists() == true || viewModel.Animations.Count > 0;
+
                 // save the new:
                 bool succeeded = false;
                 try
                 {
-                    AnimationCollectionViewModelManager.Self.Save(viewModel);
+                    if(shouldSave)
+                    {
+                        AnimationCollectionViewModelManager.Self.Save(viewModel);
+                    }
                     succeeded = true;
                 }
                 catch
@@ -46,8 +57,6 @@ namespace StateAnimationPlugin.Managers
 
                 if (succeeded)
                 {
-                    var oldFileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(oldName);
-
                     if (oldFileName?.Exists() == true)
                     {
                         System.IO.File.Delete(oldFileName.FullPath);
