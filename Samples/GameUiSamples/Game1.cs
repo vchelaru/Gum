@@ -49,6 +49,7 @@ public class Game1 : Game
         FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Keys.Up });
 
         Services.AddService<InventoryService>(new InventoryService());
+        Services.AddService<HyTaleInventoryService>(new HyTaleInventoryService());
 
         var startScreen = new MainMenu();
         startScreen.AddToRoot();

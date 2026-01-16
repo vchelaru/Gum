@@ -89,6 +89,18 @@
     </Variable>
     <Variable>
       <Type>string</Type>
+      <Name>HotbarHyTale.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Hotbar (HyTale)</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotbarHyTale.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
       <Name>HotbarStardew.ListItemDisplayText</Name>
       <Value xsi:type="xsd:string">Hotbar (Stardew Valley)</Value>
       <SetsValue>true</SetsValue>
@@ -96,6 +108,18 @@
     <Variable>
       <Type>string</Type>
       <Name>HotbarStardew.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryHyTale.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Inventory (HyTale)</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryHyTale.Parent</Name>
       <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -211,7 +235,17 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
+    <Name>HotbarHyTale</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
     <Name>InventoryStardew</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>InventoryHyTale</Name>
     <BaseType>Controls/ListBoxItem</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>

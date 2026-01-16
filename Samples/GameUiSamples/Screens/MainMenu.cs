@@ -49,6 +49,14 @@ partial class MainMenu
             {
                 GoToScreen(new FrbClickerCodeOnly());
             }
+            else if (item == HotbarHyTale)
+            {
+                GoToScreen(new HyTaleHotbarScreen());
+            }
+            else if (item == InventoryHyTale)
+            {
+                GoToScreen(new HyTaleInventoryScreen());
+            }
         }
     }
 
