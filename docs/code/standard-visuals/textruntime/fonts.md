@@ -6,15 +6,25 @@ TextRuntime instances can change their font using the Fonts property. This page 
 
 ## Fonts
 
-By default all TextRuntime instances use an Arial 18 point font. This can be changed by specifying ta custom font.
+By default all TextRuntime instances use an Arial 18 point font. To modify a TextRuntime's Font:
 
-Fonts on TextRuntime objects can be modified in one of the following ways:
+{% tabs %}
+{% tab title="MonoGame/KNI/FNA" %}
+Fonts can be modified a number of ways:
 
 1. By setting the `UseCustomFont` property to `true`, then changing the `CustomFontFile` property to a desired .fnt file.
 2. By directly assigning the `BitmapFont` property on the TextRuntime object, bypassing all other properties.
 3. By setting `UseCustomFont` property to `false`, then changing the individual Font values. This approach requires following a specific .fnt naming convention.
 
 For most projects, the first approach is recommended since it doesn't require specific naming conventions. The second approach also works well if you are directly loading the BitmapFont object yourself. The third approach is convenient if your project is using the Gum tool, and if the Gum tool has already generated fonts for the specific combinations of values you are assigning.
+{% endtab %}
+
+{% tab title="Skia" %}
+Assign the Font, IsItalic, IsBold, and FontSize properties directly on the TextRuntime.
+
+Note that the font must be installed on the system to be used.
+{% endtab %}
+{% endtabs %}
 
 ### Assigning CustomFontFile
 
