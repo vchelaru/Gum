@@ -64,34 +64,6 @@ public class CodeGenerationContext
         }
     }
 
-    private void RefreshIsInstanceFormsObject()
-    {
-        if (_instance == null || CodeOutputProjectSettings?.OutputLibrary != OutputLibrary.MonoGameForms)
-        {
-            _isInstanceFormsObject = false;
-        }
-        else
-        {
-            _isInstanceFormsObject = false;
-            var instanceElement = ObjectFinder.Self.GetElementSave(_instance);
-            if (instanceElement != null)
-            {
-                if (this.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-                {
-                    // everything is a form if it's not a standard:
-                    var isStandard = instanceElement is StandardElementSave;
-                    _isInstanceFormsObject = !isStandard;
-                }
-                else
-                {
-                    CodeGenerator.GetGumFormsTypeFromBehaviors(instanceElement, out string? formsType, out _);
-
-                    _isInstanceFormsObject = !string.IsNullOrEmpty(formsType);
-                }
-            }
-        }
-    }
-
     public ElementSave Element { get; set; }
     public StringBuilder StringBuilder { get; set; } = new StringBuilder();
 
@@ -109,7 +81,7 @@ public class CodeGenerationContext
         }
     }
 
-    public CodeOutputElementSettings ElementSettings { get; set; }
+    public CodeOutputElementSettings ElementSettings { get; set; } = new();
 
     public string GumVariablePrefix
     {
@@ -194,6 +166,34 @@ public class CodeGenerationContext
 
     int _tabs;
     private readonly CodeGenerationNameVerifier _nameVerifier;
+
+    private void RefreshIsInstanceFormsObject()
+    {
+        if (_instance == null || CodeOutputProjectSettings?.OutputLibrary != OutputLibrary.MonoGameForms)
+        {
+            _isInstanceFormsObject = false;
+        }
+        else
+        {
+            _isInstanceFormsObject = false;
+            var instanceElement = ObjectFinder.Self.GetElementSave(_instance);
+            if (instanceElement != null)
+            {
+                if (this.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                {
+                    // everything is a form if it's not a standard:
+                    var isStandard = instanceElement is StandardElementSave;
+                    _isInstanceFormsObject = !isStandard;
+                }
+                else
+                {
+                    CodeGenerator.GetGumFormsTypeFromBehaviors(instanceElement, out string? formsType, out _);
+
+                    _isInstanceFormsObject = !string.IsNullOrEmpty(formsType);
+                }
+            }
+        }
+    }
 
     public int TabCount
     {

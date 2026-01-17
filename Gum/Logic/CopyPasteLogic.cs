@@ -625,7 +625,16 @@ public class CopyPasteLogic
                 {
                     if (parent is ElementSave parentElement)
                     {
-                        newIndex = instancesToCopy.Max(item => GetIndexOfInstanceByName(parentElement, item));
+                        // Get the index by placing it after copied items.
+                        // Since instances can change, we need to use name, but
+                        // only consider same-named instances if they both came from
+                        // the same element. Otherwise the user could be copying an instance
+                        // from one element to another, and both elements could have instances
+                        // named the same thing.
+                        newIndex = instancesToCopy.Max(item =>
+                            parent == item.ParentContainer ?
+                                GetIndexOfInstanceByName(parentElement, item)
+                                : -1);
 
                         foreach (var item in selectedState.SelectedInstances)
                         {
@@ -790,7 +799,25 @@ public class CopyPasteLogic
                         desiredParentNameWithoutSubItem = desiredParentNameWithoutSubItem.Substring(0, desiredParentNameWithoutSubItem.IndexOf("."));
                     }
 
-                    if (desiredParentNameWithoutSubItem != null && oldNewNameDictionary.ContainsKey(desiredParentNameWithoutSubItem))
+                    bool isParentOfPastedInstanceAlsoAPastedInstance = desiredParentNameWithoutSubItem != null && oldNewNameDictionary.ContainsKey(desiredParentNameWithoutSubItem);
+
+                    if(isParentOfPastedInstanceAlsoAPastedInstance && desiredParent is InstanceSave desiredParentInstance2)
+                    {
+                        isParentOfPastedInstanceAlsoAPastedInstance = instancesToCopy.Any(item => AreMatch(item, desiredParentInstance2));
+                    }
+
+                    bool AreMatch(InstanceSave instance1, InstanceSave instance2)
+                    {
+                        if(instance1 == instance2)
+                        {
+                            return true;
+                        }
+                        return
+                            instance1.ParentContainer?.Name == instance2.ParentContainer?.Name &&
+                            instance1.Name == instance2.Name;
+                    }
+
+                    if (isParentOfPastedInstanceAlsoAPastedInstance)
                     {
                         // this is a parent and it may be attached to a copy, so update the value
                         newParentName = oldNewNameDictionary[desiredParentNameWithoutSubItem];
@@ -800,7 +827,11 @@ public class CopyPasteLogic
                         }
                         
                     }
-                    targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
+
+                    if(!string.IsNullOrEmpty(newParentName))
+                    {
+                        targetState.SetValue($"{newInstance.Name}.Parent", newParentName, "string");
+                    }
                 }
 
                 // This used to be done here when we paste, but now we're
