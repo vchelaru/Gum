@@ -78,7 +78,7 @@ public class TextRuntime : BindableGue
         {
             if(mContainedText == null)
             {
-                mContainedText = this.RenderableComponent as Text;
+                mContainedText = (Text)this.RenderableComponent;
             }
             return mContainedText;
         }
