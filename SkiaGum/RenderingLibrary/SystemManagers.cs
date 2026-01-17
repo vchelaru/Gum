@@ -89,7 +89,8 @@ namespace RenderingLibrary
             {
                 asText.FontName = textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;
-                asText.BoldWeight = textRuntime.IsBold ? 700 : 400;
+                // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700) here.
+                asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f; 
                 asText.FontSize = textRuntime.FontSize;
             }
         }
@@ -134,57 +135,43 @@ namespace RenderingLibrary
                 () => new TextRuntime());
         }
 
-        private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers managers)
+        private IRenderable? HandleCreateGraphicalComponent(string type, ISystemManagers managers)
         {
-            switch (type)
+            return type switch
             {
-                case "Arc": return new Arc();
-                case "Canvas": return new CanvasRenderable();
-                case "Circle": return new Circle();
-                case "ColoredCircle": return new Circle();
-                case "ColoredRectangle": return new SolidRectangle();
-                case "LottieAnimation": return new LottieAnimation();
-                case "NineSlice": return new NineSlice();
-                case "Polygon": return new Polygon();
-                case "RoundedRectangle": return new RoundedRectangle();
-                case "Svg": return new VectorSprite();
-                case "Sprite": return new Sprite();
-                case "Text": return new Text();
-            }
-
-            return null;
+                "Arc" => new Arc(),
+                "Canvas" => new CanvasRenderable(),
+                "Circle" => new Circle(),
+                "ColoredCircle" => new Circle(),
+                "ColoredRectangle" => new SolidRectangle(),
+                "LottieAnimation" => new LottieAnimation(),
+                "NineSlice" => new NineSlice(),
+                "Polygon" => new Polygon(),
+                "RoundedRectangle" => new RoundedRectangle(),
+                "Svg" => new VectorSprite(),
+                "Sprite" => new Sprite(),
+                "Text" => new Text(),
+                _ => null,
+            };
         }
 
-        private StateSave HandleCustomGetDefaultState(string arg)
+        private StateSave? HandleCustomGetDefaultState(string arg)
         {
-            switch(arg)
+            return arg switch
             {
-                case "Arc":
-                    return StandardElementsManager.GetArcState();
-                case "Canvas":
-                    return DefaultStateManager.GetCanvasState();
-                case "ColoredCircle":
-                    return StandardElementsManager.GetColoredCircleState();
-                case "LottieAnimation":
-                    return DefaultStateManager.GetLottieAnimationState();
-                case "RoundedRectangle":
-                    return StandardElementsManager.GetRoundedRectangleState();
-                case "Svg":
-                    return DefaultStateManager.GetSvgState();
-            }
-            return null;
+                "Arc" => StandardElementsManager.GetArcState(),
+                "Canvas" => DefaultStateManager.GetCanvasState(),
+                "ColoredCircle" => StandardElementsManager.GetColoredCircleState(),
+                "LottieAnimation" => DefaultStateManager.GetLottieAnimationState(),
+                "RoundedRectangle" => StandardElementsManager.GetRoundedRectangleState(),
+                "Svg" => DefaultStateManager.GetSvgState(),
+                _ => null,
+            };
         }
 
         private void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers managers, Layer layer)
         {
-            if (layer == null)
-            {
-                managers.Renderer.Layers[0].Add(renderable);
-            }
-            else
-            {
-                layer.Add(renderable);
-            }
+            (layer ?? managers.Renderer.Layers[0]).Add(renderable);
         }
 
         public void InvalidateSurface()
