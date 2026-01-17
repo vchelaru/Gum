@@ -166,6 +166,14 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowVerticalMode), Value = TextOverflowVerticalMode.SpillOver, Name = nameof(TextOverflowVerticalMode), Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowHorizontalMode), Value = TextOverflowHorizontalMode.TruncateWord, Name = nameof(TextOverflowHorizontalMode), Category = "Text" });
 
+                var lineHeightMultiplierVariable =
+                    new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "LineHeightMultiplier", Category = "Text" };
+                // should this go in a plugin?
+                lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .1m;
+                lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
+                
+                stateSave.Variables.Add(lineHeightMultiplierVariable);
+
                 // font:
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
 
