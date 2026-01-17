@@ -125,7 +125,10 @@ public class Text : IRenderableIpso, IVisible, IText
         }
     }
 
-    public int? MaximumNumberOfLines
+    [Obsolete("Use MaxNumberOfLines instead")]
+    public int? MaximumNumberOfLines => MaxNumberOfLines;
+
+    public int? MaxNumberOfLines
     {
         get => _maximumNumberOfLines; set
         {
