@@ -33,19 +33,19 @@ public class CopyPasteLogicTests : BaseTestClass
     ComponentSave selectedComponent = new();
 
 
-    private readonly AutoMocker mocker;
+    private readonly AutoMocker _mocker;
     public CopyPasteLogicTests()
     {
-        mocker = new ();
+        _mocker = new ();
 
         // Replace the mocked IMessenger with a real instance
         _messenger = new WeakReferenceMessenger();
-        mocker.Use<IMessenger>(_messenger);
+        _mocker.Use<IMessenger>(_messenger);
 
-        _copyPasteLogic = mocker.CreateInstance<CopyPasteLogic>();
+        _copyPasteLogic = _mocker.CreateInstance<CopyPasteLogic>();
 
-        _selectedState = mocker.GetMock<ISelectedState>();
-        _elementCommands = mocker.GetMock<IElementCommands>();
+        _selectedState = _mocker.GetMock<ISelectedState>();
+        _elementCommands = _mocker.GetMock<IElementCommands>();
 
 
         selectedStateSave.Name = "CopiedState";
@@ -56,7 +56,7 @@ public class CopyPasteLogicTests : BaseTestClass
             ParentContainer = selectedComponent
         });
 
-        Mock<PluginManager> pluginManager = mocker.GetMock<PluginManager>();
+        Mock<PluginManager> pluginManager = _mocker.GetMock<PluginManager>();
         pluginManager
             .Setup(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()))
             .Callback(() =>
@@ -65,7 +65,7 @@ public class CopyPasteLogicTests : BaseTestClass
             });
         pluginManager.Object.Plugins = new List<PluginBase>();
 
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
         selectedState
             .Setup(x => x.SelectedStateCategorySave)
@@ -120,7 +120,7 @@ public class CopyPasteLogicTests : BaseTestClass
     [Fact]
     public void OnPaste_Instance_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
         ComponentSave component = new();
         component.States.Add(new StateSave());
@@ -141,7 +141,7 @@ public class CopyPasteLogicTests : BaseTestClass
                 }
             });
 
-        Mock<IUndoManager> undoManager = mocker.GetMock<IUndoManager>();
+        Mock<IUndoManager> undoManager = _mocker.GetMock<IUndoManager>();
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
@@ -158,7 +158,7 @@ public class CopyPasteLogicTests : BaseTestClass
         StateSave selectedStateSave = new StateSave();
         ComponentSave component = new ComponentSave();
 
-        var selectedState = mocker.GetMock<ISelectedState>();
+        var selectedState = _mocker.GetMock<ISelectedState>();
 
         selectedState
             .Setup(x => x.SelectedStateCategorySave)
@@ -187,7 +187,7 @@ public class CopyPasteLogicTests : BaseTestClass
         selectedStateSave.Name = "CopiedState";
         ComponentSave component = new ();
 
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
         selectedState
             .Setup(x => x.SelectedStateCategorySave)

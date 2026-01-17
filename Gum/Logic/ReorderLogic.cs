@@ -16,16 +16,19 @@ public class ReorderLogic
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
+    private readonly IPluginManager _pluginManager;
 
     public ReorderLogic(ISelectedState selectedState,
         IUndoManager undoManager,
         IGuiCommands guiCommands,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
+        _pluginManager = pluginManager;
     }
     
     public void MoveSelectedInstanceForward()
@@ -183,7 +186,7 @@ public class ReorderLogic
             }
         }
     }
-    private void RefreshInResponseToReorder(InstanceSave instance)
+    public void RefreshInResponseToReorder(InstanceSave instance)
     {
         var instanceContainer = _selectedState.SelectedInstanceContainer;
         if(instanceContainer != null)
@@ -193,6 +196,6 @@ public class ReorderLogic
 
         _fileCommands.TryAutoSaveCurrentObject();
 
-        PluginManager.Self.InstanceReordered(instance);
+        _pluginManager.InstanceReordered(instance);
     }
 }

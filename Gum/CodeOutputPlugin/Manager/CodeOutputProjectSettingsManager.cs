@@ -46,7 +46,7 @@ namespace CodeOutputPlugin.Manager
             {
                 var contents = System.IO.File.ReadAllText(fileName.FullPath);
 
-                toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents);
+                toReturn = JsonConvert.DeserializeObject<CodeOutputProjectSettings>(contents)!;
             }
             else
             {
