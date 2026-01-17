@@ -169,7 +169,7 @@ namespace Gum.Managers
                 var lineHeightMultiplierVariable =
                     new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "LineHeightMultiplier", Category = "Text" };
                 // should this go in a plugin?
-                lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .1m;
+                lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
                 lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
                 
                 stateSave.Variables.Add(lineHeightMultiplierVariable);
