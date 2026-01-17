@@ -1,4 +1,7 @@
-﻿using Gum.DataTypes;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.DataTypes;
 using Gum.Graphics;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
@@ -24,13 +27,13 @@ public class TextRuntime : InteractiveGue
         {
             if (mContainedText == null)
             {
-                mContainedText = this.RenderableComponent as Text;
+                mContainedText = (Text)this.RenderableComponent;
             }
             return mContainedText;
         }
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// The XNA blend state used when rendering the text. This controls how 
     /// color and alpha values blend with the background.
@@ -59,7 +62,6 @@ public class TextRuntime : InteractiveGue
         }
     }
 #endif
-
 
     /// <summary>
     /// The red component of the text color. Ranges from 0 to 255.
@@ -135,7 +137,7 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// The maximum letters to display. This can be used to 
     /// create an effect where the text prints out letter-by-letter.
@@ -148,7 +150,10 @@ public class TextRuntime : InteractiveGue
             mContainedText.MaxLettersToShow = value;
         }
     }
+#endif
 
+
+#if !RAYLIB
     /// <summary>
     /// The maximum number of lines to display. This can be used to 
     /// limit how many lines of text are displayed at one time.
@@ -156,13 +161,11 @@ public class TextRuntime : InteractiveGue
     public int? MaxNumberOfLines
     {
         get => mContainedText.MaxNumberOfLines;
-        set
-        {
-            mContainedText.MaxNumberOfLines = value;
-        }
+        set => mContainedText.MaxNumberOfLines = value;
     }
 #endif
 
+#if !SKIA
     public BitmapFont BitmapFont
     {
         get => ContainedText.BitmapFont;
@@ -176,7 +179,21 @@ public class TextRuntime : InteractiveGue
             }
         }
     }
+#endif
 
+    /// <summary>
+    /// A multiplier used when rendering the text. The default value is 1.0.
+    /// </summary>
+#if RAYLIB || XNALIKE
+    /// <remarks>
+    /// Setting this value to a value other than 1 scales the text accordingly. This is
+    /// a scalue value applied to the existing font, so a value larger than 1 can result
+    /// in the font appearing pixellated.
+    /// 
+    /// Since this value does not affect the underlying Font, it can be changed without
+    /// requiring a dedicated font asset.
+    /// </remarks>
+#endif
     public float FontScale
     {
         get => ContainedText.FontScale;

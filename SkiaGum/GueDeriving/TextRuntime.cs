@@ -1,12 +1,20 @@
-﻿using Gum.DataTypes;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.DataTypes;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
+using System;
 
 namespace SkiaGum.GueDeriving;
 
+/// <summary>
+/// A visual text element which can display a string.
+/// </summary>
 public class TextRuntime : BindableGue
 {
+    #region Skia-specific properties, which may go away in the future
     public static int DefaultRed { get; set; } = 69;
     public static int DefaultGreen { get; set; } = 90;
     public static int DefaultBlue { get; set; } = 100;
@@ -20,7 +28,9 @@ public class TextRuntime : BindableGue
         LightGray
     }
 
+    [Obsolete("This existed to match Gum, but this should be handled by codegen")]
     ColorCategory mColorCategoryState;
+    [Obsolete("This existed to match Gum, but this should be handled by codegen")]
     public ColorCategory ColorCategoryState
     {
         get => mColorCategoryState;
@@ -53,6 +63,191 @@ public class TextRuntime : BindableGue
         }
     }
 
+    [Obsolete("Use MaxNumberOfLines instead")]
+    public int? MaximumNumberOfLines
+    {
+        get => MaxNumberOfLines;
+        set => MaxNumberOfLines = value;
+    }
+
+    #endregion
+
+    Text? mContainedText;
+    Text ContainedText
+    {
+        get
+        {
+            if(mContainedText == null)
+            {
+                mContainedText = (Text)this.RenderableComponent;
+            }
+            return mContainedText;
+        }
+    }
+
+
+#if !RAYLIB && !SKIA
+    /// <summary>
+    /// The XNA blend state used when rendering the text. This controls how 
+    /// color and alpha values blend with the background.
+    /// </summary>
+    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    {
+        get => ContainedText.BlendState.ToXNA();
+        set
+        {
+            ContainedText.BlendState = value.ToGum();
+            NotifyPropertyChanged();
+            NotifyPropertyChanged(nameof(Blend));
+        }
+    }
+
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get
+        {
+            return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+        }
+        set
+        {
+            BlendState = value.ToBlendState().ToXNA();
+            // NotifyPropertyChanged handled by BlendState:
+        }
+    }
+#endif
+
+    /// <summary>
+    /// The red component of the text color. Ranges from 0 to 255.
+    /// </summary>
+    public int Red
+    {
+        get => ContainedText.Red;
+        set => ContainedText.Red = value;
+    }
+
+    /// <summary>
+    /// The green component of the text color. Ranges from 0 to 255.
+    /// </summary>
+    public int Green
+    {
+        get => ContainedText.Green;
+        set => ContainedText.Green = value;
+    }
+
+    /// <summary>
+    /// The blue component of the text color. Ranges from 0 to 255.
+    /// </summary>
+    public int Blue
+    {
+        get => ContainedText.Blue;
+        set => ContainedText.Blue = value;
+    }
+
+    /// <summary>
+    /// The alpha (opacity) component of the text color. Ranges from 0 (fully transparent) to 255 (fully opaque).
+    /// </summary>
+    public int Alpha
+    {
+        get => ContainedText.Alpha;
+        set => ContainedText.Alpha = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the color used to render the text. This includes color and alpha (opacity) components.
+    /// </summary>
+    public SKColor Color
+    {
+        get => ContainedText.Color;
+        set => ContainedText.Color = value;
+    }
+
+    /// <summary>
+    /// The horizontal alignment of the text within its bounding box.
+    /// </summary>
+    public HorizontalAlignment HorizontalAlignment
+    {
+        get => ContainedText.HorizontalAlignment;
+        set => ContainedText.HorizontalAlignment = value;
+    }
+
+    /// <summary>
+    /// The vertical alignment of the text within its bounding box.
+    /// </summary>
+    public VerticalAlignment VerticalAlignment
+    {
+        get => ContainedText.VerticalAlignment;
+        set => ContainedText.VerticalAlignment = value;
+    }
+
+#if !RAYLIB && !SKIA
+    /// <summary>
+    /// The maximum letters to display. This can be used to 
+    /// create an effect where the text prints out letter-by-letter.
+    /// </summary>
+    public int? MaxLettersToShow
+    {
+        get => mContainedText.MaxLettersToShow;
+        set
+        {
+            mContainedText.MaxLettersToShow = value;
+        }
+    }
+#endif
+
+#if !RAYLIB
+    /// <summary>
+    /// The maximum number of lines to display. This can be used to 
+    /// limit how many lines of text are displayed at one time.
+    /// </summary>
+    public int? MaxNumberOfLines
+    {
+        get => mContainedText.MaxNumberOfLines;
+        set => mContainedText.MaxNumberOfLines = value;
+    }
+#endif
+
+
+#if !SKIA
+    public BitmapFont BitmapFont
+    {
+        get => ContainedText.BitmapFont;
+        set
+        {
+            if (value != BitmapFont)
+            {
+                ContainedText.BitmapFont = value;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
+    }
+#endif
+
+    /// <summary>
+    /// A multiplier used when rendering the text. The default value is 1.0.
+    /// </summary>
+#if RAYLIB || XNALIKE
+    /// <remarks>
+    /// Setting this value to a value other than 1 scales the text accordingly. This is
+    /// a scalue value applied to the existing font, so a value larger than 1 can result
+    /// in the font appearing pixellated.
+    /// 
+    /// Since this value does not affect the underlying Font, it can be changed without
+    /// requiring a dedicated font asset.
+    /// </remarks>
+#endif
+    public float FontScale
+    {
+        get => ContainedText.FontScale;
+        set => ContainedText.FontScale = value;
+    }
+
+    public float LineHeightMultiplier
+    {
+        get => ContainedText.LineHeightMultiplier;
+        set => ContainedText.LineHeightMultiplier = value;
+    }
+
     TextOverflowHorizontalMode textOverflowHorizontalMode;
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {
@@ -71,71 +266,11 @@ public class TextRuntime : BindableGue
         }
     }
 
-    Text mContainedText;
-    Text ContainedText
-    {
-        get
-        {
-            if(mContainedText == null)
-            {
-                mContainedText = (Text)this.RenderableComponent;
-            }
-            return mContainedText;
-        }
-    }
 
     public string Text
     {
         get => ContainedText.RawText;
         set => ContainedText.RawText = value;
-    }
-    public SKColor Color
-    {
-        get => ContainedText.Color;
-        set => ContainedText.Color = value;
-    }
-
-    public int Blue
-    {
-        get => ContainedText.Blue;
-        set => ContainedText.Blue = value;
-    }
-
-    public int Green
-    {
-        get => ContainedText.Green;
-        set => ContainedText.Green = value;
-    }
-
-    public int Red
-    {
-        get => ContainedText.Red;
-        set => ContainedText.Red = value;
-    }
-
-    public int Alpha
-    {
-        get => ContainedText.Alpha;
-        set => ContainedText.Alpha = value;
-    }
-
-
-    public float FontScale
-    {
-        get => ContainedText.FontScale;
-        set => ContainedText.FontScale = value;
-    }
-
-    public float LineHeightMultiplier
-    {
-        get => ContainedText.LineHeightMultiplier;
-        set => ContainedText.LineHeightMultiplier = value;
-    }
-
-    public int? MaximumNumberOfLines
-    {
-        get => ContainedText.MaximumNumberOfLines;
-        set => ContainedText.MaximumNumberOfLines = value;
     }
 
     public bool IsBold
@@ -154,21 +289,15 @@ public class TextRuntime : BindableGue
         }
     }
 
+    /// <summary>
+    /// Gets or sets the weight multiplier for bold text rendering.
+    /// A value of 1.0 represents regular weight, while higher values 
+    /// increase the thickness of strokes (e.g., 1.5 for bold).
+    /// </summary>
     public float BoldWeight
     {
         get => mContainedText.BoldWeight;
         set => mContainedText.BoldWeight = value;
-    }
-    public HorizontalAlignment HorizontalAlignment
-    {
-        get => ContainedText.HorizontalAlignment;
-        set => ContainedText.HorizontalAlignment = value;
-    }
-
-    public VerticalAlignment VerticalAlignment
-    {
-        get => ContainedText.VerticalAlignment;
-        set => ContainedText.VerticalAlignment = value;
     }
 
     //public SKTypeface FontType
