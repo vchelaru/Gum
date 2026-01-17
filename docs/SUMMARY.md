@@ -267,6 +267,7 @@
   * [TextRuntime](code/standard-visuals/textruntime/README.md)
     * [BBCode](code/standard-visuals/textruntime/bbcode.md)
     * [Color](code/standard-visuals/textruntime/color.md)
+    * [Fonts](code/standard-visuals/textruntime/fonts.md)
     * [FontScale](code/standard-visuals/textruntime/fontscale.md)
     * [FontSize](code/standard-visuals/textruntime/fontsize.md)
     * [HorizontalAlignment](code/standard-visuals/textruntime/horizontalalignment.md)
