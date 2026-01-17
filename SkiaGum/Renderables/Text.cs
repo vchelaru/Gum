@@ -125,7 +125,10 @@ public class Text : IRenderableIpso, IVisible, IText
         }
     }
 
-    public int? MaximumNumberOfLines
+    [Obsolete("Use MaxNumberOfLines instead")]
+    public int? MaximumNumberOfLines => MaxNumberOfLines;
+
+    public int? MaxNumberOfLines
     {
         get => _maximumNumberOfLines; set
         {
@@ -146,10 +149,10 @@ public class Text : IRenderableIpso, IVisible, IText
     }
 
     Vector2 Position;
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
     public string? StoredMarkupText => null;
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -416,7 +419,7 @@ public class Text : IRenderableIpso, IVisible, IText
     float? _lastEffectiveWidth;
     decimal _lastScreenDensity;
     private string _fontName = "Arial";
-    private int _fontSize = 12;
+    private int _fontSize = 18;
     private float _fontScale;
     private float _boldWeight = 1;
     private SKColor _color;
@@ -472,7 +475,7 @@ public class Text : IRenderableIpso, IVisible, IText
             throw new InvalidOperationException($"An internal exception has occurred: {e.ToString()} with the following information:" +
                 $"forcedWidth {forcedWidth}\n" +
                 $"FontName {FontName}\n" +
-                $"FontSize {FontSize * (float)ScreenDensity * FontScale}\n" +
+                $"FontSize {FontSize * (float)GlobalTextScale * FontScale}\n" +
                 $"FontWeight {400*BoldWeight}");
             
 #else
@@ -490,7 +493,7 @@ public class Text : IRenderableIpso, IVisible, IText
         var style = new Style()
         {
             FontFamily = FontName,
-            FontSize = FontSize * (float)ScreenDensity * FontScale,
+            FontSize = FontSize * (float)GlobalTextScale * FontScale,
             TextColor = this.Color,
             FontItalic = this.IsItalic,
             FontWeight = (int)(400 * BoldWeight),
