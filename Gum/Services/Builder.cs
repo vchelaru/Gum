@@ -83,6 +83,7 @@ file static class ServiceCollectionExtensions
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         services.AddSingleton<PluginManager>(PluginManager.Self);
+        services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>(TypeManager.Self);
         // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);

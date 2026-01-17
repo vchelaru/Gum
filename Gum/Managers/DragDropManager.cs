@@ -61,6 +61,7 @@ public class DragDropManager
     private readonly ImportLogic _importLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly PluginManager _pluginManager;
+    private readonly ReorderLogic _reorderLogic;
 
     #endregion
 
@@ -74,6 +75,8 @@ public class DragDropManager
 
     #endregion
 
+    #region Constructor
+
     public DragDropManager(CircularReferenceManager circularReferenceManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
@@ -86,7 +89,8 @@ public class DragDropManager
         CopyPasteLogic copyPasteLogic,
         ImportLogic importLogic,
         WireframeObjectManager wireframeObjectManager,
-        PluginManager pluginManager)
+        PluginManager pluginManager,
+        ReorderLogic reorderLogic)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -101,7 +105,10 @@ public class DragDropManager
         _importLogic = importLogic;
         _wireframeObjectManager = wireframeObjectManager;
         _pluginManager = pluginManager;
+        _reorderLogic = reorderLogic;
     }
+
+    #endregion
 
     #region Drag+drop File (from windows explorer)
 
@@ -474,10 +481,48 @@ public class DragDropManager
                 {
                     draggedAsInstanceSave.ParentContainer?.DefaultState.Clone() ?? new StateSave()
                 };
-                    
-                _copyPasteLogic.PasteInstanceSaves(instances,
+
+                _copyPasteLogic.ForceSelectionChanged();
+
+                // by creating a forced selected state,
+                // we can precisely control the target for
+                // the paste without having to actually change
+                // the selection which would have side effects app-wide.
+
+                SelectedStateSnapshot forcedSelectedState = new SelectedStateSnapshot
+                {
+                    SelectedElement = targetElementSave,
+                    SelectedStateSave = targetElementSave.DefaultState,
+                    SelectedInstance = targetInstanceSave
+                };
+
+                //var forcedSelectedState = _selectedState;
+
+                var newInstances = _copyPasteLogic.PasteInstanceSaves(instances,
                     stateWithVariablesForOriginalInstance,
-                    targetElementSave, targetInstanceSave);
+                    targetElementSave, 
+                    targetInstanceSave,
+                    forcedSelectedState);
+
+                // January 17, 2025
+                // For now, let's just
+                // handle the most common
+                // case - dropping a single
+                // instance. We can handle multiples
+                // later, but this is a rarer case and
+                // this bug fix has already dragged on too
+                // long. The unit test for one case is here:
+                // DragDropManagerTests.OnNodeSortingDropped_DropInstance_ShouldInsertAtIndex_OnDifferentElement
+                var firstInstance = newInstances.FirstOrDefault();
+                if(firstInstance != null && targetElementSave.Instances.IndexOf(firstInstance) != index)
+                {
+                    targetElementSave.Instances.Remove(firstInstance);
+                    targetElementSave.Instances.Insert(index, firstInstance);
+
+                    _reorderLogic.RefreshInResponseToReorder(firstInstance);
+                }
+
+                _selectedState.SelectedInstances = newInstances;
             }
         }
         else if(targetObject is BehaviorSave asBehaviorSave)
@@ -706,7 +751,7 @@ public class DragDropManager
         return false;
     }
 
-    internal void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
+    public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, int index)
     {
         IEnumerable<object> tags = draggedNodes
             .Where(n => n.Tag != null)

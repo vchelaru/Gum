@@ -33,19 +33,19 @@ public class CopyPasteLogicTests : BaseTestClass
     ComponentSave selectedComponent = new();
 
 
-    private readonly AutoMocker mocker;
+    private readonly AutoMocker _mocker;
     public CopyPasteLogicTests()
     {
-        mocker = new ();
+        _mocker = new ();
 
         // Replace the mocked IMessenger with a real instance
         _messenger = new WeakReferenceMessenger();
-        mocker.Use<IMessenger>(_messenger);
+        _mocker.Use<IMessenger>(_messenger);
 
-        _copyPasteLogic = mocker.CreateInstance<CopyPasteLogic>();
+        _copyPasteLogic = _mocker.CreateInstance<CopyPasteLogic>();
 
-        _selectedState = mocker.GetMock<ISelectedState>();
-        _elementCommands = mocker.GetMock<IElementCommands>();
+        _selectedState = _mocker.GetMock<ISelectedState>();
+        _elementCommands = _mocker.GetMock<IElementCommands>();
 
 
         selectedStateSave.Name = "CopiedState";
@@ -56,7 +56,7 @@ public class CopyPasteLogicTests : BaseTestClass
             ParentContainer = selectedComponent
         });
 
-        Mock<PluginManager> pluginManager = mocker.GetMock<PluginManager>();
+        Mock<PluginManager> pluginManager = _mocker.GetMock<PluginManager>();
         pluginManager
             .Setup(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()))
             .Callback(() =>
@@ -65,7 +65,7 @@ public class CopyPasteLogicTests : BaseTestClass
             });
         pluginManager.Object.Plugins = new List<PluginBase>();
 
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
         selectedState
             .Setup(x => x.SelectedStateCategorySave)
@@ -114,24 +114,13 @@ public class CopyPasteLogicTests : BaseTestClass
 
         _copyPasteLogic.CopiedData.CopiedStates.Count.ShouldBe(1, "Because both instances are in the same screen");
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            if (!string.IsNullOrEmpty(parentName))
-            {
-                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            }
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
     public void OnPaste_Instance_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
         ComponentSave component = new();
         component.States.Add(new StateSave());
@@ -152,7 +141,7 @@ public class CopyPasteLogicTests : BaseTestClass
                 }
             });
 
-        Mock<IUndoManager> undoManager = mocker.GetMock<IUndoManager>();
+        Mock<IUndoManager> undoManager = _mocker.GetMock<IUndoManager>();
 
         _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
 
@@ -169,7 +158,7 @@ public class CopyPasteLogicTests : BaseTestClass
         StateSave selectedStateSave = new StateSave();
         ComponentSave component = new ComponentSave();
 
-        var selectedState = mocker.GetMock<ISelectedState>();
+        var selectedState = _mocker.GetMock<ISelectedState>();
 
         selectedState
             .Setup(x => x.SelectedStateCategorySave)
@@ -198,7 +187,7 @@ public class CopyPasteLogicTests : BaseTestClass
         selectedStateSave.Name = "CopiedState";
         ComponentSave component = new ();
 
-        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
         selectedState
             .Setup(x => x.SelectedStateCategorySave)
@@ -359,6 +348,38 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.Instances.Count.ShouldBe(2);
 
         screen.Instances[0].ShouldBe(firstInstance);
+    }
+
+    [Fact] 
+    public void OnPaste_Instance_ShouldPasteAtEnd_IfInElementWithSameNamedInstance()
+    {
+        /*
+         * Screen1
+            * Instance1
+            * ExistingInstance
+            * Instance2 <--- pasted
+         * Screen2
+            * Instance1 <--- copied
+         */
+
+        ScreenSave screen1 = CreateDefaultScreen();
+        screen1.Name = "Screen1";
+        screen1.Instances[0].Name = "Instance1";
+        InstanceSave existingInstance = AddChild("ExistingInstance", null, screen1);
+
+        ScreenSave screen2 = CreateDefaultScreen();
+        screen2.Name = "Screen2";
+
+        SelectInstances(screen2.Instances[0]);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        SelectElement(screen1);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen1.Instances[2].Name.ShouldBe("Instance2");
+        
     }
 
     [Fact(Skip ="This requires either a full SelectedState, or lots of mocking behavior which is a pain")]
@@ -565,15 +586,7 @@ public class CopyPasteLogicTests : BaseTestClass
 
         int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -607,15 +620,7 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.GetValue("Child1.Parent").ShouldBe("Instance1");
         screen.DefaultState.GetValue("Grandchild1.Parent").ShouldBe("Child1");
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new ();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -662,19 +667,9 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.GetValue("CopiedChild1.Parent").ShouldBe("Instance1");
         screen.DefaultState.GetValue("CopiedGrandchild1.Parent").ShouldBe("CopiedChild1");
 
-
-
         int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -707,15 +702,7 @@ public class CopyPasteLogicTests : BaseTestClass
         var pastedInstance = screen.Instances.Find(item => item.Name == "Child1")!;
         screen.DefaultState.GetValue("Child1.Parent").ShouldBe("SelectedChild");
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -751,15 +738,7 @@ public class CopyPasteLogicTests : BaseTestClass
 
         int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -797,18 +776,7 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.GetValue("ChildA1.Parent").ShouldBe("SelectedParent");
         screen.DefaultState.GetValue("ChildB1.Parent").ShouldBe("SelectedParent");
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            if(!string.IsNullOrEmpty(parentName))
-            {
-                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            }
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -845,18 +813,7 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.GetValue("ChildACopied1.Parent").ShouldBe("ChildB");
         screen.DefaultState.GetValue("GrandchildACopied1.Parent").ShouldBe("ChildACopied1");
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            if (!string.IsNullOrEmpty(parentName))
-            {
-                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            }
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -927,18 +884,7 @@ public class CopyPasteLogicTests : BaseTestClass
         screen.DefaultState.GetValue("ChildA1.Parent").ShouldBe("ChildB");
         screen.DefaultState.GetValue("ChildA2.Parent").ShouldBe("ChildB");
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            if (!string.IsNullOrEmpty(parentName))
-            {
-                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            }
-            return child;
-        }
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact(Skip = "For this to work, need to have a full ISelectedState")]
@@ -988,19 +934,8 @@ public class CopyPasteLogicTests : BaseTestClass
 
 
         int IndexOf(InstanceSave instance) => screen.Instances.IndexOf(instance);
-
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            if (!string.IsNullOrEmpty(parentName))
-            {
-                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            }
-            return child;
-        }
+        
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
     }
 
     [Fact]
@@ -1034,19 +969,36 @@ public class CopyPasteLogicTests : BaseTestClass
 
         screen.DefaultState.GetValue("Instance2.Parent").ShouldBe("ParentInstance.DefaultContainer");
 
+        InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
 
-        InstanceSave AddChild(string childName, string parentName)
-        {
-            InstanceSave child = new();
-            screen.Instances.Add(child);
-            child.ParentContainer = screen;
-            child.Name = childName;
-            if (!string.IsNullOrEmpty(parentName))
-            {
-                screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
-            }
-            return child;
-        }
+    [Fact]
+    public void OnPaste_Instance_OnParentWithSameName_ShouldNotCreateCircularDependency()
+    {
+        ScreenSave screen1 = CreateDefaultScreen();
+        screen1.Name = "Screen1";
+        InstanceSave instance1InScreen1 = screen1.Instances[0];
+
+        ScreenSave screen2 = CreateDefaultScreen();
+        screen2.Name = "Screen2";
+        InstanceSave instance1InScreen2 = screen2.Instances[0];
+
+        SelectInstances(instance1InScreen2);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+
+        SelectInstances(instance1InScreen1);
+
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen1.Instances.Count.ShouldBe(2);
+
+        screen1.Instances[1].Name.ShouldBe("Instance2");
+
+        var instance2ParentVariable = screen1.DefaultState.GetVariableSave("Instance2.Parent");
+        instance2ParentVariable.ShouldNotBeNull();
+        ((string)instance2ParentVariable.Value!).ShouldBe("Instance1");
+
     }
 
     #region Utilities
@@ -1068,6 +1020,23 @@ public class CopyPasteLogicTests : BaseTestClass
         return element;
     }
 
+    private void SelectElement(ElementSave elementSave)
+    {
+        _selectedState
+            .Setup(x => x.SelectedInstance)
+            .Returns((InstanceSave?)null);
+        _selectedState
+            .Setup(x => x.SelectedInstances)
+            .Returns(new List<InstanceSave>());
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(elementSave);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { elementSave });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(elementSave.DefaultState);
+
+
+        _messenger.Send(new SelectionChangedMessage { /* properties */ });
+    }
+
     private void SelectInstances(params InstanceSave[] instances)
     {
         _selectedState
@@ -1085,6 +1054,19 @@ public class CopyPasteLogicTests : BaseTestClass
 
 
         _messenger.Send(new SelectionChangedMessage { /* properties */ });
+    }
+
+    InstanceSave AddChild(string childName, string? parentName, ScreenSave screen)
+    {
+        InstanceSave child = new();
+        screen.Instances.Add(child);
+        child.ParentContainer = screen;
+        child.Name = childName;
+        if (!string.IsNullOrEmpty(parentName))
+        {
+            screen.DefaultState.SetValue($"{childName}.Parent", parentName, "string");
+        }
+        return child;
     }
 
     #endregion

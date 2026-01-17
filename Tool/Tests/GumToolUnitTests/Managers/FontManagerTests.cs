@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 namespace GumToolUnitTests.Managers;
 public class FontManagerTests : BaseTestClass
 {
-    private readonly AutoMocker mocker;
+    private readonly AutoMocker _mocker;
 
     private readonly FontManager _fontManager;
 
     public FontManagerTests()
     {
-        mocker = new AutoMocker();
-        _fontManager = mocker.CreateInstance<FontManager>();
+        _mocker = new AutoMocker();
+        _fontManager = _mocker.CreateInstance<FontManager>();
     }
 }

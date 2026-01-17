@@ -428,18 +428,18 @@ public class PluginManager : IPluginManager
     public virtual void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
         CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
 
-    internal StateSave? GetDefaultStateFor(string type)
+    public StateSave? GetDefaultStateFor(string type)
     {
         StateSave? toReturn = null;
         CallMethodOnPlugin(plugin => toReturn = plugin.CallGetDefaultStateFor(type) ?? toReturn);
         return toReturn;
     }
 
-    internal void InstanceReordered(InstanceSave instance) =>
+    public void InstanceReordered(InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceReordered(instance));
     
 
-    internal bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
+    public bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
     {
         bool toReturn = false;
         CallMethodOnPlugin(plugin =>
@@ -454,7 +454,7 @@ public class PluginManager : IPluginManager
         return toReturn;
     }
 
-    internal void RefreshBehaviorView(ElementSave elementSave) =>
+    public void RefreshBehaviorView(ElementSave elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallRefreshBehaviorUi());
 
     internal void RefreshVariableView(bool force) =>

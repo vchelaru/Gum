@@ -205,33 +205,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public IInstanceContainer? SelectedInstanceContainer
-    {
-        get
-        {
-            if (SelectedComponent != null)
-            {
-                return SelectedComponent;
-            }
-            else if (SelectedScreen != null)
-            {
-                return SelectedScreen;
-            }
-            // December 3, 2025:
-            // Technically this cannot contain instances, but based on its type
-            // it is an InstanceContainer so, let's return it unless it causes problems?
-            else if (SelectedStandardElement != null)
-            {
-                return SelectedStandardElement;
-            }
-            else if (SelectedBehavior != null)
-            {
-                return SelectedBehavior;
-            }
-
-            return null;
-        }
-    }
 
     #endregion
 
@@ -347,20 +320,6 @@ public class SelectedState : ISelectedState
     public IEnumerable<ITreeNode> SelectedTreeNodes =>
         _pluginManager.GetSelectedNodes();
 
-    public RecursiveVariableFinder SelectedRecursiveVariableFinder
-    {
-        get
-        {
-            if (SelectedInstance != null)
-            {
-                return new RecursiveVariableFinder(SelectedInstance, SelectedElement);
-            }
-            else
-            {
-                return new RecursiveVariableFinder(SelectedStateSave);
-            }
-        }
-    }
 
     public IPositionedSizedObject? SelectedIpso
     {
@@ -788,35 +747,14 @@ public class SelectedState : ISelectedState
 
     #endregion
 
-    public List<ElementWithState> GetTopLevelElementStack()
-    {
-        List<ElementWithState> toReturn = new List<ElementWithState>();
 
-        if (SelectedElement != null)
-        {
-            ElementWithState item = new ElementWithState(SelectedElement);
-            if (this.SelectedStateSave != null)
-            {
-                item.StateName = this.SelectedStateSave.Name;
-            }
-            toReturn.Add(item);
-
-
-        }
-
-        return toReturn;
-    }
 }
 
 /// <summary>
 /// Stores the selected state snapshot, allowing the selected state to be stored
-/// without using any UI. 
+/// without looking at any UI states.
 /// </summary>
-/// <remarks>
-/// This is similar to how Glue stores its selections, and we're migrating to this
-/// so that the UI can be swapped out more easily.
-/// </remarks>
-class SelectedStateSnapshot
+class SelectedStateSnapshot : ISelectedState
 {
     public ScreenSave? SelectedScreen
     {
@@ -837,13 +775,13 @@ class SelectedStateSnapshot
     }
 
     List<ElementSave> selectedElements = new List<ElementSave>();
-    public List<ElementSave> SelectedElements 
+    public IEnumerable<ElementSave> SelectedElements 
     {
         get => selectedElements;
         set
         {
             selectedElements.Clear();
-            if(value?.Count > 0)
+            if(value?.Count() > 0)
             {
                 selectedElements.AddRange(value);
             }
@@ -961,8 +899,8 @@ class SelectedStateSnapshot
     public VariableSave? SelectedVariableSave { get; set; }
     public VariableSave? SelectedBehaviorVariable { get; set; }
 
-    public TreeNode? SelectedTreeNode { get; set; }
+    public ITreeNode? SelectedTreeNode { get; set; }
 
-    public IEnumerable<TreeNode> SelectedTreeNodes { get; set; }
+    public IEnumerable<ITreeNode> SelectedTreeNodes { get; set; }
 
 }

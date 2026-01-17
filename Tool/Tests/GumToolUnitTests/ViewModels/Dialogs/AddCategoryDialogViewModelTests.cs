@@ -36,7 +36,7 @@ public class AddCategoryDialogViewModelTests : BaseTestClass
     [Fact]
     public void Validate_ShouldValidateComponentCategories_UsingNameVerifier()
     {
-        string errorMessage = "Invalid category name";
+        string? errorMessage = "Invalid category name";
         _nameVerifier.Setup(
             x => x.IsCategoryNameValid(
                 It.IsAny<string>(), 
@@ -58,7 +58,7 @@ public class AddCategoryDialogViewModelTests : BaseTestClass
     [Fact]
     public void Validate_ShouldValidateBehaviorCategories_UsingNameVerifier()
     {
-        string errorMessage = "Invalid behavior category name";
+        string? errorMessage = "Invalid behavior category name";
         _nameVerifier.Setup(
             x => x.IsCategoryNameValid(
                 It.IsAny<string>(), 

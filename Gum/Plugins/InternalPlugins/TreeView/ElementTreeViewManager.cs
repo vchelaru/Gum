@@ -186,9 +186,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// <summary>
     /// Used to store off what was previously selected
     /// when the tree view refreshes itself - so the user
-    /// doesn't lose his selection.
+    /// doesn't lose the old selection.
     /// </summary>
-    object mRecordedSelectedObject;
+    object? mRecordedSelectedObject;
 
     System.Windows.Controls.TextBox searchTextBox;
     System.Windows.Controls.CheckBox deepSearchCheckBox;
@@ -1484,17 +1484,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public void RecordSelection()
     {
-        mRecordedSelectedObject = _selectedState.SelectedInstance;
-
-        if (mRecordedSelectedObject == null)
-        {
-            mRecordedSelectedObject = _selectedState.SelectedElement;
-        }
-
-        if(mRecordedSelectedObject == null)
-        {
-            mRecordedSelectedObject = _selectedState.SelectedBehavior;
-        }
+        mRecordedSelectedObject = 
+            (object?)_selectedState.SelectedInstance ?? 
+            (object?)_selectedState.SelectedElement ??
+            (object?)_selectedState.SelectedBehavior;
     }
 
     public void SelectRecordedSelection()
@@ -1503,17 +1496,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             if (mRecordedSelectedObject != null)
             {
-                if (mRecordedSelectedObject is InstanceSave)
+                if (mRecordedSelectedObject is InstanceSave instanceSave)
                 {
-                    _selectedState.SelectedInstance = mRecordedSelectedObject as InstanceSave;
+                    _selectedState.SelectedInstance = instanceSave;
                 }
-                else if (mRecordedSelectedObject is ElementSave)
+                else if (mRecordedSelectedObject is ElementSave elementSave)
                 {
-                    _selectedState.SelectedElement = mRecordedSelectedObject as ElementSave;
+                    _selectedState.SelectedElement = elementSave;
                 }
-                else if(mRecordedSelectedObject is BehaviorSave)
+                else if(mRecordedSelectedObject is BehaviorSave behaviorSave)
                 {
-                    _selectedState.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
+                    _selectedState.SelectedBehavior = behaviorSave;
                 }
             }
         }
@@ -2588,7 +2581,7 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node</param>
     /// <returns>Whether this is a folder inside the screens folder structure</returns>
-    public static bool IsScreensFolderTreeNode(this ITreeNode treeNode) =>
+    public static bool IsScreensFolderTreeNode(this ITreeNode? treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsScreensFolderTreeNode()
         : false;
@@ -2648,7 +2641,7 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node</param>
     /// <returns>Whether this is a folder inside the screens folder structure</returns>
-    public static bool IsComponentsFolderTreeNode(this ITreeNode treeNode) =>
+    public static bool IsComponentsFolderTreeNode(this ITreeNode? treeNode) =>
         treeNode is TreeNodeWrapper wrapper
         ? wrapper.Node.IsComponentsFolderTreeNode()
         : false;
