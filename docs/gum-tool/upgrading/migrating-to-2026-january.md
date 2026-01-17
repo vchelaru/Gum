@@ -183,3 +183,19 @@ otherListBox.FrameworkElementTemplate =
 otherListBox.FrameworkElementTemplate = 
     new FrameworkElementTemplate(() => new SomeFormsType()));
 ```
+
+### TextRuntime.MaximumNumberOfLines ⇒ TextRuntime.MaxNumberOfLines
+
+This change only affects the SkiaSharp runtimes. The property name `MaximumNumberOfLines` has been deprecated in favor of `MaxNumberOfLines` to address code generation issues and to unify the API between Skia and other runtimes such as MonoGame.
+
+❌Old:
+
+```csharp
+myTextRuntime.MaximumNumberOfLines = 3;
+```
+
+✅New:
+
+```csharp
+myTextRuntime.MaxNumberOfLines = 3;
+```
