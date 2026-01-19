@@ -32,15 +32,15 @@ See below for breaking changes and updates.
 
 Previous versions of GraphicalUiElement (base class for all Visuals) included the Parent property of type `IPositionedSizedObject`. This has been replaced with a Parent property of type `GraphicalUiElement`. All Parents were of type `GraphicalUiElement` already, so this change makes it easier to work with parents, avoiding the need to cast.
 
+❌Old:
+
 ```csharp
-// old:
 IPositionedSizedObject parent = SomeVisual.Parent;
 ```
 
-This is now a GraphicalUiElement:
+✅New, this is now a GraphicalUiElement:
 
 ```csharp
-// new:
 GraphicalUiElement parent = SomeVisual.Parent;
 ```
 
