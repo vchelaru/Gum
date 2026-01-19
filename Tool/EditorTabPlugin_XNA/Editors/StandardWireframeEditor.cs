@@ -758,6 +758,7 @@ public class StandardWireframeEditor : WireframeEditor
             mResizeHandles.Visible = true;
             rotationHandle.Visible = true;
             mResizeHandles.SetValuesFrom(selectedObjects);
+            mResizeHandles.UpdateHandleSizes();
         }
     }
 
