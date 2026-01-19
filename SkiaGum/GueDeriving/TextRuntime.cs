@@ -223,9 +223,9 @@ public class TextRuntime : BindableGue
     }
 #endif
 
-    /// <summary>
-    /// A multiplier used when rendering the text. The default value is 1.0.
-    /// </summary>
+        /// <summary>
+        /// A multiplier used when rendering the text. The default value is 1.0.
+        /// </summary>
 #if RAYLIB || XNALIKE
     /// <remarks>
     /// Setting this value to a value other than 1 scales the text accordingly. This is
