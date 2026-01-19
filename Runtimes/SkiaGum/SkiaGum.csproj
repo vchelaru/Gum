@@ -37,10 +37,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
+		<Compile Include="..\..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
 			<Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
 		</Compile>
-		<Compile Include="..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
+		<Compile Include="..\..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
 
 	</ItemGroup>
 
@@ -53,7 +53,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

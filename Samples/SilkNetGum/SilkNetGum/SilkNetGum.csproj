@@ -24,7 +24,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\SkiaGum\SkiaGum.csproj" />
+	  <ProjectReference Include="..\..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

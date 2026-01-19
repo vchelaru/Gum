@@ -49,7 +49,7 @@ unsafe class Program
         //Root = new CodeOnlyScreen();
         //Root.AddToManagers();
 
-        var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
+        var screen = ObjectFinder.Self.GumProjectSave!.Screens.First();
         Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
     }
 
@@ -215,7 +215,7 @@ unsafe class Program
             {
                 string messageString = Marshal.PtrToStringAnsi(message, length);
                 //Console.WriteLine($"GL Debug: {severity}: {messageString}");
-            }, IntPtr.Zero);
+            }, in IntPtr.Zero);
 
             // Print renderer info
             unsafe

@@ -339,7 +339,7 @@ namespace MonoGameGumFromFile
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(this, gameTime);
+            GumService.Default.Update(gameTime);
 
             GumService.Default.Root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
 

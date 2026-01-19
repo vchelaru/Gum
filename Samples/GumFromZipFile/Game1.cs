@@ -90,7 +90,7 @@ namespace GumFromZipFile
 
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(this, gameTime, Root);
+            GumService.Default.Update(gameTime, Root);
 
             base.Update(gameTime);
         }

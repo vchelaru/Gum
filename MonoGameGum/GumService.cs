@@ -112,21 +112,16 @@ public class GumService
         DeferredQueue = new DeferredActionQueue();
     }
 
+
+#if XNALIKE
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
-#if XNALIKE
     /// <param name="game">The game instance.</param>
-#endif
     /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
     /// <returns>The loaded project, or null if no project is loaded</returns>
-#if XNALIKE
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
-#else
-    public GumProjectSave Initialize(string gumProjectFile)
-#endif
     {
-#if XNALIKE
         if (game.GraphicsDevice == null)
         {
             throw new InvalidOperationException(
@@ -138,12 +133,20 @@ public class GumService
             game, game.GraphicsDevice,
             gumProjectFile,
             defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
+    }
 #else
+    /// <summary>
+    /// Initializes Gum, optionally loading a Gum project.
+    /// </summary>
+    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
+    /// <returns>The loaded project, or null if no project is loaded</returns>
+    public GumProjectSave Initialize(string gumProjectFile)
+    {
         return InitializeInternal(
             gumProjectFile,
             defaultVisualsVersion: DefaultVisualsVersion.Newest)!;
-#endif
     }
+#endif
 
 #if XNALIKE
     public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
