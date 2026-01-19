@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Maui", "..\..\Runti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{4DB09B34-1EBE-7FC3-3E38-251BF602AF79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\SkiaGum\SkiaGum.csproj", "{40A1FD91-0471-68E9-ABEE-C7EF715BAD8C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\Runtimes\SkiaGum\SkiaGum.csproj", "{40A1FD91-0471-68E9-ABEE-C7EF715BAD8C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{2ACD4071-A998-47FA-9B57-753FADD2545D}"
 EndProject

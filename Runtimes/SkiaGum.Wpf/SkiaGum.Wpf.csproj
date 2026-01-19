@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\SkiaGum\SkiaGum.csproj" />
+    <ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
   </ItemGroup>
 
 </Project>

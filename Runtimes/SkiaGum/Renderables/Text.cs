@@ -36,8 +36,6 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public bool IsRenderTarget => false;
 
-    float? mWidth = 200;
-
     //public SKTypeface Font { get; set; }
     public string FontName
     {

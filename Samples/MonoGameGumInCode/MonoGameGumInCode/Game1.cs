@@ -16,7 +16,6 @@ namespace MonoGameGumInCode
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        Layer layer;
 
         public Game1()
         {
@@ -174,8 +173,8 @@ namespace MonoGameGumInCode
         {
 
             var container = new ContainerRuntime();
-            container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             container.Width = 0;
             container.Height = 0;
             container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
@@ -312,7 +311,7 @@ namespace MonoGameGumInCode
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            GumService.Default.Update(this, gameTime);
+            GumService.Default.Update(gameTime);
 
             bool moveCameraWithMouse = false;
             if(moveCameraWithMouse)

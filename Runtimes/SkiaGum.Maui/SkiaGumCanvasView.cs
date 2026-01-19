@@ -92,7 +92,6 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
     public string SemaphoreTag = "GumSemaphore";
 
     float yPushed;
-    bool isWithinThreshold = false;
 
     Func<Task> customPushEventToRaise;
     Func<Task> customReleaseEventToRaise;
@@ -186,7 +185,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 
     #region Touch-related Logic
 
-    protected virtual async void HandleTouch(object sender, SKTouchEventArgs args)
+    protected virtual async void HandleTouch(object? sender, SKTouchEventArgs args)
     {
         // Maybe we need to adjust this for other devices?
         float threshold = (float)20;
@@ -199,6 +198,7 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         //args.Handled = await TryHandleTouch(threshold, touchX, touchY, actionType);
     }
 
+    // bool isWithinThreshold = false;
     //public async Task<bool> TryHandleTouch(float threshold, float touchX, float touchY, SKTouchAction actionType)
     //{
     //    var wasHandled = false;
@@ -518,19 +518,22 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 
     #endregion
 
-    private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                foreach (var toAdd in e.NewItems)
+                if(e.NewItems != null)
                 {
-                    var bindableGue = toAdd as BindableGue;
+                    foreach (var toAdd in e.NewItems)
+                    {
+                        var bindableGue = (BindableGue)toAdd;
 
-                    bindableGue.AddToManagers(this);
-                    bindableGue.BindingContext = this.BindingContext;
+                        bindableGue.AddToManagers(this);
+                        bindableGue.BindingContext = this.BindingContext;
+                    }
+
                 }
-
                 break;
         }
     }
