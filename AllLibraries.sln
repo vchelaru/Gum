@@ -43,8 +43,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum.Tests", "Tests\Ra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests.V3", "Tests\MonoGameGum.Tests.V3\MonoGameGum.Tests.V3.csproj", "{F216702F-6E70-46BF-AB12-2EEE7BC1D480}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Wpf", "Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj", "{D795E6B5-01B6-4E55-6971-A81352F1E1DE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -271,18 +269,6 @@ Global
 		{F216702F-6E70-46BF-AB12-2EEE7BC1D480}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F216702F-6E70-46BF-AB12-2EEE7BC1D480}.Release|x86.ActiveCfg = Release|Any CPU
 		{F216702F-6E70-46BF-AB12-2EEE7BC1D480}.Release|x86.Build.0 = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|x86.Build.0 = Debug|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|Any CPU.Build.0 = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|x86.ActiveCfg = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|x86.Build.0 = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|x86.ActiveCfg = Release|Any CPU
-		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
