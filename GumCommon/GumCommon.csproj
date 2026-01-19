@@ -88,7 +88,7 @@
 		<Compile Include="..\RenderingLibrary\Graphics\RenderableBase.cs" Link="RenderingLibrary\RenderableBase.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\RendererSettings.cs" Link="RenderingLibrary\RendererSettings.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
-		<Compile Include="..\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />
+		<Compile Include="..\Runtimes\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />
 		<Compile Include="..\ToolsUtilities\**\*.cs" Link="Utilities\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
