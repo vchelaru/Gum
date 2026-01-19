@@ -118,6 +118,42 @@ polygon.SetPoints(new List<System.Numerics.Vector2>
 
 Practically speaking most `Polygons` are set either through the Gum tool, or their points are modified after creation so this change has a low likelihood of breaking projects.
 
+## \[Breaking] SkiaGum Library in Runtimes Folder
+
+The SkiaGum folder, which contained the `SkiaGum.csproj` project, has been moved from the Gum root to the Runtimes folder.
+
+Most projects which use Skia reference the platform-specific csproj, such as SkiaGum.Maui, so these projects will not be affected by the change. Since a dedicated Silk.NET library does not exist, projects using Silk.NET and linking to source need to be changed.
+
+This may break existing projects which directly link the `SkiaGum.csproj` file. To fix this, change your .sln to reference the .csproj in the Runtimes folder, and also change any projects which reference this .csproj to also reference the csproj in the Runtimes folder.
+
+The following shows how a .sln may change:
+
+❌Old:
+
+```
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\SkiaGum\SkiaGum.csproj", "{40A1FD91-0471-68E9-ABEE-C7EF715BAD8C}"
+```
+
+✅New:
+
+```
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "..\..\Runtimes\SkiaGum\SkiaGum.csproj", "{40A1FD91-0471-68E9-ABEE-C7EF715BAD8C}"
+```
+
+Projects which directly reference SkiaGum.csproj also need to be updated.
+
+❌Old:
+
+```
+<ProjectReference Include="..\..\SkiaGum\SkiaGum.csproj" />
+```
+
+✅New:
+
+```
+<ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
+```
+
 ## ContainerRuntime Alpha is now int instead of float
 
 Previous versions of Gum runtime included a `ContainerRuntime` which has an `Alpha` value that was `float`. This caused confusion because the base class for `ContainerRuntime` also had an `Alpha` value of type int. The `float` version has been removed, so now only the `int` type remains.

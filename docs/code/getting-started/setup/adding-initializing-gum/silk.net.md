@@ -32,13 +32,13 @@ If you have already added the Gum NuGet package to your project, remove it.
 
 Add the following projects to your solution:
 
-* \<Gum Root>/SkiaGum/SkiaGum.csproj
+* \<Gum Root>/Runtimes/SkiaGum/SkiaGum.csproj
 * \<GumRoot>/GumCommon/GumCommon.csproj
 
 Next, add SkiaGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
-<ProjectReference Include="..\Gum\SkiaGum\SkiaGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\SkiaGum\SkiaGum.csproj" />
 ```
 
 ## Initializing Gum
@@ -145,8 +145,6 @@ unsafe class Program
 ```
 
 For a working project, see the Gum Silk.NET sample:
-
-
 
 {% embed url="https://github.com/vchelaru/Gum/tree/master/Samples/SilkNetGum" %}
 
