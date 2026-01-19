@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FnaGum", "MonoGameGum\FnaGu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FNA.Core", "fna\FNA.Core.csproj", "{435D0AF1-6956-42A4-AF24-E2BF0E9748D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "SkiaGum\SkiaGum.csproj", "{309DE2DB-648A-4769-B875-E5808F6CF92E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "Runtimes\SkiaGum\SkiaGum.csproj", "{309DE2DB-648A-4769-B875-E5808F6CF92E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -42,6 +42,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum.Tests", "Tests\RaylibGum.Tests\RaylibGum.Tests.csproj", "{2161C5E6-875D-484D-AECE-132E35B8C0B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests.V3", "Tests\MonoGameGum.Tests.V3\MonoGameGum.Tests.V3.csproj", "{F216702F-6E70-46BF-AB12-2EEE7BC1D480}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Wpf", "Runtimes\SkiaGum.Wpf\SkiaGum.Wpf.csproj", "{D795E6B5-01B6-4E55-6971-A81352F1E1DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -269,6 +271,18 @@ Global
 		{F216702F-6E70-46BF-AB12-2EEE7BC1D480}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F216702F-6E70-46BF-AB12-2EEE7BC1D480}.Release|x86.ActiveCfg = Release|Any CPU
 		{F216702F-6E70-46BF-AB12-2EEE7BC1D480}.Release|x86.Build.0 = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Debug|x86.Build.0 = Debug|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|Any CPU.ActiveCfg = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|Any CPU.Build.0 = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|x86.ActiveCfg = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release_No_Diagnostics|x86.Build.0 = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|x86.ActiveCfg = Release|Any CPU
+		{D795E6B5-01B6-4E55-6971-A81352F1E1DE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

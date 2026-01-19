@@ -27,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+		<Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
