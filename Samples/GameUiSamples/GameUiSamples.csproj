@@ -32,7 +32,7 @@
     <Folder Include="Components\HyTaleComponents\Pieces\" />
     <Folder Include="Content\GumProject\Components\FrbClickerComponents\" />
     <Folder Include="DefsData\" />
-	  <None Update="Content\**\*.*">
+	  <None Update=" Content\**\*.*">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
   </ItemGroup>

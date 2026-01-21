@@ -16,7 +16,7 @@ namespace GameUiSamples.Data
         Ore,
         Ingot,
         Food,
-        Container,
+        Container, 
         Item
     }
 
