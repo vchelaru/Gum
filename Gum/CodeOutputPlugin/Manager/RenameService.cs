@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using System.IO;
 
 namespace CodeOutputPlugin.Manager;
 
@@ -43,8 +44,9 @@ internal class RenameService
 
     }
 
-    private void RegenerateAndMoveCode(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, FilePath oldGeneratedFileName, 
-        FilePath? oldCustomFileName, FilePath newCustomFileName,
+    private void RegenerateAndMoveCode(ElementSave element, string oldName, 
+        CodeOutputProjectSettings codeOutputProjectSettings, FilePath? oldGeneratedFileName, 
+        FilePath? oldCustomFileName, FilePath? newCustomFileName,
         VisualApi? oldVisualApi = null)
     {
 
@@ -72,7 +74,7 @@ internal class RenameService
 
             if (shouldMove)
             {
-                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName.FullPath);
+                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName!.FullPath);
             }
         }
 
@@ -121,23 +123,30 @@ internal class RenameService
         }
         /////////////////////End Early Out////////////////////
 
+        FilePath? oldGeneratedFileName = null;
+        FilePath? oldCustomFileName = null;
+
         var oldVisualApi = _codeGenerator.GetVisualApiForElement(element);
 
-        // Vic - tomorrow keep testing this swapping back adn forth
         var newValue = element.BaseType;
         var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
 
-        if(oldValue is StandardElementTypes standardElementTypes)
+        if(oldValue != null)
         {
-            element.BaseType = standardElementTypes.ToString();
-        }
-        else
-        {
-            element.BaseType = (string)oldValue; 
-        }
+            // Temporarily set the element back to the old type to get the old values
+            if(oldValue is StandardElementTypes standardElementTypes)
+            {
+                element.BaseType = standardElementTypes.ToString();
+            }
+            else
+            {
+                // The old type better exist. If not, then this element was in a very bad state
+                element.BaseType = (string)oldValue;
+            }
 
-        var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
-        var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
+            oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
+            oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldVisualApi);
+        }
 
 
         element.BaseType = newValue;

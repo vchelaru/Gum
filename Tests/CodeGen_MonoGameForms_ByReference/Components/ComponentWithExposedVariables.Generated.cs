@@ -1,18 +1,14 @@
 //Code for ComponentWithExposedVariables (Container)
-using GumRuntime;
-using System.Linq;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using CodeGenProject.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
+using GumRuntime;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
-
 using System.Linq;
-
 namespace CodeGenProject.Components;
 partial class ComponentWithExposedVariables : global::Gum.Forms.Controls.FrameworkElement
 {

@@ -1,19 +1,15 @@
 //Code for Controls/InputDeviceSelectionItem (Container)
-using GumRuntime;
-using System.Linq;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
-using CodeGen_MonoGame_ByReference.Components.Elements;
 using CodeGen_MonoGame_ByReference.Components.Controls;
+using CodeGen_MonoGame_ByReference.Components.Elements;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
+using GumRuntime;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
-
 using System.Linq;
-
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
 partial class InputDeviceSelectionItemRuntime : ContainerRuntime
 {

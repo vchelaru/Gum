@@ -1,18 +1,14 @@
 //Code for Controls/ScrollBar (Container)
-using GumRuntime;
-using System.Linq;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using CodeGenProject.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
+using GumRuntime;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
-
 using System.Linq;
-
 namespace CodeGenProject.Components.Controls;
 partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
 {
