@@ -404,7 +404,6 @@ public class Cursor : ICursor
     TouchCollection _touchCollection;
     TouchCollection _lastFrameTouchCollection = new TouchCollection();
 
-
     public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
     double mLastPrimaryClickTime = -999;
     public double LastPrimaryClickTime => mLastPrimaryClickTime;
@@ -413,11 +412,20 @@ public class Cursor : ICursor
     double mLastSecondaryClickTime = -999;
     double mLastMiddleClickTime = -999;
 
+    public Cursor()
+    {
+        // empty for now, but maybe we'll need something here in the future?
+    }
 
-    // todo - need to have this actually change the cursor. For now doing this to satisfy the interface:
-    Cursors? ICursor.CustomCursor
-    { 
-        get; set;
+    public void ClearInputValues()
+    {
+        _lastFrameTouchCollection = new TouchCollection();
+        _touchCollection = new TouchCollection();
+
+        mLastFrameMouseState = new MouseState();
+        _mouseState = new MouseState();
+
+        // do we want to change X and Y?
     }
 
     public void Activity(double gameTime)
@@ -444,6 +452,45 @@ public class Cursor : ICursor
             x = _mouseState.X;
             y = _mouseState.Y;
         }
+        else
+        {
+            LastInputDevice = InputDevice.TouchScreen;
+        }
+
+        var shouldDoTouchPanel = true;
+
+#if KNI
+        shouldDoTouchPanel = TouchPanel.Current != null;
+#endif
+
+        if (shouldDoTouchPanel)
+        {
+            _touchCollection = GetTouchCollection();
+        }
+
+        var lastFrameTouchCollectionCount = 0;
+        try
+        {
+            lastFrameTouchCollectionCount = _lastFrameTouchCollection.Count;
+        }
+        // FNA crashes here (maybe because XNA did?) if lastFrameTouchCollectionCount.GetState has never been called
+        catch { }
+
+        if (_touchCollection.Count > 0 || lastFrameTouchCollectionCount > 0)
+        {
+            LastInputDevice = InputDevice.TouchScreen;
+
+            if (_touchCollection.Count > 0)
+            {
+                x = (int)_touchCollection[0].Position.X;
+                y = (int)_touchCollection[0].Position.Y;
+            }
+            else if (_lastFrameTouchCollection.Count > 0)
+            {
+                x = (int)_lastFrameTouchCollection[0].Position.X;
+                y = (int)_lastFrameTouchCollection[0].Position.Y;
+            }
+        }
 
         if (x != null)
         {
@@ -456,6 +503,7 @@ public class Cursor : ICursor
         {
             // do nothing
         }
+
         if (PrimaryPush)
         {
             if (gameTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
@@ -506,4 +554,29 @@ public class Cursor : ICursor
 
         return state;
     }
+
+    private TouchCollection GetTouchCollection()
+    {
+        var touchCollection = new TouchCollection();
+        int touchCount = Raylib.GetTouchPointCount();
+        //TouchLocation[] touches = new TouchLocation[touchCount];
+        //for (int i = 0; i < touchCount; i++)
+        //{
+        //    TouchPoint point = Raylib.GetTouchPoint(i);
+        //    TouchLocation location = new TouchLocation(
+        //        point.id,
+        //        TouchLocationState.Moved,
+        //        new Microsoft.Xna.Framework.Vector2(point.position.X, point.position.Y)
+        //    );
+        //    touches[i] = location;
+        //}
+        //touchCollection = new TouchCollection(touches);
+        return touchCollection;
+    }
+
+    public override string ToString()
+    {
+        return $"Cursor at ({X}, {Y}) Push:{PrimaryPush} Down:{PrimaryDown} Click:{PrimaryClick}";
+    }
+
 }

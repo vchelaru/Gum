@@ -209,6 +209,12 @@ public class FormsUtilities
 
         cursor = new Cursor();
 
+#if !FRB
+        // This was added to MonoGame/raylib on 1/22/2026 to support
+        // simplified behavior.
+        ICursor.VisualOverBehavior = VisualOverBehavior.IfHasEventsIsTrue;
+#endif
+
 #if XNALIKE
         keyboard = new Keyboard(game);
 #else

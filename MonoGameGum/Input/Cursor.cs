@@ -404,7 +404,6 @@ public class Cursor : ICursor
     TouchCollection _touchCollection;
     TouchCollection _lastFrameTouchCollection = new TouchCollection();
 
-
     public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
     double mLastPrimaryClickTime = -999;
     public double LastPrimaryClickTime => mLastPrimaryClickTime;
@@ -429,7 +428,7 @@ public class Cursor : ICursor
         // do we want to change X and Y?
     }
 
-    public void Activity(double currentTime)
+    public void Activity(double gameTime)
     {
         mLastFrameMouseState = _mouseState;
         _lastFrameTouchCollection = _touchCollection;
@@ -449,7 +448,7 @@ public class Cursor : ICursor
         {
             LastInputDevice = InputDevice.Mouse;
 
-            _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
+            _mouseState = GetMouseState();
             x = _mouseState.X;
             y = _mouseState.Y;
         }
@@ -466,19 +465,7 @@ public class Cursor : ICursor
 
         if (shouldDoTouchPanel)
         {
-            // In MonoGame there's no way to check if GameWindow has been set.
-            // This code could pass its own GameWindow, but that requires assumptions
-            // or additional objects being carried through Cursor to get to here. Instead
-            // we'll try/catch it. The catch shouldn't happen in actual games so it should be
-            // cheap.
-            try
-            {
-                _touchCollection = TouchPanel.GetState();
-            }
-            catch
-            {
-                _touchCollection = new TouchCollection();
-            }
+            _touchCollection = GetTouchCollection();
         }
 
         var lastFrameTouchCollectionCount = 0;
@@ -517,59 +504,66 @@ public class Cursor : ICursor
             // do nothing
         }
 
-        // We want to keep track of whether
-        // the user pushed in the window or not
-        // to prevent the user from pushing outside
-        // of the window and dragging "inward" (which 
-        // happens if the user is moving the resize bar).
-        // To do this we need to track if the user pushed in
-        // the window or not.  We can't use PrimaryPush because
-        // that checks IsInWindow, so we will manually do the MouseState
-        // checks here.
-        // Update, maybe we don't need this now that the wireframe window
-        // can receive focus.
-        //if(this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-        //        this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-        //{
-        //    mPushedInWindow = IsInWindow;
-        //}
-
         if (PrimaryPush)
         {
-            if (currentTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 PrimaryDoublePush = true;
             }
-            mLastPrimaryPushTime = currentTime;
+            mLastPrimaryPushTime = gameTime;
         }
 
         if (PrimaryClick)
         {
-            if (currentTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 PrimaryDoubleClick = true;
             }
-            mLastPrimaryClickTime = currentTime;
+            mLastPrimaryClickTime = gameTime;
         }
 
         if (SecondaryClick)
         {
-            if (currentTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 SecondaryDoubleClick = true;
             }
-            mLastSecondaryClickTime = currentTime;
+            mLastSecondaryClickTime = gameTime;
         }
 
         if(MiddleClick)
         {
-            if (currentTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 MiddleDoubleClick = true;
             }
-            mLastMiddleClickTime = currentTime;
+            mLastMiddleClickTime = gameTime;
         }
 
+    }
+
+    private MouseState GetMouseState()
+    {
+        return Microsoft.Xna.Framework.Input.Mouse.GetState();
+    }
+
+    private TouchCollection GetTouchCollection()
+    {
+        TouchCollection touchCollection;
+        // In MonoGame there's no way to check if GameWindow has been set.
+        // This code could pass its own GameWindow, but that requires assumptions
+        // or additional objects being carried through Cursor to get to here. Instead
+        // we'll try/catch it. The catch shouldn't happen in actual games so it should be
+        // cheap.
+        try
+        {
+            touchCollection = TouchPanel.GetState();
+        }
+        catch
+        {
+            touchCollection = new TouchCollection();
+        }
+        return touchCollection;
     }
 
     public override string ToString()

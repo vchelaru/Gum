@@ -421,8 +421,13 @@ public partial class InteractiveGue : BindableGue
 
         if (isOver)
         {
-            if (IsComponentOrInstanceOfComponent(currentItem)
-                ||
+            var shouldTreatAsIsOver =
+                IsComponentOrInstanceOfComponent(currentItem);
+
+            // See VisualOverBehavior for an exaplanation about this code
+            if (!shouldTreatAsIsOver && ICursor.VisualOverBehavior == VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue)
+            {
+                shouldTreatAsIsOver = 
                 asInteractive?.Push != null ||
                 asInteractive?.Click != null ||
                 asInteractive?.DoubleClick != null ||
@@ -434,7 +439,7 @@ public partial class InteractiveGue : BindableGue
                 asInteractive?._losePush != null ||
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
-                asInteractive?.MouseWheelScroll != null
+                asInteractive?.MouseWheelScroll != null;
                 // if it has events and it has a Forms control, then let's consider it a click
                 //|| asInteractive?.FormsControlAsObject != null
                 // Update July 18, 2025 
@@ -443,7 +448,17 @@ public partial class InteractiveGue : BindableGue
                 // consume all clicks. We need to come
                 // up with another way to do this. For now
                 // the events are the hack
-                )
+            }
+
+            if(!shouldTreatAsIsOver && ICursor.VisualOverBehavior == VisualOverBehavior.IfHasEventsIsTrue)
+            {
+                shouldTreatAsIsOver = asInteractive?.HasEvents == true;
+            }
+
+
+
+
+            if (shouldTreatAsIsOver)
             {
                 if (!handledByChild)
                 {
@@ -936,8 +951,34 @@ public enum Cursors
     // more may be added in the future
 }
 
+/// <summary>
+/// Determines how to evaluate whether to show visual over states based on the HasEvents property.
+/// </summary>
+/// <remarks>
+/// FlatRedBall was built around the assumption that HasEvents is not enough to determine whether
+/// a visual should respond to Cursor events. This is because users may set HasEvents on a StandardElement
+/// in the Gum tool, which would default all instances of that standard to have the value set to true. This 
+/// could result in controls which use this visual unexpectedly having their events swallowed by the child visual.
+/// To avoid this, FlatRedBall checks both HasEvents and whether any events are actually attached to the visual.
+/// However, this behavior is very confusing, and as new runtimes are introduced we can simplify things. To continue
+/// to support the old FRB behavior, this enum exists to allow users to select the old behavior or the new simplified behavior.
+/// Over time, we may get rid of the old behavior completely, or at least default to the new one.
+/// </remarks>
+public enum VisualOverBehavior
+{
+    /// <summary>
+    /// VisualOver is only set if HasEvents is true and if the visual has events attached. This 
+    /// exists to support old projects. New projects should use IfHasEventsIsTrue
+    /// </summary>
+    OnlyIfEventsAreNotNullAndHasEventsIsTrue,
+    IfHasEventsIsTrue
+}
+
 public interface ICursor
 {
+    public static VisualOverBehavior VisualOverBehavior { get; set; } = 
+        VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue;
+
     public Cursors? CustomCursor { get; set; }
     InputDevice LastInputDevice { get; }
     int X { get; }

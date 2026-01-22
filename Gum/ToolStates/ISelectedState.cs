@@ -34,6 +34,11 @@ public interface ISelectedState
     StateSaveCategory? SelectedStateCategorySave { get; set; }
     ComponentSave? SelectedComponent { get; set; }
     InstanceSave? SelectedInstance { get; set; }
+
+    // January 22, 2026
+    // This should be converted
+    // to a GraphicalUiElement at
+    // some point in the future.
     IPositionedSizedObject? SelectedIpso { get; }
 
     IEnumerable<InstanceSave> SelectedInstances { get; set;  }
