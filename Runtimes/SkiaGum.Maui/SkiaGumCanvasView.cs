@@ -139,11 +139,13 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
 
     #region Events
 
-    public event Action AfterLayoutBeforeDraw;
-    public event Action AfterAutoSizeChanged;
+    public event Action? AfterLayoutBeforeDraw;
+    public event Action? AfterAutoSizeChanged;
 
-    public event Func<Task<bool>> CanProceedFunc;
-    public event Action ReleaseFunc;
+    public event Func<Task<bool>>? CanProceedFunc;
+
+    // This isn't used currently, maybe never? Need to figure out if we ever want to handle clicks...
+    //public event Action ReleaseFunc;
     #endregion
 
     public SkiaGumCanvasView()
@@ -171,17 +173,17 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         }
     }
 
-    void ReleaseSemaphore(int count = 1)
-    {
-        if (ReleaseFunc != null)
-        {
-            ReleaseFunc();
-        }
-        else
-        {
-            ExclusiveUiInteractionSemaphore.Release(count);
-        }
-    }
+    //void ReleaseSemaphore(int count = 1)
+    //{
+    //    if (ReleaseFunc != null)
+    //    {
+    //        ReleaseFunc();
+    //    }
+    //    else
+    //    {
+    //        ExclusiveUiInteractionSemaphore.Release(count);
+    //    }
+    //}
 
     #region Touch-related Logic
 
