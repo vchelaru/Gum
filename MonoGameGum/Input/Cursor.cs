@@ -1,10 +1,6 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 #if RAYLIB
 using System.Numerics;
@@ -183,11 +179,16 @@ public class Cursor : ICursor
     /// <remarks>A detent represents a single notch or click of the scroll wheel, typically corresponding to a
     /// value of 120 units. This property is useful for detecting discrete scroll actions in input handling
     /// scenarios.</remarks>
-    public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
-
+    public int ScrollWheelChange =>
+#if RAYLIB
+        (int)Raylib.GetMouseWheelMoveV().Y;
+#else
+        (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
+#endif
 
     /// <summary>
-    /// The movement rate of the controlling input (usually mouse) on the z axis. For the mouse this refers to the scroll wheel.
+    /// The movement rate of the controlling input (usually mouse) on the z axis. 
+    /// For the mouse this refers to the scroll wheel.
     /// </summary>
     public float ZVelocity => ScrollWheelChange;
 
@@ -204,8 +205,8 @@ public class Cursor : ICursor
         {
             if(LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this.mLastFrameMouseState.LeftButton == ButtonState.Released &&
+                    this._mouseState.LeftButton == ButtonState.Pressed;
             }
             else
             {
@@ -228,7 +229,7 @@ public class Cursor : ICursor
         {
             if(LastInputDevice == InputDevice.Mouse)
             {
-                return this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this._mouseState.LeftButton == ButtonState.Pressed;
             }
             else
             {
@@ -250,8 +251,8 @@ public class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                    this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+                return this.mLastFrameMouseState.LeftButton == ButtonState.Pressed &&
+                    this._mouseState.LeftButton == ButtonState.Released;
             }
             else
             {
@@ -261,6 +262,7 @@ public class Cursor : ICursor
     }
 
     public bool PrimaryDoubleClick { get; private set; }
+
     public bool PrimaryDoublePush { get; private set; }
 
     public bool PrimaryClickNoSlide => PrimaryClick;

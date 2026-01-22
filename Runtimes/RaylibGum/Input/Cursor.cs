@@ -1,10 +1,6 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 #if RAYLIB
 using System.Numerics;
@@ -177,10 +173,32 @@ public class Cursor : ICursor
     /// </summary>
     public int YChange => Y - LastY;
 
-    public int ScrollWheelChange => (int)Raylib.GetMouseWheelMoveV().Y;
+    /// <summary>
+    /// Gets the amount of scroll wheel movement since the last frame, measured in detents.
+    /// </summary>
+    /// <remarks>A detent represents a single notch or click of the scroll wheel, typically corresponding to a
+    /// value of 120 units. This property is useful for detecting discrete scroll actions in input handling
+    /// scenarios.</remarks>
+    public int ScrollWheelChange =>
+#if RAYLIB
+        (int)Raylib.GetMouseWheelMoveV().Y;
+#else
+        (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
+#endif
 
+    /// <summary>
+    /// The movement rate of the controlling input (usually mouse) on the z axis. 
+    /// For the mouse this refers to the scroll wheel.
+    /// </summary>
     public float ZVelocity => ScrollWheelChange;
 
+    /// <summary>
+    /// Gets a value indicating whether a primary input action, such as a mouse left button press or a new touch, was
+    /// initiated during the current frame.
+    /// </summary>
+    /// <remarks>This property detects the start of a primary input event, which may originate from either a
+    /// mouse or a touch device depending on the last input used. It is typically used to determine when the user begins
+    /// an interaction, such as clicking or tapping, in real-time input scenarios.</remarks>
     public bool PrimaryPush
     {
         get
@@ -197,6 +215,14 @@ public class Cursor : ICursor
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the primary input action is currently active, such as a mouse left button press
+    /// or a touch contact.
+    /// </summary>
+    /// <remarks>This property reflects the state of the primary input based on the last input device used. If
+    /// the mouse is the last input device, it returns <see langword="true"/> when the left mouse button is pressed. If
+    /// touch is the last input device, it returns <see langword="true"/> when there is at least one active touch
+    /// contact.</remarks>
     public bool PrimaryDown
     {
         get
@@ -212,6 +238,13 @@ public class Cursor : ICursor
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether a primary click input was detected in the current frame, either from a mouse or
+    /// a touch device.
+    /// </summary>
+    /// <remarks>A primary click is considered to have occurred when the left mouse button is released after
+    /// being pressed, or when all touch points are released after being present in the previous frame. This property is
+    /// typically used to detect user selection or activation actions in input handling scenarios.</remarks>
     public bool PrimaryClick
     {
         get
@@ -327,7 +360,7 @@ public class Cursor : ICursor
     }
 
     /// <summary>
-    /// Gets or sets the Visual that was under the cursor when the cursor (left button)
+    /// Gets or sets the FrameworkElement Visual that was under the cursor when the cursor (left button)
     /// was pushed.
     /// </summary>
     public InteractiveGue? VisualPushed { get; set; }
