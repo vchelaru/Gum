@@ -24,7 +24,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static FilePath GetProjectCodeSettingsFile()
+        private static FilePath? GetProjectCodeSettingsFile()
         {
             FilePath folder = GumState.Self.ProjectState.ProjectDirectory;
             if(folder == null)

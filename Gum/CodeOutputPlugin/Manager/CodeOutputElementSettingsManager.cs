@@ -34,7 +34,7 @@ public class CodeOutputElementSettingsManager
         if (fileName.Exists())
         {
             var contents = System.IO.File.ReadAllText(fileName.FullPath);
-            toReturn = JsonConvert.DeserializeObject<Models.CodeOutputElementSettings>(contents);
+            toReturn = JsonConvert.DeserializeObject<Models.CodeOutputElementSettings>(contents)!;
         }
         else
         {

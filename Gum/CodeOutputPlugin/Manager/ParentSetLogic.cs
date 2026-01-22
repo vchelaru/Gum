@@ -80,7 +80,7 @@ public class ParentSetLogic
         var rfv = new RecursiveVariableFinder(element.DefaultState);
         var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
 
-        InstanceSave newParent = null;
+        InstanceSave? newParent = null;
 
         // continue here:
 

@@ -35,7 +35,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     public override Version Version => new Version(1, 0);
 
-    Views.CodeWindow control;
+    Views.CodeWindow? control;
     ViewModels.CodeWindowViewModel viewModel;
     Models.CodeOutputProjectSettings codeOutputProjectSettings;
 
@@ -49,7 +49,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly CodeGenerator _codeGenerator;
     private readonly ParentSetLogic _parentSetLogic;
 
-    PluginTab pluginTab;
+    PluginTab pluginTab = default!;
 
     // Not sure why this is null..., so getting it from the builder instead
     //[Import("LocalizationManager")]
@@ -65,17 +65,20 @@ public class MainCodeOutputPlugin : PluginBase
 
     public MainCodeOutputPlugin()
     {
+        codeOutputProjectSettings = new CodeOutputProjectSettings();
+
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+
         CodeGenerationNameVerifier codeGenerationNameVerifier = new(_nameVerifier);
-        _codeGenerator = new CodeGenerator(codeGenerationNameVerifier);
+
+        _codeGenerator = new CodeGenerator(codeGenerationNameVerifier, _localizationManager);
 
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, codeGenerationNameVerifier);
 
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
-        _codeGenerator.LocalizationManager = _localizationManager;
 
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, codeGenerationNameVerifier);
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, codeGenerationNameVerifier);
@@ -87,6 +90,8 @@ public class MainCodeOutputPlugin : PluginBase
         _messenger.Register<RequestCodeGenerationMessage>(
             this, 
             (_, message) => HandleRequestCodeGeneration(message));
+
+        viewModel = new ViewModels.CodeWindowViewModel();
     }
 
     private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)
@@ -175,7 +180,6 @@ public class MainCodeOutputPlugin : PluginBase
     {
         codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
         viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
-        CustomVariableManager.ViewModel = viewModel;
         HandleElementSelected(null);
     }
 
@@ -218,7 +222,11 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void LoadCodeSettingsFile(ElementSave? element)
     {
-        if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
+        ////////////////////////Early Out/////////////////////
+        if (control == null) return;
+        ///////////////////////End Early Out//////////////////
+
+        if (element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
         {
             control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
         }
@@ -322,17 +330,24 @@ public class MainCodeOutputPlugin : PluginBase
             pluginTab.Hide();
         }
 
-        control.CodeOutputProjectSettings = codeOutputProjectSettings;
-        if(control.CodeOutputElementSettings == null)
-        {
-            control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
-        }
         ///////////////////////early out////////////////////
         if(!pluginTab.IsSelected)
         {
             return;
         }
+
+        if(control == null)
+        {
+            return;
+        }
+
         /////////////////////end early out/////////////////
+
+        control.CodeOutputProjectSettings = codeOutputProjectSettings;
+        if(control.CodeOutputElementSettings == null)
+        {
+            control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+        }
 
         var instance = _selectedState.SelectedInstance;
         var selectedElement = _selectedState.SelectedElement!;
@@ -392,7 +407,6 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void CreateControl()
     {
-        viewModel = new ViewModels.CodeWindowViewModel();
         control = new Views.CodeWindow(viewModel);
 
         control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
@@ -434,7 +448,7 @@ public class MainCodeOutputPlugin : PluginBase
     private void HandleCodeOutputPropertyChanged()
     {
         var element = _selectedState.SelectedElement;
-        if(element != null && control.CodeOutputElementSettings != null)
+        if(element != null && control?.CodeOutputElementSettings != null)
         {
             CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
 
@@ -528,7 +542,7 @@ public class MainCodeOutputPlugin : PluginBase
     {
         if (element != null && element is not StandardElementSave)
         {
-            settings = settings ?? control.CodeOutputElementSettings;
+            settings = settings ?? control?.CodeOutputElementSettings;
 
             // If user is using automatic generation, generate everything
             // If it's manual, don't check for missing files

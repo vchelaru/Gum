@@ -16,7 +16,7 @@ namespace CodeOutputPlugin.Manager
 
             if(instance != null)
             {
-                var visualApi = CodeGenerator.GetVisualApiForInstance(instance, rvf.ElementStack.LastOrDefault().Element);
+                var visualApi = CodeGenerator.GetVisualApiForInstance(instance, rvf.ElementStack.Last().Element);
 
                 var variableName = variable.Name.Replace(" ", "");
 

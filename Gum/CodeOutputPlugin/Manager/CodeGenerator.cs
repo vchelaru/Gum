@@ -251,11 +251,11 @@ public class CodeGenerator
     #region CodeGenerator Fields/Properties
 
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
+    private readonly LocalizationManager _localizationManager;
 
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
 
-    public LocalizationManager LocalizationManager { get; set; }
 
     /// <summary>
     /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
@@ -266,9 +266,10 @@ public class CodeGenerator
 
     #endregion
     
-    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier)
+    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationManager localizationManager)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
+        _localizationManager = localizationManager;
     }
 
     #region Using Statements
@@ -319,12 +320,6 @@ public class CodeGenerator
             neededUsings.Add("Gum.Wireframe");
         }
 
-        foreach (var neededUsing in neededUsings)
-        {
-            context.StringBuilder.AppendLine($"using {neededUsing};");
-        }
-
-
         // The regex's here fix this bug:
         // https://github.com/vchelaru/Gum/issues/242
         if (!string.IsNullOrWhiteSpace(context.CodeOutputProjectSettings?.CommonUsingStatements))
@@ -333,7 +328,9 @@ public class CodeGenerator
 
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
-            context.StringBuilder.AppendLine(result);
+            var splitUsings = result.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+
+            AddUsings(splitUsings);
         }
 
         if (!string.IsNullOrEmpty(context.ElementSettings?.UsingStatements))
@@ -341,7 +338,33 @@ public class CodeGenerator
             string originalString = context.ElementSettings!.UsingStatements;
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
-            context.StringBuilder.AppendLine(result);
+            var splitUsings = result.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+
+            AddUsings(splitUsings);
+        }
+
+        void AddUsings(string[] splitUsings)
+        {
+            foreach (var item in splitUsings)
+            {
+                var itemCopy = item;
+                if (itemCopy.StartsWith("using "))
+                {
+                    itemCopy = item.Substring("using ".Length);
+                }
+
+                if (itemCopy.EndsWith(";"))
+                {
+                    itemCopy = itemCopy.Substring(0, itemCopy.Length - 1);
+                }
+                neededUsings.Add(itemCopy);
+            }
+        }
+
+
+        foreach (var neededUsing in neededUsings.OrderBy(item => item))
+        {
+            context.StringBuilder.AppendLine($"using {neededUsing};");
         }
     }
 
@@ -349,7 +372,7 @@ public class CodeGenerator
 
     #region Namespace
 
-    public string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+    public string GetElementNamespace(ElementSave element, CodeOutputElementSettings? elementSettings, CodeOutputProjectSettings projectSettings)
     {
         var namespaceName = elementSettings?.Namespace ?? string.Empty;
 
@@ -3245,6 +3268,26 @@ public class CodeGenerator
         return stringBuilder.ToString();
     }
 
+    public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+
+        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
+        context.Instance = instance;
+        context.CodeOutputProjectSettings = codeOutputProjectSettings;
+        var stringBuilder = context.StringBuilder;
+
+        FillWithInstanceDeclaration(context);
+
+        FillWithInstanceInstantiation(context);
+
+        FillWithNonParentVariableAssignments(context);
+
+        FillWithParentAssignments(context);
+
+        var code = stringBuilder.ToString();
+        return code;
+    }
+
 
     #endregion
 
@@ -3849,26 +3892,6 @@ public class CodeGenerator
     }
 
     #endregion
-
-    public string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
-    {
-
-        var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
-        context.Instance = instance;
-        context.CodeOutputProjectSettings = codeOutputProjectSettings;
-        var stringBuilder = context.StringBuilder;
-
-        FillWithInstanceDeclaration(context);
-
-        FillWithInstanceInstantiation(context);
-
-        FillWithNonParentVariableAssignments(context);
-
-        FillWithParentAssignments(context);
-
-        var code = stringBuilder.ToString();
-        return code;
-    }
 
     #region Variable Assignments
 
@@ -4610,7 +4633,7 @@ public class CodeGenerator
 
         #endregion
 
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationManager))
         {
             string assignment = GetLocalizedLine(variable, context);
 
@@ -4829,9 +4852,6 @@ public class CodeGenerator
         }
     }
 
-
-    #endregion
-
     private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, StringBuilder stringBuilder, CodeGenerationContext context)
     {
         var rfv = new RecursiveVariableFinder(defaultState);
@@ -4859,6 +4879,9 @@ public class CodeGenerator
             stringBuilder.AppendLine($"{context.CodePrefix}.TextColor = Color.FromRgba({red}, {green}, {blue}, {alpha});");
         }
     }
+
+
+    #endregion
 
     private static bool GetIfStateSetsAnyPositionValues(StateSave state, string prefix, List<VariableSave> variablesToConsider)
     {
@@ -4956,7 +4979,7 @@ public class CodeGenerator
                 return $"{context.CodePrefixNoTabs}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
             }
         }
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationManager))
         {
             string assignment = GetLocalizedLine(variable, context);
 
@@ -5092,7 +5115,7 @@ public class CodeGenerator
 
     private void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
     {
-        if (LocalizationManager.HasDatabase)
+        if (_localizationManager.HasDatabase)
         {
             // Vic says - we may want this to be recursive eventually, but that introduces
             // some complexity. How do we know which views have a call available? 
@@ -5113,7 +5136,7 @@ public class CodeGenerator
                 context.Instance = instance;
                 if (instance != null)
                 {
-                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
+                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationManager))
                     {
                         string assignment = GetLocalizedLine(variable, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
