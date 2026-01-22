@@ -1,6 +1,7 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
+using MonoGameGum.GueDeriving;
 using Moq;
 using Shouldly;
 using System;
@@ -221,5 +222,22 @@ public class InteractiveGueTests : BaseTestClass
         didChildRaise.ShouldBeTrue();
         didParentRaise.ShouldBeTrue();
 
+    }
+
+    [Fact]
+    public void HasEvents_SetToTrue_ShouldAssignCursorVisualOver()
+    {
+        TextRuntime visual = new ();
+        visual.Text = "Hello";
+        visual.HasEvents = false;
+        visual.AddToRoot();
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        GumService.Default.Cursor.VisualOver.ShouldBe(null);
+
+        visual.HasEvents = true;
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        GumService.Default.Cursor.VisualOver.ShouldBe(visual);
     }
 }
