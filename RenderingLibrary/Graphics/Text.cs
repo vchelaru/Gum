@@ -1151,7 +1151,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         {
                             var function = variable.Value as ParameterizedLetterCustomizationCall;
 
-                            if(function != null)
+                            if(function?.Function != null)
                             {
                                 var response = function.Function(function.CharacterIndex, function.TextBlock);
 
