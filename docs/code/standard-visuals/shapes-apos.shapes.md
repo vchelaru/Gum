@@ -12,7 +12,9 @@ GumUI supports rendering vector shapes as visuals. The following shapes are supp
 
 {% tabs %}
 {% tab title="MonoGame" %}
-The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.MonoGame NuGet package ([https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)):
+The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.MonoGame NuGet package:
+
+[https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)
 
 Modify csproj:
 
