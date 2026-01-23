@@ -49,4 +49,7 @@ public partial class Cursor
         return touchCollection;
     }
 
+    private int? GetViewportLeft() => 
+        RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Left;
+
 }

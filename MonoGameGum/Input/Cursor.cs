@@ -132,8 +132,7 @@ public partial class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-
-        return ((X - renderer.GraphicsDevice?.Viewport.Bounds.Left) / zoom) ?? 0;
+        return ((X - GetViewportLeft()) / zoom) ?? 0;
     }
 
     /// <summary>

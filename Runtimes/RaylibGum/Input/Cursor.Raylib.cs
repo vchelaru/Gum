@@ -58,5 +58,9 @@ public partial class Cursor
         return touchCollection;
     }
 
+    private int? GetViewportLeft() =>
+        0;
+
+
 
 }
