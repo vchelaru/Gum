@@ -12,6 +12,13 @@ namespace MonoGameGum.Tests.Forms;
 public class PanelTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Panel sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Panel_Width_ShouldDependOnChildren()
     {
         Panel panel = new();

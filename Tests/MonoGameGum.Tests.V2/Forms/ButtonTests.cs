@@ -17,6 +17,13 @@ public class ButtonTests : BaseTestClass
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Button sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
         Button button = new();

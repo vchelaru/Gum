@@ -22,6 +22,13 @@ public class MenuItemTests
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        MenuItem sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ShowSubItem_ShouldAcceptVisualTemplate_OfScrollViewerVisual()
     {
         MenuItem menuItem = new();

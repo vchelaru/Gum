@@ -20,6 +20,13 @@ public class SplitterTests : BaseTestClass
     Panel? _secondPanel;
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Splitter sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ApplyResizeChangeInPixels_ShouldResize_IfSiblingsAreAbsolute()
     {
         SetupVerticalStack();

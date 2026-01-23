@@ -17,4 +17,11 @@ public class ComboBoxTests
         comboBox.Visual.ShouldNotBeNull();
         (comboBox.Visual is ComboBoxVisual).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ComboBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
 }

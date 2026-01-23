@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,12 @@ public class SliderTests
         var slider = new Gum.Forms.Controls.Slider();
         slider.Visual.ShouldNotBeNull();
         (slider.Visual is Gum.Forms.DefaultVisuals.SliderVisual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Slider sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 }

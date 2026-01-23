@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,12 @@ public class LabelTests
         var label = new Gum.Forms.Controls.Label();
         label.Visual.ShouldNotBeNull();
         (label.Visual is Gum.Forms.DefaultVisuals.LabelVisual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeFalse()
+    {
+        Label sut = new();
+        sut.Visual.HasEvents.ShouldBeFalse();
     }
 }

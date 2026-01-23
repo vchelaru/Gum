@@ -1,4 +1,5 @@
-﻿using Gum.Forms.DefaultVisuals;
+﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -18,11 +19,16 @@ public class ItemsControlTests : BaseTestClass
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ItemsControl sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ItemsControlVisual_ShouldCreateItemsControlForms()
     {
         var visual = new ItemsControlVisual();
         visual.FormsControl.ShouldNotBeNull();
     }
-
-
 }

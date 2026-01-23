@@ -13,6 +13,13 @@ namespace MonoGameGum.Tests.Forms;
 public class PasswordBoxTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        PasswordBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void HandleCharEntered_ShouldUpdateBindingSource_OnEnter()
     {
         PasswordBox passwordBox = new();

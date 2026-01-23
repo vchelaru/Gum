@@ -12,6 +12,13 @@ namespace MonoGameGum.Tests.Forms;
 public class ScrollBarTests
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ScrollBar sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ScrollBar_Orientation_ShouldDefaultToVertical()
     {
         ScrollBar scrollBar = new();

@@ -15,6 +15,13 @@ namespace MonoGameGum.Tests.Forms;
 public class WindowTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Window sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Constructor_CreatesVisual()
     {
         var window = new Window();

@@ -27,6 +27,13 @@ public  class ComboBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ComboBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Clicking_ShouldOpenComboBox_IfInBounds()
     {
         ComboBox comboBox = new ComboBox();

@@ -19,6 +19,13 @@ public class ScrollBarTests
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ScrollBar sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ScrollBar_ThumbWidth_ShouldMatchScrollBarWidth()
     {
         ScrollBar scrollBar = new();

@@ -16,6 +16,14 @@ public class MenuTests
         menu.Visual.ShouldNotBeNull();
         (menu.Visual is Gum.Forms.DefaultVisuals.MenuVisual).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Menu sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
     [Fact]
     public void AbsoluteHeight_ShouldNotBe0_IfNoItemsAreAdded()
     {

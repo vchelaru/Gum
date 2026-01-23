@@ -1,4 +1,5 @@
-﻿using Shouldly;
+﻿using Gum.Forms.Controls;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,12 @@ public class ListBoxItemTests
         var listBoxItem = new Gum.Forms.Controls.ListBoxItem();
         listBoxItem.Visual.ShouldNotBeNull();
         (listBoxItem.Visual is Gum.Forms.DefaultVisuals.ListBoxItemVisual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ListBoxItem sut = new();
+        sut.Visual.HasEvents.ShouldBeFalse();
     }
 }
