@@ -398,9 +398,9 @@ public class ComboBox :
 
 
         var clickedOnThisOrChild =
-            cursor.WindowOver == this.Visual ||
-            (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual)) ||
-            (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.listBox.Visual))
+            cursor.VisualOver == this.Visual ||
+            (cursor.VisualOver != null && cursor.VisualOver.IsInParentChain(this.Visual)) ||
+            (cursor.VisualOver != null && cursor.VisualOver.IsInParentChain(this.listBox.Visual))
             ;
 
         if (clickedOnThisOrChild == false)

@@ -330,7 +330,7 @@ public partial class InteractiveGue : BindableGue
     }
 
     internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer)
-    { 
+    {
         handledActions = handledActions ?? new HandledActions();
         bool handledByChild = false;
         bool handledByThis = false;
@@ -341,15 +341,15 @@ public partial class InteractiveGue : BindableGue
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
         {
-            if(asInteractive != null && asInteractive.HasEvents  && asInteractive.IsEnabledRecursively)
+            if (asInteractive != null && asInteractive.HasEvents && asInteractive.IsEnabledRecursively)
             {
-                if(asInteractive.ClickPreview != null &&
+                if (asInteractive.ClickPreview != null &&
                     !handledActions.HandledClickPreview && cursor.PrimaryClick)
                 {
                     var args = new InputEventArgs() { InputDevice = cursor };
                     asInteractive.ClickPreview(asInteractive, args);
 
-                    if(args.Handled)
+                    if (args.Handled)
                     {
                         cursor.WindowPushed = asInteractive;
                         LastVisualPushed = asInteractive;
@@ -357,7 +357,7 @@ public partial class InteractiveGue : BindableGue
                         handledActions.HandledClickPreview = true;
                     }
                 }
-                if(asInteractive.PushPreview != null &&
+                if (asInteractive.PushPreview != null &&
                     !handledActions.handledPushPreview && cursor.PrimaryPush)
                 {
                     var args = new InputEventArgs() { InputDevice = cursor };
@@ -373,9 +373,9 @@ public partial class InteractiveGue : BindableGue
 
             #region Try handling by children
 
-            if(currentItem.Children == null)
+            if (currentItem.Children == null)
             {
-                for(int i = currentItem.ContainedElements.Count - 1; i > -1; i--)
+                for (int i = currentItem.ContainedElements.Count - 1; i > -1; i--)
                 {
                     var child = currentItem.ContainedElements[i] as GraphicalUiElement;
 
@@ -396,8 +396,8 @@ public partial class InteractiveGue : BindableGue
                 for (int i = currentItem.Children.Count - 1; i > -1; i--)
                 {
                     var child = currentItem.Children[i] as GraphicalUiElement;
-                        // Children should always have the opportunity to handle activity,
-                        // even if they are not components, because they may contain components as their children
+                    // Children should always have the opportunity to handle activity,
+                    // even if they are not components, because they may contain components as their children
 
 
                     // If the child either has events or exposes children events, then give it a chance to handle this activity.
@@ -422,12 +422,8 @@ public partial class InteractiveGue : BindableGue
         if (isOver)
         {
             var shouldTreatAsIsOver =
-                IsComponentOrInstanceOfComponent(currentItem);
-
-            // See VisualOverBehavior for an exaplanation about this code
-            if (!shouldTreatAsIsOver && ICursor.VisualOverBehavior == VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue)
-            {
-                shouldTreatAsIsOver = 
+                IsComponentOrInstanceOfComponent(currentItem)
+                ||
                 asInteractive?.Push != null ||
                 asInteractive?.Click != null ||
                 asInteractive?.DoubleClick != null ||
@@ -448,13 +444,6 @@ public partial class InteractiveGue : BindableGue
                 // consume all clicks. We need to come
                 // up with another way to do this. For now
                 // the events are the hack
-            }
-
-            if(!shouldTreatAsIsOver && ICursor.VisualOverBehavior == VisualOverBehavior.IfHasEventsIsTrue)
-            {
-                shouldTreatAsIsOver = asInteractive?.HasEvents == true;
-            }
-
 
 
 
@@ -481,7 +470,7 @@ public partial class InteractiveGue : BindableGue
                     {
                         // moved from above, see comments there...
                         handledByThis = true;
-                        cursor.WindowOver = asInteractive;
+                        cursor.VisualOver = asInteractive;
                         handledActions.SetWindowOver = true;
 
                         if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively && handledActions.handledPushPreview == false)
@@ -951,33 +940,8 @@ public enum Cursors
     // more may be added in the future
 }
 
-/// <summary>
-/// Determines how to evaluate whether to show visual over states based on the HasEvents property.
-/// </summary>
-/// <remarks>
-/// FlatRedBall was built around the assumption that HasEvents is not enough to determine whether
-/// a visual should respond to Cursor events. This is because users may set HasEvents on a StandardElement
-/// in the Gum tool, which would default all instances of that standard to have the value set to true. This 
-/// could result in controls which use this visual unexpectedly having their events swallowed by the child visual.
-/// To avoid this, FlatRedBall checks both HasEvents and whether any events are actually attached to the visual.
-/// However, this behavior is very confusing, and as new runtimes are introduced we can simplify things. To continue
-/// to support the old FRB behavior, this enum exists to allow users to select the old behavior or the new simplified behavior.
-/// Over time, we may get rid of the old behavior completely, or at least default to the new one.
-/// </remarks>
-public enum VisualOverBehavior
-{
-    /// <summary>
-    /// VisualOver is only set if HasEvents is true and if the visual has events attached. This 
-    /// exists to support old projects. New projects should use IfHasEventsIsTrue
-    /// </summary>
-    OnlyIfEventsAreNotNullAndHasEventsIsTrue,
-    IfHasEventsIsTrue
-}
-
 public interface ICursor
 {
-    public static VisualOverBehavior VisualOverBehavior { get; set; } = 
-        VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue;
 
     public Cursors? CustomCursor { get; set; }
     InputDevice LastInputDevice { get; }
@@ -1024,7 +988,10 @@ public interface ICursor
     InteractiveGue? WindowPushed { get; set; }
 
     InteractiveGue? VisualRightPushed { get; set; }
+    [Obsolete("Use VisualOver")]
     InteractiveGue? WindowOver { get; set; }
+
+    InteractiveGue? VisualOver { get; set; }
 
     public void Activity(double currentGameTimeTotalSeconds);
 }
@@ -1079,7 +1046,7 @@ public static class GueInteractiveExtensionMethods
 #endif
 
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
-        var windowOverBefore = cursor.WindowOver;
+        var windowOverBefore = cursor.VisualOver;
         var windowPushedBefore = cursor.WindowPushed;
         var VisualRightPushedBefore = cursor.VisualRightPushed;
 
@@ -1091,10 +1058,10 @@ public static class GueInteractiveExtensionMethods
 
 
         HandledActions actions = new HandledActions();
-        var lastWindowOver = cursor.WindowOver;
+        var lastWindowOver = cursor.VisualOver;
 
 
-        cursor.WindowOver = null;
+        cursor.VisualOver = null;
         for(int i = gues.Count-1; i > -1; i--)
         {
             var gue = gues[i];
@@ -1110,13 +1077,13 @@ public static class GueInteractiveExtensionMethods
             {
                 InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
             }
-            if(cursor.WindowOver != null)
+            if(cursor.VisualOver != null)
             {
                 break;
             }
         }
 
-        var windowOverAsInteractive = cursor.WindowOver as InteractiveGue;
+        var windowOverAsInteractive = cursor.VisualOver as InteractiveGue;
         if (windowOverAsInteractive != null)
         {
             if (lastWindowOver != windowOverAsInteractive)
@@ -1133,14 +1100,14 @@ public static class GueInteractiveExtensionMethods
 
         if (!actions.SetWindowOver)
         {
-            cursor.WindowOver = null;
+            cursor.VisualOver = null;
         }
-        else if(cursor.WindowOver == null)
+        else if(cursor.VisualOver == null)
         {
-            cursor.WindowOver = windowOverBefore;
+            cursor.VisualOver = windowOverBefore;
         }
 
-        if(windowOverBefore != cursor.WindowOver)
+        if(windowOverBefore != cursor.VisualOver)
         {
             string GetInfoFor(InteractiveGue interactive)
             {

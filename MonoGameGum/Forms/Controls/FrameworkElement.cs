@@ -809,8 +809,8 @@ public class FrameworkElement : INotifyPropertyChanged
 #endif
     {
         var isOnThisOrChild =
-            cursor.WindowOver == this.Visual ||
-            (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
+            cursor.VisualOver == this.Visual ||
+            (cursor.VisualOver != null && cursor.VisualOver.IsInParentChain(this.Visual));
 
         return isOnThisOrChild;
     }

@@ -209,12 +209,6 @@ public class FormsUtilities
 
         cursor = new Cursor();
 
-#if !FRB
-        // This was added to MonoGame/raylib on 1/22/2026 to support
-        // simplified behavior.
-        ICursor.VisualOverBehavior = VisualOverBehavior.IfHasEventsIsTrue;
-#endif
-
 #if XNALIKE
         keyboard = new Keyboard(game);
 #else
@@ -347,7 +341,7 @@ public class FormsUtilities
 
         var frameworkElementOverBefore =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
-            cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
+            cursor.VisualOver?.FormsControlAsObject as FrameworkElement;
 
 #if XNALIKE
         cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
@@ -447,7 +441,7 @@ public class FormsUtilities
 
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
-            cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
+            cursor.VisualOver?.FormsControlAsObject as FrameworkElement;
 
         // It's possible that a cursor pushes on a control, which would set its state to Pushed. After the cursor releases,
         // the control is no longer pushed, so it should update its state to reflect that it is no longer pushed, such as

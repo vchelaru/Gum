@@ -270,6 +270,7 @@ public class WindowTests : BaseTestClass
         FormsUtilities.SetCursor(cursor.Object);
         cursor.SetupProperty(x => x.WindowPushed);
         cursor.SetupProperty(x => x.WindowOver);
+        cursor.SetupProperty(x => x.VisualOver);
         return cursor;
     }
 }

@@ -143,6 +143,7 @@ public class MenuItemVisual : InteractiveGue
         ContainerInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         ContainerInstance.Width = 0f;
         ContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        ContainerInstance.HasEvents = false;
         this.AddChild(ContainerInstance);
 
         TextInstance = new TextRuntime();

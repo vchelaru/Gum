@@ -39,7 +39,7 @@ public  class ComboBoxTests : BaseTestClass
         // combo boxes open on a push
         cursor.Setup(x => x.PrimaryPush).Returns(true);
         cursor.Setup(x => x.WindowPushed).Returns(comboBox.Visual);
-        cursor.Setup(x => x.WindowOver).Returns(comboBox.Visual);
+        cursor.Setup(x => x.VisualOver).Returns(comboBox.Visual);
         Gum.Forms.FormsUtilities.SetCursor(cursor.Object);
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
@@ -49,7 +49,7 @@ public  class ComboBoxTests : BaseTestClass
         // Set it up so it's inside the window, but outside the bounds of the combo box
         cursor.Setup(x => x.X).Returns((int)(GraphicalUiElement.CanvasWidth-1));
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(GraphicalUiElement.CanvasWidth - 1));
-        cursor.Setup(x => x.WindowOver).Returns((InteractiveGue?)null);
+        cursor.Setup(x => x.VisualOver).Returns((InteractiveGue?)null);
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         comboBox.IsDropDownOpen.ShouldBe(false);

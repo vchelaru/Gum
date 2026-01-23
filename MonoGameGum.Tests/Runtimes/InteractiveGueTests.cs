@@ -2,6 +2,7 @@
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 using MonoGameGum.GueDeriving;
+using MonoGameGum.Input;
 using Moq;
 using Shouldly;
 using System;
@@ -14,6 +15,11 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 public class InteractiveGueTests : BaseTestClass
 {
+    public InteractiveGueTests() : base()
+    {
+
+    }
+
     #region CurrentInputReceiver
     [Fact]
     public void CurrentInputReceiver_ShouldGetUnset_IfRootIsReset()
@@ -146,7 +152,7 @@ public class InteractiveGueTests : BaseTestClass
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.PrimaryClick).Returns(true);
         FormsUtilities.SetCursor(cursor.Object);
-        cursor.SetupProperty(x => x.WindowOver);
+        cursor.SetupProperty(x => x.VisualOver);
         cursor.SetupProperty(x => x.WindowPushed);
         cursor.Setup(x => x.PrimaryPush).Returns(true);
 
@@ -163,9 +169,9 @@ public class InteractiveGueTests : BaseTestClass
 
         void HandleNextPush()
         {
-            if(cursor.Object.WindowOver != button.Visual)
+            if(cursor.Object.VisualOver != button.Visual)
             {
-                throw new Exception("WindowOver was not set correctly");
+                throw new Exception("VisualOver was not set correctly");
             }
         }
 
@@ -173,7 +179,7 @@ public class InteractiveGueTests : BaseTestClass
 
         didRunPush.ShouldBe(true);
 
-        cursor.Object.WindowOver = null;
+        cursor.Object.VisualOver = null;
         cursor.Object.WindowPushed = null;
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
@@ -234,10 +240,13 @@ public class InteractiveGueTests : BaseTestClass
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
-        GumService.Default.Cursor.VisualOver.ShouldBe(null);
+        ICursor cursor = FrameworkElement.MainCursor;
+        cursor.ShouldNotBeNull();
+        cursor.VisualOver.ShouldBe(null);
 
         visual.HasEvents = true;
+        visual.Click += (_,_) => { };
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
-        GumService.Default.Cursor.VisualOver.ShouldBe(visual);
+        cursor.VisualOver.ShouldBe(visual);
     }
 }

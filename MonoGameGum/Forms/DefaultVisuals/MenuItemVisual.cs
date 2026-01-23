@@ -65,6 +65,7 @@ public class MenuItemVisual : InteractiveGue
         this.AddChild(Background);
 
         ContainerInstance = new ContainerRuntime();
+        ContainerInstance.HasEvents = false;
         ContainerInstance.Name = "ContainerInstance";
         ContainerInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.LeftToRightStack;
         ContainerInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);
