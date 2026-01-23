@@ -80,6 +80,24 @@ public class SubtextLogic
             }
             property.Subtext += categoryString;
         }
+
+        if (defaultVariable.Name == "HasEvents")
+        {
+            var element = elementSave;
+            if (instanceSave != null)
+            {
+                element = ObjectFinder.Self.GetElementSave(instanceSave);
+            }
+
+            if (element is StandardElementSave)
+            {
+                if (!string.IsNullOrEmpty(property.Subtext))
+                {
+                    property.Subtext += "\n";
+                }
+                property.Subtext += "Assigns Cursor.WindowOver only if events are assigned at runtime";
+            }
+        }
     }
 
 
