@@ -22,7 +22,7 @@ namespace MonoGameGum.Input;
 /// This class includes properties necessary for interacting with Gum UI elements, such 
 /// as push, click, and position tracking.
 /// </summary>
-public class Cursor : ICursor
+public partial class Cursor : ICursor
 {
     Cursors? _customCursor;
 
@@ -540,30 +540,6 @@ public class Cursor : ICursor
             mLastMiddleClickTime = gameTime;
         }
 
-    }
-
-    private MouseState GetMouseState()
-    {
-        return Microsoft.Xna.Framework.Input.Mouse.GetState();
-    }
-
-    private TouchCollection GetTouchCollection()
-    {
-        TouchCollection touchCollection;
-        // In MonoGame there's no way to check if GameWindow has been set.
-        // This code could pass its own GameWindow, but that requires assumptions
-        // or additional objects being carried through Cursor to get to here. Instead
-        // we'll try/catch it. The catch shouldn't happen in actual games so it should be
-        // cheap.
-        try
-        {
-            touchCollection = TouchPanel.GetState();
-        }
-        catch
-        {
-            touchCollection = new TouchCollection();
-        }
-        return touchCollection;
     }
 
     public override string ToString()

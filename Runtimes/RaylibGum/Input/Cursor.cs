@@ -22,7 +22,7 @@ namespace MonoGameGum.Input;
 /// This class includes properties necessary for interacting with Gum UI elements, such 
 /// as push, click, and position tracking.
 /// </summary>
-public class Cursor : ICursor
+public partial class Cursor : ICursor
 {
     Cursors? _customCursor;
 
@@ -541,38 +541,6 @@ public class Cursor : ICursor
         }
     }
 
-    private MouseState GetMouseState()
-    {
-        var state = new MouseState();
-
-        state.X = Raylib.GetMouseX();
-        state.Y = Raylib.GetMouseY();
-        state.LeftButton = Raylib.IsMouseButtonDown(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
-        state.MiddleButton = Raylib.IsMouseButtonDown(MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
-        state.RightButton = Raylib.IsMouseButtonDown(MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
-        
-
-        return state;
-    }
-
-    private TouchCollection GetTouchCollection()
-    {
-        var touchCollection = new TouchCollection();
-        int touchCount = Raylib.GetTouchPointCount();
-        //TouchLocation[] touches = new TouchLocation[touchCount];
-        //for (int i = 0; i < touchCount; i++)
-        //{
-        //    TouchPoint point = Raylib.GetTouchPoint(i);
-        //    TouchLocation location = new TouchLocation(
-        //        point.id,
-        //        TouchLocationState.Moved,
-        //        new Microsoft.Xna.Framework.Vector2(point.position.X, point.position.Y)
-        //    );
-        //    touches[i] = location;
-        //}
-        //touchCollection = new TouchCollection(touches);
-        return touchCollection;
-    }
 
     public override string ToString()
     {
