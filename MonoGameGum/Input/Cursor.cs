@@ -150,7 +150,7 @@ public partial class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return ((Y - renderer.GraphicsDevice?.Viewport.Bounds.Top) / zoom) ?? 0;
+        return ((Y - GetViewportTop()) / zoom) ?? 0;
     }
 
     /// <summary>
@@ -539,7 +539,6 @@ public partial class Cursor : ICursor
             }
             mLastMiddleClickTime = gameTime;
         }
-
     }
 
     public override string ToString()

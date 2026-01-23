@@ -61,6 +61,7 @@ public partial class Cursor
     private int? GetViewportLeft() =>
         0;
 
-
+    private int? GetViewportTop() =>
+        0;
 
 }

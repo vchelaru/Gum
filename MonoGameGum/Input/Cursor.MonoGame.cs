@@ -52,4 +52,6 @@ public partial class Cursor
     private int? GetViewportLeft() => 
         RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Left;
 
+    private int? GetViewportTop() =>
+        RenderingLibrary.SystemManagers.Default.Renderer.GraphicsDevice?.Viewport.Bounds.Left;
 }
