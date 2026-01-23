@@ -5,6 +5,7 @@ using System;
 #if RAYLIB
 using System.Numerics;
 using Raylib_cs;
+using Matrix = System.Numerics.Matrix3x2;
 namespace RaylibGum.Input;
 #else
 using Microsoft.Xna.Framework;

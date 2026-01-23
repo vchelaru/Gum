@@ -5,6 +5,7 @@ using System;
 #if RAYLIB
 using System.Numerics;
 using Raylib_cs;
+using Matrix = System.Numerics.Matrix3x2;
 namespace RaylibGum.Input;
 #else
 using Microsoft.Xna.Framework;
@@ -40,7 +41,7 @@ public partial class Cursor : ICursor
             _customCursor = value;
 
 #if MONOGAME || KNI
-            switch(value)
+            switch (value)
             {
                 case Cursors.Arrow:
                 case null:
@@ -104,7 +105,7 @@ public partial class Cursor : ICursor
     /// <remarks>The transformation matrix defines how the object's coordinates are mapped, including
     /// translation, rotation, scaling, or skewing. This is often used when Gum is rendered
     /// on a render target, or in a modified viewport.</remarks>
-    public Matrix3x2 TransformMatrix { get; set; } = Matrix3x2.Identity;
+    public Matrix TransformMatrix { get; set; } = Matrix.Identity;
 
     /// <summary>
     /// Gets the most recent input device used to interact with the application. This is used
