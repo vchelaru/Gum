@@ -90,6 +90,7 @@
     * [LottieAnimation](gum-tool/gum-elements/skia-standard-elements/lottieanimation.md)
     * [RoundedRectangle](gum-tool/gum-elements/skia-standard-elements/roundedrectangle/README.md)
       * [Corner Radius](gum-tool/gum-elements/skia-standard-elements/roundedrectangle/corner-radius.md)
+    * [Shapes Platform Support](gum-tool/gum-elements/skia-standard-elements/shapes-platform-support.md)
     * [Svg](gum-tool/gum-elements/skia-standard-elements/svg.md)
   * [Sprite](gum-tool/gum-elements/sprite/README.md)
     * [Color](gum-tool/gum-elements/sprite/color.md)
