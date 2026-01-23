@@ -274,8 +274,8 @@ public partial class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this.mLastFrameMouseState.RightButton == ButtonState.Released &&
+                    this._mouseState.RightButton == ButtonState.Pressed;
             }
             else
             {
@@ -290,7 +290,7 @@ public partial class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this._mouseState.RightButton == ButtonState.Pressed;
             }
             else
             {
@@ -305,8 +305,8 @@ public partial class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                    this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+                return this.mLastFrameMouseState.RightButton == ButtonState.Pressed &&
+                    this._mouseState.RightButton == ButtonState.Released;
             }
             else
             {
@@ -321,8 +321,8 @@ public partial class Cursor : ICursor
     {
         get
         {
-            return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            return this.mLastFrameMouseState.MiddleButton == ButtonState.Released &&
+                this._mouseState.MiddleButton == ButtonState.Pressed;
         }
     }
 
@@ -330,7 +330,7 @@ public partial class Cursor : ICursor
     {
         get
         {
-            return this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            return this._mouseState.MiddleButton == ButtonState.Pressed;
         }
     }
 
@@ -338,8 +338,8 @@ public partial class Cursor : ICursor
     {
         get
         {
-            return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+            return this.mLastFrameMouseState.MiddleButton == ButtonState.Pressed &&
+                this._mouseState.MiddleButton == ButtonState.Released;
         }
     }
 
