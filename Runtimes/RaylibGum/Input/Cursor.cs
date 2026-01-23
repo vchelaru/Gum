@@ -132,8 +132,7 @@ public partial class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return (X / zoom);
-        //- renderer.GraphicsDevice.Viewport.Bounds.Left;
+        return ((X - GetViewportLeft()) / zoom) ?? 0;
     }
 
     /// <summary>
@@ -151,7 +150,7 @@ public partial class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return (Y / zoom);
+        return ((Y - GetViewportTop()) / zoom) ?? 0;
     }
 
     /// <summary>
@@ -207,7 +206,7 @@ public partial class Cursor : ICursor
             if (LastInputDevice == InputDevice.Mouse)
             {
                 return this.mLastFrameMouseState.LeftButton == ButtonState.Released &&
-                    this._mouseState.LeftButton == Input.ButtonState.Pressed;
+                    this._mouseState.LeftButton == ButtonState.Pressed;
             }
             else
             {
@@ -361,7 +360,7 @@ public partial class Cursor : ICursor
     }
 
     /// <summary>
-    /// Gets or sets the FrameworkElement Visual that was under the cursor when the cursor (left button)
+    /// Gets or sets the Visual that was under the cursor when the cursor (left button)
     /// was pushed.
     /// </summary>
     public InteractiveGue? VisualPushed { get; set; }
@@ -542,10 +541,8 @@ public partial class Cursor : ICursor
         }
     }
 
-
     public override string ToString()
     {
         return $"Cursor at ({X}, {Y}) Push:{PrimaryPush} Down:{PrimaryDown} Click:{PrimaryClick}";
     }
-
 }
