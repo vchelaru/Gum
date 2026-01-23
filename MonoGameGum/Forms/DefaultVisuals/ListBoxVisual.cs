@@ -46,6 +46,7 @@ public class ListBoxVisual : InteractiveGue
 
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         Width = 150;
         Height = 150;
 

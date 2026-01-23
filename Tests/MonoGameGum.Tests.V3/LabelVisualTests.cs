@@ -1,11 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Gum.Forms.Controls;
+using Shouldly;
+using Xunit;
 
 namespace MonoGameGum.Tests.V3;
 
-internal class LabelVisualTests
+public class LabelVisualTests
 {
+    [Fact]
+    public void Label_Visual_HasEvents_IsFalse()
+    {
+        // Arrange & Act
+        Label sut = new();
+
+        // Assert
+        sut.Visual.HasEvents.ShouldBeFalse();
+    }
 }

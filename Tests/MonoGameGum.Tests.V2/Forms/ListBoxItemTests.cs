@@ -21,6 +21,6 @@ public class ListBoxItemTests
     public void Visual_HasEvents_ShouldBeTrue()
     {
         ListBoxItem sut = new();
-        sut.Visual.HasEvents.ShouldBeFalse();
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 }

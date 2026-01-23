@@ -231,6 +231,13 @@ public class InteractiveGueTests : BaseTestClass
     }
 
     [Fact]
+    public void HasEvents_ShouldDefaultToFalse()
+    {
+        InteractiveGue sut = new();
+        sut.HasEvents.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HasEvents_SetToTrue_ShouldAssignCursorVisualOver()
     {
         TextRuntime visual = new ();

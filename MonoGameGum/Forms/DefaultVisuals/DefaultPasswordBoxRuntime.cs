@@ -13,6 +13,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public DefaultPasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
         {
+            this.HasEvents = true;
+
             if (tryCreateFormsObject)
             {
                 FormsControlAsObject = new PasswordBox(this);

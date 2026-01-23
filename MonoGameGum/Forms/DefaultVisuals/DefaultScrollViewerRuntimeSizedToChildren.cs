@@ -10,6 +10,8 @@ internal class DefaultScrollViewerRuntimeSizedToChildren : DefaultScrollViewerRu
     public DefaultScrollViewerRuntimeSizedToChildren(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 
         base(fullInstantiation, tryCreateFormsObject)
     {
+        this.HasEvents = true;
+
         base.MakeSizedToChildren();
     }
 }

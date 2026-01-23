@@ -113,11 +113,9 @@ public partial class InteractiveGue : BindableGue
     /// <summary>
     /// Whether this instance supports events and whether the Cursor considers this when
     /// determining what it is over. Typically this is assigned once based 
-    /// on its type, usually when objects are created from a Gum project. Objects which 
-    /// should consume cursor events without raising them should keep this value set to true
-    /// but should set IsEnabled to false.
+    /// on its type, usually when objects are created from a Gum project.
     /// </summary>
-    public bool HasEvents { get; set; } = true;
+    public bool HasEvents { get; set; } = false;
     public bool ExposeChildrenEvents { get; set; } = true;
 
     /// <summary>

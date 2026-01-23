@@ -121,6 +121,7 @@ public class ComboBoxVisual : InteractiveGue
 
     public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         Height = 24f;
         Width = 256f;
 

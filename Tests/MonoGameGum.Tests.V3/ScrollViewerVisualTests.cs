@@ -4,13 +4,13 @@ using Xunit;
 
 namespace MonoGameGum.Tests.V3;
 
-public class ComboBoxVisualTests
+public class ScrollViewerVisualTests
 {
     [Fact]
-    public void ComboBox_Visual_HasEvents_IsTrue()
+    public void ScrollViewer_Visual_HasEvents_IsTrue()
     {
         // Arrange & Act
-        ComboBox sut = new();
+        ScrollViewer sut = new();
 
         // Assert
         sut.Visual.HasEvents.ShouldBeTrue();

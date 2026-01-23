@@ -13,6 +13,23 @@ namespace MonoGameGum.Tests.Runtimes;
 public class SpriteRuntimeTests : BaseTestClass
 {
     [Fact]
+    public void Clone_ShouldCreateClonedSprite()
+    {
+        Sprite sut = new((Texture2D?)null);
+
+        var clone = sut.Clone() as Sprite;
+        clone.ShouldNotBeNull();
+    }
+
+    // Not an InteractiveGue:
+    //[Fact]
+    //public void HasEvents_ShouldDefaultToFalse()
+    //{
+    //    SpriteRuntime sut = new();
+    //    sut.HasEvents.ShouldBeFalse();
+    //}
+
+    [Fact]
     public void SourceRectangle_AssignsTextureValues()
     {
         SpriteRuntime sut = new();
@@ -38,14 +55,6 @@ public class SpriteRuntimeTests : BaseTestClass
         rect.Height.ShouldBe(40);
     }
 
-    [Fact]
-    public void Clone_ShouldCreateClonedSprite()
-    {
-        Sprite sut = new((Texture2D?)null);
-
-        var clone = sut.Clone() as Sprite;
-        clone.ShouldNotBeNull();
-    }
 
     [Fact]
     public void Width_ShouldBeDefault_WithNullTexture()

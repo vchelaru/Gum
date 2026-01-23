@@ -92,6 +92,7 @@ public class ScrollViewerVisual : InteractiveGue
 
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         Width = 150;
         Height = 150;
 

@@ -1,11 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Gum.Forms.Controls;
+using Shouldly;
+using Xunit;
 
 namespace MonoGameGum.Tests.V3;
 
-internal class ItemsControlVisualTests
+public class ItemsControlVisualTests
 {
+    [Fact]
+    public void ItemsControl_Visual_HasEvents_IsTrue()
+    {
+        // Arrange & Act
+        ItemsControl sut = new();
+
+        // Assert
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
 }

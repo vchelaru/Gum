@@ -6,6 +6,6 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Tests.V3;
 
-internal class ScrollViewerVisualTexts
+internal class SliderVisualTests
 {
 }
