@@ -12,31 +12,29 @@ GumUI supports rendering vector shapes as visuals. The following shapes are supp
 
 {% tabs %}
 {% tab title="MonoGame" %}
-Gum.Shapes.MonoGame uses Apos.Shapes for shape drawing. Add the following two NuGet packages:
+The Gum.Shapes.MonoGame NuGet package adds support for rendering shapes. Add the following NuGet package:
 
 [https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)
-
-[https://www.nuget.org/packages/Apos.Shapes/](https://www.nuget.org/packages/Apos.Shapes/)
 
 Modify csproj:
 
 ```xml
 <PackageReference Include="Gum.Shapes.MonoGame" Version="*" />
-<PackageReference Include="Apos.Shapes" Version="*" />
 ```
 
 Or add through command line:
 
 ```bash
 dotnet add package Gum.Shapes.MonoGame
-dotnet add package Apos.Shapes
 ```
 
-Future versions of Gum may not require explicitly adding Apos.Shapes.
+Future versions of Gum may not require adding this package explicitly.
 {% endtab %}
 
 {% tab title="KNI" %}
-The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.KNI NuGet package ([https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)):
+The Gum.Shapes.KNI NuGet package adds support for rendering shapes. Add the following NuGet package:
+
+[https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)
 
 Modify csproj:
 
@@ -49,6 +47,8 @@ Or add through command line:
 ```bash
 dotnet add package Gum.Shapes.KNI
 ```
+
+Future versions of Gum may not require adding this package explicitly.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
@@ -120,7 +120,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
         // Initialize shape renderer:
         Renderables.ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 
