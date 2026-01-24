@@ -216,6 +216,7 @@
   * [RadioButton](code/controls/radiobutton.md)
   * [ScrollBar](code/controls/scrollbar.md)
   * [ScrollViewer](code/controls/scrollviewer/README.md)
+    * [Bottom-to-Top Stacking](code/controls/scrollviewer/bottom-to-top-stacking.md)
     * [Horizontal Scrolling](code/controls/scrollviewer/horizontal-scrolling.md)
     * [MakeSizedToChildren](code/controls/scrollviewer/makesizedtochildren.md)
     * [VerticalScrollBarValue](code/controls/scrollviewer/verticalscrollbarvalue.md)
