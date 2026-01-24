@@ -377,9 +377,6 @@ public abstract class RenderableShapeBase : RenderableBase
 
     #endregion
 
-
-
-
     bool _isFilled = true;
     public bool IsFilled
     {
@@ -515,6 +512,12 @@ public abstract class RenderableShapeBase : RenderableBase
     public override void StartBatch(ISystemManagers systemManagers)
     {
         var sb = ShapeRenderer.ShapeBatch;
+        if(sb == null)
+        {
+            throw new InvalidOperationException(
+                "ShapeRenderer is null - did you remember to call ShapeRenderer.Self.Initialize()? " +
+                "For more information see documentation: https://docs.flatredball.com/gum/code/standard-visuals/shapes-apos.shapes#monogame");
+        }
         sb.Begin();
     }
 
