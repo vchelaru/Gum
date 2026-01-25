@@ -98,6 +98,7 @@ public class ListBoxItemVisual : InteractiveGue
 
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         Height = 0f;
         HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         Width = 0f;

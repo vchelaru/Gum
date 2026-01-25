@@ -11,6 +11,13 @@ namespace MonoGameGum.Tests.Forms;
 public class MenuItemTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        MenuItem sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void SubmenuIndicatorInstanceVisible_ShouldBeFalse_ByDefault()
     {
         Menu menu = new();

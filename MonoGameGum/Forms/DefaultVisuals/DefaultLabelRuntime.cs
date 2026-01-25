@@ -15,6 +15,7 @@ public class DefaultLabelRuntime : TextRuntime
 
     public DefaultLabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation)
     {
+        this.HasEvents = false;
         if (fullInstantiation)
         {
             this.Width = 0;

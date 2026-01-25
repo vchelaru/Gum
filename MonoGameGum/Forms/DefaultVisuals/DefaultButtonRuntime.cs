@@ -24,6 +24,7 @@ public class DefaultButtonRuntime : InteractiveGue
 
     public DefaultButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if (fullInstantiation)
         {
             this.Width = 128;

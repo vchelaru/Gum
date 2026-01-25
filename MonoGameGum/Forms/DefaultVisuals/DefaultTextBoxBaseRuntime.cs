@@ -25,6 +25,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public DefaultTextBoxBaseRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
+        this.HasEvents = true;
             if (fullInstantiation)
             {
                 this.Width = 100;

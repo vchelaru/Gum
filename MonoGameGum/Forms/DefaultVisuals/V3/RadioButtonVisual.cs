@@ -120,6 +120,7 @@ public class RadioButtonVisual : InteractiveGue
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         Width = 128;
         Height = 24;
 

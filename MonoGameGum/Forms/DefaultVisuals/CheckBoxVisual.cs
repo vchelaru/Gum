@@ -60,6 +60,7 @@ public class CheckBoxVisual : InteractiveGue
 
     public CheckBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         Height = 32;
         Width = 128;
 

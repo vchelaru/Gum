@@ -93,7 +93,7 @@ public class FrameworkElementTests : BaseTestClass
             null!,
             0);
 
-        cursor.VerifySet(c => c.WindowOver = frameworkElement.Visual);
+        cursor.VerifySet(c => c.VisualOver = frameworkElement.Visual);
     }
 
     [Fact]

@@ -1,14 +1,11 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 #if RAYLIB
 using System.Numerics;
 using Raylib_cs;
+using Matrix = System.Numerics.Matrix3x2;
 namespace RaylibGum.Input;
 #else
 using Microsoft.Xna.Framework;
@@ -26,7 +23,7 @@ namespace MonoGameGum.Input;
 /// This class includes properties necessary for interacting with Gum UI elements, such 
 /// as push, click, and position tracking.
 /// </summary>
-public class Cursor : ICursor
+public partial class Cursor : ICursor
 {
     Cursors? _customCursor;
 
@@ -135,8 +132,7 @@ public class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-
-        return ((X - renderer.GraphicsDevice?.Viewport.Bounds.Left) / zoom) ?? 0;
+        return ((X - GetViewportLeft()) / zoom) ?? 0;
     }
 
     /// <summary>
@@ -154,7 +150,7 @@ public class Cursor : ICursor
     {
         var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
         var zoom = renderer.Camera.Zoom;
-        return ((Y - renderer.GraphicsDevice?.Viewport.Bounds.Top) / zoom) ?? 0;
+        return ((Y - GetViewportTop()) / zoom) ?? 0;
     }
 
     /// <summary>
@@ -183,11 +179,16 @@ public class Cursor : ICursor
     /// <remarks>A detent represents a single notch or click of the scroll wheel, typically corresponding to a
     /// value of 120 units. This property is useful for detecting discrete scroll actions in input handling
     /// scenarios.</remarks>
-    public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
-
+    public int ScrollWheelChange =>
+#if RAYLIB
+        (int)Raylib.GetMouseWheelMoveV().Y;
+#else
+        (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
+#endif
 
     /// <summary>
-    /// The movement rate of the controlling input (usually mouse) on the z axis. For the mouse this refers to the scroll wheel.
+    /// The movement rate of the controlling input (usually mouse) on the z axis. 
+    /// For the mouse this refers to the scroll wheel.
     /// </summary>
     public float ZVelocity => ScrollWheelChange;
 
@@ -204,8 +205,8 @@ public class Cursor : ICursor
         {
             if(LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this.mLastFrameMouseState.LeftButton == ButtonState.Released &&
+                    this._mouseState.LeftButton == ButtonState.Pressed;
             }
             else
             {
@@ -228,7 +229,7 @@ public class Cursor : ICursor
         {
             if(LastInputDevice == InputDevice.Mouse)
             {
-                return this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this._mouseState.LeftButton == ButtonState.Pressed;
             }
             else
             {
@@ -250,8 +251,8 @@ public class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                    this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+                return this.mLastFrameMouseState.LeftButton == ButtonState.Pressed &&
+                    this._mouseState.LeftButton == ButtonState.Released;
             }
             else
             {
@@ -261,6 +262,7 @@ public class Cursor : ICursor
     }
 
     public bool PrimaryDoubleClick { get; private set; }
+
     public bool PrimaryDoublePush { get; private set; }
 
     public bool PrimaryClickNoSlide => PrimaryClick;
@@ -271,8 +273,8 @@ public class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this.mLastFrameMouseState.RightButton == ButtonState.Released &&
+                    this._mouseState.RightButton == ButtonState.Pressed;
             }
             else
             {
@@ -287,7 +289,7 @@ public class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return this._mouseState.RightButton == ButtonState.Pressed;
             }
             else
             {
@@ -302,8 +304,8 @@ public class Cursor : ICursor
         {
             if (LastInputDevice == InputDevice.Mouse)
             {
-                return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                    this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+                return this.mLastFrameMouseState.RightButton == ButtonState.Pressed &&
+                    this._mouseState.RightButton == ButtonState.Released;
             }
             else
             {
@@ -318,8 +320,8 @@ public class Cursor : ICursor
     {
         get
         {
-            return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            return this.mLastFrameMouseState.MiddleButton == ButtonState.Released &&
+                this._mouseState.MiddleButton == ButtonState.Pressed;
         }
     }
 
@@ -327,7 +329,7 @@ public class Cursor : ICursor
     {
         get
         {
-            return this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            return this._mouseState.MiddleButton == ButtonState.Pressed;
         }
     }
 
@@ -335,8 +337,8 @@ public class Cursor : ICursor
     {
         get
         {
-            return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+            return this.mLastFrameMouseState.MiddleButton == ButtonState.Pressed &&
+                this._mouseState.MiddleButton == ButtonState.Released;
         }
     }
 
@@ -402,7 +404,6 @@ public class Cursor : ICursor
     TouchCollection _touchCollection;
     TouchCollection _lastFrameTouchCollection = new TouchCollection();
 
-
     public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
     double mLastPrimaryClickTime = -999;
     public double LastPrimaryClickTime => mLastPrimaryClickTime;
@@ -427,7 +428,7 @@ public class Cursor : ICursor
         // do we want to change X and Y?
     }
 
-    public void Activity(double currentTime)
+    public void Activity(double gameTime)
     {
         mLastFrameMouseState = _mouseState;
         _lastFrameTouchCollection = _touchCollection;
@@ -447,7 +448,7 @@ public class Cursor : ICursor
         {
             LastInputDevice = InputDevice.Mouse;
 
-            _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
+            _mouseState = GetMouseState();
             x = _mouseState.X;
             y = _mouseState.Y;
         }
@@ -464,19 +465,7 @@ public class Cursor : ICursor
 
         if (shouldDoTouchPanel)
         {
-            // In MonoGame there's no way to check if GameWindow has been set.
-            // This code could pass its own GameWindow, but that requires assumptions
-            // or additional objects being carried through Cursor to get to here. Instead
-            // we'll try/catch it. The catch shouldn't happen in actual games so it should be
-            // cheap.
-            try
-            {
-                _touchCollection = TouchPanel.GetState();
-            }
-            catch
-            {
-                _touchCollection = new TouchCollection();
-            }
+            _touchCollection = GetTouchCollection();
         }
 
         var lastFrameTouchCollectionCount = 0;
@@ -515,59 +504,41 @@ public class Cursor : ICursor
             // do nothing
         }
 
-        // We want to keep track of whether
-        // the user pushed in the window or not
-        // to prevent the user from pushing outside
-        // of the window and dragging "inward" (which 
-        // happens if the user is moving the resize bar).
-        // To do this we need to track if the user pushed in
-        // the window or not.  We can't use PrimaryPush because
-        // that checks IsInWindow, so we will manually do the MouseState
-        // checks here.
-        // Update, maybe we don't need this now that the wireframe window
-        // can receive focus.
-        //if(this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-        //        this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-        //{
-        //    mPushedInWindow = IsInWindow;
-        //}
-
         if (PrimaryPush)
         {
-            if (currentTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 PrimaryDoublePush = true;
             }
-            mLastPrimaryPushTime = currentTime;
+            mLastPrimaryPushTime = gameTime;
         }
 
         if (PrimaryClick)
         {
-            if (currentTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 PrimaryDoubleClick = true;
             }
-            mLastPrimaryClickTime = currentTime;
+            mLastPrimaryClickTime = gameTime;
         }
 
         if (SecondaryClick)
         {
-            if (currentTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 SecondaryDoubleClick = true;
             }
-            mLastSecondaryClickTime = currentTime;
+            mLastSecondaryClickTime = gameTime;
         }
 
         if(MiddleClick)
         {
-            if (currentTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            if (gameTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
             {
                 MiddleDoubleClick = true;
             }
-            mLastMiddleClickTime = currentTime;
+            mLastMiddleClickTime = gameTime;
         }
-
     }
 
     public override string ToString()

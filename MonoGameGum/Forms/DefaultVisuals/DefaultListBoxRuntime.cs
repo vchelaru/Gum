@@ -22,6 +22,7 @@ public class DefaultListBoxRuntime : InteractiveGue
 
     public DefaultListBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if (fullInstantiation)
         {
             Width = 150;

@@ -83,6 +83,8 @@ public class ScrollBarVisual : InteractiveGue
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable()) 
     {
+        this.HasEvents = true;
+
         // These values change depending on vertical or horizontal Orientation category state
         Width = 24;
         WidthUnits = DimensionUnitType.Absolute; 

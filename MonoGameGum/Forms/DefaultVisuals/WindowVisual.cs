@@ -34,6 +34,7 @@ public class WindowVisual : InteractiveGue
 
     public WindowVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         const float borderSize = 10f;
         Width = 256;
         Height = 256;

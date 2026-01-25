@@ -8,6 +8,7 @@ namespace Gum.Forms.DefaultVisuals
 
         public TextBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
         {
+            this.HasEvents = true;
             if (tryCreateFormsObject)
             {
                 FormsControlAsObject = new TextBox(this);

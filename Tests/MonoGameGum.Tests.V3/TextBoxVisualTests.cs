@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace MonoGameGum.Tests.V3;
 
@@ -43,5 +44,15 @@ public class TextBoxVisualTests
         textBox.TextWrapping = Gum.Forms.TextWrapping.NoWrap;
         textBox.AcceptsReturn = true;
         visual.PlaceholderTextInstance.WidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.RelativeToChildren);
+    }
+
+    [Fact]
+    public void TextBox_Visual_HasEvents_IsTrue()
+    {
+        // Arrange & Act
+        TextBox sut = new();
+
+        // Assert
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 }

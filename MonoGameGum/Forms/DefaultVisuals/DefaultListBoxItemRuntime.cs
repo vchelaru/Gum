@@ -24,6 +24,7 @@ public class DefaultListBoxItemRuntime : InteractiveGue
 
     public DefaultListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if (fullInstantiation)
         {
             this.Height = 6f;

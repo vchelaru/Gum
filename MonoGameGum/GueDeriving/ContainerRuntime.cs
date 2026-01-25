@@ -107,6 +107,8 @@ public class ContainerRuntime : InteractiveGue
     private void Instantiate()
     {
         SetContainedObject(new InvisibleRenderable());
+        HasEvents = true;
+        ExposeChildrenEvents = true;
         Width = 150;
         Height = 150;
         Visible = true;

@@ -406,7 +406,7 @@ public abstract class RangeBase :
     private void HandleTrackHover(object? sender, EventArgs e)
     {
         var cursor = MainCursor;
-        if (cursor.WindowPushed == Track && cursor.WindowOver != thumb?.Visual)
+        if (cursor.WindowPushed == Track && cursor.VisualOver != thumb?.Visual)
         {
             // Should we be respecting MoveToPoint?
 

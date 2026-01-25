@@ -13,10 +13,12 @@ using Styling = Gum.Forms.DefaultVisuals.Styling;
 
 
 namespace MonoGameGum.Forms.DefaultVisuals;
+
 public class DefaultWindowRuntime : InteractiveGue
 {
     public DefaultWindowRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if (fullInstantiation)
         {
             const float borderSize = 10f;
@@ -91,7 +93,7 @@ public class DefaultWindowRuntime : InteractiveGue
             borderTop.Name = "BorderTopInstance";
             borderTop.Dock(Gum.Wireframe.Dock.Top);
             borderTop.Height = borderSize;
-            borderTop.Width = -borderSize*2;
+            borderTop.Width = -borderSize * 2;
             borderTop.CustomCursor = Cursors.SizeNS;
             this.AddChild(borderTop);
 
@@ -99,7 +101,7 @@ public class DefaultWindowRuntime : InteractiveGue
             borderBottom.Name = "BorderBottomInstance";
             borderBottom.Dock(Gum.Wireframe.Dock.Bottom);
             borderBottom.Height = borderSize;
-            borderBottom.Width = -borderSize*2;
+            borderBottom.Width = -borderSize * 2;
             borderBottom.CustomCursor = Cursors.SizeNS;
             this.AddChild(borderBottom);
 
@@ -107,7 +109,7 @@ public class DefaultWindowRuntime : InteractiveGue
             borderLeft.Name = "BorderLeftInstance";
             borderLeft.Dock(Gum.Wireframe.Dock.Left);
             borderLeft.Width = borderSize;
-            borderLeft.Height = -borderSize*2;
+            borderLeft.Height = -borderSize * 2;
             borderLeft.CustomCursor = Cursors.SizeWE;
             this.AddChild(borderLeft);
 
@@ -115,7 +117,7 @@ public class DefaultWindowRuntime : InteractiveGue
             borderRight.Name = "BorderRightInstance";
             borderRight.Dock(Gum.Wireframe.Dock.Right);
             borderRight.Width = borderSize;
-            borderRight.Height = -borderSize*2;
+            borderRight.Height = -borderSize * 2;
             borderRight.CustomCursor = Cursors.SizeWE;
             this.AddChild(borderRight);
 

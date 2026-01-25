@@ -15,6 +15,7 @@ internal class DefaultMenuRuntime : InteractiveGue
 {
     public DefaultMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if(fullInstantiation)
         {
             this.Width = 0;

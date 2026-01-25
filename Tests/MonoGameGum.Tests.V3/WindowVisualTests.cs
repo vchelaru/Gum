@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace MonoGameGum.Tests.V3;
 
@@ -38,5 +39,15 @@ public class WindowVisualTests
 
         window.Visual.GetAbsoluteWidth().ShouldBe(100 + 1 + 3);
         window.Visual.GetAbsoluteHeight().ShouldBe(150 + 2 + 4);
+    }
+
+    [Fact]
+    public void Window_Visual_HasEvents_IsTrue()
+    {
+        // Arrange & Act
+        Window sut = new();
+
+        // Assert
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 }

@@ -27,4 +27,12 @@ public class TextBoxTests
         textBox.SelectionStart = 0;
         textBox.SelectionLength = textBox.Text.Length;
     }
+
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        TextBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
 }

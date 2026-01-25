@@ -18,6 +18,13 @@ namespace MonoGameGum.Tests.Forms;
 public class TextBoxTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        TextBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Click_ShouldSetIsFocused()
     {
         TextBox textBox = new();

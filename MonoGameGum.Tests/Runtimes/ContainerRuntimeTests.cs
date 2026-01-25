@@ -16,4 +16,11 @@ public class ContainerRuntimeTests
         ContainerRuntime sut = new();
         sut.ExposeChildrenEvents.ShouldBeTrue();
     }
+
+    [Fact]
+    public void HasEvents_ShouldDefaultToTrue()
+    {
+        ContainerRuntime sut = new();
+        sut.HasEvents.ShouldBeTrue();
+    }
 }

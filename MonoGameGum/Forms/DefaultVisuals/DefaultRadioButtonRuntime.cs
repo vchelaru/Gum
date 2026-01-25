@@ -22,6 +22,7 @@ public class DefaultRadioButtonRuntime : InteractiveGue
 
     public DefaultRadioButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if(fullInstantiation)
         {
             this.Height = 32;

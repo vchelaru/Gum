@@ -16,4 +16,11 @@ public class NineSliceRuntimeTests
         NineSliceRuntime sut = new();
         sut.ExposeChildrenEvents.ShouldBeTrue();
     }
+
+    [Fact]
+    public void HasEvents_ShouldDefaultToFalse()
+    {
+        NineSliceRuntime sut = new();
+        sut.HasEvents.ShouldBeFalse();
+    }
 }

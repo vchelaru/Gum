@@ -23,6 +23,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public DefaultCheckboxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
+            this.HasEvents = true;
             if (fullInstantiation)
             {
                 this.Height = 32;
@@ -104,7 +105,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     });
                 }
 
-                void AddOnOffState(string state, Color checkboxBackgroundColor, 
+                void AddOnOffState(string state, Color checkboxBackgroundColor,
                     Color textColor, Color checkColor, bool isFocused)
                 {
                     AddState(state + "On");

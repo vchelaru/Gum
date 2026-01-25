@@ -525,11 +525,11 @@ public class BindableGue : GraphicalUiElement
 
     private void TryPushBindingContextChangeToChildren(string vmPropertyName)
     {
-        foreach (BindableGue descendant in GetAllBindableDescendants())
+        foreach (BindableGue descendent in GetAllBindableDescendents())
         {
-            if (descendant.BindingContextBinding == vmPropertyName && descendant.BindingContextBindingPropertyOwner == BindingContext)
+            if (descendent.BindingContextBinding == vmPropertyName && descendent.BindingContextBindingPropertyOwner == BindingContext)
             {
-                descendant.UpdateToVmProperty(vmPropertyName);
+                descendent.UpdateToVmProperty(vmPropertyName);
             }
         }
     }
@@ -563,13 +563,13 @@ public class BindableGue : GraphicalUiElement
     }
 
 
-    private IEnumerable<BindableGue> GetAllBindableDescendants()
+    private IEnumerable<BindableGue> GetAllBindableDescendents()
     {
         foreach (BindableGue child in GetAllBindableChildren())
         {
             yield return child;
 
-            foreach (BindableGue subChild in child.GetAllBindableDescendants())
+            foreach (BindableGue subChild in child.GetAllBindableDescendents())
             {
                 yield return subChild;
             }

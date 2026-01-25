@@ -10,6 +10,7 @@ internal class ScrollViewerVisualSizedToChildren : ScrollViewerVisual
     public ScrollViewerVisualSizedToChildren(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 
         base(fullInstantiation, tryCreateFormsObject)
     {
+        this.HasEvents = true;
         base.MakeSizedToChildren();
     }
 }

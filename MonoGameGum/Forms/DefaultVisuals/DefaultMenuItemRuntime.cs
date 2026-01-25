@@ -18,6 +18,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
     public DefaultMenuItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         if (fullInstantiation)
         {
             this.Width = 6;

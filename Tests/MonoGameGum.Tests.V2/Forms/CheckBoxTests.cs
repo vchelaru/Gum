@@ -17,4 +17,11 @@ public class CheckBoxTests
         checkBox.Visual.ShouldNotBeNull();
         (checkBox.Visual is CheckBoxVisual).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        CheckBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
 }

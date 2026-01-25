@@ -12,6 +12,14 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class ListBoxItemTests : BaseTestClass
 {
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ListBoxItem sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
     [Fact]
     public void CustomVisualTemplate_ShouldHaveSetFromObjectCalled()
     {

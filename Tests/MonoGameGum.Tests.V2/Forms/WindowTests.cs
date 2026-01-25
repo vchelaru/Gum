@@ -19,6 +19,13 @@ public class WindowTests
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Window sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ResizeMode_ShouldChangeCursorOnEdges_IfCanResize()
     {
         Window window = new();

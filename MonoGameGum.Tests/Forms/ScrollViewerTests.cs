@@ -15,6 +15,13 @@ namespace MonoGameGum.Tests.Forms;
 public class ScrollViewerTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ScrollViewer sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void IsFocused_ShouldBeTrue_WhenReceivingTab()
     {
         StackPanel parent = new();

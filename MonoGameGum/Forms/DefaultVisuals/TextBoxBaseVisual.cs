@@ -42,6 +42,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
 
     public TextBoxBaseVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         States = new TextBoxCategoryStates();
         Width = 100;
         Height = 24;
