@@ -6,6 +6,8 @@ The `GetCharacterIndexAtPosition` method returns the character index under the c
 
 The returned index is the index into a string obtained by combining all strings in `WrappedText`, so additional logic is needed to find the character if the text is not all displayed in one line.
 
+This method can also be used on text which includes BBCode, returning an index after BBCode has been removed.
+
 ## Code Example: Printing Character at Position
 
 The following code shows how to use the Gum cursor to hover over a TextRuntime and display the character under the cursor.
