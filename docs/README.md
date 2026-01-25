@@ -24,9 +24,9 @@ Adjust an object’s origin, position units, size units, and stacking to create 
 
 <figure><img src=".gitbook/assets/image (28).png" alt=""><figcaption><p>Position and Size Units</p></figcaption></figure>
 
-### Simple Integration with any FlatRedBall or MonoGame Project
+### Simple Integration - Gum Supports Many Runtimes
 
-Grab the NuGet, add a few lines of code, see your Gum project in game!
+Grab the NuGet, add a few lines of code, see your Gum project in game! You can use Gum with MonoGame, KNI, FNA, raylib, SkiaSharp, and many more platforms. For more information on our runtimes, see the [Getting Started](code/getting-started/) page.
 
 <figure><img src=".gitbook/assets/image (29).png" alt=""><figcaption><p>Gum UI in game</p></figcaption></figure>
 
