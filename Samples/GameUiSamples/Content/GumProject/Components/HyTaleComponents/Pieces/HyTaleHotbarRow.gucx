@@ -1,0 +1,485 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>HyTaleComponents/Pieces/HyTaleHotbarRow</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>float</Type>
+      <Name>Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem1.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem1.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem1.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem1.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem1.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem1.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem2.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem2.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem2.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem2.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem2.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem2.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem3.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem3.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem3.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem3.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem3.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem3.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem4.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem4.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem4.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem4.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem4.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem4.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem5.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem5.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem5.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem5.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">5</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem5.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem5.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem6.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem6.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem6.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem6.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem6.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem7.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem7.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem7.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem7.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem7.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem7.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem8.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem8.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem8.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem8.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">8</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem8.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem8.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HotBarItem9.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HotBarItem9.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HotBarItem9.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem9.HotBarSlotNumber</Name>
+      <Value xsi:type="xsd:string">9</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HotBarItem9.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarItem9.Parent</Name>
+      <Value xsi:type="xsd:string">HotBarRowContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>HotBarRowContainer.AutoGridHorizontalCells</Name>
+      <Value xsi:type="xsd:int">9</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>HotBarRowContainer.AutoGridVerticalCells</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>HotBarRowContainer.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>HotBarRowContainer.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>HotBarRowContainer.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotBarRowContainer.Parent</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>HotBarRowContainer.StackSpacing</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>HotBarRowContainer.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>HotBarRowContainer.WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>HotBarRowContainer.XOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>HotBarRowContainer.XUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>HotBarRowContainer.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>HotBarRowContainer.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>State</Type>
+      <Name>State</Name>
+      <Value xsi:type="xsd:string">Default</Value>
+      <Category>States and Visibility</Category>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>HotBarRowContainer</Name>
+    <BaseType>Controls/StackPanel</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem1</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem2</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem3</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem4</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem5</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem6</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem7</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem8</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotBarItem9</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ComponentSave>

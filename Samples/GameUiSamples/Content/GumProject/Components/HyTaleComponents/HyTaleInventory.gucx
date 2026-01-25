@@ -1,0 +1,1790 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>HyTaleComponents/HyTaleInventory</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Height</Name>
+      <Value xsi:type="xsd:float">20</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>ContainerInstance.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Width</Name>
+      <Value xsi:type="xsd:float">960</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleHotbarRowInstance.Parent</Name>
+      <Value xsi:type="xsd:string">MainGrid</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>HyTaleHotbarRowInstance.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>HyTaleHotbarRowInstance.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance1.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance1.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance1.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance1.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance1.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance10.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance10.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance10.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance10.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance10.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance11.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance11.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance11.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance11.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance11.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance12.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance12.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance12.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance12.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance12.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance13.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance13.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance13.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance13.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance13.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance14.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance14.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance14.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance14.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance14.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance15.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance15.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance15.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance15.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance15.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance16.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance16.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance16.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance16.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance16.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance17.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance17.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance17.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance17.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance17.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance18.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance18.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance18.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance18.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance18.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance19.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance19.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance19.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance19.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance19.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance2.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance2.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance2.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance2.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance2.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance20.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance20.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance20.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance20.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance20.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance21.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance21.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance21.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance21.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance21.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance22.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance22.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance22.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance22.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance22.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance23.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance23.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance23.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance23.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance23.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance24.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance24.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance24.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance24.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance24.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance25.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance25.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance25.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance25.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance25.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance26.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance26.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance26.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance26.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance26.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance27.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance27.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance27.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance27.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance27.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow3</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance28.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance28.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance28.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance28.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance28.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance29.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance29.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance29.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance29.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance29.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance3.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance3.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance3.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance3.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance3.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance30.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance30.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance30.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance30.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance30.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance31.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance31.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance31.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance31.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance31.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance32.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance32.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance32.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance32.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance32.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance33.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance33.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance33.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance33.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance33.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance34.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance34.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance34.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance34.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance34.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance35.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance35.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance35.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance35.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance35.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance36.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance36.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance36.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance36.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance36.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance4.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance4.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance4.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance4.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance4.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance5.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance5.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance5.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance5.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance5.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance6.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance6.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance6.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance6.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance6.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance7.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance7.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance7.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance7.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance7.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance8.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance8.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance8.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance8.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance8.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasDamage</Type>
+      <Name>HyTaleItemSlotInstance9.HasDamageState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasItem</Type>
+      <Name>HyTaleItemSlotInstance9.HasItemState</Name>
+      <Value xsi:type="xsd:string">True</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HasMoreThanOne</Type>
+      <Name>HyTaleItemSlotInstance9.HasMoreThanOneState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IsHotBarItem</Type>
+      <Name>HyTaleItemSlotInstance9.IsHotBarItemState</Name>
+      <Value xsi:type="xsd:string">False</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HyTaleItemSlotInstance9.Parent</Name>
+      <Value xsi:type="xsd:string">InventoryRow1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow1.AutoGridHorizontalCells</Name>
+      <Value xsi:type="xsd:int">9</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow1.AutoGridVerticalCells</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>InventoryRow1.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow1.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow1.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryRow1.Parent</Name>
+      <Value xsi:type="xsd:string">MainGrid</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow1.StackSpacing</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow1.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow1.WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>InventoryRow1.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow1.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>InventoryRow1.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow1.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow2.AutoGridHorizontalCells</Name>
+      <Value xsi:type="xsd:int">9</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow2.AutoGridVerticalCells</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>InventoryRow2.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow2.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow2.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryRow2.Parent</Name>
+      <Value xsi:type="xsd:string">MainGrid</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow2.StackSpacing</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow2.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow2.WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>InventoryRow2.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow2.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>InventoryRow2.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow2.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow3.AutoGridHorizontalCells</Name>
+      <Value xsi:type="xsd:int">9</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow3.AutoGridVerticalCells</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>InventoryRow3.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow3.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow3.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryRow3.Parent</Name>
+      <Value xsi:type="xsd:string">MainGrid</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow3.StackSpacing</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow3.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow3.WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>InventoryRow3.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow3.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>InventoryRow3.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow3.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow4.AutoGridHorizontalCells</Name>
+      <Value xsi:type="xsd:int">9</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>InventoryRow4.AutoGridVerticalCells</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>InventoryRow4.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow4.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow4.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>InventoryRow4.Parent</Name>
+      <Value xsi:type="xsd:string">MainGrid</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow4.StackSpacing</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>InventoryRow4.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>InventoryRow4.WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>InventoryRow4.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow4.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>InventoryRow4.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>InventoryRow4.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>MainGrid.ChildrenLayout</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MainGrid.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>MainGrid.HeightUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MainGrid.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MainGrid.StackSpacing</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MainGrid.Width</Name>
+      <Value xsi:type="xsd:float">-20</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>MainGrid.WidthUnits</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MainGrid.X</Name>
+      <Value xsi:type="xsd:float">10</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MainGrid.Y</Name>
+      <Value xsi:type="xsd:float">20</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NineSliceInstance.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <IsFile>true</IsFile>
+      <Type>string</Type>
+      <Name>NineSliceInstance.SourceFile</Name>
+      <Value xsi:type="xsd:string">Components\HyTaleComponents\hytale.png</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceInstance.TextureHeight</Name>
+      <Value xsi:type="xsd:int">24</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceInstance.TextureLeft</Name>
+      <Value xsi:type="xsd:int">240</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceInstance.TextureTop</Name>
+      <Value xsi:type="xsd:int">72</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NineSliceInstance.TextureWidth</Name>
+      <Value xsi:type="xsd:int">24</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>State</Type>
+      <Name>State</Name>
+      <Value xsi:type="xsd:string">Default</Value>
+      <Category>States and Visibility</Category>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>WidthUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>InventoryRow1</Name>
+    <BaseType>Controls/StackPanel</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>InventoryRow2</Name>
+    <BaseType>Controls/StackPanel</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>InventoryRow3</Name>
+    <BaseType>Controls/StackPanel</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>InventoryRow4</Name>
+    <BaseType>Controls/StackPanel</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleHotbarRowInstance</Name>
+    <BaseType>HyTaleComponents/Pieces/HyTaleHotbarRow</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance1</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>NineSliceInstance</Name>
+    <BaseType>NineSlice</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>MainGrid</Name>
+    <BaseType>Controls/PanelStandard</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance2</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance3</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance4</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance5</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance6</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance7</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance8</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance9</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance10</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance11</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance12</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance13</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance14</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance15</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance16</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance17</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance18</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance28</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance29</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance30</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance31</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance32</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance33</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance34</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance35</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance36</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance19</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance20</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance21</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance22</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance23</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance24</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance25</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance26</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleItemSlotInstance27</Name>
+    <BaseType>HyTaleComponents/HyTaleItemSlot</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HyTaleInventoryHeaderRowInstance</Name>
+    <BaseType>HyTaleComponents/Pieces/HyTaleInventoryHeaderRow</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ContainerInstance</Name>
+    <BaseType>Container</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ComponentSave>
