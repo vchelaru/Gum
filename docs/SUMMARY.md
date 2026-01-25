@@ -273,6 +273,7 @@
     * [Fonts](code/standard-visuals/textruntime/fonts.md)
     * [FontScale](code/standard-visuals/textruntime/fontscale.md)
     * [FontSize](code/standard-visuals/textruntime/fontsize.md)
+    * [GetCharacterIndexAtPosition](code/standard-visuals/textruntime/getcharacterindexatposition.md)
     * [HorizontalAlignment](code/standard-visuals/textruntime/horizontalalignment.md)
     * [MaxLettersToShow](code/standard-visuals/textruntime/maxletterstoshow.md)
     * [Text Wrapping](code/standard-visuals/textruntime/text-wrapping.md)
