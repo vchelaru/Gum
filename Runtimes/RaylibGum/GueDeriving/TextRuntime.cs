@@ -1,4 +1,7 @@
-﻿using Gum.DataTypes;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.DataTypes;
 using Gum.Renderables;
 using Gum.Renderables;
 using Gum.Wireframe;
@@ -11,11 +14,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if RAYLIB
 namespace Gum.GueDeriving;
-
+#else
+namespace MonoGameGum.GueDeriving;
+#endif
 
 /// <summary>
-/// Represents a text element which can display a string.
+/// A visual text element which can display a string.
 /// </summary>
 public class TextRuntime : InteractiveGue
 {
@@ -32,7 +38,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// The XNA blend state used when rendering the text. This controls how 
     /// color and alpha values blend with the background.
@@ -120,7 +126,7 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// The maximum letters to display. This can be used to 
     /// create an effect where the text prints out letter-by-letter.
@@ -133,7 +139,10 @@ public class TextRuntime : InteractiveGue
             mContainedText.MaxLettersToShow = value;
         }
     }
+#endif
 
+
+#if !RAYLIB
     /// <summary>
     /// The maximum number of lines to display. This can be used to 
     /// limit how many lines of text are displayed at one time.
@@ -326,4 +335,17 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
+    // We should phase this out, so not adding it to raylib. Instead, add to root
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
+#endif
+
+    /// <summary>
+    /// Returns the index of the character at the specified screen position. This returns the index
+    /// within the WrappedText, so to index in, you need to loop through each line.
+    /// </summary>
+    /// <param name="screenX">The screen x position, usually obtained by Cursor.XRespectingGumZoomAndBounds()</param>
+    /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
+    /// <returns>The index in the WrappedText</returns>
+    public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
 }

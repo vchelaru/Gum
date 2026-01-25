@@ -13,7 +13,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if RAYLIB
+namespace Gum.GueDeriving;
+#else
 namespace MonoGameGum.GueDeriving;
+#endif
+
 
 /// <summary>
 /// A visual text element which can display a string.
@@ -428,5 +433,18 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+#if !RAYLIB
+    // We should phase this out, so not adding it to raylib. Instead, add to root
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
+#endif
+
+    /// <summary>
+    /// Returns the index of the character at the specified screen position. This returns the index
+    /// within the WrappedText, so to index in, you need to loop through each line.
+    /// </summary>
+    /// <param name="screenX">The screen x position, usually obtained by Cursor.XRespectingGumZoomAndBounds()</param>
+    /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
+    /// <returns>The index in the WrappedText</returns>
+    public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
+
 }

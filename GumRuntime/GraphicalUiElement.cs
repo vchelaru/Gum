@@ -6684,6 +6684,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #region GraphicalUiElementExtensions
 public static class GraphicalUiElementExtensions
 {
+    #region Animation Extensions
 #if !FRB
 
     /// <summary>
@@ -6797,6 +6798,8 @@ public static class GraphicalUiElementExtensions
 
 
 #endif
+    #endregion
+
 }
 #endregion
 
