@@ -14,11 +14,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
+using Raylib_cs;
 namespace Gum.GueDeriving;
 #else
 namespace MonoGameGum.GueDeriving;
 #endif
-
 
 /// <summary>
 /// A visual text element which can display a string.
@@ -109,15 +109,21 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public Microsoft.Xna.Framework.Color Color
     {
-        get
-        {
-            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
-        }
+#if XNALIKE
+        get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
         set
         {
             ContainedText.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
             NotifyPropertyChanged();
         }
+#else
+        get => ContainedText.Color;
+        set
+        {
+            ContainedText.Color = value;
+            NotifyPropertyChanged();
+        }
+#endif
     }
 
     /// <summary>

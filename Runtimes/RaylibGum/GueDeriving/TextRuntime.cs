@@ -5,7 +5,6 @@ using Gum.DataTypes;
 using Gum.Renderables;
 using Gum.Renderables;
 using Gum.Wireframe;
-using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -15,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
+using Raylib_cs;
 namespace Gum.GueDeriving;
 #else
 namespace MonoGameGum.GueDeriving;
@@ -104,22 +104,40 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.Alpha = value;
     }
 
+    /// <summary>
+    /// Gets or sets the color used to render the text. This includes color and alpha (opacity) components.
+    /// </summary>
     public Color Color
     {
+#if XNALIKE
+        get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
+        set
+        {
+            ContainedText.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            NotifyPropertyChanged();
+        }
+#else
         get => ContainedText.Color;
         set
         {
             ContainedText.Color = value;
             NotifyPropertyChanged();
         }
+#endif
     }
 
+    /// <summary>
+    /// The horizontal alignment of the text within its bounding box.
+    /// </summary>
     public HorizontalAlignment HorizontalAlignment
     {
         get => ContainedText.HorizontalAlignment;
         set => ContainedText.HorizontalAlignment = value;
     }
 
+    /// <summary>
+    /// The vertical alignment of the text within its bounding box.
+    /// </summary>
     public VerticalAlignment VerticalAlignment
     {
         get => ContainedText.VerticalAlignment;
