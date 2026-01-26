@@ -11,75 +11,120 @@
   <UserControl.Resources>
     <Style BasedOn="{StaticResource IconButton}" TargetType="{x:Type Button}" />
   </UserControl.Resources>
-  <Border
-    BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
-    BorderThickness="1"
-    CornerRadius="4">
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition />
-        <RowDefinition />
-        <RowDefinition />
-      </Grid.RowDefinitions>
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition />
-        <ColumnDefinition />
-        <ColumnDefinition />
-      </Grid.ColumnDefinitions>
 
-      <Button
-        Click="TopLeftButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowUpLeft}"
-        ToolTip="Top Left" />
 
-      <Button
-        Grid.Column="1"
-        Click="TopButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowUp}"
-        ToolTip="Top Middle" />
-      <Button
-        Grid.Column="2"
-        Click="TopRightButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowUpRight}"
-        ToolTip="Top Right" />
-      <Button
-        Grid.Row="1"
-        Grid.Column="0"
-        Click="MiddleLeftButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowLeft}"
-        ToolTip="Middle Left" />
-      <Button
-        Grid.Row="1"
-        Grid.Column="1"
-        Click="MiddleMiddleButton_Click"
-        Content="{wpf:FluentIcon Icon=Stop}"
-        ToolTip="Middle" />
-      <Button
-        Grid.Row="1"
-        Grid.Column="2"
-        Click="MiddleRightButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowRight}"
-        ToolTip="Middle Right" />
-      <Button
-        Grid.Row="2"
-        Grid.Column="0"
-        Click="BottomLeftButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowDownLeft}"
-        ToolTip="Bottom Left" />
-      <Button
-        Grid.Row="2"
-        Grid.Column="1"
-        Click="BottomMiddleButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowDown}"
-        ToolTip="Bottom Middle" />
-      <Button
-        Grid.Row="2"
-        Grid.Column="2"
-        Click="BottomRightButton_Click"
-        Content="{wpf:FluentIcon Icon=ArrowDownRight}"
-        ToolTip="Bottom Right" />
 
-    </Grid>
-  </Border>
+  <Grid>
+
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+
+    <Border
+      Margin="0,0,8,0"
+      BorderBrush="{DynamicResource Frb.Brushes.Contrast01}"
+      BorderThickness="1"
+      CornerRadius="4">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition />
+          <RowDefinition />
+          <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition />
+          <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <Button
+          Click="TopLeftButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowUpLeft}"
+          ToolTip="Top Left" />
+
+        <Button
+          Grid.Column="1"
+          Click="TopButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowUp}"
+          ToolTip="Top Middle" />
+        <Button
+          Grid.Column="2"
+          Click="TopRightButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowUpRight}"
+          ToolTip="Top Right" />
+        <Button
+          Grid.Row="1"
+          Grid.Column="0"
+          Click="MiddleLeftButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowLeft}"
+          ToolTip="Middle Left" />
+        <Button
+          Grid.Row="1"
+          Grid.Column="1"
+          Click="MiddleMiddleButton_Click"
+          Content="{wpf:FluentIcon Icon=Stop}"
+          ToolTip="Middle" />
+        <Button
+          Grid.Row="1"
+          Grid.Column="2"
+          Click="MiddleRightButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowRight}"
+          ToolTip="Middle Right" />
+        <Button
+          Grid.Row="2"
+          Grid.Column="0"
+          Click="BottomLeftButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowDownLeft}"
+          ToolTip="Bottom Left" />
+        <Button
+          Grid.Row="2"
+          Grid.Column="1"
+          Click="BottomMiddleButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowDown}"
+          ToolTip="Bottom Middle" />
+        <Button
+          Grid.Row="2"
+          Grid.Column="2"
+          Click="BottomRightButton_Click"
+          Content="{wpf:FluentIcon Icon=ArrowDownRight}"
+          ToolTip="Bottom Right" />
+
+      </Grid>
+
+    </Border>
+
+
+    <StackPanel Grid.Column="1">
+      <Button
+        x:Name="AnchorCenterHorizontally"
+        Grid.Row="0"
+        Grid.Column="3"
+        Click="AnchorCenterHorizontally_Click">
+        <Button.Content>
+          <wpf:FluentIcon Icon="ArrowMinimizeVertical">
+            <wpf:FluentIcon.LayoutTransform>
+              <RotateTransform Angle="90" />
+            </wpf:FluentIcon.LayoutTransform>
+          </wpf:FluentIcon>
+        </Button.Content>
+        <Button.ToolTip>
+          Anchor Center Horizontally
+        </Button.ToolTip>
+      </Button>
+      <Button
+        x:Name="AnchorCenterVertically"
+        Grid.Row="1"
+        Grid.Column="3"
+        Click="AnchorCenterVertically_Click"
+        Content="{wpf:FluentIcon Icon=ArrowMinimizeVertical}">
+        <Button.ToolTip>
+          Anchor Center Vertically
+        </Button.ToolTip>
+      </Button>
+    </StackPanel>
+
+  </Grid>
+
 
 </UserControl>

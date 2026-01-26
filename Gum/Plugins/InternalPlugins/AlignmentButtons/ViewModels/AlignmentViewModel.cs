@@ -186,6 +186,30 @@ public class AlignmentViewModel : ViewModel
         }
     }
 
+    public void AnchorCenterHorizontally_Click()
+    {
+        using (_undoManager.RequestLock())
+        {
+            _commonControlLogic.SetXValues(
+            global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+            PositionUnitType.PixelsFromCenterX);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void AnchorCenterVertically_Click()
+    {
+        using (_undoManager.RequestLock())
+        {
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
     #endregion
 
     #region Dock Actions

@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Localization;
@@ -554,4 +555,38 @@ $"chars count=223\r\n";
 
 
     }
+
+    [Fact]
+    public void Anchor_CenterHorizontally_ShouldSetCorrectValues()
+    {
+        TextRuntime textRuntime = new TextRuntime();
+        textRuntime.HorizontalAlignment = HorizontalAlignment.Right;
+        textRuntime.VerticalAlignment = VerticalAlignment.Bottom;
+        textRuntime.Text = "This is some sample text";
+        textRuntime.Anchor(Anchor.CenterHorizontally);
+
+        // Should set center
+        textRuntime.HorizontalAlignment.ShouldBe(HorizontalAlignment.Center);
+
+        // Should not change vertical
+        textRuntime.VerticalAlignment.ShouldBe(VerticalAlignment.Bottom);
+    }
+
+    [Fact]
+    public void Anchor_CenterVertically_ShouldSetCorrectValues()
+    {
+        TextRuntime textRuntime = new TextRuntime();
+        textRuntime.HorizontalAlignment = HorizontalAlignment.Right;
+        textRuntime.VerticalAlignment = VerticalAlignment.Bottom;
+        textRuntime.Text = "This is some sample text";
+        textRuntime.Anchor(Anchor.CenterVertically);
+
+        // Should not change Horizontal
+        textRuntime.HorizontalAlignment.ShouldBe(HorizontalAlignment.Right);
+
+        // Should set Center
+        textRuntime.VerticalAlignment.ShouldBe(VerticalAlignment.Center);
+    }
+
+
 }

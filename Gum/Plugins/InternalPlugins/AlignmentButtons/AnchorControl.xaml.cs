@@ -83,5 +83,15 @@ namespace Gum.Plugins.AlignmentButtons
         {
             ViewModel.BottomRightButton_Click();
         }
+
+        private void AnchorCenterHorizontally_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ViewModel.AnchorCenterHorizontally_Click();
+        }
+
+        private void AnchorCenterVertically_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ViewModel.AnchorCenterVertically_Click();
+        }
     }
 }

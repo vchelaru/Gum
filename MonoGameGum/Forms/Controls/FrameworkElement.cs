@@ -361,6 +361,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set => Visual.MaxWidth = value;
     }
 
+    /// <inheritdoc cref="Gum.Wireframe.GraphicalUiElement.Anchor(Gum.Wireframe.Anchor)" />
     public void Anchor(Anchor anchor) => Visual.Anchor(anchor);
     public void Dock(Dock dock) => Visual.Dock(dock);
 

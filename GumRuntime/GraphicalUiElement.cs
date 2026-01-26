@@ -51,7 +51,9 @@ public enum Anchor
     Right,
     BottomLeft,
     Bottom,
-    BottomRight
+    BottomRight,
+    CenterHorizontally,
+    CenterVertically
 }
 
 public enum Dock
@@ -4728,6 +4730,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
+    /// <summary>
+    /// Sets the X, Y, Units and Origin values for an element, based on the Anchor Enum types.  If the element implements IText, also sets Text Alignment.
+    /// </summary>
+    /// <param name="anchor"></param>
+    /// <exception cref="NotImplementedException"></exception>
     public void Anchor(Anchor anchor)
     {
         switch (anchor)
@@ -4850,11 +4857,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
                 }
                 break;
+            case Wireframe.Anchor.CenterHorizontally:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                }
+                break;
+            case Wireframe.Anchor.CenterVertically:
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
             default:
                 throw new NotImplementedException();
         }
     }
 
+    /// <summary>
+    /// Attempts to determine if the element is anchored utilizing the X, Y, Units, and Origins.  
+    /// </summary>
+    /// <returns>If a suitable Anchor position is identified, returns that Anchor Enum, otherwise null.</returns>
     public Anchor? GetAnchor()
     {
         if (this.XOrigin == HorizontalAlignment.Left &&
@@ -4934,6 +4963,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         this.YUnits == GeneralUnitType.PixelsFromLarge &&
         this.Y == 0)
             return Wireframe.Anchor.BottomRight;
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0)
+            return Wireframe.Anchor.CenterHorizontally;
+
+        if (this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0)
+            return Wireframe.Anchor.CenterVertically;
 
         return null;
     }
