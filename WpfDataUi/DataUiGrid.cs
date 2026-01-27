@@ -631,7 +631,7 @@ namespace WpfDataUi
 
         public void SetMultipleCategoryLists(List<List<MemberCategory>> listOfCategoryLists)
         {
-            HashSet<string> alreadyAddedMembers = [];
+            Dictionary<string, InstanceMember> alreadyAddedMembers = [];
 
             List<MemberCategory> effectiveCategory = [];
 
@@ -649,9 +649,10 @@ namespace WpfDataUi
 
                     foreach (var member in category.Members)
                     {
-                        if (alreadyAddedMembers.Contains(member.DisplayName) == false)
+                        var isExisting = alreadyAddedMembers.TryGetValue(member.DisplayName, out var foundMember);
+                        if (!isExisting)
                         {
-                            alreadyAddedMembers.Add(member.DisplayName);
+                            alreadyAddedMembers.Add(member.DisplayName, member);
 
                             var multiSelectInstanceMember = TryCreateMultiGroup(listOfCategoryLists, member);
                             if (multiSelectInstanceMember != null)
@@ -692,6 +693,7 @@ namespace WpfDataUi
                 multiSelectInstanceMember.DisplayName = templateMember.DisplayName;
                 multiSelectInstanceMember.PreferredDisplayer = templateMember.PreferredDisplayer;
                 multiSelectInstanceMember.InstanceMembers = membersToAdd;
+                multiSelectInstanceMember.IsReadOnly = membersToAdd.Any(item => item.IsReadOnly);
                 return multiSelectInstanceMember;
             }
             else
