@@ -88,7 +88,7 @@ namespace WpfDataUi.DataTypes
 
         #region Events
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public event Action<InstanceMember> MemberValueChangedByUi;
 
