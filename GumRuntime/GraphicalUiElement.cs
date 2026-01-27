@@ -91,6 +91,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     class DirtyState
     {
+        // Indicates situations where a parent should be updated. If None is specified, then only this object
+        // is updated and its parent is not.
         public ParentUpdateType ParentUpdateType;
         public int ChildrenUpdateDepth;
         public XOrY? XOrY;
@@ -113,7 +115,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public static float GlobalFontScale = 1;
 
-    private DirtyState currentDirtyState;
+    private DirtyState? currentDirtyState;
+    private ParentUpdateType EffectiveDirtyStateParentUpdateType
+    {
+        get
+        {
+            if(currentDirtyState == null)
+            {
+                return ParentUpdateType.None;
+            }
+            else
+            {
+                if(GetIfParentHasRatioChildren())
+                {
+                    return currentDirtyState.ParentUpdateType | ParentUpdateType.IfParentHasRatioSizedChildren;
+                }
+                return currentDirtyState.ParentUpdateType;
+            }
+        }
+    }
     bool isFontDirty = false;
     public bool IsFontDirty
     {
@@ -307,8 +327,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 ParentUpdateType.IfParentHasRatioSizedChildren,
                                 // If something is made visible, that shouldn't update the children, right?
                                 // Update January 27, 2026: Yes, children should update if we are dealing with ratios:
-                                 0,
-                                //ShouldUpdateChildren() ? int.MaxValue/2 : 0, 
+                                //0,
+                                ShouldUpdateChildren() ? int.MaxValue/2 : 0, 
                                 null);
                             didUpdate = true;
                         }
@@ -321,8 +341,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid |
                         ParentUpdateType.IfParentHasRatioSizedChildren,
                         // See call above on why we check if children should be updated
-                        0,
-                        //ShouldUpdateChildren() ? int.MaxValue / 2 : 0,
+                        //0,
+                        ShouldUpdateChildren() ? int.MaxValue / 2 : 0,
                         null);
                 }
 
@@ -1808,7 +1828,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
         if (!isSuspended)
         {
-            isSuspended = !AreUpdatesAppliedWhenInvisible &&
+            isSuspended = !updateParent && !AreUpdatesAppliedWhenInvisible &&
                 (mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false && this.IsInRenderTargetRecursively() == false);
         }
 
@@ -2145,7 +2165,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // like check the width/height of the parent to see if they're 0
         if (updateParent && GetIfShouldCallUpdateOnParent())
         {
-            (this.Parent as GraphicalUiElement).UpdateLayout(false, false);
+            Parent?.UpdateLayout(false, false);
             ChildrenUpdatingParentLayoutCalls++;
         }
         if (this.mContainedObjectAsIpso != null)
@@ -2156,7 +2176,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (!isInSizeChange)
                 {
                     isInSizeChange = true;
-                    SizeChanged?.Invoke(this, null);
+                    SizeChanged?.Invoke(this, EventArgs.Empty);
                     isInSizeChange = false;
                 }
             }
@@ -2164,7 +2184,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (xBeforeLayout != mContainedObjectAsIpso.X ||
                     yBeforeLayout != mContainedObjectAsIpso.Y)
             {
-                PositionChanged?.Invoke(this, null);
+                PositionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -3510,6 +3530,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 if (canDoFullUpdate)
                 {
+                    // Pass ParentUpdateType.None here so that children do not attempt to update their parent. `this` is
+                    // the parent and it's already in an update
                     child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                     if (flagAsUpdated)
                     {
@@ -4351,6 +4373,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         currentDirtyState.ParentUpdateType = currentDirtyState.ParentUpdateType | parentUpdateType;
         currentDirtyState.ChildrenUpdateDepth = Math.Max(
+
             currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
 
         // If the update is supposed to update all associations, make it null...
@@ -6168,7 +6191,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             if (currentDirtyState != null)
             {
-                UpdateLayout(currentDirtyState.ParentUpdateType,
+                UpdateLayout(EffectiveDirtyStateParentUpdateType,
                     currentDirtyState.ChildrenUpdateDepth,
                     currentDirtyState.XOrY);
             }
@@ -6186,7 +6209,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (currentDirtyState != null)
         {
             didCallUpdateLayout = true;
-            UpdateLayout(currentDirtyState.ParentUpdateType,
+            UpdateLayout(EffectiveDirtyStateParentUpdateType,
                 currentDirtyState.ChildrenUpdateDepth,
                 currentDirtyState.XOrY);
         }
