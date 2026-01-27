@@ -311,7 +311,10 @@ public abstract class TextBoxBase :
 #endif
         Visual.SizeChanged += HandleVisualSizeChanged;
 
-        this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
+        if(textComponent != null)
+        {
+            this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
+        }
         base.ReactToVisualChanged();
 
         // don't do this, the layout may not have yet been performed yet:
@@ -403,12 +406,12 @@ public abstract class TextBoxBase :
 
     #region Event Handler Methods
 
-    private void HandleVisualSizeChanged(object sender, EventArgs e)
+    private void HandleVisualSizeChanged(object? sender, EventArgs e)
     {
         OffsetTextToKeepCaretInView();
     }
 
-    private void HandlePush(object sender, EventArgs args)
+    private void HandlePush(object? sender, EventArgs args)
     {
         // September 7, 2025
         // When pushing on a TextBox,
@@ -432,7 +435,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void HandleClick(object sender, EventArgs args)
+    private void HandleClick(object? sender, EventArgs args)
     {
         InteractiveGue.CurrentInputReceiver = this;
     }
@@ -466,16 +469,16 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void HandleRollOn(object sender, EventArgs args)
+    private void HandleRollOn(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandleRollOver(object sender, EventArgs args)
+    private void HandleRollOver(object? sender, EventArgs args)
     {
     }
 
-    private void HandleDrag(object sender, EventArgs args)
+    private void HandleDrag(object? sender, EventArgs args)
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
@@ -523,7 +526,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void HandleRollOff(object sender, EventArgs args)
+    private void HandleRollOff(object? sender, EventArgs args)
     {
         UpdateState();
     }

@@ -1410,4 +1410,40 @@ public class GraphicalUiElementTests : BaseTestClass
         gue.Name.ShouldMatch(name2);
         gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
     }
+
+
+    [Fact]
+    public void Visible_ShouldUpdateChildren_IfWidthUnitsRatio()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 200;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime leftChild = new();
+        parent.AddChild(leftChild);
+        leftChild.Width = 100;
+        leftChild.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime rightChild = new();
+        parent.AddChild(rightChild);
+        // Doesn't really matter if we anchor but let's do it to make this test more realistic
+        rightChild.Anchor(Anchor.Right);
+        rightChild.Width = 1;
+        rightChild.WidthUnits = DimensionUnitType.Ratio;
+
+        ContainerRuntime sut = new();
+        rightChild.AddChild(sut);
+        sut.Dock(Dock.Fill);
+
+        leftChild.Visible = false;
+
+        rightChild.GetAbsoluteWidth().ShouldBe(200);
+        sut.GetAbsoluteWidth().ShouldBe(200);
+
+        leftChild.Visible = true;
+
+        rightChild.GetAbsoluteWidth().ShouldBe(100);
+        sut.GetAbsoluteWidth().ShouldBe(100);
+
+    }
 }
