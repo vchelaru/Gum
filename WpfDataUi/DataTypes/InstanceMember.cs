@@ -170,7 +170,12 @@ namespace WpfDataUi.DataTypes
             }
             else
             {
-                LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
+                var instanceType = Instance.GetType();
+                if(instanceType != null)
+                {
+                    var instance = LateBinder.GetInstance(instanceType);
+                    instance?.SetValue(Instance, Name, value);
+                }
             }
             OnPropertyChanged("Value");
             OnPropertyChanged(nameof(IsDefault));
