@@ -304,8 +304,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 // if there are ratio sized children, then flipping visibility on this can update the widths of the ratio'ed children
                                 ParentUpdateType.IfParentHasRatioSizedChildren,
                                 // If something is made visible, that shouldn't update the children, right?
-                                //int.MaxValue/2, 
-                                0,
+                                // Update January 27, 2026: Yes, children should update if we are dealing with ratios:
+                                 0,
+                                //ShouldUpdateChildren() ? int.MaxValue/2 : 0, 
                                 null);
                             didUpdate = true;
                         }
@@ -317,19 +318,37 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // This will make this dirty:
                     this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid |
                         ParentUpdateType.IfParentHasRatioSizedChildren,
-                        // If something is made visible, that shouldn't update the children, right?
-                        //int.MaxValue/2, 
+                        // See call above on why we check if children should be updated
                         0,
+                        //ShouldUpdateChildren() ? int.MaxValue / 2 : 0,
                         null);
                 }
 
                 if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid()))
                 {
                     // This updates the parent right away:
-                    (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
+                    Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            bool ShouldUpdateChildren()
+            {
+                // If this or siblings are ratio, then changing this width can result in changing the width of children, so we need to update recursively.
+                if (this.WidthUnits == DimensionUnitType.Ratio || this.HeightUnits == DimensionUnitType.Ratio) return true;
+
+                if(this.Parent != null)
+                {
+                    foreach(var child in this.Parent.Children)
+                    {
+                        if(child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
     }
