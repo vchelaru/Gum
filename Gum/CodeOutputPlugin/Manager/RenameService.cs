@@ -10,6 +10,8 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using System.IO;
+using Gum;
+using Gum.Commands;
 
 namespace CodeOutputPlugin.Manager;
 
@@ -24,23 +26,35 @@ internal class RenameService
     public RenameService(CodeGenerationService codeGenerationService,
         CodeGenerator codeGenerator,
         CustomCodeGenerator customCodeGenerator,
-        CodeGenerationNameVerifier nameVerifier)
+        CodeGenerationNameVerifier nameVerifier,
+        IDialogService dialogService)
     {
-        _dialogService = Locator.GetRequiredService<IDialogService>();
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier);
         _codeGenerationService = codeGenerationService;
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
+        _dialogService = dialogService;
     }
 
     internal void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
     {
-        var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+        if(codeOutputProjectSettings.CodeProjectRoot == string.Empty)
+        {
+            return;
+        }
+        try
+        {
+            var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
-        var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
-        var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
-        var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
-        RegenerateAndMoveCode(element, oldName, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
+            var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
+            var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
+            var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
+            RegenerateAndMoveCode(element, oldName, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
+        }
+        catch(Exception e)
+        {
+            _dialogService.ShowMessage(e.ToString(), $"Error moving code for {element}");
+        }
 
     }
 

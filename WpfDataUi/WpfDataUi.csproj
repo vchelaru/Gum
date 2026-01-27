@@ -1,55 +1,57 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-	  <TargetFramework>net8.0-windows</TargetFramework>
-    <OutputType>Library</OutputType>
-    <LangVersion>12.0</LangVersion>
-	  <!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
-	  <NoWarn>$(NoWarn);CA1416</NoWarn>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;WpfDataUi</DefineConstants>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <DefineConstants>TRACE;WpfDataUi</DefineConstants>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug2\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WpfDataUi</DefineConstants>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <AppDesigner Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Content\Icons\OpenFolder.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="SampleProject\SampleProject\App.xaml.cs" />
-    <Compile Remove="SampleProject\SampleProject\Character.cs" />
-    <Compile Remove="SampleProject\SampleProject\MainWindow.xaml.cs" />
-    <Compile Remove="SampleProject\SampleProject\Properties\AssemblyInfo.cs" />
-    <Compile Remove="SampleProject\SampleProject\Properties\Resources.Designer.cs" />
-    <Compile Remove="SampleProject\SampleProject\Properties\Settings.Designer.cs" />
-    <EmbeddedResource Remove="SampleProject\SampleProject\Properties\Resources.resx" />
-    <Page Remove="Controls\ComboBoxDisplay.xaml" />
-    <Page Remove="SampleProject\SampleProject\App.xaml" />
-    <Page Remove="SampleProject\SampleProject\MainWindow.xaml" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<OutputType>Library</OutputType>
+		<LangVersion>12.0</LangVersion>
+		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<Nullable>enable</Nullable>
+
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+		<DefineConstants>TRACE;DEBUG;WpfDataUi</DefineConstants>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<DefineConstants>TRACE;WpfDataUi</DefineConstants>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup>
+		<StartupObject />
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|AnyCPU'">
+		<DebugSymbols>true</DebugSymbols>
+		<OutputPath>bin\x86\Debug2\</OutputPath>
+		<DefineConstants>TRACE;DEBUG;WpfDataUi</DefineConstants>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<AppDesigner Include="Properties\" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<Resource Include="Content\Icons\OpenFolder.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="SampleProject\SampleProject\App.xaml.cs" />
+		<Compile Remove="SampleProject\SampleProject\Character.cs" />
+		<Compile Remove="SampleProject\SampleProject\MainWindow.xaml.cs" />
+		<Compile Remove="SampleProject\SampleProject\Properties\AssemblyInfo.cs" />
+		<Compile Remove="SampleProject\SampleProject\Properties\Resources.Designer.cs" />
+		<Compile Remove="SampleProject\SampleProject\Properties\Settings.Designer.cs" />
+		<EmbeddedResource Remove="SampleProject\SampleProject\Properties\Resources.resx" />
+		<Page Remove="Controls\ComboBoxDisplay.xaml" />
+		<Page Remove="SampleProject\SampleProject\App.xaml" />
+		<Page Remove="SampleProject\SampleProject\MainWindow.xaml" />
+	</ItemGroup>
 </Project>

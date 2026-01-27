@@ -390,7 +390,7 @@ namespace WpfDataUi.DataTypes
         /// </example>
         public Action<object> SetValueError;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         /// Provides a custom set event. This is required if the instance member is not part of the

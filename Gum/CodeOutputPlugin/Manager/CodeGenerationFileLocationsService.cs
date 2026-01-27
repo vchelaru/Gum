@@ -74,7 +74,15 @@ internal class CodeGenerationFileLocationsService
             generatedFileName = ProjectState.Self.ProjectDirectory + generatedFileName;
         }
 
-        return generatedFileName;
+        // If it's empty, return null so it doesn't get used in code generation externally
+        if (string.IsNullOrEmpty(generatedFileName))
+        {
+            return null;
+        }
+        else
+        {
+            return generatedFileName;
+        }
     }
 
     public FilePath? GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
