@@ -242,6 +242,363 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     [Fact]
+    public void Anchor_TopLeft_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Center;
+        anchor.YOrigin = VerticalAlignment.Center;
+
+        // Perform action
+        anchor.Anchor(Anchor.TopLeft);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Left);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Top);
+    }
+
+    [Fact]
+    public void Anchor_Top_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Right;
+        anchor.YOrigin = VerticalAlignment.Center;
+
+        // Perform action
+        anchor.Anchor(Anchor.Top);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Center);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Top);
+    }
+
+    [Fact]
+    public void Anchor_TopRight_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Center;
+        anchor.YOrigin = VerticalAlignment.Center;
+
+        // Perform action
+        anchor.Anchor(Anchor.TopRight);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Right);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Top);
+    }
+
+    [Fact]
+    public void Anchor_Left_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Center;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.Left);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Left);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Center);
+    }
+
+    [Fact]
+    public void Anchor_Center_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Right;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.Center);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Center);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Center);
+    }
+
+    [Fact]
+    public void Anchor_Right_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Center;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.Right);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Right);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Center);
+    }
+
+
+    [Fact]
+    public void Anchor_BottomLeft_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Center;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.BottomLeft);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Left);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Bottom);
+    }
+
+    [Fact]
+    public void Anchor_Bottom_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Right;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.Bottom);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Center);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Bottom);
+    }
+
+    [Fact]
+    public void Anchor_BottomRight_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Center;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.BottomRight);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Right);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Bottom);
+    }
+
+
+    [Fact]
+    public void Anchor_CenterHorizontally_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Right;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.CenterHorizontally);
+
+        // Validate results
+        anchor.X.ShouldBe(0);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Center);
+
+        // These should not have changed!
+        anchor.Y.ShouldBe(200);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.Percentage);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Top);
+    }
+
+
+    [Fact]
+    public void Anchor_CenterVertically_ShouldSetCorrectValues()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 100;
+        parent.Height = 100;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+
+        // Setup control with value we want to change
+        ContainerRuntime anchor = new();
+        parent.AddChild(anchor);
+        anchor.X = 100;
+        anchor.Y = 200;
+        anchor.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.YUnits = Gum.Converters.GeneralUnitType.Percentage;
+        anchor.XOrigin = HorizontalAlignment.Right;
+        anchor.YOrigin = VerticalAlignment.Top;
+
+        // Perform action
+        anchor.Anchor(Anchor.CenterVertically);
+
+        // Validate results
+        anchor.X.ShouldBe(100);
+        anchor.XUnits.ShouldBe(Gum.Converters.GeneralUnitType.Percentage);
+        anchor.XOrigin.ShouldBe(HorizontalAlignment.Right);
+
+        anchor.Y.ShouldBe(0);
+        anchor.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        anchor.YOrigin.ShouldBe(VerticalAlignment.Center);
+    }
+
+
+    [Fact]
     public void HeightUnits_RelativeToChildren_ShouldUseChildrenHeight_AutoGrid()
     {
         ContainerRuntime parent = new();
