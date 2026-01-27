@@ -346,7 +346,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         null);
                 }
 
-                if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid()))
+                if (GetIfParentStacks() || GetIfParentIsAutoGrid())
                 {
                     // This updates the parent right away:
                     Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
