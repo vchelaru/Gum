@@ -682,26 +682,13 @@ public class Sprite : SpriteBatchRenderableBase,
             objectCausingRendering = ipso;
         }
 
-        Renderer renderer = null;
-        if (managers == null)
-        {
-            renderer = Renderer.Self;
-        }
-        else
-        {
-            renderer = managers.Renderer;
-        }
+        Renderer renderer = managers.Renderer ?? Renderer.Self;
 
-        Texture2D? textureToUse = texture;
+        Texture2D? textureToUse = texture ?? InvalidTexture;
 
         if (textureToUse == null)
         {
-            textureToUse = InvalidTexture;
-
-            if (textureToUse == null)
-            {
-                return;
-            }
+            return;
         }
 
         SpriteEffects effects = SpriteEffects.None;
@@ -712,7 +699,6 @@ public class Sprite : SpriteBatchRenderableBase,
         if (flipHorizontal)
         {
             effects |= SpriteEffects.FlipHorizontally;
-            //rotationInDegrees *= -1;
         }
 
         var rotationInRadians = MathHelper.ToRadians(rotationInDegrees);
