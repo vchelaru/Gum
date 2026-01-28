@@ -222,7 +222,7 @@ namespace Gum.Managers
             ///////////////////////End Early Out/////////////////////////
 
             FilePath standardized = file.RemoveExtension().StandardizedCaseSensitive;
-            var relativeToFolderForType = standardized.RelativeTo(projectDirectory);
+            var relativeToFolderForType = standardized.RelativeTo(projectDirectory).Replace("\\", "/");
 
             if(relativeToFolderForType.StartsWith("Screens/"))
             {
