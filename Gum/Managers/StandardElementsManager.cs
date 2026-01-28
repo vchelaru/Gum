@@ -469,6 +469,15 @@ namespace Gum.Managers
                 stateSave.Name = "Default";
                 AddPositioningVariables(stateSave);
                 AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.AllowFileOptions);
+
+                var borderScaleVariable =
+                    new VariableSave { SetsValue = true, Type = "float", Value = 1f, Name = "BorderScale", Category = "Dimensions" };
+                borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
+                borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
+
+                stateSave.Variables.Add(borderScaleVariable);
+
+
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
@@ -493,6 +502,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateWidth", Category = "Source" });
+
 
                 AddVariableReferenceList(stateSave);
 
