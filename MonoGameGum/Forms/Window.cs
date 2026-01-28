@@ -72,6 +72,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             if (value != _resizeMode)
             {
                 _resizeMode = value;
+                AssignCursorsOnBorders();
 
             }
             ResizeModeChanged?.Invoke(this, EventArgs.Empty);
@@ -83,14 +84,14 @@ public class Window : Gum.Forms.Controls.FrameworkElement
 
     InteractiveGue? titleBar;
 
-    InteractiveGue? borderTopLeft;
-    InteractiveGue? borderTop;
-    InteractiveGue? borderTopRight;
-    InteractiveGue? borderLeft;
-    InteractiveGue? borderRight;
-    InteractiveGue? borderBottomLeft;
-    InteractiveGue? borderBottom;
-    InteractiveGue? borderBottomRight;
+    InteractiveGue? _borderTopLeft;
+    InteractiveGue? _borderTop;
+    InteractiveGue? _borderTopRight;
+    InteractiveGue? _borderLeft;
+    InteractiveGue? _borderRight;
+    InteractiveGue? _borderBottomLeft;
+    InteractiveGue? _borderBottom;
+    InteractiveGue? _borderBottomRight;
 
     public GraphicalUiElement InnerPanel => innerPanel;
 
@@ -152,42 +153,23 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                 titleBar.Dragging += HandleVisualDragging;
             }
 
-            borderTopLeft = Visual.GetGraphicalUiElementByName("BorderTopLeftInstance") as InteractiveGue;
-            TryAssignCursor(borderTopLeft, Cursors.SizeNWSE);
+            _borderTopLeft = Visual.GetGraphicalUiElementByName("BorderTopLeftInstance") as InteractiveGue;
 
-            borderTop = Visual.GetGraphicalUiElementByName("BorderTopInstance") as InteractiveGue;
-            TryAssignCursor(borderTop, Cursors.SizeNS);
+            _borderTop = Visual.GetGraphicalUiElementByName("BorderTopInstance") as InteractiveGue;
 
-            borderTopRight = Visual.GetGraphicalUiElementByName("BorderTopRightInstance") as InteractiveGue;
-            TryAssignCursor(borderTopRight, Cursors.SizeNESW);
+            _borderTopRight = Visual.GetGraphicalUiElementByName("BorderTopRightInstance") as InteractiveGue;
 
-            borderLeft = Visual.GetGraphicalUiElementByName("BorderLeftInstance") as InteractiveGue;
-            TryAssignCursor(borderLeft, Cursors.SizeWE);
+            _borderLeft = Visual.GetGraphicalUiElementByName("BorderLeftInstance") as InteractiveGue;
 
-            borderRight = Visual.GetGraphicalUiElementByName("BorderRightInstance") as InteractiveGue;
-            TryAssignCursor(borderRight, Cursors.SizeWE);
+            _borderRight = Visual.GetGraphicalUiElementByName("BorderRightInstance") as InteractiveGue;
 
-            borderBottomLeft = Visual.GetGraphicalUiElementByName("BorderBottomLeftInstance") as InteractiveGue;
-            TryAssignCursor(borderBottomLeft, Cursors.SizeNESW);
+            _borderBottomLeft = Visual.GetGraphicalUiElementByName("BorderBottomLeftInstance") as InteractiveGue;
 
-            borderBottom = Visual.GetGraphicalUiElementByName("BorderBottomInstance") as InteractiveGue;
-            TryAssignCursor(borderBottom, Cursors.SizeNS);
+            _borderBottom = Visual.GetGraphicalUiElementByName("BorderBottomInstance") as InteractiveGue;
 
-            borderBottomRight = Visual.GetGraphicalUiElementByName("BorderBottomRightInstance") as InteractiveGue;
-            TryAssignCursor(borderBottomRight, Cursors.SizeNWSE);
+            _borderBottomRight = Visual.GetGraphicalUiElementByName("BorderBottomRightInstance") as InteractiveGue;
 
-            void TryAssignCursor(InteractiveGue? interactiveGue, Cursors cursor)
-            {
-                if (interactiveGue == null) return;
-
-                interactiveGue.Push += HandleVisualPush;
-                interactiveGue.Dragging += HandleVisualDragging;
-                var frameworkElement = interactiveGue.FormsControlAsObject as FrameworkElement;
-                if (frameworkElement != null)
-                {
-                    frameworkElement.CustomCursor = cursor;
-                }
-            }
+            AssignCursorsOnBorders();
 
 #if FULL_DIAGNOSTICS
             if (innerPanel == null)
@@ -219,6 +201,44 @@ public class Window : Gum.Forms.Controls.FrameworkElement
         base.ReactToVisualChanged();
     }
 
+    private void AssignCursorsOnBorders()
+    {
+        if(ResizeMode == ResizeMode.CanResize)
+        {
+            TryAssignCursor(_borderTopLeft, Cursors.SizeNWSE);
+            TryAssignCursor(_borderTop, Cursors.SizeNS);
+            TryAssignCursor(_borderTopRight, Cursors.SizeNESW);
+            TryAssignCursor(_borderLeft, Cursors.SizeWE);
+            TryAssignCursor(_borderRight, Cursors.SizeWE);
+            TryAssignCursor(_borderBottomLeft, Cursors.SizeNESW);
+            TryAssignCursor(_borderBottom, Cursors.SizeNS);
+            TryAssignCursor(_borderBottomRight, Cursors.SizeNWSE);
+        }
+        else
+        {
+            TryAssignCursor(_borderTopLeft, null);
+            TryAssignCursor(_borderTop, null);
+            TryAssignCursor(_borderTopRight, null);
+            TryAssignCursor(_borderLeft, null);
+            TryAssignCursor(_borderRight, null);
+            TryAssignCursor(_borderBottomLeft, null);
+            TryAssignCursor(_borderBottom, null);
+            TryAssignCursor(_borderBottomRight, null);
+        }
+
+            void TryAssignCursor(InteractiveGue? interactiveGue, Cursors? cursor)
+            {
+                if (interactiveGue == null) return;
+
+                interactiveGue.Push += HandleVisualPush;
+                interactiveGue.Dragging += HandleVisualDragging;
+                var frameworkElement = interactiveGue.FormsControlAsObject as FrameworkElement;
+                if (frameworkElement != null)
+                {
+                    frameworkElement.CustomCursor = cursor;
+                }
+            }
+    }
 
     float? leftGrabbedInOffset;
     float? topGrabbedInOffset;
@@ -460,20 +480,20 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             var relativeToRightIn = Visual.AbsoluteRight - cursorX;
             var relativeToBottomIn = Visual.AbsoluteBottom - cursorY;
 
-            if (sender == borderTopLeft || sender == borderLeft || sender == borderBottomLeft)
+            if (sender == _borderTopLeft || sender == _borderLeft || sender == _borderBottomLeft)
             {
                 leftGrabbedInOffset = relativeToLeftIn;
             }
-            else if (sender == borderTopRight || sender == borderRight || sender == borderBottomRight)
+            else if (sender == _borderTopRight || sender == _borderRight || sender == _borderBottomRight)
             {
                 rightGrabbedInOffset = relativeToRightIn;
             }
 
-            if (sender == borderTopLeft || sender == borderTop || sender == borderTopRight)
+            if (sender == _borderTopLeft || sender == _borderTop || sender == _borderTopRight)
             {
                 topGrabbedInOffset = relativeToTopIn;
             }
-            else if (sender == borderBottomLeft || sender == borderBottom || sender == borderBottomRight)
+            else if (sender == _borderBottomLeft || sender == _borderBottom || sender == _borderBottomRight)
             {
                 bottomGrabbedInOffset = relativeToBottomIn;
             }

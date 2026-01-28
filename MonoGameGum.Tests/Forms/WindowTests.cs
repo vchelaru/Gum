@@ -127,6 +127,50 @@ public class WindowTests : BaseTestClass
     }
 
     [Fact]
+    public void ResizeMode_ShouldSetCursor()
+    {
+        Window sut = new();
+        InteractiveGue Visual = sut.Visual;
+
+        var borderTopLeft = GetFrameworkElement("BorderTopLeftInstance");
+        var borderTop = GetFrameworkElement("BorderTopInstance");
+        var borderTopRight = GetFrameworkElement("BorderTopRightInstance");
+        var borderLeft = GetFrameworkElement("BorderLeftInstance");
+        var borderRight = GetFrameworkElement("BorderRightInstance");
+        var borderBottomLeft = GetFrameworkElement("BorderBottomLeftInstance");
+        var borderBottom = GetFrameworkElement("BorderBottomInstance");
+        var borderBottomRight = GetFrameworkElement("BorderBottomRightInstance");
+
+        sut.ResizeMode = ResizeMode.CanResize;
+
+        borderTopLeft.CustomCursor.ShouldNotBe(null);
+        borderTop.CustomCursor.ShouldNotBe(null);
+        borderTopRight.CustomCursor.ShouldNotBe(null);
+        borderLeft.CustomCursor.ShouldNotBe(null);
+        borderRight.CustomCursor.ShouldNotBe(null);
+        borderBottomLeft.CustomCursor.ShouldNotBe(null);
+        borderBottom.CustomCursor.ShouldNotBe(null);
+        borderBottomRight.CustomCursor.ShouldNotBe(null);
+
+        sut.ResizeMode = ResizeMode.NoResize;
+
+        borderTopLeft.CustomCursor.ShouldBe(null);
+        borderTop.CustomCursor.ShouldBe(null);
+        borderTopRight.CustomCursor.ShouldBe(null);
+        borderLeft.CustomCursor.ShouldBe(null);
+        borderRight.CustomCursor.ShouldBe(null);
+        borderBottomLeft.CustomCursor.ShouldBe(null);
+        borderBottom.CustomCursor.ShouldBe(null);
+        borderBottomRight.CustomCursor.ShouldBe(null);
+
+        FrameworkElement GetFrameworkElement(string name)
+        {
+            InteractiveGue visual = (InteractiveGue)Visual.GetGraphicalUiElementByName("BorderTopLeftInstance")!;
+            return (FrameworkElement)visual.FormsControlAsObject;
+        }
+    }
+
+    [Fact]
     public void Resizing_ShouldNotShrinkOrShift_BeyondMinimumWidth_LeftSide()
     {
         Mock<ICursor> cursor = CreateMockCursor();
@@ -264,6 +308,8 @@ public class WindowTests : BaseTestClass
         sut.Height.ShouldBe(20);
     }
 
+    #region Utilities
+
     private static Mock<ICursor> CreateMockCursor()
     {
         Mock<ICursor> cursor = new();
@@ -272,4 +318,6 @@ public class WindowTests : BaseTestClass
         cursor.SetupProperty(x => x.WindowOver);
         return cursor;
     }
+
+    #endregion
 }
