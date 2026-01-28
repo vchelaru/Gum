@@ -26,6 +26,9 @@ public class NineSlice : RenderableBase, ITextureCoordinate
 
     public float? TextureHeight => Texture?.Height;
 
+    // border scale is not currently supported here because the built-in NinePatch functionality doesn't support border scaling in raylib.
+    // This means we would have to break apart rendering into individual sprites. That's more than I want to do now
+
     System.Drawing.Rectangle? ITextureCoordinate.SourceRectangle
     {
         get
@@ -148,25 +151,33 @@ public class NineSlice : RenderableBase, ITextureCoordinate
         var destinationRectangle = new Rectangle(
             x, y, this.Width, this.Height);
 
+        int leftSize, rightSize, topSize, bottomSize;
+
+        if (SourceRectangle != null)
+        {
+            var rect = SourceRectangle.Value;
+            leftSize = (int)(rect.Width / 3);
+            rightSize = (int)(rect.Width / 3);
+            topSize = (int)(rect.Height / 3);
+            bottomSize = (int)(rect.Height / 3);
+        }
+        else
+        {
+            leftSize = (int)(nonNullText.Width / 3);
+            rightSize = (int)(nonNullText.Width / 3);
+            topSize = (int)(nonNullText.Height / 3);
+            bottomSize = (int)(nonNullText.Height / 3);
+        }
 
         var nPatchInfo = new NPatchInfo
         {
             Source = SourceRectangle ?? new Raylib_cs.Rectangle(0, 0, nonNullText.Width, nonNullText.Height),
-            Left = nonNullText.Width/3,
-            Top = nonNullText.Height/3,
-            Right = nonNullText.Width - nonNullText.Width/3,
-            Bottom = nonNullText.Height - nonNullText.Height/3,
+            Left = leftSize,
+            Top = topSize,
+            Right = rightSize,
+            Bottom = bottomSize,
             Layout = NPatchLayout.NinePatch
         };
-
-        if(SourceRectangle != null)
-        {
-            var rect = SourceRectangle.Value;
-            nPatchInfo.Left = (int)(rect.Width / 3);
-            nPatchInfo.Right = (int)(rect.Width / 3);
-            nPatchInfo.Top = (int)(rect.Height / 3);
-            nPatchInfo.Bottom = (int)(rect.Height / 3);
-        }
 
         var absoluteRotation = this.GetAbsoluteRotation();
 
