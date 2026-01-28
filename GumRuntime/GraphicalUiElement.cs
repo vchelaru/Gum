@@ -120,18 +120,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         get
         {
-            if(currentDirtyState == null)
+            var toReturn = currentDirtyState.ParentUpdateType;
+
+            if(GetIfParentHasRatioChildren())
             {
-                return ParentUpdateType.None;
+                toReturn = toReturn | ParentUpdateType.IfParentHasRatioSizedChildren;
             }
-            else
+
+            if(GetIfParentStacks())
             {
-                if(GetIfParentHasRatioChildren())
-                {
-                    return currentDirtyState.ParentUpdateType | ParentUpdateType.IfParentHasRatioSizedChildren;
-                }
-                return currentDirtyState.ParentUpdateType;
+                toReturn = toReturn | ParentUpdateType.IfParentStacks;
             }
+            return toReturn;
         }
     }
     bool isFontDirty = false;

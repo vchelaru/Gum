@@ -1411,7 +1411,6 @@ public class GraphicalUiElementTests : BaseTestClass
         gue.Name.ShouldMatch(((InvisibleRenderable)gue.RenderableComponent).Name);
     }
 
-
     [Fact]
     public void Visible_ShouldUpdateChildren_IfWidthUnitsRatio()
     {
@@ -1445,5 +1444,35 @@ public class GraphicalUiElementTests : BaseTestClass
         rightChild.GetAbsoluteWidth().ShouldBe(100);
         sut.GetAbsoluteWidth().ShouldBe(100);
 
+    }
+
+    [Fact]
+    public void Visible_ShouldUpdateChildren_IfLeftToRightStack()
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 200;
+        parent.WidthUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+        ContainerRuntime leftChild = new();
+        parent.AddChild(leftChild);
+        leftChild.Width = 100;
+        leftChild.WidthUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime rightChild = new();
+        parent.AddChild(rightChild);
+        // Doesn't really matter if we anchor but let's do it to make this test more realistic
+        rightChild.Width = 100;
+        rightChild.WidthUnits = DimensionUnitType.Absolute;
+
+        rightChild.GetAbsoluteLeft().ShouldBe(100);
+
+        leftChild.Visible = false;
+
+        rightChild.GetAbsoluteLeft().ShouldBe(0);
+
+        leftChild.Visible = true;
+
+        rightChild.GetAbsoluteLeft().ShouldBe(100);
     }
 }
