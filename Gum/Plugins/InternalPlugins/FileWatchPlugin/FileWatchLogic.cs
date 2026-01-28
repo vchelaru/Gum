@@ -1,21 +1,25 @@
-﻿using Gum.Managers;
+﻿using Gum.Commands;
+using Gum.Managers;
 using Gum.Services;
 using Gum.ToolStates;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
 
 namespace Gum.Logic.FileWatch;
 
-public class FileWatchLogic : Singleton<FileWatchLogic>
+public class FileWatchLogic
 {
     FileWatchManager _fileWatchManager;
+    private readonly IGuiCommands _guiCommands;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
     public FileWatchLogic()
     {
-        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>(); 
+        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
     }
 
     public void HandleProjectLoaded()
@@ -43,7 +47,7 @@ public class FileWatchLogic : Singleton<FileWatchLogic>
         }
     }
 
-    private static HashSet<FilePath> GetFileWatchRootDirectories()
+    private HashSet<FilePath> GetFileWatchRootDirectories()
     {
         HashSet<FilePath> directories = new HashSet<FilePath>();
 
@@ -70,13 +74,13 @@ public class FileWatchLogic : Singleton<FileWatchLogic>
                 .Where(item => item != null)
                 // to make it easier to debug:
                 .ToHashSet();
-            foreach(var directory in directoriesToAdd)
+            foreach (var directory in directoriesToAdd)
             {
                 // check if the root of this directory is already here:
                 var isAlreadyHandled = directories
                     .Any(item => item.IsRootOf(directory));
 
-                if(!isAlreadyHandled)
+                if (!isAlreadyHandled)
                 {
                     directories.Add(directory);
                 }
@@ -86,24 +90,45 @@ public class FileWatchLogic : Singleton<FileWatchLogic>
 
         foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
         {
-            var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(screen);
+            try
+            {
+                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(screen);
 
-            AddRange(filesReferenced);
+                AddRange(filesReferenced);
+            }
+            catch (Exception e)
+            {
+                _guiCommands.PrintOutput(e.ToString());
+            }
         }
         foreach (var component in ProjectState.Self.GumProjectSave.Components)
         {
-            var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(component);
-            AddRange(filesReferenced);
+            try
+            {
+                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(component);
+                AddRange(filesReferenced);
+            }
+            catch (Exception e)
+            {
+                _guiCommands.PrintOutput(e.ToString());
+            }
         }
         foreach (var standardElement in ProjectState.Self.GumProjectSave.StandardElements)
         {
-            var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(standardElement);
-            AddRange(filesReferenced);
+            try
+            {
+                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(standardElement);
+                AddRange(filesReferenced);
+            }
+            catch (Exception e)
+            {
+                _guiCommands.PrintOutput(e.ToString());
+            }
         }
 
         FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
 
-        if(gumProjectFilePath != null)
+        if (gumProjectFilePath != null)
         {
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
             directories.Add(gumProjectFilePath.GetDirectoryContainingThis());
