@@ -6638,20 +6638,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #region Cursor/Position Hit Testing
 
+    protected virtual bool IsOutsideOfBoundsHitTestingEnabled => this.Tag is ScreenSave;
 
-    public bool IsPointInside(float x, float y)
-    {
-        var asIpso = this as IRenderableIpso;
-
-        var absoluteX = asIpso.GetAbsoluteX();
-        var absoluteY = asIpso.GetAbsoluteY();
-
-        return
-            x > absoluteX &&
-            y > absoluteY &&
-            x < absoluteX + this.GetAbsoluteWidth() &&
-            y < absoluteY + this.GetAbsoluteHeight();
-    }
+    public virtual bool IsPointInside(float x, float y) => ((IRenderableIpso)this).HasCursorOver(x, y);
 
     #endregion
 

@@ -571,6 +571,10 @@ public partial class InteractiveGue : BindableGue
         return handledByThis || handledByChild;
     }
 
+    protected override bool IsOutsideOfBoundsHitTestingEnabled =>
+        RaiseChildrenEventsOutsideOfBounds == true || this.Tag is ScreenSave;
+
+
     /// <summary>
     /// Returns whether the argument cursor is over this instance. If RaiseChildrenEventsOutsideOfBounds is set
     /// to true, then each of the individual chilren are also checked if the cursor is not inside this object's bounds.
@@ -589,7 +593,7 @@ public partial class InteractiveGue : BindableGue
 
         toReturn = CheckHasCursorOverOnThis(this, cursor, layer, toReturn);
 
-        if (!toReturn && (this?.RaiseChildrenEventsOutsideOfBounds == true || this.Tag is ScreenSave))
+        if (!toReturn && IsOutsideOfBoundsHitTestingEnabled)
         {
             toReturn = IsOverChildren(this, cursor, layer);
         }
@@ -671,8 +675,7 @@ public partial class InteractiveGue : BindableGue
 
                 // for now we'll just rely on the bounds of the GUE itself
 
-                toReturn = global::RenderingLibrary.IPositionedSizedObjectExtensionMethods.HasCursorOver(
-                    thisInstance, worldX, worldY);
+                toReturn = thisInstance.IsPointInside(worldX, worldY);
             }
             else
             {
