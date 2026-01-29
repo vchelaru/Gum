@@ -16,7 +16,7 @@ The Wrap variable applies when dealing with a **Texture Address** of **Custom** 
 If Texture Address is set to Custom then wrapping is available. All examples in the Custom Texture Address section use the following values:
 
 * Width = 100
-* Width Units = Percentage of File Width&#x20;
+* Width Units = Percentage of File Width
 * Height = 100
 * Height Units = Percentage of File Height
 
@@ -43,7 +43,7 @@ If Wrap is set to true, then wrapping happens for any area to the right or botto
 {% hint style="info" %}
 If a Sprite's Texture Left or Texture Top are set to less than 0 then the Sprite clamps this area. This may change to wrap in future versions of Gum so this behavior should not be relied upon.
 
-![](<../../../.gitbook/assets/image (130).png>)
+<img src="../../../.gitbook/assets/image (130).png" alt="" data-size="original">
 {% endhint %}
 
 ### Wrap and DimensionsBased
@@ -68,4 +68,3 @@ If a Sprite's width or height are adjusted, this results in its texture coordina
 Wrapping can also be affected by changing the Texture Width Scale or Texture Height Scale. Smaller values result in image being drawn smaller, making it wrap more.
 
 <figure><img src="../../../.gitbook/assets/22_09 40 21.gif" alt=""><figcaption></figcaption></figure>
-
