@@ -6,7 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## Upgrading Runtime
 
-Upgrade your Gum NuGet packages to version 2026.1.3.1. For more information, see the NuGet packages for your particular platform:
+Upgrade your Gum NuGet packages to version **2026.1.29.1**. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
