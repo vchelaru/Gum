@@ -4524,6 +4524,113 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return whatToStackAfter as GraphicalUiElement;
     }
 
+
+    public void SuspendLayout(bool recursive = false)
+    {
+        mIsLayoutSuspended = true;
+
+        if (recursive)
+        {
+            if (this.Children?.Count > 0)
+            {
+                var count = Children.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    var asGraphicalUiElement = Children[i];
+                    asGraphicalUiElement?.SuspendLayout(true);
+                }
+            }
+            else
+            {
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    mWhatThisContains[i].SuspendLayout(true);
+                }
+
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clears the layout and font dirty state, resulting in no layout logic being
+    /// performed on the next resume layout. This method should only be used 
+    /// if you intend to manually perform layouts after a layout resume. Otherwise, calling
+    /// this can cause layouts to behave incorrectly
+    /// </summary>
+    public void ClearDirtyLayoutState()
+    {
+        currentDirtyState = null;
+        isFontDirty = false;
+    }
+
+    public void ResumeLayout(bool recursive = false)
+    {
+        mIsLayoutSuspended = false;
+
+        if (recursive)
+        {
+            if (!IsAllLayoutSuspended)
+            {
+
+                ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+        else
+        {
+            if (isFontDirty)
+            {
+                if (!IsAllLayoutSuspended)
+                {
+                    this.UpdateToFontValues();
+                    isFontDirty = false;
+                }
+            }
+            if (currentDirtyState != null)
+            {
+                UpdateLayout(EffectiveDirtyStateParentUpdateType,
+                    currentDirtyState.ChildrenUpdateDepth,
+                    currentDirtyState.XOrY);
+            }
+        }
+    }
+
+    private bool ResumeLayoutUpdateIfDirtyRecursive()
+    {
+
+        mIsLayoutSuspended = false;
+        UpdateFontRecursive();
+
+        var didCallUpdateLayout = false;
+
+        if (currentDirtyState != null)
+        {
+            didCallUpdateLayout = true;
+            UpdateLayout(EffectiveDirtyStateParentUpdateType,
+                currentDirtyState.ChildrenUpdateDepth,
+                currentDirtyState.XOrY);
+        }
+
+        if (this.Children?.Count > 0)
+        {
+            var count = Children.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var asGraphicalUiElement = Children[i];
+                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+        else
+        {
+            int count = mWhatThisContains.Count;
+            for (int i = 0; i < count; i++)
+            {
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+
+        return didCallUpdateLayout;
+    }
+
     #endregion
 
     #region Alignment (Anchor/Dock)
@@ -6114,126 +6221,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
 
-    public bool IsPointInside(float x, float y)
-    {
-        var asIpso = this as IRenderableIpso;
-
-        var absoluteX = asIpso.GetAbsoluteX();
-        var absoluteY = asIpso.GetAbsoluteY();
-
-        return
-            x > absoluteX &&
-            y > absoluteY &&
-            x < absoluteX + this.GetAbsoluteWidth() &&
-            y < absoluteY + this.GetAbsoluteHeight();
-    }
-
-
-    public void SuspendLayout(bool recursive = false)
-    {
-        mIsLayoutSuspended = true;
-
-        if (recursive)
-        {
-            if (this.Children?.Count > 0)
-            {
-                var count = Children.Count;
-                for (int i = 0; i < count; i++)
-                {
-                    var asGraphicalUiElement = Children[i];
-                    asGraphicalUiElement?.SuspendLayout(true);
-                }
-            }
-            else
-            {
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
-                {
-                    mWhatThisContains[i].SuspendLayout(true);
-                }
-
-            }
-        }
-    }
-
-    /// <summary>
-    /// Clears the layout and font dirty state, resulting in no layout logic being
-    /// performed on the next resume layout. This method should only be used 
-    /// if you intend to manually perform layouts after a layout resume. Otherwise, calling
-    /// this can cause layouts to behave incorrectly
-    /// </summary>
-    public void ClearDirtyLayoutState()
-    {
-        currentDirtyState = null;
-        isFontDirty = false;
-    }
-
-    public void ResumeLayout(bool recursive = false)
-    {
-        mIsLayoutSuspended = false;
-
-        if (recursive)
-        {
-            if (!IsAllLayoutSuspended)
-            {
-
-                ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-        else
-        {
-            if (isFontDirty)
-            {
-                if (!IsAllLayoutSuspended)
-                {
-                    this.UpdateToFontValues();
-                    isFontDirty = false;
-                }
-            }
-            if (currentDirtyState != null)
-            {
-                UpdateLayout(EffectiveDirtyStateParentUpdateType,
-                    currentDirtyState.ChildrenUpdateDepth,
-                    currentDirtyState.XOrY);
-            }
-        }
-    }
-
-    private bool ResumeLayoutUpdateIfDirtyRecursive()
-    {
-
-        mIsLayoutSuspended = false;
-        UpdateFontRecursive();
-
-        var didCallUpdateLayout = false;
-
-        if (currentDirtyState != null)
-        {
-            didCallUpdateLayout = true;
-            UpdateLayout(EffectiveDirtyStateParentUpdateType,
-                currentDirtyState.ChildrenUpdateDepth,
-                currentDirtyState.XOrY);
-        }
-
-        if (this.Children?.Count > 0)
-        {
-            var count = Children.Count;
-            for (int i = 0; i < count; i++)
-            {
-                var asGraphicalUiElement = Children[i];
-                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-        else
-        {
-            int count = mWhatThisContains.Count;
-            for (int i = 0; i < count; i++)
-            {
-                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-
-        return didCallUpdateLayout;
-    }
 
     #endregion
 
@@ -6649,6 +6636,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    #region Cursor/Position Hit Testing
+
+    protected virtual bool IsOutsideOfBoundsHitTestingEnabled => this.Tag is ScreenSave;
+
+    public virtual bool IsPointInside(float x, float y) => ((IRenderableIpso)this).HasCursorOver(x, y);
+
+    #endregion
 
     #region AnimationChain 
 

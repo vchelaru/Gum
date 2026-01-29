@@ -335,8 +335,8 @@ public partial class InteractiveGue : BindableGue
         bool handledByChild = false;
         bool handledByThis = false;
 
-        bool isOver = HasCursorOver(cursor, currentItem, layer);
         var asInteractive = currentItem as InteractiveGue;
+        bool isOver = asInteractive?.HasCursorOver(cursor, layer) ?? HasCursorOver(cursor, currentItem, layer);
 
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
@@ -395,14 +395,22 @@ public partial class InteractiveGue : BindableGue
                 // Let's see if any children have the cursor over:
                 for (int i = currentItem.Children.Count - 1; i > -1; i--)
                 {
-                    var child = currentItem.Children[i] as GraphicalUiElement;
-                        // Children should always have the opportunity to handle activity,
-                        // even if they are not components, because they may contain components as their children
+                    var child = currentItem.Children[i];
+                    // Children should always have the opportunity to handle activity,
+                    // even if they are not components, because they may contain components as their children
 
 
                     // If the child either has events or exposes children events, then give it a chance to handle this activity.
-
-                    if (child != null && HasCursorOver(cursor, child, layer))
+                    bool hasCursorOver = false;
+                    if(child is InteractiveGue interactiveGue)
+                    {
+                        hasCursorOver = interactiveGue.HasCursorOver(cursor, layer);
+                    }
+                    else if(child != null)
+                    {
+                        hasCursorOver = HasCursorOver(cursor, child, layer);
+                    }
+                    if (hasCursorOver)
                     {
                         handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
 
@@ -563,6 +571,10 @@ public partial class InteractiveGue : BindableGue
         return handledByThis || handledByChild;
     }
 
+    protected override bool IsOutsideOfBoundsHitTestingEnabled =>
+        RaiseChildrenEventsOutsideOfBounds == true || this.Tag is ScreenSave;
+
+
     /// <summary>
     /// Returns whether the argument cursor is over this instance. If RaiseChildrenEventsOutsideOfBounds is set
     /// to true, then each of the individual chilren are also checked if the cursor is not inside this object's bounds.
@@ -573,39 +585,55 @@ public partial class InteractiveGue : BindableGue
     /// </remarks>
     /// <param name="cursor">The cursor to check whether it is over this.</param>
     /// <returns>Whether the cursor is over this.</returns>
-    public virtual bool HasCursorOver(ICursor cursor)
+    public virtual bool HasCursorOver(ICursor cursor, Layer? layer = null)
     {
-        var layer = (this.GetTopParent() as GraphicalUiElement).Layer;
-        return HasCursorOver(cursor, this, layer);
+        layer = layer ?? (this.GetTopParent() as GraphicalUiElement).Layer;
+
+        bool toReturn = false;
+
+        toReturn = CheckHasCursorOverOnThis(this, cursor, layer, toReturn);
+
+        if (!toReturn && IsOutsideOfBoundsHitTestingEnabled)
+        {
+            toReturn = IsOverChildren(this, cursor, layer);
+        }
+
+        return toReturn;
+
+
     }
 
     private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance, Layer? layer)
-    { 
+    {
         bool toReturn = false;
 
         var asInteractive = thisInstance as InteractiveGue;
+        toReturn = CheckHasCursorOverOnThis(thisInstance, cursor, layer, toReturn);
 
+        if (!toReturn && (asInteractive?.RaiseChildrenEventsOutsideOfBounds == true || thisInstance.Tag is ScreenSave))
+        {
+            toReturn = IsOverChildren(thisInstance, cursor, layer);
+        }
+
+        return toReturn;
+    }
+
+    private static bool CheckHasCursorOverOnThis(GraphicalUiElement thisInstance, ICursor cursor, Layer? layer, bool toReturn)
+    {
         // If this is a touch screen, then the only way the cursor is over any
         // UI element is if the cursor is being pressed.
         // Even though the finger is technically not over any UI element when 
         // the user lifts it, we still want to consider UI logic so that the click action
         // can apply and events can be raised
-        // todo - implement it later
-        //var shouldConsiderBasedOnInput = cursor.LastInputDevice != InputDevice.TouchScreen ||
-        //    cursor.PrimaryDown ||
-        //    cursor.PrimaryClick;
-
-        bool shouldConsiderBasedOnInput = true;
+        var shouldConsiderBasedOnInput = cursor.LastInputDevice != InputDevice.TouchScreen ||
+            cursor.PrimaryDown ||
+            cursor.PrimaryClick;
 
         var shouldProcess = shouldConsiderBasedOnInput &&
              (thisInstance as IVisible).AbsoluteVisible == true;
 
         if (shouldProcess)
         {
-            int cursorScreenX = cursor.X;
-            int cursorScreenY = cursor.Y;
-            float worldX;
-            float worldY;
 
             var managers = thisInstance.EffectiveManagers as ISystemManagers ?? ISystemManagers.Default;
 
@@ -619,6 +647,10 @@ public partial class InteractiveGue : BindableGue
 
             if (managers != null)
             {
+                int cursorScreenX = cursor.X;
+                int cursorScreenY = cursor.Y;
+                float worldX;
+                float worldY;
                 // Adjust by viewport values:
                 // todo ...
                 //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
@@ -643,8 +675,7 @@ public partial class InteractiveGue : BindableGue
 
                 // for now we'll just rely on the bounds of the GUE itself
 
-                toReturn = global::RenderingLibrary.IPositionedSizedObjectExtensionMethods.HasCursorOver(
-                    thisInstance, worldX, worldY);
+                toReturn = thisInstance.IsPointInside(worldX, worldY);
             }
             else
             {
@@ -656,31 +687,46 @@ public partial class InteractiveGue : BindableGue
             }
         }
 
-        if (!toReturn && (asInteractive?.RaiseChildrenEventsOutsideOfBounds == true || thisInstance.Tag is ScreenSave  ))
+        return toReturn;
+    }
+
+    protected static bool IsOverChildren(GraphicalUiElement thisInstance, ICursor cursor, Layer? layer)
+    {
+        bool toReturn = false;
+        if (thisInstance.Children == null)
         {
-            if(thisInstance.Children == null)
+            // It's a screen
+            foreach (var child in thisInstance.ContainedElements)
             {
-                // It's a screen
-                foreach(var child in thisInstance.ContainedElements)
+                if (HasCursorOver(cursor, child, layer))
                 {
-                    if (HasCursorOver(cursor, child, layer))
+                    toReturn = true;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < thisInstance.Children.Count; i++)
+            {
+                var child = thisInstance.Children[i] as GraphicalUiElement;
+
+                if(child is InteractiveGue asInteractiveGue)
+                {
+                    if(asInteractiveGue.HasCursorOver(cursor, layer))
                     {
                         toReturn = true;
                         break;
                     }
                 }
-            }
-            else
-            {
-                for (int i = 0; i < thisInstance.Children.Count; i++)
+                else
                 {
-                    var child = thisInstance.Children[i] as GraphicalUiElement;
-
                     if (child != null && HasCursorOver(cursor, child, layer))
                     {
                         toReturn = true;
                         break;
                     }
+
                 }
             }
         }
