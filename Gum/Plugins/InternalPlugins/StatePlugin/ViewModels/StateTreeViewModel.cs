@@ -62,7 +62,7 @@ public class StateTreeViewModel : ViewModel
 
     bool IsPushingChangesToGum = true;
 
-    private void HandleItemVmPropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void HandleItemVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
 
         if(e.PropertyName == nameof(StateTreeViewItem.IsSelected))

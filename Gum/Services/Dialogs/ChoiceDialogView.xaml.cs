@@ -24,7 +24,7 @@ public partial class ChoiceDialogView : UserControl
         InitializeComponent();
     }
 
-    private void ToggleButton_OnChecked(object sender, RoutedEventArgs e)
+    private void ToggleButton_OnChecked(object? sender, RoutedEventArgs e)
     {
         if (sender is RadioButton { Content: string content, IsChecked: true } &&
             DataContext is ChoiceDialogViewModel vm)

@@ -342,12 +342,12 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
     #region Events
 
-    public event EventHandler StartRegionChanged;
-    public new event EventHandler RegionChanged;
-    public event EventHandler EndRegionChanged;
+    public event EventHandler? StartRegionChanged;
+    public new event EventHandler? RegionChanged;
+    public event EventHandler? EndRegionChanged;
 
-    public event EventHandler MouseWheelZoom;
-    public event Action Panning;
+    public event EventHandler? MouseWheelZoom;
+    public event Action? Panning;
     #endregion
 
     #region Methods
@@ -479,17 +479,17 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         }
     }
 
-    private void HandleStartRegionChanged(object sender, EventArgs e)
+    private void HandleStartRegionChanged(object? sender, EventArgs e)
     {
         StartRegionChanged?.Invoke(this, null);
     }
 
-    void RegionChangedInternal(object sender, EventArgs e)
+    void RegionChangedInternal(object? sender, EventArgs e)
     {
         RegionChanged?.Invoke(this, null);
     }
 
-    void EndRegionChangedInternal(object sender, EventArgs e)
+    void EndRegionChangedInternal(object? sender, EventArgs e)
     {
         EndRegionChanged?.Invoke(this, null);
     }
@@ -522,7 +522,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         }
     }
 
-    void HandleMouseWheel(object sender, MouseEventArgs e)
+    void HandleMouseWheel(object? sender, MouseEventArgs e)
     {
         if (mAvailableZoomLevels != null)
         {

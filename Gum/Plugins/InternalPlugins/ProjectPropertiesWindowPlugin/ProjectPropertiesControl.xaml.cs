@@ -43,7 +43,7 @@ public partial class ProjectPropertiesControl : UserControl
         InitializeComponent();
     }
 
-    private void CancelButtonClicked(object sender, RoutedEventArgs e)
+    private void CancelButtonClicked(object? sender, RoutedEventArgs e)
     {
         CloseClicked?.Invoke(this, null);
     }

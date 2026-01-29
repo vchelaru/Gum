@@ -25,12 +25,12 @@ namespace Gum
             InitializeComponent();
         }
 
-        private void HandleAddVariableClicked(object sender, RoutedEventArgs e)
+        private void HandleAddVariableClicked(object? sender, RoutedEventArgs e)
         {
             AddVariableClicked?.Invoke(this, null);
         }
 
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
             SelectedBehaviorVariableChanged?.Invoke(this, null);
         }

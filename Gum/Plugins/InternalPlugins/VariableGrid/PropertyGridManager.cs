@@ -149,12 +149,12 @@ public partial class PropertyGridManager
         InitializeRightClickMenu();
     }
 
-    private void HandleBehaviorVariableSelected(object sender, EventArgs e)
+    private void HandleBehaviorVariableSelected(object? sender, EventArgs e)
     {
         _selectedState.SelectedBehaviorVariable = PropertyGridManager.Self.SelectedBehaviorVariable;
     }
 
-    private void HandleAddVariable(object sender, EventArgs e)
+    private void HandleAddVariable(object? sender, EventArgs e)
     {
         var canShow = _selectedState.SelectedBehavior != null || _selectedState.SelectedElement != null;
 

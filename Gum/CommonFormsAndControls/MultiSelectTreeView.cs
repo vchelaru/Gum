@@ -7,6 +7,8 @@ using System.Windows.Forms;
 
 namespace CommonFormsAndControls
 {
+    // The WndProc(ref Message) override uses Windows message constants like WM_ERASEBKGND = 0x0014, which is low-level Windows API interaction. Some analyzers may flag this as "P/Invoke-adjacent" code.
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1060:Move pinvokes to native methods class")]
     public partial class MultiSelectTreeView : TreeView, IEnumerable<TreeNode>
     {
         #region Fields  
@@ -655,7 +657,7 @@ namespace CommonFormsAndControls
             }
         }
 
-        public void CallAfterClickSelect(object sender, TreeViewEventArgs args)
+        public void CallAfterClickSelect(object? sender, TreeViewEventArgs args)
         {
             AfterClickSelect?.Invoke(sender, args);
         }

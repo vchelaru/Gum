@@ -31,7 +31,7 @@ namespace Gum.Gui.Forms
             }
         }
 
-        private void checkedListBox1_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void checkedListBox1_ItemCheck(object? sender, ItemCheckEventArgs e)
         {
             PluginContainer container = checkedListBox1.Items[e.Index] as PluginContainer;
             bool isShuttingDown = e.CurrentValue == CheckState.Checked &&

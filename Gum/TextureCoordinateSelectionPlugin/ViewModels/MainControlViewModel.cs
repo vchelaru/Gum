@@ -76,7 +76,7 @@ public class MainControlViewModel : ViewModel
 
     }
 
-    private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         ////////////////////////////Early Out////////////////////////////////
         if (_isSavingSuppressed)

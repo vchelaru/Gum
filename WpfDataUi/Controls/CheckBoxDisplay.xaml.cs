@@ -14,30 +14,29 @@ namespace WpfDataUi.Controls
     {
         #region Fields
 
-        InstanceMember mInstanceMember;
-        Type mInstancePropertyType;
+        InstanceMember? _instanceMember;
 
         #endregion
 
         #region Properties
 
-        public InstanceMember InstanceMember
+        public InstanceMember? InstanceMember
         {
             get
             {
-                return mInstanceMember;
+                return _instanceMember;
             }
             set
             {
-                bool instanceMemberChanged = mInstanceMember != value;
-                if (mInstanceMember != null && instanceMemberChanged)
+                bool instanceMemberChanged = _instanceMember != value;
+                if (_instanceMember != null && instanceMemberChanged)
                 {
-                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                    _instanceMember.PropertyChanged -= HandlePropertyChange;
                 }
-                mInstanceMember = value;
-                if (mInstanceMember != null && instanceMemberChanged)
+                _instanceMember = value;
+                if (_instanceMember != null && instanceMemberChanged)
                 {
-                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                    _instanceMember.PropertyChanged += HandlePropertyChange;
                 }
 
                 if (instanceMemberChanged)
@@ -65,7 +64,11 @@ namespace WpfDataUi.Controls
         {
             get
             {
-                if (InstanceMember.IsDefault)
+                if(InstanceMember == null)
+                {
+                    return Brushes.Black;
+                }
+                else if (InstanceMember.IsDefault)
                 {
                     return Brushes.Green;
                 }
@@ -99,13 +102,6 @@ namespace WpfDataUi.Controls
         {
             SuppressSettingProperty = true;
 
-            if (this.HasEnoughInformationToWork())
-            {
-                Type type = this.GetPropertyType();
-
-                mInstancePropertyType = type;
-            }
-
             object valueOnInstance;
             bool successfulGet = this.TryGetValueOnInstance(out valueOnInstance);
             if (successfulGet)
@@ -120,7 +116,7 @@ namespace WpfDataUi.Controls
                     this.CheckBox.IsChecked = false;
                 }
             }
-            this.CheckBox.Content = InstanceMember.DisplayName;
+            this.CheckBox.Content = InstanceMember?.DisplayName ?? string.Empty;
             this.RefreshContextMenu(CheckBox.ContextMenu);
 
 
@@ -176,7 +172,7 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.Success;
         }
 
-        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
@@ -189,7 +185,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void CheckBoxChanged(object sender, RoutedEventArgs e)
+        private void CheckBoxChanged(object? sender, RoutedEventArgs e)
         {
             if (!SuppressSettingProperty)
             {

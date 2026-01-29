@@ -78,7 +78,7 @@ public static class SelectedItemsBehavior
         finally { SetIsUpdating(selector, false); }
     }
 
-    private static void Selector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private static void Selector_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (sender is not Selector selector) return;
         var target = GetSelectedItems(selector);

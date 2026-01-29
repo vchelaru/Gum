@@ -21,7 +21,7 @@ namespace Gum.Plugins.ImportPlugin.Views
             InitializeComponent();
         }
 
-        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TextBox_PreviewKeyDown(object? sender, KeyEventArgs e)
         {
             int current = ListBoxInstance.SelectedIndex;
             int max = ListBoxInstance.Items.Count - 1;

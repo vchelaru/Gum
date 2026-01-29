@@ -15,7 +15,7 @@ namespace WpfDataUi
 
     public interface IDataUi
     {
-        InstanceMember InstanceMember { get; set; }
+        InstanceMember? InstanceMember { get; set; }
         bool SuppressSettingProperty { get; set; }
         void Refresh(bool forceRefreshEvenIfFocused = false);
 

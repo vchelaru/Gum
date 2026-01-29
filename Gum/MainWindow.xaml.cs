@@ -65,17 +65,17 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         Close();
     }
 
-    private void OnMinimizeButtonClick(object sender, RoutedEventArgs e)
+    private void OnMinimizeButtonClick(object? sender, RoutedEventArgs e)
     {
         this.WindowState = WindowState.Minimized;
     }
 
-    private void OnMaximizeButtonClick(object sender, RoutedEventArgs e)
+    private void OnMaximizeButtonClick(object? sender, RoutedEventArgs e)
     {
         this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     }
 
-    private void OnCloseButtonClick(object sender, RoutedEventArgs e)
+    private void OnCloseButtonClick(object? sender, RoutedEventArgs e)
     {
         Locator.GetRequiredService<IMessenger>().Send(new CloseMainWindowMessage());
     }

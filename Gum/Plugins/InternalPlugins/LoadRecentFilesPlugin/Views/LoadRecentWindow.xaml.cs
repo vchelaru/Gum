@@ -22,7 +22,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views
             this.Loaded += HandleLoaded;
         }
 
-        private void HandleLoaded(object sender, RoutedEventArgs e)
+        private void HandleLoaded(object? sender, RoutedEventArgs e)
         {
             //this.MoveToCursor();
 
@@ -47,7 +47,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views
         //    }
         //}
 
-        private void ListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void ListBox_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
         {
             if (ViewModel.CanExecuteAffirmative())
             {

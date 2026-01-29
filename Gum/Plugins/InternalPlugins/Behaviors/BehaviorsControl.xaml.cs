@@ -24,7 +24,7 @@ namespace Gum.Plugins.Behaviors
             _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
-        private void HandleEditClick(object sender, RoutedEventArgs e)
+        private void HandleEditClick(object? sender, RoutedEventArgs e)
         {
             var component = _selectedState.SelectedComponent;
             if(component != null)
@@ -34,14 +34,14 @@ namespace Gum.Plugins.Behaviors
             ViewModel.IsEditing = true;
         }
 
-        private void OkClick(object sender, RoutedEventArgs e)
+        private void OkClick(object? sender, RoutedEventArgs e)
         {
             ViewModel.HandleOkEditClick();
             ViewModel.IsEditing = false;
         }
 
 
-        private void CancelClick(object sender, RoutedEventArgs e)
+        private void CancelClick(object? sender, RoutedEventArgs e)
         {
             ViewModel.IsEditing = false;
         }

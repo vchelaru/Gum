@@ -33,17 +33,17 @@ namespace TextureCoordinateSelectionPlugin.Views
             InnerControl.DisableHotkeyPanning();
         }
 
-        private void HandleKeyDown(object sender, KeyEventArgs e)
+        private void HandleKeyDown(object? sender, KeyEventArgs e)
         {
             ImageRegionKeyDown?.Invoke(null, e);
         }
 
-        private void HandleMinusClicked(object sender, RoutedEventArgs e)
+        private void HandleMinusClicked(object? sender, RoutedEventArgs e)
         {
             ViewModel.ZoomOut();
         }
 
-        private void HandlePlusClicked(object sender, RoutedEventArgs e)
+        private void HandlePlusClicked(object? sender, RoutedEventArgs e)
         {
             ViewModel.ZoomIn();
         }

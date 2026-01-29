@@ -47,7 +47,7 @@ namespace StateAnimationPlugin.Views
 
          //Next step:  Make animations vs. state interpolations visibly different in the tree view
 
-        private void TextBox_KeyDown(object sender, KeyEventArgs e)
+        private void TextBox_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {

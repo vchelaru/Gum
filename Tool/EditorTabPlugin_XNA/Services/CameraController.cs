@@ -19,7 +19,7 @@ public class CameraController
 
     System.Drawing.Point mLastMouseLocation;
 
-    public event Action CameraChanged;
+    public event Action? CameraChanged;
     HotkeyManager _hotkeyManager;
 
     public void Initialize(Camera camera, 
@@ -33,7 +33,7 @@ public class CameraController
         Renderer.Self.Camera.Y = - 30;
     }
 
-    internal void HandleMouseWheel(object sender, MouseEventArgs e)
+    internal void HandleMouseWheel(object? sender, MouseEventArgs e)
     {
         float worldX, worldY;
         Camera.ScreenToWorld(e.X, e.Y, out worldX, out worldY);
@@ -66,7 +66,7 @@ public class CameraController
         }
     }
 
-    internal void HandleMouseDown(object sender, MouseEventArgs e)
+    internal void HandleMouseDown(object? sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Middle)
         {
@@ -74,7 +74,7 @@ public class CameraController
         }
     }
 
-    internal void HandleMouseMove(object sender, MouseEventArgs e)
+    internal void HandleMouseMove(object? sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Middle)
         {

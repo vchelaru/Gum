@@ -21,7 +21,7 @@ public class MenuItemExposedClick : MenuItem
         this.SetClick(MakeDefault);
     }
 
-    private void MakeDefault(object sender, RoutedEventArgs e)
+    private void MakeDefault(object? sender, RoutedEventArgs e)
     {
         Owner.InstanceMember.IsDefault = true;
         Owner.Refresh();

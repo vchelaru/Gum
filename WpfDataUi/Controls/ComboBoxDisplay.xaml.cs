@@ -17,7 +17,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     #region Fields
 
 
-    InstanceMember mInstanceMember;
+    InstanceMember? _instanceMember;
 
 
     Type mInstancePropertyType;
@@ -28,23 +28,23 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
 
     #region Properties
 
-    public InstanceMember InstanceMember
+    public InstanceMember? InstanceMember
     {
         get
         {
-            return mInstanceMember;
+            return _instanceMember;
         }
         set
         {
-            bool instanceMemberChanged = mInstanceMember != value;
-            if (mInstanceMember != null && instanceMemberChanged)
+            bool instanceMemberChanged = _instanceMember != value;
+            if (_instanceMember != null && instanceMemberChanged)
             {
-                mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                _instanceMember.PropertyChanged -= HandlePropertyChange;
             }
-            mInstanceMember = value;
-            if (mInstanceMember != null && instanceMemberChanged)
+            _instanceMember = value;
+            if (_instanceMember != null && instanceMemberChanged)
             {
-                mInstanceMember.PropertyChanged += HandlePropertyChange;
+                _instanceMember.PropertyChanged += HandlePropertyChange;
             }
 
             if (instanceMemberChanged)
@@ -116,7 +116,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         this.ComboBox.PreviewKeyDown += HandlePreviewKeyDown;
     }
 
-    private void HandlePreviewKeyDown(object sender, KeyEventArgs e)
+    private void HandlePreviewKeyDown(object? sender, KeyEventArgs e)
     {
         // by suppressing CTRL+Z, we prevent it from
         // undoing a change to a bad value as shown here:
@@ -129,7 +129,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         }
     }
 
-    private void HandleIsKeyboardFocusChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private void HandleIsKeyboardFocusChanged(object? sender, DependencyPropertyChangedEventArgs e)
     {
         // Sept 15, 2021
         // This is an interesting bug...
@@ -426,7 +426,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     }
 
     bool isInSelectionChanged = false;
-    private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         // August 17, 2021 - If we check ComboBox.IsKeyboardFocusWithin,
         // then selecting a new item in the drop-down won't update the UI

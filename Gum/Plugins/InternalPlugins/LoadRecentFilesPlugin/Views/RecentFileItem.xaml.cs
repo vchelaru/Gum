@@ -16,13 +16,13 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views
             InitializeComponent();
         }
 
-        private void Image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Image_MouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
         {
             //ViewModel.IsFavorite = !ViewModel.IsFavorite;
             //e.Handled = true;
         }
 
-        private void Image_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Image_PreviewMouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
         {
             ViewModel.IsFavorite = !ViewModel.IsFavorite;
             e.Handled = true;

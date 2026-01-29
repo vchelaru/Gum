@@ -77,7 +77,7 @@ internal class MainGumFormsPlugin : PluginBase
         return files.Values.Any(item => item.Extension != "png" && item.Extension != "gutx" && item.Exists());
     }
 
-    private void HandleAddFormsComponents(object sender, EventArgs e)
+    private void HandleAddFormsComponents(object? sender, EventArgs e)
     {
         #region Early Out
 

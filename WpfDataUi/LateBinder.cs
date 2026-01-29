@@ -620,7 +620,7 @@ namespace FlatRedBall.Instructions.Reflection
             internal static InstantiateObjectHandler CreateInstantiateObjectHandler(Type type)
             {
 #if !NO_CODE_EMIT
-                ConstructorInfo constructorInfo = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[0], null);
+                ConstructorInfo? constructorInfo = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[0], null);
                 if (constructorInfo == null)
                 {
                     throw new ApplicationException(string.Format("The type {0} must declare an empty constructor (the constructor may be private, internal, protected, protected internal, or public).", type));

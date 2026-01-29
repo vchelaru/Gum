@@ -34,7 +34,7 @@ public static class TitleBarClickPassthrough
         }
     }
 
-    private static void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private static void OnPreviewMouseLeftButtonDown(object? sender, MouseButtonEventArgs e)
     {
         var el = sender as UIElement;
         var win = Window.GetWindow(el);
@@ -61,7 +61,7 @@ public static class TitleBarClickPassthrough
         }
     }
 
-    private static void OnPreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    private static void OnPreviewMouseRightButtonUp(object? sender, MouseButtonEventArgs e)
     {
         if (sender is not UIElement el) return;
         var win = Window.GetWindow(el);

@@ -21,7 +21,7 @@ namespace WpfDataUi.DataTypes
     public class SetPropertyArgs
     {
         public SetPropertyCommitType CommitType { get; set; }
-        public object Value { get; set; }
+        public object? Value { get; set; }
         /// <summary>
         /// Can be assigned to mark that assignment was cancelled. This can be used
         /// by views to react to a cancelled assignment, such as by preventing futher 
@@ -418,7 +418,7 @@ namespace WpfDataUi.DataTypes
         /// <remarks>
         /// The object passed in is the container of this member - which usually is the Instance of the DataGrid.
         /// </remarks>
-        public event Func<object, object> CustomGetEvent;
+        public event Func<object, object?> CustomGetEvent;
         public event Func<object, Type> CustomGetTypeEvent;
 
         #endregion

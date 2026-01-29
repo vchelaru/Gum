@@ -585,19 +585,19 @@ public partial class CodeWindow : UserControl
 
     #region Button Event Handlers
 
-    private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
+    private void HandleGenerateCodeClicked(object? sender, RoutedEventArgs e)
     {
 
         GenerateCodeClicked?.Invoke(this, EventArgs.Empty);
     }
 
-    private void HandleGenerateAllCodeClicked(object sender, RoutedEventArgs e)
+    private void HandleGenerateAllCodeClicked(object? sender, RoutedEventArgs e)
     {
         GenerateAllCodeClicked?.Invoke(this, EventArgs.Empty);
     }
 
     // maybe we'll bring this back later?
-    //private void CopyButtonClicked(object sender, RoutedEventArgs e)
+    //private void CopyButtonClicked(object? sender, RoutedEventArgs e)
     //{
     //    TextBoxInstance.Focus();
     //    TextBoxInstance.SelectAll();
@@ -618,7 +618,7 @@ public partial class CodeWindow : UserControl
     //}
 
 
-    private void HandleAutoSetupClicked(object sender, RoutedEventArgs e)
+    private void HandleAutoSetupClicked(object? sender, RoutedEventArgs e)
     {
         bool shouldContinue = CodeOutputProjectSettings != null && 
             ViewModel.HandleAutoSetupClicked(CodeOutputProjectSettings);
@@ -633,7 +633,7 @@ public partial class CodeWindow : UserControl
 
 
 
-    private void HandleManualSetupClicked(object sender, RoutedEventArgs e)
+    private void HandleManualSetupClicked(object? sender, RoutedEventArgs e)
     {
         HasClickedManualSetup = true;
         FullRefreshDataGrid();

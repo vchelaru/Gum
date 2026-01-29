@@ -202,7 +202,7 @@ namespace Gum.Plugins.Undos
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void HandleUndosChanged(object sender, UndoOperationEventArgs e)
+        private void HandleUndosChanged(object? sender, UndoOperationEventArgs e)
         {
             if (e.Operation == UndoOperation.EntireHistoryChange)
             {

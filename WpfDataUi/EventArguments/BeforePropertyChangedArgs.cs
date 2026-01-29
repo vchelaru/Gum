@@ -1,23 +1,22 @@
-﻿namespace WpfDataUi.EventArguments
+﻿namespace WpfDataUi.EventArguments;
+
+public class BeforePropertyChangedArgs : PropertyChangedArgs
 {
-    public class BeforePropertyChangedArgs : PropertyChangedArgs
+    object? mOverridingValue;
+
+    public object? OverridingValue
     {
-        object mOverridingValue;
-
-        public object OverridingValue
+        get { return mOverridingValue; }
+        set
         {
-            get { return mOverridingValue; }
-            set
-            {
-                WasManuallySet = true;
-                mOverridingValue = value;
-            }
+            WasManuallySet = true;
+            mOverridingValue = value;
         }
+    }
 
-        public bool WasManuallySet
-        {
-            get;
-            private set;
-        }
+    public bool WasManuallySet
+    {
+        get;
+        private set;
     }
 }

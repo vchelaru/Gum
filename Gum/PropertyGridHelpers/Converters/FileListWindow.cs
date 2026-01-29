@@ -24,12 +24,12 @@ namespace Gum.PropertyGridHelpers.Converters
             return toReturn;
         }
 
-        private void treeView1_MouseClick(object sender, MouseEventArgs e)
+        private void treeView1_MouseClick(object? sender, MouseEventArgs e)
         {
 
         }
 
-        private void addFileToolStripMenuItem_Click(object sender, EventArgs e)
+        private void addFileToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             var openFileDialog = new OpenFileDialog();
 
@@ -46,7 +46,7 @@ namespace Gum.PropertyGridHelpers.Converters
             }
         }
 
-        private void removeFileToolStripMenuItem_Click(object sender, EventArgs e)
+        private void removeFileToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (treeView1.SelectedNode != null)
             {
@@ -54,7 +54,7 @@ namespace Gum.PropertyGridHelpers.Converters
             }
         }
 
-        private void treeView1_MouseDown(object sender, MouseEventArgs e)
+        private void treeView1_MouseDown(object? sender, MouseEventArgs e)
         {
             removeFileToolStripMenuItem.Visible = treeView1.SelectedNode != null;
         }

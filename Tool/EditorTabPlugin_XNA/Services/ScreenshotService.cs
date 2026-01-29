@@ -31,7 +31,7 @@ internal class ScreenshotService
         item.Click += HandleExportAsImageClicked;
     }
 
-    private void HandleExportAsImageClicked(object sender, EventArgs e)
+    private void HandleExportAsImageClicked(object? sender, EventArgs e)
     {
         // Create OpenFileDialog 
         Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();

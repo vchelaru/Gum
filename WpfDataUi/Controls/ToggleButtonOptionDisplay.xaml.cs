@@ -111,18 +111,18 @@ namespace WpfDataUi.Controls
 
         List<ToggleButton> toggleButtons = new List<ToggleButton>();
 
-        InstanceMember mInstanceMember;
+        InstanceMember? _instanceMember;
 
-        public InstanceMember InstanceMember
+        public InstanceMember? InstanceMember
         {
             get
             {
-                return mInstanceMember;
+                return _instanceMember;
             }
             set
             {
-                var didChange = mInstanceMember != value;
-                mInstanceMember = value;
+                var didChange = _instanceMember != value;
+                _instanceMember = value;
                 Refresh();
                 if(didChange)
                 {
@@ -391,7 +391,7 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.Success;
         }
 
-        private void HandleToggleClick(object sender, RoutedEventArgs e)
+        private void HandleToggleClick(object? sender, RoutedEventArgs e)
         {
             var toggleButtonClicked = sender as ToggleButton;
 

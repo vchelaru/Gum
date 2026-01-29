@@ -16,7 +16,7 @@ namespace Gum.DataTypes.ComponentModel
 
     #endregion
 
-    public delegate void MemberChangeEventHandler(object sender, MemberChangeArgs args);
+    public delegate void MemberChangeEventHandler(object? sender, MemberChangeArgs args);
 
     // EVentually we want to move over to the ReflectingPropertyDescriptorHelper
     public class PropertyDescriptorHelper

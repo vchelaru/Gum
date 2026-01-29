@@ -216,7 +216,7 @@ public class ColorPickerLogic
         }
     }
 
-    private void HandleExposeColorEvent(object sender, RoutedEventArgs e)
+    private void HandleExposeColorEvent(object? sender, RoutedEventArgs e)
     {
         // expose 3 variables: Red, Green, and Blue
         var instance = _selectedState.SelectedInstance;

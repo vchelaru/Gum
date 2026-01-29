@@ -61,7 +61,7 @@ namespace Gum.Mvvm
             return didSet;
 
 
-            void CollectionChangedInternal(object sender, NotifyCollectionChangedEventArgs e)
+            void CollectionChangedInternal(object? sender, NotifyCollectionChangedEventArgs e)
             {
                 var shouldNotify = true;
                 if (e.Action == NotifyCollectionChangedAction.Reset)

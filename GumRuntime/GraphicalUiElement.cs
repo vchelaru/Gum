@@ -5379,7 +5379,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {

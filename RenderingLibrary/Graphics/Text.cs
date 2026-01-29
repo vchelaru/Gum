@@ -888,7 +888,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
-    void SetNeedsRefresh(object sender, EventArgs args)
+    void SetNeedsRefresh(object? sender, EventArgs args)
     {
         mNeedsBitmapFontRefresh = true;
     }

@@ -40,7 +40,7 @@ namespace PerformanceMeasurementPlugin.ViewModels
             mTimer.Start();
         }
 
-        private void HandleTick(object sender, EventArgs e)
+        private void HandleTick(object? sender, EventArgs e)
         {
             if(PropertyChanged != null)
             {

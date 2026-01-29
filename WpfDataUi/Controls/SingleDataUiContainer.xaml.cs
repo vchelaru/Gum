@@ -84,7 +84,7 @@ namespace WpfDataUi
 
         #endregion
 
-        private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void HandleDataContextChanged(object? sender, DependencyPropertyChangedEventArgs e)
         {
             Grid.Children.Clear();
 

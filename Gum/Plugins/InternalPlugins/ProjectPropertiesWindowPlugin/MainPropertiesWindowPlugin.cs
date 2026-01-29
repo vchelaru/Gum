@@ -107,7 +107,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         }
     }
 
-    private void HandlePropertiesClicked(object sender, EventArgs e)
+    private void HandlePropertiesClicked(object? sender, EventArgs e)
     {
         try
         {
@@ -127,7 +127,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
         }
     }
 
-    private async void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+    private async void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         ////////////////////Early Out//////////////////
         if (viewModel.IsUpdatingFromModel)
@@ -303,7 +303,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
             control.DataGrid.Refresh();
         }
     }
-    private void HandleCloseClicked(object sender, EventArgs e)
+    private void HandleCloseClicked(object? sender, EventArgs e)
     {
         _pluginTab?.Hide();
     }
