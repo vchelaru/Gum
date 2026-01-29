@@ -621,12 +621,9 @@ public partial class InteractiveGue : BindableGue
         // Even though the finger is technically not over any UI element when 
         // the user lifts it, we still want to consider UI logic so that the click action
         // can apply and events can be raised
-        // todo - implement it later
-        //var shouldConsiderBasedOnInput = cursor.LastInputDevice != InputDevice.TouchScreen ||
-        //    cursor.PrimaryDown ||
-        //    cursor.PrimaryClick;
-
-        bool shouldConsiderBasedOnInput = true;
+        var shouldConsiderBasedOnInput = cursor.LastInputDevice != InputDevice.TouchScreen ||
+            cursor.PrimaryDown ||
+            cursor.PrimaryClick;
 
         var shouldProcess = shouldConsiderBasedOnInput &&
              (thisInstance as IVisible).AbsoluteVisible == true;
