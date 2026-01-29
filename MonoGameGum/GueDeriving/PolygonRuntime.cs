@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -152,8 +153,50 @@ public class PolygonRuntime : InteractiveGue
     public void InsertPointAt(Vector2 point, int index) => ContainedPolygon.InsertPointAt(point, index);
     public void RemovePointAtIndex(int index) => ContainedPolygon.RemovePointAtIndex(index);
     public void SetPointAt(Vector2 point, int index) => ContainedPolygon.SetPointAt(point, index);
-
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
+    public override bool HasCursorOver(ICursor cursor, Layer? layer = null)
+    {
+        //var pointX = cursor.XRespectingGumZoomAndBounds();
+        //var pointY = cursor.YRespectingGumZoomAndBounds();
+
+        int cursorScreenX = cursor.X;
+        int cursorScreenY = cursor.Y;
+        float worldX;
+        float worldY;
+        // Adjust by viewport values:
+        // todo ...
+        //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
+        //cursorScreenY -= managers.Renderer.GraphicsDevice.Viewport.Y;
+
+        var managers = this.EffectiveManagers as ISystemManagers ?? ISystemManagers.Default;
+
+
+        var camera = managers.Renderer.Camera;
+
+        if (layer != null)
+        {
+            layer.ScreenToWorld(
+                camera,
+                cursorScreenX, cursorScreenY,
+                out worldX, out worldY);
+        }
+        else
+        {
+            camera.ScreenToWorld(
+                cursorScreenX, cursorScreenY,
+                out worldX, out worldY);
+        }
+
+        if( ContainedPolygon.IsPointInside(worldX, worldY))
+        {
+            return true;
+        }
+        else if(this.RaiseChildrenEventsOutsideOfBounds)
+        {
+            return IsOverChildren(this, cursor, layer);
+        }
+        return false;
+    }
 
 }
