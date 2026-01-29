@@ -4,9 +4,20 @@
 
 `Anchor` and `Dock` are methods used to position and size the calling object.
 
+These methods match the Anchor and Dock actions which can be performed in the Gum UI tool.
+
+<figure><img src="../../.gitbook/assets/AnchorAndDockUIScreenshot.png" alt=""><figcaption></figcaption></figure>
+
 `Anchor` adjusts the position of an object without changing its size.
 
-<figure><img src="../../.gitbook/assets/15_16 56 39.png" alt=""><figcaption><p>Nine possible anchor values</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/15_16 56 39.png" alt=""><figcaption><p>Nine standard anchor values</p></figcaption></figure>
+
+`Anchor` has 2 other values `CenterHorizontally` and `CenterVertically`. &#x20;
+
+1. `CenterHorizontally` sets the X related variables only, leaving the Y related variables unchanged.
+2. `CenterVertically` sets the Y related variables only, leaving the X related variables unchanged.
+
+This allows you to Have an element locked to the center position of the horizontal or vertical, but modify the other value.
 
 `Dock` changes the position and size of an object. `Dock` can be used to adjust horizontal or vertical values.
 
@@ -14,7 +25,7 @@
 
 <figure><img src="../../.gitbook/assets/15_17 03 14.png" alt=""><figcaption><p>Dock values adjusting vertical size</p></figcaption></figure>
 
-`Dock` can also adjust both vertical and horizontal values.
+`Dock` can also adjust both vertical and horizontal values using `Fill` or `Size to Children`.
 
 <figure><img src="../../.gitbook/assets/17_06 12 46.png" alt=""><figcaption><p>Fill and SizeToChildren adjusts both Width and Height values</p></figcaption></figure>
 
