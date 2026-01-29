@@ -27,7 +27,7 @@ namespace CommonFormsAndControls.Forms
             }
         }
 
-        void CloseThisWindow(object sender, EventArgs args)
+        void CloseThisWindow(object? sender, EventArgs args)
         {
             this.Close();
         }

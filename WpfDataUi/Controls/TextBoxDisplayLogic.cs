@@ -17,7 +17,7 @@ namespace WpfDataUi.Controls
 
         public bool HasUserChangedAnything { get; set; }
         public string TextAtStartOfEditing { get; set; }
-        public InstanceMember InstanceMember { get; set; }
+        public InstanceMember? InstanceMember { get; set; }
         public Type InstancePropertyType { get; set; }
 
         public decimal? MinValue { get; set; }
@@ -64,7 +64,7 @@ namespace WpfDataUi.Controls
             mAssociatedTextBox.TextChanged += HandleTextChanged;
         }
 
-        private void HandleTextChanged(object sender, TextChangedEventArgs e)
+        private void HandleTextChanged(object? sender, TextChangedEventArgs e)
         {
             HasUserChangedAnything = true;
         }
@@ -91,7 +91,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void HandlePreviewKeydown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void HandlePreviewKeydown(object? sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.Enter && (HandlesEnter))
             {
@@ -119,7 +119,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        void HandleTextBoxGotFocus(object sender, System.Windows.RoutedEventArgs e)
+        void HandleTextBoxGotFocus(object? sender, System.Windows.RoutedEventArgs e)
         {
             TextAtStartOfEditing = mAssociatedTextBox.Text;
 
@@ -143,7 +143,7 @@ namespace WpfDataUi.Controls
 
                     if (result == ApplyValueResult.Success)
                     {
-                        if (InstanceMember.BeforeSetByUi != null)
+                        if (InstanceMember?.BeforeSetByUi != null)
                         {
                             InstanceMember.CallBeforeSetByUi(mContainer);
                         }
@@ -160,7 +160,7 @@ namespace WpfDataUi.Controls
                     }
                     else
                     {
-                        InstanceMember.SetValueError?.Invoke(mAssociatedTextBox.Text);
+                        InstanceMember?.SetValueError?.Invoke(mAssociatedTextBox.Text);
 
                         return result;
                     }

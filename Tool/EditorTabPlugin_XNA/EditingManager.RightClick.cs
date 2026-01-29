@@ -55,31 +55,31 @@ public partial class EditingManager
         contextMenuStrip.VisibleChanged += HandleVisibleChange;
     }
 
-    private void HandleVisibleChange(object sender, EventArgs e)
+    private void HandleVisibleChange(object? sender, EventArgs e)
     {
 
         PopulateMoveInFrontOfMenuItem();
     }
 
-    void OnMoveForward(object sender, EventArgs e)
+    void OnMoveForward(object? sender, EventArgs e)
     {
         _reorderLogic.MoveSelectedInstanceForward();
     }
 
 
 
-    void OnMoveBackward(object sender, EventArgs e)
+    void OnMoveBackward(object? sender, EventArgs e)
     {
         _reorderLogic.MoveSelectedInstanceBackward();
     }
 
-    void OnSendToBack(object sender, EventArgs e)
+    void OnSendToBack(object? sender, EventArgs e)
     {
         _reorderLogic.MoveSelectedInstanceToBack();
     }
 
 
-    void OnBringToFrontClick(object sender, EventArgs e)
+    void OnBringToFrontClick(object? sender, EventArgs e)
     {
         _reorderLogic.MoveSelectedInstanceToFront();
     }
@@ -178,7 +178,7 @@ public partial class EditingManager
         return parentName;
     }
 
-    private void HandleMoveInFrontOfClick(object sender, EventArgs e)
+    private void HandleMoveInFrontOfClick(object? sender, EventArgs e)
     {
         InstanceSave whatToMoveInFrontOf = ((ToolStripMenuItem)sender).Tag as InstanceSave;
 

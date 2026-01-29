@@ -57,7 +57,7 @@ public static class ListBoxDoubleClick
         }
     }
 
-    private static void OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private static void OnMouseDoubleClick(object? sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;
 

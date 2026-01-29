@@ -16,32 +16,32 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
     TextBoxDisplayLogic mTextBoxLogic;
 
-    InstanceMember mInstanceMember;
+    InstanceMember? _instanceMember;
 
     #endregion
 
     #region Properties
 
-    public InstanceMember InstanceMember
+    public InstanceMember? InstanceMember
     {
         get
         {
-            return mInstanceMember;
+            return _instanceMember;
         }
         set
         {
             mTextBoxLogic.InstanceMember = value;
 
-            bool instanceMemberChanged = mInstanceMember != value;
-            if (mInstanceMember != null && instanceMemberChanged)
+            bool instanceMemberChanged = _instanceMember != value;
+            if (_instanceMember != null && instanceMemberChanged)
             {
-                mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                _instanceMember.PropertyChanged -= HandlePropertyChange;
             }
-            mInstanceMember = value;
+            _instanceMember = value;
 
-            if (mInstanceMember != null && instanceMemberChanged)
+            if (_instanceMember != null && instanceMemberChanged)
             {
-                mInstanceMember.PropertyChanged += HandlePropertyChange;
+                _instanceMember.PropertyChanged += HandlePropertyChange;
             }
 
             if (instanceMemberChanged)
@@ -66,7 +66,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     public string Filter
     {
         get; set;
-    }
+    } = string.Empty;
 
     public static string FolderRelativeTo { get; set; }
 
@@ -135,7 +135,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         return mTextBoxLogic.TryGetValueOnUi(out value);
     }
 
-    private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+    private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == "Value")
         {
@@ -145,7 +145,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     }
 
 
-    private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
+    private void TextBox_LostFocus_1(object? sender, RoutedEventArgs e)
     {
         if (this.TextBox.Text != mTextBoxLogic.TextAtStartOfEditing)
         {
@@ -161,7 +161,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     }
 
 
-    private void Button_Click_1(object sender, RoutedEventArgs e)
+    private void Button_Click_1(object? sender, RoutedEventArgs e)
     {
         if (IsFolderDialog)
         {
@@ -192,7 +192,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         }
     }
 
-    private void ViewInExplorerClicked(object sender, RoutedEventArgs e)
+    private void ViewInExplorerClicked(object? sender, RoutedEventArgs e)
     {
         var fileToOpen = this.TextBox.Text;
 

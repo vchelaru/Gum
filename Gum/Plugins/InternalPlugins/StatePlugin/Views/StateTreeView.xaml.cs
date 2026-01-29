@@ -60,7 +60,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             this.DataContext = viewModel;
         }
 
-        private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void TreeView_SelectedItemChanged(object? sender, RoutedPropertyChangedEventArgs<object> e)
         {
             //var treeView = sender as System.Windows.Controls.TreeView;
 
@@ -69,7 +69,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void TreeViewInstance_KeyDown(object sender, KeyEventArgs e)
+        private void TreeViewInstance_KeyDown(object? sender, KeyEventArgs e)
         {
             if (_hotkeyManager.ReorderUp.IsPressed(e))
             {
@@ -152,7 +152,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             }
         }
 
-        private void TreeViewInstance_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void TreeViewInstance_PreviewMouseRightButtonDown(object? sender, MouseButtonEventArgs e)
         {
             // Find the TreeViewItem that was clicked
             var clickedItem = VisualUpwardSearch<TreeViewItem>(e.OriginalSource as DependencyObject);

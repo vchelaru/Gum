@@ -20,7 +20,7 @@ public partial class DialogWindow : WindowChromeWindow
 
     // This hacks around some artifacts that present when using custom WindowChrome
     // when you want your window to size to content and center itself
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object? sender, RoutedEventArgs e)
     {
         var mainWindow = Application.Current.MainWindow;
         SizeToContent = SizeToContent.WidthAndHeight;
@@ -32,7 +32,7 @@ public partial class DialogWindow : WindowChromeWindow
         Loaded -= OnLoaded;
     }
 
-    private void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
@@ -47,7 +47,7 @@ public partial class DialogWindow : WindowChromeWindow
         }
     }
 
-    private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    private void ScrollViewer_PreviewMouseWheel(object? sender, MouseWheelEventArgs e)
     {
         DependencyObject? origin = e.OriginalSource as DependencyObject;
 

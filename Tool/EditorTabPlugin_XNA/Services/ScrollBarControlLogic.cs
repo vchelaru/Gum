@@ -86,17 +86,17 @@ namespace FlatRedBall.SpecializedXnaControls
             //(mHorizontalScrollBar as Control).BackColor = Color.Red;
         }
 
-        void HandlePanelResize(object sender, EventArgs e)
+        void HandlePanelResize(object? sender, EventArgs e)
         {
             UpdateScrollBars();
         }
 
-        private void HandleVerticalScroll(object sender, EventArgs e)
+        private void HandleVerticalScroll(object? sender, EventArgs e)
         {
             Managers.Renderer.Camera.Y = mVerticalScrollBar.Value;
         }
 
-        private void HandleHorizontalScroll(object sender, EventArgs e)
+        private void HandleHorizontalScroll(object? sender, EventArgs e)
         {
             Managers.Renderer.Camera.X = mHorizontalScrollBar.Value;
 

@@ -88,7 +88,7 @@ public partial class MainPanelControl : UserControl
         }
     }
 
-    private void TabHeader_OnMiddleMouseDown(object sender, MouseButtonEventArgs e)
+    private void TabHeader_OnMiddleMouseDown(object? sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: PluginTab pluginTab } &&
             pluginTab.CloseCommand.CanExecute(null))

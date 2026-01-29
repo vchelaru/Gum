@@ -90,7 +90,7 @@ namespace StateAnimationPlugin.Views
 
         }
 
-        private void HandleCanvasSizeChanged(object sender, SizeChangedEventArgs e)
+        private void HandleCanvasSizeChanged(object? sender, SizeChangedEventArgs e)
         {
             RefreshRectangles();
         }
@@ -125,7 +125,7 @@ namespace StateAnimationPlugin.Views
             display.RefreshRectangles();
         }
 
-        private void SelectedKeyframeValueChanged(object sender, PropertyChangedEventArgs e)
+        private void SelectedKeyframeValueChanged(object? sender, PropertyChangedEventArgs e)
         {
             switch(e.PropertyName)
             {
@@ -282,7 +282,7 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void SKElement_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
+        private void SKElement_PaintSurface(object? sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)
         {
             var canvas = e.Surface.Canvas;
 

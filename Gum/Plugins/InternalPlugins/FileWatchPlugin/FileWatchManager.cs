@@ -121,7 +121,7 @@ public class FileWatchManager
         fileSystemWatchers.Clear();
     }
 
-    private void HandleRename(object sender, RenamedEventArgs e)
+    private void HandleRename(object? sender, RenamedEventArgs e)
     {
         var fileName = new FilePath(e.FullPath);
         // for now only do texture files like PNG:
@@ -134,12 +134,12 @@ public class FileWatchManager
         }
     }
 
-    private void HandleFileSystemDelete(object sender, FileSystemEventArgs e)
+    private void HandleFileSystemDelete(object? sender, FileSystemEventArgs e)
     {
         // do anything?
     }
 
-    private void HandleFileSystemChange(object sender, FileSystemEventArgs e)
+    private void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
     {
         var fileName = new FilePath(e.FullPath);
         var extension = fileName.Extension;

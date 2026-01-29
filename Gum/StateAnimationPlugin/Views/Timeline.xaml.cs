@@ -228,7 +228,7 @@ public partial class TimelineControl : UserControl
         }
     }
 
-    private void Keyframe_MouseDown(object sender, MouseButtonEventArgs e)
+    private void Keyframe_MouseDown(object? sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame } && Animation is { } animation &&
             animation.Keyframes.Contains(frame))
@@ -237,7 +237,7 @@ public partial class TimelineControl : UserControl
         }
     }
 
-    private void OnKeyframeMouseEnter(object sender, MouseEventArgs e)
+    private void OnKeyframeMouseEnter(object? sender, MouseEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
         {
@@ -245,7 +245,7 @@ public partial class TimelineControl : UserControl
         }
     }
 
-    private void OnKeyframeMouseLeave(object sender, MouseEventArgs e)
+    private void OnKeyframeMouseLeave(object? sender, MouseEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
         {

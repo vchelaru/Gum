@@ -135,7 +135,7 @@ namespace Gum.Plugins.VariableGrid
             _editVariableService = editVariableService;
         }
 
-        private void HandleDeleteVariableClicked(object sender, RoutedEventArgs e)
+        private void HandleDeleteVariableClicked(object? sender, RoutedEventArgs e)
         {
             if(BehaviorSave != null)
             {
@@ -143,7 +143,7 @@ namespace Gum.Plugins.VariableGrid
             }
         }
 
-        private void HandleEditVariableClicked(object sender, RoutedEventArgs e)
+        private void HandleEditVariableClicked(object? sender, RoutedEventArgs e)
         {
             var editModes = 
                 _editVariableService.GetAvailableEditModeFor(SelectedBehaviorVariable, BehaviorSave);

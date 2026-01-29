@@ -63,7 +63,7 @@ public class MainFontPlugin : InternalPlugin
             ProjectState.Self.GumProjectSave);
     }
 
-    private void HandleClearFontCache(object sender, EventArgs e)
+    private void HandleClearFontCache(object? sender, EventArgs e)
     {
         try
         {
@@ -75,7 +75,7 @@ public class MainFontPlugin : InternalPlugin
         }
     }
 
-    private void HandleViewFontCache(object sender, EventArgs e)
+    private void HandleViewFontCache(object? sender, EventArgs e)
     {
         if(!System.IO.Directory.Exists(_fontManager.AbsoluteFontCacheFolder))
         {

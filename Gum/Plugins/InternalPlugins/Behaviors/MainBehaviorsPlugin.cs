@@ -134,7 +134,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     }
 
     bool isApplyingChanges = false;
-    private void HandleApplyBehaviorChanges(object sender, EventArgs e)
+    private void HandleApplyBehaviorChanges(object? sender, EventArgs e)
     {
 
         var component = _selectedState.SelectedComponent;

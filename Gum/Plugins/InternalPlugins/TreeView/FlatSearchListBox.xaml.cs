@@ -25,7 +25,7 @@ namespace Gum.Plugins.InternalPlugins.TreeView
             InitializeComponent();
         }
 
-        private void FlatList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void FlatList_MouseLeftButtonUp(object? sender, MouseButtonEventArgs e)
         {
             var objectPushed = e.OriginalSource;
             var frameworkElementPushed = (objectPushed as FrameworkElement);

@@ -44,7 +44,7 @@ public static class MiddleClickBehavior
         }
     }
 
-    private static void OnMouseDown(object sender, MouseButtonEventArgs e)
+    private static void OnMouseDown(object? sender, MouseButtonEventArgs e)
     {
         if (e.MiddleButton == MouseButtonState.Pressed &&
             sender is UIElement element &&

@@ -306,7 +306,7 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void HandleViewCodeClicked(object sender, EventArgs e)
+    private void HandleViewCodeClicked(object? sender, EventArgs e)
     {
         //GumCommands.Self.GuiCommands.ShowControl(control);
 

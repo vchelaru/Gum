@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using WpfDataUi.DataTypes;
@@ -12,49 +13,49 @@ namespace WpfDataUi.Controls
     {
         public string TrueText
         {
-            get => TrueRadioButton.Content?.ToString();
+            get => TrueRadioButton.Content?.ToString() ?? string.Empty;
             set => TrueRadioButton.Content = value;
         }
 
         public string FalseText
         {
-            get => FalseRadioButton.Content?.ToString();
+            get => FalseRadioButton.Content?.ToString() ?? string.Empty;
             set => FalseRadioButton.Content = value;
         }
 
         public string NullText
         {
-            get => NullRadioButton.Content?.ToString();
+            get => NullRadioButton.Content?.ToString() ?? string.Empty;
             set => NullRadioButton.Content = value;
         }
 
-        InstanceMember mInstanceMember;
-        public InstanceMember InstanceMember
+        InstanceMember? _instanceMember;
+        public InstanceMember? InstanceMember
         {
             get
             {
-                return mInstanceMember;
+                return _instanceMember;
             }
             set
             {
-                bool instanceMemberChanged = mInstanceMember != value;
-                if (mInstanceMember != null && instanceMemberChanged)
+                bool instanceMemberChanged = _instanceMember != value;
+                if (_instanceMember != null && instanceMemberChanged)
                 {
-                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                    _instanceMember.PropertyChanged -= HandlePropertyChange;
                 }
-                mInstanceMember = value;
-                if (mInstanceMember != null && instanceMemberChanged)
+                _instanceMember = value;
+                if (_instanceMember != null && instanceMemberChanged)
                 {
-                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                    _instanceMember.PropertyChanged += HandlePropertyChange;
                 }
                 Refresh();
             }
         }
         public bool SuppressSettingProperty { get; set; }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
@@ -130,7 +131,7 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.Success;
         }
 
-        private void TrueRadioButton_Checked(object sender, RoutedEventArgs e)
+        private void TrueRadioButton_Checked(object? sender, RoutedEventArgs e)
         {
             if (!SuppressSettingProperty)
             {
@@ -138,7 +139,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void FalseRadioButton_Checked(object sender, RoutedEventArgs e)
+        private void FalseRadioButton_Checked(object? sender, RoutedEventArgs e)
         {
             if (!SuppressSettingProperty)
             {
@@ -146,12 +147,19 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void NullRadioButton_Checked(object sender, RoutedEventArgs e)
+        private void NullRadioButton_Checked(object? sender, RoutedEventArgs e)
         {
             if (!SuppressSettingProperty)
             {
                 this.TrySetValueOnInstance();
             }
+        }
+
+        public new bool Equals(object? obj)
+        {
+            return obj is NullableBoolDisplay display &&
+                   base.Equals(obj) &&
+                   EqualityComparer<InstanceMember?>.Default.Equals(_instanceMember, display._instanceMember);
         }
     }
 }

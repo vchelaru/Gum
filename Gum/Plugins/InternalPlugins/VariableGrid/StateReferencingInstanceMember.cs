@@ -587,7 +587,7 @@ public class StateReferencingInstanceMember : InstanceMember
         }
     }
 
-    private void HandleUnexposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleUnexposeVariableClick(object? sender, System.Windows.RoutedEventArgs e)
     {
         // Find this variable in the source instance and make it not exposed
         VariableSave variableSave = this.VariableSave;
@@ -598,7 +598,7 @@ public class StateReferencingInstanceMember : InstanceMember
         }
     }
 
-    private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleExposeVariableClick(object? sender, System.Windows.RoutedEventArgs e)
     {
         _exposeVariableService.HandleExposeVariableClick(_selectedState.SelectedInstance,
             this.RootVariableName);

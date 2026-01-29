@@ -52,7 +52,7 @@ namespace Gum.Plugins.VariableGrid
             return ApplyValueResult.Success;
         }
 
-        private void ButtonInstance_Click(object sender, RoutedEventArgs e)
+        private void ButtonInstance_Click(object? sender, RoutedEventArgs e)
         {
             // When we click we'll set the value on the instance. The instance member will watch for that and remove itself from the category if so
             this.TrySetValueOnInstance();

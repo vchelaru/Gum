@@ -30,14 +30,14 @@ public class ScrollBarLogicWpf
     }
 
     bool isInScrollBarUpdate = false;
-    private void HandleVerticalScrollValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void HandleVerticalScrollValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (isInScrollBarUpdate) return;
         _camera.Y = (float)_verticalScrollBar.Value;
 
     }
 
-    private void HandleHorizontalScrollValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void HandleHorizontalScrollValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (isInScrollBarUpdate) return;
         _camera.X = (float)_horizontalScrollBar.Value;

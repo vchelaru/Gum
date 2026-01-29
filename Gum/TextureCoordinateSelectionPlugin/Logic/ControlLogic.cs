@@ -172,7 +172,7 @@ public class ControlLogic
         };
     }
 
-    private void HandleKeyDown(object sender, KeyEventArgs e)
+    private void HandleKeyDown(object? sender, KeyEventArgs e)
     {
         var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
         if (_hotkeyManager.MoveCameraRight.IsPressed(e))
@@ -251,7 +251,7 @@ public class ControlLogic
         mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(lineGrid);
     }
 
-    private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         void RefreshSnappingGridSize()
         {
@@ -482,7 +482,7 @@ public class ControlLogic
 
     }
 
-    private void HandleStartRegionChanged(object sender, EventArgs e)
+    private void HandleStartRegionChanged(object? sender, EventArgs e)
     {
         _undoManager.RecordUndo();
 
@@ -501,7 +501,7 @@ public class ControlLogic
         oldTextureHeightValue = state.GetValue($"{instancePrefix}TextureHeight");
     }
 
-    private void HandleRegionChanged(object sender, EventArgs e)
+    private void HandleRegionChanged(object? sender, EventArgs e)
     {
         var control = sender as ImageRegionSelectionControl;
 
@@ -539,7 +539,7 @@ public class ControlLogic
         RefreshNineSliceGuides();
     }
 
-    private void HandleEndRegionChanged(object sender, EventArgs e)
+    private void HandleEndRegionChanged(object? sender, EventArgs e)
     {
         var element = _selectedState.SelectedElement;
         var instance = _selectedState.SelectedInstance;

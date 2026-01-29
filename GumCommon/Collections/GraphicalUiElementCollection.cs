@@ -61,7 +61,7 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     /// <summary>
     /// Handles changes from the inner IRenderableIpso collection and syncs them to this collection.
     /// </summary>
-    private void InnerCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void InnerCollection_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         // Prevent circular updates
         if (_isUpdatingFromOuter)

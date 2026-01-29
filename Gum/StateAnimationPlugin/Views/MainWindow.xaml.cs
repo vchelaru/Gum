@@ -85,7 +85,7 @@ namespace StateAnimationPlugin.Views
         {
         }
 
-        private void AddAnimationButton_Click(object sender, RoutedEventArgs e)
+        private void AddAnimationButton_Click(object? sender, RoutedEventArgs e)
         {
             if (ViewModel == null)
             {
@@ -128,12 +128,12 @@ namespace StateAnimationPlugin.Views
 
 
 
-        private void AddStateKeyframeButton_Click(object sender, RoutedEventArgs e)
+        private void AddStateKeyframeButton_Click(object? sender, RoutedEventArgs e)
         {
             AddStateKeyframeClicked?.Invoke(this, EventArgs.Empty);
         }
 
-        private void AddSubAnimationButton_Click(object sender, RoutedEventArgs e)
+        private void AddSubAnimationButton_Click(object? sender, RoutedEventArgs e)
         {
             ////////////// Early Out//////////
             if(ViewModel.SelectedAnimation == null)
@@ -184,7 +184,7 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void AddNamedEventButton_Click(object sender, RoutedEventArgs e)
+        private void AddNamedEventButton_Click(object? sender, RoutedEventArgs e)
         {
             ////////////// Early Out//////////
             if (ViewModel.SelectedAnimation == null)
@@ -250,7 +250,7 @@ namespace StateAnimationPlugin.Views
             return AnimationContainers;
         }
 
-        private void LoopToggleClick(object sender, RoutedEventArgs e)
+        private void LoopToggleClick(object? sender, RoutedEventArgs e)
         {
             var animation = ((Button)sender).DataContext as AnimationViewModel;
             if (animation != null)
@@ -259,7 +259,7 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void HandleAnimationListKeyPressed(object sender, KeyEventArgs e)
+        private void HandleAnimationListKeyPressed(object? sender, KeyEventArgs e)
         {
             // todo - this should use the hotkey manager
             var alt = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt);
@@ -349,7 +349,7 @@ namespace StateAnimationPlugin.Views
         }
 
 
-        private void HandleAnimationKeyframeListBoxKey(object sender, KeyEventArgs e)
+        private void HandleAnimationKeyframeListBoxKey(object? sender, KeyEventArgs e)
         {
             if(this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
             {
@@ -380,22 +380,22 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void GridSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        private void GridSplitter_DragCompleted(object? sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             AnimationColumnsResized?.Invoke();
         }
 
-        private void SpeedDecreaseClicked(object sender, RoutedEventArgs args)
+        private void SpeedDecreaseClicked(object? sender, RoutedEventArgs args)
         {
             ViewModel.DecreaseGameSpeed();
         }
 
-        private void SpeedIncreaseClicked(object sender, RoutedEventArgs args)
+        private void SpeedIncreaseClicked(object? sender, RoutedEventArgs args)
         {
             ViewModel.IncreaseGameSpeed();
         }
 
-        private void OnKeyframeMouseEnter(object sender, MouseEventArgs e)
+        private void OnKeyframeMouseEnter(object? sender, MouseEventArgs e)
         {
             if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
             {
@@ -403,7 +403,7 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void OnKeyframeMouseLeave(object sender, MouseEventArgs e)
+        private void OnKeyframeMouseLeave(object? sender, MouseEventArgs e)
         {
             if (sender is FrameworkElement { DataContext: AnimatedKeyframeViewModel frame })
             {
@@ -411,7 +411,7 @@ namespace StateAnimationPlugin.Views
             }
         }
 
-        private void MenuItem_OnClick(object sender, RoutedEventArgs e)
+        private void MenuItem_OnClick(object? sender, RoutedEventArgs e)
         {
             ViewModel.ToggleInterpolationClampingCommand.Execute(null);
         }

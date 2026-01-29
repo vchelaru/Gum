@@ -197,7 +197,7 @@ namespace Gum.Controls.DataUi
             return result;
         }
 
-        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "Value")
             {
@@ -206,7 +206,7 @@ namespace Gum.Controls.DataUi
             }
         }
 
-        private void HandleColorChange(object sender, RoutedEventArgs e)
+        private void HandleColorChange(object? sender, RoutedEventArgs e)
         {
             if (!(e is ColorRoutedEventArgs colorArgs)) return;
 
@@ -269,7 +269,7 @@ namespace Gum.Controls.DataUi
             isSetting = false;
         }
 
-        private void ColorPicker_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ColorPicker_MouseUp(object? sender, MouseButtonEventArgs e)
         {
             // This is not raised for all UI as discussed here:
             //https://github.com/PixiEditor/ColorPicker/issues/52
@@ -282,7 +282,7 @@ namespace Gum.Controls.DataUi
             //System.Diagnostics.Debug.WriteLine($"Mouse up at {DateTime.Now}");
         }
 
-        private void ColorPicker_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        private void ColorPicker_PreviewMouseUp(object? sender, MouseButtonEventArgs e)
         {
             if (needsToPushFullCommitOnMouseUp)
             {

@@ -842,7 +842,7 @@ public class PluginManager : IPluginManager
 
 
 
-    private Assembly currentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+    private Assembly currentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
     {
         foreach (Assembly item in mExternalAssemblies)
         {

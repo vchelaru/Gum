@@ -153,7 +153,7 @@ public class UndoManager : IUndoManager
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }
 
-    private void HandleUndoLockChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleUndoLockChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (UndoLocks.Count == 0)
         {
