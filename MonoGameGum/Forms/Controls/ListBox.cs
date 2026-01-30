@@ -975,8 +975,11 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         // let's just make sure it's removed
-        popup.Visual.RemoveFromManagers();
-
+        // don't remove from managers. Doing so
+        // resets the binding on the ListBox which 
+        // we don't want!
+        //popup.Visual.RemoveFromManagers();
+        popup.Visual.Parent = null;
         var layerToAddListBoxTo = GetLayerToAddTo(listBoxParent);
 
 #if FRB

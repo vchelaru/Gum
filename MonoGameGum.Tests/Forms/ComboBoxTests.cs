@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals;
+using Gum.Mvvm;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;
@@ -10,6 +11,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,6 +58,39 @@ public  class ComboBoxTests : BaseTestClass
 
     }
 
+    [Fact]
+    public void IsDropDownOpen_ShouldNotResetListBoxItemBindingContext()
+    {
+        ComboBox comboBox = new();
+
+        comboBox.AddToRoot();
+
+        comboBox.Visual.EffectiveManagers.ShouldNotBeNull(
+            "because this is needed to effectively test removal");
+
+        TestViewModel viewModel = new();
+        viewModel.Items.Add("1");
+        viewModel.Items.Add("2");
+        viewModel.Items.Add("3");
+
+        comboBox.BindingContext = viewModel;
+        comboBox.SetBinding(
+            nameof(comboBox.Items),
+            nameof(viewModel.Items));
+
+        comboBox.ListBox.Items.Count.ShouldBe(3);
+        comboBox.ListBox.ListBoxItems.Count.ShouldBe(3);
+        comboBox.ListBox.ListBoxItems[0].BindingContext.ShouldBe("1");
+
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.ListBox.ListBoxItems[0].BindingContext.ShouldBe("1");
+
+        comboBox.IsDropDownOpen = false;
+
+        comboBox.ListBox.ListBoxItems[0].BindingContext.ShouldBe("1");
+
+    }
 
     public class CGComboBox : InteractiveGue
     {
@@ -130,6 +165,14 @@ public  class ComboBoxTests : BaseTestClass
         }
 
         public ComboBox FormsControl => (ComboBox)FormsControlAsObject;
+    }
 
+    class TestViewModel : ViewModel
+    {
+        public ObservableCollection<string> Items { get; set; } = new ObservableCollection<string>();
+
+        public TestViewModel()
+        {
+        }
     }
 }
