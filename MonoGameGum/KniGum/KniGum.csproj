@@ -53,6 +53,7 @@
 		<Compile Include="..\..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
 		<Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
 		<Compile Include="..\..\RenderingLibrary\Content\ContentLoader.cs" Link="RenderingLibrary\ContentLoader.cs" />
+		<Compile Include="..\..\RenderingLibrary\Content\LoaderManagerExtensionMethods.cs" Link="RenderingLibrary\LoaderManagerExtensionMethods.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />

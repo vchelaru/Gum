@@ -39,7 +39,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
+    <ProjectReference Include="..\MonoGameGum\KniGum\KniGum.csproj" />
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
   </ItemGroup>
   <ItemGroup>
