@@ -59,8 +59,6 @@ To add the Gum files to your csproj:
 {% hint style="info" %}
 If you are using the Contentless project ([https://github.com/Ellpeck/Contentless](https://github.com/Ellpeck/Contentless)) , you need to explicitly exclude Gum and all of its files by adding and modifying `Content/Contentless.json` .
 {% endhint %}
-
-
 {% endtab %}
 
 {% tab title="MonoGame/KNI Android" %}
@@ -122,7 +120,7 @@ protected override void Initialize()
 }
 ```
 
-By default the Gum path is relative to your game's Content folder.&#x20;
+By default the Gum path is relative to your game's Content folder.
 
 If your Gum project is not part of the the folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
@@ -169,9 +167,7 @@ The code above loads the Gum project using the desired file path, such as `"GumP
 
 Once a Gum project is loaded, all of its screens and components can be accessed through the `ObjectFinder.Self.GumProjectSave` property. Any screen or component can be converted to a GraphicalUiElement, which is the visual object that displays in game.
 
-The code in the previous section creates a `GraphicalUiElement` from the first screen in the project.
-
-For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82)
+The code in the previous section creates a `GraphicalUiElement` from the first screen in the project.&#x20;
 
 Note that calling ToGraphicalUiElement creates a [GraphicalUiElement](../../gum-code-reference/graphicaluielement/) (Gum object) from the first screen. You can access any screen in the the Gum project if your project has multiple Screens.
 
