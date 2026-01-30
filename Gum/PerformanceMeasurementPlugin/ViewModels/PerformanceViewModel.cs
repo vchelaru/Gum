@@ -7,47 +7,46 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
-namespace PerformanceMeasurementPlugin.ViewModels
+namespace PerformanceMeasurementPlugin.ViewModels;
+
+public class PerformanceViewModel : INotifyPropertyChanged
 {
-    public class PerformanceViewModel : INotifyPropertyChanged
+    DispatcherTimer mTimer;
+
+    public int DrawCallCount
     {
-        DispatcherTimer mTimer;
-
-        public int DrawCallCount
+        get
         {
-            get
+            if (ISystemManagers.Default != null)
             {
-                if (SystemManagers.Default != null)
-                {
-                    // to do: need to replace this with proper calls
-                    return -1;
-                }
-                else
-                {
-                    return 0;
-                }
+                // to do: need to replace this with proper calls
+                return -1;
+            }
+            else
+            {
+                return 0;
             }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public PerformanceViewModel()
-        {
-            mTimer = new DispatcherTimer();
-            mTimer.Tick += HandleTick;
-            mTimer.Interval = TimeSpan.FromSeconds(1);
-
-            mTimer.Start();
-        }
-
-        private void HandleTick(object? sender, EventArgs e)
-        {
-            if(PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs("DrawCallCount"));
-            }
-        }
-
-
     }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public PerformanceViewModel()
+    {
+        mTimer = new DispatcherTimer();
+        mTimer.Tick += HandleTick;
+        mTimer.Interval = TimeSpan.FromSeconds(1);
+
+        mTimer.Start();
+    }
+
+    private void HandleTick(object? sender, EventArgs e)
+    {
+        if(PropertyChanged != null)
+        {
+            PropertyChanged(this, new PropertyChangedEventArgs("DrawCallCount"));
+        }
+    }
+
+
 }
