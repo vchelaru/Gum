@@ -22,7 +22,6 @@
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\Gum.csproj" />
 		<ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
-		<ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
 	</ItemGroup>

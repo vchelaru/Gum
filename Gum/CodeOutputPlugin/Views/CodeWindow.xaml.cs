@@ -135,7 +135,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                var valueToSet = (string)args.Value;
+                var valueToSet = (string?)args.Value ?? string.Empty;
                 var needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
                     !valueToSet.EndsWith("\\") &&
                     !valueToSet.EndsWith("/");
@@ -270,7 +270,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.CommonUsingStatements = (string)args.Value;
+                CodeOutputProjectSettings.CommonUsingStatements = (string)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -290,7 +290,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.RootNamespace = (string)args.Value;
+                CodeOutputProjectSettings.RootNamespace = (string)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -309,7 +309,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.AppendFolderToNamespace = (bool)args.Value;
+                CodeOutputProjectSettings.AppendFolderToNamespace = (bool)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -329,7 +329,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.DefaultScreenBase = (string)args.Value;
+                CodeOutputProjectSettings.DefaultScreenBase = (string)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -347,7 +347,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.AdjustPixelValuesForDensity = (bool)args.Value;
+                CodeOutputProjectSettings.AdjustPixelValuesForDensity = (bool)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -366,7 +366,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.BaseTypesNotCodeGenerated = (string)args.Value;
+                CodeOutputProjectSettings.BaseTypesNotCodeGenerated = (string)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -386,7 +386,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.GenerateGumDataTypes = (bool)args.Value;
+                CodeOutputProjectSettings.GenerateGumDataTypes = (bool)args.Value!;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -493,7 +493,7 @@ public partial class CodeWindow : UserControl
         {
             if (codeOutputElementSettings != null)
             {
-                codeOutputElementSettings.UsingStatements = (string)args.Value;
+                codeOutputElementSettings.UsingStatements = (string?)args.Value ?? string.Empty;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -518,7 +518,7 @@ public partial class CodeWindow : UserControl
         {
             if (codeOutputElementSettings != null)
             {
-                codeOutputElementSettings.Namespace = (string)args.Value;
+                codeOutputElementSettings.Namespace = (string?)args.Value ?? string.Empty;
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }
         };
@@ -541,7 +541,7 @@ public partial class CodeWindow : UserControl
         {
             if (codeOutputElementSettings != null)
             {
-                var valueAsString = (string)args.Value;
+                var valueAsString = (string?)args.Value ?? string.Empty;
                 if (!string.IsNullOrWhiteSpace(ProjectState.Self.ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
                 {
                     valueAsString = FileManager.MakeRelative(valueAsString, ProjectState.Self.ProjectDirectory, preserveCase: true);
@@ -566,7 +566,7 @@ public partial class CodeWindow : UserControl
         {
             if (codeOutputElementSettings != null)
             {
-                codeOutputElementSettings.LocalizeElement = (bool)args.Value;
+                codeOutputElementSettings.LocalizeElement = (bool)args.Value!;
 
                 CodeOutputSettingsPropertyChanged?.Invoke(this, EventArgs.Empty);
             }

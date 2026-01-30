@@ -2428,7 +2428,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             whatToHighlight = _wireframeObjectManager.GetRepresentation(instance, null);
         }
 
-        PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+        if(PluginManager.Self.IsInitialized)
+        {
+            PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+        }
     }
 
     void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)

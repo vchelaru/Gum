@@ -131,6 +131,8 @@ public class PluginManager : IPluginManager
     {
         get { return mPluginContainers; }
     }
+
+    public bool IsInitialized => this.Plugins != null;
     #endregion
 
     #region Exported objects

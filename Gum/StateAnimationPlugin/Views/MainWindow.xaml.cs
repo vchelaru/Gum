@@ -252,7 +252,7 @@ namespace StateAnimationPlugin.Views
 
         private void LoopToggleClick(object? sender, RoutedEventArgs e)
         {
-            var animation = ((Button)sender).DataContext as AnimationViewModel;
+            var animation = ((Button)sender!).DataContext as AnimationViewModel;
             if (animation != null)
             {
                 animation.ToggleLoop();
