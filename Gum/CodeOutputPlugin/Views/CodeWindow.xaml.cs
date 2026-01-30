@@ -135,7 +135,7 @@ public partial class CodeWindow : UserControl
         {
             if (CodeOutputProjectSettings != null)
             {
-                var valueToSet = (string)args.Value;
+                var valueToSet = (string?)args.Value ?? string.Empty;
                 var needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
                     !valueToSet.EndsWith("\\") &&
                     !valueToSet.EndsWith("/");
@@ -541,7 +541,7 @@ public partial class CodeWindow : UserControl
         {
             if (codeOutputElementSettings != null)
             {
-                var valueAsString = (string)args.Value;
+                var valueAsString = (string?)args.Value ?? string.Empty;
                 if (!string.IsNullOrWhiteSpace(ProjectState.Self.ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
                 {
                     valueAsString = FileManager.MakeRelative(valueAsString, ProjectState.Self.ProjectDirectory, preserveCase: true);

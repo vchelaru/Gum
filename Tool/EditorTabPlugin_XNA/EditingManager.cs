@@ -39,8 +39,8 @@ public partial class EditingManager
 
     public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
     {
-        GraphicalUiElement ipso = _wireframeObjectManager.GetRepresentation(instance, elementStack);
-        ipso.UpdateLayout();
+        GraphicalUiElement? ipso = _wireframeObjectManager.GetRepresentation(instance, elementStack);
+        ipso?.UpdateLayout();
     }
 
 
