@@ -17,7 +17,7 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<LangVersion>12.0</LangVersion>
-		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+		<Configurations>Debug;Release;Release_No_Diagnostics;Debug_AposShapes;Release_AposShapes</Configurations>
 
 	</PropertyGroup>
 
@@ -31,6 +31,16 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
 	  <DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_AposShapes|AnyCPU'">
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON;FULL_DIAGNOSTICS;APOS_SHAPES</DefineConstants>
+		<OutputPath>bin\Debug_AposShapes\</OutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_AposShapes|AnyCPU'">
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON;FULL_DIAGNOSTICS;APOS_SHAPES</DefineConstants>
+		<OutputPath>bin\Release_AposShapes\</OutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -133,6 +143,10 @@
 		<Folder Include="Renderables\Fonts\" />
 		<Folder Include="Utilities\" />
 		<Folder Include="RenderingLibrary\" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(Configuration)'=='Debug_AposShapes' OR '$(Configuration)'=='Release_AposShapes'">
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.3-alpha" />
 	</ItemGroup>
 
 	<ItemGroup>

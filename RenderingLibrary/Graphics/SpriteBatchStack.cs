@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlendState = Gum.BlendState;
@@ -7,10 +6,21 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
+
+
+
+#if APOS_SHAPES
+using SpriteBatch = Apos.Shapes.ShapeBatch;
+#else
+using SpriteBatch = Microsoft.Xna.Framework.Graphics.SpriteBatch;
+
+#endif
+
 
 namespace RenderingLibrary.Graphics
 {
-
     public struct StateChangeInfo
     {
         public Texture2D Texture;
@@ -146,9 +156,14 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
-        public SpriteBatchStack(GraphicsDevice graphicsDevice)
+        public SpriteBatchStack(GraphicsDevice graphicsDevice, ContentManager contentManager)
         {
+#if APOS_SHAPES
+
+            SpriteBatch = new Apos.Shapes.ShapeBatch(graphicsDevice, contentManager);
+#else
             SpriteBatch = new SpriteBatch(graphicsDevice);
+#endif
         }
 
         public static void PerformStartOfLayerRenderingLogic()

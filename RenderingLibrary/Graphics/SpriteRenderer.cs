@@ -7,6 +7,7 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using Microsoft.Xna.Framework.Content;
 
 namespace RenderingLibrary.Graphics;
 
@@ -60,9 +61,9 @@ public class SpriteRenderer
 
     #endregion
 
-    public void Initialize(GraphicsDevice graphicsDevice)
+    public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager)
     {
-        mSpriteBatch = new SpriteBatchStack(graphicsDevice);
+        mSpriteBatch = new SpriteBatchStack(graphicsDevice, contentManager);
 
         CreateRasterizerStates();
 
