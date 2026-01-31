@@ -402,15 +402,14 @@ public class SpriteRenderer
         mSpriteBatch.DrawString(font, line, offset, color, objectRequestingChange);
     }
 
-    internal void Draw(Texture2D textureToUse, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
+    internal void Draw(Texture2D textureToUse, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, object objectRequestingChange)
     {
-        mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, layerDepth, objectRequestingChange);
+        mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, objectRequestingChange);
     }
 
     internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, 
         float rotation, Vector2 origin, 
         Vector2 scale, SpriteEffects effects, 
-        float depth, 
         object objectRequestingChange, 
         Renderer renderer = null, 
         bool offsetPixel = true,
@@ -545,7 +544,7 @@ public class SpriteRenderer
             position.Y = y;
         }
 
-        mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
+        mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, objectRequestingChange);
     }
 
 

@@ -846,7 +846,6 @@ public class BitmapFont : IDisposable
                             Vector2.Zero,
                             scale,
                             SpriteEffects.None,
-                            0,
                             this,
                             dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
@@ -866,7 +865,6 @@ public class BitmapFont : IDisposable
                             Vector2.Zero,
                             scale,
                             SpriteEffects.None,
-                            0,
                             this,
                             dimensionSnapping: DimensionSnapping.DimensionSnapping);
                     }
