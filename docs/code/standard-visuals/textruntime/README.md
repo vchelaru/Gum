@@ -10,6 +10,8 @@ A TextRuntime are often used in the following situations:
 2. Adding visuals to a Forms control, such as adding another label to a Button
 3. Modifying Visuals, such as a TextInstance in a ButtonVisual
 
+TextRuntime corresponds to the Text type in the Gum UI tool, and shares all of the same properties. For more information see the [Text](../../../gum-tool/gum-elements/text/text.md) page.
+
 ## Example - Creating a TextRuntime
 
 To create a TextRuntime, instantiate it and add it to root as shown in the following code:
