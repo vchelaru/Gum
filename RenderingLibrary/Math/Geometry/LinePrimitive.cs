@@ -44,6 +44,7 @@ namespace RenderingLibrary.Math.Geometry
         /// <summary>
         /// Gets/sets the render depth of the primitive line object (0 = front, 1 = back)
         /// </summary>
+        [Obsolete("Not used anymore")]
         public float Depth;
 
         public float LinePixelWidth = 1;
@@ -72,7 +73,6 @@ namespace RenderingLibrary.Math.Geometry
 
             Color = Color.White;
             Position = new Vector2(0, 0);
-            Depth = 0;
 
             mVectors = new List<Vector2>();
         }
@@ -309,7 +309,6 @@ namespace RenderingLibrary.Math.Geometry
                     Vector2.Zero,
                     scale,
                     SpriteEffects.None,
-                    Depth,
                     this,
                     renderer:null,
                     offsetPixel:false);

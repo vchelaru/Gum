@@ -232,7 +232,8 @@ public class SpriteRenderer
         // This seems to work fine in all cases
         if (beginType == BeginType.Begin)
         {
-            mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,
+            mSpriteBatch.ReplaceRenderStates(
+                SpriteSortMode.Deferred,
                 renderStates.BlendState,
                 samplerState,
                 depthStencilState,
@@ -246,7 +247,8 @@ public class SpriteRenderer
         }
         else
         {
-            mSpriteBatch.PushRenderStates(SpriteSortMode.Deferred,
+            mSpriteBatch.PushRenderStates(
+                SpriteSortMode.Deferred,
                 renderStates.BlendState,
                 samplerState,
                 depthStencilState,

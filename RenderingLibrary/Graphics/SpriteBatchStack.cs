@@ -196,7 +196,8 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.Begin();
         }
 
-        public void PushRenderStates(SpriteSortMode sortMode, 
+        public void PushRenderStates(
+            SpriteSortMode spriteSortMode,
             BlendState blendState, SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
             Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle,
@@ -208,14 +209,17 @@ namespace RenderingLibrary.Graphics
 
             // begin will end 
             ReplaceRenderStates(
-                sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle, objectChangingState);
+                spriteSortMode,
+                blendState, 
+                samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle, objectChangingState);
         }
 
         public void ForceSetRenderStatesToCurrent()
         {
             if (currentParameters != null)
             {
-                ReplaceRenderStates(currentParameters.Value.SortMode,
+                ReplaceRenderStates(
+                    currentParameters.Value.SortMode,
                     currentParameters.Value.BlendState,
                     currentParameters.Value.SamplerState,
                     currentParameters.Value.DepthStencilState,
@@ -227,7 +231,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public void ReplaceRenderStates(SpriteSortMode sortMode, 
+        public void ReplaceRenderStates(SpriteSortMode sortMode,
             BlendState blendState, 
             SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, 
@@ -282,10 +286,16 @@ namespace RenderingLibrary.Graphics
             // assign here so that any other renderables that rely on scissor rects can use it
             SpriteBatch.GraphicsDevice.RasterizerState = 
                 rasterizerState ?? RasterizerState.CullCounterClockwise;
+
+#if APOS_SHAPES
+            // todo - need blend mode, and a few other things as outlined here:
+            // https://github.com/Apostolique/Apos.Shapes/issues/28
+            SpriteBatch.Begin(transformMatrix);
+#else
             SpriteBatch.Begin(sortMode,
                 blendState.ToXNA(),
                 samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
-
+#endif
         }
 
         internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle sourceRectangle, Color color, object objectRequestingChange)
@@ -314,9 +324,11 @@ namespace RenderingLibrary.Graphics
 
         internal void DrawString(SpriteFont font, string line, Vector2 offset, Color color, object objectRequestingChange)
         {
+#if !APOS_SHAPES
             AdjustCurrentParametersDrawCall(null, font, objectRequestingChange);
 
             SpriteBatch.DrawString(font, line, offset.ToXNA(), color.ToXNA());
+#endif
         }
 
         private void AdjustCurrentParametersDrawCall(Texture2D texture, SpriteFont spriteFont, object objectRequestingChange)
@@ -386,7 +398,9 @@ namespace RenderingLibrary.Graphics
 
             if (parameters.HasValue)
             {
-                ReplaceRenderStates(parameters.Value.SortMode, parameters.Value.BlendState,
+                ReplaceRenderStates(
+                    parameters.Value.SortMode,
+                    parameters.Value.BlendState,
                     parameters.Value.SamplerState, parameters.Value.DepthStencilState,
                     parameters.Value.RasterizerState, parameters.Value.Effect,
                     parameters.Value.TransformMatrix, parameters.Value.ScissorRectangle, null);
