@@ -704,24 +704,28 @@ public class ProjectManager
                 try
                 {
 
+                    _fileWatchManager.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
+
                     if (saveContainedElements)
                     {
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
                             PluginManager.Self.BeforeElementSave(screenSave);
+                            _fileWatchManager.IgnoreNextChangeUntil(screenSave.GetFullPathXmlFile());
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
                             PluginManager.Self.BeforeElementSave(componentSave);
+                            _fileWatchManager.IgnoreNextChangeUntil(componentSave.GetFullPathXmlFile());
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
                             PluginManager.Self.BeforeElementSave(standardElementSave);
+                            _fileWatchManager.IgnoreNextChangeUntil(standardElementSave.GetFullPathXmlFile());
                         }
                     }
 
                     // todo - this should go through the plugin...
-                    _fileWatchManager.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
 
                     GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
                     succeeded = true;

@@ -28,12 +28,15 @@ namespace Gum.DataTypes
             {
                 try
                 {
-                    StateSave stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
+                    StateSave? stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
                     // this will result in extra variables being
                     // added
                     wasModified = standardElementSave.Initialize(stateSave) || wasModified;
 
-                    stateSave.ParentContainer = standardElementSave;
+                    if(stateSave != null)
+                    {
+                        stateSave.ParentContainer = standardElementSave;
+                    }
 
                 }
                 catch
@@ -252,13 +255,15 @@ namespace Gum.DataTypes
             foreach (var element in gumProjectSave.StandardElements)
             {
                 var defaultState = StandardElementsManager.Self.GetDefaultStateFor(element.Name);
-
-                foreach (var variable in defaultState.Variables)
+                if(defaultState != null)
                 {
-                    var variableInLoadedElement = element.DefaultState.GetVariableSave(variable.Name);
+                    foreach (var variable in defaultState.Variables)
+                    {
+                        var variableInLoadedElement = element.DefaultState.GetVariableSave(variable.Name);
 
-                    variableInLoadedElement.CanOnlyBeSetInDefaultState = variable.CanOnlyBeSetInDefaultState;
-                    variableInLoadedElement.DesiredOrder = variable.DesiredOrder;
+                        variableInLoadedElement.CanOnlyBeSetInDefaultState = variable.CanOnlyBeSetInDefaultState;
+                        variableInLoadedElement.DesiredOrder = variable.DesiredOrder;
+                    }
                 }
             }
 

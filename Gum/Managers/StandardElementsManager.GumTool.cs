@@ -160,7 +160,7 @@ namespace Gum.Managers
         {
             foreach (var stateSaveCategory in elementSave.Categories)
             {
-                VariableSave foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
+                VariableSave? foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
 
                 if (foundVariable != null)
                 {
