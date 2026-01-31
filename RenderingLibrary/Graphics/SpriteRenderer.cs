@@ -61,7 +61,7 @@ public class SpriteRenderer
 
     #endregion
 
-    public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager)
+    public void Initialize(GraphicsDevice graphicsDevice, ContentManager? contentManager = null)
     {
         mSpriteBatch = new SpriteBatchStack(graphicsDevice, contentManager);
 

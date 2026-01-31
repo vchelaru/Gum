@@ -8,6 +8,8 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using System.Diagnostics;
+
 
 
 
@@ -156,10 +158,10 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
-        public SpriteBatchStack(GraphicsDevice graphicsDevice, ContentManager contentManager)
+        public SpriteBatchStack(GraphicsDevice graphicsDevice, ContentManager? contentManager = null)
         {
 #if APOS_SHAPES
-
+            Debug.Assert(contentManager != null);
             SpriteBatch = new Apos.Shapes.ShapeBatch(graphicsDevice, contentManager);
 #else
             SpriteBatch = new SpriteBatch(graphicsDevice);
