@@ -328,7 +328,7 @@
 		<Folder Include="Plugins\InternalPlugins\ScreenshotPlugin\" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.3-alpha" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.4-alpha" />
 		<PackageReference Include="CommunityToolkit.Mvvm">
 		  <Version>8.4.0</Version>
 		</PackageReference>

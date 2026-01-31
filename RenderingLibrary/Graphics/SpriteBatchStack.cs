@@ -287,10 +287,25 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.GraphicsDevice.RasterizerState = 
                 rasterizerState ?? RasterizerState.CullCounterClockwise;
 
+
 #if APOS_SHAPES
+
             // todo - need blend mode, and a few other things as outlined here:
             // https://github.com/Apostolique/Apos.Shapes/issues/28
-            SpriteBatch.Begin(transformMatrix);
+            // hack:
+            var basicEffect = (BasicEffect)effect;
+
+            SpriteBatch.GraphicsDevice.SamplerStates[0] = samplerState;
+
+            // The matrix used here needs to be offset
+            var width = SpriteBatch.GraphicsDevice.Viewport.Width;
+            var height = SpriteBatch.GraphicsDevice.Viewport.Height;
+
+            var matrix = Microsoft.Xna.Framework.Matrix.CreateTranslation(width / 2, height / 2, 0);
+
+            matrix = Microsoft.Xna.Framework.Matrix.Multiply(basicEffect.View, matrix);
+
+            SpriteBatch.Begin(matrix, blendState:blendState.ToXNA(), samplerState:samplerState, depthStencilState:depthStencilState, rasterizerState:rasterizerState);
 #else
             SpriteBatch.Begin(sortMode,
                 blendState.ToXNA(),

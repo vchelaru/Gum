@@ -126,7 +126,6 @@
 		<Compile Include="..\RenderingLibrary\Math\Geometry\LinePolygon.cs" Link="Renderables\LinePolygon.cs" />
 		<Compile Include="..\RenderingLibrary\Math\Geometry\LinePrimitive.cs" Link="Renderables\LinePrimitive.cs" />
 		<Compile Include="..\RenderingLibrary\Math\Geometry\LineRectangle.cs" Link="Renderables\LineRectangle.cs" />
-		<Compile Include="..\RenderingLibrary\Math\Geometry\Rectangle.cs" Link="Renderables\Rectangle.cs" />
 		<Compile Include="..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
 		<Compile Include="..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
 		<Compile Include="..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />

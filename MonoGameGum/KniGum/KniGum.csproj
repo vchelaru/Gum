@@ -146,7 +146,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)'=='Debug_AposShapes' OR '$(Configuration)'=='Release_AposShapes'">
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.3-alpha" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.4-alpha" />
 	</ItemGroup>
 
 	<ItemGroup>

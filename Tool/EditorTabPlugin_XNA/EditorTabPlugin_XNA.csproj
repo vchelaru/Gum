@@ -38,7 +38,7 @@
 		</Compile>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.3-alpha" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.4-alpha" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
