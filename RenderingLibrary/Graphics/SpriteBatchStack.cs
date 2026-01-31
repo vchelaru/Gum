@@ -311,15 +311,57 @@ namespace RenderingLibrary.Graphics
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
+#if APOS_SHAPES
 
+            var destinationRectangleF = new MonoGame.Extended.RectangleF(
+                destinationRectangle.X,
+                destinationRectangle.Y,
+                destinationRectangle.Width,
+                destinationRectangle.Height);
+
+            if(sourceRectangle != null)
+            {
+                var sourceF = new MonoGame.Extended.RectangleF(
+                        sourceRectangle.Value.X,
+                        sourceRectangle.Value.Y,
+                        sourceRectangle.Value.Width,
+                        sourceRectangle.Value.Height);
+
+                SpriteBatch.Draw(texture2D, destinationRectangleF, sourceF, color.ToXNA(), rotationInRadians, origin.ToXNA(), Microsoft.Xna.Framework.Vector2.One);
+
+            }
+            else
+            {
+                SpriteBatch.Draw(texture2D, destinationRectangleF, color.ToXNA(), rotationInRadians, origin.ToXNA(), Microsoft.Xna.Framework.Vector2.One);
+            }
+
+#else
             SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), effects, layerDepth:0);
+#endif
         }
 
         internal void Draw(Texture2D texture2D, Vector2 position, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, Vector2 scale, SpriteEffects effects, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
+#if APOS_SHAPES
+
+            if (sourceRectangle != null)
+            {
+                var sourceF = new MonoGame.Extended.RectangleF(
+                    sourceRectangle.Value.X,
+                    sourceRectangle.Value.Y,
+                    sourceRectangle.Value.Width,
+                    sourceRectangle.Value.Height);
+                SpriteBatch.Draw(texture2D, position.ToXNA(), sourceF, color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA());
+            }
+            else
+            {
+                SpriteBatch.Draw(texture2D, position.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA());
+            }
+#else
             SpriteBatch.Draw(texture2D, position.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA(), effects, layerDepth: 0);
+#endif
         }
 
         internal void DrawString(SpriteFont font, string line, Vector2 offset, Color color, object objectRequestingChange)

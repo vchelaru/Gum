@@ -23,8 +23,8 @@
     <None Remove="SkiaInGumShared\obj\**" />
   </ItemGroup>
   <ItemGroup>
-	  <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
+	  <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />

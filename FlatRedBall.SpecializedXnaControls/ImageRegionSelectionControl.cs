@@ -382,6 +382,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
             var contentLoader = new ContentLoader();
             // create one here since we need one anyway:
             contentLoader.XnaContentManager = new Microsoft.Xna.Framework.Content.ContentManager(services);
+
             mManagers.Initialize(GraphicsDevice, fullInstantiation:false, contentLoader:contentLoader);
             mManagers.Name = "Image Region Selection";
             Assembly assembly = Assembly.GetAssembly(typeof(GraphicsDeviceControl));// Assembly.GetCallingAssembly();

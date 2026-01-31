@@ -217,7 +217,7 @@ public partial class SystemManagers : ISystemManagers
 #endif
         }
 
-        Renderer.Initialize(graphicsDevice, this);
+        Renderer.Initialize(graphicsDevice, this, (LoaderManager.Self.ContentLoader as ContentLoader)?.XnaContentManager);
 
         SpriteManager = new SpriteManager();
 

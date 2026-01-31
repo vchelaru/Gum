@@ -265,7 +265,7 @@ public class Renderer : IRenderer
 
     }
 
-    public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
+    public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers, ContentManager? contentManager)
     {
         renderTargetService = new RenderTargetService();
 
@@ -293,7 +293,7 @@ public class Renderer : IRenderer
 
         mGraphicsDevice = graphicsDevice;
 
-        spriteRenderer.Initialize(graphicsDevice);
+        spriteRenderer.Initialize(graphicsDevice, contentManager);
         CustomEffectManager.Initialize(graphicsDevice);
 
         mSinglePixelTexture = new Texture2D(mGraphicsDevice, 1, 1, false, SurfaceFormat.Color);

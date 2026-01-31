@@ -76,6 +76,9 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
+		<None Update="apos-shapes.xnb">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="Content\Fonts\Font18Arial_o1.fnt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -325,6 +328,7 @@
 		<Folder Include="Plugins\InternalPlugins\ScreenshotPlugin\" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.3-alpha" />
 		<PackageReference Include="CommunityToolkit.Mvvm">
 		  <Version>8.4.0</Version>
 		</PackageReference>
@@ -376,10 +380,10 @@
 		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
 		<PackageReference Include="System.Management" Version="9.0.3" />
 
-		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
-		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="System.Resources.Extensions" Version="9.0.5" />
 		<PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
 	</ItemGroup>
