@@ -121,10 +121,16 @@ Global
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{951A5743-C515-41A8-B0D9-A5B3F37B927D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Release|Any CPU.Build.0 = Release|Any CPU
+#		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+#		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+#		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+#		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Release|Any CPU.Build.0 = Release|Any CPU
+
+		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Debug|Any CPU.ActiveCfg = Debug_AposShapes|Any CPU
+		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Debug|Any CPU.Build.0 = Debug_AposShapes|Any CPU
+		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Release|Any CPU.ActiveCfg = Release_AposShapes|Any CPU
+		{BC2FFE67-E115-886E-D707-5E94DBF364A5}.Release|Any CPU.Build.0 = Release_AposShapes|Any CPU
+
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
