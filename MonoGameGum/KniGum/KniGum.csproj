@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>2026.1.24.1</Version>
+		<Version>2026.1.31.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>KNI</DefineConstants>

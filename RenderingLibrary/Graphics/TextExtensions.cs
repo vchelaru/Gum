@@ -38,7 +38,7 @@ public static class TextExtensions
         var leftOfText = textInstance.GetAbsoluteLeft();
         var cursorOffset = screenX - leftOfText;
 
-        var lineHeight = textInstance.LineHeightInPixels;
+        var lineHeight = textInstance.LineHeightInPixels * textInstance.LineHeightMultiplier;
         var topOfText = textInstance.GetAbsoluteTop();
         if (textInstance.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
         {
@@ -46,7 +46,7 @@ public static class TextExtensions
         }
         var cursorYOffset = screenY - topOfText;
 
-        var lineOn = System.Math.Max(0, System.Math.Min((int)cursorYOffset / lineHeight, textInstance.WrappedText.Count - 1));
+        var lineOn = (int)System.Math.Max(0, System.Math.Min((int)cursorYOffset / lineHeight, textInstance.WrappedText.Count - 1));
 
         if (lineOn < textInstance.WrappedText.Count)
         {
