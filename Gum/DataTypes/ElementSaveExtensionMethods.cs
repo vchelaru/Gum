@@ -128,7 +128,7 @@ namespace Gum.DataTypes
                 var elementDefaultState = elementSave.DefaultState;
                 foreach (VariableSave variableSave in stateForNewType.Variables)
                 {
-                    VariableSave existingVariable = elementDefaultState.GetVariableSave(variableSave.Name);
+                    VariableSave? existingVariable = elementDefaultState.GetVariableSave(variableSave.Name);
 
                     if(existingVariable == null)
                     {
@@ -204,7 +204,7 @@ namespace Gum.DataTypes
 
                 foreach (var stateSaveCategory in elementSave.Categories)
                 {
-                    VariableSave foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
+                    VariableSave? foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
 
                     if (foundVariable == null)
                     {
