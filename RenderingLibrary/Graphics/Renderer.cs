@@ -265,7 +265,7 @@ public class Renderer : IRenderer
 
     }
 
-    public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers, ContentManager? contentManager)
+    public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers, ContentManager? contentManager = null)
     {
         renderTargetService = new RenderTargetService();
 

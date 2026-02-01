@@ -217,7 +217,11 @@ public partial class SystemManagers : ISystemManagers
 #endif
         }
 
+#if USE_GUMCOMMON
         Renderer.Initialize(graphicsDevice, this, (LoaderManager.Self.ContentLoader as ContentLoader)?.XnaContentManager);
+#else
+        Renderer.Initialize(graphicsDevice, this);
+#endif
 
         SpriteManager = new SpriteManager();
 
