@@ -3523,9 +3523,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             void UpdateChild(GraphicalUiElement child, bool flagAsUpdated)
             {
-
+                var childLayoutType = child.GetChildLayoutType(this);
                 var canDoFullUpdate =
-                    CanDoFullUpdate(child.GetChildLayoutType(this), child);
+                    CanDoFullUpdate(childLayoutType, child);
 
 
                 if (canDoFullUpdate)
@@ -6062,8 +6062,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
+            bool didSuspend = false;
             if (GraphicalUiElement.IsAllLayoutSuspended == false)
             {
+                didSuspend = true;
                 this.SuspendLayout(true);
             }
 
@@ -6120,7 +6122,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.SetProperty(variableList.Name, variableList.ValueAsIList);
             }
 
-            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            if (didSuspend)
             {
                 this.ResumeLayout(true);
 
