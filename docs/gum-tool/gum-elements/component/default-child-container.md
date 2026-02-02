@@ -30,17 +30,14 @@ Once this value is set, instances which are drag+dropped onto Frame instances us
 
 When one instance is drag+dropped onto another instance, the Parent property is set according to the parent's Default Child Container.
 
-Using the example above, the RectangleInstance is dropped on the ContainerTestInstance. Since the ContainerTestInstance is of type Frame, then the Default Child Container is applied on the drop, which results in the RectangleInstance's Parent being set to ContainerTestInstance.InnerRectangle.
+Using the example above, the RectangleInstance is dropped on the ContainerTestInstance. Since the ContainerTestInstance is of type Frame, then the Default Child Container is applied on the drop, which results in the RectangleInstance's Parent being set to `ContainerTestInstance.InnerRectangle`.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_08 43 00.png" alt=""><figcaption></figcaption></figure>
 
 ## Ignoring Default Child Container
 
 As mentioned above, if an instance is added to a parent component, the instance automatically attaches itself to the parent's `Default Child Container`. This can be undone by manually changing the `Parent` property.
 
-For example, the `Parent` can be manually changed to **ContainerTestInstance**.
+For example, the `Parent` can be manually changed to `ContainerTestInstance`.
 
 <figure><img src="../../../.gitbook/assets/22_11 38 45.gif" alt=""><figcaption><p>Changing the Parent to the name of the instance can force a child to be attached to the root of the parent</p></figcaption></figure>
-
-
-
