@@ -295,6 +295,7 @@
 * [Animation](code/animationruntime.md)
 * [Performance and Optimization](code/performance-and-optimization/README.md)
   * [Measuring Draw Calls](code/performance-and-optimization/lastframedrawstates.md)
+  * [Measuring Layout Calls](code/performance-and-optimization/measuring-layout-calls.md)
   * [SinglePixelTexture](code/performance-and-optimization/singlepixeltexture.md)
 * [Gum Tool Code (Contributing and Plugins)](code/gum-tool-code-contributing-and-plugins/README.md)
   * [DataUiGrid](code/gum-tool-code-contributing-and-plugins/datauigrid/README.md)
