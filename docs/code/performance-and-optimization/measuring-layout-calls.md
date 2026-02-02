@@ -89,6 +89,35 @@ We can notice a few things when looking at this code:
 
 Based on the screenshot above, our project is performing over 1000 unnecessary layout call counts. At least, in a typical game the final layout is only needed when drawing is performed, not after every item add.
 
+It's important to note that a single control may perform multiple layout calls when a single variable is changed. For example, consider the following code:
+
+```csharp
+Button button = new();
+button.AddToRoot();
+button.Anchor(Anchor.Center);
+
+int countBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+button.Width = 200;
+button.Height = 40;
+
+int countAfter = GraphicalUiElement.UpdateLayoutCallCount;
+
+button.Text = $"{countAfter - countBefore} layouts performed";
+```
+
+You may expect the code above to perform only 2 layout calls, but we see the number is actually higher:
+
+<figure><img src="../../.gitbook/assets/02_08 53 59.png" alt=""><figcaption><p>Number of layout calls displayed by a button</p></figcaption></figure>
+
+Remember that even a simple control, like a Button, is made of multiple visuals:
+
+* The main Visual itself&#x20;
+* The text
+* The background
+
+Therefore, changing the button's Width requires multiple visuals to update their layout.
+
 ## Reducing Layout Calls
 
 We can improve the performance of our code by setting `GraphicalUiElement.IsAllLayoutSuspended` to true, then resuming layout it after the adds have finished:
@@ -118,3 +147,39 @@ for(int i = 0; i &#x3C; 20; i++)
 </strong></code></pre>
 
 <figure><img src="../../.gitbook/assets/02_08 34 32.png" alt=""><figcaption><p>Significantly reduced layout calls</p></figcaption></figure>
+
+## States and Layout Calls
+
+States can be used to set multiple variables at once. Internally Gum automatically suppresses and resumes layouts when states are applied. The following code shows how to apply states to a button. Notice that fewer layout calls are performed compared to explicitly setting each value:
+
+```csharp
+Button button = new();
+button.AddToRoot();
+button.Anchor(Anchor.Center);
+
+int countBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+StateSave state = new StateSave();
+
+state.Variables.Add(new VariableSave
+{
+    Name = "Width",
+    Value = 200f
+});
+
+state.Variables.Add(new VariableSave
+{
+    Name = "Height",
+    Value = 40f
+});
+
+
+button.Visual.ApplyState(state);
+
+int countAfter = GraphicalUiElement.UpdateLayoutCallCount;
+
+button.Text = $"{countAfter - countBefore} layouts performed";
+```
+
+<figure><img src="../../.gitbook/assets/02_08 56 48.png" alt=""><figcaption><p>Setting states can reduce layout call count</p></figcaption></figure>
+
