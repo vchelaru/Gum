@@ -1653,6 +1653,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
     {
+        mIsLayoutSuspended = true;
         Width = 32;
         Height = 32;
 #if FULL_DIAGNOSTICS
@@ -1677,6 +1678,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
 
+        mIsLayoutSuspended = false;
         // This is a bit of a hack to support GraphicalUiElement.IWindow.
         // This isn't needed in MonoGame:
         OnConstructor();
@@ -4886,6 +4888,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <exception cref="NotImplementedException"></exception>
     public void Anchor(Anchor anchor)
     {
+        var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended || this.IsLayoutSuspended;
+
+        if(!wasSuspended)
+        {
+            this.SuspendLayout();
+        }
+
         switch (anchor)
         {
             case Wireframe.Anchor.TopLeft:
@@ -5026,6 +5035,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 break;
             default:
                 throw new NotImplementedException();
+        }
+
+        if(!wasSuspended)
+        {
+            this.ResumeLayout();
         }
     }
 
