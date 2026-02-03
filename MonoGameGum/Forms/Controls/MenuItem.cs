@@ -509,9 +509,9 @@ public class MenuItem : ItemsControl
                 var parentForSizing = itemsPopup.InnerPanel;
                 while(parentForSizing != null)
                 {
-                    parentForSizing.WidthUnits = DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     parentForSizing.Width = 0;
-                    parentForSizing.HeightUnits = DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     parentForSizing.Height = 0;
 
                     if (parentForSizing == itemsPopup.Visual)

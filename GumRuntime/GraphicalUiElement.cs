@@ -271,17 +271,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <inheritdoc/>
     public bool Visible
     {
-        get
-        {
-            if (mContainedObjectAsIVisible != null)
-            {
-                return mContainedObjectAsIVisible.Visible;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        get => mContainedObjectAsIVisible?.Visible ?? false;
         set
         {
             // If this is a Screen, then it doesn't have a contained IVisible:
