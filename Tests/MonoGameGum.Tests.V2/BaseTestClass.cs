@@ -1,16 +1,35 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Wireframe;
+using MonoGameGum.Input;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MonoGameGum.Input;
 
 namespace MonoGameGum.Tests.V2;
 
 public class BaseTestClass : IDisposable
 {
+    public BaseTestClass()
+    {
+        CreateMockCursor();
+    }
+
+
+    private void CreateMockCursor()
+    {
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.PrimaryClick).Returns(true);
+        FormsUtilities.SetCursor(cursor.Object);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+        cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(x => x.PrimaryPush).Returns(true);
+    }
+
     public void Dispose()
     {
         FrameworkElement.KeyboardsForUiControl.Clear();

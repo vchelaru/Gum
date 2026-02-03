@@ -15,6 +15,13 @@ namespace MonoGameGum.Tests.Forms;
 public class ItemsControlTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ItemsControl sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ItemsControl_Items_ShouldAddLabels_WhenAdding()
     {
         ItemsControl itemsControl = new ();

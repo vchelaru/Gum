@@ -11,6 +11,13 @@ namespace MonoGameGum.Tests.Forms;
 public class SliderTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        Slider sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Value_ShouldBeLimited_WhenOutsideOfMinimumAndMaximum()
     {
         Slider slider = new ()

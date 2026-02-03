@@ -23,6 +23,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public DefaultComboBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
+            this.HasEvents = true;
             if (fullInstantiation)
             {
                 var background = new ColoredRectangleRuntime();

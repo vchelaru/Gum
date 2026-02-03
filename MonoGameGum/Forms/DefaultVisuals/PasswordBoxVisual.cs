@@ -8,6 +8,7 @@ namespace Gum.Forms.DefaultVisuals
 
         public PasswordBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
         {
+            this.HasEvents = true;
             if (tryCreateFormsObject)
             {
                 FormsControlAsObject = new PasswordBox(this);

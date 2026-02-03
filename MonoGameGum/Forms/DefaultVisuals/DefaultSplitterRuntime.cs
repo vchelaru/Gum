@@ -15,7 +15,9 @@ public class DefaultSplitterRuntime : InteractiveGue
 {
     public DefaultSplitterRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
-        if(fullInstantiation)
+        this.HasEvents = true;
+
+        if (fullInstantiation)
         {
             this.Width = 8;
             this.Height = 8;

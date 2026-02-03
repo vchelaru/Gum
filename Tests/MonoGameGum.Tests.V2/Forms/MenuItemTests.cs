@@ -1,6 +1,7 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
+using MonoGameGum.Input;
 using Moq;
 using Shouldly;
 using System;
@@ -18,6 +19,13 @@ public class MenuItemTests
         MenuItem menuItem = new ();
         menuItem.Visual.ShouldNotBeNull();
         (menuItem.Visual is Gum.Forms.DefaultVisuals.MenuItemVisual).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        MenuItem sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 
     [Fact]
@@ -74,7 +82,7 @@ public class MenuItemTests
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.PrimaryClick).Returns(true);
         FormsUtilities.SetCursor(cursor.Object);
-        cursor.SetupProperty(x => x.WindowOver);
+        cursor.SetupProperty(x => x.VisualOver);
         cursor.SetupProperty(x => x.WindowPushed);
         cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.Mouse);
         cursor.Setup(x => x.PrimaryPush).Returns(true);
@@ -86,8 +94,12 @@ public class MenuItemTests
         cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(topItem.Visual.AbsoluteLeft + 1));
         cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns((int)(topItem.Visual.AbsoluteTop + 1));
 
-
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        if(wasTopClicked == false)
+        {
+            var failureReason = CursorExtensions.GetEventFailureReason(cursor.Object, subItem);
+        }
 
         wasTopClicked.ShouldBeTrue();
 

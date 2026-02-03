@@ -98,7 +98,8 @@ public static class CursorExtensions
 
         if(interactiveGue.EffectiveManagers == null)
         {
-            return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers, which means it was not added to a root object, and it was not added as a descendant of a root object.";
+            return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers, " +
+                $"which means it was not added to a root object, and it was not added as a descendent of a root object.";
         }
 
 
@@ -158,9 +159,9 @@ public static class CursorExtensions
 
         }
 
-        if(cursor.WindowOver != null && cursor.WindowOver != interactiveGue)
+        if(cursor.VisualOver != null && cursor.VisualOver != interactiveGue)
         {
-            return $"The cursor is over {NameOrType(cursor.WindowOver)} instead of {interactiveGue}";
+            return $"The cursor is over {NameOrType(cursor.VisualOver)} instead of {interactiveGue}";
         }
 
         var rootParent = interactiveGue.GetTopParent();

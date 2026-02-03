@@ -15,6 +15,12 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class ListBoxTests : BaseTestClass
 {
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ListBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
 
     [Fact]
     public void IsEnabled_ShouldSetListBoxItemsDisable_IfSetToFalse()
@@ -90,7 +96,7 @@ public class ListBoxTests : BaseTestClass
 
         Mock<ICursor> mockCursor = SetupForPush();
 
-        mockCursor.SetupProperty(x => x.WindowOver);
+        mockCursor.SetupProperty(x => x.VisualOver);
         mockCursor.SetupProperty(x => x.WindowPushed);
 
 
@@ -105,11 +111,11 @@ public class ListBoxTests : BaseTestClass
         {
             var firstListBoxItem = listBox.ListBoxItems[0];
 
-            var isOverFirst = mockCursor.Object.WindowOver ==
+            var isOverFirst = mockCursor.Object.VisualOver ==
                 firstListBoxItem.Visual;
 
             string diagnostics =
-                $"WindowOver: {mockCursor.Object.WindowOver}" +
+                $"VisualOver: {mockCursor.Object.VisualOver}" +
                 $" WindowPushed: {mockCursor.Object.WindowPushed}" +
                 $" Is over first: {isOverFirst}";
             throw new Exception(diagnostics);

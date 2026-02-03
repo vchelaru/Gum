@@ -115,11 +115,9 @@ public partial class InteractiveGue : BindableGue
     /// <summary>
     /// Whether this instance supports events and whether the Cursor considers this when
     /// determining what it is over. Typically this is assigned once based 
-    /// on its type, usually when objects are created from a Gum project. Objects which 
-    /// should consume cursor events without raising them should keep this value set to true
-    /// but should set IsEnabled to false.
+    /// on its type, usually when objects are created from a Gum project.
     /// </summary>
-    public bool HasEvents { get; set; } = true;
+    public bool HasEvents { get; set; } = false;
     public bool ExposeChildrenEvents { get; set; } = true;
 
     /// <summary>
@@ -333,7 +331,7 @@ public partial class InteractiveGue : BindableGue
     }
 
     internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer)
-    { 
+    {
         handledActions = handledActions ?? new HandledActions();
         bool handledByChild = false;
         bool handledByThis = false;
@@ -344,15 +342,15 @@ public partial class InteractiveGue : BindableGue
         // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
         if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
         {
-            if(asInteractive != null && asInteractive.HasEvents  && asInteractive.IsEnabledRecursively)
+            if (asInteractive != null && asInteractive.HasEvents && asInteractive.IsEnabledRecursively)
             {
-                if(asInteractive.ClickPreview != null &&
+                if (asInteractive.ClickPreview != null &&
                     !handledActions.HandledClickPreview && cursor.PrimaryClick)
                 {
                     var args = new InputEventArgs() { InputDevice = cursor };
                     asInteractive.ClickPreview(asInteractive, args);
 
-                    if(args.Handled)
+                    if (args.Handled)
                     {
                         cursor.WindowPushed = asInteractive;
                         LastVisualPushed = asInteractive;
@@ -360,7 +358,7 @@ public partial class InteractiveGue : BindableGue
                         handledActions.HandledClickPreview = true;
                     }
                 }
-                if(asInteractive.PushPreview != null &&
+                if (asInteractive.PushPreview != null &&
                     !handledActions.handledPushPreview && cursor.PrimaryPush)
                 {
                     var args = new InputEventArgs() { InputDevice = cursor };
@@ -376,9 +374,9 @@ public partial class InteractiveGue : BindableGue
 
             #region Try handling by children
 
-            if(currentItem.Children == null)
+            if (currentItem.Children == null)
             {
-                for(int i = currentItem.ContainedElements.Count - 1; i > -1; i--)
+                for (int i = currentItem.ContainedElements.Count - 1; i > -1; i--)
                 {
                     var child = currentItem.ContainedElements[i] as GraphicalUiElement;
 
@@ -432,8 +430,13 @@ public partial class InteractiveGue : BindableGue
 
         if (isOver)
         {
-            if (IsComponentOrInstanceOfComponent(currentItem)
-                ||
+            var shouldTreatAsIsOver =
+                IsComponentOrInstanceOfComponent(currentItem);
+
+            // See VisualOverBehavior for an exaplanation about this code
+            if (!shouldTreatAsIsOver && ICursor.VisualOverBehavior == VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue)
+            {
+                shouldTreatAsIsOver =
                 asInteractive?.Push != null ||
                 asInteractive?.Click != null ||
                 asInteractive?.DoubleClick != null ||
@@ -445,7 +448,7 @@ public partial class InteractiveGue : BindableGue
                 asInteractive?._losePush != null ||
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
-                asInteractive?.MouseWheelScroll != null
+                asInteractive?.MouseWheelScroll != null;
                 // if it has events and it has a Forms control, then let's consider it a click
                 //|| asInteractive?.FormsControlAsObject != null
                 // Update July 18, 2025 
@@ -454,7 +457,15 @@ public partial class InteractiveGue : BindableGue
                 // consume all clicks. We need to come
                 // up with another way to do this. For now
                 // the events are the hack
-                )
+            }
+
+            if (!shouldTreatAsIsOver && ICursor.VisualOverBehavior == VisualOverBehavior.IfHasEventsIsTrue)
+            {
+                shouldTreatAsIsOver = asInteractive?.HasEvents == true;
+            }
+
+
+            if (shouldTreatAsIsOver)
             {
                 if (!handledByChild)
                 {
@@ -477,8 +488,8 @@ public partial class InteractiveGue : BindableGue
                     {
                         // moved from above, see comments there...
                         handledByThis = true;
-                        cursor.WindowOver = asInteractive;
-                        handledActions.SetWindowOver = true;
+                        cursor.VisualOver = asInteractive;
+                        handledActions.SetVisualOver = true;
 
                         if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively && handledActions.handledPushPreview == false)
                         {
@@ -908,7 +919,7 @@ public partial class InteractiveGue : BindableGue
 
         // When AddNextPushAction or AddNextClickAction are called, the user expects:
         // 1. That it will not be raised immediately if added inside a push/click event
-        // 2. That it will have access to the WindowPushed/WindowOver
+        // 2. That it will have access to the WindowPushed/VisualOver
         // This means that we cannot immediately run new events, but that all events should
         // be run *after* we do our every-frame logic of detecting whether the user is over a
         // window.
@@ -994,8 +1005,33 @@ public enum Cursors
     // more may be added in the future
 }
 
+/// <summary>
+/// Determines how to evaluate whether to show visual over states based on the HasEvents property.
+/// </summary>
+/// <remarks>
+/// FlatRedBall was built around the assumption that HasEvents is not enough to determine whether
+/// a visual should respond to Cursor events. This is because users may set HasEvents on a StandardElement
+/// in the Gum tool, which would default all instances of that standard to have the value set to true. This 
+/// could result in controls which use this visual unexpectedly having their events swallowed by the child visual.
+/// To avoid this, FlatRedBall checks both HasEvents and whether any events are actually attached to the visual.
+/// However, this behavior is very confusing, and as new runtimes are introduced we can simplify things. To continue
+/// to support the old FRB behavior, this enum exists to allow users to select the old behavior or the new simplified behavior.
+/// Over time, we may get rid of the old behavior completely, or at least default to the new one.
+/// </remarks>
+public enum VisualOverBehavior
+{
+    /// <summary>
+    /// VisualOver is only set if HasEvents is true and if the visual has events attached. This 
+    /// exists to support old projects. New projects should use IfHasEventsIsTrue
+    /// </summary>
+    OnlyIfEventsAreNotNullAndHasEventsIsTrue,
+    IfHasEventsIsTrue
+}
 public interface ICursor
 {
+    public static VisualOverBehavior VisualOverBehavior { get; set; } =
+        VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue;
+
     public Cursors? CustomCursor { get; set; }
     InputDevice LastInputDevice { get; }
     int X { get; }
@@ -1075,7 +1111,7 @@ class HandledActions
     public bool HandledRollOver;
     public bool HandledClickPreview;
     public bool handledPushPreview;
-    public bool SetWindowOver;
+    public bool SetVisualOver;
 }
 public static class GueInteractiveExtensionMethods
 {
@@ -1100,7 +1136,7 @@ public static class GueInteractiveExtensionMethods
 #endif
 
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
-        var windowOverBefore = cursor.WindowOver;
+        var visualOverBefore = cursor.VisualOver;
         var windowPushedBefore = cursor.WindowPushed;
         var VisualRightPushedBefore = cursor.VisualRightPushed;
 
@@ -1112,10 +1148,10 @@ public static class GueInteractiveExtensionMethods
 
 
         HandledActions actions = new HandledActions();
-        var lastWindowOver = cursor.WindowOver;
+        var lastVisualOver = cursor.VisualOver;
 
 
-        cursor.WindowOver = null;
+        cursor.VisualOver = null;
         for(int i = gues.Count-1; i > -1; i--)
         {
             var gue = gues[i];
@@ -1131,43 +1167,43 @@ public static class GueInteractiveExtensionMethods
             {
                 InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
             }
-            if(cursor.WindowOver != null)
+            if(cursor.VisualOver != null)
             {
                 break;
             }
         }
 
-        var windowOverAsInteractive = cursor.WindowOver as InteractiveGue;
-        if (windowOverAsInteractive != null)
+        var visualOverAsInteractive = cursor.VisualOver as InteractiveGue;
+        if (visualOverAsInteractive != null)
         {
-            if (lastWindowOver != windowOverAsInteractive)
+            if (lastVisualOver != visualOverAsInteractive)
             {
-                windowOverAsInteractive.TryCallRollOn();
+                visualOverAsInteractive.TryCallRollOn();
             }
 
-            windowOverAsInteractive.TryCallHoverOver();
+            visualOverAsInteractive.TryCallHoverOver();
             if (cursor.XChange != 0 || cursor.YChange != 0)
             {
-                windowOverAsInteractive.TryCallRollOver();
+                visualOverAsInteractive.TryCallRollOver();
             }
         }
 
-        if (!actions.SetWindowOver)
+        if (!actions.SetVisualOver)
         {
-            cursor.WindowOver = null;
+            cursor.VisualOver = null;
         }
-        else if(cursor.WindowOver == null)
+        else if(cursor.VisualOver == null)
         {
-            cursor.WindowOver = windowOverBefore;
+            cursor.VisualOver = visualOverBefore;
         }
 
-        if(windowOverBefore != cursor.WindowOver)
+        if(visualOverBefore != cursor.VisualOver)
         {
             string GetInfoFor(InteractiveGue interactive)
             {
                 return interactive?.Name + " " + interactive?.GetType();
             }
-            if (windowOverBefore is InteractiveGue interactiveBefore)
+            if (visualOverBefore is InteractiveGue interactiveBefore)
             {
                 interactiveBefore.TryCallRollOff(cursor);
             }
@@ -1204,7 +1240,7 @@ public static class GueInteractiveExtensionMethods
         // not the current click, and this makes closing windows that were just opened much
         // harder to do.
         // Update 2 - The reason this logic must happen after normal UI logic is because some
-        // actions added may inspect the WindowOver or WindowPushed properties, and those are 
+        // actions added may inspect the VisualOver or WindowPushed properties, and those are 
         // set during the UI activity.
         // This does cause the problem of click and push events being called immediately, which
         // means the InteractiveGue must only run events which are at least 1 frame old

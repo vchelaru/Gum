@@ -13,6 +13,13 @@ namespace MonoGameGum.Tests.Forms;
 public class LabelTests : BaseTestClass
 {
     [Fact]
+    public void Visual_HasEvents_ShouldBeFalse()
+    {
+        Label sut = new();
+        sut.Visual.HasEvents.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Text_ShouldParseBbCodeTags()
     {
         // Arrange

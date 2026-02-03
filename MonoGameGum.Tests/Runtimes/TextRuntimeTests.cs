@@ -71,111 +71,6 @@ $"chars count=223\r\n";
 
     #endregion
 
-    #region WrappedText
-
-    [Fact]
-    public void WrappedText_ShouldWrap_WithFixedWidth()
-    {
-        Text.IsMidWordLineBreakEnabled = false;
-
-        TextRuntime textRuntime = new ();
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        textRuntime.Width = 100; // Set a fixed width
-
-        textRuntime.Text = "This is a long text that should wrap within the fixed width of 100 units.";
-
-        textRuntime.WrappedText.Count.ShouldBeGreaterThan(1);
-
-        textRuntime.WrappedText[0].ShouldStartWith("This is a");
-        textRuntime.WrappedText[1].ShouldNotStartWith("This is a");
-    }
-
-    [Fact]
-    public void WrappedText_ShouldNotBreakWords_IfBreakWordsWithNoWhitespaceIsFalse()
-    {
-        Text.IsMidWordLineBreakEnabled = false;
-        TextRuntime textRuntime = new();
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        textRuntime.Width = 100; // Set a fixed width
-        textRuntime.Text = "abcdefghijklmnopqrstuvwxyz 1abcdefghijklmnopqrstuvwxyz 12abcdefghijklmnopqrstuvwxyz";
-        
-        textRuntime.WrappedText.Count.ShouldBe(3);
-        textRuntime.WrappedText[0].ShouldBe("abcdefghijklmnopqrstuvwxyz ");
-        textRuntime.WrappedText[1].ShouldBe("1abcdefghijklmnopqrstuvwxyz ");
-        textRuntime.WrappedText[2].ShouldBe("12abcdefghijklmnopqrstuvwxyz");
-    }
-
-    [Fact]
-    public void WrappedText_ShouldWrap_IfOnlyLettersExist()
-    {
-        Text text = new();
-        Text.IsMidWordLineBreakEnabled = true;
-        text.Width = 100;
-
-        text.RawText = "abcdefghijklmnopqrstuvwxyz";
-
-        text.WrappedText.Count.ShouldBeGreaterThan(1);
-        text.WrappedText[0].ShouldStartWith("abc");
-        text.WrappedText[1].ShouldNotStartWith("abc");
-        text.WrappedText[1].ShouldStartWith("mno");
-        char lastLine0 = text.WrappedText[0].Last();
-        char firstCharacterInSecondLine = text.WrappedText[1][0];
-        firstCharacterInSecondLine.ShouldBe((char)(lastLine0 + 1));
-    }
-
-    [Fact]
-    public void WrappedText_ShouldWrapMidWord_WithMultipleLines()
-    {
-        // bypassing TextRuntime to test this directly:
-        var text = new Text();
-        text.Width = 14;
-        Text.IsMidWordLineBreakEnabled = true;
-
-        text.RawText = "01\n01";
-
-        text.WrappedText.Count.ShouldBe(4);
-        text.WrappedText[0].ShouldBe("0");
-        text.WrappedText[1].ShouldBe("1\n");
-        text.WrappedText[2].ShouldBe("0");
-        text.WrappedText[3].ShouldBe("1");
-    }
-
-    [Fact]
-    public void WrappedText_ShouldWrapMidWord_WithMultipleWords()
-    {
-        // bypassing TextRuntime to test this directly:
-        var text = new Text();
-        text.Width = 14;
-        Text.IsMidWordLineBreakEnabled = true;
-
-        text.RawText = "01 01";
-
-        text.WrappedText.Count.ShouldBe(4);
-        text.WrappedText[0].ShouldBe("0");
-        text.WrappedText[1].ShouldBe("1 ");
-        text.WrappedText[2].ShouldBe("0");
-        text.WrappedText[3].ShouldBe("1");
-    }
-
-    [Fact]
-    public void WrappedText_ShouldWrapMidWord_IfWidthMatchesLetterWidthExactly()
-    {
-        // each letter is 10 wide, so let's set a width that is a multiple of that:
-        Text text = new();
-        Text.IsMidWordLineBreakEnabled = true;
-        text.Width = 30;
-
-        text.RawText = "abcdefghijklmnopqrstuvwxyz";
-
-        text.WrappedText.Count.ShouldBe(9);
-        text.WrappedText[0].ShouldNotBeEmpty("abc");
-        text.WrappedText[1].ShouldNotBeEmpty("def");
-        text.WrappedText[2].ShouldNotBeEmpty("ghi");
-        text.WrappedText[3].ShouldNotBeEmpty("jkl");
-    }
-
-    #endregion
-
     #region GetStyledSubstrings
 
     [Fact]
@@ -331,6 +226,17 @@ $"chars count=223\r\n";
 
     #endregion
 
+    #region HasEvents
+
+    [Fact]
+    public void HasEvents_ShouldDefaultToFalse()
+    {
+        TextRuntime sut = new();
+        sut.HasEvents.ShouldBeFalse();
+    }
+
+    #endregion
+
     #region Text (including bbcode and localization)
 
     [Fact]
@@ -435,6 +341,111 @@ $"chars count=223\r\n";
 
         inlineVariables[1].StartIndex.ShouldBe(3, "Because \\r character should not be included, so the newline 0 character starts at index 3");
         inlineVariables[1].CharacterCount.ShouldBe(1);
+    }
+
+    #endregion
+
+    #region WrappedText
+
+    [Fact]
+    public void WrappedText_ShouldWrap_WithFixedWidth()
+    {
+        Text.IsMidWordLineBreakEnabled = false;
+
+        TextRuntime textRuntime = new ();
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        textRuntime.Width = 100; // Set a fixed width
+
+        textRuntime.Text = "This is a long text that should wrap within the fixed width of 100 units.";
+
+        textRuntime.WrappedText.Count.ShouldBeGreaterThan(1);
+
+        textRuntime.WrappedText[0].ShouldStartWith("This is a");
+        textRuntime.WrappedText[1].ShouldNotStartWith("This is a");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldNotBreakWords_IfBreakWordsWithNoWhitespaceIsFalse()
+    {
+        Text.IsMidWordLineBreakEnabled = false;
+        TextRuntime textRuntime = new();
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        textRuntime.Width = 100; // Set a fixed width
+        textRuntime.Text = "abcdefghijklmnopqrstuvwxyz 1abcdefghijklmnopqrstuvwxyz 12abcdefghijklmnopqrstuvwxyz";
+        
+        textRuntime.WrappedText.Count.ShouldBe(3);
+        textRuntime.WrappedText[0].ShouldBe("abcdefghijklmnopqrstuvwxyz ");
+        textRuntime.WrappedText[1].ShouldBe("1abcdefghijklmnopqrstuvwxyz ");
+        textRuntime.WrappedText[2].ShouldBe("12abcdefghijklmnopqrstuvwxyz");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldWrap_IfOnlyLettersExist()
+    {
+        Text text = new();
+        Text.IsMidWordLineBreakEnabled = true;
+        text.Width = 100;
+
+        text.RawText = "abcdefghijklmnopqrstuvwxyz";
+
+        text.WrappedText.Count.ShouldBeGreaterThan(1);
+        text.WrappedText[0].ShouldStartWith("abc");
+        text.WrappedText[1].ShouldNotStartWith("abc");
+        text.WrappedText[1].ShouldStartWith("mno");
+        char lastLine0 = text.WrappedText[0].Last();
+        char firstCharacterInSecondLine = text.WrappedText[1][0];
+        firstCharacterInSecondLine.ShouldBe((char)(lastLine0 + 1));
+    }
+
+    [Fact]
+    public void WrappedText_ShouldWrapMidWord_WithMultipleLines()
+    {
+        // bypassing TextRuntime to test this directly:
+        var text = new Text();
+        text.Width = 14;
+        Text.IsMidWordLineBreakEnabled = true;
+
+        text.RawText = "01\n01";
+
+        text.WrappedText.Count.ShouldBe(4);
+        text.WrappedText[0].ShouldBe("0");
+        text.WrappedText[1].ShouldBe("1\n");
+        text.WrappedText[2].ShouldBe("0");
+        text.WrappedText[3].ShouldBe("1");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldWrapMidWord_WithMultipleWords()
+    {
+        // bypassing TextRuntime to test this directly:
+        var text = new Text();
+        text.Width = 14;
+        Text.IsMidWordLineBreakEnabled = true;
+
+        text.RawText = "01 01";
+
+        text.WrappedText.Count.ShouldBe(4);
+        text.WrappedText[0].ShouldBe("0");
+        text.WrappedText[1].ShouldBe("1 ");
+        text.WrappedText[2].ShouldBe("0");
+        text.WrappedText[3].ShouldBe("1");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldWrapMidWord_IfWidthMatchesLetterWidthExactly()
+    {
+        // each letter is 10 wide, so let's set a width that is a multiple of that:
+        Text text = new();
+        Text.IsMidWordLineBreakEnabled = true;
+        text.Width = 30;
+
+        text.RawText = "abcdefghijklmnopqrstuvwxyz";
+
+        text.WrappedText.Count.ShouldBe(9);
+        text.WrappedText[0].ShouldNotBeEmpty("abc");
+        text.WrappedText[1].ShouldNotBeEmpty("def");
+        text.WrappedText[2].ShouldNotBeEmpty("ghi");
+        text.WrappedText[3].ShouldNotBeEmpty("jkl");
     }
 
     #endregion

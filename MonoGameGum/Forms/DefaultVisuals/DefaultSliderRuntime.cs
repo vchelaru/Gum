@@ -19,7 +19,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public DefaultSliderRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
-            if(fullInstantiation)
+            this.HasEvents = true;
+
+            if (fullInstantiation)
             {
                 this.Width = 128;
                 this.Height = 24;

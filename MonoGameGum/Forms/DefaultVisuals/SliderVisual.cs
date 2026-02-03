@@ -40,6 +40,7 @@ public class SliderVisual : InteractiveGue
 
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
 
         Width = 128;
         Height = 24;

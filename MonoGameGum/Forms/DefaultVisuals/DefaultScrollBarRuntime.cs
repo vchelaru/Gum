@@ -16,7 +16,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
     {
         public DefaultScrollBarRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable()) 
         {
-            if(fullInstantiation)
+            this.HasEvents = true;
+
+            if (fullInstantiation)
             {
                 this.Width = 24;
                 this.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;

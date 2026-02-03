@@ -446,8 +446,8 @@ public abstract class TextBoxBase :
 
 
         var clickedOnThisOrChild =
-            cursor.WindowOver == this.Visual ||
-            (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
+            cursor.VisualOver == this.Visual ||
+            (cursor.VisualOver != null && cursor.VisualOver.IsInParentChain(this.Visual));
 
         if (clickedOnThisOrChild == false && IsFocused && cursor.WindowPushed != this.Visual)
         {
@@ -457,7 +457,7 @@ public abstract class TextBoxBase :
 
     private void HandlePushOff()
     {
-        if (MainCursor.WindowOver != Visual && 
+        if (MainCursor.VisualOver != Visual && 
             timeFocused != InteractiveGue.CurrentGameTime &&
             LosesFocusWhenClickedOff)
         {
@@ -1112,7 +1112,7 @@ public abstract class TextBoxBase :
         }
         else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null 
             //&& Visual.HasCursorOver(cursor)
-            && cursor.WindowOver == Visual
+            && cursor.VisualOver == Visual
             )
         {
             Visual.SetProperty(CategoryName, HighlightedStateName);

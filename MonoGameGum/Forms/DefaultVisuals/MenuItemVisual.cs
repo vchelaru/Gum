@@ -36,6 +36,7 @@ public class MenuItemVisual : InteractiveGue
 
     public MenuItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         X = 0;
         Y = 0;
         Width = 6;
@@ -65,6 +66,7 @@ public class MenuItemVisual : InteractiveGue
         this.AddChild(Background);
 
         ContainerInstance = new ContainerRuntime();
+        ContainerInstance.HasEvents = false;
         ContainerInstance.Name = "ContainerInstance";
         ContainerInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.LeftToRightStack;
         ContainerInstance.Anchor(Gum.Wireframe.Anchor.TopLeft);

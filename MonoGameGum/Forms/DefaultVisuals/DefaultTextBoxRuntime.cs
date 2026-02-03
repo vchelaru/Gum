@@ -17,6 +17,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
         public DefaultTextBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
         {
+            this.HasEvents = true;
             if (tryCreateFormsObject)
             {
                 FormsControlAsObject = new TextBox(this);

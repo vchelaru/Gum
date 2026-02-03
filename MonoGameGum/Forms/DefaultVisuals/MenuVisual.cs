@@ -21,6 +21,7 @@ public class MenuVisual : InteractiveGue
 
     public MenuVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
+        this.HasEvents = true;
         X = 0;
         Y = 0;
         // a small value that prevents it from being invisible due to 0 height

@@ -68,6 +68,7 @@ public class Panel :
         
         if(Visual != null)
         {
+            Visual.HasEvents = true;
             Visual.ExposeChildrenEvents = true;
 
             // Note - if Visual is changed multiple times, this causes a slight

@@ -36,6 +36,7 @@ public class ScrollBarVisual : InteractiveGue
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable()) 
     {
+        this.HasEvents = true;
         Width = 24;
         WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         Height = 128;

@@ -17,6 +17,13 @@ public class RadioButtonTests : BaseTestClass
     }
 
     [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        RadioButton sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task IsChecked_ShouldUncheckOtherRadioButtons()
     {
         var radioButton1 = new RadioButton();
