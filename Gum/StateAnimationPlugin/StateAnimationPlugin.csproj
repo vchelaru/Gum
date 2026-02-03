@@ -28,7 +28,6 @@
     <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
     <ProjectReference Include="..\Gum.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
-    <ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Bear.png" />

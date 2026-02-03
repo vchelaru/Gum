@@ -24,7 +24,7 @@ namespace WpfDataUi.Controls
     public partial class AngleSelectorDisplay : UserControl, INotifyPropertyChanged, IDataUi
     {
         #region Fields
-        InstanceMember mInstanceMember;
+        InstanceMember? _instanceMember;
 
         TextBoxDisplayLogic mTextBoxLogic;
 
@@ -107,29 +107,29 @@ namespace WpfDataUi.Controls
 
         public decimal? SnappingInterval { get; set; } = 1;
 
-        public DataTypes.InstanceMember InstanceMember
+        public DataTypes.InstanceMember? InstanceMember
         {
             get
             {
-                return mInstanceMember;
+                return _instanceMember;
             }
             set
             {
                 mTextBoxLogic.InstanceMember = value;
 
-                bool valueChanged = mInstanceMember != value;
+                bool valueChanged = _instanceMember != value;
 
-                mInstanceMember = value;
+                _instanceMember = value;
 
-                if (mInstanceMember != null && valueChanged)
+                if (_instanceMember != null && valueChanged)
                 {
-                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                    _instanceMember.PropertyChanged -= HandlePropertyChange;
                 }
-                mInstanceMember = value;
+                _instanceMember = value;
 
-                if (mInstanceMember != null && valueChanged)
+                if (_instanceMember != null && valueChanged)
                 {
-                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                    _instanceMember.PropertyChanged += HandlePropertyChange;
                 }
 
                 Refresh();
@@ -152,7 +152,7 @@ namespace WpfDataUi.Controls
 
         #region Events
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion
 
@@ -394,7 +394,7 @@ namespace WpfDataUi.Controls
             return toReturn;
         }
 
-        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "Value")
             {
@@ -409,7 +409,7 @@ namespace WpfDataUi.Controls
         }
 
         #region Event Handlers
-        private void TextBox_PreviewKeyDown_1(object sender, KeyEventArgs e)
+        private void TextBox_PreviewKeyDown_1(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
@@ -421,7 +421,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
+        private void TextBox_LostFocus_1(object? sender, RoutedEventArgs e)
         {
             if(mTextBoxLogic.HasUserChangedAnything)
             {
@@ -429,12 +429,12 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void Grid_DragOver_1(object sender, DragEventArgs e)
+        private void Grid_DragOver_1(object? sender, DragEventArgs e)
         {
             Ellipse_MouseMove_1(null, null);
         }
 
-        private void Ellipse_MouseMove_1(object sender, MouseEventArgs e)
+        private void Ellipse_MouseMove_1(object? sender, MouseEventArgs e)
         {
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
@@ -480,12 +480,12 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void Ellipse_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
+        private void Ellipse_MouseLeftButtonDown_1(object? sender, MouseButtonEventArgs e)
         {
             Ellipse_MouseMove_1(null, null);
         }
 
-        private void TopRowGrid_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        private void TopRowGrid_PreviewMouseUp(object? sender, MouseButtonEventArgs e)
         {
             if(needsToPushFullCommitOnMouseUp)
             {
@@ -494,13 +494,13 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void Ellipse_MouseDown(object sender, MouseButtonEventArgs e)
+        private void Ellipse_MouseDown(object? sender, MouseButtonEventArgs e)
         {
             System.Windows.Input.Mouse.Capture(EllipseInstance);
 
         }
 
-        private void Ellipse_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Ellipse_MouseUp(object? sender, MouseButtonEventArgs e)
         {
             System.Windows.Input.Mouse.Capture(null);
 

@@ -45,7 +45,7 @@ public class WireframeControl : GraphicsDeviceControl
     public Ruler TopRuler { get; private set; }
     public Ruler LeftRuler { get; private set; }
 
-    public event Action CameraChanged;
+    public event Action? CameraChanged;
 
     bool mouseHasEntered = false;
 
@@ -99,7 +99,7 @@ public class WireframeControl : GraphicsDeviceControl
     #region Event Methods
 
 
-    void HandleKeyDown(object sender, KeyEventArgs e)
+    void HandleKeyDown(object? sender, KeyEventArgs e)
     {
         _hotkeyManager.HandleKeyDownWireframe(e);
         _cameraController.HandleKeyPress(e);

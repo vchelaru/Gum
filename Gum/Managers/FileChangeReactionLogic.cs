@@ -9,6 +9,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Controls;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -214,7 +215,30 @@ namespace Gum.Managers
 
         private void ReactToElementSaveChanged(FilePath file)
         {
-            var element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
+            var projectDirectory = _fileCommands.ProjectDirectory;
+            ////////////////////////Early Out////////////////////////////
+            if (projectDirectory == null) return;
+            if (!projectDirectory.IsRootOf(file)) return;
+            ///////////////////////End Early Out/////////////////////////
+
+            FilePath standardized = file.RemoveExtension().StandardizedCaseSensitive;
+            var relativeToFolderForType = standardized.RelativeTo(projectDirectory).Replace("\\", "/");
+
+            if(relativeToFolderForType.StartsWith("Screens/"))
+            {
+                relativeToFolderForType = relativeToFolderForType.Substring("Screens/".Length);
+            }
+            else if(relativeToFolderForType.StartsWith("Components/"))
+            {
+                relativeToFolderForType = relativeToFolderForType.Substring("Components/".Length);
+            }
+            else if(relativeToFolderForType.StartsWith("Standards/"))
+            {
+                relativeToFolderForType = relativeToFolderForType.Substring("Standards/".Length);
+            }
+
+
+            var element = ObjectFinder.Self.GetElementSave(relativeToFolderForType);
 
             var refreshingSelected = element == _selectedState.SelectedElement;
 

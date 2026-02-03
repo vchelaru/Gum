@@ -723,7 +723,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         ApplyThemeSettings(themeSettings);
     }
 
-    internal void OnWireframeDrop(object sender, System.Windows.Forms.DragEventArgs e)
+    internal void OnWireframeDrop(object? sender, System.Windows.Forms.DragEventArgs e)
     {
         // Handle node drops
         List<TreeNode>? droppedNodes = e switch
@@ -1024,7 +1024,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeObjectManager.RefreshAll(forceLayout: true);
     }
 
-    private void wireframeControl1_MouseDown(object sender, MouseEventArgs e)
+    private void wireframeControl1_MouseDown(object? sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Right)
         {

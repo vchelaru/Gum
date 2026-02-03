@@ -12,7 +12,9 @@ GumUI supports rendering vector shapes as visuals. The following shapes are supp
 
 {% tabs %}
 {% tab title="MonoGame" %}
-The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.MonoGame NuGet package ([https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)):
+The Gum.Shapes.MonoGame NuGet package adds support for rendering shapes. Add the following NuGet package:
+
+[https://www.nuget.org/packages/Gum.Shapes.MonoGame](https://www.nuget.org/packages/Gum.Shapes.MonoGame)
 
 Modify csproj:
 
@@ -25,10 +27,14 @@ Or add through command line:
 ```bash
 dotnet add package Gum.Shapes.MonoGame
 ```
+
+Future versions of Gum may not require adding this package explicitly.
 {% endtab %}
 
 {% tab title="KNI" %}
-The Apos.Shapes library is needed to render shapes in MonoGame projects. Add the Gum.Shapes.KNI NuGet package ([https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)):
+The Gum.Shapes.KNI NuGet package adds support for rendering shapes. Add the following NuGet package:
+
+[https://www.nuget.org/packages/Gum.Shapes.KNI](https://www.nuget.org/packages/Gum.Shapes.KNI)
 
 Modify csproj:
 
@@ -41,6 +47,14 @@ Or add through command line:
 ```bash
 dotnet add package Gum.Shapes.KNI
 ```
+
+Future versions of Gum may not require adding this package explicitly.
+
+{% hint style="warning" %}
+Apos.Shapes compiles a shader at compile time which is used by the library to draw shapes. As of January 2026 shader compilation is not supported on Linux for KNI. Therefore, libraries must be compiled on Windows.
+
+For more information, see this issue: [https://github.com/vchelaru/Gum/issues/2034](https://github.com/vchelaru/Gum/issues/2034)
+{% endhint %}
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
@@ -112,7 +126,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
         // Initialize shape renderer:
         Renderables.ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 

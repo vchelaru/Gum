@@ -33,12 +33,12 @@ namespace Gum.Gui.Windows
             InitializeComponent();
         }
 
-        private void YesButtonClick(object sender, RoutedEventArgs e)
+        private void YesButtonClick(object? sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
         }
 
-        private void NoButtonClick(object sender, RoutedEventArgs e)
+        private void NoButtonClick(object? sender, RoutedEventArgs e)
         {
             CloseWithResultFalse();
         }
@@ -50,7 +50,7 @@ namespace Gum.Gui.Windows
             this.MainStackPanel.Children.Clear();
         }
 
-        private void HandleKeyDown(object sender, KeyEventArgs e)
+        private void HandleKeyDown(object? sender, KeyEventArgs e)
         {
             if(e.Key == Key.Enter || e.Key == Key.Return || e.Key == Key.Y)
             {

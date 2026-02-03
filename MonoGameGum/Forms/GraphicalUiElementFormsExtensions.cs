@@ -24,6 +24,14 @@ namespace Gum.Forms;
 
 public static class GraphicalUiElementFormsExtensions
 {
+    /// <summary>
+    /// Recursively returns the first matching element with the given name, or throws an exception if not found.
+    /// </summary>
+    /// <typeparam name="FrameworkElementType">The element type</typeparam>
+    /// <param name="graphicalUiElement">The parent visual owning all children</param>
+    /// <param name="name">The name to match</param>
+    /// <returns>Teh found FrameworkElement</returns>
+    /// <exception cref="ArgumentException">Throw if a visual is not found by the name, or if a child is found but its type doesn't match.</exception>
     public static FrameworkElementType GetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
     {
         var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);

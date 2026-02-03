@@ -52,7 +52,7 @@ public partial class StateTreeViewManager
         _hotkeyManager = hotkeyManager;
     }
 
-    private void HandleKeyDown(object sender, KeyEventArgs e)
+    private void HandleKeyDown(object? sender, KeyEventArgs e)
     {
         if(_hotkeyManager.Rename.IsPressed(e))
         {
@@ -86,7 +86,7 @@ public partial class StateTreeViewManager
         }
     }
 
-    //private void HandleTreeViewKeyPressed(object sender, KeyPressEventArgs e)
+    //private void HandleTreeViewKeyPressed(object? sender, KeyPressEventArgs e)
     //{
     //    switch(e.)
     //}

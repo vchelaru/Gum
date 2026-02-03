@@ -281,11 +281,16 @@ public class CustomSetPropertyOnRenderable
             nineSlice.SetSingleTexture((Texture2D)value);
             handled = true;
         }
+        else if(propertyName == nameof(NineSlice.BorderScale))
+        {
+            nineSlice.BorderScale = (float)value;
+            handled = true;
+        }
 
-        // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
-        // are handled by GraphicalUiElement so we don't have to handle it here
+            // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
+            // are handled by GraphicalUiElement so we don't have to handle it here
 
-        return handled;
+            return handled;
     }
 
     private static void AssignSourceFileOnNineSlice(string value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)

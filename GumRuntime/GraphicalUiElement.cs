@@ -51,7 +51,9 @@ public enum Anchor
     Right,
     BottomLeft,
     Bottom,
-    BottomRight
+    BottomRight,
+    CenterHorizontally,
+    CenterVertically
 }
 
 public enum Dock
@@ -89,6 +91,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     class DirtyState
     {
+        // Indicates situations where a parent should be updated. If None is specified, then only this object
+        // is updated and its parent is not.
         public ParentUpdateType ParentUpdateType;
         public int ChildrenUpdateDepth;
         public XOrY? XOrY;
@@ -111,7 +115,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public static float GlobalFontScale = 1;
 
-    private DirtyState currentDirtyState;
+    private DirtyState? currentDirtyState;
+    private ParentUpdateType EffectiveDirtyStateParentUpdateType
+    {
+        get
+        {
+            var toReturn = currentDirtyState.ParentUpdateType;
+
+            if(GetIfParentHasRatioChildren())
+            {
+                toReturn = toReturn | ParentUpdateType.IfParentHasRatioSizedChildren;
+            }
+
+            if(GetIfParentStacks())
+            {
+                toReturn = toReturn | ParentUpdateType.IfParentStacks;
+            }
+            return toReturn;
+        }
+    }
     bool isFontDirty = false;
     public bool IsFontDirty
     {
@@ -249,17 +271,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <inheritdoc/>
     public bool Visible
     {
-        get
-        {
-            if (mContainedObjectAsIVisible != null)
-            {
-                return mContainedObjectAsIVisible.Visible;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        get => mContainedObjectAsIVisible?.Visible ?? false;
         set
         {
             // If this is a Screen, then it doesn't have a contained IVisible:
@@ -304,8 +316,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 // if there are ratio sized children, then flipping visibility on this can update the widths of the ratio'ed children
                                 ParentUpdateType.IfParentHasRatioSizedChildren,
                                 // If something is made visible, that shouldn't update the children, right?
-                                //int.MaxValue/2, 
-                                0,
+                                // Update January 27, 2026: Yes, children should update if we are dealing with ratios:
+                                //0,
+                                ShouldUpdateChildren() ? int.MaxValue/2 : 0, 
                                 null);
                             didUpdate = true;
                         }
@@ -317,19 +330,37 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // This will make this dirty:
                     this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid |
                         ParentUpdateType.IfParentHasRatioSizedChildren,
-                        // If something is made visible, that shouldn't update the children, right?
-                        //int.MaxValue/2, 
-                        0,
+                        // See call above on why we check if children should be updated
+                        //0,
+                        ShouldUpdateChildren() ? int.MaxValue / 2 : 0,
                         null);
                 }
 
                 if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid()))
                 {
                     // This updates the parent right away:
-                    (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
+                    Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            bool ShouldUpdateChildren()
+            {
+                // If this or siblings are ratio, then changing this width can result in changing the width of children, so we need to update recursively.
+                if (this.WidthUnits == DimensionUnitType.Ratio || this.HeightUnits == DimensionUnitType.Ratio) return true;
+
+                if(this.Parent != null)
+                {
+                    foreach(var child in this.Parent.Children)
+                    {
+                        if(child.WidthUnits == DimensionUnitType.Ratio || child.HeightUnits == DimensionUnitType.Ratio)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         }
     }
@@ -1612,6 +1643,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
     {
+        mIsLayoutSuspended = true;
         Width = 32;
         Height = 32;
 #if FULL_DIAGNOSTICS
@@ -1636,6 +1668,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
 
+        mIsLayoutSuspended = false;
         // This is a bit of a hack to support GraphicalUiElement.IWindow.
         // This isn't needed in MonoGame:
         OnConstructor();
@@ -1787,7 +1820,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var isSuspended = mIsLayoutSuspended || IsAllLayoutSuspended;
         if (!isSuspended)
         {
-            isSuspended = !AreUpdatesAppliedWhenInvisible &&
+            isSuspended = !updateParent && !AreUpdatesAppliedWhenInvisible &&
                 (mContainedObjectAsIVisible != null && asIVisible.AbsoluteVisible == false && this.IsInRenderTargetRecursively() == false);
         }
 
@@ -2124,7 +2157,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // like check the width/height of the parent to see if they're 0
         if (updateParent && GetIfShouldCallUpdateOnParent())
         {
-            (this.Parent as GraphicalUiElement).UpdateLayout(false, false);
+            Parent?.UpdateLayout(false, false);
             ChildrenUpdatingParentLayoutCalls++;
         }
         if (this.mContainedObjectAsIpso != null)
@@ -2135,7 +2168,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (!isInSizeChange)
                 {
                     isInSizeChange = true;
-                    SizeChanged?.Invoke(this, null);
+                    SizeChanged?.Invoke(this, EventArgs.Empty);
                     isInSizeChange = false;
                 }
             }
@@ -2143,7 +2176,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (xBeforeLayout != mContainedObjectAsIpso.X ||
                     yBeforeLayout != mContainedObjectAsIpso.Y)
             {
-                PositionChanged?.Invoke(this, null);
+                PositionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -3482,13 +3515,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             void UpdateChild(GraphicalUiElement child, bool flagAsUpdated)
             {
-
+                var childLayoutType = child.GetChildLayoutType(this);
                 var canDoFullUpdate =
-                    CanDoFullUpdate(child.GetChildLayoutType(this), child);
+                    CanDoFullUpdate(childLayoutType, child);
 
 
                 if (canDoFullUpdate)
                 {
+                    // Pass ParentUpdateType.None here so that children do not attempt to update their parent. `this` is
+                    // the parent and it's already in an update
                     child.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                     if (flagAsUpdated)
                     {
@@ -4330,6 +4365,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         currentDirtyState.ParentUpdateType = currentDirtyState.ParentUpdateType | parentUpdateType;
         currentDirtyState.ChildrenUpdateDepth = Math.Max(
+
             currentDirtyState.ChildrenUpdateDepth, childrenUpdateDepth);
 
         // If the update is supposed to update all associations, make it null...
@@ -4478,6 +4514,113 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         return whatToStackAfter as GraphicalUiElement;
+    }
+
+
+    public void SuspendLayout(bool recursive = false)
+    {
+        mIsLayoutSuspended = true;
+
+        if (recursive)
+        {
+            if (this.Children?.Count > 0)
+            {
+                var count = Children.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    var asGraphicalUiElement = Children[i];
+                    asGraphicalUiElement?.SuspendLayout(true);
+                }
+            }
+            else
+            {
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    mWhatThisContains[i].SuspendLayout(true);
+                }
+
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clears the layout and font dirty state, resulting in no layout logic being
+    /// performed on the next resume layout. This method should only be used 
+    /// if you intend to manually perform layouts after a layout resume. Otherwise, calling
+    /// this can cause layouts to behave incorrectly
+    /// </summary>
+    public void ClearDirtyLayoutState()
+    {
+        currentDirtyState = null;
+        isFontDirty = false;
+    }
+
+    public void ResumeLayout(bool recursive = false)
+    {
+        mIsLayoutSuspended = false;
+
+        if (recursive)
+        {
+            if (!IsAllLayoutSuspended)
+            {
+
+                ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+        else
+        {
+            if (isFontDirty)
+            {
+                if (!IsAllLayoutSuspended)
+                {
+                    this.UpdateToFontValues();
+                    isFontDirty = false;
+                }
+            }
+            if (currentDirtyState != null)
+            {
+                UpdateLayout(EffectiveDirtyStateParentUpdateType,
+                    currentDirtyState.ChildrenUpdateDepth,
+                    currentDirtyState.XOrY);
+            }
+        }
+    }
+
+    private bool ResumeLayoutUpdateIfDirtyRecursive()
+    {
+
+        mIsLayoutSuspended = false;
+        UpdateFontRecursive();
+
+        var didCallUpdateLayout = false;
+
+        if (currentDirtyState != null)
+        {
+            didCallUpdateLayout = true;
+            UpdateLayout(EffectiveDirtyStateParentUpdateType,
+                currentDirtyState.ChildrenUpdateDepth,
+                currentDirtyState.XOrY);
+        }
+
+        if (this.Children?.Count > 0)
+        {
+            var count = Children.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var asGraphicalUiElement = Children[i];
+                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+        else
+        {
+            int count = mWhatThisContains.Count;
+            for (int i = 0; i < count; i++)
+            {
+                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+            }
+        }
+
+        return didCallUpdateLayout;
     }
 
     #endregion
@@ -4728,8 +4871,20 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
+    /// <summary>
+    /// Sets the X, Y, Units and Origin values for an element, based on the Anchor Enum types.  If the element implements IText, also sets Text Alignment.
+    /// </summary>
+    /// <param name="anchor"></param>
+    /// <exception cref="NotImplementedException"></exception>
     public void Anchor(Anchor anchor)
     {
+        var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended || this.IsLayoutSuspended;
+
+        if(!wasSuspended)
+        {
+            this.SuspendLayout();
+        }
+
         switch (anchor)
         {
             case Wireframe.Anchor.TopLeft:
@@ -4850,11 +5005,38 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
                 }
                 break;
+            case Wireframe.Anchor.CenterHorizontally:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                }
+                break;
+            case Wireframe.Anchor.CenterVertically:
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
             default:
                 throw new NotImplementedException();
         }
+
+        if(!wasSuspended)
+        {
+            this.ResumeLayout();
+        }
     }
 
+    /// <summary>
+    /// Attempts to determine if the element is anchored utilizing the X, Y, Units, and Origins.  
+    /// </summary>
+    /// <returns>If a suitable Anchor position is identified, returns that Anchor Enum, otherwise null.</returns>
     public Anchor? GetAnchor()
     {
         if (this.XOrigin == HorizontalAlignment.Left &&
@@ -4934,6 +5116,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         this.YUnits == GeneralUnitType.PixelsFromLarge &&
         this.Y == 0)
             return Wireframe.Anchor.BottomRight;
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0)
+            return Wireframe.Anchor.CenterHorizontally;
+
+        if (this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0)
+            return Wireframe.Anchor.CenterVertically;
 
         return null;
     }
@@ -5191,7 +5383,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    private void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
@@ -5874,8 +6066,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
+            bool didSuspend = false;
             if (GraphicalUiElement.IsAllLayoutSuspended == false)
             {
+                didSuspend = true;
                 this.SuspendLayout(true);
             }
 
@@ -5932,7 +6126,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.SetProperty(variableList.Name, variableList.ValueAsIList);
             }
 
-            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            if (didSuspend)
             {
                 this.ResumeLayout(true);
 
@@ -6033,126 +6227,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
 
-    public bool IsPointInside(float x, float y)
-    {
-        var asIpso = this as IRenderableIpso;
-
-        var absoluteX = asIpso.GetAbsoluteX();
-        var absoluteY = asIpso.GetAbsoluteY();
-
-        return
-            x > absoluteX &&
-            y > absoluteY &&
-            x < absoluteX + this.GetAbsoluteWidth() &&
-            y < absoluteY + this.GetAbsoluteHeight();
-    }
-
-
-    public void SuspendLayout(bool recursive = false)
-    {
-        mIsLayoutSuspended = true;
-
-        if (recursive)
-        {
-            if (this.Children?.Count > 0)
-            {
-                var count = Children.Count;
-                for (int i = 0; i < count; i++)
-                {
-                    var asGraphicalUiElement = Children[i];
-                    asGraphicalUiElement?.SuspendLayout(true);
-                }
-            }
-            else
-            {
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
-                {
-                    mWhatThisContains[i].SuspendLayout(true);
-                }
-
-            }
-        }
-    }
-
-    /// <summary>
-    /// Clears the layout and font dirty state, resulting in no layout logic being
-    /// performed on the next resume layout. This method should only be used 
-    /// if you intend to manually perform layouts after a layout resume. Otherwise, calling
-    /// this can cause layouts to behave incorrectly
-    /// </summary>
-    public void ClearDirtyLayoutState()
-    {
-        currentDirtyState = null;
-        isFontDirty = false;
-    }
-
-    public void ResumeLayout(bool recursive = false)
-    {
-        mIsLayoutSuspended = false;
-
-        if (recursive)
-        {
-            if (!IsAllLayoutSuspended)
-            {
-
-                ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-        else
-        {
-            if (isFontDirty)
-            {
-                if (!IsAllLayoutSuspended)
-                {
-                    this.UpdateToFontValues();
-                    isFontDirty = false;
-                }
-            }
-            if (currentDirtyState != null)
-            {
-                UpdateLayout(currentDirtyState.ParentUpdateType,
-                    currentDirtyState.ChildrenUpdateDepth,
-                    currentDirtyState.XOrY);
-            }
-        }
-    }
-
-    private bool ResumeLayoutUpdateIfDirtyRecursive()
-    {
-
-        mIsLayoutSuspended = false;
-        UpdateFontRecursive();
-
-        var didCallUpdateLayout = false;
-
-        if (currentDirtyState != null)
-        {
-            didCallUpdateLayout = true;
-            UpdateLayout(currentDirtyState.ParentUpdateType,
-                currentDirtyState.ChildrenUpdateDepth,
-                currentDirtyState.XOrY);
-        }
-
-        if (this.Children?.Count > 0)
-        {
-            var count = Children.Count;
-            for (int i = 0; i < count; i++)
-            {
-                var asGraphicalUiElement = Children[i];
-                asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-        else
-        {
-            int count = mWhatThisContains.Count;
-            for (int i = 0; i < count; i++)
-            {
-                mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
-            }
-        }
-
-        return didCallUpdateLayout;
-    }
 
     #endregion
 
@@ -6568,6 +6642,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    #region Cursor/Position Hit Testing
+
+    protected virtual bool IsOutsideOfBoundsHitTestingEnabled => this.Tag is ScreenSave;
+
+    public virtual bool IsPointInside(float x, float y) => ((IRenderableIpso)this).HasCursorOver(x, y);
+
+    #endregion
 
     #region AnimationChain 
 
@@ -6684,6 +6765,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #region GraphicalUiElementExtensions
 public static class GraphicalUiElementExtensions
 {
+    #region Animation Extensions
 #if !FRB
 
     /// <summary>
@@ -6797,6 +6879,8 @@ public static class GraphicalUiElementExtensions
 
 
 #endif
+    #endregion
+
 }
 #endregion
 

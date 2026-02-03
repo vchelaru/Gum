@@ -19,42 +19,42 @@ namespace Gum.Plugins.AlignmentButtons
             InitializeComponent();
         }
 
-        private void TopButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void TopButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockTopButton_Click();
         }
 
-        private void SizeToChildren_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void SizeToChildren_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.SizeToChildren_Click();
         }
 
-        private void LeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void LeftButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockLeftButton_Click();
         }
 
-        private void FillButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void FillButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockFillButton_Click();
         }
 
-        private void RightButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void RightButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockRightButton_Click();
         }
 
-        private void BottomButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void BottomButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockBottomButton_Click();
         }
 
-        private void FillVerticallyButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void FillVerticallyButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockFillVerticallyButton_Click();
         }
 
-        private void FillHorizontallyButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void FillHorizontallyButton_Click(object? sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockFillHorizontallyButton_Click();
         }

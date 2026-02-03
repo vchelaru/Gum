@@ -1,6 +1,6 @@
 # Points
 
-### Introduction
+## Introduction
 
 Points are an ordered set of X,Y values defining the shape of the polygon. All points are relative to the Polygon's position. Typically the last point is the same as the first point creating a _closed_ polygon.
 
@@ -20,25 +20,35 @@ Each point is relative to the polygon's X and Y (position). Points use pixel coo
 
 Notice that the image above has points which appear above and to the left of the polygon's origin.
 
-### Adding Points in the Editor
+## Adding Points in the Editor
 
 The easiest way to add points is by selecting a Polygon, then clicking on the + icon that appears in the center of the line where you would like to add a point. The following animation shows how to add points to a square to create an octagon:
 
 <figure><img src="../../../.gitbook/assets/16_17 11 31.gif" alt=""><figcaption><p>Points can be added by clicking in the center of lines</p></figcaption></figure>
 
-### Moving Points
+## Moving Points
 
 Points can be moved by clicking on them and dragging them in the editor. Note that points can be positioned anywhere, even if lines cross or if a polygon is concave.
 
 <figure><img src="../../../.gitbook/assets/16_17 15 21.gif" alt=""><figcaption><p>Polygons can be concave and even have crossing lines.</p></figcaption></figure>
 
-### Removing Points
+## Removing Points
 
 A point can be removed by clicking on it and pressing the delete key.
 
 <figure><img src="../../../.gitbook/assets/16_17 16 54.gif" alt=""><figcaption><p>Press the delete key to remove points</p></figcaption></figure>
 
-### Advanced Point Editing
+## Editing in Variables
+
+Each point can be edited in the Variables tab. To edit a point, double-click the desired point and type in the new X,Y value.
+
+<figure><img src="../../../.gitbook/assets/29_04 52 19.gif" alt=""><figcaption></figcaption></figure>
+
+{% hint style="info" %}
+Currently editing individual points does not automatically keep the first and last points equal. If editing the first or last point, the matching point must also be manually edted to match.
+{% endhint %}
+
+## Advanced Point Editing
 
 Points can also be edited manually in the Screen or Component which contains the Polygon instance. You can open the file in a text editor to see a list of points.
 

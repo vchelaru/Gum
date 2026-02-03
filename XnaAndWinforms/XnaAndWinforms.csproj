@@ -10,6 +10,8 @@
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<LangVersion>12.0</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<Nullable>enable</Nullable>
+
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />

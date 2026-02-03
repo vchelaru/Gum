@@ -110,7 +110,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
             return name;
         }
 
-        private async void HandleLoadRecentClicked(object sender, EventArgs e)
+        private async void HandleLoadRecentClicked(object? sender, EventArgs e)
         {
             var viewModel = new LoadRecentViewModel();
             var recentFiles = ProjectManager.Self.GeneralSettingsFile.RecentProjects;

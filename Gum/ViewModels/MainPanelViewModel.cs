@@ -89,7 +89,7 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
         }
     }
 
-    private void PluginTabsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void PluginTabsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.NewItems?.OfType<PluginTab>() is { } newTabs)
         {

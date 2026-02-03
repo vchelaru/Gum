@@ -531,7 +531,7 @@ public class FontManager
     {
         var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        void Process_Exited(object sender, EventArgs e)
+        void Process_Exited(object? sender, EventArgs e)
         {
             tcs.TrySetResult(process.ExitCode);
         }

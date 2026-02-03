@@ -518,7 +518,7 @@ public partial class ElementTreeViewManager
         return true;
     }
 
-    private void HandleAddLinkedComponentClick(object sender, EventArgs e)
+    private void HandleAddLinkedComponentClick(object? sender, EventArgs e)
     {
         ////////////////Early Out/////////////////////////
         if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave?.FullFileName))

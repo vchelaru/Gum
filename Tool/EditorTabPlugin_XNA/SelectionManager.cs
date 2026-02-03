@@ -8,6 +8,7 @@ using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe.Editors;
+using HarfBuzzSharp;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -599,28 +600,28 @@ public class SelectionManager
                 isVisible = false;
             }
         }
-        else if (ipso is IVisible)
+        else if (ipso is IVisible asIVisible)
         {
-            isVisible = ((IVisible)ipso).AbsoluteVisible;
+            isVisible = (asIVisible).AbsoluteVisible;
         }
-        else if (ipso is Sprite)
+        else if (ipso is Sprite asSprite)
         {
-            isVisible = ((Sprite)ipso).AbsoluteVisible;
+            isVisible = (asSprite).AbsoluteVisible;
         }
-        else if (ipso is Text)
+        else if (ipso is Text asText)
         {
-            isVisible = ((Text)ipso).AbsoluteVisible;
+            isVisible = (asText).AbsoluteVisible;
         }
 
         return isVisible;
     }
 
-    List<GraphicalUiElement> emptyGraphicalUiElementList = new List<GraphicalUiElement>();
+    List<GraphicalUiElement> _emptyGraphicalUiElementList = new List<GraphicalUiElement>();
     private void UpdateEditorsToSelection()
     {
         if (SelectedGues.Count == 1 &&
-            SelectedGue?.Tag is InstanceSave &&
-            ((InstanceSave)SelectedGue.Tag).BaseType == "Polygon")
+            SelectedGue?.Tag is InstanceSave instanceSaveTag &&
+            ObjectFinder.Self.GetRootStandardElementSave(instanceSaveTag)?.Name == "Polygon")
         {
             // use the Polygon wireframe editor
             if (WireframeEditor is PolygonWireframeEditor == false)
@@ -688,7 +689,7 @@ public class SelectionManager
         {
             if (_selectedState.CustomCurrentStateSave != null)
             {
-                WireframeEditor.UpdateToSelection(emptyGraphicalUiElementList);
+                WireframeEditor.UpdateToSelection(_emptyGraphicalUiElementList);
             }
             else
             {

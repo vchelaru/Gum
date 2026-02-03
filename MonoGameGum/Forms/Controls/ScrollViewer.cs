@@ -273,7 +273,7 @@ public class ScrollViewer :
 
     SizeMode _verticalSizeMode;
     /// <summary>
-    /// Sets whether Vertical sizing is fixed (based on the size of the ScrollViewer's Visual) or 
+    /// Sets whether vertical sizing (height of entire control) is fixed (based on the size of the ScrollViewer's Visual) or 
     /// auto (based on the size of the inner panel's contents).
     /// </summary>
     /// <remarks>
@@ -296,7 +296,7 @@ public class ScrollViewer :
 
     SizeMode _horizontalSizeMode;
     /// <summary>
-    /// Sets whether Horizontal sizing is fixed (based on the size of the ScrollViewer's Visual) or
+    /// Sets whether horizontal sizing (width of the entire control) is fixed (based on the size of the ScrollViewer's Visual) or
     /// auto (based on the size of the inner panel's contents).
     /// </summary>
     /// <remarks>

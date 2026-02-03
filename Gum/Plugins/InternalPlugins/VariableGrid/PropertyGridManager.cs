@@ -53,7 +53,7 @@ public partial class PropertyGridManager
     List<InstanceSave> mLastInstanceSaves = new List<InstanceSave>();
     //InstanceSave mLastInstance;
     StateSave mLastState;
-    StateSaveCategory mLastCategory;
+    StateSaveCategory? mLastCategory;
     BehaviorSave mLastBehaviorSave;
 
     // Making this public allows the plugin to access it. Eventually we will want to migrate
@@ -149,12 +149,12 @@ public partial class PropertyGridManager
         InitializeRightClickMenu();
     }
 
-    private void HandleBehaviorVariableSelected(object sender, EventArgs e)
+    private void HandleBehaviorVariableSelected(object? sender, EventArgs e)
     {
         _selectedState.SelectedBehaviorVariable = PropertyGridManager.Self.SelectedBehaviorVariable;
     }
 
-    private void HandleAddVariable(object sender, EventArgs e)
+    private void HandleAddVariable(object? sender, EventArgs e)
     {
         var canShow = _selectedState.SelectedBehavior != null || _selectedState.SelectedElement != null;
 
@@ -231,8 +231,11 @@ public partial class PropertyGridManager
     /// <param name="state">The state to display.</param>
     /// <param name="instance">The instance to display. May be null.</param>
     /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
-    private void RefreshDataGrid(ElementSave element, StateSave state, StateSaveCategory stateCategory, List<InstanceSave> newInstances, 
-        BehaviorSave behaviorSave, bool force = false)
+    private void RefreshDataGrid(ElementSave? element, 
+        StateSave? state, 
+        StateSaveCategory? stateCategory, 
+        List<InstanceSave> newInstances, 
+        BehaviorSave? behaviorSave, bool force = false)
     {
         ObjectFinder.Self.EnableCache();
         try
@@ -294,7 +297,7 @@ public partial class PropertyGridManager
                     }
                     else
                     {
-                        categories = GetMemberCategories(element, state, stateCategory, instance);
+                        categories = GetMemberCategories(element, state!, stateCategory, instance);
                     }
 
                     if (newInstances.Count > 1)
@@ -634,7 +637,7 @@ public partial class PropertyGridManager
         return categories;
     }
 
-    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory stateCategory, InstanceSave instance)
+    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory? stateCategory, InstanceSave instance)
     {
         List<MemberCategory> categories = new List<MemberCategory>();
 

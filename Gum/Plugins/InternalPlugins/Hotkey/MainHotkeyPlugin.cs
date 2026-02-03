@@ -39,7 +39,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
         }
 
 
-        private void HandleToggleTabVisibility(object sender, EventArgs e)
+        private void HandleToggleTabVisibility(object? sender, EventArgs e)
         {
             pluginTab.IsVisible = !pluginTab.IsVisible;
         }

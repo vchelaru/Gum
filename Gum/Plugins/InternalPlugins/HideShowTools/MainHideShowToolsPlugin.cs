@@ -28,7 +28,7 @@ internal class MainHideShowToolsPlugin : InternalPlugin
         _hideShowMenuItem.Click += HandleMenuItemClick;
     }
 
-    private void HandleMenuItemClick(object sender, EventArgs e)
+    private void HandleMenuItemClick(object? sender, EventArgs e)
     {
         _mainPanelViewModel.IsToolsVisible = !_mainPanelViewModel.IsToolsVisible;
 

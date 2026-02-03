@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>2026.1.12.1</Version>
+		<Version>2026.1.31.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>KNI</DefineConstants>
@@ -53,6 +53,7 @@
 		<Compile Include="..\..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
 		<Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
 		<Compile Include="..\..\RenderingLibrary\Content\ContentLoader.cs" Link="RenderingLibrary\ContentLoader.cs" />
+		<Compile Include="..\..\RenderingLibrary\Content\LoaderManagerExtensionMethods.cs" Link="RenderingLibrary\LoaderManagerExtensionMethods.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
@@ -72,6 +73,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Text.cs" Link="Renderables\Text.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\TextExtensions.cs" Link="Renderables\TextExtensions.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\TextManager.cs" Link="RenderingLibrary\TextManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\XNAExtensions.cs" Link="Utilities\XNAExtensions.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\FloatRectangle.cs" Link="Utilities\FloatRectangle.cs" />

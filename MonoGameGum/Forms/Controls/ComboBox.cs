@@ -428,7 +428,9 @@ public class ComboBox :
         if (Visual.EffectiveManagers != null && listBox.IsVisible)
         {
             listBox.IsVisible = false;
-            listBox.Visual.RemoveFromManagers();
+            // Don't do this, because doing so removes the bindings
+            //listBox.Visual.RemoveFromManagers();
+            listBox.Visual.Parent = null;
 
             listBox.Visual.XUnits = listBoxXUnits;
             listBox.Visual.YUnits = listBoxYUnits;

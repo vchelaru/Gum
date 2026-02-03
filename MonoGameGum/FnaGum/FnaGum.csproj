@@ -7,7 +7,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.FNA</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>2026.1.12.1</Version>
+		<Version>2026.1.31.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -67,6 +67,8 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Text.cs" Link="Renderables\Text.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\TextExtensions.cs" Link="Renderables\TextExtensions.cs" />
+		
 		<Compile Include="..\..\RenderingLibrary\Graphics\TextManager.cs" Link="RenderingLibrary\TextManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\XNAExtensions.cs" Link="Utilities\XNAExtensions.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\FloatRectangle.cs" Link="Utilities\FloatRectangle.cs" />

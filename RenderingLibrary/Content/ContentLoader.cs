@@ -27,7 +27,7 @@ public class ContentLoader : IContentLoader
 
     //List<Atlas> atlases = new List<Atlas>();
 
-    public T? LoadContent<T>(string contentName)
+    public T LoadContent<T>(string contentName)
     {
         if(typeof(T) == typeof(Texture2D))
         {

@@ -13,6 +13,8 @@
 		<DefineConstants>GUM; MONOGAME</DefineConstants>
 		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 		<NoWarn>$(NoWarn);CA1416</NoWarn>
+		<!-- Force copy of all dependencies to output folder -->
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
@@ -37,10 +39,12 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
-		<ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
+		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
 
 		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
@@ -48,6 +52,6 @@
 		
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)XnaAndWinforms.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)RenderingLibrary.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)XnaAndWinforms.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)KniGum.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)Xna*.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
 	</Target>
 </Project>

@@ -301,7 +301,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDeleteKeyframe(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleDeleteKeyframe(object? sender, System.Windows.RoutedEventArgs e)
     {
         if(SelectedAnimation != null && SelectedAnimation.SelectedKeyframe != null)
         {
@@ -309,7 +309,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleRenameAnimation(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleRenameAnimation(object? sender, System.Windows.RoutedEventArgs e)
     {
         /////////////////Early Out/////////////////
         if(SelectedAnimation == null)
@@ -337,7 +337,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleSquashStretchTimes(object? sender, System.Windows.RoutedEventArgs e)
     {
         if(SelectedAnimation == null)
         {
@@ -377,7 +377,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleDeleteAnimation(object? sender, System.Windows.RoutedEventArgs e)
     {
         if(SelectedAnimation == null)
         {
@@ -389,7 +389,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDuplicateAnimation(object sender, System.Windows.RoutedEventArgs e)
+    private void HandleDuplicateAnimation(object? sender, System.Windows.RoutedEventArgs e)
     {
         if(SelectedAnimation == null)
         {

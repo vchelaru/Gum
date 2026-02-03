@@ -76,13 +76,17 @@ public class MainCodeOutputPlugin : PluginBase
 
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(_codeGenerator, codeGenerationNameVerifier);
 
-
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-
 
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, codeGenerationNameVerifier);
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, codeGenerationNameVerifier);
-        _renameService = new RenameService(_codeGenerationService, _codeGenerator, customCodeGenerator, codeGenerationNameVerifier);
+        _renameService = new RenameService(
+            _codeGenerationService, 
+            _codeGenerator, 
+            customCodeGenerator, 
+            codeGenerationNameVerifier, 
+            _dialogService);
+
         _messenger = Locator.GetRequiredService<IMessenger>();
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator);
@@ -302,7 +306,7 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void HandleViewCodeClicked(object sender, EventArgs e)
+    private void HandleViewCodeClicked(object? sender, EventArgs e)
     {
         //GumCommands.Self.GuiCommands.ShowControl(control);
 

@@ -42,27 +42,27 @@ namespace WpfDataUi.Controls
         /// </summary>
         public int DecimalPointsFromSlider { get; set; } = 2;
 
-        InstanceMember mInstanceMember;
-        public InstanceMember InstanceMember
+        InstanceMember? _instanceMember;
+        public InstanceMember? InstanceMember
         {
             get
             {
-                return mInstanceMember;
+                return _instanceMember;
             }
             set
             {
                 mTextBoxLogic.InstanceMember = value;
 
-                bool valueChanged = mInstanceMember != value;
-                if (mInstanceMember != null && valueChanged)
+                bool valueChanged = _instanceMember != value;
+                if (_instanceMember != null && valueChanged)
                 {
-                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                    _instanceMember.PropertyChanged -= HandlePropertyChange;
                 }
-                mInstanceMember = value;
+                _instanceMember = value;
 
-                if (mInstanceMember != null && valueChanged)
+                if (_instanceMember != null && valueChanged)
                 {
-                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                    _instanceMember.PropertyChanged += HandlePropertyChange;
                 }
 
 
@@ -111,7 +111,7 @@ namespace WpfDataUi.Controls
 
         #endregion
 
-        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
@@ -340,7 +340,7 @@ namespace WpfDataUi.Controls
         }
 
         DateTime lastSliderTime = new DateTime();
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void Slider_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
         {
             // This is required to prevent weird flickering on the slider. Putting 100 ms frequency limiter makes everything work just fine.
             // It's a hack but...not sure what else to do. I also have Slider_DragCompleted so the last value is always pushed.
@@ -374,7 +374,7 @@ namespace WpfDataUi.Controls
         {
             var value = Slider.Value;
 
-            var propertyType = mInstanceMember?.PropertyType;
+            var propertyType = _instanceMember?.PropertyType;
             if (propertyType == typeof(int) || 
                 propertyType == typeof(uint) || 
                 propertyType == typeof(long) || 
@@ -391,7 +391,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
+        private void TextBox_LostFocus_1(object? sender, RoutedEventArgs e)
         {
 
             mTextBoxLogic.ClampTextBoxValuesToMinMax();
@@ -402,7 +402,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void Slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        private void Slider_DragCompleted(object? sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             HandleValueChanged();
 
@@ -419,7 +419,7 @@ namespace WpfDataUi.Controls
             RefreshMinMaxAndTickDisplay();
         }
 
-        private void Slider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Slider_MouseLeftButtonUp(object? sender, MouseButtonEventArgs e)
         {
             HandleValueChanged();
         }

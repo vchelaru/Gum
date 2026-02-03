@@ -311,7 +311,10 @@ public abstract class TextBoxBase :
 #endif
         Visual.SizeChanged += HandleVisualSizeChanged;
 
-        this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
+        if(textComponent != null)
+        {
+            this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
+        }
         base.ReactToVisualChanged();
 
         // don't do this, the layout may not have yet been performed yet:
@@ -403,12 +406,12 @@ public abstract class TextBoxBase :
 
     #region Event Handler Methods
 
-    private void HandleVisualSizeChanged(object sender, EventArgs e)
+    private void HandleVisualSizeChanged(object? sender, EventArgs e)
     {
         OffsetTextToKeepCaretInView();
     }
 
-    private void HandlePush(object sender, EventArgs args)
+    private void HandlePush(object? sender, EventArgs args)
     {
         // September 7, 2025
         // When pushing on a TextBox,
@@ -432,7 +435,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void HandleClick(object sender, EventArgs args)
+    private void HandleClick(object? sender, EventArgs args)
     {
         InteractiveGue.CurrentInputReceiver = this;
     }
@@ -466,16 +469,16 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void HandleRollOn(object sender, EventArgs args)
+    private void HandleRollOn(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandleRollOver(object sender, EventArgs args)
+    private void HandleRollOver(object? sender, EventArgs args)
     {
     }
 
-    private void HandleDrag(object sender, EventArgs args)
+    private void HandleDrag(object? sender, EventArgs args)
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
@@ -523,7 +526,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void HandleRollOff(object sender, EventArgs args)
+    private void HandleRollOff(object? sender, EventArgs args)
     {
         UpdateState();
     }
@@ -1140,6 +1143,11 @@ public abstract class TextBoxBase :
     /// <param name="relativeIndexOnLine">The relative index in the line, where 0 is the first character in the line.</param>
     public void GetLineNumber(int absoluteCharacterIndex, out int lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine)
     {
+        // This is a copy of the method in TextExtensions.cs, but since that
+        // requires a Text and not an IText, that can't be referenced here.
+        // Doing so would require a little more refactoring. If this method 
+        // changes, make the change in TextExtensions, or clean it up.
+
         lineNumber = 0;
         relativeIndexOnLine = absoluteCharacterIndex;
         absoluteStartOfLine = 0;
@@ -1196,13 +1204,6 @@ public abstract class TextBoxBase :
         else
         {
             GetLineNumber(caretIndex, out int lineNumber, out int _, out int relativeIndexOnLine);
-
-            int lineLength = 0;
-            if (lineNumber < coreTextObject.WrappedText.Count && lineNumber > -1)
-            {
-                var currentLine = coreTextObject.WrappedText[lineNumber];
-                lineLength = currentLine.Length;
-            }
 
             if (lineNumber == -1)
             {
@@ -1587,15 +1588,13 @@ public abstract class TextBoxBase :
         if(true)
         {
             var measure = this.coreTextObject.MeasureString(substring);
-            return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
-        }
 #else
         if (this.coreTextObject.BitmapFont != null)
         {
             var measure = this.coreTextObject.BitmapFont.MeasureString(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+#endif
             return measure + this.textComponent.X + GetLineXOffsetForHorizontalAlignment(stringToMeasure);
         }
-#endif
         else
         {
             return caretComponent.X = GetLineXOffsetForHorizontalAlignment(stringToMeasure);

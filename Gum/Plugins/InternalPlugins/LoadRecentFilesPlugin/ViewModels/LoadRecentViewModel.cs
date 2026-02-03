@@ -60,7 +60,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
             this.PropertyChanged += HandlePropertyChanged;
         }
 
-        private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {

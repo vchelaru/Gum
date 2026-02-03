@@ -13,7 +13,7 @@ namespace Gum.Managers
         {
         }
 
-        void HandleFileFromProjectSelect(object sender, EventArgs args)
+        void HandleFileFromProjectSelect(object? sender, EventArgs args)
         {
             ToolStripMenuItem menuItem = sender as ToolStripMenuItem;
 

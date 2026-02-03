@@ -1,4 +1,7 @@
-﻿using Gum.Graphics.Animation;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
@@ -26,15 +29,15 @@ namespace MonoGameGum.GueDeriving
 
         #region Contained Nineslice
 
-        RenderingLibrary.Graphics.NineSlice mContainedNineSlice;
+        NineSlice mContainedNineSlice;
 
-        RenderingLibrary.Graphics.NineSlice ContainedNineSlice
+        NineSlice ContainedNineSlice
         {
             get
             {
                 if (mContainedNineSlice == null)
                 {
-                    mContainedNineSlice = this.RenderableComponent as RenderingLibrary.Graphics.NineSlice;
+                    mContainedNineSlice = (NineSlice)this.RenderableComponent;
                 }
                 return mContainedNineSlice;
             }
@@ -208,11 +211,13 @@ namespace MonoGameGum.GueDeriving
             set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
         }
 
+#if XNALIKE
         public float BorderScale
         {
             get => ContainedNineSlice.BorderScale;
             set => ContainedNineSlice.BorderScale = value;
         }
+#endif
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 

@@ -1014,12 +1014,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private void ObjectTreeView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+    private void ObjectTreeView_PreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
     {
         int m = 3;
     }
 
-    private void ObjectTreeView_KeyPress(object sender, KeyPressEventArgs e)
+    private void ObjectTreeView_KeyPress(object? sender, KeyPressEventArgs e)
     {
         _dragDropManager.HandleKeyPress(e);
     }
@@ -2114,7 +2114,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     }
 
-    private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)
+    private void ObjectTreeView_AfterSelect_1(object? sender, TreeViewEventArgs e)
     {
         // If we use AfterClickSelect instead of AfterSelect then
         // we don't get notified when the user selects nothing.
@@ -2126,12 +2126,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
+    private void ObjectTreeView_AfterClickSelect(object? sender, TreeViewEventArgs e)
     {
         OnSelect(ObjectTreeView.SelectedNode);
     }
 
-    private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
+    private void ObjectTreeView_MouseClick(object? sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Right)
         {
@@ -2141,7 +2141,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
+    private void ObjectTreeView_KeyDown(object? sender, KeyEventArgs e)
     {
         HandleKeyDown(e);
     }
@@ -2428,7 +2428,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             whatToHighlight = _wireframeObjectManager.GetRepresentation(instance, null);
         }
 
-        PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+        if(PluginManager.Self.IsInitialized)
+        {
+            PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+        }
     }
 
     void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)

@@ -548,8 +548,6 @@ public class CopyPasteLogic
 
         foreach (var sourceInstance in instancesToCopy)
         {
-            ElementSave sourceElement = sourceInstance.ParentContainer;
-
             // This could be an instance in a behavior, so we can't clone:
             //InstanceSave newInstance = sourceInstance.Clone();
             InstanceSave newInstance = new InstanceSave();

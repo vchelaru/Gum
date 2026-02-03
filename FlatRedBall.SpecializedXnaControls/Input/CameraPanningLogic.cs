@@ -16,7 +16,7 @@ namespace FlatRedBall.SpecializedXnaControls.Input
 
         SystemManagers mManagers;
 
-        public event Action Panning;
+        public event Action? Panning;
 
         public bool IsHotkeyPanningEnabled
         {

@@ -22,7 +22,7 @@ namespace WpfDataUi.Controls
 
         TextBoxDisplayLogic mTextBoxLogic;
 
-        InstanceMember mInstanceMember;
+        InstanceMember? _instanceMember;
 
         ApplyValueResult? lastApplyValueResult = null;
 
@@ -34,23 +34,23 @@ namespace WpfDataUi.Controls
 
         public bool EnableLabelDragValueChange { get; set; } = true;
 
-        public InstanceMember InstanceMember
+        public InstanceMember? InstanceMember
         {
-            get => mInstanceMember;
+            get => _instanceMember;
             set
             {
                 mTextBoxLogic.InstanceMember = value;
 
-                bool instanceMemberChanged = mInstanceMember != value;
-                if (mInstanceMember != null && instanceMemberChanged)
+                bool instanceMemberChanged = _instanceMember != value;
+                if (_instanceMember != null && instanceMemberChanged)
                 {
-                    mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                    _instanceMember.PropertyChanged -= HandlePropertyChange;
                 }
-                mInstanceMember = value;
+                _instanceMember = value;
 
-                if (mInstanceMember != null && instanceMemberChanged)
+                if (_instanceMember != null && instanceMemberChanged)
                 {
-                    mInstanceMember.PropertyChanged += HandlePropertyChange;
+                    _instanceMember.PropertyChanged += HandlePropertyChange;
                 }
 
                 if(instanceMemberChanged)
@@ -265,7 +265,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+        private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(InstanceMember.Value))
             {
@@ -295,7 +295,7 @@ namespace WpfDataUi.Controls
             AfterTextBoxUi.Children.Add(element);
         }
 
-        private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
+        private void TextBox_LostFocus_1(object? sender, RoutedEventArgs e)
         {
             RefreshPlaceholderText();
 
@@ -340,7 +340,7 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.TextAtStartOfEditing = this.TextBox.Text;
         }
 
-        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        private void TextBox_GotFocus(object? sender, RoutedEventArgs e)
         {
             RefreshPlaceholderText();
         }
@@ -354,7 +354,7 @@ namespace WpfDataUi.Controls
         private static extern bool SetCursorPos(int X, int Y);
 
 
-        private void Label_MouseDown(object sender, MouseButtonEventArgs e)
+        private void Label_MouseDown(object? sender, MouseButtonEventArgs e)
         {
             if (mTextBoxLogic.IsNumeric && EnableLabelDragValueChange)
             {
@@ -380,7 +380,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void Label_MouseMove(object sender, MouseEventArgs e)
+        private void Label_MouseMove(object? sender, MouseEventArgs e)
         {
             if(currentDownX != null)
             {
@@ -426,7 +426,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        private void Label_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Label_MouseUp(object? sender, MouseButtonEventArgs e)
         {
             if (mTextBoxLogic.IsNumeric && currentDownX != 0 && EnableLabelDragValueChange &&
                 // If the user changed the value with the mouse. Otherwise, it was a simple click
@@ -446,12 +446,12 @@ namespace WpfDataUi.Controls
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
 
-        private void NullableCheckBox_Checked(object sender, RoutedEventArgs e)
+        private void NullableCheckBox_Checked(object? sender, RoutedEventArgs e)
         {
             HandleNullableCheckBoxCheckChanged();
         }
 
-        private void NullableCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        private void NullableCheckBox_Unchecked(object? sender, RoutedEventArgs e)
         {
             var propertyType = this.GetPropertyType();
 

@@ -8,7 +8,7 @@
 		<PackageId>Gum.Shapes.KNI</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 
-		<Version>2026.1.12.1</Version>
+		<Version>2026.1.31.1</Version>
 		<NoWarn>1591</NoWarn>
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -31,7 +31,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.5.2" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.3-alpha" />
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />

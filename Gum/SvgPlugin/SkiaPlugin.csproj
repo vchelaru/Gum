@@ -27,9 +27,9 @@
 	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
     <ProjectReference Include="..\Gum.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
-    <ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
     <ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj" />
   </ItemGroup>
   <ItemGroup>

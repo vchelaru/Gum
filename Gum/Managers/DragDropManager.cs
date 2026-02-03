@@ -831,7 +831,7 @@ public class DragDropManager
         }
     }
 
-    public void OnWireframeDragEnter(object sender, DragEventArgs e)
+    public void OnWireframeDragEnter(object? sender, DragEventArgs e)
     {
         var canDropFile =
             _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements

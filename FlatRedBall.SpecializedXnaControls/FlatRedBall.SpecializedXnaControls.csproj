@@ -8,6 +8,8 @@
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 	  <!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 	  <NoWarn>$(NoWarn);CA1416</NoWarn>
+	  <Nullable>enable</Nullable>
+
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -37,7 +39,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
+    <ProjectReference Include="..\MonoGameGum\KniGum\KniGum.csproj" />
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
   </ItemGroup>
   <ItemGroup>

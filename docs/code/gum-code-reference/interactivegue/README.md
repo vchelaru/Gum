@@ -20,4 +20,7 @@ The following events are available on InteractiveGue
 * RollOver
 * HoverOver
 * Dragging
+* RemovedAsPushed
 * MouseWheelScroll
+
+For more information on visual events, see the [Visual Events](../../events-and-interactivity/visual-events.md) page.

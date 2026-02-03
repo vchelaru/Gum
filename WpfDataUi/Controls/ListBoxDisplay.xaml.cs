@@ -18,7 +18,7 @@ namespace WpfDataUi.Controls;
 /// </summary>
 public partial class ListBoxDisplay : UserControl, IDataUi
 {
-    InstanceMember mInstanceMember;
+    InstanceMember? _instanceMember;
 
     int? indexEditing = -1;
     int? IndexEditing
@@ -31,20 +31,20 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
-    public InstanceMember InstanceMember
+    public InstanceMember? InstanceMember
     { 
-        get => mInstanceMember; 
+        get => _instanceMember; 
         set
         {
-            bool instanceMemberChanged = mInstanceMember != value;
-            if (mInstanceMember != null && instanceMemberChanged)
+            bool instanceMemberChanged = _instanceMember != value;
+            if (_instanceMember != null && instanceMemberChanged)
             {
-                mInstanceMember.PropertyChanged -= HandlePropertyChange;
+                _instanceMember.PropertyChanged -= HandlePropertyChange;
             }
-            mInstanceMember = value;
-            if (mInstanceMember != null && instanceMemberChanged)
+            _instanceMember = value;
+            if (_instanceMember != null && instanceMemberChanged)
             {
-                mInstanceMember.PropertyChanged += HandlePropertyChange;
+                _instanceMember.PropertyChanged += HandlePropertyChange;
             }
             Refresh();
 
@@ -234,7 +234,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         return ApplyValueResult.Success;
     }
 
-    private void AddButtonClicked(object sender, RoutedEventArgs e)
+    private void AddButtonClicked(object? sender, RoutedEventArgs e)
     {
         ShowTextBoxUi();
     }
@@ -246,7 +246,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         NewTextBox.Focus();
     }
 
-    private void ListBox_KeyDown(object sender, KeyEventArgs e)
+    private void ListBox_KeyDown(object? sender, KeyEventArgs e)
     {
         var isCtrlDown =
             (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
@@ -288,7 +288,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
-    private void OkButton_Click(object sender, RoutedEventArgs e)
+    private void OkButton_Click(object? sender, RoutedEventArgs e)
     {
         HandleAddTextItem(NewTextBox.Text);
     }
@@ -339,17 +339,15 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             }
             else if(listToAddTo is List<System.Numerics.Vector2> vector2List)
             {
-                Vector2? toAdd = null;
-
-                if(TryParse(text, out toAdd))
+                if(TryParse(text, out var toAdd))
                 {
                     if (IndexEditing == null)
                     {
-                        vector2List.Add(toAdd.Value);
+                        vector2List.Add(toAdd!.Value);
                     }
                     else
                     {
-                        vector2List[IndexEditing.Value] = toAdd.Value;
+                        vector2List[IndexEditing.Value] = toAdd!.Value;
                     }
                 }
                 else
@@ -397,7 +395,9 @@ public partial class ListBoxDisplay : UserControl, IDataUi
                 }
             }
         }
-        return parsedValue != null;
+        var succeeded = parsedValue != null;
+
+        return succeeded;
     }
 
     private void TryDoManualRefresh()
@@ -412,7 +412,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
         HandleCancelItem();
     }
@@ -425,7 +425,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         IndexEditing = null;
     }
 
-    private void NewTextBox_KeyDown(object sender, KeyEventArgs e)
+    private void NewTextBox_KeyDown(object? sender, KeyEventArgs e)
     {
         if(e.Key == Key.Enter)
         {
@@ -440,7 +440,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
-    private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
+    private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(InstanceMember.Value))
         {
@@ -449,7 +449,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
-    private void ListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private void ListBox_MouseDoubleClick(object? sender, MouseButtonEventArgs e)
     {
         IndexEditing = ((ListBox)sender).SelectedIndex;
         if(IndexEditing < 0)

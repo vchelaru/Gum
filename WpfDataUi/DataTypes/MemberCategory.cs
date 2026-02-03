@@ -88,7 +88,7 @@ namespace WpfDataUi.DataTypes
 
         #region Events
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public event Action<InstanceMember> MemberValueChangedByUi;
 
@@ -116,7 +116,7 @@ namespace WpfDataUi.DataTypes
             Members.CollectionChanged += HandleMembersChanged;
         }
 
-        void HandleMembersChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void HandleMembersChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             NotifyPropertyChanged("Visibility");
 

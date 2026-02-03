@@ -93,6 +93,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<CopyPasteLogic>();
         services.AddSingleton<DeleteLogic>();
         services.AddSingleton<FileLocations>();
+        services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
         services.AddSingleton<LocalizationManager>();
