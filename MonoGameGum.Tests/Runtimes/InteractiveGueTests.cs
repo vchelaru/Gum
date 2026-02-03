@@ -7,6 +7,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -285,6 +286,7 @@ public class InteractiveGueTests : BaseTestClass
 
     #endregion
 
+
     [Fact]
     public void MouseWheelScroll_ShouldRaiseOnChildrenBeforeParents()
     {
@@ -326,6 +328,64 @@ public class InteractiveGueTests : BaseTestClass
         didChildRaise.ShouldBeTrue();
         didParentRaise.ShouldBeTrue();
 
+    }
+
+    [Fact]
+    public void RollOn_ShouldRaise_OnMoveOn()
+    {
+        InteractiveGue gue = new ContainerRuntime();
+        gue.AddToRoot();
+        gue.HasEvents = true;
+
+        bool wasCalled = false;
+        gue.RollOn += (_, _) =>
+        {
+            wasCalled = true;
+        };
+
+        SetCursor(1000, 1);
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        var isEither =
+            _cursor.Object.VisualOver == gue ||
+            _cursor.Object.WindowOver == gue;
+        isEither.ShouldBeFalse();
+
+        SetCursor(1, 1);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+  
+        wasCalled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RollOff_ShouldRaise_OnMoveOff()
+    {
+        InteractiveGue gue = new ContainerRuntime();
+        gue.AddToRoot();
+        gue.HasEvents = true;
+
+        bool wasCalled = false;
+        gue.RollOff += (_, _) =>
+        {
+            wasCalled = true;
+        };
+
+        SetCursor(1, 1);
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        var isEither =
+            _cursor.Object.VisualOver == gue ||
+            _cursor.Object.WindowOver == gue;
+        isEither.ShouldBeTrue();
+
+        _cursor.Setup(x => x.PrimaryPush).Returns(false);
+
+        SetCursor(1000, 1);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        wasCalled.ShouldBeTrue();
     }
 
     #region Utilities
