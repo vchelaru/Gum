@@ -22,7 +22,6 @@ public class InteractiveGueTests : BaseTestClass
     public InteractiveGueTests()
     {
         _cursor = new Mock<ICursor>();
-        _cursor.SetupProperty(x => x.WindowOver);
         _cursor.SetupProperty(x => x.VisualOver);
         _cursor.SetupProperty(x => x.WindowPushed);
         FormsUtilities.SetCursor(_cursor.Object);
@@ -55,7 +54,7 @@ public class InteractiveGueTests : BaseTestClass
     }
 
     [Fact]
-    public void AddNextPushAction_ShouldRegisterWindowOver_ForFrame()
+    public void AddNextPushAction_ShouldRegisterVisualOver_ForFrame()
     {
         _cursor.Setup(x => x.PrimaryClick).Returns(true);
         _cursor.Setup(x => x.PrimaryPush).Returns(true);
@@ -73,10 +72,9 @@ public class InteractiveGueTests : BaseTestClass
 
         void HandleNextPush()
         {
-            if (_cursor.Object.WindowOver != button.Visual &&
-                _cursor.Object.VisualOver != button.Visual)
+            if (_cursor.Object.VisualOver != button.Visual)
             {
-                throw new Exception("WindowOver was not set correctly");
+                throw new Exception("VisualOver was not set correctly");
             }
         }
 
@@ -84,7 +82,7 @@ public class InteractiveGueTests : BaseTestClass
 
         didRunPush.ShouldBe(true);
 
-        _cursor.Object.WindowOver = null;
+        _cursor.Object.VisualOver = null;
         _cursor.Object.WindowPushed = null;
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
@@ -207,8 +205,7 @@ public class InteractiveGueTests : BaseTestClass
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
-            _cursor.Object.VisualOver == gue ||
-            _cursor.Object.WindowOver == gue;
+            _cursor.Object.VisualOver == gue;
         isEither.ShouldBeTrue();
 
         SetCursor(1000, 1);
@@ -216,7 +213,6 @@ public class InteractiveGueTests : BaseTestClass
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         _cursor.Object.VisualOver.ShouldBeNull();
-        _cursor.Object.WindowOver.ShouldBeNull();
     }
 
 
@@ -238,8 +234,7 @@ public class InteractiveGueTests : BaseTestClass
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
-            _cursor.Object.VisualOver == gue ||
-            _cursor.Object.WindowOver == gue;
+            _cursor.Object.VisualOver == gue;
 
         isEither.ShouldBeTrue();
 
@@ -271,8 +266,7 @@ public class InteractiveGueTests : BaseTestClass
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
-            _cursor.Object.VisualOver == gue ||
-            _cursor.Object.WindowOver == gue;
+            _cursor.Object.VisualOver == gue;
 
         isEither.ShouldBeTrue();
 
@@ -374,8 +368,7 @@ public class InteractiveGueTests : BaseTestClass
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
-            _cursor.Object.VisualOver == gue ||
-            _cursor.Object.WindowOver == gue;
+            _cursor.Object.VisualOver == gue;
         isEither.ShouldBeFalse();
 
         SetCursor(1, 1);
@@ -402,8 +395,7 @@ public class InteractiveGueTests : BaseTestClass
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
         var isEither =
-            _cursor.Object.VisualOver == gue ||
-            _cursor.Object.WindowOver == gue;
+            _cursor.Object.VisualOver == gue;
         isEither.ShouldBeTrue();
 
         _cursor.Setup(x => x.PrimaryPush).Returns(false);

@@ -82,7 +82,6 @@ public class MenuItemTests
         Mock<ICursor> cursor = new();
         cursor.Setup(x => x.PrimaryClick).Returns(true);
         FormsUtilities.SetCursor(cursor.Object);
-        cursor.SetupProperty(x => x.WindowOver);
         cursor.SetupProperty(x => x.VisualOver);
         cursor.SetupProperty(x => x.WindowPushed);
         cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.Mouse);

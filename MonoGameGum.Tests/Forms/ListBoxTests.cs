@@ -115,7 +115,7 @@ public class ListBoxTests : BaseTestClass
                 firstListBoxItem.Visual;
 
             string diagnostics =
-                $"WindowOver: {mockCursor.Object.VisualOver}" +
+                $"VisualOver: {mockCursor.Object.VisualOver}" +
                 $" WindowPushed: {mockCursor.Object.WindowPushed}" +
                 $" Is over first: {isOverFirst}";
             throw new Exception(diagnostics);

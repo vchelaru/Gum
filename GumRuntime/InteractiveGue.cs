@@ -489,7 +489,7 @@ public partial class InteractiveGue : BindableGue
                         // moved from above, see comments there...
                         handledByThis = true;
                         cursor.VisualOver = asInteractive;
-                        handledActions.SetWindowOver = true;
+                        handledActions.SetVisualOver = true;
 
                         if (cursor.PrimaryPush && asInteractive.IsEnabledRecursively && handledActions.handledPushPreview == false)
                         {
@@ -919,7 +919,7 @@ public partial class InteractiveGue : BindableGue
 
         // When AddNextPushAction or AddNextClickAction are called, the user expects:
         // 1. That it will not be raised immediately if added inside a push/click event
-        // 2. That it will have access to the WindowPushed/WindowOver
+        // 2. That it will have access to the WindowPushed/VisualOver
         // This means that we cannot immediately run new events, but that all events should
         // be run *after* we do our every-frame logic of detecting whether the user is over a
         // window.
@@ -1111,7 +1111,7 @@ class HandledActions
     public bool HandledRollOver;
     public bool HandledClickPreview;
     public bool handledPushPreview;
-    public bool SetWindowOver;
+    public bool SetVisualOver;
 }
 public static class GueInteractiveExtensionMethods
 {
@@ -1136,7 +1136,7 @@ public static class GueInteractiveExtensionMethods
 #endif
 
         InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
-        var windowOverBefore = cursor.VisualOver;
+        var visualOverBefore = cursor.VisualOver;
         var windowPushedBefore = cursor.WindowPushed;
         var VisualRightPushedBefore = cursor.VisualRightPushed;
 
@@ -1148,7 +1148,7 @@ public static class GueInteractiveExtensionMethods
 
 
         HandledActions actions = new HandledActions();
-        var lastWindowOver = cursor.VisualOver;
+        var lastVisualOver = cursor.VisualOver;
 
 
         cursor.VisualOver = null;
@@ -1173,37 +1173,37 @@ public static class GueInteractiveExtensionMethods
             }
         }
 
-        var windowOverAsInteractive = cursor.VisualOver as InteractiveGue;
-        if (windowOverAsInteractive != null)
+        var visualOverAsInteractive = cursor.VisualOver as InteractiveGue;
+        if (visualOverAsInteractive != null)
         {
-            if (lastWindowOver != windowOverAsInteractive)
+            if (lastVisualOver != visualOverAsInteractive)
             {
-                windowOverAsInteractive.TryCallRollOn();
+                visualOverAsInteractive.TryCallRollOn();
             }
 
-            windowOverAsInteractive.TryCallHoverOver();
+            visualOverAsInteractive.TryCallHoverOver();
             if (cursor.XChange != 0 || cursor.YChange != 0)
             {
-                windowOverAsInteractive.TryCallRollOver();
+                visualOverAsInteractive.TryCallRollOver();
             }
         }
 
-        if (!actions.SetWindowOver)
+        if (!actions.SetVisualOver)
         {
             cursor.VisualOver = null;
         }
         else if(cursor.VisualOver == null)
         {
-            cursor.VisualOver = windowOverBefore;
+            cursor.VisualOver = visualOverBefore;
         }
 
-        if(windowOverBefore != cursor.VisualOver)
+        if(visualOverBefore != cursor.VisualOver)
         {
             string GetInfoFor(InteractiveGue interactive)
             {
                 return interactive?.Name + " " + interactive?.GetType();
             }
-            if (windowOverBefore is InteractiveGue interactiveBefore)
+            if (visualOverBefore is InteractiveGue interactiveBefore)
             {
                 interactiveBefore.TryCallRollOff(cursor);
             }
@@ -1240,7 +1240,7 @@ public static class GueInteractiveExtensionMethods
         // not the current click, and this makes closing windows that were just opened much
         // harder to do.
         // Update 2 - The reason this logic must happen after normal UI logic is because some
-        // actions added may inspect the WindowOver or WindowPushed properties, and those are 
+        // actions added may inspect the VisualOver or WindowPushed properties, and those are 
         // set during the UI activity.
         // This does cause the problem of click and push events being called immediately, which
         // means the InteractiveGue must only run events which are at least 1 frame old
