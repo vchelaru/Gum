@@ -33,3 +33,7 @@ Tests/CodeGen_MonoGameForms_FullCodegen/Content/EventExport/gum_events.json
 /Tests/CodeGen_MonoGameForms_ByReference/.vscode
 Tests/CodeGen_MonoGameForms_ByReference/app.manifest
 Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/EventExport/gum_events.json
+
+
+# Ignore the DIST folder so that the RELEASE automation in github actions doesn't try to include the dist/gum.zip every time we release
+dist/

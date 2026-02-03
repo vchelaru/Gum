@@ -421,6 +421,7 @@ public class TextRuntime : InteractiveGue
     {
         if(fullInstantiation)
         {
+            this.SuspendLayout();
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
             textRenderable.RenderBoundary = false;
             mContainedText = textRenderable;
@@ -436,6 +437,7 @@ public class TextRuntime : InteractiveGue
             HasEvents = false;
 
             textRenderable.RawText = "Hello World";
+            this.ResumeLayout();
         }
     }
 

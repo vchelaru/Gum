@@ -685,7 +685,19 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public int LineHeightInPixels => BitmapFont?.LineHeightInPixels ?? 32;
 
-    public float LineHeightMultiplier { get; set; } = 1;
+    float _lineHeightMultiplier = 1;
+    public float LineHeightMultiplier 
+    { 
+        get => _lineHeightMultiplier;
+        set
+        {
+            if(value != _lineHeightMultiplier)
+            {
+                _lineHeightMultiplier = value;
+                UpdatePreRenderDimensions();
+            }
+        }
+    }
 
     bool IRenderableIpso.IsRenderTarget => false;
 
@@ -1066,7 +1078,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             else
             {
                 individualLineWidth[0] = widths[i];
-                var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, 1);
+                var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, LineHeightMultiplier);
                 var defaultBaseline = fontToUse.BaselineY;
 
                 float currentFontScale = FontScale;

@@ -214,6 +214,10 @@ public class MenuItem : ItemsControl
             {
                 foreach (var item in items)
                 {
+                    // This item could have been added through a state. 
+                    // If that's the case, layout will be suspended. Let's
+                    // force resume it now:
+                    item.Visual.ResumeLayout(recursive:true);
                     this.Items.Add(item);
                 }
             });
@@ -485,14 +489,14 @@ public class MenuItem : ItemsControl
 
 
             ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
-            if(visualTemplateVisual == null)
+            if (visualTemplateVisual == null)
             {
                 // let's suppress layout for performance reasons, and to prevent issues with scrollbars:
                 var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
                 GraphicalUiElement.IsAllLayoutSuspended = true;
 
-                var oldHorizontalScrollBarVisibility = itemsPopup.HorizontalScrollBarVisibility;
-                var oldVerticalScrollBarVisibility = itemsPopup.VerticalScrollBarVisibility;
+                //var oldHorizontalScrollBarVisibility = itemsPopup.HorizontalScrollBarVisibility;
+                //var oldVerticalScrollBarVisibility = itemsPopup.VerticalScrollBarVisibility;
 
                 itemsPopup.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
                 itemsPopup.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
@@ -500,24 +504,25 @@ public class MenuItem : ItemsControl
                 itemsPopup.VerticalSizeMode = SizeMode.Auto;
                 itemsPopup.HorizontalSizeMode = SizeMode.Auto;
 
-                itemsPopup.Width = 200;
-                itemsPopup.Height = 400;
+                // We can't make assumptions about the structure of the popup, so we have to just recursively
+                // climb up from the inner panel and size it according to its children.
+                var parentForSizing = itemsPopup.InnerPanel;
+                while(parentForSizing != null)
+                {
+                    parentForSizing.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.Width = 0;
+                    parentForSizing.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    parentForSizing.Height = 0;
 
-
-                itemsPopup.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                itemsPopup.Visual.Height = 0;
-                itemsPopup.ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                itemsPopup.ClipContainer.Height = 0;
-
-                itemsPopup.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                itemsPopup.Visual.Width = 0;
-                itemsPopup.ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                itemsPopup.ClipContainer.Width = 0;
-                itemsPopup.InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                itemsPopup.InnerPanel.Width = 0;
+                    if (parentForSizing == itemsPopup.Visual)
+                    {
+                        break;
+                    }
+                    parentForSizing = parentForSizing.Parent;
+                }
 
                 GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
-                if(!wasSuppressed)
+                if (!wasSuppressed)
                 {
                     itemsPopup.Visual.UpdateLayout();
                 }

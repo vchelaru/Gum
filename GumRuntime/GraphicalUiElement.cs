@@ -271,17 +271,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <inheritdoc/>
     public bool Visible
     {
-        get
-        {
-            if (mContainedObjectAsIVisible != null)
-            {
-                return mContainedObjectAsIVisible.Visible;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        get => mContainedObjectAsIVisible?.Visible ?? false;
         set
         {
             // If this is a Screen, then it doesn't have a contained IVisible:
@@ -1653,6 +1643,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
     {
+        mIsLayoutSuspended = true;
         Width = 32;
         Height = 32;
 #if FULL_DIAGNOSTICS
@@ -1677,6 +1668,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
 
+        mIsLayoutSuspended = false;
         // This is a bit of a hack to support GraphicalUiElement.IWindow.
         // This isn't needed in MonoGame:
         OnConstructor();
@@ -3523,9 +3515,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             void UpdateChild(GraphicalUiElement child, bool flagAsUpdated)
             {
-
+                var childLayoutType = child.GetChildLayoutType(this);
                 var canDoFullUpdate =
-                    CanDoFullUpdate(child.GetChildLayoutType(this), child);
+                    CanDoFullUpdate(childLayoutType, child);
 
 
                 if (canDoFullUpdate)
@@ -4886,6 +4878,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <exception cref="NotImplementedException"></exception>
     public void Anchor(Anchor anchor)
     {
+        var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended || this.IsLayoutSuspended;
+
+        if(!wasSuspended)
+        {
+            this.SuspendLayout();
+        }
+
         switch (anchor)
         {
             case Wireframe.Anchor.TopLeft:
@@ -5026,6 +5025,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 break;
             default:
                 throw new NotImplementedException();
+        }
+
+        if(!wasSuspended)
+        {
+            this.ResumeLayout();
         }
     }
 
@@ -6062,8 +6066,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
+            bool didSuspend = false;
             if (GraphicalUiElement.IsAllLayoutSuspended == false)
             {
+                didSuspend = true;
                 this.SuspendLayout(true);
             }
 
@@ -6120,7 +6126,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.SetProperty(variableList.Name, variableList.ValueAsIList);
             }
 
-            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            if (didSuspend)
             {
                 this.ResumeLayout(true);
 
