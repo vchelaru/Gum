@@ -134,17 +134,20 @@ public class WireframeControl : GraphicsDeviceControl
         HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         DragDropManager dragDropManager,
-        EditorViewModel editorViewModel)
+        EditorViewModel editorViewModel,
+        IServiceProvider xnaServiceProvider)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
         _hotkeyManager = hotkeyManager;
         try
         {
-            LoaderManager.Self.ContentLoader = new ContentLoader();
+            var contentLoader = new ContentLoader();
+            contentLoader.XnaContentManager = new Microsoft.Xna.Framework.Content.ContentManager(xnaServiceProvider);
+            LoaderManager.Self.ContentLoader = contentLoader;
 
             SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(GraphicsDevice);
+            SystemManagers.Default.Initialize(GraphicsDevice, contentLoader : contentLoader);
 
             InitializeDefaultTypeInstantiation();
 

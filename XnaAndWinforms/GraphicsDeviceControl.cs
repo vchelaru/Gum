@@ -9,6 +9,7 @@
 
 #region Using Statements
 using System;
+using System.ComponentModel.Design;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -138,7 +139,7 @@ public class GraphicsDeviceControl : Control
             mTimer.Start();
 
             // Give derived classes a chance to initialize themselves.
-            Initialize();
+            Initialize(services);
         }
     }
 
@@ -534,7 +535,7 @@ public class GraphicsDeviceControl : Control
     /// <summary>
     /// Derived classes override this to initialize their drawing code.
     /// </summary>
-    protected virtual void Initialize()
+    protected virtual void Initialize(IServiceProvider serviceContainer)
     {
     }
 

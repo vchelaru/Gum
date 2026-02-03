@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using BlendState = Gum.BlendState;
@@ -7,10 +6,23 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
+using System.Diagnostics;
+
+
+
+
+#if APOS_SHAPES
+using SpriteBatch = Apos.Shapes.ShapeBatch;
+#else
+using SpriteBatch = Microsoft.Xna.Framework.Graphics.SpriteBatch;
+
+#endif
+
 
 namespace RenderingLibrary.Graphics
 {
-
     public struct StateChangeInfo
     {
         public Texture2D Texture;
@@ -146,9 +158,14 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
-        public SpriteBatchStack(GraphicsDevice graphicsDevice)
+        public SpriteBatchStack(GraphicsDevice graphicsDevice, ContentManager? contentManager = null)
         {
+#if APOS_SHAPES
+            Debug.Assert(contentManager != null);
+            SpriteBatch = new Apos.Shapes.ShapeBatch(graphicsDevice, contentManager);
+#else
             SpriteBatch = new SpriteBatch(graphicsDevice);
+#endif
         }
 
         public static void PerformStartOfLayerRenderingLogic()
@@ -179,7 +196,8 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.Begin();
         }
 
-        public void PushRenderStates(SpriteSortMode sortMode, 
+        public void PushRenderStates(
+            SpriteSortMode spriteSortMode,
             BlendState blendState, SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
             Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle,
@@ -191,14 +209,17 @@ namespace RenderingLibrary.Graphics
 
             // begin will end 
             ReplaceRenderStates(
-                sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle, objectChangingState);
+                spriteSortMode,
+                blendState, 
+                samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle, objectChangingState);
         }
 
         public void ForceSetRenderStatesToCurrent()
         {
             if (currentParameters != null)
             {
-                ReplaceRenderStates(currentParameters.Value.SortMode,
+                ReplaceRenderStates(
+                    currentParameters.Value.SortMode,
                     currentParameters.Value.BlendState,
                     currentParameters.Value.SamplerState,
                     currentParameters.Value.DepthStencilState,
@@ -210,7 +231,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public void ReplaceRenderStates(SpriteSortMode sortMode, 
+        public void ReplaceRenderStates(SpriteSortMode sortMode,
             BlendState blendState, 
             SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, 
@@ -265,10 +286,31 @@ namespace RenderingLibrary.Graphics
             // assign here so that any other renderables that rely on scissor rects can use it
             SpriteBatch.GraphicsDevice.RasterizerState = 
                 rasterizerState ?? RasterizerState.CullCounterClockwise;
+
+
+#if APOS_SHAPES
+
+            // todo - need blend mode, and a few other things as outlined here:
+            // https://github.com/Apostolique/Apos.Shapes/issues/28
+            // hack:
+            var basicEffect = (BasicEffect)effect;
+
+            SpriteBatch.GraphicsDevice.SamplerStates[0] = samplerState;
+
+            // The matrix used here needs to be offset
+            var width = SpriteBatch.GraphicsDevice.Viewport.Width;
+            var height = SpriteBatch.GraphicsDevice.Viewport.Height;
+
+            var matrix = Microsoft.Xna.Framework.Matrix.CreateTranslation(width / 2, height / 2, 0);
+
+            matrix = Microsoft.Xna.Framework.Matrix.Multiply(basicEffect.View, matrix);
+
+            SpriteBatch.Begin(matrix, blendState:blendState.ToXNA(), samplerState:samplerState, depthStencilState:depthStencilState, rasterizerState:rasterizerState);
+#else
             SpriteBatch.Begin(sortMode,
                 blendState.ToXNA(),
                 samplerState, depthStencilState, rasterizerState, effect, transformMatrix);
-
+#endif
         }
 
         internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle sourceRectangle, Color color, object objectRequestingChange)
@@ -280,26 +322,70 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle.ToXNA(), xnaColor);
         }
 
-        internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
+        internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, SpriteEffects effects, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
+#if APOS_SHAPES
 
-            SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), effects, layerDepth);
+            var destinationRectangleF = new MonoGame.Extended.RectangleF(
+                destinationRectangle.X,
+                destinationRectangle.Y,
+                destinationRectangle.Width,
+                destinationRectangle.Height);
+
+            if(sourceRectangle != null)
+            {
+                var sourceF = new MonoGame.Extended.RectangleF(
+                        sourceRectangle.Value.X,
+                        sourceRectangle.Value.Y,
+                        sourceRectangle.Value.Width,
+                        sourceRectangle.Value.Height);
+
+                SpriteBatch.Draw(texture2D, destinationRectangleF, sourceF, color.ToXNA(), rotationInRadians, origin.ToXNA(), Microsoft.Xna.Framework.Vector2.One);
+
+            }
+            else
+            {
+                SpriteBatch.Draw(texture2D, destinationRectangleF, color.ToXNA(), rotationInRadians, origin.ToXNA(), Microsoft.Xna.Framework.Vector2.One);
+            }
+
+#else
+            SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), effects, layerDepth:0);
+#endif
         }
 
-        internal void Draw(Texture2D texture2D, Vector2 position, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, Vector2 scale, SpriteEffects effects, float depth, object objectRequestingChange)
+        internal void Draw(Texture2D texture2D, Vector2 position, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, Vector2 scale, SpriteEffects effects, object objectRequestingChange)
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
-            SpriteBatch.Draw(texture2D, position.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA(), effects, depth);
+#if APOS_SHAPES
+
+            if (sourceRectangle != null)
+            {
+                var sourceF = new MonoGame.Extended.RectangleF(
+                    sourceRectangle.Value.X,
+                    sourceRectangle.Value.Y,
+                    sourceRectangle.Value.Width,
+                    sourceRectangle.Value.Height);
+                SpriteBatch.Draw(texture2D, position.ToXNA(), sourceF, color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA());
+            }
+            else
+            {
+                SpriteBatch.Draw(texture2D, position.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA());
+            }
+#else
+            SpriteBatch.Draw(texture2D, position.ToXNA(), sourceRectangle?.ToXNA(), color.ToXNA(), rotationInRadians, origin.ToXNA(), scale.ToXNA(), effects, layerDepth: 0);
+#endif
         }
 
         internal void DrawString(SpriteFont font, string line, Vector2 offset, Color color, object objectRequestingChange)
         {
+#if !APOS_SHAPES
             AdjustCurrentParametersDrawCall(null, font, objectRequestingChange);
 
             SpriteBatch.DrawString(font, line, offset.ToXNA(), color.ToXNA());
+#endif
         }
 
         private void AdjustCurrentParametersDrawCall(Texture2D texture, SpriteFont spriteFont, object objectRequestingChange)
@@ -369,7 +455,9 @@ namespace RenderingLibrary.Graphics
 
             if (parameters.HasValue)
             {
-                ReplaceRenderStates(parameters.Value.SortMode, parameters.Value.BlendState,
+                ReplaceRenderStates(
+                    parameters.Value.SortMode,
+                    parameters.Value.BlendState,
                     parameters.Value.SamplerState, parameters.Value.DepthStencilState,
                     parameters.Value.RasterizerState, parameters.Value.Effect,
                     parameters.Value.TransformMatrix, parameters.Value.ScissorRectangle, null);

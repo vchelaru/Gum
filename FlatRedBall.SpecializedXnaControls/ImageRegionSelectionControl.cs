@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using RenderingLibrary.Math;
 using InputLibrary;
 using ToolsUtilitiesStandard.Helpers;
+using System.ComponentModel.Design;
 
 namespace FlatRedBall.SpecializedXnaControls;
 
@@ -352,11 +353,11 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
     #region Methods
 
-    protected override void Initialize()
+    protected override void Initialize(IServiceProvider services)
     {
-        CustomInitialize();
+        CustomInitialize(services);
 
-        base.Initialize();
+        base.Initialize(services);
 
     }
 
@@ -370,7 +371,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
     }
 
-    public void CustomInitialize()
+    public void CustomInitialize(IServiceProvider services)
     {
         if (!DesignMode)
         {
@@ -378,7 +379,11 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
 
             mManagers = new SystemManagers();
-            mManagers.Initialize(GraphicsDevice);
+            var contentLoader = new ContentLoader();
+            // create one here since we need one anyway:
+            contentLoader.XnaContentManager = new Microsoft.Xna.Framework.Content.ContentManager(services);
+
+            mManagers.Initialize(GraphicsDevice, fullInstantiation:false, contentLoader:contentLoader);
             mManagers.Name = "Image Region Selection";
             Assembly assembly = Assembly.GetAssembly(typeof(GraphicsDeviceControl));// Assembly.GetCallingAssembly();
 
@@ -417,7 +422,6 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
 
 
-            var contentLoader = new ContentLoader();
             contentLoader.SystemManagers = mManagers;
 
             LoaderManager.Self.ContentLoader = contentLoader;

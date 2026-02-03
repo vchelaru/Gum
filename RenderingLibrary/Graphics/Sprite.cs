@@ -791,7 +791,6 @@ public class Sprite : SpriteBatchRenderableBase,
                     origin,
                     scale,
                     effects,
-                    0,
                     objectCausingRendering, renderer);
             }
         }
@@ -820,7 +819,6 @@ public class Sprite : SpriteBatchRenderableBase,
                 rotationInRadians,
                 origin,
                 effects,
-                0,
                 objectCausingRendering
                 );
         }

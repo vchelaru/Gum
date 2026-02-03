@@ -7,6 +7,7 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using Microsoft.Xna.Framework.Content;
 
 namespace RenderingLibrary.Graphics;
 
@@ -60,9 +61,9 @@ public class SpriteRenderer
 
     #endregion
 
-    public void Initialize(GraphicsDevice graphicsDevice)
+    public void Initialize(GraphicsDevice graphicsDevice, ContentManager? contentManager = null)
     {
-        mSpriteBatch = new SpriteBatchStack(graphicsDevice);
+        mSpriteBatch = new SpriteBatchStack(graphicsDevice, contentManager);
 
         CreateRasterizerStates();
 
@@ -231,7 +232,8 @@ public class SpriteRenderer
         // This seems to work fine in all cases
         if (beginType == BeginType.Begin)
         {
-            mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,
+            mSpriteBatch.ReplaceRenderStates(
+                SpriteSortMode.Deferred,
                 renderStates.BlendState,
                 samplerState,
                 depthStencilState,
@@ -245,7 +247,8 @@ public class SpriteRenderer
         }
         else
         {
-            mSpriteBatch.PushRenderStates(SpriteSortMode.Deferred,
+            mSpriteBatch.PushRenderStates(
+                SpriteSortMode.Deferred,
                 renderStates.BlendState,
                 samplerState,
                 depthStencilState,
@@ -399,15 +402,14 @@ public class SpriteRenderer
         mSpriteBatch.DrawString(font, line, offset, color, objectRequestingChange);
     }
 
-    internal void Draw(Texture2D textureToUse, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)
+    internal void Draw(Texture2D textureToUse, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Vector2 origin, SpriteEffects effects, object objectRequestingChange)
     {
-        mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, layerDepth, objectRequestingChange);
+        mSpriteBatch.Draw(textureToUse, destinationRectangle, sourceRectangle, color, rotation, origin, effects, objectRequestingChange);
     }
 
     internal void Draw(Texture2D textureToUse, Vector2 position, Rectangle? sourceRectangle, Color color, 
         float rotation, Vector2 origin, 
         Vector2 scale, SpriteEffects effects, 
-        float depth, 
         object objectRequestingChange, 
         Renderer renderer = null, 
         bool offsetPixel = true,
@@ -542,7 +544,7 @@ public class SpriteRenderer
             position.Y = y;
         }
 
-        mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
+        mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, objectRequestingChange);
     }
 
 
