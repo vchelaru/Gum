@@ -199,6 +199,74 @@ public class GraphicalUiElementTests : BaseTestClass
     }
     #endregion
 
+    #region ApplyState
+    [Fact]
+    public void ApplyState_ShouldApplyVariables()
+    {
+        ContainerRuntime container = new();
+        StateSave state = new();
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Value = 42f
+        });
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "Y",
+            Value = 84f
+        });
+
+        container.ApplyState(state);
+
+        container.X.ShouldBe(42f);
+        container.Y.ShouldBe(84f);
+    }
+
+    [Fact]
+    public void ApplyState_ShouldSuspendLayout_ToReduceLayoutCallCount()
+    {
+        ContainerRuntime container = new();
+        container.Dock(Dock.Fill);
+
+        StateSave state = new();
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "X",
+            Value = 11f
+        });
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "Y",
+            Value = 12f
+        });
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "Width",
+            Value = 13f
+        });
+
+
+        state.Variables.Add(new VariableSave
+        {
+            Name = "Height",
+            Value = 14f
+        });
+        int callCountBeforeApply = GraphicalUiElement.UpdateLayoutCallCount;
+
+        container.ApplyState(state);
+
+        int callCountAfterApply = GraphicalUiElement.UpdateLayoutCallCount;
+
+        callCountAfterApply.ShouldBe(callCountBeforeApply + 1);
+    }
+
+    #endregion
+
     [Fact]
     public void FillListWithChildrenByType_ShouldFillRecursively()
     {
@@ -1357,6 +1425,8 @@ public class GraphicalUiElementTests : BaseTestClass
 
     #endregion
 
+    #region RemoveFromRoot
+
     [Fact]
     public void RemoveFromRoot_ShouldRemoveFromRootCorrectly()
     {
@@ -1366,6 +1436,8 @@ public class GraphicalUiElementTests : BaseTestClass
         child.Parent.ShouldBeNull();
         GumService.Default.Root.Children.ShouldNotContain(child);
     }
+
+    #endregion
 
     [Fact]
     public void SetRenderable_NameMatches()

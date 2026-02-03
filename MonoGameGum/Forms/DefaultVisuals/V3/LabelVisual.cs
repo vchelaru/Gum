@@ -18,6 +18,7 @@ public class LabelVisual : TextRuntime
     {
         if (fullInstantiation)
         {
+            this.SuspendLayout();
             Name = "TextInstance";
             Text = "Label";
             X = 0;
@@ -29,7 +30,7 @@ public class LabelVisual : TextRuntime
             this.Color = Styling.ActiveStyle.Colors.TextPrimary;
 
             this.ApplyState(Styling.ActiveStyle.Text.Normal);
-
+            this.ResumeLayout();
         }
         if (tryCreateFormsObject)
         {
