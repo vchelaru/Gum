@@ -210,7 +210,7 @@ public partial class InteractiveGue : BindableGue
     private EventHandler? _losePush;
     /// <summary>
     /// Event raised when this loses a push. A push occurs when the
-    /// cursor is over this window and the left mouse button is pushed. A push is lost
+    /// cursor is over this and the left mouse button is pushed. A push is lost
     /// if the left mouse button is released or if the user moves the cursor so that it
     /// is no longer over this while the mouse button is pressed. 
     /// </summary>
@@ -253,7 +253,8 @@ public partial class InteractiveGue : BindableGue
     public event EventHandler? Push;
 
     /// <summary>
-    /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
+    /// Event raised when this is pushed, then is no longer the pushed visual due to a 
+    /// cursor releasing the primary button.
     /// This can be used to detect the end of a drag operation, or to reset the state of a button.
     /// </summary>
     public event EventHandler? RemovedAsPushed;
