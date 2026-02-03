@@ -1,7 +1,9 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
+using MonoGameGum.GueDeriving;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -11,13 +13,87 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
+
 public class InteractiveGueTests : BaseTestClass
 {
+    Mock<ICursor> _cursor;
+    public InteractiveGueTests()
+    {
+        _cursor = new Mock<ICursor>();
+        _cursor.SetupProperty(x => x.WindowOver);
+        _cursor.SetupProperty(x => x.VisualOver);
+        _cursor.SetupProperty(x => x.WindowPushed);
+        FormsUtilities.SetCursor(_cursor.Object);
+    }
+
+
+    [Fact]
+    public void AddNextClickAction_ShouldNotBeRaised_OnSameFrameAdded()
+    {
+        _cursor.Setup(x => x.PrimaryClick).Returns(true);
+
+        var button = new Button();
+        button.AddToRoot();
+        bool didClickRun = false;
+        button.Click += (_, _) =>
+        {
+            didClickRun = true;
+            InteractiveGue.AddNextClickAction(() =>
+            {
+                var message = "This should not be run since it is the same frame it was added";
+                throw new Exception(message);
+            });
+        };
+
+        _cursor.Setup(x => x.WindowPushed).Returns(button.Visual);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        didClickRun.ShouldBe(true);
+    }
+
+    [Fact]
+    public void AddNextPushAction_ShouldRegisterWindowOver_ForFrame()
+    {
+        _cursor.Setup(x => x.PrimaryClick).Returns(true);
+        _cursor.SetupProperty(x => x.WindowOver);
+        _cursor.SetupProperty(x => x.WindowPushed);
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+
+        Button button = new();
+        button.AddToRoot();
+
+        bool didRunPush = false;
+
+        button.Push += (_, _) =>
+        {
+            didRunPush = true;
+            InteractiveGue.AddNextPushAction(HandleNextPush);
+        };
+
+        void HandleNextPush()
+        {
+            if (_cursor.Object.WindowOver != button.Visual)
+            {
+                throw new Exception("WindowOver was not set correctly");
+            }
+        }
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        didRunPush.ShouldBe(true);
+
+        _cursor.Object.WindowOver = null;
+        _cursor.Object.WindowPushed = null;
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+    }
+
     #region CurrentInputReceiver
     [Fact]
     public void CurrentInputReceiver_ShouldGetUnset_IfRootIsReset()
     {
-        TextBox textBox = new ();
+        TextBox textBox = new();
         textBox.AddToRoot();
         textBox.IsFocused = true;
 
@@ -32,7 +108,7 @@ public class InteractiveGueTests : BaseTestClass
     [Fact]
     public void CurrentInputReceiver_ShouldGetUnset_IfControlIsRemovedFromRoot()
     {
-        TextBox textBox = new ();
+        TextBox textBox = new();
         textBox.AddToRoot();
         textBox.IsFocused = true;
 
@@ -47,7 +123,7 @@ public class InteractiveGueTests : BaseTestClass
     [Fact]
     public void CurrentInputReceiver_ShouldNotGetUnset_IfSiblingIsRemovedFromRoot()
     {
-        TextBox first = new ();
+        TextBox first = new();
         first.AddToRoot();
 
         TextBox second = new();
@@ -112,71 +188,102 @@ public class InteractiveGueTests : BaseTestClass
 
     #endregion
 
-    [Fact]
-    public void AddNextClickAction_ShouldNotBeRaised_OnSameFrameAdded()
-    {
-        Mock<ICursor> cursor = new();
-        cursor.Setup(x => x.PrimaryClick).Returns(true);
-        FormsUtilities.SetCursor(cursor.Object);
+    #region LosePush
 
-        var button = new Button();
-        button.AddToRoot();
-        bool didClickRun = false;
-        button.Click += (_, _) =>
+    [Fact]
+    public void LosePush_ShouldNotRaise_IfCursorWasNeverPushed()
+    {
+        InteractiveGue gue = new ContainerRuntime();
+        gue.AddToRoot();
+        gue.HasEvents = true;
+        gue.LosePush += (_, _) =>
         {
-            didClickRun = true;
-            InteractiveGue.AddNextClickAction(() =>
-            {
-                var message = "This should not be run since it is the same frame it was added";
-                throw new Exception(message);
-            });
+            throw new Exception("LosePush should not be raised if the cursor was never pushed");
         };
 
-        cursor.Setup(x => x.WindowPushed).Returns(button.Visual);
+        SetCursor(1, 1);
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
-        didClickRun.ShouldBe(true);
+        var isEither =
+            _cursor.Object.VisualOver == gue ||
+            _cursor.Object.WindowOver == gue;
+        isEither.ShouldBeTrue();
+
+        SetCursor(1000, 1);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        _cursor.Object.VisualOver.ShouldBeNull();
+        _cursor.Object.WindowOver.ShouldBeNull();
     }
 
     [Fact]
-    public void AddNextPushAction_ShouldRegisterWindowOver_ForFrame()
+    public void LosePush_ShouldRaise_OnPushAndClick()
     {
-        Mock<ICursor> cursor = new();
-        cursor.Setup(x => x.PrimaryClick).Returns(true);
-        FormsUtilities.SetCursor(cursor.Object);
-        cursor.SetupProperty(x => x.WindowOver);
-        cursor.SetupProperty(x => x.WindowPushed);
-        cursor.Setup(x => x.PrimaryPush).Returns(true);
+        InteractiveGue gue = new ContainerRuntime();
+        gue.AddToRoot();
+        gue.HasEvents = true;
 
-        Button button = new ();
-        button.AddToRoot();
-
-        bool didRunPush = false;
-
-        button.Push += (_, _) =>
+        bool wasCalled = false;
+        gue.LosePush += (_, _) =>
         {
-            didRunPush = true;
-            InteractiveGue.AddNextPushAction(HandleNextPush);
+            wasCalled = true;
         };
 
-        void HandleNextPush()
-        {
-            if(cursor.Object.WindowOver != button.Visual)
-            {
-                throw new Exception("WindowOver was not set correctly");
-            }
-        }
+        SetCursor(1, 1);
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+        _cursor.Setup(x => x.PrimaryDown).Returns(true);
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        var isEither =
+            _cursor.Object.VisualOver == gue ||
+            _cursor.Object.WindowOver == gue;
+
+        isEither.ShouldBeTrue();
+
+        _cursor.Setup(x => x.PrimaryClick).Returns(true);
+        _cursor.Setup(x => x.PrimaryPush).Returns(false);
+        _cursor.Setup(x => x.PrimaryDown).Returns(false);
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
 
-        didRunPush.ShouldBe(true);
-
-        cursor.Object.WindowOver = null;
-        cursor.Object.WindowPushed = null;
-
-        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+        wasCalled.ShouldBeTrue();
     }
+
+    [Fact]
+    public void LosePush_ShouldRaise_OnPushAndMoveOff()
+    {
+        InteractiveGue gue = new ContainerRuntime();
+        gue.AddToRoot();
+        gue.HasEvents = true;
+
+        bool wasCalled = false;
+        gue.LosePush += (_, _) =>
+        {
+            wasCalled = true;
+        };
+
+        SetCursor(1, 1);
+        _cursor.Setup(x => x.PrimaryPush).Returns(true);
+        _cursor.Setup(x => x.PrimaryDown).Returns(true);
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        var isEither =
+            _cursor.Object.VisualOver == gue ||
+            _cursor.Object.WindowOver == gue;
+
+        isEither.ShouldBeTrue();
+
+        _cursor.Setup(x => x.PrimaryPush).Returns(false);
+        SetCursor(1000, 1);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        wasCalled.ShouldBeTrue();
+    }
+
+    #endregion
 
     [Fact]
     public void MouseWheelScroll_ShouldRaiseOnChildrenBeforeParents()
@@ -184,36 +291,34 @@ public class InteractiveGueTests : BaseTestClass
         bool didChildRaise = false;
         bool didParentRaise = false;
 
-        Panel parent = new ();
+        Panel parent = new();
         parent.AddToRoot();
         parent.Width = 10;
         parent.Height = 10;
         parent.Visual.MouseWheelScroll += (_, _) =>
         {
             didParentRaise = true;
-            if(!didChildRaise)
+            if (!didChildRaise)
             {
                 throw new Exception("Parent raised before child, should not be");
             }
         };
 
-        Panel child = new ();
+        Panel child = new();
         parent.AddChild(child);
         child.Width = 10;
         child.Height = 10;
         child.Visual.MouseWheelScroll += (_, _) =>
         {
             didChildRaise = true;
-            if(didParentRaise)
+            if (didParentRaise)
             {
                 throw new Exception("Child raised after parent, should not be");
             }
         };
 
-        Mock<ICursor> cursor = new();
-        cursor
+        _cursor
             .Setup(x => x.ScrollWheelChange).Returns(1);
-        FormsUtilities.SetCursor(cursor.Object);
 
 
         GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
@@ -222,4 +327,17 @@ public class InteractiveGueTests : BaseTestClass
         didParentRaise.ShouldBeTrue();
 
     }
+
+    #region Utilities
+
+    void SetCursor(float x, float y)
+    {
+        _cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(x);
+        _cursor.Setup(x => x.X).Returns((int)x);
+        _cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(y);
+        _cursor.Setup(x => x.Y).Returns((int)y);
+
+    }
+
+    #endregion
 }

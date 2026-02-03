@@ -65,20 +65,22 @@ public class SelectionChangedEventArgs
 #endregion
 
 /// <summary>
-/// The base object for all Gum runtime objects. It contains functionality for
-/// setting variables, states, and performing layout. The GraphicalUiElement can
-/// wrap an underlying rendering object.
+/// The base object for all interactive Gum runtime objects. It provides events for cursor interaction which can be used
+/// to create full interactive controls
 /// </summary>
 public partial class InteractiveGue : BindableGue
 {
+
     static List<Action> nextPushActions = new List<Action>();
     static List<Action> nextClickActions = new List<Action>();
 
     /// <summary>
-    /// The current game time, assigned internally when calling GumService.Update. This can be used by UI elements to perform
+    /// The current game time in seconds, assigned internally when calling GumService.Update. 
+    /// This can be used by UI elements to perform
     /// timing-based actions, such as moving a slider on a long press.
     /// </summary>
     public static double CurrentGameTime { get; internal set; }
+
 
     public static InteractiveGue? LastVisualPushed { get; set; }
     static IInputReceiver? currentInputReceiver;
@@ -296,9 +298,10 @@ public partial class InteractiveGue : BindableGue
     public void CallRightClick() => RightClick?.Invoke(this, EventArgs.Empty);  
 
     // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
-    public void TryCallRollOff()
+    public void TryCallRollOff(ICursor cursor = null)
     {
-        RollOff?.Invoke(this, EventArgs.Empty);
+        InputEventArgs args = new InputEventArgs { InputDevice = cursor };
+        RollOff?.Invoke(this, args);
     }
 
     public void TryCallDragging()
@@ -810,8 +813,17 @@ public partial class InteractiveGue : BindableGue
         if(!_hasSubscribedLosePusheEvents)
         {
             _hasSubscribedLosePusheEvents = true;
-            Click += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
-            RollOff += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
+            Click += (_, _) => _losePush?.Invoke(this, EventArgs.Empty);
+            RollOff += (_, args) =>
+            {
+                ICursor cursor = (args as InputEventArgs)?.InputDevice as ICursor;
+
+                if(cursor?.WindowPushed == this)
+                {
+                    _losePush?.Invoke(this, EventArgs.Empty);
+                }
+
+            };
         }
     }
 
@@ -1029,7 +1041,11 @@ public interface ICursor
     InteractiveGue? WindowPushed { get; set; }
 
     InteractiveGue? VisualRightPushed { get; set; }
+
+    [Obsolete("Use VisualOver instead")]
     InteractiveGue? WindowOver { get; set; }
+
+    InteractiveGue? VisualOver { get; set; }
 
     public void Activity(double currentGameTimeTotalSeconds);
 }
@@ -1153,7 +1169,7 @@ public static class GueInteractiveExtensionMethods
             }
             if (windowOverBefore is InteractiveGue interactiveBefore)
             {
-                interactiveBefore.TryCallRollOff();
+                interactiveBefore.TryCallRollOff(cursor);
             }
         }
         if(windowPushedBefore != cursor.WindowPushed || 
