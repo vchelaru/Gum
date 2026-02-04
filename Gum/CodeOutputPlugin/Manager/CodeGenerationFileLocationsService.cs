@@ -40,7 +40,7 @@ internal class CodeGenerationFileLocationsService
         }
         if(selectedElement != null)
         {
-            var elementName = selectedElement.Name;
+            var elementName = forcedElementName ?? selectedElement.Name;
 
             var effectiveVisualApi = visualApi;
 

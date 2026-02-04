@@ -77,7 +77,9 @@ internal class RenameService
             bool shouldMove = true;
             if (newCustomFileName?.Exists() == true)
             {
-                var message = $"Would you like to rename the custom code file to:\n{newCustomFileName.FullPath}\nThis would delete the existing file that is already there";
+                var message = $"Would you like to rename the custom code file to:\n" +
+                    $"{newCustomFileName.FullPath}\n" +
+                    $"This would delete the existing file that is already there";
                 shouldMove = _dialogService.ShowYesNoMessage(message, "Overwrite?");
 
                 if (shouldMove)
