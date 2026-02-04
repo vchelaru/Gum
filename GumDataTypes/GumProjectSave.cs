@@ -612,7 +612,7 @@ public class GumProjectSave
             var matchingReference = StandardElementReferences.FirstOrDefault(item => item.Name == element.Name);
 
             StandardElementSave newStandardElement = matchingReference?.ToElementSave<StandardElementSave>(
-                projectRootDirectory, GumProjectSave.ComponentExtension, gumLoadResult);
+                projectRootDirectory, GumProjectSave.StandardExtension, gumLoadResult);
 
             if (newStandardElement != null)
             {
