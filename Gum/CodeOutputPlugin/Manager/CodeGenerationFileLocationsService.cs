@@ -54,7 +54,7 @@ internal class CodeGenerationFileLocationsService
                 var context = new CodeGenerationContext(_nameVerifier, selectedElement);
                 context.CodeOutputProjectSettings = codeOutputProjectSettings;
 
-                string? fileName = _codeGenerator.GetClassNameForType(selectedElement, effectiveVisualApi, context, out bool isPrefixed);
+                string? fileName = _codeGenerator.GetClassNameForType(elementName, selectedElement.GetType(), effectiveVisualApi, context, out bool isPrefixed);
                 if (isPrefixed) fileName = fileName?.Substring(1);
                 
                 var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(fileName);
