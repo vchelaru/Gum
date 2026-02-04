@@ -198,9 +198,19 @@ internal class RenameService
         ///
         var endOfLine = contents.IndexOf("\n", startOfLine + 1);
 
+        var oldClassHeader = contents.Substring(startOfLine, endOfLine - startOfLine);
+        string suffix = string.Empty;
+
+        if(oldClassHeader.Contains(":"))
+        {
+            var colonIndex = oldClassHeader.IndexOf(":");
+            suffix = " " + oldClassHeader.Substring(colonIndex).Trim();
+        }
+
         contents = contents.Remove(startOfLine, endOfLine - startOfLine);
 
-        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings)
+
+        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings) + suffix
             // don't append \n - it's already there from what was removed earlier
             //+ "\n"
             ;
