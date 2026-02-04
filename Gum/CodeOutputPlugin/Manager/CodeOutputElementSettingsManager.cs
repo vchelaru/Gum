@@ -22,7 +22,7 @@ public class CodeOutputElementSettingsManager
 
     private static FilePath GetCodeSettingsFileFor(ElementSave element)
     {
-        FilePath fileName = element.GetFullPathXmlFile();
+        FilePath fileName = element.GetFullPathXmlFile()!;
         fileName = fileName.RemoveExtension() + ".codsj";
         return fileName;
     }
