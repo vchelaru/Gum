@@ -20,9 +20,9 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     InstanceMember? _instanceMember;
 
 
-    Type mInstancePropertyType;
+    Type? mInstancePropertyType;
 
-    static Brush mUnmodifiedBrush = null;
+    static Brush? mUnmodifiedBrush = null;
 
     #endregion
 
@@ -62,20 +62,20 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     {
         get;
         private set;
-    }
+    } = default!;
 
     private ComboBox ComboBox
     {
         get;
         set;
-    }
+    } = default!;
 
     private TextBlock TextBlock
     {
         get;
         set;
-    }
-    private TextBlock HintTextBlock;
+    } = default!;
+    private TextBlock HintTextBlock = default!;
 
 
     public bool IsEditable
@@ -114,6 +114,16 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
 
         this.ComboBox.IsKeyboardFocusWithinChanged += HandleIsKeyboardFocusChanged;
         this.ComboBox.PreviewKeyDown += HandlePreviewKeyDown;
+        this.ComboBox.KeyDown += HandleKeyDown;
+    }
+
+    private void HandleKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && ComboBox.IsEditable)
+        {
+            HandleChange();
+            e.Handled = true;
+        }
     }
 
     private void HandlePreviewKeyDown(object? sender, KeyEventArgs e)
@@ -283,7 +293,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
 
         RefreshAllContextMenus();
         
-        this.TextBlock.Text = InstanceMember.DisplayName;
+        this.TextBlock.Text = InstanceMember?.DisplayName;
 
         RefreshIsEnabled();
 
@@ -336,7 +346,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             // reduced by the converter.  In that case we 
             // want to show the reduced set instead of the
             // entire enum
-            if (InstanceMember.CustomOptions != null)
+            if (InstanceMember?.CustomOptions != null)
             {
                 foreach(var item in InstanceMember.CustomOptions)
                 {
@@ -460,7 +470,16 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             // Update March 23, 2022
             ComboBox.SelectedItem = selectedItem;
 
-            HandleChange();
+            // Only apply the change immediately if:
+            // 1. ComboBox is not editable, OR
+            // 2. ComboBox is editable but the dropdown is open (user clicked an item)
+            // If the user is typing and happens to match an item, wait for focus loss
+            var shouldApplyImmediately = !ComboBox.IsEditable || ComboBox.IsDropDownOpen;
+            
+            if (shouldApplyImmediately)
+            {
+                HandleChange();
+            }
 
             isInSelectionChanged = false;
         }
@@ -501,7 +520,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
                 return;
             }
 
-            if (InstanceMember.IsDefault)
+            if (InstanceMember?.IsDefault == true)
             {
                 ComboBox.Foreground = Brushes.Green;
             }
