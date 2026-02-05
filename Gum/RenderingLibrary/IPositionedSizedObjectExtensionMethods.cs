@@ -38,8 +38,8 @@ namespace Gum.RenderingLibrary
 
             if (iTextureCoordinate != null)
             {
-                fileWidth = iTextureCoordinate.TextureWidth ?? 0;
-                fileHeight = iTextureCoordinate.TextureHeight ?? 0;
+                fileWidth = iTextureCoordinate.TextureWidth ?? 32;
+                fileHeight = iTextureCoordinate.TextureHeight ?? 32;
             }
         }
 
