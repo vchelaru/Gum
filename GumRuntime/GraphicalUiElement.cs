@@ -955,7 +955,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     float.IsNegativeInfinity(value) ||
                     float.IsNaN(value))
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("Invalid Width: " + value);
                 }
 #endif
                 mWidth = value;
@@ -1026,7 +1026,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     float.IsNegativeInfinity(value) ||
                     float.IsNaN(value))
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("Invalid height: " + value);
                 }
 #endif
                 mHeight = value;
