@@ -10,6 +10,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+
 #if GUM
 using Gum.Commands;
 using Gum.Services;

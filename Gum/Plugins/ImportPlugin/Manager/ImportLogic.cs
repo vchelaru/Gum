@@ -8,6 +8,7 @@ using Gum.Commands;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using System.Linq;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
 

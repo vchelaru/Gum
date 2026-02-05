@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.Services;
 using ToolsUtilities;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace SkiaPlugin.Managers
 {

@@ -17,7 +17,7 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly IUndoManager _undoManager;
     private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
-    private IStateContainer StateContainer => _selectedState.SelectedStateContainer;
+    private IStateContainer? StateContainer => _selectedState.SelectedStateContainer;
 
     public AddCategoryDialogViewModel(
         ISelectedState selectedState,
@@ -44,7 +44,7 @@ public class AddCategoryDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {
-        if (!_nameVerifier.IsCategoryNameValid(value, StateContainer, out string whyNotValid))
+        if (StateContainer != null && !_nameVerifier.IsCategoryNameValid(value, StateContainer, out var whyNotValid))
         {
             return whyNotValid;
         }

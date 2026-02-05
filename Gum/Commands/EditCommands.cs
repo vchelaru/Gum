@@ -21,6 +21,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Commands;
 

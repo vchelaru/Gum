@@ -13,6 +13,7 @@ using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Reflection;
 using Gum.Services;
 using Gum.Settings;

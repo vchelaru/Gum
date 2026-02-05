@@ -952,7 +952,7 @@ public class CopyPasteLogicTests : BaseTestClass
         component.Instances.Add(defaultContainer);
         defaultContainer.ParentContainer = component;
         defaultContainer.Name = "DefaultContainer";
-        component.DefaultChildContainer = "DefaultContainer";
+        component.DefaultState.SetValue("DefaultChildContainer", "DefaultContainer");
 
         ScreenSave screen = CreateDefaultScreen();
         InstanceSave instance1 = screen.Instances[0];

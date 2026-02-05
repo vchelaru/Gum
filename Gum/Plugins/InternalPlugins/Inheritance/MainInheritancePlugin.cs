@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using System.ComponentModel.Composition;
 using System.Linq;
 

@@ -104,7 +104,7 @@ public class ElementSaveDisplayer
 
         if (effectiveElementSave is ComponentSave && instanceSave == null)
         {
-            var defaultChildContainerProperty = mHelper.AddProperty(pdc, nameof(ComponentSave.DefaultChildContainer), typeof(string));
+            var defaultChildContainerProperty = mHelper.AddProperty(pdc, "DefaultChildContainer", typeof(string));
             defaultChildContainerProperty.IsReadOnly = !isDefault;
             defaultChildContainerProperty.TypeConverter = new AvailableInstancesConverter();
         }
