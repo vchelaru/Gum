@@ -1884,7 +1884,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     desiredParentNode = GetTreeNodeFor(instanceParent, node);
                 }
             }
-            if(desiredParentNode != nodeForInstance.Parent && desiredParentNode != null)
+            if(desiredParentNode != nodeForInstance.Parent && desiredParentNode != null && 
+                // Just in case Gum gets into a weird circular reference situation.
+                // Gum should protect against this at a higher level, but in case it fails to we
+                // don't want to bring down the entire treeview so let's run a last minute check:
+                nodeForInstance != desiredParentNode)
             {
                 nodeForInstance.Remove();
                 desiredParentNode.Nodes.Add(nodeForInstance);
