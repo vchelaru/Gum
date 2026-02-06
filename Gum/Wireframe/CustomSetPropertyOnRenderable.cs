@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 using ToolsUtilitiesStandard.Helpers;
 using System.Net;
 using System.IO;
-using MonoGameGum.Localization;
+using Gum.Localization;
 using System.Security.Policy;
 using Gum.Managers;
 using Microsoft.Xna.Framework.Graphics;

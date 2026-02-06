@@ -18,6 +18,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
+using Gum.Localization;
 
 namespace Gum.Plugins.PropertiesWindowPlugin;
 
@@ -32,8 +33,8 @@ class MainPropertiesWindowPlugin : InternalPlugin
     ProjectPropertiesControl control;
 
     ProjectPropertiesViewModel viewModel;
-    [Import("LocalizationManager")]
-    public LocalizationManager LocalizationManager
+    [Import("LocalizationService")]
+    public LocalizationService LocalizationService
     {
         get;
         set;
@@ -158,7 +159,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 }
                 break;
             case nameof(viewModel.LanguageIndex):
-                LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
+                LocalizationService.CurrentLanguage = viewModel.LanguageIndex;
                 break;
             case nameof(viewModel.ShowLocalization):
                 shouldSaveAndRefresh = true;

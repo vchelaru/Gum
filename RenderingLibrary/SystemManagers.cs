@@ -24,6 +24,7 @@ using GumRuntime;
 
 using MonoGameGum.Renderables;
 using Gum.Wireframe;
+using Gum.Localization;
 #endif
 
 namespace RenderingLibrary;
@@ -244,6 +245,7 @@ public partial class SystemManagers : ISystemManagers
             //GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
             //GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            CustomSetPropertyOnRenderable.LocalizationService ??= new LocalizationService();
             GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
             GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
 

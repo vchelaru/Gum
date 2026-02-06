@@ -3,7 +3,7 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Renderables;
 using Gum.Wireframe;
-using MonoGameGum.Localization;
+using Gum.Localization;
 using Raylib_cs;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;

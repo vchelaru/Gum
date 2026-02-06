@@ -16,6 +16,7 @@ using System.Reflection;
 using ToolsUtilities;
 using Gum.Forms;
 using Gum.Threading;
+using Gum.Localization;
 
 #if XNALIKE
 using MonoGameGum.GueDeriving;
@@ -27,6 +28,7 @@ namespace MonoGameGum;
 using Gum.GueDeriving;
 using RaylibGum.Input;
 using GameTime = double;
+using RaylibGum.Renderables;
 namespace RaylibGum;
 #endif
 
@@ -266,6 +268,18 @@ public class GumService
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
             gumProject = GumProjectSave.Load(gumProjectFile);
+
+            if(!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            {
+                var fileName = FileManager.GetDirectory(gumProject.FullFileName) +
+                    gumProject.LocalizationFile;
+
+                using var stream = FileManager.GetStreamForFile(fileName);
+
+                CustomSetPropertyOnRenderable.LocalizationService?.AddCsvDatabase(stream);
+
+            }
+
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
@@ -327,7 +341,6 @@ public class GumService
     }
 #endif
     #endregion
-
 
     #region Update
 

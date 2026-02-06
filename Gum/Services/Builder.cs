@@ -32,6 +32,7 @@ using ToolsUtilities;
 using Gum.Logic.FileWatch;
 using Gum.Reflection;
 using Gum.Services.Fonts;
+using Gum.Localization;
 
 namespace Gum.Services;
 
@@ -96,7 +97,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
-        services.AddSingleton<LocalizationManager>();
+        services.AddSingleton<LocalizationService>();
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<INameVerifier, NameVerifier>();
         services.AddSingleton<IUndoManager, UndoManager>();

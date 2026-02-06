@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Localization;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
@@ -18,7 +19,7 @@ namespace Gum.Commands;
 
 public class FileCommands : IFileCommands
 {
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationService;
     private readonly FileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
@@ -30,7 +31,7 @@ public class FileCommands : IFileCommands
         Lazy<IUndoManager> undoManager, 
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager,
+        LocalizationService localizationService,
         IOutputManager outputManager,
         FileWatchManager fileWatchManager)
     {
@@ -38,7 +39,7 @@ public class FileCommands : IFileCommands
         _undoManager = undoManager;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
-        _localizationManager = localizationManager;
+        _localizationService = localizationService;
         _fileWatchManager = fileWatchManager;
         _outputManager = outputManager;
     }
@@ -322,7 +323,7 @@ public class FileCommands : IFileCommands
 
     public void LoadLocalizationFile()
     {
-        _localizationManager.Clear();
+        _localizationService.Clear();
 
         if (!string.IsNullOrEmpty(GumState.Self.ProjectState.GumProjectSave.LocalizationFile))
         {
@@ -332,8 +333,8 @@ public class FileCommands : IFileCommands
             {
                 try
                 {
-                    _localizationManager.AddDatabase(file.FullPath, ',');
-                    _localizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
+                    _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
+                    _localizationService.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
                 }
                 catch (Exception e)
                 {

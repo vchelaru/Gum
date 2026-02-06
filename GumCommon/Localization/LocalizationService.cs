@@ -1,12 +1,15 @@
-﻿using CsvLibrary;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using ToolsUtilities;
+using Gum.Localization;
 
-namespace Gum.Managers;
+namespace Gum.Localization;
 
-public class LocalizationManager
+/// <summary>
+/// Manages localization strings and language support for the application.
+/// Implements ILocalizationService for portability across different contexts.
+/// </summary>
+public class LocalizationService : ILocalizationService
 {
     public ReadOnlyCollection<string> Languages
     {
@@ -32,7 +35,7 @@ public class LocalizationManager
         set;
     }
 
-    public LocalizationManager()
+    public LocalizationService()
     {
         Languages = new ReadOnlyCollection<string>(new List<string>());
     }
@@ -44,40 +47,11 @@ public class LocalizationManager
         HasDatabase = false;
     }
 
-    public void AddDatabase(string fileName, char delimiter)
-    {
-
-        RuntimeCsvRepresentation rcr;
-
-        //char oldDelimiter = CsvFileManager.Delimiter;
-        //CsvFileManager.Delimiter = delimiter;
-        Dictionary<string, string[]> entryDictionary = new Dictionary<string, string[]>();
-
-        CsvFileManager.CsvDeserializeDictionary<string, string[]>(fileName, 
-            entryDictionary, 
-            // FRB supports multiple lines of text per single string ID. We don't support this in Gum (yet?), so just use the first:
-            DuplicateDictionaryEntryBehavior.PreserveFirst,
-            out rcr);
-        //CsvFileManager.Delimiter = oldDelimiter;
-        var keys = entryDictionary.Keys.ToArray();
-        foreach(var key in keys)
-        {
-            if(key?.Trim().StartsWith("//") == true)
-            {
-                entryDictionary.Remove(key);
-            }
-        }
-
-        List<string> headerList = new List<string>();
-
-        foreach (CsvHeader header in rcr.Headers)
-        {
-            headerList.Add(header.Name);
-        }
-
-        AddDatabase(entryDictionary, headerList);
-    }
-
+    /// <summary>
+    /// Adds a localization database from a dictionary of string IDs to translations.
+    /// </summary>
+    /// <param name="entryDictionary">Dictionary mapping string IDs to arrays of translations (one per language).</param>
+    /// <param name="headerList">List of language names corresponding to the translation arrays.</param>
     public void AddDatabase(Dictionary<string, string[]> entryDictionary, List<string> headerList)
     {
         Languages = new ReadOnlyCollection<string>(headerList);
@@ -85,11 +59,22 @@ public class LocalizationManager
         HasDatabase = true;
     }
 
-    public string Translate(string stringID)
+    /// <summary>
+    /// Translates a string ID to the current language.
+    /// </summary>
+    /// <param name="stringId">The string ID to translate.</param>
+    /// <returns>The translated string, or the original string with "(loc)" suffix if not found.</returns>
+    public string Translate(string stringId)
     {
-        return TranslateForLanguage(stringID, CurrentLanguage);
+        return TranslateForLanguage(stringId, CurrentLanguage);
     }
 
+    /// <summary>
+    /// Translates a string ID to a specific language.
+    /// </summary>
+    /// <param name="stringID">The string ID to translate.</param>
+    /// <param name="language">The language index to translate to.</param>
+    /// <returns>The translated string, or the original string with "(loc)" suffix if not found.</returns>
     public string TranslateForLanguage(string stringID, int language)
     {
 

@@ -3,6 +3,7 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Reflection;
 using Gum.StateAnimation.SaveClasses;
@@ -252,7 +253,7 @@ public class CodeGenerator
     #region CodeGenerator Fields/Properties
 
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationService;
 
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
@@ -267,10 +268,10 @@ public class CodeGenerator
 
     #endregion
     
-    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationManager localizationManager)
+    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationService)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
-        _localizationManager = localizationManager;
+        _localizationService = localizationService;
     }
 
     #region Using Statements
@@ -4644,7 +4645,7 @@ public class CodeGenerator
 
         #endregion
 
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationManager))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationService))
         {
             string assignment = GetLocalizedLine(variable, context);
 
@@ -4990,7 +4991,7 @@ public class CodeGenerator
                 return $"{context.CodePrefixNoTabs}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
             }
         }
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationManager))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationService))
         {
             string assignment = GetLocalizedLine(variable, context);
 
@@ -5088,9 +5089,9 @@ public class CodeGenerator
         return assignment;
     }
 
-    private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState, LocalizationManager localizationManager)
+    private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState, LocalizationService localizationService)
     {
-        var toReturn = localizationManager.HasDatabase &&
+        var toReturn = localizationService.HasDatabase &&
             // This could be exposed of exposed, so the name wouldn't be "Text"
             //variable.GetRootName() == "Text" && 
             variable.Value is string valueAsString &&
@@ -5126,7 +5127,7 @@ public class CodeGenerator
 
     private void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
     {
-        if (_localizationManager.HasDatabase)
+        if (_localizationService.HasDatabase)
         {
             // Vic says - we may want this to be recursive eventually, but that introduces
             // some complexity. How do we know which views have a call available? 
@@ -5147,7 +5148,7 @@ public class CodeGenerator
                 context.Instance = instance;
                 if (instance != null)
                 {
-                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationManager))
+                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationService))
                     {
                         string assignment = GetLocalizedLine(variable, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
