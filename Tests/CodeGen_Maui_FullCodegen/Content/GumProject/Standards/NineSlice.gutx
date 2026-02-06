@@ -32,6 +32,13 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float</Type>
+      <Name>BorderScale</Name>
+      <Value xsi:type="xsd:float">1</Value>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>string</Type>
       <Name>CurrentChainName</Name>
       <Category>Animation</Category>
