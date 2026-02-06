@@ -18,7 +18,7 @@ namespace Gum.Commands;
 
 public class FileCommands : IFileCommands
 {
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationManager;
     private readonly FileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
@@ -30,7 +30,7 @@ public class FileCommands : IFileCommands
         Lazy<IUndoManager> undoManager, 
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager,
+        LocalizationService localizationManager,
         IOutputManager outputManager,
         FileWatchManager fileWatchManager)
     {
@@ -332,7 +332,7 @@ public class FileCommands : IFileCommands
             {
                 try
                 {
-                    _localizationManager.AddDatabase(file.FullPath, ',');
+                    _localizationManager.AddDatabaseFromCsv(file.FullPath, ',');
                     _localizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
                 }
                 catch (Exception e)

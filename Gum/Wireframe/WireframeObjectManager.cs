@@ -60,14 +60,14 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     GraphicalUiElementManager gueManager;
-    private LocalizationManager _localizationManager;
+    private LocalizationService _localizationManager;
     private readonly PluginManager _pluginManager;
 
     public WireframeObjectManager(FontManager fontManager,
         ISelectedState selectedState,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationManager localizationManager, 
+        LocalizationService localizationManager, 
         PluginManager pluginManager)
     {
         _fontManager = fontManager;

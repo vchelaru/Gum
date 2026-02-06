@@ -34,7 +34,7 @@ public partial class PropertyGridManager
     private readonly ObjectFinder _objectFinder;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IDialogService _dialogService;
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationManager;
     private readonly ITabManager _tabManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
@@ -114,7 +114,7 @@ public partial class PropertyGridManager
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _localizationManager = Locator.GetRequiredService<LocalizationService>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }

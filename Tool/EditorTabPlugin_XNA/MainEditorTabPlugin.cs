@@ -109,7 +109,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     readonly ScrollbarService _scrollbarService;
     private readonly IGuiCommands _guiCommands;
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationManager;
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
     private readonly IElementCommands _elementCommands;
@@ -148,7 +148,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         
         _scrollbarService = new ScrollbarService();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _localizationManager = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
             Locator.GetRequiredService<WireframeObjectManager>(),
             Locator.GetRequiredService<ReorderLogic>());

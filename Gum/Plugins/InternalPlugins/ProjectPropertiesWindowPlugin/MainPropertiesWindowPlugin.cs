@@ -33,7 +33,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
     ProjectPropertiesViewModel viewModel;
     [Import("LocalizationManager")]
-    public LocalizationManager LocalizationManager
+    public LocalizationService LocalizationManager
     {
         get;
         set;

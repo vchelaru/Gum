@@ -44,7 +44,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly ISelectedState _selectedState;
     private readonly RenameService _renameService;
     private readonly IMessenger _messenger;
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationManager;
     private readonly INameVerifier _nameVerifier;
     private readonly CodeGenerator _codeGenerator;
     private readonly ParentSetLogic _parentSetLogic;
@@ -68,7 +68,7 @@ public class MainCodeOutputPlugin : PluginBase
         codeOutputProjectSettings = new CodeOutputProjectSettings();
 
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _localizationManager = Locator.GetRequiredService<LocalizationService>();
 
         CodeGenerationNameVerifier codeGenerationNameVerifier = new(_nameVerifier);
 

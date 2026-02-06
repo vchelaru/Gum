@@ -252,7 +252,7 @@ public class CodeGenerator
     #region CodeGenerator Fields/Properties
 
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
-    private readonly LocalizationManager _localizationManager;
+    private readonly LocalizationService _localizationManager;
 
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
@@ -267,7 +267,7 @@ public class CodeGenerator
 
     #endregion
     
-    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationManager localizationManager)
+    public CodeGenerator(CodeGenerationNameVerifier codeGenerationNameVerifier, LocalizationService localizationManager)
     {
         _codeGenerationNameVerifier = codeGenerationNameVerifier;
         _localizationManager = localizationManager;
@@ -5088,7 +5088,7 @@ public class CodeGenerator
         return assignment;
     }
 
-    private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState, LocalizationManager localizationManager)
+    private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState, LocalizationService localizationManager)
     {
         var toReturn = localizationManager.HasDatabase &&
             // This could be exposed of exposed, so the name wouldn't be "Text"
