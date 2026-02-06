@@ -81,7 +81,14 @@ public class StateSave
         return toReturn;
     }
 
-    public VariableSave GetVariableSave(string variableName)
+    /// <summary>
+    /// Performs a non-recursive search for the variable with the given name. 
+    /// This will return the first variable found with the given name or null if 
+    /// not found.
+    /// </summary>
+    /// <param name="variableName">The variable name</param>
+    /// <returns>The found variable, or null if not found.</returns>
+    public VariableSave? GetVariableSave(string variableName)
     {
         for(int i = Variables.Count-1; i > -1; i--)
         {

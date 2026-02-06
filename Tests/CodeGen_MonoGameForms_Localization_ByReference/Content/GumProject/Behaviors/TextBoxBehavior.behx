@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>TextBoxBehavior</Name>
+  <RequiredVariables />
+  <Category>
+    <Name>TextBoxCategory</Name>
+    <State>
+      <Name>Enabled</Name>
+    </State>
+    <State>
+      <Name>Disabled</Name>
+    </State>
+    <State>
+      <Name>Highlighted</Name>
+    </State>
+    <State>
+      <Name>Focused</Name>
+    </State>
+  </Category>
+  <Category>
+    <Name>LineModeCategory</Name>
+    <State>
+      <Name>Single</Name>
+    </State>
+    <State>
+      <Name>Multi</Name>
+    </State>
+  </Category>
+  <RequiredInstances>
+    <InstanceSave>
+      <Name>TextInstance</Name>
+      <BaseType>Text</BaseType>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+    <InstanceSave>
+      <Name>CaretInstance</Name>
+      <BaseType />
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/TextBox</DefaultImplementation>
+</BehaviorSave>

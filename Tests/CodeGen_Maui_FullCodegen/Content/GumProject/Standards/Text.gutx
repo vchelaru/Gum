@@ -114,7 +114,7 @@
       <Type>float</Type>
       <Name>LineHeightMultiplier</Name>
       <Value xsi:type="xsd:float">1</Value>
-      <Category>Font</Category>
+      <Category>Text</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

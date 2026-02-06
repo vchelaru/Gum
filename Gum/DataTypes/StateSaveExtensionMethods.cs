@@ -277,14 +277,15 @@ public static class StateSaveExtensionMethods
 
 
     /// <summary>
-    /// Returns the first instance of an existing VariableSave recursively. 
+    /// Returns the first instance of an existing VariableSave recursively. Returns null if not found.
     /// </summary>
-    /// <param name="stateSave">The possible state that contains the variable. If it doesn't, then the code will recursively go to base types.</param>
+    /// <param name="stateSave">The possible state that contains the variable. 
+    /// If it doesn't, then the code will recursively go to base types.</param>
     /// <param name="variableName"></param>
     /// <returns></returns>
-    public static VariableSave GetVariableRecursive(this StateSave stateSave, string variableName)
+    public static VariableSave? GetVariableRecursive(this StateSave stateSave, string variableName)
     {
-        VariableSave variableSave = stateSave.GetVariableSave(variableName);
+        VariableSave? variableSave = stateSave.GetVariableSave(variableName);
 
         if (variableSave == null)
         {

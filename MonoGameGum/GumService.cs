@@ -56,6 +56,8 @@ public class GumService
 
     public Keyboard Keyboard => FormsUtilities.Keyboard;
 
+    public ILocalizationService LocalizationService => CustomSetPropertyOnRenderable.LocalizationService!;
+
     public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
 
     public Renderer Renderer => this.SystemManagers.Renderer;

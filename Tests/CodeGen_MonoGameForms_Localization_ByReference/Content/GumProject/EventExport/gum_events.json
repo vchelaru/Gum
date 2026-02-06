@@ -1,0 +1,55 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "MainMenu.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-02-06T11:50:10.0887228Z"
+      },
+      {
+        "NewName": "MainMenu.NineSliceInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-02-06T11:50:30.2541227Z"
+      },
+      {
+        "NewName": "MainMenu.ButtonStandardInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-02-06T11:51:07.7459133Z"
+      },
+      {
+        "NewName": "MainMenu.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-02-06T11:51:38.7776829Z"
+      },
+      {
+        "NewName": "MainScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2026-02-06T12:02:52.950198Z"
+      },
+      {
+        "NewName": "MainScreen.WindowInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-02-06T12:03:00.7911562Z"
+      },
+      {
+        "NewName": "MainScreen.LabelInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2026-02-06T12:03:22.8662483Z"
+      }
+    ]
+  }
+}

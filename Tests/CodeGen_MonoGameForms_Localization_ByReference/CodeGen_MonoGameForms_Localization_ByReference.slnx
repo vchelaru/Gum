@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../../GumCommon/GumCommon.csproj" />
+  <Project Path="../../MonoGameGum/MonoGameGum.csproj" />
+  <Project Path="CodeGen_MonoGameForms_Localization_ByReference.csproj" />
+</Solution>

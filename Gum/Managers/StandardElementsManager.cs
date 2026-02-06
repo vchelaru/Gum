@@ -10,1109 +10,1108 @@ using Matrix = System.Numerics.Matrix4x4;
 using Vector2 = System.Numerics.Vector2;
 
 
-namespace Gum.Managers
+namespace Gum.Managers;
+
+#region Enums
+
+public enum TextureAddress
+{
+    EntireTexture,
+    Custom,
+    DimensionsBased
+}
+
+public enum ChildrenLayout
+{
+    Regular,
+    TopToBottomStack,
+    LeftToRightStack,
+    AutoGridHorizontal,
+    AutoGridVertical
+
+}
+
+#endregion
+
+public class StandardElementsManager
 {
     #region Enums
 
-    public enum TextureAddress
+    public enum DimensionVariableAction
     {
-        EntireTexture,
-        Custom,
-        DimensionsBased
-    }
-
-    public enum ChildrenLayout
-    {
-        Regular,
-        TopToBottomStack,
-        LeftToRightStack,
-        AutoGridHorizontal,
-        AutoGridVertical
-
+        ExcludeFileOptions,
+        AllowFileOptions,
+        DefaultToPercentageOfFile
     }
 
     #endregion
 
-    public class StandardElementsManager
+    #region Fields
+
+    static StateSave? arcState;
+    static StateSave? filledCircleState;
+    static StateSave? roundedRectangleState;
+
+    public const string ScreenBoundsName = "<SCREEN BOUNDS>";
+
+    Dictionary<string, StateSave> mDefaults;
+
+    static StandardElementsManager mSelf;
+
+    #endregion
+
+    #region Properties
+
+    public IEnumerable<string> DefaultTypes
     {
-        #region Enums
-
-        public enum DimensionVariableAction
+        get
         {
-            ExcludeFileOptions,
-            AllowFileOptions,
-            DefaultToPercentageOfFile
-        }
-
-        #endregion
-
-        #region Fields
-
-        static StateSave? arcState;
-        static StateSave? filledCircleState;
-        static StateSave? roundedRectangleState;
-
-        public const string ScreenBoundsName = "<SCREEN BOUNDS>";
-
-        Dictionary<string, StateSave> mDefaults;
-
-        static StandardElementsManager mSelf;
-
-        #endregion
-
-        #region Properties
-
-        public IEnumerable<string> DefaultTypes
-        {
-            get
+            foreach (var kvp in mDefaults)
             {
-                foreach (var kvp in mDefaults)
-                {
-                    yield return kvp.Key;
-                }
+                yield return kvp.Key;
             }
         }
+    }
 
-        public static StandardElementsManager Self
+    public static StandardElementsManager Self
+    {
+        get
         {
-            get
+            if (mSelf == null)
             {
-                if (mSelf == null)
-                {
-                    mSelf = new StandardElementsManager();
-                }
-                return mSelf;
+                mSelf = new StandardElementsManager();
             }
+            return mSelf;
         }
+    }
 
-        public string DefaultType
+    public string DefaultType
+    {
+        get
         {
-            get
-            {
-                return "Container";
-            }
+            return "Container";
         }
+    }
 
-        public Dictionary<string, StateSave> DefaultStates => mDefaults;
+    public Dictionary<string, StateSave> DefaultStates => mDefaults;
 
-        #endregion
+    #endregion
 
-        bool hasInitialized = false;
+    bool hasInitialized = false;
 
-        public void Initialize()
+    public void Initialize()
+    {
+        if(!hasInitialized)
         {
-            if(!hasInitialized)
-            {
-                hasInitialized = true;
-                RefreshDefaults();
-            }
+            hasInitialized = true;
+            RefreshDefaults();
         }
+    }
 
-        public void RefreshDefaults()
+    public void RefreshDefaults()
+    {
+        mDefaults = new Dictionary<string, StateSave>();
+
+        // Eventually this would get read from somewhere like an XML file
+        // or a CSV file, but for
+        // now we'll just use hard values.
+
+
         {
-            mDefaults = new Dictionary<string, StateSave>();
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                     Text                                                           //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
 
-            // Eventually this would get read from somewhere like an XML file
-            // or a CSV file, but for
-            // now we'll just use hard values.
+            AddPositioningVariables(stateSave, includeBaseline: true);
 
+            AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
 
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
+
+            // Okay so here's some info on this value.
+            // It would be nice to be able to select whether 
+            // a Text should or should not be localized in Gum.
+            // The problem is that when we do the localization, we
+            // only have access to the GraphicalUiElement, not the InstanceSave.
+            // Sure, we could get the reference, but what about at runtime in a game?
+            // We ultimately want this value to be saved in the GraphicalUiElement so it
+            // can be applied at runtime too. This is a pain to do, since it would require
+            // changes to SkiaGum and possibly to FRB plugins. It's a bigger project, so until
+            // then, we'll leave this out and put it back in when it's time.
+            //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Apply Localization", Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
+
+            var maxLettersToShowVariable = new VariableSave
             {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                     Text                                                           //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-                AddPositioningVariables(stateSave, includeBaseline: true);
-
-                AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
-
-                // Okay so here's some info on this value.
-                // It would be nice to be able to select whether 
-                // a Text should or should not be localized in Gum.
-                // The problem is that when we do the localization, we
-                // only have access to the GraphicalUiElement, not the InstanceSave.
-                // Sure, we could get the reference, but what about at runtime in a game?
-                // We ultimately want this value to be saved in the GraphicalUiElement so it
-                // can be applied at runtime too. This is a pain to do, since it would require
-                // changes to SkiaGum and possibly to FRB plugins. It's a bigger project, so until
-                // then, we'll leave this out and put it back in when it's time.
-                //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Apply Localization", Category = "Text" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });
-
-                var maxLettersToShowVariable = new VariableSave
-                {
-                    SetsValue = true,
-                    Type = "int?",
-                    Value = null,
-                    Name = "MaxLettersToShow",
-                    Category = "Text",
-                };
-
-                maxLettersToShowVariable.PropertiesToSetOnDisplayer["NullCheckboxText"] = "All";
-
-                stateSave.Variables.Add(maxLettersToShowVariable);
-
-                var maxNumberOfLinesVariable = new VariableSave { SetsValue = true, Type = "int?", Value = null, Name = "MaxNumberOfLines", Category = "Text" };
-                maxNumberOfLinesVariable.PropertiesToSetOnDisplayer["NullCheckboxText"] = "All";
-                stateSave.Variables.Add(maxNumberOfLinesVariable);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowVerticalMode), Value = TextOverflowVerticalMode.SpillOver, Name = nameof(TextOverflowVerticalMode), Category = "Text" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowHorizontalMode), Value = TextOverflowHorizontalMode.TruncateWord, Name = nameof(TextOverflowHorizontalMode), Category = "Text" });
-
-                var lineHeightMultiplierVariable =
-                    new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "LineHeightMultiplier", Category = "Text" };
-                // should this go in a plugin?
-                lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
-                lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
-                
-                stateSave.Variables.Add(lineHeightMultiplierVariable);
-
-                // font:
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
-
-                var fontVariable = new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" };
-                fontVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
-                stateSave.Variables.Add(fontVariable);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsItalic", Category = "Font" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsBold", Category = "Font" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "UseFontSmoothing", Category = "Font" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "FontScale", Category = "Font" });
-
-                AddRotationVariable(stateSave);
-
-                AddEventVariables(stateSave);
-
-                AddStateVariable(stateSave);
-
-                AddVariableReferenceList(stateSave);
-
-                AddColorVariables(stateSave, includeAlpha: true);
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                mDefaults.Add("Text", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-
-
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                     Sprite                                                         //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-                AddPositioningVariables(stateSave);
-                AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
-
-                var currentChainNameVariable = new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" };
-                currentChainNameVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
-                stateSave.Variables.Add(currentChainNameVariable);
-
-
-                AddRotationVariable(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipVertical" });
-
-
-                //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureLeft", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureTop", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureWidth", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
-
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureWidthScale", Category = "Source",
-                    DetailText="Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as wide"});
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureHeightScale", Category = "Source",
-                    DetailText = "Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as tall"});
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
-
-                AddColorVariables(stateSave);
-                stateSave.Variables.Add(CreateBlendVariable());
-
-                AddEventVariables(stateSave);
-
-                AddStateVariable(stateSave);
-
-                AddVariableReferenceList(stateSave);
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-
-                mDefaults.Add("Sprite", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                   Container                                                        //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-
-                AddPositioningVariables(stateSave);
-
-                AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
-
-                stateSave.Variables.Add(new VariableSave
-                {
-                    SetsValue = true,
-                    Category = "Children",
-                    Type = "string",
-                    Value = null,
-                    Name = "ContainedType"
-                });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "ChildrenLayout" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 0.0f, Name = "StackSpacing" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "WrapsChildren" });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridHorizontalCells" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridVerticalCells" });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
-
-                var alphaValue = CreateAlphaVariable();
-                stateSave.Variables.Add(alphaValue);
-
-
-                var blendVariable = CreateBlendVariable();
-                stateSave.Variables.Add(blendVariable);
-
-
-                AddClipsChildren(stateSave);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-
-                AddRotationVariable(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
-
-                AddVariableReferenceList(stateSave);
-
-                AddEventVariables(stateSave, defaultHasEvents: true);
-
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                mDefaults.Add("Container", stateSave);
-
-
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                               ColoredRectangle                                                     //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-                AddPositioningVariables(stateSave);
-
-                AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
-
-                AddRotationVariable(stateSave);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-
-                AddColorVariables(stateSave, true);
-
-                stateSave.Variables.Add(CreateBlendVariable());
-
-                AddEventVariables(stateSave);
-
-                AddStateVariable(stateSave);
-
-                ApplySortValuesFromOrderInState(stateSave);
-                
-                AddVariableReferenceList(stateSave);
-
-                mDefaults.Add("ColoredRectangle", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-
-
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                               Circle                                                               //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-                AddPositioningVariables(stateSave);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius", Category = "Dimensions" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-                AddColorVariables(stateSave, true);
-
-                // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
-                AddRotationVariable(stateSave);
-
-
-                AddEventVariables(stateSave);
-
-                AddStateVariable(stateSave);
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                AddVariableReferenceList(stateSave);
-
-                mDefaults.Add("Circle", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                               Rectangle                                                            //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-                AddPositioningVariables(stateSave);
-
-                AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-                AddColorVariables(stateSave, true);
-
-                AddRotationVariable(stateSave);
-
-
-                AddEventVariables(stateSave);
-
-                AddStateVariable(stateSave);
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                AddVariableReferenceList(stateSave);
-
-                mDefaults.Add("Rectangle", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                     Polygon                                                        //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-                // January 1, 2026
-                // Modifying this to
-                // include origin variables
-                // because they can be set using
-                // dock/anchor anyway, so we might
-                // as well have them available in the
-                // UI
-                //AddPositioningVariables(stateSave, addOriginVariables: false);
-                AddPositioningVariables(stateSave, addOriginVariables: true);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-                AddColorVariables(stateSave, true);
-
-                AddRotationVariable(stateSave);
-
-                var pointsVariable = new VariableListSave<Vector2>()
-                { Name = "Points", Category = "Points" , Type = "Vector2"};
-
-                pointsVariable.Value.Add(new Vector2(0, 0));
-                pointsVariable.Value.Add(new Vector2(32, 0));
-                pointsVariable.Value.Add(new Vector2(32, 32));
-                pointsVariable.Value.Add(new Vector2(0, 32));
-                // close it:
-                pointsVariable.Value.Add(new Vector2(0, 0));
-
-                stateSave.VariableLists.Add(pointsVariable);
-
-                AddStateVariable(stateSave);
-
-                AddVariableReferenceList(stateSave);
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                mDefaults.Add("Polygon", stateSave);
-            }
-
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                    NineSlice                                                       //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-                AddPositioningVariables(stateSave);
-                AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.AllowFileOptions);
-
-                var borderScaleVariable =
-                    new VariableSave { SetsValue = true, Type = "float", Value = 1f, Name = "BorderScale", Category = "Dimensions" };
-                borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
-                borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
-
-                stateSave.Variables.Add(borderScaleVariable);
-
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
-
-                var currentChainNameVariable = new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" };
-                currentChainNameVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
-                stateSave.Variables.Add(currentChainNameVariable);
-
-
-                AddColorVariables(stateSave);
-                stateSave.Variables.Add(CreateBlendVariable());
-
-                var ninesliceTextureAddressVariable =
-                    new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" };
-                ninesliceTextureAddressVariable.ExcludedValuesForEnum.Add(TextureAddress.DimensionsBased);
-                stateSave.Variables.Add(ninesliceTextureAddressVariable);
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureLeft", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureTop", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureWidth", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
-
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateWidth", Category = "Source" });
-
-
-                AddVariableReferenceList(stateSave);
-
-                AddEventVariables(stateSave);
-                // For NineSlice we want it to expose its children, but it should not have events itself, as that would break old projects:
-                stateSave.Variables.Find(item => item.Name == "ExposeChildrenEvents")!.Value = true;
-
-                AddStateVariable(stateSave);
-
-                AddRotationVariable(stateSave);
-
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                mDefaults.Add("NineSlice", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                     Component                                                      //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                AddStateVariable(stateSave);
-
-                // Not sure if component needs this - does it get values from container?
-                //AddEventVariables(stateSave);
-
-                mDefaults.Add("Component", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //                                                    Screen                                                          //
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                var stateSave = new StateSave();
-                stateSave.Name = "Default";
-
-
-
-                ApplySortValuesFromOrderInState(stateSave);
-
-                mDefaults.Add("Screen", stateSave);
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-
-            
-            // We shouldn't do this because states above may explicitly not want to set values - like the variable for state
-            //foreach (var defaultState in mDefaults.Values)
-            //{
-            //    foreach (var variable in defaultState.Variables)
-            //    {
-            //        variable.SetsValue = true;
-            //    }
-            //}
-        }
-
-        private VariableSave CreateBlendVariable()
-        {
-            return new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
-        }
-
-        public static void AddClipsChildren(StateSave stateSave)
-        {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "ClipsChildren" });
-        }
-
-        private void AddRotationVariable(StateSave stateSave)
-        {
-            var variable = new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" };
-            stateSave.Variables.Add(variable);
-        }
-
-        public static void AddVariableReferenceList(StateSave stateSave)
-        {
-            var variableListSave = new VariableListSave<string>
-            {
-                Type = "string",
-                Value = new List<string>(),
-                Category = "References",
-                Name = "VariableReferences"
+                SetsValue = true,
+                Type = "int?",
+                Value = null,
+                Name = "MaxLettersToShow",
+                Category = "Text",
             };
-            stateSave.VariableLists.Add(variableListSave);
+
+            maxLettersToShowVariable.PropertiesToSetOnDisplayer["NullCheckboxText"] = "All";
+
+            stateSave.Variables.Add(maxLettersToShowVariable);
+
+            var maxNumberOfLinesVariable = new VariableSave { SetsValue = true, Type = "int?", Value = null, Name = "MaxNumberOfLines", Category = "Text" };
+            maxNumberOfLinesVariable.PropertiesToSetOnDisplayer["NullCheckboxText"] = "All";
+            stateSave.Variables.Add(maxNumberOfLinesVariable);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowVerticalMode), Value = TextOverflowVerticalMode.SpillOver, Name = nameof(TextOverflowVerticalMode), Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowHorizontalMode), Value = TextOverflowHorizontalMode.TruncateWord, Name = nameof(TextOverflowHorizontalMode), Category = "Text" });
+
+            var lineHeightMultiplierVariable =
+                new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "LineHeightMultiplier", Category = "Text" };
+            // should this go in a plugin?
+            lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
+            lineHeightMultiplierVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
+            
+            stateSave.Variables.Add(lineHeightMultiplierVariable);
+
+            // font:
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
+
+            var fontVariable = new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" };
+            fontVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
+            stateSave.Variables.Add(fontVariable);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 18, Name = "FontSize", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "OutlineThickness", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsItalic", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsBold", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "UseFontSmoothing", Category = "Font" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "CustomFontFile", Category = "Font", IsFile = true });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "FontScale", Category = "Font" });
+
+            AddRotationVariable(stateSave);
+
+            AddEventVariables(stateSave);
+
+            AddStateVariable(stateSave);
+
+            AddVariableReferenceList(stateSave);
+
+            AddColorVariables(stateSave, includeAlpha: true);
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("Text", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
 
-        public static void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)
+
+
+
         {
-            var hasEventsVariable =
-                new VariableSave
-                {
-                    SetsValue = true,
-                    Type = "bool",
-                    Value = defaultHasEvents,
-                    Name = "HasEvents",
-                    Category = "Behavior",
-                    CanOnlyBeSetInDefaultState = true,
-                    // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
-                    //ExcludeFromInstances = true
-                };
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                     Sprite                                                         //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+            AddPositioningVariables(stateSave);
+            AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
+
+            var currentChainNameVariable = new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" };
+            currentChainNameVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
+            stateSave.Variables.Add(currentChainNameVariable);
 
 
-            stateSave.Variables.Add(hasEventsVariable);
-            stateSave.Variables.Add(
-                new VariableSave
-                { 
-                    SetsValue = true, 
-                    Type = "bool", 
-                    Value = defaultHasEvents, 
-                    Name = "ExposeChildrenEvents", 
-                    Category = "Behavior", 
-                    CanOnlyBeSetInDefaultState = true,
-                    // We used to exclude ExposeChildrenEvents from instances, but there are plenty of situations where we want to modify this value on an instance-by-instance basis. It's similar to InputTransparent in Maui
-                    //ExcludeFromInstances = true 
-                });
+            AddRotationVariable(stateSave);
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipVertical" });
+
+
+            //stateSave.Variables.Add(new VariableSave { Type = "bool", Value = false, Name = "Custom Texture Coordinates", Category="Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureLeft", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureTop", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureWidth", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
+
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureWidthScale", Category = "Source",
+                DetailText="Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as wide"});
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureHeightScale", Category = "Source",
+                DetailText = "Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as tall"});
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
+
+            AddColorVariables(stateSave);
+            stateSave.Variables.Add(CreateBlendVariable());
+
+            AddEventVariables(stateSave);
+
+            AddStateVariable(stateSave);
+
+            AddVariableReferenceList(stateSave);
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+
+            mDefaults.Add("Sprite", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
 
-        private static void AddStateVariable(StateSave stateSave)
         {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                   Container                                                        //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+
+            AddPositioningVariables(stateSave);
+
+            AddDimensionsVariables(stateSave, 150, 150, DimensionVariableAction.ExcludeFileOptions);
+
             stateSave.Variables.Add(new VariableSave
             {
-                // Don't want it to set the value...
-                SetsValue = false, 
-                Type = "State",
-                Value = "Default",
-                Name = "State",
-                Category = "States and Visibility"
+                SetsValue = true,
+                Category = "Children",
+                Type = "string",
+                Value = null,
+                Name = "ContainedType"
             });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "ChildrenLayout" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 0.0f, Name = "StackSpacing" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "WrapsChildren" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridHorizontalCells" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridVerticalCells" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
+
+            var alphaValue = CreateAlphaVariable();
+            stateSave.Variables.Add(alphaValue);
+
+
+            var blendVariable = CreateBlendVariable();
+            stateSave.Variables.Add(blendVariable);
+
+
+            AddClipsChildren(stateSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+
+            AddRotationVariable(stateSave);
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
+
+            AddVariableReferenceList(stateSave);
+
+            AddEventVariables(stateSave, defaultHasEvents: true);
+
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("Container", stateSave);
+
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
 
-        private void ApplySortValuesFromOrderInState(StateSave stateSave)
         {
-            for (int i = 0; i < stateSave.Variables.Count; i++)
-            {
-                stateSave.Variables[i].DesiredOrder = i;
-            }
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                               ColoredRectangle                                                     //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+            AddPositioningVariables(stateSave);
+
+            AddDimensionsVariables(stateSave, 50, 50, DimensionVariableAction.ExcludeFileOptions);
+
+            AddRotationVariable(stateSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+
+            AddColorVariables(stateSave, true);
+
+            stateSave.Variables.Add(CreateBlendVariable());
+
+            AddEventVariables(stateSave);
+
+            AddStateVariable(stateSave);
+
+            ApplySortValuesFromOrderInState(stateSave);
+            
+            AddVariableReferenceList(stateSave);
+
+            mDefaults.Add("ColoredRectangle", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         }
 
-        public static void AddColorVariables(StateSave stateSave, bool includeAlpha = true)
+
+
+
         {
-            if (includeAlpha)
-            {
-                VariableSave alphaValue = CreateAlphaVariable(); 
-                stateSave.Variables.Add(alphaValue);
-            }
-            var redValue = new VariableSave
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                               Circle                                                               //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+            AddPositioningVariables(stateSave);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius", Category = "Dimensions" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+            AddColorVariables(stateSave, true);
+
+            // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
+            AddRotationVariable(stateSave);
+
+
+            AddEventVariables(stateSave);
+
+            AddStateVariable(stateSave);
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            AddVariableReferenceList(stateSave);
+
+            mDefaults.Add("Circle", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+
+        {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                               Rectangle                                                            //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+            AddPositioningVariables(stateSave);
+
+            AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+            AddColorVariables(stateSave, true);
+
+            AddRotationVariable(stateSave);
+
+
+            AddEventVariables(stateSave);
+
+            AddStateVariable(stateSave);
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            AddVariableReferenceList(stateSave);
+
+            mDefaults.Add("Rectangle", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+
+        {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                     Polygon                                                        //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+            // January 1, 2026
+            // Modifying this to
+            // include origin variables
+            // because they can be set using
+            // dock/anchor anyway, so we might
+            // as well have them available in the
+            // UI
+            //AddPositioningVariables(stateSave, addOriginVariables: false);
+            AddPositioningVariables(stateSave, addOriginVariables: true);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+            AddColorVariables(stateSave, true);
+
+            AddRotationVariable(stateSave);
+
+            var pointsVariable = new VariableListSave<Vector2>()
+            { Name = "Points", Category = "Points" , Type = "Vector2"};
+
+            pointsVariable.Value.Add(new Vector2(0, 0));
+            pointsVariable.Value.Add(new Vector2(32, 0));
+            pointsVariable.Value.Add(new Vector2(32, 32));
+            pointsVariable.Value.Add(new Vector2(0, 32));
+            // close it:
+            pointsVariable.Value.Add(new Vector2(0, 0));
+
+            stateSave.VariableLists.Add(pointsVariable);
+
+            AddStateVariable(stateSave);
+
+            AddVariableReferenceList(stateSave);
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("Polygon", stateSave);
+        }
+
+
+        {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                    NineSlice                                                       //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+            AddPositioningVariables(stateSave);
+            AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.AllowFileOptions);
+
+            var borderScaleVariable =
+                new VariableSave { SetsValue = true, Type = "float", Value = 1f, Name = "BorderScale", Category = "Dimensions" };
+            borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
+            borderScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .01m;
+
+            stateSave.Variables.Add(borderScaleVariable);
+
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
+
+            var currentChainNameVariable = new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" };
+            currentChainNameVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
+            stateSave.Variables.Add(currentChainNameVariable);
+
+
+            AddColorVariables(stateSave);
+            stateSave.Variables.Add(CreateBlendVariable());
+
+            var ninesliceTextureAddressVariable =
+                new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" };
+            ninesliceTextureAddressVariable.ExcludedValuesForEnum.Add(TextureAddress.DimensionsBased);
+            stateSave.Variables.Add(ninesliceTextureAddressVariable);
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureLeft", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureTop", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureWidth", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
+
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateWidth", Category = "Source" });
+
+
+            AddVariableReferenceList(stateSave);
+
+            AddEventVariables(stateSave);
+            // For NineSlice we want it to expose its children, but it should not have events itself, as that would break old projects:
+            stateSave.Variables.Find(item => item.Name == "ExposeChildrenEvents")!.Value = true;
+
+            AddStateVariable(stateSave);
+
+            AddRotationVariable(stateSave);
+
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("NineSlice", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+
+        {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                     Component                                                      //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            AddStateVariable(stateSave);
+
+            // Not sure if component needs this - does it get values from container?
+            //AddEventVariables(stateSave);
+
+            mDefaults.Add("Component", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+
+
+        {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //                                                    Screen                                                          //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var stateSave = new StateSave();
+            stateSave.Name = "Default";
+
+
+
+            ApplySortValuesFromOrderInState(stateSave);
+
+            mDefaults.Add("Screen", stateSave);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+
+        
+        // We shouldn't do this because states above may explicitly not want to set values - like the variable for state
+        //foreach (var defaultState in mDefaults.Values)
+        //{
+        //    foreach (var variable in defaultState.Variables)
+        //    {
+        //        variable.SetsValue = true;
+        //    }
+        //}
+    }
+
+    private VariableSave CreateBlendVariable()
+    {
+        return new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
+    }
+
+    public static void AddClipsChildren(StateSave stateSave)
+    {
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "ClipsChildren" });
+    }
+
+    private void AddRotationVariable(StateSave stateSave)
+    {
+        var variable = new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" };
+        stateSave.Variables.Add(variable);
+    }
+
+    public static void AddVariableReferenceList(StateSave stateSave)
+    {
+        var variableListSave = new VariableListSave<string>
+        {
+            Type = "string",
+            Value = new List<string>(),
+            Category = "References",
+            Name = "VariableReferences"
+        };
+        stateSave.VariableLists.Add(variableListSave);
+    }
+
+    public static void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)
+    {
+        var hasEventsVariable =
+            new VariableSave
             {
                 SetsValue = true,
-                Type = "int",
-                Value = 255,
-                Name = "Red",
-                Category = "Rendering",
+                Type = "bool",
+                Value = defaultHasEvents,
+                Name = "HasEvents",
+                Category = "Behavior",
+                CanOnlyBeSetInDefaultState = true,
+                // We used to exclude them from instances, but there are plenty of situations where we want to hide events on an instance. It's similar to InputTransparent in XamForms
+                //ExcludeFromInstances = true
             };
-            stateSave.Variables.Add(redValue);
 
-            var greenValue = new VariableSave
-            {
-                SetsValue = true,
-                Type = "int",
-                Value = 255,
-                Name = "Green",
-                Category = "Rendering",
-            };
-            stateSave.Variables.Add(greenValue);
 
-            var blueValue = new VariableSave
-            {
-                SetsValue = true,
-                Type = "int",
-                Value = 255,
-                Name = "Blue",
-                Category = "Rendering",
-            };
-            stateSave.Variables.Add(blueValue);
+        stateSave.Variables.Add(hasEventsVariable);
+        stateSave.Variables.Add(
+            new VariableSave
+            { 
+                SetsValue = true, 
+                Type = "bool", 
+                Value = defaultHasEvents, 
+                Name = "ExposeChildrenEvents", 
+                Category = "Behavior", 
+                CanOnlyBeSetInDefaultState = true,
+                // We used to exclude ExposeChildrenEvents from instances, but there are plenty of situations where we want to modify this value on an instance-by-instance basis. It's similar to InputTransparent in Maui
+                //ExcludeFromInstances = true 
+            });
+    }
 
+    private static void AddStateVariable(StateSave stateSave)
+    {
+        stateSave.Variables.Add(new VariableSave
+        {
+            // Don't want it to set the value...
+            SetsValue = false, 
+            Type = "State",
+            Value = "Default",
+            Name = "State",
+            Category = "States and Visibility"
+        });
+    }
+
+    private void ApplySortValuesFromOrderInState(StateSave stateSave)
+    {
+        for (int i = 0; i < stateSave.Variables.Count; i++)
+        {
+            stateSave.Variables[i].DesiredOrder = i;
+        }
+    }
+
+    public static void AddColorVariables(StateSave stateSave, bool includeAlpha = true)
+    {
+        if (includeAlpha)
+        {
+            VariableSave alphaValue = CreateAlphaVariable(); 
+            stateSave.Variables.Add(alphaValue);
+        }
+        var redValue = new VariableSave
+        {
+            SetsValue = true,
+            Type = "int",
+            Value = 255,
+            Name = "Red",
+            Category = "Rendering",
+        };
+        stateSave.Variables.Add(redValue);
+
+        var greenValue = new VariableSave
+        {
+            SetsValue = true,
+            Type = "int",
+            Value = 255,
+            Name = "Green",
+            Category = "Rendering",
+        };
+        stateSave.Variables.Add(greenValue);
+
+        var blueValue = new VariableSave
+        {
+            SetsValue = true,
+            Type = "int",
+            Value = 255,
+            Name = "Blue",
+            Category = "Rendering",
+        };
+        stateSave.Variables.Add(blueValue);
+
+    }
+
+    private static VariableSave CreateAlphaVariable()
+    {
+        var alphaValue = new VariableSave
+        {
+            SetsValue = true,
+            Type = "int",
+            Value = 255,
+            Name = "Alpha",
+            Category = "Rendering",
+        };
+
+        return alphaValue;
+    }
+
+    public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
+    {
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
+
+        var defaultValue = DimensionUnitType.Absolute;
+
+        if(dimensionVariableAction == DimensionVariableAction.DefaultToPercentageOfFile)
+        {
+            defaultValue = DimensionUnitType.PercentageOfSourceFile;
         }
 
-        private static VariableSave CreateAlphaVariable()
+        VariableSave variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "WidthUnits", Category = "Dimensions" };
+        if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
         {
-            var alphaValue = new VariableSave
-            {
-                SetsValue = true,
-                Type = "int",
-                Value = 255,
-                Name = "Alpha",
-                Category = "Rendering",
-            };
+            variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+            variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
+        }
+        stateSave.Variables.Add(variableSave);
 
-            return alphaValue;
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MinWidth", Category = "Dimensions" });
+        var maxWidthVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxWidth", Category = "Dimensions" };
+        stateSave.Variables.Add(maxWidthVariable);
+
+
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
+
+        variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "HeightUnits", Category = "Dimensions" };
+        if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
+
+        {
+            variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
+            variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
+        }
+        stateSave.Variables.Add(variableSave);
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MinHeight", Category = "Dimensions" });
+        var maxHeightVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxHeight", Category = "Dimensions" };
+        stateSave.Variables.Add(maxHeightVariable);
+
+    }
+
+    public static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true, bool includeBaseline = false)
+    {
+        List<object> xUnitsExclusions = new List<object>();
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
+        xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
+
+        List<object> yUnitsExclusions = new List<object>();
+        yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
+        yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
+        yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
+        yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
+
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "X", Category = "Position" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "XUnits", Category = "Position", ExcludedValuesForEnum = xUnitsExclusions });
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Y", Category = "Position" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "YUnits", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions });
+
+        if(addOriginVariables)
+        {
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(HorizontalAlignment), Value = HorizontalAlignment.Left, Name = "XOrigin", Category = "Position" });
+
+            var verticalAlignmentVariable =
+                new VariableSave { SetsValue = true, Type = nameof(VerticalAlignment), Value = VerticalAlignment.Top, Name = "YOrigin", Category = "Position" };
+            if(includeBaseline == false)
+            {
+                verticalAlignmentVariable.ExcludedValuesForEnum.Add(VerticalAlignment.TextBaseline);
+            }
+            stateSave.Variables.Add(verticalAlignmentVariable);
         }
 
-        public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
+        // Removed December 16, 2024
+        // This duplicates functionality
+        // that you can get from adding containers
+        // to a screen. It's not documente, hasn't been
+        // tested, and probably doesn't work in some environments
+        // like MonoGame
+        //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
+        AddParentVariables(stateSave);
+    }
+
+
+    private static void AddParentVariables(StateSave stateSave)
+    {
+        VariableSave variableSave = new VariableSave();
+        variableSave.SetsValue = true;
+        variableSave.Type = "string";
+        variableSave.Name = "Parent";
+        variableSave.Category = "Parent";
+        variableSave.CanOnlyBeSetInDefaultState = true;
+
+
+        stateSave.Variables.Add(variableSave);
+
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentSize", Category = "Parent" });
+    }
+
+    public Func<string, StateSave> CustomGetDefaultState;
+
+    public StateSave? TryGetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
+    {
+        if(mDefaults == null)
         {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultWidth, Name = "Width", Category = "Dimensions" });
-
-            var defaultValue = DimensionUnitType.Absolute;
-
-            if(dimensionVariableAction == DimensionVariableAction.DefaultToPercentageOfFile)
-            {
-                defaultValue = DimensionUnitType.PercentageOfSourceFile;
-            }
-
-            VariableSave variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "WidthUnits", Category = "Dimensions" };
-            if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
-            {
-                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
-                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
-            }
-            stateSave.Variables.Add(variableSave);
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MinWidth", Category = "Dimensions" });
-            var maxWidthVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxWidth", Category = "Dimensions" };
-            stateSave.Variables.Add(maxWidthVariable);
-
-
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
-
-            variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "HeightUnits", Category = "Dimensions" };
-            if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
-
-            {
-                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
-                variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
-            }
-            stateSave.Variables.Add(variableSave);
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MinHeight", Category = "Dimensions" });
-            var maxHeightVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxHeight", Category = "Dimensions" };
-            stateSave.Variables.Add(maxHeightVariable);
+            return null;
+        }
+        if (string.IsNullOrEmpty(type))
+        {
+            return null;
+        }
+        if (mDefaults.ContainsKey(type))
+        {
+            return mDefaults[type];
 
         }
-
-        public static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true, bool includeBaseline = false)
+        else
         {
-            List<object> xUnitsExclusions = new List<object>();
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
-            xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
 
-            List<object> yUnitsExclusions = new List<object>();
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
-            yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
+            StateSave customState = CustomGetDefaultState?.Invoke(type);
+            // Vic says - not sure if this is still used. If so, we need to create a 
+            // CustomGetDefaultState that returns a state as shown below.
+            //#if SKIA
+            //                // In Skia we will assume that any type that comes through has a default state:
+            //                customState = new StateSave();
+            //                AddPositioningVariables(customState, addOriginVariables: true);
+            //                mDefaults[type] = customState;
+            //#endif
 
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "X", Category = "Position" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "XUnits", Category = "Position", ExcludedValuesForEnum = xUnitsExclusions });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "Y", Category = "Position" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "YUnits", Category = "Position", ExcludedValuesForEnum = yUnitsExclusions });
-
-            if(addOriginVariables)
+            if (customState == null && throwExceptionOnMissing)
             {
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(HorizontalAlignment), Value = HorizontalAlignment.Left, Name = "XOrigin", Category = "Position" });
+                var message = $"Could not get the default state for type {type} in either the default or through plugins";
 
-                var verticalAlignmentVariable =
-                    new VariableSave { SetsValue = true, Type = nameof(VerticalAlignment), Value = VerticalAlignment.Top, Name = "YOrigin", Category = "Position" };
-                if(includeBaseline == false)
+                if(type == "Arc")
                 {
-                    verticalAlignmentVariable.ExcludedValuesForEnum.Add(VerticalAlignment.TextBaseline);
+                    message += "\nIf using MonoGame/KNI, FNA, did you remember to initialize the shapes library?";
                 }
-                stateSave.Variables.Add(verticalAlignmentVariable);
-            }
 
-            // Removed December 16, 2024
-            // This duplicates functionality
-            // that you can get from adding containers
-            // to a screen. It's not documente, hasn't been
-            // tested, and probably doesn't work in some environments
-            // like MonoGame
-            //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
-            AddParentVariables(stateSave);
-        }
-
-
-        private static void AddParentVariables(StateSave stateSave)
-        {
-            VariableSave variableSave = new VariableSave();
-            variableSave.SetsValue = true;
-            variableSave.Type = "string";
-            variableSave.Name = "Parent";
-            variableSave.Category = "Parent";
-            variableSave.CanOnlyBeSetInDefaultState = true;
-
-
-            stateSave.Variables.Add(variableSave);
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentSize", Category = "Parent" });
-        }
-
-        public Func<string, StateSave> CustomGetDefaultState;
-
-        public StateSave? TryGetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
-        {
-            if(mDefaults == null)
-            {
-                return null;
-            }
-            if (string.IsNullOrEmpty(type))
-            {
-                return null;
-            }
-            if (mDefaults.ContainsKey(type))
-            {
-                return mDefaults[type];
-
+                throw new InvalidOperationException(message);
             }
             else
             {
-
-                StateSave customState = CustomGetDefaultState?.Invoke(type);
-                // Vic says - not sure if this is still used. If so, we need to create a 
-                // CustomGetDefaultState that returns a state as shown below.
-                //#if SKIA
-                //                // In Skia we will assume that any type that comes through has a default state:
-                //                customState = new StateSave();
-                //                AddPositioningVariables(customState, addOriginVariables: true);
-                //                mDefaults[type] = customState;
-                //#endif
-
-                if (customState == null && throwExceptionOnMissing)
-                {
-                    var message = $"Could not get the default state for type {type} in either the default or through plugins";
-
-                    if(type == "Arc")
-                    {
-                        message += "\nIf using MonoGame/KNI, FNA, did you remember to initialize the shapes library?";
-                    }
-
-                    throw new InvalidOperationException(message);
-                }
-                else
-                {
-                    return customState;
-                }
+                return customState;
             }
         }
+    }
 
-        public StateSave? GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
+    public StateSave? GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
+    {
+        if (mDefaults == null)
         {
-            if (mDefaults == null)
+            throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
+        }
+        return TryGetDefaultStateFor(type, throwExceptionOnMissing);
+    }
+
+    public bool IsDefaultType(string type)
+    {
+        return mDefaults.ContainsKey(type);
+    }
+
+    public void PopulateProjectWithDefaultStandards(GumProjectSave gumProjectSave)
+    {
+        if (mDefaults == null)
+        {
+            throw new Exception("You must first call Initialize on this StandardElementsManager");
+        }
+
+
+        foreach (KeyValuePair<string, StateSave> kvp in mDefaults)
+        {
+
+            string type = kvp.Key;
+
+            if (type != "Screen")
             {
-                throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
+                AddStandardElementSaveInstance(gumProjectSave, type);
             }
-            return TryGetDefaultStateFor(type, throwExceptionOnMissing);
+        }
+    }
+
+    public StandardElementSave AddStandardElementSaveInstance(GumProjectSave gumProjectSave, string type)
+    {
+        StandardElementSave elementSave = new StandardElementSave();
+        elementSave.Initialize(mDefaults[type]);
+        elementSave.Name = type;
+
+        
+        gumProjectSave.StandardElementReferences.Add( new ElementReference { Name = type, ElementType = ElementType.Standard});
+        gumProjectSave.StandardElements.Add( elementSave);
+
+        return elementSave;
+    }
+
+    #region Colored Circle State
+    public static StateSave GetColoredCircleState()
+    {
+        if (filledCircleState == null)
+        {
+            filledCircleState = new StateSave();
+            filledCircleState.Name = "Default";
+            AddVisibleVariable(filledCircleState);
+
+            StandardElementsManager.AddPositioningVariables(filledCircleState);
+            StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64,
+                StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+            StandardElementsManager.AddColorVariables(filledCircleState);
+
+            AddGradientVariables(filledCircleState);
+
+            AddDropshadowVariables(filledCircleState);
+
+
+            AddStrokeAndFilledVariables(filledCircleState);
+
+            AddBlendVariable(filledCircleState);
+
+            filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
+
+            AddVariableReferenceList(filledCircleState);
+            StandardElementsManager.AddEventVariables(filledCircleState);
         }
 
-        public bool IsDefaultType(string type)
+        return filledCircleState;
+    }
+    #endregion
+
+    #region Rounded Rectangle State
+
+    public static StateSave GetRoundedRectangleState()
+    {
+        if (roundedRectangleState == null)
         {
-            return mDefaults.ContainsKey(type);
+            roundedRectangleState = new StateSave();
+            roundedRectangleState.Name = "Default";
+            AddVisibleVariable(roundedRectangleState);
+
+            roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5f, Name = "CornerRadius", Category = "Dimensions" });
+            roundedRectangleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
+
+            StandardElementsManager.AddPositioningVariables(roundedRectangleState);
+            StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,
+                StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+            StandardElementsManager.AddColorVariables(roundedRectangleState);
+
+            AddGradientVariables(roundedRectangleState);
+
+            AddDropshadowVariables(roundedRectangleState);
+
+            AddStrokeAndFilledVariables(roundedRectangleState);
+
+            AddBlendVariable(roundedRectangleState);
+
+
+            AddVariableReferenceList(roundedRectangleState);
+
+            StandardElementsManager.AddClipsChildren(roundedRectangleState);
+            StandardElementsManager.AddEventVariables(roundedRectangleState);
         }
 
-        public void PopulateProjectWithDefaultStandards(GumProjectSave gumProjectSave)
+        return roundedRectangleState;
+    }
+
+    #endregion
+
+    #region Arc State
+
+    public static StateSave GetArcState()
+    {
+        if (arcState == null)
         {
-            if (mDefaults == null)
-            {
-                throw new Exception("You must first call Initialize on this StandardElementsManager");
-            }
+            arcState = new StateSave();
+            arcState.Name = "Default";
+            arcState.Variables.Add(new VariableSave { Type = "float", Value = 10f, Category = "Arc", Name = "Thickness", SetsValue = true });
 
-
-            foreach (KeyValuePair<string, StateSave> kvp in mDefaults)
-            {
-
-                string type = kvp.Key;
-
-                if (type != "Screen")
-                {
-                    AddStandardElementSaveInstance(gumProjectSave, type);
-                }
-            }
-        }
-
-        public StandardElementSave AddStandardElementSaveInstance(GumProjectSave gumProjectSave, string type)
-        {
-            StandardElementSave elementSave = new StandardElementSave();
-            elementSave.Initialize(mDefaults[type]);
-            elementSave.Name = type;
-
-            
-            gumProjectSave.StandardElementReferences.Add( new ElementReference { Name = type, ElementType = ElementType.Standard});
-            gumProjectSave.StandardElements.Add( elementSave);
-
-            return elementSave;
-        }
-
-        #region Colored Circle State
-        public static StateSave GetColoredCircleState()
-        {
-            if (filledCircleState == null)
-            {
-                filledCircleState = new StateSave();
-                filledCircleState.Name = "Default";
-                AddVisibleVariable(filledCircleState);
-
-                StandardElementsManager.AddPositioningVariables(filledCircleState);
-                StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64,
-                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-                StandardElementsManager.AddColorVariables(filledCircleState);
-
-                AddGradientVariables(filledCircleState);
-
-                AddDropshadowVariables(filledCircleState);
-
-
-                AddStrokeAndFilledVariables(filledCircleState);
-
-                AddBlendVariable(filledCircleState);
-
-                filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
-
-                AddVariableReferenceList(filledCircleState);
-                StandardElementsManager.AddEventVariables(filledCircleState);
-            }
-
-            return filledCircleState;
-        }
-        #endregion
-
-        #region Rounded Rectangle State
-
-        public static StateSave GetRoundedRectangleState()
-        {
-            if (roundedRectangleState == null)
-            {
-                roundedRectangleState = new StateSave();
-                roundedRectangleState.Name = "Default";
-                AddVisibleVariable(roundedRectangleState);
-
-                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5f, Name = "CornerRadius", Category = "Dimensions" });
-                roundedRectangleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
-
-                StandardElementsManager.AddPositioningVariables(roundedRectangleState);
-                StandardElementsManager.AddDimensionsVariables(roundedRectangleState, 64, 64,
-                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-                StandardElementsManager.AddColorVariables(roundedRectangleState);
-
-                AddGradientVariables(roundedRectangleState);
-
-                AddDropshadowVariables(roundedRectangleState);
-
-                AddStrokeAndFilledVariables(roundedRectangleState);
-
-                AddBlendVariable(roundedRectangleState);
-
-
-                AddVariableReferenceList(roundedRectangleState);
-
-                StandardElementsManager.AddClipsChildren(roundedRectangleState);
-                StandardElementsManager.AddEventVariables(roundedRectangleState);
-            }
-
-            return roundedRectangleState;
-        }
-
-        #endregion
-
-        #region Arc State
-
-        public static StateSave GetArcState()
-        {
-            if (arcState == null)
-            {
-                arcState = new StateSave();
-                arcState.Name = "Default";
-                arcState.Variables.Add(new VariableSave { Type = "float", Value = 10f, Category = "Arc", Name = "Thickness", SetsValue = true });
-
-                var startAngle = new VariableSave { Type = "float", Value = 0f, Category = "Arc", Name = "StartAngle", SetsValue = true };
+            var startAngle = new VariableSave { Type = "float", Value = 0f, Category = "Arc", Name = "StartAngle", SetsValue = true };
 #if GUM
-                StandardElementsManagerGumTool.MakeDegreesAngle(startAngle);
+            StandardElementsManagerGumTool.MakeDegreesAngle(startAngle);
 #endif
-                arcState.Variables.Add(startAngle);
+            arcState.Variables.Add(startAngle);
 
-                var sweepAngle = new VariableSave { Type = "float", Value = 90f, Category = "Arc", Name = "SweepAngle", SetsValue = true };
+            var sweepAngle = new VariableSave { Type = "float", Value = 90f, Category = "Arc", Name = "SweepAngle", SetsValue = true };
 #if GUM
-                StandardElementsManagerGumTool.MakeDegreesAngle(sweepAngle);
+            StandardElementsManagerGumTool.MakeDegreesAngle(sweepAngle);
 #endif
-                arcState.Variables.Add(sweepAngle);
+            arcState.Variables.Add(sweepAngle);
 
-                arcState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Arc", Name = "IsEndRounded", SetsValue = true });
+            arcState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Arc", Name = "IsEndRounded", SetsValue = true });
 
-                AddVisibleVariable(arcState);
+            AddVisibleVariable(arcState);
 
-                StandardElementsManager.AddPositioningVariables(arcState);
-                StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
-                    StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
-                StandardElementsManager.AddColorVariables(arcState);
-                StandardElementsManager.AddEventVariables(arcState);
-                //StandardElementsManager.
+            StandardElementsManager.AddPositioningVariables(arcState);
+            StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
+                StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
+            StandardElementsManager.AddColorVariables(arcState);
+            StandardElementsManager.AddEventVariables(arcState);
+            //StandardElementsManager.
 
 
-                AddBlendVariable(arcState);
+            AddBlendVariable(arcState);
 
-                AddGradientVariables(arcState);
+            AddGradientVariables(arcState);
 
-                AddDropshadowVariables(arcState);
+            AddDropshadowVariables(arcState);
 
-                AddVariableReferenceList(arcState);
-            }
-
-            return arcState;
+            AddVariableReferenceList(arcState);
         }
 
-        #endregion
+        return arcState;
+    }
 
-        public static void AddVisibleVariable(StateSave state)
+    #endregion
+
+    public static void AddVisibleVariable(StateSave state)
+    {
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
+    }
+
+    public static void AddGradientVariables(StateSave state)
+    {
+        List<object> xUnitsExclusions = new List<object>();
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
+        xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
+        xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
+
+        List<object> yUnitsExclusions = new List<object>();
+        yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
+        yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
+        yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
+        yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
+
+
+        state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient", SetsValue = true });
+
+        state.Variables.Add(new VariableSave
         {
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
-        }
-
-        public static void AddGradientVariables(StateSave state)
-        {
-            List<object> xUnitsExclusions = new List<object>();
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
-            xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromBottom);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterY);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromCenterYInverted);
-            xUnitsExclusions.Add(PositionUnitType.PixelsFromBaseline);
-
-            List<object> yUnitsExclusions = new List<object>();
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromLeft);
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromCenterX);
-            yUnitsExclusions.Add(PositionUnitType.PercentageWidth);
-            yUnitsExclusions.Add(PositionUnitType.PixelsFromRight);
+            SetsValue = true,
+            Type = typeof(GradientType).Name,
+            Value = GradientType.Linear,
+            Name = "GradientType",
+            Category = "Rendering",
+            CustomTypeConverter = new EnumConverter(typeof(GradientType))
+        });
 
 
-            state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient", SetsValue = true });
-
-            state.Variables.Add(new VariableSave
-            {
-                SetsValue = true,
-                Type = typeof(GradientType).Name,
-                Value = GradientType.Linear,
-                Name = "GradientType",
-                Category = "Rendering",
-                CustomTypeConverter = new EnumConverter(typeof(GradientType))
-            });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientX1" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX1Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
 
 
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientX1" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX1Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientY1" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha1", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
+
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientX2" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX2Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
+
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientY2" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY2Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 50f, Category = "Rendering", Name = "GradientInnerRadius" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
 
 
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientY1" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientOuterRadius" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
 
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientX2" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX2Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientY2" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY2Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
-
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 50f, Category = "Rendering", Name = "GradientInnerRadius" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientInnerRadiusUnits", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha2", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
+        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
+    }
 
 
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientOuterRadius" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = DimensionUnitType.Absolute, Name = "GradientOuterRadiusUnits", Category = "Rendering" });
+    public static void AddDropshadowVariables(StateSave stateSave)
+    {
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasDropshadow", Category = "Dropshadow" });
 
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
-        }
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowOffsetX", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowOffsetY", Category = "Dropshadow" });
 
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowBlurX", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowBlurY", Category = "Dropshadow" });
 
-        public static void AddDropshadowVariables(StateSave stateSave)
-        {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasDropshadow", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "DropshadowAlpha", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowRed", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowGreen", Category = "Dropshadow" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowBlue", Category = "Dropshadow" });
+    }
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowOffsetX", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowOffsetY", Category = "Dropshadow" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowBlurX", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 3f, Name = "DropshadowBlurY", Category = "Dropshadow" });
-
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "DropshadowAlpha", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowRed", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowGreen", Category = "Dropshadow" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowBlue", Category = "Dropshadow" });
-        }
-
-        public static void AddStrokeAndFilledVariables(StateSave stateSave)
-        {
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
-
-        }
-
-        public static void AddBlendVariable(StateSave stateSave)
-        {
-            var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
-
-            stateSave.Variables.Add(blendariable);
-        }
+    public static void AddStrokeAndFilledVariables(StateSave stateSave)
+    {
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
 
     }
+
+    public static void AddBlendVariable(StateSave stateSave)
+    {
+        var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
+
+        stateSave.Variables.Add(blendariable);
+    }
+
 }

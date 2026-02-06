@@ -77,21 +77,29 @@ public class FormsUtilities
 
     public static GamePad[] Gamepads { get; private set; } = new GamePad[4];
 
+
+#if XNALIKE
     /// <summary>
     /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
     /// </summary>
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
-#if XNALIKE
     /// <param name="game">The Game instance, used for creating and updating input such as the Keyboard and Mouse</param>
-#endif
     /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
     /// do not need to provide one.</param>
     /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
-#if XNALIKE
     public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
 #else
+    /// <summary>
+    /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
+    /// </summary>
+    /// <remarks>
+    /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
+    /// </remarks>
+    /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
+    /// do not need to provide one.</param>
+    /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
     public static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
 #endif
     {

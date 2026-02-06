@@ -1,5 +1,6 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum.Renderables;
@@ -55,6 +56,7 @@ public class TestAssemblyInitializeBase : XunitTestFramework
 
         GumService.Default.Root.UpdateLayout();
 
+        StandardElementsManager.Self.Initialize();
     }
 
 
