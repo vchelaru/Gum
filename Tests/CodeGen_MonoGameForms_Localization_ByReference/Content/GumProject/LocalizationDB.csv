@@ -1,0 +1,5 @@
+String ID,English,Spanish
+T_OK,OK,OK
+T_Cancel,Cancel,Cancelar
+T_Submit,Submit,Entregar
+T_Greeting,"Welcome, this is a localized project example","Bienvenido, este es un ejemplo de proyecto localizado."

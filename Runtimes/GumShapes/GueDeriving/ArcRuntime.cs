@@ -14,7 +14,7 @@ public class ArcRuntime : AposShapeRuntime
 
 
 
-    Arc _containedArc;
+    Arc _containedArc = default!;
 
     Arc ContainedArc
     {
