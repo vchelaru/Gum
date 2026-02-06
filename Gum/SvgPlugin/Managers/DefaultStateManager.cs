@@ -10,7 +10,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 
 #if GUM
 using Gum.Commands;
@@ -215,13 +214,13 @@ namespace SkiaPlugin.Managers
 #if GUM
         internal static void UpdateDisplayersForStandards()
         {
-            StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetArcState());
-            StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetColoredCircleState());
-            StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetRoundedRectangleState());
+            Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetArcState());
+            Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetColoredCircleState());
+            Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetRoundedRectangleState());
 
-            StandardElementsManagerGumTool.SetPreferredDisplayers(GetCanvasState());
-            StandardElementsManagerGumTool.SetPreferredDisplayers(GetSvgState());
-            StandardElementsManagerGumTool.SetPreferredDisplayers(GetLottieAnimationState());
+            Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetCanvasState());
+            Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetSvgState());
+            Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetLottieAnimationState());
 
         }
 #endif
