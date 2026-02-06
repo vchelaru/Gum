@@ -885,12 +885,7 @@ namespace Gum.Managers
                 var instanceContainer = ObjectFinder.Self.GetContainerOf(targetInstance);
 
                 var recursiveVariableFinder = new RecursiveVariableFinder(stateSave ?? instanceContainer?.DefaultState);
-                defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
-
-                if (defaultChild == null && targetInstanceComponent.DefaultChildContainer != null)
-                {
-                    defaultChild = targetInstanceComponent.DefaultChildContainer;
-                }
+                defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{"DefaultChildContainer"}");
 
                 if (defaultChild != null)
                 {

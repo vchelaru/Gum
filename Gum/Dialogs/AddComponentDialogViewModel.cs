@@ -32,7 +32,7 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
     {
         if (Value is null || Error is not null) return;
 
-        ITreeNode nodeToAddTo = _selectedState.SelectedTreeNode;
+        ITreeNode? nodeToAddTo = _selectedState.SelectedTreeNode;
 
         while (nodeToAddTo is { Tag: ComponentSave, Parent: { } parent })
         {

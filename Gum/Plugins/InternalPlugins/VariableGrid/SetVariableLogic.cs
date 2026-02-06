@@ -333,7 +333,7 @@ public class SetVariableLogic
     {
         VariableSave variable = _selectedState.SelectedVariableSave;
 
-        if (variable != null && rootVariableName == nameof(ComponentSave.DefaultChildContainer))
+        if (variable != null && rootVariableName == "DefaultChildContainer")
         {
             if ((variable.Value as string) == "<NONE>")
             {

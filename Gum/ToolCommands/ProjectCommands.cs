@@ -12,6 +12,7 @@ using Gum.Plugins;
 using System.Linq;
 using Gum.Commands;
 using Gum.Services;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.ToolCommands;
 
