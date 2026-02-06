@@ -10,6 +10,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Extensions;
+using Gum.Localization;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;

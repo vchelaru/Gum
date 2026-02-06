@@ -32,6 +32,7 @@ using ToolsUtilities;
 using Gum.Logic.FileWatch;
 using Gum.Reflection;
 using Gum.Services.Fonts;
+using Gum.Localization;
 
 namespace Gum.Services;
 

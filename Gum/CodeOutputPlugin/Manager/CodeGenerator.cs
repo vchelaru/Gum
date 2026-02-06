@@ -3,6 +3,7 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Reflection;
 using Gum.StateAnimation.SaveClasses;

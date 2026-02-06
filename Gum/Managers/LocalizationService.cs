@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using MonoGameGum.Localization;
+using Gum.Localization;
 
-namespace Gum.Managers;
+namespace Gum.Localization;
 
 /// <summary>
 /// Manages localization strings and language support for the application.

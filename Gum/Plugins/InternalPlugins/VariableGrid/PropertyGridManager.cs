@@ -19,6 +19,7 @@ using Gum.Commands;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Services.Dialogs;
 using Gum.Wireframe;
+using Gum.Localization;
 
 namespace Gum.Managers;
 

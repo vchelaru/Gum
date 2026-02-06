@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.RenderingLibrary;

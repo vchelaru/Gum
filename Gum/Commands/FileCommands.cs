@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Localization;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;

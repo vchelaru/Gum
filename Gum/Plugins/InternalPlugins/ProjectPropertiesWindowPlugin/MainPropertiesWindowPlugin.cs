@@ -18,6 +18,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
+using Gum.Localization;
 
 namespace Gum.Plugins.PropertiesWindowPlugin;
 
@@ -32,7 +33,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
     ProjectPropertiesControl control;
 
     ProjectPropertiesViewModel viewModel;
-    [Import("LocalizationManager")]
+    [Import("LocalizationService")]
     public LocalizationService LocalizationManager
     {
         get;

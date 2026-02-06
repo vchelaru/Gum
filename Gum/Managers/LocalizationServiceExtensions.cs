@@ -1,4 +1,5 @@
 using CsvLibrary;
+using Gum.Localization;
 using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
@@ -17,7 +18,7 @@ public static class LocalizationServiceExtensions
     /// <param name="manager">The LocalizationManager instance.</param>
     /// <param name="fileName">Path to the CSV file.</param>
     /// <param name="delimiter">The delimiter character used in the CSV file.</param>
-    public static void AddDatabaseFromCsv(this LocalizationService manager, string fileName, char delimiter)
+    public static void AddDatabaseFromCsv(this ILocalizationService manager, string fileName, char delimiter)
     {
         RuntimeCsvRepresentation rcr;
 
