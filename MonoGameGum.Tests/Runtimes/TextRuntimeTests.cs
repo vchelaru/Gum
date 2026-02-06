@@ -2,7 +2,7 @@
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.GueDeriving;
-using MonoGameGum.Localization;
+using Gum.Localization;
 using Moq;
 using RenderingLibrary.Graphics;
 using Shouldly;
