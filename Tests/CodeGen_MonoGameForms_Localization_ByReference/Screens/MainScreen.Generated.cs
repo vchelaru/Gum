@@ -59,6 +59,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
     public void ApplyLocalization()
     {
+        this.LabelInstance.Text = GumService.Default.LocalizationService.Translate("T_Greeting");
     }
     partial void CustomInitialize();
 }

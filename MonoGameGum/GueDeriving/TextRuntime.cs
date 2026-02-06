@@ -192,10 +192,10 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
+#if RAYLIB || XNALIKE
     /// <summary>
     /// A multiplier used when rendering the text. The default value is 1.0.
     /// </summary>
-#if RAYLIB || XNALIKE
     /// <remarks>
     /// Setting this value to a value other than 1 scales the text accordingly. This is
     /// a scalue value applied to the existing font, so a value larger than 1 can result
@@ -204,6 +204,10 @@ public class TextRuntime : InteractiveGue
     /// Since this value does not affect the underlying Font, it can be changed without
     /// requiring a dedicated font asset.
     /// </remarks>
+#else
+    /// <summary>
+    /// A multiplier used when rendering the text. The default value is 1.0.
+    /// </summary>
 #endif
     public float FontScale
     {

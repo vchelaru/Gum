@@ -5102,7 +5102,7 @@ public class CodeGenerator
         return toReturn;
     }
     public static string StringIdPrefix = "T_";
-    public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
+    public static string FormattedLocalizationCode = "GumService.Default.LocalizationService.Translate(\"{0}\")";
 
     private void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder)
     {

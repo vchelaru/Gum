@@ -1661,8 +1661,8 @@ public class DeviceManager : IGraphicsDeviceService
 
     public GraphicsDevice GraphicsDevice { get; }
 
-    public event EventHandler<EventArgs> DeviceCreated;
-    public event EventHandler<EventArgs> DeviceDisposing;
+    public event EventHandler<EventArgs>? DeviceCreated;
+    public event EventHandler<EventArgs>? DeviceDisposing;
 
     private EventHandler<EventArgs> deviceReset;
     event EventHandler<EventArgs> IGraphicsDeviceService.DeviceReset
