@@ -286,6 +286,7 @@
   * [File Loading](code/files-and-fonts/file-loading.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
   * [Content Using Embedded Resources](code/files-and-fonts/content-using-embedded-resources.md)
+* [Localization](code/localization.md)
 * [Binding and MVVM](code/binding-viewmodels/README.md)
   * [Tutorial - Settings Screen](code/binding-viewmodels/tutorial-settings-screen.md)
   * [Tutorial - Task Screen](code/binding-viewmodels/tutorial-task-screen.md)

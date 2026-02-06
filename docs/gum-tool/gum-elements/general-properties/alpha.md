@@ -18,10 +18,10 @@ A parent can affect its children's transparency if the parent is a container wit
 
 <figure><img src="../../../.gitbook/assets/11_05 30 25.gif" alt=""><figcaption><p>Entire Container Alpha makes all children transparent</p></figcaption></figure>
 
-Note that by setting Is Render Target to true, the entire container's Alpha can be adjusted rather rather than the alpha value cascading to each individual child.  This Alpha value is used to control transparency _after_ all children have been drawn. We can see the difference between a partially-transparent Container and each child individually being made partially transparent by overlapping two children ColoredRectangles.
+Note that by setting Is Render Target to true, the entire container's Alpha can be adjusted rather rather than the alpha value cascading to each individual child. This Alpha value is used to control transparency _after_ all children have been drawn. We can see the difference between a partially-transparent Container and each child individually being made partially transparent by overlapping two children ColoredRectangles.
 
 The rectangles on the left each have an `Alpha` value of `255`. These rectangles are in a Container `Is Render Target` set to true and an `Alpha` set to `128`.
 
 The rectangles on the right each have an `Alpha` of `128`, so the red rectangle is visible behind the blue rectangle.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Container Alpha on the left, individual Alpha on the right</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Container Alpha on the left, individual Alpha on the right</p></figcaption></figure>
