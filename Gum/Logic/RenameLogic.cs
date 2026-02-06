@@ -17,6 +17,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using DialogResult = System.Windows.Forms.DialogResult;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Logic;
 
@@ -499,7 +500,7 @@ public class RenameLogic : IRenameLogic
                 var renamedDefaultChildContainer = false;
                 foreach (var state in _selectedState.SelectedElement.AllStates)
                 {
-                    var variable = state.Variables.FirstOrDefault(item => item.Name == nameof(ComponentSave.DefaultChildContainer));
+                    var variable = state.Variables.FirstOrDefault(item => item.Name == "DefaultChildContainer");
 
                     if (variable?.Value as string != null)
                     {

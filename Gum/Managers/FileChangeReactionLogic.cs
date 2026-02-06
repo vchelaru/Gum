@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;

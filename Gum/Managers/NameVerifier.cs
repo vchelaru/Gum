@@ -183,7 +183,7 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public bool IsCategoryNameValid(string name, IStateContainer categoryContainer, out string whyNotValid)
+    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string whyNotValid)
     {
         IsNameValidCommon(name, out whyNotValid, out _);
 

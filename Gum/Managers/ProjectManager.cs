@@ -9,6 +9,7 @@ using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Settings;

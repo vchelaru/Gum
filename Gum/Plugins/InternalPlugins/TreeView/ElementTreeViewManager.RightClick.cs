@@ -18,6 +18,7 @@ using Gum.Dialogs;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Plugins.ImportPlugin.ViewModel;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
 

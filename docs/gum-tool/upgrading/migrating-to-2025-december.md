@@ -4,6 +4,14 @@
 
 This page discusses breaking changes and other considerations when migrating from `2025 November` to `2025 December` .
 
+## Upgrading Gum Tool
+
+To upgrade the Gum tool:
+
+1. Download Gum.zip from the release on Github: [https://github.com/vchelaru/Gum/releases/tag/Release\_December\_28\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_December_28_2025)
+2. Delete the old tool from your machine
+3. Unzip the gum tool to the same location as to not break any file associations
+
 ## Upgrading Runtime
 
 Upgrade your Gum NuGet packages to version 2025.12.28.1. For more information, see the NuGet packages for your particular platform:

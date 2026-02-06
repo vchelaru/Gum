@@ -2,7 +2,9 @@
 
 This release is still being worked on, planned changes are listed here.
 
+## Upgrading Gum Tool
 
+The February release of the Gum tool is not yet available, but you can build it from source if you would like access now. For more information, see the [Running from Source](../setup/running-from-source.md) page.
 
 ## \[Breaking] Cursor Visual Interaction Uses Only HasEvents
 
