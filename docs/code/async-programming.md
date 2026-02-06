@@ -12,7 +12,7 @@ When a method makes an async call, its continuation is not guaranteed to be on t
 
 ```csharp
 // Assume this is a click handler for a button:
-void HandleButtonClicked(object sender, EventArgs args)
+async void HandleButtonClicked(object sender, EventArgs args)
 {
   AnnounceButtonClicked();
   await Task.Delay(1000);
