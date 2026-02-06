@@ -61,21 +61,21 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     GraphicalUiElementManager gueManager;
-    private LocalizationService _localizationManager;
+    private LocalizationService _localizationService;
     private readonly PluginManager _pluginManager;
 
     public WireframeObjectManager(FontManager fontManager,
         ISelectedState selectedState,
         IDialogService dialogService,
         IGuiCommands guiCommands,
-        LocalizationService localizationManager, 
+        LocalizationService localizationService, 
         PluginManager pluginManager)
     {
         _fontManager = fontManager;
         _selectedState = selectedState;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
-        _localizationManager = localizationManager;
+        _localizationService = localizationService;
         _pluginManager = pluginManager;
 
         gueManager = new GraphicalUiElementManager();
@@ -218,7 +218,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
 
 
-                    if(_localizationManager.HasDatabase)
+                    if(_localizationService.HasDatabase)
                     {
                         ApplyLocalization();
                     }
@@ -283,9 +283,9 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     public void ApplyLocalization()
     {
-        if(_localizationManager.HasDatabase == false)
+        if(_localizationService.HasDatabase == false)
         {
-            throw new InvalidOperationException("Cannot apply localization - the LocalizationManager doesn't have a localization database loaded");
+            throw new InvalidOperationException("Cannot apply localization - the LocalizationService doesn't have a localization database loaded");
         }
 
         var texts = GetTextsRecurisve(RootGue);
@@ -322,7 +322,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             }
 
             // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
-            gue.SetProperty("Text", _localizationManager.Translate(stringId));
+            gue.SetProperty("Text", _localizationService.Translate(stringId));
         }
     }
 

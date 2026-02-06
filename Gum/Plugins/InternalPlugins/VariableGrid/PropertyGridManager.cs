@@ -35,7 +35,7 @@ public partial class PropertyGridManager
     private readonly ObjectFinder _objectFinder;
     private readonly SetVariableLogic _setVariableLogic;
     private readonly IDialogService _dialogService;
-    private readonly LocalizationService _localizationManager;
+    private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
     private readonly WireframeObjectManager _wireframeObjectManager;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
@@ -115,7 +115,7 @@ public partial class PropertyGridManager
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationService>();
+        _localizationService = Locator.GetRequiredService<LocalizationService>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
     }
@@ -724,7 +724,7 @@ public partial class PropertyGridManager
 
                     var shouldShowLocalizationUi = (member.CustomOptions?.Count > 0) == false &&
                         baseVariable?.Name == "Text" &&
-                        _localizationManager.HasDatabase;
+                        _localizationService.HasDatabase;
 
                     // See StandardElementsManager for Text on explanation why this is commented out.
                     //if(shouldShowLocalizationUi)
@@ -743,7 +743,7 @@ public partial class PropertyGridManager
                         // give it options!
                         member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
                         member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
-                        member.CustomOptions = _localizationManager.Keys.OrderBy(item => item).ToArray();
+                        member.CustomOptions = _localizationService.Keys.OrderBy(item => item).ToArray();
                     }
                     else if(baseVariable?.Name == "Text")
                     {

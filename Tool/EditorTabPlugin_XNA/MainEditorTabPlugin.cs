@@ -110,7 +110,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
     readonly ScrollbarService _scrollbarService;
     private readonly IGuiCommands _guiCommands;
-    private readonly LocalizationService _localizationManager;
+    private readonly LocalizationService _localizationService;
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
     private readonly IElementCommands _elementCommands;
@@ -149,7 +149,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         
         _scrollbarService = new ScrollbarService();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _localizationManager = Locator.GetRequiredService<LocalizationService>();
+        _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
             Locator.GetRequiredService<WireframeObjectManager>(),
             Locator.GetRequiredService<ReorderLogic>());
@@ -606,7 +606,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
                     handledByDirectSet = !disposedFile;
                 }
-                if (unqualifiedMember == "Text" && _localizationManager.HasDatabase)
+                if (unqualifiedMember == "Text" && _localizationService.HasDatabase)
                 {
                     _wireframeObjectManager.ApplyLocalization(gue, value as string);
                 }

@@ -7,18 +7,17 @@ using ToolsUtilities;
 namespace Gum.Managers;
 
 /// <summary>
-/// Extension methods for LocalizationManager that handle CSV file loading.
-/// This keeps CSV-specific dependencies separate from the core LocalizationManager.
+/// Extension methods for LocalizationService.
 /// </summary>
 public static class LocalizationServiceExtensions
 {
     /// <summary>
     /// Loads a localization database from a CSV file.
     /// </summary>
-    /// <param name="manager">The LocalizationManager instance.</param>
+    /// <param name="service">The ILocalizationService instance.</param>
     /// <param name="fileName">Path to the CSV file.</param>
     /// <param name="delimiter">The delimiter character used in the CSV file.</param>
-    public static void AddDatabaseFromCsv(this ILocalizationService manager, string fileName, char delimiter)
+    public static void AddDatabaseFromCsv(this ILocalizationService service, string fileName, char delimiter)
     {
         RuntimeCsvRepresentation rcr;
 
@@ -48,6 +47,6 @@ public static class LocalizationServiceExtensions
             headerList.Add(header.Name);
         }
 
-        manager.AddDatabase(entryDictionary, headerList);
+        service.AddDatabase(entryDictionary, headerList);
     }
 }

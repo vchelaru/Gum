@@ -34,7 +34,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
     ProjectPropertiesViewModel viewModel;
     [Import("LocalizationService")]
-    public LocalizationService LocalizationManager
+    public LocalizationService LocalizationService
     {
         get;
         set;
@@ -159,7 +159,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 }
                 break;
             case nameof(viewModel.LanguageIndex):
-                LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
+                LocalizationService.CurrentLanguage = viewModel.LanguageIndex;
                 break;
             case nameof(viewModel.ShowLocalization):
                 shouldSaveAndRefresh = true;

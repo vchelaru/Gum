@@ -110,7 +110,7 @@ public class PluginManager : IPluginManager
     }
 
     [Export("LocalizationService")]
-    public LocalizationService LocalizationManager => Locator.GetRequiredService<LocalizationService>();
+    public LocalizationService LocalizationService => Locator.GetRequiredService<LocalizationService>();
 
 
     internal static List<PluginContainer> AllPluginContainers
