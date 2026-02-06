@@ -22,6 +22,7 @@ using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Gum.Localization;
 namespace MonoGameGum;
 #elif RAYLIB
 using Gum.GueDeriving;
@@ -266,6 +267,18 @@ public class GumService
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
             gumProject = GumProjectSave.Load(gumProjectFile);
+
+            if(!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            {
+                var fileName = FileManager.GetDirectory(gumProject.FullFileName) +
+                    gumProject.LocalizationFile;
+
+                using var stream = FileManager.GetStreamForFile(fileName);
+
+                CustomSetPropertyOnRenderable.LocalizationService?.AddCsvDatabase(stream);
+
+            }
+
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
@@ -327,7 +340,6 @@ public class GumService
     }
 #endif
     #endregion
-
 
     #region Update
 
