@@ -22,6 +22,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using System.Collections;
 using Gum.Commands;
+using Gum.Reflection;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -43,16 +44,21 @@ public class ElementSaveDisplayer
     private readonly SubtextLogic _subtextLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
+    private readonly TypeManager _typeManager;
     private readonly VariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
 
     #endregion
 
-    public ElementSaveDisplayer(SubtextLogic subtextLogic)
+    public ElementSaveDisplayer(SubtextLogic subtextLogic,
+        TypeManager typeManager,
+        ISelectedState selectedState,
+        IUndoManager undoManager)
     {
         _subtextLogic = subtextLogic;
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _selectedState = selectedState;
+        _undoManager = undoManager;;
+        _typeManager = typeManager;
         _variableSaveLogic = new VariableSaveLogic();
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
     }
@@ -102,12 +108,15 @@ public class ElementSaveDisplayer
             mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
         }
 
-        if (effectiveElementSave is ComponentSave && instanceSave == null)
+        var shouldShowChildContainer = effectiveElementSave is ComponentSave && instanceSave == null;
+        if (shouldShowChildContainer)
         {
             var defaultChildContainerProperty = mHelper.AddProperty(pdc, "DefaultChildContainer", typeof(string));
             defaultChildContainerProperty.IsReadOnly = !isDefault;
             defaultChildContainerProperty.TypeConverter = new AvailableInstancesConverter();
         }
+        // we can't remove it here, because it might be added as a regular variable below...
+
 
         var variableListName = "VariableReferences";
         if (instanceSave != null)
@@ -176,8 +185,12 @@ public class ElementSaveDisplayer
         }
 
 
-
-
+        // now that variables have been added we can remove the default child container:
+        if(!shouldShowChildContainer)
+        {
+            string variableName = "DefaultChildContainer";
+            pdc.RemoveAll(item => item.Name == variableName);
+        }
 
         #region Loop through all variables
 
@@ -801,13 +814,13 @@ public class ElementSaveDisplayer
             
             if(!string.IsNullOrEmpty(defaultVariable.Type))
             {
-                type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
+                type = _typeManager.GetTypeFromString(defaultVariable.Type);
             }
             else
             {
                 var rootVariable = ObjectFinder.Self.GetRootVariable(defaultVariable.Name, elementSave);
 
-                type = Gum.Reflection.TypeManager.Self.GetTypeFromString(rootVariable.Type);
+                type = _typeManager.GetTypeFromString(rootVariable.Type);
             }
 
                 string name = defaultVariable.Name;

@@ -89,8 +89,8 @@ public class VariableInCategoryPropagationLogicTests : BaseTestClass
             element,
             element.Categories[0]);
 
-        element.Categories[0].States[0].GetVariableSave("Instance1.X").Value.ShouldBe(0);
-        element.Categories[0].States[1].GetVariableSave("Instance1.X").Value.ShouldBe(0);
+        element.Categories[0].States[0].GetVariableSave("Instance1.X")!.Value.ShouldBe(0);
+        element.Categories[0].States[1].GetVariableSave("Instance1.X")!.Value.ShouldBe(0);
 
     }
 
@@ -143,8 +143,8 @@ public class VariableInCategoryPropagationLogicTests : BaseTestClass
             element,
             element.Categories[0]);
 
-        element.Categories[0].States[0].GetVariableSave("Instance1.X").Value.ShouldBe(0);
-        element.Categories[0].States[1].GetVariableSave("Instance1.X").Value.ShouldBe(0);
+        element.Categories[0].States[0].GetVariableSave("Instance1.X")!.Value.ShouldBe(0);
+        element.Categories[0].States[1].GetVariableSave("Instance1.X")!.Value.ShouldBe(0);
 
     }
 }

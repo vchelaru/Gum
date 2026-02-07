@@ -196,7 +196,7 @@ public class UndoManagerTests : BaseTestClass
 
             _undoManager.RecordState();
 
-            var xVariable = component.DefaultState.GetVariableSave("X");
+            var xVariable = component.DefaultState.GetVariableSave("X")!;
             xVariable.ExposedAsName = "ExposedX";
 
             _undoManager.RecordUndo();
