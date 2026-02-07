@@ -139,7 +139,15 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     private void ThrowIfReadOnly()
     {
         if (IsReadOnly)
+        {
+            if(this == _empty)
+            {
+                throw new InvalidOperationException(
+                    "Cannot modify the empty collection. " +
+                    "If this is in a Visual, did you create a proper Visual which has a renderable, such as ContainerRuntime?");
+            }
             throw new NotSupportedException("Cannot modify a read-only collection.");
+        }
     }
 
     /// <summary>
