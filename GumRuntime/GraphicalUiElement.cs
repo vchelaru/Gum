@@ -6234,6 +6234,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void AddChild(GraphicalUiElement child) => this.Children.Add(child);
 
+    public void RemoveChild(GraphicalUiElement child) => this.Children.Remove(child);
+
     /// <summary>
     /// Searches recursively for and returns a GraphicalUiElement in this instance by name. Returns null
     /// if not found.

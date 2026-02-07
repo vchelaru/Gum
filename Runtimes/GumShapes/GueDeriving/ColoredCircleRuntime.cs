@@ -14,7 +14,7 @@ public class ColoredCircleRuntime : AposShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
 
-    Circle mContainedCircle;
+    Circle mContainedCircle = default!;
     Circle ContainedCircle
     {
         get
@@ -69,7 +69,10 @@ public class ColoredCircleRuntime : AposShapeRuntime
         var toReturn = (ColoredCircleRuntime)base.Clone();
 
         // Should this call SetContainedObject?
-        toReturn.mContainedCircle = null;
+        if(this.mContainedCircle != null)
+        {
+            SetContainedObject(new Circle());
+        }
 
         return toReturn;
     }

@@ -16,49 +16,8 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class FrameworkElementTests : BaseTestClass
 {
-    #region Loaded
 
-    [Fact]
-    public void Loaded_ShouldBeCalled_WhenAddedToRoot()
-    {
-        Button button = new ();
-        bool loadedCalled = false;
-        button.Loaded += (_,_) => loadedCalled = true;
-        button.AddToRoot();
-        loadedCalled.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Loaded_ShouldBeCalled_WhenParentIsAddedToRoot()
-    {
-        Button button = new();
-        bool loadedCalled = false;
-        button.Loaded += (_, _) => loadedCalled = true;
-        Panel parent = new ();
-        parent.AddChild(button);
-        parent.AddToRoot();
-        loadedCalled.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Loaded_ShouldBeCalledMultipleTimes_IfAddedMultipleTimes()
-    {
-        Button button = new();
-        int loadCallCount = 0;
-        button.Loaded += (_, _) => loadCallCount++;
-        Panel parent = new();
-        parent.AddToRoot();
-        parent.AddChild(button);
-
-        button.Visual.Parent = null;
-        parent.AddChild(button);
-
-        loadCallCount.ShouldBe(2);
-
-    }
-
-    #endregion
-
+    #region AddToRoot
     [Fact]
     public void AddToRoot_ShouldAddToRootCorrectly()
     {
@@ -68,6 +27,8 @@ public class FrameworkElementTests : BaseTestClass
         child.Visual.Parent.ShouldBe(GumService.Default.Root);
         GumService.Default.Root.Children.ShouldContain(child.Visual);
     }
+
+    #endregion
 
     [Fact]
     public void CursorOver_ShouldBeThis_IfHasEvents()
@@ -215,6 +176,49 @@ public class FrameworkElementTests : BaseTestClass
 
     #endregion
 
+    #region Loaded
+
+    [Fact]
+    public void Loaded_ShouldBeCalled_WhenAddedToRoot()
+    {
+        Button button = new ();
+        bool loadedCalled = false;
+        button.Loaded += (_,_) => loadedCalled = true;
+        button.AddToRoot();
+        loadedCalled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Loaded_ShouldBeCalled_WhenParentIsAddedToRoot()
+    {
+        Button button = new();
+        bool loadedCalled = false;
+        button.Loaded += (_, _) => loadedCalled = true;
+        Panel parent = new ();
+        parent.AddChild(button);
+        parent.AddToRoot();
+        loadedCalled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Loaded_ShouldBeCalledMultipleTimes_IfAddedMultipleTimes()
+    {
+        Button button = new();
+        int loadCallCount = 0;
+        button.Loaded += (_, _) => loadCallCount++;
+        Panel parent = new();
+        parent.AddToRoot();
+        parent.AddChild(button);
+
+        button.Visual.Parent = null;
+        parent.AddChild(button);
+
+        loadCallCount.ShouldBe(2);
+
+    }
+
+    #endregion
+
     #region OnFocusUpdate
 
     [Fact]
@@ -299,6 +303,21 @@ public class FrameworkElementTests : BaseTestClass
         button.Visual.YUnits.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
     }
 
+    #region RemoveChild
+
+    [Fact]
+    public void RemoveChild_ShouldRemoveFromParentCorrectly()
+    {
+        Panel parent = new();
+        parent.AddToRoot();
+        Button child = new();
+        parent.AddChild(child);
+        parent.RemoveChild(child);
+        child.Visual.Parent.ShouldBeNull();
+        parent.Visual.Children.ShouldNotContain(child.Visual);
+    }
+
+    #endregion
 
     [Fact]
     public void RemoveFromRoot_ShouldRemoveFromRootCorrectly()

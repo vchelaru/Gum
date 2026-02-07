@@ -502,6 +502,18 @@ public class ScrollViewer :
         }
     }
 
+    public override void RemoveChild(FrameworkElement child)
+    {
+        if (InnerPanel != null)
+        {
+            this.InnerPanel.Children.Remove(child.Visual);
+        }
+        else
+        {
+            base.RemoveChild(child);
+        }
+    }
+
     public override void AddChild(GraphicalUiElement child)
     {
         if (InnerPanel != null)
@@ -511,6 +523,18 @@ public class ScrollViewer :
         else
         {
             base.AddChild(child);
+        }
+    }
+
+    public override void RemoveChild(GraphicalUiElement child)
+    {
+        if (InnerPanel != null)
+        {
+            this.InnerPanel.Children.Remove(child);
+        }
+        else
+        {
+            base.RemoveChild(child);
         }
     }
 

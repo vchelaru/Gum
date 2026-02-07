@@ -12,7 +12,7 @@ public class RoundedRectangleRuntime : AposShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedRectangle;
 
-    RoundedRectangle _containedRectangle;
+    RoundedRectangle _containedRectangle = default!;
     RoundedRectangle ContainedRectangle
     {
         get
