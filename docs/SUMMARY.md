@@ -291,6 +291,7 @@
   * [Tutorial - Settings Screen](code/binding-viewmodels/tutorial-settings-screen.md)
   * [Tutorial - Task Screen](code/binding-viewmodels/tutorial-task-screen.md)
   * [Items Binding (ListBox, ComboBox, ItemsControl)](code/binding-viewmodels/items-binding-listbox-combobox-itemscontrol.md)
+  * [Advanced Binding Options](code/binding-viewmodels/advanced-binding-options.md)
   * [View Model Property Dependency](code/binding-viewmodels/view-model-property-dependency.md)
   * [Binding Visual Properties](code/binding-viewmodels/binding-deep-dive.md)
   * [Binding Custom View Properties](code/binding-viewmodels/binding-custom-view-properties.md)
