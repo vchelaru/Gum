@@ -540,15 +540,14 @@ public class SkiaGumCanvasView : global::SkiaSharp.Views.Maui.Controls.SKCanvasV
         }
     }
 
-    public void AddChild(BindableGue toAdd)
-    {
-        Children.Add(toAdd);
+    public void AddChild(BindableGue toAdd) => Children.Add(toAdd);
 
         //if (toAdd.ClickedAsync != null || toAdd.PushedAsync != null || toAdd.DragAsync != null)
         //{
         //    this.EnableTouchEvents = true;
         //}
-    }
+    public void RemoveChild(BindableGue toRemove) => Children.Remove(toRemove);
+
 
     protected override void OnBindingContextChanged()
     {

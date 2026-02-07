@@ -99,6 +99,11 @@ public static class FrameworkElementExt
     {
         element.Children.Add(child.Visual);
     }
+
+    public static void RemoveChild(this GraphicalUiElement element, FrameworkElement child)
+    {
+        element.Children.Remove(child.Visual);
+    }
 #endif
 
 }

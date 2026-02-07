@@ -520,10 +520,12 @@ public class Window : Gum.Forms.Controls.FrameworkElement
         this.InnerPanel.Children.Add(child.Visual);
     }
 
-    public override void AddChild(GraphicalUiElement child)
-    {
+    public override void RemoveChild(FrameworkElement child) =>
+        this.InnerPanel.Children.Remove(child.Visual);
+
+    public override void AddChild(GraphicalUiElement child) =>
         this.InnerPanel.Children.Add(child);
-    }
 
-
+    public override void RemoveChild(GraphicalUiElement child) =>
+        this.InnerPanel.Children.Remove(child);
 }
