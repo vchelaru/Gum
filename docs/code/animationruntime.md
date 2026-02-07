@@ -18,7 +18,7 @@ Animations defined in the Gum tool can be loaded at runtime. To load and play an
 2. Obtain an `AnimationRuntime` instance from your `GraphicalUiElement` . This could be a screen or component.
 3. Call `PlayAnimation` to begin the animation.
 
-Animations can be played on an entire screen, entire component, or an individual instance within a screen or component.&#x20;
+Animations can be played on an entire screen, entire component, or an individual instance within a screen or component.
 
 For this example, the project has a screen called AnimatedScreen which contains an animation named SlideOnAndOff.
 
@@ -70,8 +70,8 @@ public class Game1 : Game
 </strong><strong>        {
 </strong><strong>            var popup = _animatedScreen
 </strong><strong>                .PleaseWaitPopupInstance.Visual;
-</strong><strong>
-</strong><strong>            if(popup.Visible)
+</strong>
+<strong>            if(popup.Visible)
 </strong><strong>            {
 </strong><strong>                popup.StopAnimation();
 </strong><strong>                popup.Visible = false;
@@ -138,8 +138,8 @@ public class Game1 : Game
 </strong><strong>        {
 </strong><strong>            var popup = _animatedScreen
 </strong><strong>                .GetGraphicalUiElementByName("PleaseWaitPopupInstance");
-</strong><strong>
-</strong><strong>            if(popup.Visible)
+</strong>
+<strong>            if(popup.Visible)
 </strong><strong>            {
 </strong><strong>                popup.StopAnimation();
 </strong><strong>                popup.Visible = false;
@@ -180,16 +180,21 @@ Animations can be defined and executed in a code-only environment. The steps for
 ```csharp
 protected override void Initialize()
 {
-    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
+    GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.Newest);
 
     var button = new Button();
     button.AddToRoot();
     button.Anchor(Anchor.Center);
-    var buttonVisual = (ButtonVisual)button.Visual;
+    var buttonVisual = button.Visual;
     buttonVisual.Animations = new List<AnimationRuntime>();
+
+    StateSaveCategory category = new StateSaveCategory();
+    category.Name = "Size";
+    button.Visual.AddCategory(category);
 
     // we will grow/shrink the contained background in response to hovering:
     var largeState = new StateSave();
+    category.States.Add(largeState);
     largeState.Name = "Large";
     // can't use Apply since we need values to be interpolated:
     // buttonVisual background is already
@@ -198,7 +203,9 @@ protected override void Initialize()
     largeState.SetValue("Background.Width", 20f);
     largeState.SetValue("Background.Height", 20f);
 
+
     var regularState = new StateSave();
+    category.States.Add(regularState);
     regularState.Name = "Regular";
     regularState.SetValue("Background.Width", 0f);
     regularState.SetValue("Background.Height", 0f);
@@ -207,17 +214,21 @@ protected override void Initialize()
     buttonVisual.Animations.Add(growAnimation);
     growAnimation.Name = "Grow";
 
+
+
     var firstGrowKeyframe = new KeyframeRuntime();
     growAnimation.Keyframes.Add(firstGrowKeyframe);
-    firstGrowKeyframe.CachedCumulativeState = regularState;
+    firstGrowKeyframe.StateName = category.Name + "/" + regularState.Name;
     firstGrowKeyframe.Time = 0;
     firstGrowKeyframe.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Elastic;
     firstGrowKeyframe.Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
 
+
     var secondGrowKeyframe = new KeyframeRuntime();
     growAnimation.Keyframes.Add(secondGrowKeyframe);
-    secondGrowKeyframe.CachedCumulativeState = largeState;
+    secondGrowKeyframe.StateName = category.Name + "/" + largeState.Name;
     secondGrowKeyframe.Time = 1;
+
 
     var shrinkAnimation = new AnimationRuntime();
     buttonVisual.Animations.Add(shrinkAnimation);
@@ -225,15 +236,16 @@ protected override void Initialize()
 
     var firstShrinkKeyframe = new KeyframeRuntime();
     shrinkAnimation.Keyframes.Add(firstShrinkKeyframe);
-    firstShrinkKeyframe.CachedCumulativeState = largeState;
+    firstShrinkKeyframe.StateName = category.Name + "/" + largeState.Name;
     firstShrinkKeyframe.Time = 0;
     firstShrinkKeyframe.InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Elastic;
     firstShrinkKeyframe.Easing = FlatRedBall.Glue.StateInterpolation.Easing.Out;
 
     var secondShrinkKeyframe = new KeyframeRuntime();
     shrinkAnimation.Keyframes.Add(secondShrinkKeyframe);
-    secondShrinkKeyframe.CachedCumulativeState = regularState;
+    secondShrinkKeyframe.StateName = category.Name + "/" + regularState.Name;
     secondShrinkKeyframe.Time = 1;
+
 
     buttonVisual.RollOn += (_,_) =>
     {
@@ -247,7 +259,6 @@ protected override void Initialize()
 
     base.Initialize();
 }
-
 ```
 
 <figure><img src="../.gitbook/assets/06_11 02 23.gif" alt=""><figcaption><p>Button reacting to hover</p></figcaption></figure>
