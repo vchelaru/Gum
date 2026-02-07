@@ -77,6 +77,7 @@ public class LocalizationService : ILocalizationService
     /// <returns>The translated string, or the original string with "(loc)" suffix if not found.</returns>
     public string TranslateForLanguage(string stringID, int language)
     {
+        if (this.mStringDatabase.Count == 0) return stringID;
 
         if (stringID == null)
         {
