@@ -112,12 +112,6 @@ public class DragDropManager
 
     #region Drag+drop File (from windows explorer)
 
-
-
-
-
-
-
     public IEnumerable<string> ValidTextureExtensions
     {
         get
@@ -305,7 +299,7 @@ public class DragDropManager
             }
 #endif
 
-            string name = GetUniqueNameForNewInstance(draggedAsElementSave, target);
+            string name = _elementCommands.GetUniqueNameForNewInstance(draggedAsElementSave, target);
 
             // First we want to re-select the target so that it is highlighted in the tree view and not
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
@@ -360,21 +354,6 @@ public class DragDropManager
         }
 
         return errorMessage;
-    }
-
-    private string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave element)
-    {
-#if DEBUG
-        if (elementSaveForNewInstance == null)
-        {
-            throw new ArgumentNullException("elementSave");
-        }
-#endif
-        // remove the path - we dont want folders to be part of the name
-        string name = FileManager.RemovePath( elementSaveForNewInstance.Name ) + "Instance";
-        IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
-
-        return StringFunctions.MakeStringUnique(name, existingNames);
     }
 
 

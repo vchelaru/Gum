@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Gum.Commands;
+using Gum.Converters;
 using Gum.DataTypes;
-using Gum.Managers;
-using Gum.DataTypes.Variables;
-using Gum.Plugins;
-using Gum.ToolStates;
-using Gum.PropertyGridHelpers;
 using Gum.DataTypes.Behaviors;
-using System.ComponentModel;
-using Gum.Commands;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
+using Gum.Plugins;
+using Gum.PropertyGridHelpers;
+using Gum.RenderingLibrary;
+using Gum.Services;
+using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
-using Gum.Converters;
-using Gum.RenderingLibrary;
 using RenderingLibrary;
-using Gum.Services;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using ToolsUtilities;
 
 namespace Gum.ToolCommands;
 
@@ -111,7 +112,20 @@ public class ElementCommands : IElementCommands
         return instanceSave;
     }
 
+    public string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave containerForNewInstance)
+    {
+#if DEBUG
+        if (elementSaveForNewInstance == null)
+        {
+            throw new ArgumentNullException("elementSave");
+        }
+#endif
+        // remove the path - we dont want folders to be part of the name
+        string name = FileManager.RemovePath(elementSaveForNewInstance.Name) + "Instance";
+        IEnumerable<string> existingNames = containerForNewInstance.Instances.Select(i => i.Name);
 
+        return StringFunctions.MakeStringUnique(name, existingNames);
+    }
 
     #endregion
 

@@ -85,13 +85,7 @@ public class StandardElementsManager
         }
     }
 
-    public string DefaultType
-    {
-        get
-        {
-            return "Container";
-        }
-    }
+    public string DefaultType => "Container";
 
     public Dictionary<string, StateSave> DefaultStates => mDefaults;
 
