@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Gum\CodeOutputPlugin\CodeOutputPlugin.csproj" />
     <ProjectReference Include="..\..\..\Gum\Gum.csproj" />
   </ItemGroup>
 

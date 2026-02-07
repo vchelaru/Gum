@@ -96,7 +96,11 @@ public class MainCodeOutputPlugin : PluginBase
             this, 
             (_, message) => HandleRequestCodeGeneration(message));
 
-        viewModel = new ViewModels.CodeWindowViewModel();
+        viewModel = new ViewModels.CodeWindowViewModel(
+            Locator.GetRequiredService<ProjectState>(),
+            Locator.GetRequiredService<IFileCommands>(),
+            Locator.GetRequiredService<IDialogService>(),
+            Locator.GetRequiredService<IGuiCommands>());
     }
 
     private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)

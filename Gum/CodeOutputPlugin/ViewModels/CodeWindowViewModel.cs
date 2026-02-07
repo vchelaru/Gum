@@ -37,8 +37,12 @@ public enum WhichElementsToGenerate
 
 public class CodeWindowViewModel : ViewModel
 {
+    #region Fields/Properties
+
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly ProjectState _projectState;
 
     public bool CanGenerateCode
     {
@@ -167,15 +171,22 @@ public class CodeWindowViewModel : ViewModel
         set => Set(value);
     }
 
-    public CodeWindowViewModel()
+    #endregion
+
+    public CodeWindowViewModel(ProjectState projectState,
+        IFileCommands fileCommands,
+        IDialogService dialogService,
+        IGuiCommands guiCommands)
     {
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _projectState = projectState;
     }
 
     public FilePath? GetCsprojDirectoryAboveGumx()
     {
-        FilePath gumDirectory = GumState.Self.ProjectState.ProjectDirectory;
+        FilePath gumDirectory = _projectState.ProjectDirectory;
 
         return GetCsprojDirectoryAboveGumx(gumDirectory);
     }
@@ -187,7 +198,7 @@ public class CodeWindowViewModel : ViewModel
             return null;
         }
 
-        var files = System.IO.Directory.GetFiles(filePath.FullPath)
+        var files = _fileCommands.GetFiles(filePath.FullPath)
             .Select(item => new FilePath(item));
 
         if (files.Any(item => item.Extension == "csproj"))
@@ -221,9 +232,9 @@ public class CodeWindowViewModel : ViewModel
 
         if (shouldContinue)
         {
-
-
-            codeOutputProjectSettings.CodeProjectRoot = csprojLocation!.FullPath;
+            var gumDirectory = _projectState.ProjectDirectory;
+            var relativePath = FileManager.MakeRelative(csprojLocation!.FullPath, gumDirectory);
+            codeOutputProjectSettings.CodeProjectRoot = relativePath;
 
             // we're going to load the project, so let's set it to find by name:
             codeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
@@ -232,13 +243,13 @@ public class CodeWindowViewModel : ViewModel
             {
                 var csprojDirectory = codeOutputProjectSettings.CodeProjectRoot;
 
-                var csproj = System.IO.Directory.GetFiles(csprojDirectory, "*.csproj", System.IO.SearchOption.TopDirectoryOnly)
+                var csproj = _fileCommands.GetFiles(csprojDirectory, "*.csproj", System.IO.SearchOption.TopDirectoryOnly)
                     .Select(item => new FilePath(item))
                     .FirstOrDefault();
 
                 if (csproj != null)
                 {
-                    var contents = System.IO.File.ReadAllText(csproj.FullPath);
+                    var contents = _fileCommands.ReadAllText(csproj.FullPath);
 
                     var isMonoGameBased = contents.Contains("<PackageReference Include=\"MonoGame.Framework.") ||
                         contents.Contains("<PackageReference Include=\"nkast.Xna.Framework");
