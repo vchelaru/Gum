@@ -284,6 +284,26 @@ partial void CustomInitialize()
 
 <figure><img src="../../../../.gitbook/assets/31_05 57 26.gif" alt=""><figcaption><p>ListBox reacting to SelectionChanged event</p></figcaption></figure>
 
+## Menu and MenuItem
+
+Menu is a control which is usually placed at the top of the screen It contains MenUitem instances which can perform commands when clicked, or which can contain sub-items.
+
+We can add a Menu by drag+dropping the Menu into our TitleScreen. Usually Menu instances are added directly to a screen rather than to a container such as a StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/07_05 41 23.png" alt=""><figcaption><p>Menu in Gum tool</p></figcaption></figure>
+
+Notice that the Menu is collapsed. We can add MenuItem instances to the Menu by drag+dropping a MenuItem component onto the MenuInstance.
+
+<figure><img src="../../../../.gitbook/assets/07_05 43 07.png" alt=""><figcaption><p>MenuItem in Menu</p></figcaption></figure>
+
+MenuItems expose a Header variable which can be edited. Additional MenuItem instances can be added to the Menu and they will stack.
+
+<figure><img src="../../../../.gitbook/assets/07_05 45 57.png" alt=""><figcaption><p>Menu with assigned Header value</p></figcaption></figure>
+
+Sub-items can be added by dragging MenuItems onto existing MenuItem instances.
+
+
+
 ## RadioButton
 
 RadioButton provides a way to select from a set of options. Unlike CheckBox, when one RadioButton is selected, other RadioButton instances in the group are deselected.
