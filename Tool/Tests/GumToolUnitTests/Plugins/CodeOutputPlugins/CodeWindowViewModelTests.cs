@@ -26,6 +26,7 @@ public class CodeWindowViewModelTests
 
     public CodeWindowViewModelTests()
     {
+        _mocker = new AutoMocker();
         _viewModel = _mocker.CreateInstance<CodeWindowViewModel>();
 
     }
