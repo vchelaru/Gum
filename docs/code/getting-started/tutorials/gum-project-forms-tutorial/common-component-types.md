@@ -302,6 +302,34 @@ MenuItems expose a Header variable which can be edited. Additional MenuItem inst
 
 Sub-items can be added by dragging MenuItems onto existing MenuItem instances.
 
+<figure><img src="../../../../.gitbook/assets/07_06 02 09.png" alt=""><figcaption></figcaption></figure>
+
+We can handle the Clicked event to react to clicks on MenuItem instances.
+
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+partial void CustomInitialize()
+{
+    MenuItemInstance3.Clicked += (_, _) =>
+        System.Diagnostics.Debug.WriteLine("Menu Item Clicked");
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
+```diff
+partial void CustomInitialize()
+{
++    MenuItemInstance3.Clicked += (_, _) =>
++        System.Diagnostics.Debug.WriteLine("Menu Item Clicked");
+}
+```
+{% endtab %}
+{% endtabs %}
+
+<figure><img src="../../../../.gitbook/assets/07_06 11 15.gif" alt=""><figcaption></figcaption></figure>
+
 
 
 ## RadioButton
