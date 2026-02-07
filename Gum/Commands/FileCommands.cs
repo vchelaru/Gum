@@ -53,6 +53,13 @@ public class FileCommands : IFileCommands
     public void DeleteDirectory(FilePath directory) => 
         FileManager.DeleteDirectory(directory.FullPath);
 
+    public string[] GetFiles(string path) => System.IO.Directory.GetFiles(path);
+
+    public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) =>
+        System.IO.Directory.GetFiles(path, searchPattern, searchOption);
+
+    public string ReadAllText(string path) => System.IO.File.ReadAllText(path);
+
     public void MoveDirectory(string source, string destination)
     {
         Directory.CreateDirectory(destination);

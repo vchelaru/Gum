@@ -2,6 +2,7 @@
 using Gum.DataTypes.Behaviors;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -14,6 +15,12 @@ public interface IFileCommands
     FilePath? ProjectDirectory { get; }
 
     void DeleteDirectory(FilePath filePath);
+
+    string[] GetFiles(string path);
+
+    string[] GetFiles(string path, string searchPattern, SearchOption searchOption);
+
+    string ReadAllText(string path);
 
     void MoveDirectory(string source, string destination);
 
