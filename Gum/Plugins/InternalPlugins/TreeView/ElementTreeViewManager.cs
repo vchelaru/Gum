@@ -11,6 +11,7 @@ using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -291,7 +292,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly FileLocations _fileLocations;
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
 
     public bool HasMouseOver
     {
@@ -323,7 +324,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _fileLocations = Locator.GetRequiredService<FileLocations>();
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
 

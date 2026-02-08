@@ -34,7 +34,7 @@ public partial class PropertyGridManager
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly ObjectFinder _objectFinder;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     private readonly IDialogService _dialogService;
     private readonly LocalizationService _localizationService;
     private readonly ITabManager _tabManager;
@@ -114,7 +114,7 @@ public partial class PropertyGridManager
             Locator.GetRequiredService<IUndoManager>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _objectFinder = ObjectFinder.Self;
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _localizationService = Locator.GetRequiredService<LocalizationService>();

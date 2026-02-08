@@ -20,6 +20,7 @@ using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Commands;
 using Gum.Services;
 using Gum.ToolCommands;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Wireframe;
 
@@ -30,7 +31,7 @@ public abstract class WireframeEditor
     protected HotkeyManager _hotkeyManager { get; private set; }
 
     private readonly SelectionManager _selectionManager;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     protected readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IUndoManager _undoManager;
@@ -60,7 +61,7 @@ public abstract class WireframeEditor
     {
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _selectedState = selectedState;
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _undoManager = Locator.GetRequiredService<IUndoManager>();

@@ -4,6 +4,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolStates;
@@ -41,7 +42,7 @@ public class ControlLogic
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ScrollBarLogicWpf _scrollBarLogic;
@@ -83,7 +84,7 @@ public class ControlLogic
         IUndoManager undoManager,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        SetVariableLogic setVariableLogic,
+        ISetVariableLogic setVariableLogic,
         ITabManager tabManager,
         HotkeyManager hotkeyManager,
         ScrollBarLogicWpf scrollBarLogic,

@@ -16,6 +16,7 @@ using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.ScrollBarPlugin;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
@@ -120,7 +121,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly WireframeCommands _wireframeCommands;
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
@@ -177,7 +178,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
         _editorViewModel = new EditorViewModel(

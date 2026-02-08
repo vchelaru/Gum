@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -23,7 +24,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IElementCommands _elementCommands;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     
     public bool IsAddingAsParentToSelectedInstance { get; set; }
 
@@ -31,7 +32,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         ISelectedState selectedState,
         INameVerifier nameVerifier, 
         IElementCommands elementCommands,
-        SetVariableLogic setVariableLogic)
+        ISetVariableLogic setVariableLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;

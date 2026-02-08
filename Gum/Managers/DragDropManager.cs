@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using System.Windows.Navigation;
 using Gum.Extensions;
 using ToolsUtilities;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
 
@@ -56,7 +57,7 @@ public class DragDropManager
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly ImportLogic _importLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
@@ -85,7 +86,7 @@ public class DragDropManager
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        SetVariableLogic setVariableLogic, 
+        ISetVariableLogic setVariableLogic, 
         CopyPasteLogic copyPasteLogic,
         ImportLogic importLogic,
         WireframeObjectManager wireframeObjectManager,

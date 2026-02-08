@@ -22,14 +22,14 @@ public class ColorPickerLogic
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
     private readonly ObjectFinder _objectFinder;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
 
     public ColorPickerLogic(ISelectedState selectedState,
         IExposeVariableService exposeVariableService,
         IUndoManager undoManager,
         IGuiCommands guiCommands,
         ObjectFinder objectFinder,
-        SetVariableLogic setVariableLogic)
+        ISetVariableLogic setVariableLogic)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;

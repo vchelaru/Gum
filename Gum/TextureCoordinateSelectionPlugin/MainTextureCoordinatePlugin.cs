@@ -8,6 +8,7 @@ using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolStates;
@@ -69,7 +70,7 @@ public class MainTextureCoordinatePlugin : PluginBase
             Locator.GetRequiredService<IUndoManager>(),
             Locator.GetRequiredService<IGuiCommands>(),
             Locator.GetRequiredService<IFileCommands>(),
-            Locator.GetRequiredService<SetVariableLogic>(),
+            Locator.GetRequiredService<ISetVariableLogic>(),
             Locator.GetRequiredService<ITabManager>(),
             Locator.GetRequiredService<HotkeyManager>(),
             new ScrollBarLogicWpf(),
