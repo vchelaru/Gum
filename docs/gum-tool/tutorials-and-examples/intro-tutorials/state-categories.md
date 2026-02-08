@@ -6,7 +6,7 @@ States are a powerful way to create expressive groups of variables. Some UI elem
 
 For example, consider a Button component which displays a button callout.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Button with Y button callout. Credit Game UI Database <a href="https://www.gameuidatabase.com/gameData.php?id=36&#x26;autoload=975">https://www.gameuidatabase.com/gameData.php?id=36&#x26;autoload=975</a></p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Button with Y button callout. Credit Game UI Database <a href="https://www.gameuidatabase.com/gameData.php?id=36&#x26;autoload=975">https://www.gameuidatabase.com/gameData.php?id=36&#x26;autoload=975</a></p></figcaption></figure>
 
 This button might be a standard Button with the following states:
 

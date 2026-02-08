@@ -16,7 +16,7 @@ The Canvas Size dropdown has been added for the January 2026 version of Gum.
 
 The canvas can be adjusted by selecting from the dropdown in the Editor tab.
 
-<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption><p>Guides dropdown</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Guides dropdown</p></figcaption></figure>
 
 ### Project Default
 

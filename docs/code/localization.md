@@ -56,7 +56,7 @@ protected override void Initialize()
 {% endtab %}
 {% endtabs %}
 
-<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>Screen with localization</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption><p>Screen with localization</p></figcaption></figure>
 
 ## Localization in a Code-Only Project
 

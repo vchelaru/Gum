@@ -1,111 +1,99 @@
 # Behaviors
 
-### Introduction
+## Introduction
 
 Behaviors can define requirements which are reusable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
 
-The most common usage of behaviors is the automatic creation and inclusion of _Gum Forms_ behaviors.
+Common behavior usage falls into one of two categories:
 
-Behaviors are used to define requirements for components, to simplify the creation of new components, and to reduce the chances of spelling and implementation mistakes.
+1. Behaviors for built-in controls such as Button and TextBox exist to make customization for these types of controls easier.
+2. New behaviors can be created to match the syntax of controls defined in your game project. This is considered an advanced scenario and is rarely used.
+
+The most common usage of behaviors is the automatic creation and inclusion of _Gum Forms_ behaviors. Therefore, it is unlikely that you will need to create new behaviors or edit existing behaviors.&#x20;
 
 {% hint style="info" %}
 C# programmers may find the concept of behaviors to be similar to interfaces in code. Behaviors define requirements for components, but they give components the flexibility to implement these requirements, just like interfaces define required properties and methods which classes can implement.
 {% endhint %}
 
-### Common Behavior Usage
+{% hint style="warning" %}
+Behaviors place requirements for components in the Gum tool, but the behavior of these components at runtime depends on the control existing in the particular runtime that is being used.
 
-Behaviors are used to standardize state, category, and instance names. The most common usage of behaviors is with Gum Forms. Of course, behaviors can also be used to standardize names in your project for components which are not intended to be with Gum Forms.
+As of February 2026, forms controls are not implemented in Skia-based runtimes. If this is a requirement for your project, please post an issue on GitHub or let us know on Discord.
+{% endhint %}
 
-### Creating a Behavior
+## Default Behaviors
 
-To add a behavior:
+By default, empty projects contain no behaviors. If your project has added forms components, then it should contain a set of default behaviors matching the forms control types.
 
-1. Right-click on the Behaviors folder
-2.  Select **Add Behavior**\
-
-
-    <figure><img src="../../../.gitbook/assets/image (82).png" alt=""><figcaption><p>Add Behavior menu item</p></figcaption></figure>
-3. Enter the new behavior name. Often time the word **Behavior** is added at the end of the name, such as **ButtonBehavior**
-
-New behaviors appear in the Project tab.
-
-<figure><img src="../../../.gitbook/assets/image (83).png" alt=""><figcaption><p>ButtonBehavior in the Behaviors folder</p></figcaption></figure>
-
-Once a behavior is created, it can be given categories, states, and instances. Components which use this behavior are required to have matching categories and states.&#x20;
-
-The process of adding and removing states to behaviors is the same as adding and removing states in other elements. For more information, see the [States](../states/) page.
-
-For example, the ButtonBehavior may have the following:
-
-* ButtonCategory (Category)
-  * Enabled (State)
-  * Disabled (State)
-  * Focused (State)
-  * Pushed (State)
-
-<figure><img src="../../../.gitbook/assets/19_05 44 01.png" alt=""><figcaption><p>ButtonCategory defined on ButtonBehavior</p></figcaption></figure>
-
-A behavior can have as many categories and states as needed.
-
-Once a behavior is added, it can be used in a component. To add a behavior to a component, drag+drop the behavior onto the component in the tree view.
-
-<figure><img src="../../../.gitbook/assets/19_05 44 59.gif" alt=""><figcaption><p>Add a behavior to a component by drag+dropping the behavior on the component in the Project tab</p></figcaption></figure>
-
-Behaviors can also be added and removed on the component's Behaviors tab:
-
-1. Select a component which should use the behavior
-2. Click the Behaviors tab
-3. Click the Edit button
-4. Check the desired behaviors - a component may use multiple behaviors
-5. Click OK
-
-<figure><img src="../../../.gitbook/assets/03_04 09 26.gif" alt=""><figcaption><p>Button component adding the ButtonBehavior</p></figcaption></figure>
-
-Notice that once a behavior is added to a component, the component automatically creates the matching categories and states.
-
-If the behavior is selected in the Behaviors tab, the required states and categories are highlighted in the States tab.
-
-<figure><img src="../../../.gitbook/assets/03_04 07 52.png" alt=""><figcaption><p>States and Categories required by the selected behavior are highlighted</p></figcaption></figure>
-
-These categories cannot be removed as long as the component uses the behavior.
-
-### Category and State Requirements
-
-As mentioned above, if a component uses a behavior, then the component is required to include all of the states and categories defined by the behavior.  If a behavior is added to a component, then all states and categories in the behavior are automatically added to the component. Keep in mind that newly-added states do not automatically assign any values. The behavior only requires that the states exist but it does not decide which variables are assigned by the states. These required states can even be left to their default so they have no affect on the component.
-
-Required states and categories cannot be removed or renamed. Required states cannot be moved to different categories.
-
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1).png" alt=""><figcaption><p>Renaming and deleting states and categories required by behaviors is not allowed</p></figcaption></figure>
-
-If a new category or state is added to a behavior, all components which use the behavior also have the new category or state added.
-
-<figure><img src="../../../.gitbook/assets/19_06 02 42.gif" alt=""><figcaption><p>Adding states and categories in a component adds the states and categories to all components using the behavior</p></figcaption></figure>
-
-If a state or category is removed from a behavior, Gum does not remove the state or category from components which implement the behavior. Behaviors only define what is required, but they do not prevent components from defining additional states and categories. Also, the states on components may still be needed even if the behavior is removed. Therefore, if you remove any states or categories from a behavior, you may need to manually remove the same states and categories from components which use the behavior if these are no longer needed.
-
-### Instance Requirements
-
-Behaviors can include instances, resulting in required instances existing in components which use the behavior. Instances in behaviors only include two properties:
-
-* Name
-* Base Type
-
-Instances in behaviors only require that instances in components have these two matching properties. All other properties can be set to any value.
-
-To add an instance to a behavior, drag+drop a standard element or component onto the behavior in the Project tab.
-
-<figure><img src="../../../.gitbook/assets/21_07 01 58.gif" alt=""><figcaption><p>Drag+drop standard elements or components onto behaviors to create instances in the behavior</p></figcaption></figure>
-
-An instance can have its Name changed, Base Type changed, or removed.
-
-<figure><img src="../../../.gitbook/assets/21_07 04 12.gif" alt=""><figcaption><p>The Variables tab lets you change Name and Base Type. Right-click to delete an instance.</p></figcaption></figure>
-
-If a component is missing a behavior then the Error window provides information about the missing requirement.
-
-<figure><img src="../../../.gitbook/assets/image (128).png" alt=""><figcaption><p>Button component is missing a SpriteInstance which is required by the ButtonBehavior</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Default behavior types</p></figcaption></figure>
 
 {% hint style="info" %}
-At this time Gum does not automatically add required instances to components which need them. This may change in future versions of Gum. For now, instances must be manually added to resolve errors.
+Future versions of Gum may add or remove behavior types, so don't worry if your list is different than the screenshot above.
+{% endhint %}
 
-<img src="../../../.gitbook/assets/21_07 08 10.gif" alt="" data-size="original">
+These behaviors are used by the Gum runtime to decide whether a component should have the behavior of a particular control type.
+
+For example, a component with a NineSlice background will not respond to cursor hover events by default. However, if the ButtonBehavior is added to this component, then the component is required to contain certain states which are used at runtime to react to hover, push, and disable states.
+
+In other words, behaviors answer the question "How can I give default forms behavior to my component" by providing a required set of states, instances.
+
+## Default Control Behaviors
+
+As mentioned above, if you have added forms controls to your project, then you should have a set of components which already implement the default behaviors defined below.
+
+For example, we can look at the `ButtonStandard` component which implements `ButtonBehavior`.
+
+<figure><img src="../../../.gitbook/assets/08_07 34 25.png" alt=""><figcaption><p>ButtonBehavior used by ButtonStandard</p></figcaption></figure>
+
+By using the ButtonBehavior, the ButtonStandard will automatically be associated with the Button type at runtime.
+
+Furthermore, the `ButtonStandard` component is required to include the category and states defined by `ButtonBehavior`.
+
+Notice the categories and states defined by ButtonBehavior:
+
+<figure><img src="../../../.gitbook/assets/08_07 37 59.png" alt=""><figcaption><p>Behaviors defined by ButtonBehavior</p></figcaption></figure>
+
+Gum prevents the removal or renaming of any of these states from `ButtonStandard` since they are required by  `ButtonBehavior`.
+
+<figure><img src="../../../.gitbook/assets/08_07 41 13.png" alt=""><figcaption><p>Removal is prevented if a state is defined by a used behavior</p></figcaption></figure>
+
+## Adding Behaviors to Components
+
+If you are creating a new component which should be used as a standard forms type, such as creating a new Button style, then you will need to add a behavior to the component. By adding a new behavior, Gum will add required states automatically and will display errors if any behavior requirements are missing.
+
+For example, consider the creation of a new component which will have button behavior (responding visually to hover and push, enabled/disabled support, and click events).&#x20;
+
+To add the ButtonBehavior to a component:
+
+1. Select your component
+2. Click the Behaviors tab
+3. Click the Edit button
+4. Check the desired behavior ( `ButtonBehavior` )
+5. Click OK to apply the selected behavior
+
+Gum automatically creates the ButtonCategory and required states. Keep in mind that these states are empty - it is up to you to select the states and customize your component appropriately.
+
+<figure><img src="../../../.gitbook/assets/08_07 48 27.png" alt=""><figcaption><p>A component using ButtonBehavior</p></figcaption></figure>
+
+## Behavior Instance Requirements
+
+Some behaviors have instance requirements too. For example, the `TextBoxBehavior` has two required instances:&#x20;
+
+1. TextInstance which uses a base type of Text
+2. CaretInstance which can be of any type
+
+<figure><img src="../../../.gitbook/assets/08_07 50 16.png" alt=""><figcaption><p><code>TextBoxBehavior</code> has required instances</p></figcaption></figure>
+
+If this behavior is used in a component, Gum displays errors indicating that instances are missing.
+
+<figure><img src="../../../.gitbook/assets/08_07 52 13.png" alt=""><figcaption></figcaption></figure>
+
+You need to add instances to your component to satisfy these errors or else the component may not function properly at runtime, and may even cause runtime crashes.
+
+{% hint style="info" %}
+Notice that Gum is able to automatically create categories and states when a new behavior is added, but it does not automatically create required instances. This happens because Gum can add empty states which you can choose to fill in or leave as default.
+
+By contrast, Gum cannot guess how to create instances for your components. For example, the CaretInstance required by a TextBox can be of any type - you may want to use a Sprite to display a texture, a Rectangle, or even a dedicated custom Caret component.
+
+Future versions of Gum may provide shortcuts to create required types.
 {% endhint %}

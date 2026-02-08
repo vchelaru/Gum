@@ -57,6 +57,7 @@
     * [Y Units](gum-tool/gum-elements/general-properties/y-units.md)
   * [Behaviors](gum-tool/gum-elements/behaviors/README.md)
     * [Default Implementation](gum-tool/gum-elements/behaviors/default-implementation.md)
+    * [Creating New Behaviors (Advanced)](gum-tool/gum-elements/behaviors/creating-new-behaviors-advanced.md)
   * [Circle](gum-tool/gum-elements/circle.md)
   * [ColoredRectangle](gum-tool/gum-elements/coloredrectangle.md)
   * [Component](gum-tool/gum-elements/component/README.md)

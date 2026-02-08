@@ -27,13 +27,13 @@ Notice that comments using two forward slashes (similar to languages like C#) ca
 
 Once you have created a CSV with the desired entries, you can reference this by clicking the ... button to browse for the file in Gum.
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Selecting localization file</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Selecting localization file</p></figcaption></figure>
 
 After selecting the localization file, you can choose which language index is being displayed. Note that this is a 0-based index, with the left-most column being 0. For example, using the table above a Language Index of 1 would result in the English column being displayed.
 
 Once you have added a localization file, Gum recognizes this and displays Text properties as an editable drop-down. You can type in a string ID, or you can use the drop-down to select from available options.
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
 
 Localized text appears in Gum based on the selected ID. You can change the Language Index at any time to see localization applied immediately in your screens and components.
 
