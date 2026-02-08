@@ -1,6 +1,10 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.PropertyGridHelpers;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.ViewModels;
 using Moq;
@@ -14,6 +18,10 @@ public class RightClickViewModelTests
     private readonly AutoMocker _mocker;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly ReorderLogic _reorderLogic;
+    private readonly Mock<ObjectFinder> _objectFinder;
+    private readonly Mock<IElementCommands> _elementCommands;
+    private readonly Mock<INameVerifier> _nameVerifier;
+    private readonly Mock<ISetVariableLogic> _setVariableLogic;
     private readonly RightClickViewModel _sut;
 
     public RightClickViewModelTests()
@@ -21,7 +29,18 @@ public class RightClickViewModelTests
         _mocker = new AutoMocker();
         _reorderLogic = _mocker.CreateInstance<ReorderLogic>();
         _selectedState = new Mock<ISelectedState>();
-        _sut = new RightClickViewModel(_selectedState.Object, _reorderLogic);
+        _objectFinder = new Mock<ObjectFinder>();
+        _elementCommands = new Mock<IElementCommands>();
+        _nameVerifier = new Mock<INameVerifier>();
+        _setVariableLogic = new Mock<ISetVariableLogic>();
+
+        _sut = new RightClickViewModel(
+            _selectedState.Object,
+            _reorderLogic,
+            _objectFinder.Object,
+            _elementCommands.Object,
+            _nameVerifier.Object,
+            _setVariableLogic.Object);
     }
 
     [Fact]
@@ -35,7 +54,7 @@ public class RightClickViewModelTests
     }
 
     [Fact]
-    public void GetMenuItems_ShouldReturnFiveItems_WhenInstanceIsSelected()
+    public void GetMenuItems_ShouldReturnItems_WhenInstanceIsSelected()
     {
         var element = CreateElementWithInstances("InstanceA");
         var instance = element.Instances[0];
@@ -45,12 +64,13 @@ public class RightClickViewModelTests
 
         var result = _sut.GetMenuItems();
 
-        result.Count.ShouldBe(5);
         result[0].Text.ShouldBe("Bring to Front");
         result[1].Text.ShouldBe("Move Forward");
         result[2].Text.ShouldBe("Move In Front Of");
         result[3].Text.ShouldBe("Move Backward");
         result[4].Text.ShouldBe("Send to Back");
+        result[5].IsSeparator.ShouldBeTrue();
+        result[6].Text.ShouldStartWith("Add child object to");
     }
 
     [Fact]

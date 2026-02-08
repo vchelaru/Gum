@@ -21,7 +21,13 @@ public partial class EditingManager
 
     private void RightClickInitialize(ContextMenuStrip contextMenuStrip)
     {
-        _viewModel = new RightClickViewModel(_selectedState, _reorderLogic);
+        _viewModel = new RightClickViewModel(
+            _selectedState, 
+            _reorderLogic,
+            ObjectFinder.Self,
+            _elementCommands,
+            _nameVerifier,
+            _setVariableLogic);
         mContextMenuStrip = contextMenuStrip;
 
         contextMenuStrip.VisibleChanged += HandleVisibleChange;
@@ -55,14 +61,19 @@ public partial class EditingManager
 
             foreach(var item in menuItems)
             {
-                ToolStripMenuItem tsmi = ToToolStripMenuItem(item);
-                mContextMenuStrip.Items.Add(tsmi);
+                var toolStripItem = ToToolStripItem(item);
+                mContextMenuStrip.Items.Add(toolStripItem);
             }
         }
     }
 
-    private static ToolStripMenuItem ToToolStripMenuItem(ContextMenuItemViewModel item)
+    private static ToolStripItem ToToolStripItem(ContextMenuItemViewModel item)
     {
+        if (item.IsSeparator)
+        {
+            return new ToolStripSeparator();
+        }
+
         var toolStripItem = new ToolStripMenuItem(item.Text);
 
         if (item.Action != null)
@@ -72,7 +83,7 @@ public partial class EditingManager
 
         foreach (var child in item.Children)
         {
-            toolStripItem.DropDownItems.Add(ToToolStripMenuItem(child));
+            toolStripItem.DropDownItems.Add(ToToolStripItem(child));
         }
 
         return toolStripItem;

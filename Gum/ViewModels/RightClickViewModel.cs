@@ -1,8 +1,14 @@
+using Gum.DataTypes;
+using Gum.Dialogs;
+using Gum.Logic;
+using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.PropertyGridHelpers;
+using Gum.ToolCommands;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
-using Gum.DataTypes;
-using Gum.Logic;
-using Gum.ToolStates;
+using System.Windows.Forms;
 
 namespace Gum.ViewModels;
 
@@ -10,13 +16,26 @@ public class RightClickViewModel
 {
     private readonly ISelectedState _selectedState;
     private readonly ReorderLogic _reorderLogic;
-
+    private readonly ObjectFinder _objectFinder;
+    private readonly IElementCommands _elementCommands;
+    private readonly INameVerifier _nameVerifier;
+    private readonly ISetVariableLogic _setVariableLogic;
     ContextMenuItemViewModel? _moveInFrontOf;
 
-    public RightClickViewModel(ISelectedState selectedState, ReorderLogic reorderLogic)
+    public RightClickViewModel(
+        ISelectedState selectedState, 
+        ReorderLogic reorderLogic, 
+        ObjectFinder objectFinder,
+        IElementCommands elementCommands,
+        INameVerifier nameVerifier,
+        ISetVariableLogic setVariableLogic)
     {
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
+        _objectFinder = objectFinder;
+        _elementCommands = elementCommands;
+        _nameVerifier = nameVerifier;
+        _setVariableLogic = setVariableLogic;
     }
 
     public List<ContextMenuItemViewModel> GetMenuItems()
@@ -59,7 +78,53 @@ public class RightClickViewModel
             Action = () => _reorderLogic.MoveSelectedInstanceToBack()
         });
 
+
+        items.Add(new ContextMenuItemViewModel
+        {
+            IsSeparator = true
+        });
+
+
+        items.Add(AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'"));
+
         return items;
+    }
+
+    private ContextMenuItemViewModel AddCreateInstanceMenuItems(string itemText)
+    {
+        var parentMenuItem = new ContextMenuItemViewModel();
+        parentMenuItem.Text = itemText;
+
+        // Add child menu items for each type
+        var types = new[] { "Sprite", "Text", "NineSlice", "ColoredRectangle", "Container" };
+
+        foreach (var type in types)
+        {
+            var menuItem = new ContextMenuItemViewModel();
+            menuItem.Text = type;
+            parentMenuItem.Children.Add(menuItem);
+
+            menuItem.Action = () =>
+            {
+                var selectedElement = _selectedState.SelectedElement;
+                if (selectedElement != null)
+                {
+                    var newInstanceElementType = _objectFinder.GetElementSave(type)!;
+                    var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
+
+                    var viewModel = new AddInstanceDialogViewModel(
+                        _selectedState,
+                        _nameVerifier,
+                        _elementCommands,
+                        _setVariableLogic);
+                    viewModel.TypeToCreate = type;
+                    viewModel.Value = name;
+                    viewModel.OnAffirmative();
+                }
+            };
+        }
+
+        return parentMenuItem;
     }
 
     private void PopulateMoveInFrontOfChildren(ContextMenuItemViewModel moveInFrontOf)

@@ -3,9 +3,11 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.RenderingLibrary;
 using Gum.Services;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using GumRuntime;
 using InputLibrary;
@@ -21,13 +23,23 @@ public partial class EditingManager
     private readonly ISelectedState _selectedState;
     private readonly ReorderLogic _reorderLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IElementCommands _elementCommands;
+    private readonly INameVerifier _nameVerifier;
+    private readonly ISetVariableLogic _setVariableLogic;
 
-    public EditingManager(WireframeObjectManager wireframeObjectManager,
-        ReorderLogic reorderLogic)
+    public EditingManager(
+        WireframeObjectManager wireframeObjectManager,
+        ReorderLogic reorderLogic,
+        IElementCommands elementCommands,
+        INameVerifier nameVerifier,
+        ISetVariableLogic setVariableLogic)
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _reorderLogic = reorderLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _elementCommands = elementCommands;
+        _nameVerifier = nameVerifier;
+        _setVariableLogic = setVariableLogic;
     }
     #region Methods
 
