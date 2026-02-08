@@ -53,6 +53,8 @@ Notice the categories and states defined by ButtonBehavior:
 
 <figure><img src="../../../.gitbook/assets/08_07 37 59.png" alt=""><figcaption><p>Behaviors defined by ButtonBehavior</p></figcaption></figure>
 
+These automatically-added states are empty - they do nothing by default. For information on working with states, see the [States page](../states/).
+
 Gum prevents the removal or renaming of any of these states from `ButtonStandard` since they are required by  `ButtonBehavior`.
 
 <figure><img src="../../../.gitbook/assets/08_07 41 13.png" alt=""><figcaption><p>Removal is prevented if a state is defined by a used behavior</p></figcaption></figure>
