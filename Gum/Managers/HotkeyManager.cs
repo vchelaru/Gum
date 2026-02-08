@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using Gum.Undo;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
 
@@ -200,7 +201,7 @@ public class HotkeyManager
     private readonly IElementCommands _elementCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
     private readonly DeleteLogic _deleteLogic;
@@ -213,7 +214,7 @@ public class HotkeyManager
         IElementCommands elementCommands,
         IDialogService dialogService,
         IFileCommands fileCommands,
-        SetVariableLogic setVariableLogic,
+        ISetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
         CopyPasteLogic copyPasteLogic,
         IUndoManager undoManager,

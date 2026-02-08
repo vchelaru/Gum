@@ -34,7 +34,7 @@ public enum VariableRefreshType
     ThisVariableRefresh
 }
 
-public class SetVariableLogic
+public class SetVariableLogic : ISetVariableLogic
 {
     Dictionary<string, VariableRefreshType> VariablesRequiringRefresh = new ()
     {

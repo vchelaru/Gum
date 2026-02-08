@@ -441,7 +441,7 @@ public class ElementSaveDisplayer
                 var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
                 var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
                 var _fileCommands = Locator.GetRequiredService<IFileCommands>();
-                var _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+                var _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
                 var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
                 var propertyDescriptor = new InstanceSavePropertyDescriptor(variableList.Name, type, null);
@@ -548,7 +548,7 @@ public class ElementSaveDisplayer
         var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
         var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         var _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        var _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        var _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         var _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
 
         srim = new StateReferencingInstanceMember(

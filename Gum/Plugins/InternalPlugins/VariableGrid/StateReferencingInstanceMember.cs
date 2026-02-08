@@ -42,7 +42,7 @@ public class StateReferencingInstanceMember : InstanceMember
     private readonly IEditVariableService _editVariablesService;
     private readonly IExposeVariableService _exposeVariableService;
     private readonly ISelectedState _selectedState;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
     StateSave mStateSave;
     string mVariableName;
@@ -257,7 +257,7 @@ public class StateReferencingInstanceMember : InstanceMember
         ISelectedState selectedState,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        SetVariableLogic setVariableLogic,
+        ISetVariableLogic setVariableLogic,
         WireframeObjectManager wireframeObjectManager) :
         base(variableName, stateSave)
     {

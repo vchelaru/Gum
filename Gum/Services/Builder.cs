@@ -119,7 +119,7 @@ file static class ServiceCollectionExtensions
 
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();
-        services.AddSingleton<SetVariableLogic>();
+        services.AddSingleton<ISetVariableLogic, SetVariableLogic>();
 
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IGuiCommands, GuiCommands>();

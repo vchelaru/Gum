@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -11,25 +12,32 @@ namespace Gum.Dialogs;
 
 public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 {
+    public string TypeToCreate
+    {
+        get;
+        set;
+    } = StandardElementsManager.Self.DefaultType;
+
     public override string Title => "New Object";
     public override string Message => "Enter new object name";
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IElementCommands _elementCommands;
-    private static readonly SetVariableLogic _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+    private readonly ISetVariableLogic _setVariableLogic;
     
-    public bool ParentInstance { get; set; }
-    
+    public bool IsAddingAsParentToSelectedInstance { get; set; }
 
     public AddInstanceDialogViewModel(
         ISelectedState selectedState,
         INameVerifier nameVerifier, 
-        IElementCommands elementCommands)
+        IElementCommands elementCommands,
+        ISetVariableLogic setVariableLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _elementCommands = elementCommands;
+        _setVariableLogic = setVariableLogic;
     }
 
     public override void OnAffirmative()
@@ -39,16 +47,16 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         ElementSave selectedElement = _selectedState.SelectedElement;
         InstanceSave? focusedInstance = _selectedState.SelectedInstance;
         InstanceSave newInstance =
-            _elementCommands.AddInstance(selectedElement, Value, StandardElementsManager.Self.DefaultType);
+            _elementCommands.AddInstance(selectedElement, Value, TypeToCreate);
         
-        if (ParentInstance)
+        if (IsAddingAsParentToSelectedInstance)
         {
             System.Diagnostics.Debug.Assert(focusedInstance != null);
         }
         
         if (focusedInstance != null)
         {
-            if (ParentInstance)
+            if (IsAddingAsParentToSelectedInstance)
             {
                 SetInstanceParentWrapper(selectedElement, newInstance, focusedInstance);
             }
@@ -71,7 +79,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         return base.Validate(value);
     }
     
-    public static void SetInstanceParentWrapper(ElementSave targetElement, InstanceSave newInstance, InstanceSave existingInstance)
+    public void SetInstanceParentWrapper(ElementSave targetElement, InstanceSave newInstance, InstanceSave existingInstance)
     {
         // Vic October 13, 2023
         // Currently new parents can
@@ -100,7 +108,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         _setVariableLogic.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
     }
 
-    public static void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
+    public void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
     {
         // From DragDropManager:
         // "Since the Parent property can only be set in the default state, we will

@@ -3,6 +3,7 @@ using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using Gum.Commands;
 using Gum.Services;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Plugins.AlignmentButtons;
 
@@ -12,7 +13,7 @@ public class CommonControlLogic
     private readonly WireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISetVariableLogic _setVariableLogic;
     
     public CommonControlLogic()
     {
@@ -20,7 +21,7 @@ public class CommonControlLogic
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
     }
 
     bool SelectionInheritsFromText()

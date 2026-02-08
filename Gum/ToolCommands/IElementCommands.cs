@@ -14,7 +14,9 @@ public interface IElementCommands
     InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null);
 
     InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null);
-
+    
+    string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave containerForNewInstance);
+    
     #endregion
 
     #region State

@@ -35,7 +35,6 @@ public partial class ElementTreeViewManager
     ToolStripMenuItem mImportComponent;
     ToolStripMenuItem mAddLinkedComponent;
 
-    ToolStripMenuItem mAddInstance;
     ToolStripMenuItem mAddParentInstance;
     ToolStripMenuItem mSaveObject;
     ToolStripMenuItem mGoToDefinition;
@@ -69,14 +68,10 @@ public partial class ElementTreeViewManager
         mAddLinkedComponent.Text = "Add Linked Component";
         mAddLinkedComponent.Click += HandleAddLinkedComponentClick;
 
-        mAddInstance = new ToolStripMenuItem();
-        mAddInstance.Text = "Add Instance";
-        mAddInstance.Click += (_, _) => _dialogService.Show<AddInstanceDialogViewModel>();
-
         mAddParentInstance = new ToolStripMenuItem();
         mAddParentInstance.Text = "Add Parent Instance";
         mAddParentInstance.Click +=
-            (_, _) => _dialogService.Show<AddInstanceDialogViewModel>(x => x.ParentInstance = true);
+            (_, _) => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true);
 
         mSaveObject = new ToolStripMenuItem();
         mSaveObject.Text = "Force Save Object";
@@ -255,8 +250,8 @@ public partial class ElementTreeViewManager
                 {
                     mMenuStrip.Items.Add("-");
 
-                    mAddInstance.Text = $"Add child object to '{_selectedState.SelectedInstance.Name}'";
-                    mMenuStrip.Items.Add(mAddInstance);
+                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'");
+                    
                     mAddParentInstance.Text = $"Add parent object to '{_selectedState.SelectedInstance.Name}'";
                     mMenuStrip.Items.Add(mAddParentInstance);
 
@@ -290,8 +285,8 @@ public partial class ElementTreeViewManager
 
                 mMenuStrip.Items.Add("-");
 
-                mAddInstance.Text = "Add object to " + _selectedState.SelectedElement!.Name;
-                mMenuStrip.Items.Add(mAddInstance);
+                AddCreateInstanceMenuItems("Add object to " + _selectedState.SelectedElement!.Name);
+
                 mMenuStrip.Items.Add(mSaveObject);
                 if (_selectedState.SelectedScreen != null)
                 {
@@ -400,6 +395,40 @@ public partial class ElementTreeViewManager
             }
 
             #endregion
+        }
+    }
+
+    private void AddCreateInstanceMenuItems(string itemText)
+    {
+        var parentMenuItem = new ToolStripMenuItem(itemText);
+        mMenuStrip.Items.Add(parentMenuItem);
+
+        // Add child menu items for each type
+        var types = new[] { "Sprite", "Text", "NineSlice", "ColoredRectangle", "Container" };
+
+        foreach (var type in types)
+        {
+            var menuItem = new ToolStripMenuItem(type);
+            parentMenuItem.DropDownItems.Add(menuItem);
+
+            menuItem.Click += (_, _) =>
+            {
+                var selectedElement = _selectedState.SelectedElement;
+                if (selectedElement != null)
+                {
+                    var newInstanceElementType = ObjectFinder.Self.GetElementSave(type)!;
+                    var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
+
+                    var viewModel = new AddInstanceDialogViewModel(
+                        _selectedState, 
+                        _nameVerifier, 
+                        _elementCommands,
+                        _setVariableLogic);
+                    viewModel.TypeToCreate = type;
+                    viewModel.Value = name;
+                    viewModel.OnAffirmative();
+                }
+            };
         }
     }
 
