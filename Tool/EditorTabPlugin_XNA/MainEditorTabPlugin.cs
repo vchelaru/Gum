@@ -153,7 +153,11 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
             Locator.GetRequiredService<WireframeObjectManager>(),
-            Locator.GetRequiredService<ReorderLogic>());
+            Locator.GetRequiredService<ReorderLogic>(),
+            Locator.GetRequiredService<IElementCommands>(),
+            Locator.GetRequiredService<INameVerifier>(),
+            Locator.GetRequiredService<ISetVariableLogic>()
+            );
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
         _fileLocations = Locator.GetRequiredService<FileLocations>();
