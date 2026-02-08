@@ -35,43 +35,68 @@ namespace RaylibGum;
 public class GumService
 {
     #region Default
-    static GumService _default;
-    public static GumService Default
-    {
-        get
-        {
-            if (_default == null)
-            {
-                _default = new GumService();
-            }
-            return _default;
-        }
-    }
+    static GumService _default = default!;
+
+    /// <summary>
+    /// Gets the default instance of the GumService class.
+    /// </summary>
+    /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
+    /// this instance when a custom configuration is not required.</remarks>
+    public static GumService Default => _default ??= new GumService();
 
     #endregion
 
+    /// <summary>
+    /// The GameTime of the most recent Update call.
+    /// </summary>
     public GameTime GameTime { get; private set; }
 
+    /// <summary>
+    /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
+    /// </summary>
     public Cursor Cursor => FormsUtilities.Cursor;
 
+    /// <summary>
+    /// Gets the default keyboard.
+    /// </summary>
     public Keyboard Keyboard => FormsUtilities.Keyboard;
 
+    /// <summary>
+    /// Gets the service used to provide localized strings and resources for the application.
+    /// </summary>
     public ILocalizationService LocalizationService => CustomSetPropertyOnRenderable.LocalizationService!;
 
+    /// <summary>
+    /// Gets the collection of connected gamepads available to the application.
+    /// </summary>
     public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 
-    public SystemManagers SystemManagers { get; private set; }
+    private SystemManagers? _systemManagers;
+    public SystemManagers SystemManagers
+    {
+        get => _systemManagers ?? throw new InvalidOperationException(
+            "GumService has not been initialized. Call GumService.Initialize() first.");
+        private set => _systemManagers = value;
+    }
 
     public DeferredActionQueue DeferredQueue { get; private set; }
 
+    /// <summary>
+    /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
+    /// represents the "internal coordinates" which can be adjusted by Camera zoom.
+    /// </summary>
     public float CanvasWidth
     {
         get => GraphicalUiElement.CanvasWidth;
         set => GraphicalUiElement.CanvasWidth = value;
     }
 
+    /// <summary>
+    /// Gets or sets the height of the canvas, which acts as the root-most coordiante space. This value
+    /// represents the "internal coordinates" which can be adjusted by Camera zoom.
+    /// </summary>
     public float CanvasHeight
     {
         get => GraphicalUiElement.CanvasHeight;
@@ -96,12 +121,28 @@ public class GumService
         Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
     }
 
+
+    /// <summary>
+    /// Gets whether GumService has been initialized.
+    /// </summary>
+    public bool IsInitialized { get; private set; }
+
 #if XNALIKE
-    public Game Game { get; private set; }
+    private Game? _game;
+    public Game Game
+    {
+        get => _game ?? throw new InvalidOperationException(
+            "GumService has not been initialized. Call GumService.Initialize() first.");
+        private set => _game = value;
+    }
 #endif
 
     #region Initialize
 
+    /// <summary>
+    /// Instantiates a new GumService. This is usually not called directly, since
+    /// the Default is the most common way to access GumService.
+    /// </summary>
     public GumService()
     {
         Root.Width = 0;
@@ -179,10 +220,21 @@ public class GumService
     }
 #endif
 
+    /// <summary>
+    /// Loads animations for all elements in the project.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if a Gum project hasn't been loaded first</exception>
     [Obsolete("Experimental - this API may change in future versions")]
     public void LoadAnimations()
     {
         var project = ObjectFinder.Self.GumProjectSave;
+
+        if(project == null)
+        {
+            throw new InvalidOperationException(
+                "You must first load a project before attempting to load its animations. " +
+                "Did you call GumUI.Initialize with a valid .gumx first?");
+        }
 
         foreach (var element in project.AllElements)
         {
@@ -195,7 +247,7 @@ public class GumService
         }
     }
 
-    private ElementAnimationsSave? TryLoadAnimation(ElementSave element)
+    private static ElementAnimationsSave? TryLoadAnimation(ElementSave element)
     {
         string prefix = element is ScreenSave ? "Screens/" :
             element is ComponentSave ? "Components/" :
@@ -221,7 +273,6 @@ public class GumService
     }
 #endif
 
-    public bool IsInitialized { get; private set; }
 
     GumProjectSave? InitializeInternal(
 #if XNALIKE
@@ -398,17 +449,17 @@ public class GumService
         DeferredQueue.ProcessPending();
         GameTime = gameTime;
 #if XNALIKE
-        FormsUtilities.Update(this.Game, gameTime, roots);
+        FormsUtilities.Update(_game, gameTime, roots);
 #else
         FormsUtilities.Update(gameTime, roots);
 #endif
-        // SystemManagers.Activity (as of Sept 13, 2025) only 
-        // performs Sprite animation internally. This is not a 
+        // SystemManagers.Activity (as of Sept 13, 2025) only
+        // performs Sprite animation internally. This is not a
         // critical system, but unit tests cannot initialize a SystemManagers
         // because these require a graphics device. Therefore, we can tolerate
         // a null SystemManagers to simplify unit tests.
 #if XNALIKE
-        this.SystemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
+        _systemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
 #endif
         foreach (var item in roots)
         {
