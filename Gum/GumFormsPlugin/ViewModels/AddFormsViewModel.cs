@@ -17,7 +17,7 @@ public class AddFormsViewModel : DialogViewModel
     private readonly FormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
-    private readonly ImportLogic _importLogic;
+    private readonly IImportLogic _importLogic;
 
     public bool IsIncludeDemoScreenGum
     {
@@ -30,7 +30,7 @@ public class AddFormsViewModel : DialogViewModel
     public AddFormsViewModel(FormsFileService formsFileService, 
         IDialogService dialogService, 
         IFileCommands fileCommands,
-        ImportLogic importLogic)
+        IImportLogic importLogic)
     {
         _formsFileService = formsFileService;
         _dialogService = dialogService;

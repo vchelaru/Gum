@@ -38,7 +38,7 @@ public class MainStatePlugin : InternalPlugin
     private readonly ISelectedState _selectedState;
     private readonly ObjectFinder _objectFinder;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly CopyPasteLogic _copyPasteLogic;
+    private readonly ICopyPasteLogic _copyPasteLogic;
 
     #endregion
 
@@ -61,7 +61,7 @@ public class MainStatePlugin : InternalPlugin
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _objectFinder = ObjectFinder.Self;
         _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
-        _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
+        _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
 
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,
             selectedState);

@@ -21,7 +21,7 @@ namespace Gum.Wireframe;
 public partial class EditingManager
 {
     private readonly ISelectedState _selectedState;
-    private readonly ReorderLogic _reorderLogic;
+    private readonly IReorderLogic _reorderLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
@@ -29,7 +29,7 @@ public partial class EditingManager
 
     public EditingManager(
         WireframeObjectManager wireframeObjectManager,
-        ReorderLogic reorderLogic,
+        IReorderLogic reorderLogic,
         IElementCommands elementCommands,
         INameVerifier nameVerifier,
         ISetVariableLogic setVariableLogic)

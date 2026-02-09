@@ -47,8 +47,6 @@ public class DragDropManager
 {
     #region Fields
 
-    static DragDropManager mSelf;
-
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
@@ -58,11 +56,11 @@ public class DragDropManager
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
-    private readonly CopyPasteLogic _copyPasteLogic;
-    private readonly ImportLogic _importLogic;
+    private readonly ICopyPasteLogic _copyPasteLogic;
+    private readonly IImportLogic _importLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly PluginManager _pluginManager;
-    private readonly ReorderLogic _reorderLogic;
+    private readonly IReorderLogic _reorderLogic;
 
     #endregion
 
@@ -87,11 +85,11 @@ public class DragDropManager
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic, 
-        CopyPasteLogic copyPasteLogic,
-        ImportLogic importLogic,
+        ICopyPasteLogic copyPasteLogic,
+        IImportLogic importLogic,
         WireframeObjectManager wireframeObjectManager,
         PluginManager pluginManager,
-        ReorderLogic reorderLogic)
+        IReorderLogic reorderLogic)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;

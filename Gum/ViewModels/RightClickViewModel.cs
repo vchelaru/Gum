@@ -15,7 +15,7 @@ namespace Gum.ViewModels;
 public class RightClickViewModel
 {
     private readonly ISelectedState _selectedState;
-    private readonly ReorderLogic _reorderLogic;
+    private readonly IReorderLogic _reorderLogic;
     private readonly ObjectFinder _objectFinder;
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
@@ -24,7 +24,7 @@ public class RightClickViewModel
 
     public RightClickViewModel(
         ISelectedState selectedState, 
-        ReorderLogic reorderLogic, 
+        IReorderLogic reorderLogic, 
         ObjectFinder objectFinder,
         IElementCommands elementCommands,
         INameVerifier nameVerifier,
