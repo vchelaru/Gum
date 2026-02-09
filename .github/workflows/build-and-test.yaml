@@ -22,7 +22,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Install workloads
-        run: dotnet workload install wasm-tools-net8 ios android maui
+        run: dotnet workload install wasm-tools-net9 ios android maui
 
 
       # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
