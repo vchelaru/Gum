@@ -1548,25 +1548,20 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #if !FRB
     public List<AnimationRuntime>? Animations { get; set; }
 
-    AnimationRuntime? currentAnimation;
-    double currentAnimationTime;
+    /// <summary>
+    /// Gets the AnimationController that manages animation playback for this element.
+    /// Use this to control animations (play, pause, stop), check playback state, and subscribe to animation events.
+    /// </summary>
+    public AnimationController AnimationController { get; } = new();
 
     /// <summary>
     /// Starts playing the specified AnimationRuntime.
     /// </summary>
     /// <param name="animation">the AnimationRuntime object</param>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
     public void PlayAnimation(AnimationRuntime animation)
     {
-        if (animation != null)
-        {
-            currentAnimation = animation;
-            currentAnimationTime = 0;
-        }
-        else
-        {
-            throw new ArgumentNullException(nameof(animation), "the animation cannot be null");
-        }
+        AnimationController.Play(animation);
     }
 
 
@@ -1575,7 +1570,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public void StopAnimation()
     {
-        currentAnimation = null;
+        AnimationController.Stop();
     }
 #endif
 
@@ -6661,15 +6656,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="secondDifference">The time elapsed since the last update, in seconds.</param>
     private void RunAnimation(double secondDifference)
     {
-        if (currentAnimation != null)
-        {
-            currentAnimationTime += secondDifference;
-            currentAnimation.ApplyAtTimeTo(currentAnimationTime, this);
-            if (!currentAnimation.Loops && currentAnimationTime >= currentAnimation.Length)
-            {
-                currentAnimation = null;
-            }
-        }
+        AnimationController.Update(secondDifference, this);
     }
 #endif
 

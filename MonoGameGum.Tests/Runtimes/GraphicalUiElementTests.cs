@@ -560,6 +560,97 @@ public class GraphicalUiElementTests : BaseTestClass
         }
         didThrow.ShouldBeTrue();
     }
+
+    [Fact]
+    public void AnimationController_ShouldNotBeNull()
+    {
+        var gue = new GraphicalUiElement(new InvisibleRenderable());
+
+        gue.AnimationController.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void AnimationController_Pause_ShouldPauseAnimation()
+    {
+        var (element, animation) = CreateElementAndAnimation();
+        var gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            ElementSave = element
+        };
+
+        gue.PlayAnimation(animation);
+        gue.AnimateSelf(0.3);
+        gue.X.ShouldBeInRange(29.99f, 30.01f);
+
+        gue.AnimationController.Pause();
+        gue.AnimateSelf(0.5);
+
+        // Should still be at 30 because animation is paused
+        // tolerate floating point imprecision with a range check
+        gue.X.ShouldBeInRange(29.99f, 30.01f);
+        gue.AnimationController.IsPaused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AnimationController_Resume_ShouldResumeAnimation()
+    {
+        var (element, animation) = CreateElementAndAnimation();
+        var gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            ElementSave = element
+        };
+
+        gue.PlayAnimation(animation);
+        gue.AnimateSelf(0.3);
+        gue.AnimationController.Pause();
+        gue.AnimationController.Resume();
+        gue.AnimateSelf(0.2);
+
+        gue.X.ShouldBe(50f);
+        gue.AnimationController.IsPlaying.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AnimationController_OnCompleted_ShouldFireWhenAnimationCompletes()
+    {
+        var (element, animation) = CreateElementAndAnimation();
+        animation.Loops = false;
+        var gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            ElementSave = element
+        };
+
+        bool completedEventFired = false;
+        gue.AnimationController.OnCompleted += () => completedEventFired = true;
+
+        gue.PlayAnimation(animation);
+        gue.AnimateSelf(1.5); // Exceeds animation length of 1.0
+
+        completedEventFired.ShouldBeTrue();
+        gue.AnimationController.IsStopped.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AnimationController_StateProperties_ShouldReflectPlaybackState()
+    {
+        var (element, animation) = CreateElementAndAnimation();
+        var gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            ElementSave = element
+        };
+
+        gue.AnimationController.IsStopped.ShouldBeTrue();
+
+        gue.PlayAnimation(animation);
+        gue.AnimationController.IsPlaying.ShouldBeTrue();
+        gue.AnimationController.CurrentAnimation.ShouldNotBeNull();
+
+        gue.AnimationController.Pause();
+        gue.AnimationController.IsPaused.ShouldBeTrue();
+
+        gue.StopAnimation();
+        gue.AnimationController.IsStopped.ShouldBeTrue();
+    }
     #endregion
 
     #region ApplyState
