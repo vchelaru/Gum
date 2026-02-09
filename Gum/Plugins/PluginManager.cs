@@ -281,25 +281,25 @@ public class PluginManager : IPluginManager
     public void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
         CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
 
-    internal void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
+    public void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
         CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectsToDelete));
 
-    internal void ElementRename(ElementSave elementSave, string oldName) =>
+    public void ElementRename(ElementSave elementSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
 
-    internal void ElementAdd(ElementSave element) =>
+    public void ElementAdd(ElementSave element) =>
         CallMethodOnPlugin(plugin => plugin.CallElementAdd(element));
 
-    internal void ElementDelete(ElementSave element) =>
+    public void ElementDelete(ElementSave element) =>
         CallMethodOnPlugin(plugin => plugin.CallElementDelete(element));
 
-    internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
+    public void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
         CallMethodOnPlugin(plugin => plugin.CallElementDuplicate(oldElement, newElement));
 
-    internal void StateRename(StateSave stateSave, string oldName) => 
+    public void StateRename(StateSave stateSave, string oldName) => 
         CallMethodOnPlugin(plugin => plugin.CallStateRename(stateSave, oldName));
 
-    internal void StateAdd(StateSave stateSave) =>
+    public void StateAdd(StateSave stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave));
 
     internal void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
@@ -374,7 +374,7 @@ public class PluginManager : IPluginManager
     internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
         CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
 
-    internal ITreeNode? GetTreeNodeOver()
+    public ITreeNode? GetTreeNodeOver()
     {
         ITreeNode? treeNodeOver = null;
 
@@ -391,7 +391,7 @@ public class PluginManager : IPluginManager
         return treeNodeOver;
     }
 
-    internal IEnumerable<ITreeNode> GetSelectedNodes()
+    public IEnumerable<ITreeNode> GetSelectedNodes()
     {
         IEnumerable<ITreeNode>? toReturn = null;
         CallMethodOnPlugin(plugin =>
@@ -405,21 +405,21 @@ public class PluginManager : IPluginManager
         return toReturn ?? Enumerable.Empty<ITreeNode>();
     }
 
-    internal void BehaviorSelected(BehaviorSave? behaviorSave) =>
+    public void BehaviorSelected(BehaviorSave? behaviorSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 
-    internal void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
+    public void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorReferenceSelected(behaviorReference, elementSave));
 
-    internal void BehaviorVariableSelected(VariableSave variable) =>
+    public void BehaviorVariableSelected(VariableSave variable) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
-    internal void BehaviorCreated(BehaviorSave behavior) =>
+    public void BehaviorCreated(BehaviorSave behavior) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorCreated(behavior));
 
-    internal void BehaviorDeleted(BehaviorSave behavior) =>
+    public void BehaviorDeleted(BehaviorSave behavior) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorDeleted(behavior));
 
-    internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
+    public void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
 
     public virtual void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>

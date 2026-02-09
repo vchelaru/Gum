@@ -59,7 +59,7 @@ public class DragDropManager
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IImportLogic _importLogic;
     private readonly WireframeObjectManager _wireframeObjectManager;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IReorderLogic _reorderLogic;
 
     #endregion
@@ -88,7 +88,7 @@ public class DragDropManager
         ICopyPasteLogic copyPasteLogic,
         IImportLogic importLogic,
         WireframeObjectManager wireframeObjectManager,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IReorderLogic reorderLogic)
     {
         _circularReferenceManager = circularReferenceManager;
