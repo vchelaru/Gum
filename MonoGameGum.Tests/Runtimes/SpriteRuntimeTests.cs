@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Gum.Graphics.Animation;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -12,6 +13,97 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 public class SpriteRuntimeTests : BaseTestClass
 {
+    #region Helpers
+
+    private static Sprite CreateSpriteWithOneFrameChain(float frameLength = 1.0f)
+    {
+        var sprite = new Sprite((Texture2D?)null);
+
+        var frame = new AnimationFrame { FrameLength = frameLength };
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(frame);
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        // mCurrentChainIndex defaults to 0, which points to the first chain.
+        // Avoid setting CurrentChainName as its setter calls UpdateToCurrentAnimationFrame
+        // which requires non-null textures.
+        sprite.Animate = true;
+
+        return sprite;
+    }
+
+    #endregion
+
+    [Fact]
+    public void AnimateSelf_ShouldFireAnimationChainCycled_WhenLooping()
+    {
+        var sut = CreateSpriteWithOneFrameChain(frameLength: 1.0f);
+        var cycleCount = 0;
+        sut.AnimationChainCycled += () => cycleCount++;
+
+        sut.AnimateSelf(1.5);
+
+        cycleCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldFireAnimationChainCycled_WhenNotLooping()
+    {
+        var sut = CreateSpriteWithOneFrameChain(frameLength: 1.0f);
+        sut.IsAnimationChainLooping = false;
+        var cycleCount = 0;
+        sut.AnimationChainCycled += () => cycleCount++;
+
+        sut.AnimateSelf(1.5);
+
+        cycleCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldStopAnimating_WhenNotLoopingAndAnimationEnds()
+    {
+        var sut = CreateSpriteWithOneFrameChain(frameLength: 1.0f);
+        sut.IsAnimationChainLooping = false;
+
+        sut.AnimateSelf(1.5);
+
+        sut.Animate.ShouldBeFalse();
+        sut.TimeIntoAnimation.ShouldBe(1.0);
+    }
+
+    [Fact]
+    public void AnimationChainFrameIndex_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+
+        sut.AnimationChainFrameIndex = 3;
+
+        sut.AnimationChainFrameIndex.ShouldBe(3);
+    }
+
+    [Fact]
+    public void AnimationChainSpeed_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+
+        sut.AnimationChainSpeed = 2.5f;
+
+        sut.AnimationChainSpeed.ShouldBe(2.5f);
+    }
+
+    [Fact]
+    public void AnimationChainTime_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+
+        sut.AnimationChainTime = 1.5;
+
+        sut.AnimationChainTime.ShouldBe(1.5);
+    }
+
     [Fact]
     public void Clone_ShouldCreateClonedSprite()
     {
@@ -28,6 +120,36 @@ public class SpriteRuntimeTests : BaseTestClass
     //    SpriteRuntime sut = new();
     //    sut.HasEvents.ShouldBeFalse();
     //}
+
+    [Fact]
+    public void Height_ShouldIgnoreTextureHeight_IfUsingEntireTexture()
+    {
+        SpriteRuntime sut = new();
+
+        sut.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+        sut.TextureAddress = Gum.Managers.TextureAddress.EntireTexture;
+        sut.TextureHeight = 150;
+
+        sut.GetAbsoluteHeight().ShouldBe(64);
+    }
+
+    [Fact]
+    public void IsAnimationChainLooping_ShouldDefaultToTrue()
+    {
+        SpriteRuntime sut = new();
+
+        sut.IsAnimationChainLooping.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsAnimationChainLooping_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+
+        sut.IsAnimationChainLooping = false;
+
+        sut.IsAnimationChainLooping.ShouldBeFalse();
+    }
 
     [Fact]
     public void SourceRectangle_AssignsTextureValues()
@@ -55,7 +177,6 @@ public class SpriteRuntimeTests : BaseTestClass
         rect.Height.ShouldBe(40);
     }
 
-
     [Fact]
     public void Width_ShouldBeDefault_WithNullTexture()
     {
@@ -76,18 +197,6 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.TextureWidth = 150;
 
         sut.GetAbsoluteWidth().ShouldBe(64);
-    }
-
-    [Fact]
-    public void Height_ShouldIgnoreTextureHeight_IfUsingEntireTexture()
-    {
-        SpriteRuntime sut = new();
-
-        sut.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-        sut.TextureAddress = Gum.Managers.TextureAddress.EntireTexture;
-        sut.TextureHeight = 150;
-
-        sut.GetAbsoluteHeight().ShouldBe(64);
     }
 
 }

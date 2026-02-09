@@ -43,6 +43,12 @@ public class Sprite : SpriteBatchRenderableBase,
     }
 
     protected float mAnimationSpeed = 1;
+    public float AnimationSpeed
+    {
+        get => mAnimationSpeed;
+        set => mAnimationSpeed = value;
+    }
+
     protected double mTimeIntoAnimation;
 
     public double TimeIntoAnimation
@@ -266,6 +272,15 @@ public class Sprite : SpriteBatchRenderableBase,
         get;
         set;
     }
+
+    bool mIsAnimationChainLooping = true;
+    public bool IsAnimationChainLooping
+    {
+        get => mIsAnimationChainLooping;
+        set => mIsAnimationChainLooping = value;
+    }
+
+    public event Action AnimationChainCycled;
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
     public ObservableCollection<IRenderableIpso> Children
@@ -893,7 +908,29 @@ public class Sprite : SpriteBatchRenderableBase,
 
             AnimationChain animationChain = mAnimationChains[mCurrentChainIndex];
 
-            mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
+            if (IsAnimationChainLooping)
+            {
+                mTimeIntoAnimation = MathFunctions.Loop(mTimeIntoAnimation, animationChain.TotalLength, out mJustCycled);
+            }
+            else
+            {
+                if (mTimeIntoAnimation >= animationChain.TotalLength)
+                {
+                    mTimeIntoAnimation = animationChain.TotalLength;
+                    mCurrentFrameIndex = animationChain.Count - 1;
+                    Animate = false;
+                    mJustCycled = true;
+                }
+                else
+                {
+                    mJustCycled = false;
+                }
+            }
+
+            if (mJustCycled)
+            {
+                AnimationChainCycled?.Invoke();
+            }
 
             UpdateFrameBasedOffOfTimeIntoAnimation();
 
