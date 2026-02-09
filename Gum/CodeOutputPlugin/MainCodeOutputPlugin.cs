@@ -470,7 +470,7 @@ public class MainCodeOutputPlugin : PluginBase
     {
         if(string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
         {
-            var message = "To save generated code, you must specify a Code Project Root.";
+            var message = "To save generated code, you must specify a .csproj location.";
 
             var csprojAboveGumx = viewModel.GetCsprojDirectoryAboveGumx();
             if(csprojAboveGumx == null)
