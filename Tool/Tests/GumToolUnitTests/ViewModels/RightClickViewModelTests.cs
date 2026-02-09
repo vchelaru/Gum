@@ -17,7 +17,7 @@ public class RightClickViewModelTests
 {
     private readonly AutoMocker _mocker;
     private readonly Mock<ISelectedState> _selectedState;
-    private readonly IReorderLogic _reorderLogic;
+    private readonly Mock<IReorderLogic> _reorderLogic;
     private readonly Mock<ObjectFinder> _objectFinder;
     private readonly Mock<IElementCommands> _elementCommands;
     private readonly Mock<INameVerifier> _nameVerifier;
@@ -27,7 +27,7 @@ public class RightClickViewModelTests
     public RightClickViewModelTests()
     {
         _mocker = new AutoMocker();
-        _reorderLogic = _mocker.CreateInstance<IReorderLogic>();
+        _reorderLogic = new Mock<IReorderLogic>();
         _selectedState = new Mock<ISelectedState>();
         _objectFinder = new Mock<ObjectFinder>();
         _elementCommands = new Mock<IElementCommands>();
@@ -36,7 +36,7 @@ public class RightClickViewModelTests
 
         _sut = new RightClickViewModel(
             _selectedState.Object,
-            _reorderLogic,
+            _reorderLogic.Object,
             _objectFinder.Object,
             _elementCommands.Object,
             _nameVerifier.Object,
