@@ -58,7 +58,7 @@ public class DragDropManager
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IImportLogic _importLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IPluginManager _pluginManager;
     private readonly IReorderLogic _reorderLogic;
 
@@ -87,7 +87,7 @@ public class DragDropManager
         ISetVariableLogic setVariableLogic, 
         ICopyPasteLogic copyPasteLogic,
         IImportLogic importLogic,
-        WireframeObjectManager wireframeObjectManager,
+        IWireframeObjectManager wireframeObjectManager,
         IPluginManager pluginManager,
         IReorderLogic reorderLogic)
     {
@@ -782,7 +782,7 @@ public class DragDropManager
 
     public void OnNodeObjectDroppedInWireframe(object draggedObject)
     {
-        ElementSave draggedAsElementSave = draggedObject as ElementSave;                    
+        ElementSave? draggedAsElementSave = draggedObject as ElementSave;                    
         ElementSave? target = _wireframeObjectManager.ElementShowing;
 
         // Depending on how fast the user clicks the UI may think they dragged an instance rather than 
