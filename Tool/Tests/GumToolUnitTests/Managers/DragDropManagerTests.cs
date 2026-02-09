@@ -1,7 +1,11 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Services;
+using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
@@ -19,6 +23,10 @@ public class DragDropManagerTests : BaseTestClass
     private readonly AutoMocker _mocker;
     private readonly DragDropManager _dragDropManager;
 
+    private readonly Mock<ICircularReferenceManager> _circularReferenceManager;
+    private readonly Mock<ICopyPasteLogic> _copyPasteLogic;
+
+
     public DragDropManagerTests()
     {
         _mocker = new AutoMocker();
@@ -27,11 +35,14 @@ public class DragDropManagerTests : BaseTestClass
         Mock<PluginManager> pluginManager = _mocker.GetMock<PluginManager>();
         pluginManager.Object.Plugins = new List<PluginBase>();
 
+        _circularReferenceManager = _mocker.GetMock<ICircularReferenceManager>();
+        _copyPasteLogic = _mocker.GetMock<ICopyPasteLogic>();
     }
 
     [Fact]
     public void OnNodeSortingDropped_DropInstance_ShouldInsertAtIndex_OnDifferentElement()
     {
+        // Arrange
         ComponentSave parentOfDragged = new ComponentSave();
         parentOfDragged.Name = "ParentOfDragged";
         parentOfDragged.States.Add(new ());
@@ -52,8 +63,23 @@ public class DragDropManagerTests : BaseTestClass
 
         List<ITreeNode> draggedNodes = new () { draggedNode.Object };
 
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _copyPasteLogic
+            .Setup(x => x.PasteInstanceSaves(
+                It.IsAny<List<InstanceSave>>(),
+                It.IsAny<List<StateSave>>(),
+                It.IsAny<ElementSave>(),
+                It.IsAny<InstanceSave?>(),
+                It.IsAny<ISelectedState?>()))
+            .Returns(new List<InstanceSave> { draggedInstance });
+
+        // Act
         _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, 1);
 
+        // Assert
         destinationComponent.Instances[1].Name.ShouldBe("DraggedInstance");
     }
 }
