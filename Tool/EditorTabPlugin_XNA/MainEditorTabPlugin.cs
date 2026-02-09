@@ -656,7 +656,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             _hotkeyManager, 
             _selectionManager, 
             _dragDropManager,
-            _editorViewModel);
+            _editorViewModel,
+            _wireframeControl.Services);
         var systemManagers = _wireframeControl.SystemManagers;
 
 

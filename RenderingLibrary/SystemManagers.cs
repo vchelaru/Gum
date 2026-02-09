@@ -118,7 +118,7 @@ public partial class SystemManagers : ISystemManagers
 #endif
 
     
-    public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
+    public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false, ContentLoader? contentLoader = null)
     {
 #if NET6_0_OR_GREATER
         var usesTitleContainer = System.OperatingSystem.IsAndroid() || 
@@ -204,7 +204,25 @@ public partial class SystemManagers : ISystemManagers
         mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
         Renderer = new Renderer();
+
+        if(contentLoader != null)
+        {
+            LoaderManager.Self.ContentLoader = contentLoader;
+        }
+
+        if (fullInstantiation)
+        {
+#if USE_GUMCOMMON
+            // Do the content loader here, because otherwise we won't have it ready for the renderer
+            LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new ContentLoader();
+#endif
+        }
+
+#if USE_GUMCOMMON
+        Renderer.Initialize(graphicsDevice, this, (LoaderManager.Self.ContentLoader as ContentLoader)?.XnaContentManager);
+#else
         Renderer.Initialize(graphicsDevice, this);
+#endif
 
         SpriteManager = new SpriteManager();
 
@@ -231,7 +249,6 @@ public partial class SystemManagers : ISystemManagers
         if(fullInstantiation)
         {
 #if USE_GUMCOMMON
-            LoaderManager.Self.ContentLoader = new ContentLoader();
 
             // Load the default font, and then the bold, italic, and italic_bold options for bbcode
             var loadedFont = LoadEmbeddedFont("Font18Arial");
