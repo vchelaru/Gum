@@ -39,7 +39,21 @@ public class Sprite : SpriteBatchRenderableBase,
     public int CurrentFrameIndex
     {
         get => mCurrentFrameIndex;
-        set => mCurrentFrameIndex = value;
+        set
+        {
+            mCurrentFrameIndex = value;
+
+            if (CurrentChain != null && CurrentChain.Count > 0)
+            {
+                double time = 0;
+                int clampedIndex = System.Math.Clamp(value, 0, CurrentChain.Count - 1);
+                for (int i = 0; i < clampedIndex; i++)
+                {
+                    time += CurrentChain[i].FrameLength;
+                }
+                mTimeIntoAnimation = time;
+            }
+        }
     }
 
     protected float mAnimationSpeed = 1;

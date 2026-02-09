@@ -15,13 +15,15 @@ public class SpriteRuntimeTests : BaseTestClass
 {
     #region Helpers
 
-    private static Sprite CreateSpriteWithOneFrameChain(float frameLength = 1.0f)
+    private static Sprite CreateAnimatedSprite(params float[] frameLengths)
     {
         var sprite = new Sprite((Texture2D?)null);
 
-        var frame = new AnimationFrame { FrameLength = frameLength };
         var chain = new AnimationChain { Name = "TestChain" };
-        chain.Add(frame);
+        foreach (var length in frameLengths)
+        {
+            chain.Add(new AnimationFrame { FrameLength = length });
+        }
 
         var chainList = new AnimationChainList();
         chainList.Add(chain);
@@ -40,7 +42,7 @@ public class SpriteRuntimeTests : BaseTestClass
     [Fact]
     public void AnimateSelf_ShouldFireAnimationChainCycled_WhenLooping()
     {
-        var sut = CreateSpriteWithOneFrameChain(frameLength: 1.0f);
+        var sut = CreateAnimatedSprite(1.0f);
         var cycleCount = 0;
         sut.AnimationChainCycled += () => cycleCount++;
 
@@ -52,7 +54,7 @@ public class SpriteRuntimeTests : BaseTestClass
     [Fact]
     public void AnimateSelf_ShouldFireAnimationChainCycled_WhenNotLooping()
     {
-        var sut = CreateSpriteWithOneFrameChain(frameLength: 1.0f);
+        var sut = CreateAnimatedSprite(1.0f);
         sut.IsAnimationChainLooping = false;
         var cycleCount = 0;
         sut.AnimationChainCycled += () => cycleCount++;
@@ -65,7 +67,7 @@ public class SpriteRuntimeTests : BaseTestClass
     [Fact]
     public void AnimateSelf_ShouldStopAnimating_WhenNotLoopingAndAnimationEnds()
     {
-        var sut = CreateSpriteWithOneFrameChain(frameLength: 1.0f);
+        var sut = CreateAnimatedSprite(1.0f);
         sut.IsAnimationChainLooping = false;
 
         sut.AnimateSelf(1.5);
@@ -94,6 +96,7 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.AnimationChainSpeed.ShouldBe(2.5f);
     }
 
+
     [Fact]
     public void AnimationChainTime_ShouldForwardToContainedSprite()
     {
@@ -113,6 +116,17 @@ public class SpriteRuntimeTests : BaseTestClass
         clone.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void CurrentFrameIndex_ShouldSyncTimeIntoAnimation()
+    {
+        // 3 frames: 0.5s, 1.0s, 0.75s
+        var sut = CreateAnimatedSprite(0.5f, 1.0f, 0.75f);
+
+        sut.CurrentFrameIndex = 2;
+
+        // Time should be sum of frames 0 and 1: 0.5 + 1.0 = 1.5
+        sut.TimeIntoAnimation.ShouldBe(1.5);
+    }
     // Not an InteractiveGue:
     //[Fact]
     //public void HasEvents_ShouldDefaultToFalse()
