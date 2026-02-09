@@ -696,7 +696,7 @@ public class ProjectManager
 
             if (shouldSave)
             {
-                PluginManager.Self.BeforeProjectSave(GumProjectSave);
+                PluginManager.Self.BeforeSavingProjectSave(GumProjectSave);
 
                 _elementCommands.SortVariables();
 
@@ -711,17 +711,17 @@ public class ProjectManager
                     {
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
-                            PluginManager.Self.BeforeElementSave(screenSave);
+                            PluginManager.Self.BeforeSavingElementSave(screenSave);
                             _fileWatchManager.IgnoreNextChangeUntil(screenSave.GetFullPathXmlFile());
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
-                            PluginManager.Self.BeforeElementSave(componentSave);
+                            PluginManager.Self.BeforeSavingElementSave(componentSave);
                             _fileWatchManager.IgnoreNextChangeUntil(componentSave.GetFullPathXmlFile());
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
-                            PluginManager.Self.BeforeElementSave(standardElementSave);
+                            PluginManager.Self.BeforeSavingElementSave(standardElementSave);
                             _fileWatchManager.IgnoreNextChangeUntil(standardElementSave.GetFullPathXmlFile());
                         }
                     }
@@ -735,15 +735,15 @@ public class ProjectManager
                     {
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
-                            PluginManager.Self.AfterElementSave(screenSave);
+                            PluginManager.Self.AfterSavingElementSave(screenSave);
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
-                            PluginManager.Self.AfterElementSave(componentSave);
+                            PluginManager.Self.AfterSavingElementSave(componentSave);
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
-                            PluginManager.Self.AfterElementSave(standardElementSave);
+                            PluginManager.Self.AfterSavingElementSave(standardElementSave);
                         }
                     }
                 }

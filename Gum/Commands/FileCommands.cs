@@ -261,7 +261,7 @@ public class FileCommands : IFileCommands
 
             if (shouldSave)
             {
-                PluginManager.Self.BeforeElementSave(elementSave);
+                PluginManager.Self.BeforeSavingElementSave(elementSave);
 
                 var fileName = elementSave.GetFullPathXmlFile();
 
@@ -309,7 +309,7 @@ public class FileCommands : IFileCommands
                 if (succeeded)
                 {
                     _outputManager.AddOutput("Saved " + elementSave + " to " + fileName);
-                    PluginManager.Self.AfterElementSave(elementSave);
+                    PluginManager.Self.AfterSavingElementSave(elementSave);
                 }
             }
 

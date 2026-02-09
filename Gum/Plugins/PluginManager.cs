@@ -196,24 +196,25 @@ public class PluginManager : IPluginManager
 #endif
     }
 
-    internal void BeforeElementSave(ElementSave savedElement) => 
+    public void BeforeSavingElementSave(ElementSave savedElement) => 
         CallMethodOnPlugin(plugin => plugin.CallBeforeElementSave(savedElement));
 
-    internal void AfterElementSave(ElementSave savedElement) =>
+    public void AfterSavingElementSave(ElementSave savedElement) =>
         CallMethodOnPlugin(plugin => plugin.CallAfterElementSave(savedElement));
 
-    internal void BeforeProjectSave(GumProjectSave savedProject) =>
+    public void BeforeSavingProjectSave(GumProjectSave savedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallBeforeProjectSave(savedProject));
 
-    internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
+    public void ProjectLoad(GumProjectSave newlyLoadedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
 
     public void ProjectPropertySet(string propertyName) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
-    internal void ProjectSave(GumProjectSave savedProject) =>
+
+    public void ProjectSave(GumProjectSave savedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
 
-    internal GraphicalUiElement CreateGraphicalUiElement(ElementSave elementSave)
+    public GraphicalUiElement CreateGraphicalUiElement(ElementSave elementSave)
     {
         GraphicalUiElement toReturn = null;
         CallMethodOnPlugin(plugin =>
@@ -228,16 +229,16 @@ public class PluginManager : IPluginManager
         return toReturn;
     }
 
-    internal void ProjectLocationSet(FilePath filePath) =>
+    public void ProjectLocationSet(FilePath filePath) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectLocationSet(filePath));
 
-    internal void Export(ElementSave elementToExport) =>
+    public void Export(ElementSave elementToExport) =>
         CallMethodOnPlugin(plugin => plugin.CallExport(elementToExport));
 
-    internal void ModifyDefaultStandardState(string type, StateSave stateSave) =>
+    public void ModifyDefaultStandardState(string type, StateSave stateSave) =>
         CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
 
-    internal bool TryHandleDelete()
+    public bool TryHandleDelete()
     {
         bool toReturn = false;
 
@@ -277,7 +278,7 @@ public class PluginManager : IPluginManager
     /// </summary>
     /// <param name="window">The window to modify.</param>
     /// <param name="objectsToDelete">An array of objects that may be deleted, which could be any Gum type.</param>
-    internal void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
+    public void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
         CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
 
     internal void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
@@ -356,7 +357,7 @@ public class PluginManager : IPluginManager
     internal void AfterUndo() =>
         CallMethodOnPlugin(plugin => plugin.CallAfterUndo());
 
-    internal List<Attribute> GetAttributesFor(VariableSave variableSave)
+    public List<Attribute> GetAttributesFor(VariableSave variableSave)
     {
         var listToFill = new List<Attribute>();
         CallMethodOnPlugin(plugin => plugin.CallFillVariableAttributes(variableSave, listToFill));
@@ -673,6 +674,28 @@ public class PluginManager : IPluginManager
     public void FocusSearch() =>
         CallMethodOnPlugin(plugin => plugin.CallFocusSearch());
 
+    public bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
+    {
+        bool shouldExclude = false;
+        foreach (var plugin in this.Plugins.Where(item=>this.PluginContainers[item].IsEnabled))
+        {
+            PluginContainer container = this.PluginContainers[plugin];
+
+            if (container.Plugin is PluginBase pluginBase)
+            {
+
+                try
+                {
+                    shouldExclude |= pluginBase.GetIfVariableIsExcluded(defaultVariable, rvf);
+                }
+                catch (Exception e)
+                {
+                    container.Fail(e, "Failed in GetIfVariableIsExcluded");
+                }
+            }
+        }
+        return shouldExclude;
+    }
     #endregion
 
 
@@ -1100,26 +1123,4 @@ public class PluginManager : IPluginManager
 
     #endregion
 
-    internal bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
-    {
-        bool shouldExclude = false;
-        foreach (var plugin in this.Plugins.Where(item=>this.PluginContainers[item].IsEnabled))
-        {
-            PluginContainer container = this.PluginContainers[plugin];
-
-            if (container.Plugin is PluginBase pluginBase)
-            {
-
-                try
-                {
-                    shouldExclude |= pluginBase.GetIfVariableIsExcluded(defaultVariable, rvf);
-                }
-                catch (Exception e)
-                {
-                    container.Fail(e, "Failed in GetIfVariableIsExcluded");
-                }
-            }
-        }
-        return shouldExclude;
-    }
 }
