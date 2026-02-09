@@ -47,9 +47,7 @@ public class DragDropManager
 {
     #region Fields
 
-    static DragDropManager mSelf;
-
-    private readonly CircularReferenceManager _circularReferenceManager;
+    private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IRenameLogic _renameLogic;
@@ -58,11 +56,11 @@ public class DragDropManager
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
-    private readonly CopyPasteLogic _copyPasteLogic;
-    private readonly ImportLogic _importLogic;
-    private readonly WireframeObjectManager _wireframeObjectManager;
-    private readonly PluginManager _pluginManager;
-    private readonly ReorderLogic _reorderLogic;
+    private readonly ICopyPasteLogic _copyPasteLogic;
+    private readonly IImportLogic _importLogic;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IPluginManager _pluginManager;
+    private readonly IReorderLogic _reorderLogic;
 
     #endregion
 
@@ -78,7 +76,7 @@ public class DragDropManager
 
     #region Constructor
 
-    public DragDropManager(CircularReferenceManager circularReferenceManager,
+    public DragDropManager(ICircularReferenceManager circularReferenceManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IRenameLogic renameLogic,
@@ -87,11 +85,11 @@ public class DragDropManager
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic, 
-        CopyPasteLogic copyPasteLogic,
-        ImportLogic importLogic,
-        WireframeObjectManager wireframeObjectManager,
-        PluginManager pluginManager,
-        ReorderLogic reorderLogic)
+        ICopyPasteLogic copyPasteLogic,
+        IImportLogic importLogic,
+        IWireframeObjectManager wireframeObjectManager,
+        IPluginManager pluginManager,
+        IReorderLogic reorderLogic)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -784,7 +782,7 @@ public class DragDropManager
 
     public void OnNodeObjectDroppedInWireframe(object draggedObject)
     {
-        ElementSave draggedAsElementSave = draggedObject as ElementSave;                    
+        ElementSave? draggedAsElementSave = draggedObject as ElementSave;                    
         ElementSave? target = _wireframeObjectManager.ElementShowing;
 
         // Depending on how fast the user clicks the UI may think they dragged an instance rather than 

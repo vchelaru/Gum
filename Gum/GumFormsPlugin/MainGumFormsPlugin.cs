@@ -29,14 +29,14 @@ internal class MainGumFormsPlugin : PluginBase
 
     System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
     private readonly FormsFileService _formsFileService;
-    private readonly ImportLogic _importLogic;
+    private readonly IImportLogic _importLogic;
 
     #endregion
 
     public MainGumFormsPlugin()
     {
         _formsFileService = new FormsFileService();
-        _importLogic = Locator.GetRequiredService<ImportLogic>();
+        _importLogic = Locator.GetRequiredService<IImportLogic>();
     }
 
     public override void StartUp()

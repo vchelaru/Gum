@@ -284,7 +284,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
     private DragDropManager _dragDropManager;
-    private CopyPasteLogic _copyPasteLogic;
+    private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly DeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
@@ -315,7 +315,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
-        _copyPasteLogic = Locator.GetRequiredService<CopyPasteLogic>();
+        _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _messenger.RegisterAll(this);
         _deleteLogic = Locator.GetRequiredService<DeleteLogic>();

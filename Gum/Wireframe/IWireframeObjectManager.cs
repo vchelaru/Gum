@@ -10,6 +10,10 @@ namespace Gum.Wireframe;
 
 public interface IWireframeObjectManager
 {
+    List<GraphicalUiElement> AllIpsos { get; }
+
+    ElementSave? ElementShowing { get; }
+
     GraphicalUiElement? RootGue { get; }
 
     void RefreshAll(bool forceLayout, bool forceReloadTextures = false);

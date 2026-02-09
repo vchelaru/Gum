@@ -92,7 +92,9 @@ file static class ServiceCollectionExtensions
 
         // singletons
         services.AddSingleton<CircularReferenceManager>();
+        services.AddSingleton<ICircularReferenceManager>(provider => provider.GetRequiredService<CircularReferenceManager>());
         services.AddSingleton<CopyPasteLogic>();
+        services.AddSingleton<ICopyPasteLogic>(provider => provider.GetRequiredService<CopyPasteLogic>());
         services.AddSingleton<DeleteLogic>();
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
@@ -108,6 +110,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<DragDropManager>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();
+        services.AddSingleton<IImportLogic>(provider => provider.GetRequiredService<ImportLogic>());
         services.AddSingleton<MainOutputViewModel>();
 
         // temporary while transitioning all usage from WireframeObjectManager to IWireframeObjectManager
@@ -116,6 +119,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<ReorderLogic>();
+        services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
 
         services.AddSingleton<VariableReferenceLogic>();
         services.AddSingleton<IRenameLogic, RenameLogic>();

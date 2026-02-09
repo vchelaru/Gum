@@ -195,7 +195,7 @@ public class HotkeyManager
 
     public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
-    private readonly CopyPasteLogic _copyPasteLogic;
+    private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
@@ -205,7 +205,7 @@ public class HotkeyManager
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
     private readonly DeleteLogic _deleteLogic;
-    private readonly ReorderLogic _reorderLogic;
+    private readonly IReorderLogic _reorderLogic;
 
     // If adding any new keys here, modify HotkeyViewModel
 
@@ -216,10 +216,10 @@ public class HotkeyManager
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
-        CopyPasteLogic copyPasteLogic,
+        ICopyPasteLogic copyPasteLogic,
         IUndoManager undoManager,
         DeleteLogic deleteLogic,
-        ReorderLogic reorderLogic)
+        IReorderLogic reorderLogic)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;

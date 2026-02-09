@@ -10,12 +10,12 @@ namespace Gum.Plugins.ImportPlugin.ViewModel;
 
 public class ImportScreenDialog : ImportBaseDialogViewModel
 {
-    private readonly ImportLogic _importLogic;
+    private readonly IImportLogic _importLogic;
 
     public override string Title => "Import Screen";
     public override string BrowseFileFilter => "Gum Screen (*.gusx)|*.gusx";
     public ImportScreenDialog(IDialogService dialogService,
-        ImportLogic importLogic
+        IImportLogic importLogic
 
         ) : base(dialogService)
     {

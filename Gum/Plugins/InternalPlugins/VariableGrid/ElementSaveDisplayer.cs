@@ -47,13 +47,15 @@ public class ElementSaveDisplayer
     private readonly TypeManager _typeManager;
     private readonly VariableSaveLogic _variableSaveLogic;
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
+    private readonly IPluginManager _pluginManager;
 
     #endregion
 
     public ElementSaveDisplayer(SubtextLogic subtextLogic,
         TypeManager typeManager,
         ISelectedState selectedState,
-        IUndoManager undoManager)
+        IUndoManager undoManager,
+        IPluginManager pluginManager)
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
@@ -61,6 +63,7 @@ public class ElementSaveDisplayer
         _typeManager = typeManager;
         _variableSaveLogic = new VariableSaveLogic();
         _categorySortAndColorLogic = new CategorySortAndColorLogic();
+        _pluginManager = pluginManager;
     }
 
     private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
@@ -799,7 +802,8 @@ public class ElementSaveDisplayer
                     category = "Exposed";
                 }
             }
-            else if (isState)
+            
+            if (string.IsNullOrEmpty(category) && isState)
             {
                 category = "States and Visibility";
             }
@@ -860,7 +864,7 @@ public class ElementSaveDisplayer
     }
 
 
-    private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave? instanceOwner, InstanceSave instance, bool isReadOnly)
+    private void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave? instanceOwner, InstanceSave instance, bool isReadOnly)
     {
         var nameProperty = mHelper.AddProperty(
             pdc,
@@ -890,7 +894,7 @@ public class ElementSaveDisplayer
                 Name = "BaseType",
             };
 
-            isExcluded = PluginManager.Self.ShouldExclude(
+            isExcluded = _pluginManager.ShouldExclude(
                 fakeBaseTypeVariable, rfv);
         }
 
@@ -930,7 +934,7 @@ public class ElementSaveDisplayer
         return toReturn;
     }
         
-    private static Attribute[] GetAttributesForVariable(VariableSave defaultVariable)
+    private Attribute[] GetAttributesForVariable(VariableSave defaultVariable)
     {
         List<Attribute> attributes = new List<Attribute>();
 
@@ -944,7 +948,7 @@ public class ElementSaveDisplayer
             attributes.Add(new BrowsableAttribute(false));
         }
 
-        List<Attribute> attributesFromPlugins = PluginManager.Self.GetAttributesFor(defaultVariable);
+        List<Attribute> attributesFromPlugins = _pluginManager.GetAttributesFor(defaultVariable);
 
         if(attributesFromPlugins.Count != 0)
         {

@@ -15,7 +15,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
     private readonly IFileCommands _fileCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
-    private readonly ImportLogic _importLogic;
+    private readonly IImportLogic _importLogic;
 
     public override string Title => "Import Component";
     public override string BrowseFileFilter => "Gum Component (*.gucx)|*.gucx";
@@ -25,7 +25,7 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
         IGuiCommands guiCommands,
         ISelectedState selectedState,
         IDialogService dialogService,
-        ImportLogic importLogic) 
+        IImportLogic importLogic) 
         : base(dialogService)
     {
         _fileCommands = fileCommands;
