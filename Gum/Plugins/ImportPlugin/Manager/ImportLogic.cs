@@ -12,7 +12,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
 
-public class ImportLogic
+public class ImportLogic : IImportLogic
 {
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;

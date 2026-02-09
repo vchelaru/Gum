@@ -49,7 +49,7 @@ public class DragDropManager
 
     static DragDropManager mSelf;
 
-    private readonly CircularReferenceManager _circularReferenceManager;
+    private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
     private readonly IRenameLogic _renameLogic;
@@ -78,7 +78,7 @@ public class DragDropManager
 
     #region Constructor
 
-    public DragDropManager(CircularReferenceManager circularReferenceManager,
+    public DragDropManager(ICircularReferenceManager circularReferenceManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IRenameLogic renameLogic,

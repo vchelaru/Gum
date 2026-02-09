@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.Services;
-public class CircularReferenceManager
+public class CircularReferenceManager : ICircularReferenceManager
 {
     private readonly IObjectFinder _objectFinder;
 

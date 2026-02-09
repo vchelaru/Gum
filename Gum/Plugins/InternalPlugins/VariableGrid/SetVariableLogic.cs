@@ -54,7 +54,7 @@ public class SetVariableLogic : ISetVariableLogic
 
 
     private readonly VariableReferenceLogic _variableReferenceLogic;
-    private readonly CircularReferenceManager _circularReferenceManager;
+    private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly FontManager _fontManager;
     private readonly IFileCommands _fileCommands;
     private readonly ISelectedState _selectedState;
@@ -80,7 +80,7 @@ public class SetVariableLogic : ISetVariableLogic
         IGuiCommands guiCommands,
         FontManager fontManager,
         IFileCommands fileCommands,
-        CircularReferenceManager circularReferenceManager,
+        ICircularReferenceManager circularReferenceManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IDialogService dialogService,
         PluginManager pluginManager,
@@ -313,8 +313,6 @@ public class SetVariableLogic : ISetVariableLogic
 
         if (rootVariableName == "BaseType")
         {
-            VariableSave variable = _selectedState.SelectedVariableSave;
-
             if (instance != null)
             {
                 var parentElement = instanceContainer as ElementSave;
@@ -322,7 +320,6 @@ public class SetVariableLogic : ISetVariableLogic
                 if(parentElement != null && _circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
                 {
                     _dialogService.ShowMessage("This assignment would create a circular reference, which is not allowed.");
-                    //stateSave.SetValue("BaseType", oldValue, instance);
                     instance.BaseType = (string)oldValue;
                     _guiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
                     _guiCommands.RefreshVariables(force: true);

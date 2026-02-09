@@ -50,7 +50,7 @@ public class CopiedData
 
 #endregion
 
-public class CopyPasteLogic
+public class CopyPasteLogic : ICopyPasteLogic
 {
     #region Fields/Properties
 

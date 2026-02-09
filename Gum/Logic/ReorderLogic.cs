@@ -10,7 +10,7 @@ using Gum.Wireframe;
 
 namespace Gum.Logic;
 
-public class ReorderLogic
+public class ReorderLogic : IReorderLogic
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
