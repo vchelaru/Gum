@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Localization;
+namespace Gum.Localization;
 public interface ILocalizationService
 {
     string Translate(string stringId);
