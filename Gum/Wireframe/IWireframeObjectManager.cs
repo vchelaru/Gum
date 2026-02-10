@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -32,4 +33,5 @@ public interface IWireframeObjectManager
     InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer,
         string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack);
 
+    bool IsRepresentation(IPositionedSizedObject ipso);
 }

@@ -564,7 +564,7 @@ public class SelectionManager
 
                         // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
                         // it's an instance that is locked.  If so, we shouldn't select it!
-                        InstanceSave instanceSave = graphicalUiElement.Tag as InstanceSave;
+                        var instanceSave = graphicalUiElement.Tag as InstanceSave;
                         if (instanceSave == null || instanceSave.Locked == false)
                         {
                             ipsoOver = graphicalUiElement;

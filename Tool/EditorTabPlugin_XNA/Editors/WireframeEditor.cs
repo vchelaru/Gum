@@ -21,6 +21,8 @@ using Gum.Commands;
 using Gum.Services;
 using Gum.ToolCommands;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Wireframe.Editors;
+using Gum.Wireframe.Editors.Handlers;
 
 namespace Gum.Wireframe;
 
