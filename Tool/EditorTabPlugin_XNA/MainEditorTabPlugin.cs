@@ -494,7 +494,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeContextMenuStrip.Font = new Font("Segoe UI", fontSize);
     }
 
-    private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
+    private void HandleVariableSetLate(ElementSave? element, InstanceSave instance, string unqualifiedName, object oldValue)
     {
         /////////////////////////////Early Out//////////////////////////
         if(element == null)
@@ -504,12 +504,25 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         }
         ////////////////////////////End Early Out///////////////////////
 
-        if(instance != null)
+        var qualifiedName = unqualifiedName;
+        if (instance != null)
         {
             qualifiedName = instance.Name + "." + qualifiedName;
         }
 
-        var state = _selectedState.SelectedStateSave ?? element?.DefaultState;
+        var state = _selectedState.SelectedStateSave ?? element.DefaultState;
+
+        // This method could be called...
+        // 1. Directly on an element or instance when the user edits a value
+        // 2. Indirectly, as a result of a variable reference
+        // If it's (2), then that means the element that is being
+        // edited may not be the current element, and in that case
+        // we shouldn't use _selectedState.SelectedStateSave.
+        if(_selectedState.SelectedElements.Contains(element) == false)
+        {
+            state = element.DefaultState;
+        }
+
         var value = state.GetValue(qualifiedName);
 
         var areSame = value == null && oldValue == null;
@@ -560,7 +573,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
                 // this assumes that the object having its variable set is the selected instance. If we're setting
                 // an exposed variable, this is not the case - the object having its variable set is actually the instance.
                 //GraphicalUiElement gue = _wireframeObjectManager.GetSelectedRepresentation();
-                GraphicalUiElement gue = null;
+                GraphicalUiElement? gue = null;
                 if (instance != null)
                 {
                     gue = _wireframeObjectManager.GetRepresentation(instance);
@@ -575,7 +588,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
                 if (gue != null)
                 {
-                    VariableSave variable = null;
+                    VariableSave? variable = null;
                     if(element != null)
                     {
                         variable = ObjectFinder.Self.GetRootVariable(qualifiedName, element);
@@ -611,9 +624,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
                     handledByDirectSet = !disposedFile;
                 }
-                if (unqualifiedMember == "Text" && _localizationService.HasDatabase)
+                if (gue != null && value is string valueAsString && unqualifiedMember == "Text" && _localizationService.HasDatabase)
                 {
-                    _wireframeObjectManager.ApplyLocalization(gue, value as string);
+                    _wireframeObjectManager.ApplyLocalization(gue, valueAsString);
                 }
             }
 
