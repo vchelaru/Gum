@@ -56,12 +56,46 @@ public interface IPluginManager
     void StateRename(StateSave stateSave, string oldName);
     void StateAdd(StateSave stateSave);
 
+    void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory);
 
+    void StateDelete(StateSave stateSave);
 
+    void ReactToStateSaveSelected(StateSave? stateSave);
 
-
-
+    void ReactToCustomStateSaveSelected(StateSave stateSave);
+    void RefreshStateTreeView();
+    void RefreshElementTreeView(IInstanceContainer? instanceContainer = null);
+    void CategoryRename(StateSaveCategory category, string oldName);
+    void CategoryAdd(StateSaveCategory category);
+    void CategoryDelete(StateSaveCategory category);
+    void ReactToStateSaveCategorySelected(StateSaveCategory? category);
+    void VariableAdd(ElementSave elementSave, string variableName);
+    void VariableDelete(ElementSave elementSave, string variableName);
+    /// <summary>
+    /// Raised when a variable is set.
+    /// </summary>
+    /// <param name="parentElement">The element that contains the variable, or which contains the instance that holds the variable.</param>
+    /// <param name="instance">The optional instance that holds the variable</param>
+    /// <param name="unqualifiedChangedMemberName">The unqualified name. If an instance's value is set, this would be unqualified, such as "X" instead of "SpriteInstance.X"</param>
+    /// <param name="oldValue">The value prior to being set.</param>
+    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue);
+    void VariableSelected(IStateContainer container, VariableSave variable);
+    void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
+    void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName);
+    void AfterUndo();
     List<Attribute> GetAttributesFor(VariableSave variableSave);
+    void ElementSelected(ElementSave? elementSave);
+
+
+
+
+
+
+
+
+
+
+
 
 
 
