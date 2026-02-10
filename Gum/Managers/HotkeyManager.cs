@@ -195,6 +195,9 @@ public class HotkeyManager
 
     public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
+    public KeyCombination NextState { get; private set; } = KeyCombination.Shift(Keys.PageDown);
+    public KeyCombination PreviousState { get; private set; } = KeyCombination.Shift(Keys.PageUp);
+
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
@@ -245,6 +248,8 @@ public class HotkeyManager
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
             _ when ZoomDirection() is { } dir => () => _uiSettingsService.BaseFontSize += dir,
+            _ when NextState.IsPressed(e) => () => NavigateState(1),
+            _ when PreviousState.IsPressed(e) => () => NavigateState(-1),
             _ => null
         };
 
@@ -262,6 +267,26 @@ public class HotkeyManager
             null;
     }
 
+
+    private void NavigateState(int direction)
+    {
+        var currentState = _selectedState.SelectedStateSave;
+        var stateCategory = _selectedState.SelectedStateCategorySave;
+
+        if (currentState == null || stateCategory == null)
+            return;
+
+        var states = stateCategory.States;
+        if (states == null || states.Count == 0)
+            return;
+
+        int currentIndex = states.IndexOf(currentState);
+        if (currentIndex == -1)
+            return;
+
+        int nextIndex = (currentIndex + direction + states.Count) % states.Count;
+        _selectedState.SelectedStateSave = states[nextIndex];
+    }
 
     #endregion
 

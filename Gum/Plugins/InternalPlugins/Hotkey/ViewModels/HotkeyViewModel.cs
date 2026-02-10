@@ -57,6 +57,8 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 
             Add(_hotkeyManager.Rename, "Rename State");
 
+            Add(_hotkeyManager.NextState, "Next State");
+            Add(_hotkeyManager.PreviousState, "Previous State");
         }
 
         private void Add(KeyCombination keyCombination, string action)
