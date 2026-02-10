@@ -1,21 +1,20 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.ToolStates;
-using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
-using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using ToolsUtilities;
 using Vector2 = System.Numerics.Vector2;
-using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
 using ToolsUtilitiesStandard.Helpers;
 using RenderingLibrary.Math;
+using Gum.Wireframe.Editors.Visuals;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.Wireframe.Editors
 {
@@ -23,7 +22,12 @@ namespace Gum.Wireframe.Editors
     {
         #region Fields/Properties
 
-        OriginDisplay originDisplay;
+        // Visual components
+        private readonly PolygonPointNodesVisual _pointNodesVisual;
+        private readonly AddPointSpriteVisual _addPointSpriteVisual;
+        private readonly SelectedPointHighlightVisual _selectedPointHighlightVisual;
+        private readonly OriginDisplayVisual _originDisplayVisual;
+        private readonly EditorContext _context;
 
         const float RadiusAtNoZoom = 5;
 
@@ -34,11 +38,6 @@ namespace Gum.Wireframe.Editors
 
         List<GraphicalUiElement> selectedPolygons = new List<GraphicalUiElement>();
         LinePolygon SelectedLinePolygon => selectedPolygons.FirstOrDefault()?.RenderableComponent as LinePolygon;
-
-        List<SolidRectangle> pointNodes = new List<SolidRectangle>();
-        Sprite addPointSprite;
-        static Texture2D addPointTexture;
-        LineRectangle selectedPointLineRectangle;
 
         bool hasGrabbedBodyOrPoint = false;
 
@@ -66,7 +65,7 @@ namespace Gum.Wireframe.Editors
 
                 if(!isOver)
                 {
-                    var pointIndexOver = GetIndexOver(x, y);
+                    var pointIndexOver = _pointNodesVisual.GetIndexOver(x, y);
 
                     if(pointIndexOver != null)
                     {
@@ -76,7 +75,7 @@ namespace Gum.Wireframe.Editors
 
                 if(!isOver)
                 {
-                    if (IsPointOverAddPointSprite(x, y))
+                    if (_addPointSpriteVisual.IsPointOver(x, y))
                     {
                         isOver = true;
                     }
@@ -94,12 +93,6 @@ namespace Gum.Wireframe.Editors
             }
         }
 
-        private bool IsPointOverAddPointSprite(float x, float y)
-        {
-            return x > addPointSprite.X && x < addPointSprite.X + addPointSprite.Width &&
-                                    y > addPointSprite.Y && y < addPointSprite.Y + addPointSprite.Height;
-        }
-
         #endregion
 
         #region Constructor/Update To
@@ -114,96 +107,49 @@ namespace Gum.Wireframe.Editors
                   selectionManager,
                   selectedState)
         {
-            if(addPointTexture == null)
-            {
-                var gumExePath = System.IO.Path.GetDirectoryName(
-                    System.Reflection.Assembly.GetEntryAssembly().Location).ToLower().Replace("/", "\\") + "\\";
-
-                ContentLoader loader = new ContentLoader();
-                var loaderManager = new LoaderManager();
-
-                loaderManager.ContentLoader = loader;
-                var fileName = gumExePath + "Content/AddPoint.png";
-                //addPointTexture = loaderManager.LoadContent(fileName);
-
-                using (var stream = FileManager.GetStreamForFile(fileName))
-                {
-                    addPointTexture = Texture2D.FromStream(SystemManagers.Default.Renderer.GraphicsDevice,
-                        stream);
-
-                    addPointTexture.Name = fileName;
-                }
-
-                //addPointTexture = LoaderManager.Self.LoadContent<Texture2D>(gumExePath + "Content/AddPoint.png");
-            }
             this.layer = layer;
 
-            addPointSprite = new Sprite(addPointTexture);
-            addPointSprite.Name = "Add point sprite";
-            SpriteManager.Self.Add(addPointSprite, layer);
+            // Create EditorContext for visual components
+            _context = new EditorContext(
+                selectedState,
+                selectionManager,
+                Gum.Services.Locator.GetRequiredService<Gum.ToolCommands.IElementCommands>(),
+                Gum.Services.Locator.GetRequiredService<Gum.Commands.IGuiCommands>(),
+                Gum.Services.Locator.GetRequiredService<Gum.Commands.IFileCommands>(),
+                Gum.Services.Locator.GetRequiredService<ISetVariableLogic>(),
+                Gum.Services.Locator.GetRequiredService<Gum.Undo.IUndoManager>(),
+                Gum.Services.Locator.GetRequiredService<IVariableInCategoryPropagationLogic>(),
+                hotkeyManager,
+                Gum.Services.Locator.GetRequiredService<IWireframeObjectManager>(),
+                layer,
+                grabbedState,
+                System.Drawing.Color.White,
+                System.Drawing.Color.White);
 
-            selectedPointLineRectangle = new LineRectangle();
-            ShapeManager.Self.Add(selectedPointLineRectangle, layer);
-            selectedPointLineRectangle.Color = Color.Magenta;
-            selectedPointLineRectangle.IsDotted = false;
-            selectedPointLineRectangle.LinePixelWidth = 3;
-
-            originDisplay = new OriginDisplay(layer);
+            // Create visual components
+            _pointNodesVisual = new PolygonPointNodesVisual(_context, layer);
+            _addPointSpriteVisual = new AddPointSpriteVisual(_context, layer);
+            _selectedPointHighlightVisual = new SelectedPointHighlightVisual(_context, layer);
+            _originDisplayVisual = new OriginDisplayVisual(_context);
         }
 
         public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
         {
             selectedPolygons.Clear();
-
             selectedPolygons.AddRange(selectedObjects);
 
-            UpdatePointNodes();
-        }
+            // Update context's selected objects for visuals
+            _context.SelectedObjects.Clear();
+            _context.SelectedObjects.AddRange(selectedObjects);
 
-        private void UpdatePointNodes()
-        {
-            var neededNumberOfPointCircles = 0;
+            // Notify visual components of selection change
+            _pointNodesVisual.UpdateToSelection(selectedObjects);
+            _addPointSpriteVisual.UpdateToSelection(selectedObjects);
+            _selectedPointHighlightVisual.UpdateToSelection(selectedObjects);
+            _originDisplayVisual.UpdateToSelection(selectedObjects);
 
-            LinePolygon linePolygon = SelectedLinePolygon;
-
-            if(linePolygon != null)
-            {
-                neededNumberOfPointCircles = linePolygon.PointCount;
-            }
-
-            // create needed circles
-            while(pointNodes.Count < neededNumberOfPointCircles)
-            {
-                var rectangle = new SolidRectangle();
-                rectangle.Width = NodeDisplayWidth;
-                rectangle.Height = NodeDisplayWidth;
-                ShapeManager.Self.Add(rectangle, layer);
-                pointNodes.Add(rectangle);
-            }
-
-            // destroy excess circles
-            while(pointNodes.Count > neededNumberOfPointCircles)
-            {
-                var node = pointNodes.Last();
-                ShapeManager.Self.Remove(node);
-                pointNodes.Remove(node);
-            }
-
-            if(linePolygon != null)
-            {
-                var nodeDimension = NodeDisplayWidth;
-                // position circles
-                for (int i = 0; i < linePolygon.PointCount; i++)
-                {
-                    var point = linePolygon.AbsolutePointAt(i);
-
-                    pointNodes[i].X = point.X - nodeDimension/2;
-                    pointNodes[i].Y = point.Y - nodeDimension/2;
-
-                    pointNodes[i].Width = nodeDimension;
-                    pointNodes[i].Height = nodeDimension;
-                }
-            }
+            // Clear selected index when selection changes
+            selectedIndex = null;
         }
 
         #endregion
@@ -222,73 +168,15 @@ namespace Gum.Wireframe.Editors
 
                 BodyGrabbingActivity();
 
-                UpdatePointNodes();
+                // Update visual component state
+                _addPointSpriteVisual.IsEnabled = grabbedIndex == null && hasGrabbedBodyOrPoint == false;
+                _selectedPointHighlightVisual.SelectedIndex = selectedIndex;
 
-                UpdateAddPointSprite();
-
-                UpdateSelectedNodeLineRectangle();
-
-                originDisplay.UpdateTo(selectedObjects.First());
-            }
-        }
-
-        private void UpdateSelectedNodeLineRectangle()
-        {
-            var selectedPolygon = SelectedLinePolygon;
-            var hasSelection = selectedIndex != null && selectedIndex < selectedPolygon.PointCount;
-            selectedPointLineRectangle.Visible = hasSelection;
-
-            if(hasSelection)
-            {
-                var zoom = Renderer.Self.Camera.Zoom;
-                selectedPointLineRectangle.Width = NodeDisplayWidth + 6/zoom;
-                selectedPointLineRectangle.Height = NodeDisplayWidth + 6 / zoom;
-
-                var selectedVertexPosition = selectedPolygon.AbsolutePointAt(selectedIndex.Value);
-
-                selectedPointLineRectangle.X = selectedVertexPosition.X - selectedPointLineRectangle.Width / 2;
-                selectedPointLineRectangle.Y = selectedVertexPosition.Y - selectedPointLineRectangle.Height / 2;
-            }
-        }
-
-        private void UpdateAddPointSprite()
-        {
-            var canUpdatePoint = grabbedIndex == null && hasGrabbedBodyOrPoint == false;
-
-            addPointSprite.Visible = false;
-
-            const int maxPixelsForAddPoint = 15;
-
-            if (canUpdatePoint)
-            {
-
-                var worldX = InputLibrary.Cursor.Self.GetWorldX();
-                var worldY = InputLibrary.Cursor.Self.GetWorldY();
-
-                var zoom = Renderer.Self.Camera.Zoom;
-
-                this.addPointSprite.Width = this.addPointSprite.Height = 16 / zoom;
-
-                var closestResult = GetClosestLineOver(worldX, worldY);
-
-                addPointSprite.Visible = closestResult.MinDistance < (maxPixelsForAddPoint / zoom);
-
-                if(addPointSprite.Visible)
-                {
-                    // give preverential treatment to existing points:
-                    var existingPointIndexOver = GetIndexOver(worldX, worldY);
-                    addPointSprite.Visible = existingPointIndexOver == null;
-                }
-
-                if (addPointSprite.Visible)
-                {
-                    var selectedPolygon = SelectedLinePolygon;
-                    var addPointPosition = (selectedPolygon.AbsolutePointAt(closestResult.ClosestIndex) + selectedPolygon.AbsolutePointAt(closestResult.ClosestIndex+ 1)) / 2.0f;
-
-                    addPointSprite.X = addPointPosition.X - addPointSprite.Width / 2.0f;
-                    addPointSprite.Y = addPointPosition.Y - addPointSprite.Height / 2.0f;
-                }
-
+                // Update all visual components
+                _pointNodesVisual.Update();
+                _addPointSpriteVisual.Update();
+                _selectedPointHighlightVisual.Update();
+                _originDisplayVisual.Update();
             }
         }
 
@@ -302,9 +190,9 @@ namespace Gum.Wireframe.Editors
 
                 mHasChangedAnythingSinceLastPush = false;
 
-                var existingPointIndexOver = GetIndexOver(x, y);
+                var existingPointIndexOver = _pointNodesVisual.GetIndexOver(x, y);
 
-                var isAddPointSpriteVisible = IsPointOverAddPointSprite(x, y);
+                var isAddPointSpriteVisible = _addPointSpriteVisual.IsPointOver(x, y);
 
                 if (existingPointIndexOver != null || isAddPointSpriteVisible == false)
                 {
@@ -410,25 +298,12 @@ namespace Gum.Wireframe.Editors
 
             if (grabbedIndex == null && linePolygon != null)
             {
-                indexOver = GetIndexOver(cursor.GetWorldX(), cursor.GetWorldY());
+                indexOver = _pointNodesVisual.GetIndexOver(cursor.GetWorldX(), cursor.GetWorldY());
             }
 
-            for(int i = 0; i < pointNodes.Count; i++)
-            {
-                if(i == indexOver)
-                {
-                    pointNodes[i].Color = Color.Yellow;
-                }
-                else
-                {
-                    pointNodes[i].Color = Color.Gray;
-                }
-
-                if(indexOver == 0 && i == pointNodes.Count-1)
-                {
-                    pointNodes[i].Color = Color.Yellow;
-                }
-            }
+            // Update visual component state for highlighting
+            _pointNodesVisual.HighlightedIndex = indexOver;
+            _pointNodesVisual.GrabbedIndex = grabbedIndex;
 
             if(grabbedIndex != null && linePolygon != null && (cursor.XChange != 0 || cursor.YChange != 0))
             {
@@ -540,14 +415,10 @@ namespace Gum.Wireframe.Editors
 
         public override void Destroy()
         {
-            for (int i = 0; i < pointNodes.Count; i++)
-            {
-                ShapeManager.Self.Remove(pointNodes[i]);
-            }
-
-            SpriteManager.Self.Remove(addPointSprite);
-            ShapeManager.Self.Remove(selectedPointLineRectangle);
-            originDisplay.Destroy();
+            _pointNodesVisual.Destroy();
+            _addPointSpriteVisual.Destroy();
+            _selectedPointHighlightVisual.Destroy();
+            _originDisplayVisual.Destroy();
         }
 
         #region Get/Find methods
@@ -571,24 +442,7 @@ namespace Gum.Wireframe.Editors
 
         private int? GetIndexOver(float worldXAt, float worldYAt)
         {
-            var effectiveRadius = RadiusAtNoZoom / Renderer.Self.Camera.Zoom;
-            // consider zoom:
-            float currentZoomRadius = effectiveRadius * effectiveRadius;
-            for(int i = 0; i < pointNodes.Count; i++)
-            {
-                var left = pointNodes[i].X;
-                var top = pointNodes[i].Y;
-                var right = left + effectiveRadius * 2;
-                var bottom = top + effectiveRadius * 2;
-
-                if(worldXAt > left && worldXAt < right &&
-                    worldYAt > top && worldYAt < bottom)
-                {
-                    return i;
-                }
-            }
-
-            return null;
+            return _pointNodesVisual.GetIndexOver(worldXAt, worldYAt);
         }
 
         private (int ClosestIndex, float MinDistance) GetClosestLineOver(float worldXAt, float worldYAt)
