@@ -15,7 +15,6 @@ using Gum.Managers;
 using System.Collections;
 using System;
 using Gum.PropertyGridHelpers;
-using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Commands;
 using Gum.Services;
@@ -23,6 +22,7 @@ using Gum.ToolCommands;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Wireframe.Editors;
 using Gum.Wireframe.Editors.Handlers;
+using Color = System.Drawing.Color;
 
 namespace Gum.Wireframe;
 
@@ -42,6 +42,10 @@ public abstract class WireframeEditor
     private readonly WireframeObjectManager _wireframeObjectManager;
     protected GrabbedState grabbedState = new GrabbedState();
 
+    // Shared context and move handler for all wireframe editors
+    protected readonly EditorContext _context;
+    protected readonly MoveInputHandler _moveInputHandler;
+
     protected bool mHasChangedAnythingSinceLastPush = false;
 
     protected float aspectRatioOnGrab;
@@ -59,7 +63,10 @@ public abstract class WireframeEditor
     public WireframeEditor(
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        Layer layer,
+        Color lineColor,
+        Color textColor)
     {
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
@@ -70,6 +77,25 @@ public abstract class WireframeEditor
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+
+        // Create shared EditorContext and MoveInputHandler
+        _context = new EditorContext(
+            selectedState,
+            selectionManager,
+            _elementCommands,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _undoManager,
+            Locator.GetRequiredService<IVariableInCategoryPropagationLogic>(),
+            hotkeyManager,
+            Locator.GetRequiredService<IWireframeObjectManager>(),
+            layer,
+            grabbedState,
+            lineColor,
+            textColor);
+
+        _moveInputHandler = new MoveInputHandler(_context);
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);

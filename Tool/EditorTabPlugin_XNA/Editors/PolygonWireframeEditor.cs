@@ -24,7 +24,6 @@ namespace Gum.Wireframe.Editors
         private readonly AddPointSpriteVisual _addPointSpriteVisual;
         private readonly SelectedPointHighlightVisual _selectedPointHighlightVisual;
         private readonly OriginDisplayVisual _originDisplayVisual;
-        private readonly EditorContext _context;
         
         // Input handler
         private readonly PolygonPointInputHandler _pointInputHandler;
@@ -74,28 +73,14 @@ namespace Gum.Wireframe.Editors
             : base(
                   hotkeyManager, 
                   selectionManager,
-                  selectedState)
+                  selectedState,
+                  layer,
+                  System.Drawing.Color.White,
+                  System.Drawing.Color.White)
         {
             this.layer = layer;
 
-            // Create EditorContext for visual components
-            _context = new EditorContext(
-                selectedState,
-                selectionManager,
-                Gum.Services.Locator.GetRequiredService<Gum.ToolCommands.IElementCommands>(),
-                Gum.Services.Locator.GetRequiredService<Gum.Commands.IGuiCommands>(),
-                Gum.Services.Locator.GetRequiredService<Gum.Commands.IFileCommands>(),
-                Gum.Services.Locator.GetRequiredService<ISetVariableLogic>(),
-                Gum.Services.Locator.GetRequiredService<Gum.Undo.IUndoManager>(),
-                Gum.Services.Locator.GetRequiredService<IVariableInCategoryPropagationLogic>(),
-                hotkeyManager,
-                Gum.Services.Locator.GetRequiredService<IWireframeObjectManager>(),
-                layer,
-                grabbedState,
-                System.Drawing.Color.White,
-                System.Drawing.Color.White);
-
-            // Create visual components
+            // Create visual components (using inherited _context from base class)
             _pointNodesVisual = new PolygonPointNodesVisual(_context, layer);
             _addPointSpriteVisual = new AddPointSpriteVisual(_context, layer);
             _selectedPointHighlightVisual = new SelectedPointHighlightVisual(_context, layer);

@@ -20,6 +20,10 @@ using System;
 using Gum.ToolCommands;
 using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Services;
+using Gum.Commands;
+using Gum.Undo;
+using Gum.Wireframe.Editors.Handlers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Wireframe.Editors;
 
@@ -87,7 +91,10 @@ public class StandardWireframeEditor : WireframeEditor
         : base(
               hotkeyManager, 
               selectionManager,
-              selectedState)
+              selectedState,
+              layer,
+              lineColor,
+              textColor)
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeObjectManager = wireframeObjectManager;
@@ -110,7 +117,6 @@ public class StandardWireframeEditor : WireframeEditor
         heightDimensionDisplay = new DimensionDisplay();
         heightDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
         heightDimensionDisplay.SetColor(lineColor, textColor);
-
     }
 
     public override void Destroy()
@@ -139,7 +145,8 @@ public class StandardWireframeEditor : WireframeEditor
 
             HandlesActivity();
 
-            BodyGrabbingActivity();
+            // MoveInputHandler handles body grabbing (push/drag/release via PushActivity/ClickActivity)
+            MoveInputHandlerDragActivity();
 
             RotationHandleGrabbingActivity();
 
@@ -377,28 +384,17 @@ public class StandardWireframeEditor : WireframeEditor
             isRotationGrabbed = false;
         }
 
-        if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
+        // Let MoveInputHandler handle the release (it handles axis lock and snapping internally)
+        if (cursor.PrimaryClick)
         {
-            // If the user resized with locked to axis, then released, we don't want to apply this, because they are not doing axis constrained movement
-            if (_hotkeyManager.LockMovementToAxis.IsPressedInControl() && SideGrabbed == ResizeSide.None)
-            {
-                ApplyAxisLockToSelectedState();
-
-                _guiCommands.RefreshVariables();
-            }
-
-            // let's snap everything
-            if (RestrictToUnitValues)
-            {
-                SnapSelectedToUnitValues();
-            }
+            _moveInputHandler.HandleRelease();
         }
 
-        if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
+        // Handle resize-specific logic (not body movement)
+        if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush && SideGrabbed != ResizeSide.None)
         {
             DoEndOfSettingValuesLogic();
         }
-
     }
 
 
@@ -511,6 +507,20 @@ public class StandardWireframeEditor : WireframeEditor
             {
                 UpdateAspectRatioForGrabbedIpso();
             }
+
+            // Let MoveInputHandler know about the push for body movement
+            var worldX = cursor.GetWorldX();
+            var worldY = cursor.GetWorldY();
+            _moveInputHandler.HandlePush(worldX, worldY);
+        }
+    }
+
+    private void MoveInputHandlerDragActivity()
+    {
+        var cursor = InputLibrary.Cursor.Self;
+        if (cursor.PrimaryDown && grabbedState.HasMovedEnough)
+        {
+            _moveInputHandler.HandleDrag();
         }
     }
 
