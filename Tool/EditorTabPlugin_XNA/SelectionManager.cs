@@ -79,7 +79,7 @@ public class SelectionManager
     private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public bool IsOverBody
@@ -200,7 +200,7 @@ public class SelectionManager
         IDialogService dialogService,
         HotkeyManager hotkeyManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        WireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;

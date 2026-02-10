@@ -46,7 +46,7 @@ public class StandardWireframeEditor : WireframeEditor
 
     bool mHasGrabbed = false;
     private readonly IElementCommands _elementCommands;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly SelectionManager _selectionManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
@@ -83,7 +83,7 @@ public class StandardWireframeEditor : WireframeEditor
         SelectionManager selectionManager,
         ISelectedState selectedState,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        WireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager)
         : base(
               hotkeyManager, 
               selectionManager,
@@ -546,7 +546,7 @@ public class StandardWireframeEditor : WireframeEditor
         // invert Y so up is positive
         reposition.Y *= -1;
 
-        GraphicalUiElement representation = null;
+        GraphicalUiElement? representation = null;
 
         if (instanceSave != null)
         {

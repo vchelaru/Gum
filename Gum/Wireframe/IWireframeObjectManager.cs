@@ -17,12 +17,14 @@ public interface IWireframeObjectManager
     GraphicalUiElement? RootGue { get; }
 
     void RefreshAll(bool forceLayout, bool forceReloadTextures = false);
+    GraphicalUiElement? GetSelectedRepresentation();
+
+    GraphicalUiElement[] GetSelectedRepresentations();
 
     GraphicalUiElement? GetRepresentation(ElementSave elementSave);
 
     GraphicalUiElement? GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack = null);
 
-    GraphicalUiElement? GetSelectedRepresentation();
 
     InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType,
         List<ElementWithState> elementStack);
