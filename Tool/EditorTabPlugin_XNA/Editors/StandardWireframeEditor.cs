@@ -62,7 +62,7 @@ public class StandardWireframeEditor : WireframeEditor
         }
     }
 
-    public override bool HasCursorOver
+    public override bool HasCursorOverHandles
     {
         get
         {

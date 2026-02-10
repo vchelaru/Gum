@@ -33,7 +33,7 @@ namespace Gum.Wireframe.Editors
         List<GraphicalUiElement> selectedPolygons = new List<GraphicalUiElement>();
         LinePolygon SelectedLinePolygon => selectedPolygons.FirstOrDefault()?.RenderableComponent as LinePolygon;
 
-        public override bool HasCursorOver
+        public override bool HasCursorOverHandles
         {
             get
             {
@@ -45,16 +45,6 @@ namespace Gum.Wireframe.Editors
                 if (_pointInputHandler.HasCursorOver(x, y))
                 {
                     return true;
-                }
-
-                // Check if cursor is over polygon body
-                foreach (var gue in selectedPolygons)
-                {
-                    var polygon = gue.RenderableComponent as LinePolygon;
-                    if (polygon.IsPointInside(x, y))
-                    {
-                        return true;
-                    }
                 }
 
                 return false;
@@ -138,6 +128,7 @@ namespace Gum.Wireframe.Editors
                         {
                             mHasChangedAnythingSinceLastPush = false;
                             grabbedState.HandlePush();
+                            _moveInputHandler.HandlePush(x, y);
                         }
                     }
                 }
@@ -151,8 +142,8 @@ namespace Gum.Wireframe.Editors
                     }
                     else if (grabbedState.HasMovedEnough)
                     {
-                        // Body dragging
-                        ApplyCursorMovement(cursor);
+                        // Body dragging - use base class MoveInputHandler
+                        _moveInputHandler.HandleDrag();
                     }
                 }
 
@@ -162,6 +153,11 @@ namespace Gum.Wireframe.Editors
                     if (_pointInputHandler.IsActive)
                     {
                         _pointInputHandler.HandleRelease();
+                    }
+                    else
+                    {
+                        // Let MoveInputHandler handle the release (axis lock, snapping, etc.)
+                        _moveInputHandler.HandleRelease();
                     }
                 }
 
