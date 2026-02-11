@@ -14,6 +14,7 @@ using RenderingLibrary.Math;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment;
 using Gum.Input;
+using Gum.Wireframe.Editors.Visuals;
 
 namespace Gum.Wireframe.Editors.Handlers;
 
@@ -25,7 +26,7 @@ public class ResizeInputHandler : InputHandlerBase
     private ResizeSide _sideGrabbed = ResizeSide.None;
     private ResizeSide _sideOver = ResizeSide.None;
 
-    private readonly ResizeHandles _resizeHandles;
+    private readonly ResizeHandlesVisual _resizeHandlesVisual;
 
     public override int Priority => 90; // Higher than move, lower than rotation
 
@@ -35,10 +36,10 @@ public class ResizeInputHandler : InputHandlerBase
     /// </summary>
     public ResizeSide SideOver => _sideOver;
 
-    public ResizeInputHandler(EditorContext context, ResizeHandles resizeHandles)
+    public ResizeInputHandler(EditorContext context, ResizeHandlesVisual resizeHandlesVisual)
         : base(context)
     {
-        _resizeHandles = resizeHandles;
+        _resizeHandlesVisual = resizeHandlesVisual;
     }
 
     public override bool HasCursorOver(float worldX, float worldY)
@@ -60,7 +61,7 @@ public class ResizeInputHandler : InputHandlerBase
 
     public override void UpdateHover(float worldX, float worldY)
     {
-        if (!_resizeHandles.Visible)
+        if (!_resizeHandlesVisual.Visible)
         {
             _sideOver = ResizeSide.None;
             return;
@@ -71,7 +72,7 @@ public class ResizeInputHandler : InputHandlerBase
         // If dragging, don't change the side over
         if (cursor.PrimaryPush || (!cursor.PrimaryDown && !cursor.PrimaryClick))
         {
-            _sideOver = _resizeHandles.GetSideOver(worldX, worldY);
+            _sideOver = _resizeHandlesVisual.Handles.GetSideOver(worldX, worldY);
         }
     }
 
@@ -141,18 +142,7 @@ public class ResizeInputHandler : InputHandlerBase
 
     public override void OnSelectionChanged()
     {
-        // Update resize handle visibility based on selection
-        if (Context.SelectedObjects.Count == 0 ||
-            Context.SelectedObjects.Any(item => item.Tag is ScreenSave))
-        {
-            _resizeHandles.Visible = false;
-        }
-        else
-        {
-            _resizeHandles.Visible = true;
-            _resizeHandles.SetValuesFrom(Context.SelectedObjects);
-            _resizeHandles.UpdateHandleSizes();
-        }
+        // Visibility and updates are now handled by ResizeHandlesVisual.UpdateToSelection
     }
 
     private bool ApplySizeChange(float cursorXChange, float cursorYChange)
@@ -349,14 +339,14 @@ public class ResizeInputHandler : InputHandlerBase
                 break;
         }
 
-        if (_resizeHandles.Width != 0)
+        if (_resizeHandlesVisual.Handles.Width != 0)
         {
-            widthMultiplier *= (((IPositionedSizedObject)ipso).Width / _resizeHandles.Width);
+            widthMultiplier *= (((IPositionedSizedObject)ipso).Width / _resizeHandlesVisual.Handles.Width);
         }
 
-        if (_resizeHandles.Height != 0)
+        if (_resizeHandlesVisual.Handles.Height != 0)
         {
-            heightMultiplier *= (((IPositionedSizedObject)ipso).Height / _resizeHandles.Height);
+            heightMultiplier *= (((IPositionedSizedObject)ipso).Height / _resizeHandlesVisual.Handles.Height);
         }
 
         if (Context.HotkeyManager.ResizeFromCenter.IsPressedInControl())

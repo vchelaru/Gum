@@ -35,7 +35,7 @@ public class StandardWireframeEditor : WireframeEditor
 {
     #region Fields/Properties
 
-    ResizeHandles mResizeHandles;
+    ResizeHandlesVisual _resizeHandlesVisual;
     ResizeInputHandler _resizeInputHandler;
     RotationInputHandler _rotationInputHandler;
     RotationHandleVisual _rotationHandleVisual;
@@ -103,11 +103,10 @@ public class StandardWireframeEditor : WireframeEditor
         _selectionManager = selectionManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
 
-        mResizeHandles = new ResizeHandles(layer, lineColor);
-        mResizeHandles.ShowOrigin = true;
-        mResizeHandles.Visible = false;
+        _resizeHandlesVisual = new ResizeHandlesVisual(_context, lineColor);
+        _resizeHandlesVisual.ShowOrigin = true;
 
-        _resizeInputHandler = new ResizeInputHandler(_context, mResizeHandles);
+        _resizeInputHandler = new ResizeInputHandler(_context, _resizeHandlesVisual);
 
         _rotationHandleVisual = new RotationHandleVisual(_context, Color.Yellow);
         _rotationInputHandler = new RotationInputHandler(_context, _rotationHandleVisual);
@@ -118,7 +117,7 @@ public class StandardWireframeEditor : WireframeEditor
 
     public override void Destroy()
     {
-        mResizeHandles.Destroy();
+        _resizeHandlesVisual.Destroy();
         _rotationInputHandler.Destroy();
         _rotationHandleVisual.Destroy();
 
@@ -166,10 +165,7 @@ public class StandardWireframeEditor : WireframeEditor
             {
                 UpdateLockedVariables(selectedObjects);
 
-                mResizeHandles.SetValuesFrom(selectedObjects);
-
-                mResizeHandles.UpdateHandleSizes();
-
+                _resizeHandlesVisual.Update();
                 _rotationHandleVisual.Update();
             }
         }
@@ -340,18 +336,8 @@ public class StandardWireframeEditor : WireframeEditor
 
         _resizeInputHandler.OnSelectionChanged();
         _rotationInputHandler.OnSelectionChanged();
+        _resizeHandlesVisual.UpdateToSelection(selectedObjects);
         _rotationHandleVisual.UpdateToSelection(selectedObjects);
-
-        if (selectedObjects.Count == 0 || selectedObjects.Any(item => item.Tag is ScreenSave))
-        {
-            mResizeHandles.Visible = false;
-        }
-        else
-        {
-            mResizeHandles.Visible = true;
-            mResizeHandles.SetValuesFrom(selectedObjects);
-            mResizeHandles.UpdateHandleSizes();
-        }
     }
 
     #endregion
