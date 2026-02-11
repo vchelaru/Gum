@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -52,6 +53,8 @@ public class SelectionManager
     LayerService _layerService;
 
     public WireframeEditor? WireframeEditor;
+
+    private RectangleSelector? _rectangleSelector;
 
     List<GraphicalUiElement> mSelectedIpsos = new List<GraphicalUiElement>();
     IPositionedSizedObject? mHighlightedIpso;
@@ -221,6 +224,16 @@ public class SelectionManager
 
         highlightManager = new HighlightManager(overlayLayer);
 
+        // Initialize rectangle selector for drag-to-select functionality
+        var guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _rectangleSelector = new RectangleSelector(
+            _hotkeyManager,
+            _wireframeObjectManager,
+            this,
+            guiCommands,
+            overlayLayer);
+
+        System.Diagnostics.Debug.WriteLine("SelectionManager.Initialize - RectangleSelector created and initialized");
     }
 
     /// <summary>
@@ -268,11 +281,111 @@ public class SelectionManager
     public void LateActivity(SystemManagers systemManagers)
     {
         WireframeEditor?.Activity(SelectedGues, systemManagers);
+
+        // Update rectangle selector visual
+        _rectangleSelector?.Update();
     }
 
     public void Deselect()
     {
         SelectedGue = null;
+    }
+
+    /// <summary>
+    /// Deselects all currently selected elements.
+    /// </summary>
+    public void DeselectAll()
+    {
+        // Clear the underlying state first (important for multiple selections)
+        _selectedState.SelectedInstance = null;
+
+        // Then clear the local selection and update editors
+        SelectedGue = null;
+    }
+
+    /// <summary>
+    /// Selects the specified elements, replacing the current selection.
+    /// </summary>
+    public void Select(IEnumerable<GraphicalUiElement> elements)
+    {
+        if (elements == null || !elements.Any())
+        {
+            DeselectAll();
+            return;
+        }
+
+        var elementList = elements.ToList();
+
+        // Convert GraphicalUiElements to InstanceSaves
+        var instances = new List<InstanceSave>();
+        foreach (var element in elementList)
+        {
+            if (element.Tag is InstanceSave instance)
+            {
+                instances.Add(instance);
+            }
+        }
+
+        if (instances.Any())
+        {
+            _selectedState.SelectedInstances = instances;
+
+            var elementStack = _selectedState.GetTopLevelElementStack();
+            var selectedGues = new List<GraphicalUiElement>();
+            foreach (var instance in instances)
+            {
+                var gue = _wireframeObjectManager.GetRepresentation(instance, elementStack);
+                if (gue != null)
+                {
+                    selectedGues.Add(gue);
+                }
+            }
+            SelectedGues = selectedGues;
+        }
+    }
+
+    /// <summary>
+    /// Toggles the selection state of the specified element.
+    /// If selected, deselects it. If not selected, selects it.
+    /// </summary>
+    public void ToggleSelection(GraphicalUiElement element)
+    {
+        if (element?.Tag is InstanceSave instance)
+        {
+            var currentInstances = _selectedState.SelectedInstances.ToList();
+
+            if (currentInstances.Contains(instance))
+            {
+                // Deselect
+                currentInstances.Remove(instance);
+            }
+            else
+            {
+                // Select
+                currentInstances.Add(instance);
+            }
+
+            if (currentInstances.Any())
+            {
+                _selectedState.SelectedInstances = currentInstances;
+
+                var elementStack = _selectedState.GetTopLevelElementStack();
+                var selectedGues = new List<GraphicalUiElement>();
+                foreach (var inst in currentInstances)
+                {
+                    var gue = _wireframeObjectManager.GetRepresentation(inst, elementStack);
+                    if (gue != null)
+                    {
+                        selectedGues.Add(gue);
+                    }
+                }
+                SelectedGues = selectedGues;
+            }
+            else
+            {
+                DeselectAll();
+            }
+        }
     }
 
     /// <summary>
@@ -307,6 +420,16 @@ public class SelectionManager
             }
             else
             {
+                // Check rectangle selector cursor first (for shift+drag mode indication)
+                if (_rectangleSelector != null)
+                {
+                    var rectangleCursor = _rectangleSelector.GetCursorToShow();
+                    if (rectangleCursor != null)
+                    {
+                        cursorToSet = rectangleCursor;
+                    }
+                }
+
                 if (WireframeEditor != null)
                 {
                     cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
@@ -677,7 +800,7 @@ public class SelectionManager
 
                     WireframeEditor = new StandardWireframeEditor(
                         _layerService.OverlayLayer,
-                        lineColor, textColor, 
+                        lineColor, textColor,
                         _hotkeyManager,
                         this,
                         _selectedState,
@@ -719,9 +842,42 @@ public class SelectionManager
     {
         if (_editingManager.ContextMenuStrip?.Visible != true)
         {
-            if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
+            // Handle rectangle selection input
+            if (_rectangleSelector != null)
             {
-                PushAndDoubleClickSelectionActivity();
+                if (Cursor.PrimaryPush)
+                {
+                    float worldX = Cursor.GetWorldX();
+                    float worldY = Cursor.GetWorldY();
+                    System.Diagnostics.Debug.WriteLine($"SelectionActivity - PrimaryPush at ({worldX:F1}, {worldY:F1}), IsOverBody={IsOverBody}");
+                    _rectangleSelector.HandlePush(worldX, worldY);
+                    System.Diagnostics.Debug.WriteLine($"SelectionActivity - After HandlePush, IsActive={_rectangleSelector.IsActive}");
+                }
+
+                if (Cursor.PrimaryDown && _rectangleSelector.IsActive)
+                {
+                    _rectangleSelector.HandleDrag();
+                }
+
+                if (Cursor.PrimaryClick && _rectangleSelector.IsActive)
+                {
+                    _rectangleSelector.HandleRelease();
+                }
+            }
+
+            // Handle normal click/double-click selection
+            // Only if rectangle selector didn't handle it
+            if (_rectangleSelector?.IsActive != true)
+            {
+                if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
+                {
+                    System.Diagnostics.Debug.WriteLine("SelectionActivity - Running normal PushAndDoubleClickSelectionActivity");
+                    PushAndDoubleClickSelectionActivity();
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("SelectionActivity - Skipping normal selection, rectangle selector is active");
             }
 
             //if (Cursor.PrimaryClick)

@@ -180,6 +180,7 @@ public class HotkeyManager
     public KeyCombination LockMovementToAxis { get; private set; } = KeyCombination.Shift();
     public KeyCombination MaintainResizeAspectRatio { get; private set; } = KeyCombination.Shift();
     public KeyCombination SnapRotationTo15Degrees { get; private set; } = KeyCombination.Shift();
+    public KeyCombination MultiSelect { get; private set; } = KeyCombination.Shift();
     public KeyCombination ResizeFromCenter { get; private set; } = KeyCombination.Alt();
 
     public KeyCombination MoveCameraLeft { get; private set; } = KeyCombination.Ctrl(Keys.Left);

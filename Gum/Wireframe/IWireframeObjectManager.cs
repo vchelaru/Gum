@@ -34,4 +34,10 @@ public interface IWireframeObjectManager
         string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack);
 
     bool IsRepresentation(IPositionedSizedObject ipso);
+
+    /// <summary>
+    /// Gets all visible GraphicalUiElements in the current screen/component.
+    /// This is used to find elements within a selection rectangle.
+    /// </summary>
+    IEnumerable<GraphicalUiElement> GetAllVisibleElements();
 }
