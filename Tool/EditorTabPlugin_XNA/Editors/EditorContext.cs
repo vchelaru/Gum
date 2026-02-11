@@ -10,6 +10,7 @@ using Gum.Undo;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System.Collections.Generic;
+using System.Linq;
 using Color = System.Drawing.Color;
 
 namespace Gum.Wireframe.Editors;
@@ -129,6 +130,130 @@ public class EditorContext
                 AspectRatioOnGrab = width / height;
             }
         }
+    }
+
+    /// <summary>
+    /// Performs end-of-editing logic: saves the element, refreshes UI, and notifies plugins of changes.
+    /// Call this after completing a drag/resize/rotate operation.
+    /// </summary>
+    public void DoEndOfSettingValuesLogic()
+    {
+        var selectedElement = SelectedState.SelectedElement;
+        var stateSave = SelectedState.SelectedStateSave;
+        if (stateSave == null)
+        {
+            throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
+        }
+
+        FileCommands.TryAutoSaveElement(selectedElement);
+
+        using var undoLock = UndoManager.RequestLock();
+
+        GuiCommands.RefreshVariableValues();
+
+        var element = SelectedState.SelectedElement;
+
+        foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
+        {
+            var oldValue = GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
+
+            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
+            {
+                var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
+
+                SetVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
+                   oldValue,
+                   instance,
+                   element.DefaultState,
+                   refresh: true,
+                   recordUndo: false,
+                   trySave: false);
+            }
+        }
+
+        foreach (var possiblyChangedVariableList in stateSave.VariableLists)
+        {
+            var oldValue = GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
+
+            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
+            {
+                var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
+                Gum.Plugins.PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
+            }
+        }
+
+        HasChangedAnythingSinceLastPush = false;
+    }
+
+    private bool DoValuesDiffer(DataTypes.Variables.StateSave newStateSave, string variableName, object oldValue)
+    {
+        var newValue = newStateSave.GetValue(variableName);
+        if (newValue == null && oldValue != null)
+        {
+            return true;
+        }
+        if (newValue != null && oldValue == null)
+        {
+            return true;
+        }
+        if (newValue == null && oldValue == null)
+        {
+            return false;
+        }
+        // neither are null
+        else
+        {
+            if (oldValue is float oldFloat)
+            {
+                var newFloat = (float)newValue;
+                return oldFloat != newFloat;
+            }
+            else if (oldValue is string)
+            {
+                return (string)oldValue != (string)newValue;
+            }
+            else if (oldValue is bool)
+            {
+                return (bool)oldValue != (bool)newValue;
+            }
+            else if (oldValue is int)
+            {
+                return (int)oldValue != (int)newValue;
+            }
+            else if (oldValue is System.Numerics.Vector2)
+            {
+                return (System.Numerics.Vector2)oldValue != (System.Numerics.Vector2)newValue;
+            }
+            else if (oldValue is System.Collections.IList oldList)
+            {
+                return AreListsSame(oldList, (System.Collections.IList)newValue);
+            }
+            else
+            {
+                return oldValue.Equals(newValue) == false;
+            }
+        }
+    }
+
+    private bool AreListsSame(System.Collections.IList oldList, System.Collections.IList newList)
+    {
+        if (oldList == null && newList == null)
+        {
+            return true;
+        }
+        if (oldList == null || newList == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < oldList.Count; i++)
+        {
+            if (oldList[i].Equals(newList[i]) == false)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     #endregion

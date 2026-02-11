@@ -125,16 +125,6 @@ public class StandardWireframeEditor : WireframeEditor
         _visuals.Add(heightDimensionDisplay);
     }
 
-    public override void Destroy()
-    {
-        _resizeHandlesVisual.Destroy();
-        _rotationInputHandler.Destroy();
-        _rotationHandleVisual.Destroy();
-
-        widthDimensionDisplay.Destroy();
-        heightDimensionDisplay.Destroy();
-    }
-
     #region Activity
 
     protected override bool ShouldProcessActivity(ICollection<GraphicalUiElement> selectedObjects)
@@ -225,27 +215,8 @@ public class StandardWireframeEditor : WireframeEditor
         this.selectedObjects.Clear();
         this.selectedObjects.AddRange(selectedObjects);
 
-        _context.SelectedObjects.Clear();
-        _context.SelectedObjects.AddRange(selectedObjects);
-
-        _resizeInputHandler.OnSelectionChanged();
-        _rotationInputHandler.OnSelectionChanged();
-        _resizeHandlesVisual.UpdateToSelection(selectedObjects);
-        _rotationHandleVisual.UpdateToSelection(selectedObjects);
-    }
-
-    #endregion
-
-    #region Changing the cursor (for resizing
-
-    public override System.Windows.Forms.Cursor GetWindowsCursorToShow(
-        System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
-    {
-        var cursorFromHandler = _resizeInputHandler.GetCursorToShow(worldXAt, worldYAt);
-        if (cursorFromHandler != null) return cursorFromHandler;
-
-        cursorFromHandler = _rotationInputHandler.GetCursorToShow(worldXAt, worldYAt);
-        return cursorFromHandler ?? defaultCursor;
+        // Base class handles updating context, visuals, and handlers
+        base.UpdateToSelection(selectedObjects);
     }
 
     #endregion

@@ -99,18 +99,8 @@ public class PolygonWireframeEditor : WireframeEditor
         selectedPolygons.Clear();
         selectedPolygons.AddRange(selectedObjects);
 
-        // Update context's selected objects for visuals
-        _context.SelectedObjects.Clear();
-        _context.SelectedObjects.AddRange(selectedObjects);
-
-        // Notify visual components of selection change
-        _pointNodesVisual.UpdateToSelection(selectedObjects);
-        _addPointSpriteVisual.UpdateToSelection(selectedObjects);
-        _selectedPointHighlightVisual.UpdateToSelection(selectedObjects);
-        _originDisplayVisual.UpdateToSelection(selectedObjects);
-
-        // Notify handler of selection change
-        _pointInputHandler.OnSelectionChanged();
+        // Base class handles updating context, visuals, and handlers
+        base.UpdateToSelection(selectedObjects);
     }
 
     #endregion
@@ -118,36 +108,6 @@ public class PolygonWireframeEditor : WireframeEditor
     #region Activity Functions
 
     // Note: Activity is now handled by base class which iterates through registered handlers and visuals
-
-    #endregion
-
-    public override void Destroy()
-    {
-        _pointNodesVisual.Destroy();
-        _addPointSpriteVisual.Destroy();
-        _selectedPointHighlightVisual.Destroy();
-        _originDisplayVisual.Destroy();
-    }
-
-    #region Get/Find methods
-
-    public override Cursor GetWindowsCursorToShow(Cursor defaultCursor, float worldXAt, float worldYAt)
-    {
-        // Check handlers in priority order
-        var handlerCursor = _pointInputHandler.GetCursorToShow(worldXAt, worldYAt);
-        if (handlerCursor != null)
-        {
-            return handlerCursor;
-        }
-
-        handlerCursor = _moveInputHandler.GetCursorToShow(worldXAt, worldYAt);
-        if (handlerCursor != null)
-        {
-            return handlerCursor;
-        }
-
-        return defaultCursor;
-    }
 
     #endregion
 }

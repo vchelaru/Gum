@@ -29,8 +29,6 @@ public abstract class InputHandlerBase : IInputHandler
         if (HasCursorOver(worldX, worldY))
         {
             IsActive = true;
-            Context.HasChangedAnythingSinceLastPush = false;
-            Context.GrabbedState.HandlePush();
             OnPush(worldX, worldY);
             return true;
         }

@@ -75,7 +75,29 @@ public abstract class WireframeEditor
         _moveInputHandler = new MoveInputHandler(_context);
     }
 
-    public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
+    /// <summary>
+    /// Updates all visuals and handlers to reflect the current selection.
+    /// Override to add custom selection handling, but call base.UpdateToSelection() to ensure
+    /// visuals and handlers are updated.
+    /// </summary>
+    public virtual void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
+    {
+        // Update context's selected objects
+        _context.SelectedObjects.Clear();
+        _context.SelectedObjects.AddRange(selectedObjects);
+
+        // Update all visuals
+        foreach (var visual in _visuals)
+        {
+            visual.UpdateToSelection(selectedObjects);
+        }
+
+        // Notify all handlers of selection change
+        foreach (var handler in _inputHandlers)
+        {
+            handler.OnSelectionChanged();
+        }
+    }
 
     public abstract bool HasCursorOverHandles { get; }
 
@@ -161,10 +183,32 @@ public abstract class WireframeEditor
     {
     }
 
-    public abstract System.Windows.Forms.Cursor GetWindowsCursorToShow(
-        System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt);
+    /// <summary>
+    /// Gets the Windows Forms cursor to display based on current handler states.
+    /// Iterates through handlers by priority to find the first one that wants to change the cursor.
+    /// </summary>
+    public virtual System.Windows.Forms.Cursor GetWindowsCursorToShow(
+        System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
+    {
+        foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
+        {
+            var cursor = handler.GetCursorToShow(worldXAt, worldYAt);
+            if (cursor != null) return cursor;
+        }
+        return defaultCursor;
+    }
 
-    public abstract void Destroy();
+    /// <summary>
+    /// Destroys all registered visuals and handlers.
+    /// Override to add custom cleanup, but call base.Destroy() to ensure visuals are cleaned up.
+    /// </summary>
+    public virtual void Destroy()
+    {
+        foreach (var visual in _visuals)
+        {
+            visual.Destroy();
+        }
+    }
 
     public virtual bool TryHandleDelete()
     {
@@ -176,131 +220,5 @@ public abstract class WireframeEditor
             }
         }
         return false;
-    }
-
-
-    protected void DoEndOfSettingValuesLogic()
-    {
-        var selectedElement = _context.SelectedState.SelectedElement;
-        var stateSave = _context.SelectedState.SelectedStateSave;
-        if (stateSave == null)
-        {
-            throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
-        }
-
-        _context.FileCommands.TryAutoSaveElement(selectedElement);
-
-        using var undoLock = _context.UndoManager.RequestLock();
-
-        _context.GuiCommands.RefreshVariableValues();
-
-        var element = _context.SelectedState.SelectedElement;
-
-        foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
-        {
-            var oldValue = _context.GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
-
-                // should this be:
-                _context.SetVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
-                   oldValue,
-                   instance,
-                   element.DefaultState,
-                   refresh: true,
-                   recordUndo: false,
-                   trySave: false);
-                // instead of this?
-                //PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
-            }
-        }
-
-        foreach (var possiblyChangedVariableList in stateSave.VariableLists)
-        {
-            var oldValue = _context.GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
-            }
-        }
-
-        _context.HasChangedAnythingSinceLastPush = false;
-    }
-
-    protected bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
-    {
-        var newValue = newStateSave.GetValue(variableName);
-        if (newValue == null && oldValue != null)
-        {
-            return true;
-        }
-        if (newValue != null && oldValue == null)
-        {
-            return true;
-        }
-        if (newValue == null && oldValue == null)
-        {
-            return false;
-        }
-        // neither are null
-        else
-        {
-            if (oldValue is float)
-            {
-                var oldFloat = (float)oldValue;
-                var newFloat = (float)newValue;
-
-                return oldFloat != newFloat;
-            }
-            else if (oldValue is string)
-            {
-                return (string)oldValue != (string)newValue;
-            }
-            else if (oldValue is bool)
-            {
-                return (bool)oldValue != (bool)newValue;
-            }
-            else if (oldValue is int)
-            {
-                return (int)oldValue != (int)newValue;
-            }
-            else if (oldValue is Vector2)
-            {
-                return (Vector2)oldValue != (Vector2)newValue;
-            }
-            else if (oldValue is IList oldList)
-            {
-                return AreListsSame(oldList, (IList)newValue);
-            }
-            else
-            {
-                return oldValue.Equals(newValue) == false;
-            }
-        }
-    }
-
-    private bool AreListsSame(IList oldList, IList newList)
-    {
-        if (oldList == null && newList == null)
-        {
-            return true;
-        }
-        if (oldList == null || newList == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < oldList.Count; i++)
-        {
-            if (oldList[i].Equals(newList[i]) == false)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 }

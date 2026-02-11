@@ -73,7 +73,7 @@ public class MoveInputHandler : InputHandlerBase
                 SnapSelectedToUnitValues();
             }
 
-            DoEndOfSettingValuesLogic();
+            Context.DoEndOfSettingValuesLogic();
         }
 
         _hasGrabbed = false;
@@ -341,125 +341,5 @@ public class MoveInputHandler : InputHandlerBase
             float desiredHeight = MathFunctions.RoundToInt(height);
             differenceToUnitHeight = desiredHeight - height;
         }
-    }
-
-    private void DoEndOfSettingValuesLogic()
-    {
-        var selectedElement = Context.SelectedState.SelectedElement;
-        var stateSave = Context.SelectedState.SelectedStateSave;
-        if (stateSave == null)
-        {
-            throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
-        }
-
-        Context.FileCommands.TryAutoSaveElement(selectedElement);
-
-        using var undoLock = Context.UndoManager.RequestLock();
-
-        Context.GuiCommands.RefreshVariableValues();
-
-        var element = Context.SelectedState.SelectedElement;
-
-        foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
-        {
-            var oldValue = Context.GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
-
-                Context.SetVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
-                   oldValue,
-                   instance,
-                   element.DefaultState,
-                   refresh: true,
-                   recordUndo: false,
-                   trySave: false);
-            }
-        }
-
-        foreach (var possiblyChangedVariableList in stateSave.VariableLists)
-        {
-            var oldValue = Context.GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
-            }
-        }
-
-        Context.HasChangedAnythingSinceLastPush = false;
-    }
-
-    private bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
-    {
-        var newValue = newStateSave.GetValue(variableName);
-        if (newValue == null && oldValue != null)
-        {
-            return true;
-        }
-        if (newValue != null && oldValue == null)
-        {
-            return true;
-        }
-        if (newValue == null && oldValue == null)
-        {
-            return false;
-        }
-        // neither are null
-        else
-        {
-            if (oldValue is float oldFloat)
-            {
-                var newFloat = (float)newValue;
-                return oldFloat != newFloat;
-            }
-            else if (oldValue is string)
-            {
-                return (string)oldValue != (string)newValue;
-            }
-            else if (oldValue is bool)
-            {
-                return (bool)oldValue != (bool)newValue;
-            }
-            else if (oldValue is int)
-            {
-                return (int)oldValue != (int)newValue;
-            }
-            else if (oldValue is Vector2)
-            {
-                return (Vector2)oldValue != (Vector2)newValue;
-            }
-            else if (oldValue is IList oldList)
-            {
-                return AreListsSame(oldList, (IList)newValue);
-            }
-            else
-            {
-                return oldValue.Equals(newValue) == false;
-            }
-        }
-    }
-
-    private bool AreListsSame(IList oldList, IList newList)
-    {
-        if (oldList == null && newList == null)
-        {
-            return true;
-        }
-        if (oldList == null || newList == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < oldList.Count; i++)
-        {
-            if (oldList[i].Equals(newList[i]) == false)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 }
