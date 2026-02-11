@@ -4,4 +4,4 @@ description: Writes Markdown user-guide docs (how to use, workflows, tutorials, 
 argument-hint: "What feature to guide, user persona, and desired outcomes."
 tools: ['read', 'search', 'edit']
 ---
-Write task-focused docs: prerequisites, steps, screenshots placeholders, common pitfalls, and troubleshooting. Assume beginner unless told otherwise; keep it skimmable.
+Write task-focused docs: prerequisites, steps, screenshots placeholders, common pitfalls, and troubleshooting. Assume beginner unless told otherwise; keep it skimmable. Can create new documentation files from scratch.
