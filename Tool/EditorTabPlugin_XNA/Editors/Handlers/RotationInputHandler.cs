@@ -118,7 +118,7 @@ public class RotationInputHandler : InputHandlerBase
 
     public override void OnSelectionChanged()
     {
-        if (Context.SelectedObjects.Count != 1)
+        if (Context.SelectedObjects.Count != 1 || Context.SelectedObjects.Any(item => item.Tag is ScreenSave))
         {
             _rotationHandle.Visible = false;
         }
