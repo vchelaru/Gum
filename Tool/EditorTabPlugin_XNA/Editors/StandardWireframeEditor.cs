@@ -130,7 +130,7 @@ public class StandardWireframeEditor : WireframeEditor
 
     public override void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
     {
-        if (selectedObjects.Count != 0 && _selectedState.SelectedStateSave != null && _selectedState.CustomCurrentStateSave == null)
+        if (selectedObjects.Count != 0 && _context.SelectedState.SelectedStateSave != null && _context.SelectedState.CustomCurrentStateSave == null)
         {
             var cursor = InputLibrary.Cursor.Self;
             float worldX = cursor.GetWorldX();
@@ -144,7 +144,7 @@ public class StandardWireframeEditor : WireframeEditor
             ClickActivity();
 
             // ResizeInputHandler handles resize dragging
-            if (cursor.PrimaryDown && grabbedState.HasMovedEnough)
+            if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
             {
                 _resizeInputHandler.HandleDrag();
             }
@@ -179,10 +179,10 @@ public class StandardWireframeEditor : WireframeEditor
     {
         var item = selectedObjects.FirstOrDefault();
 
-        IsXMovementEnabled = true;
-        IsYMovementEnabled = true;
-        IsWidthChangeEnabled = true;
-        IsHeightChangeEnabled = true;
+        _context.IsXMovementEnabled = true;
+        _context.IsYMovementEnabled = true;
+        _context.IsWidthChangeEnabled = true;
+        _context.IsHeightChangeEnabled = true;
 
 
         if (item == null) return;
@@ -197,9 +197,9 @@ public class StandardWireframeEditor : WireframeEditor
         }
         if(tag is ElementSave element)
         {
-            rfv = new RecursiveVariableFinder(_selectedState.SelectedStateSave);
+            rfv = new RecursiveVariableFinder(_context.SelectedState.SelectedStateSave);
         }
-            
+
         var variableReferences = rfv?.GetVariableList("VariableReferences");
 
         if(variableReferences != null)
@@ -216,20 +216,20 @@ public class StandardWireframeEditor : WireframeEditor
 
                     if(variable == "X")
                     {
-                        IsXMovementEnabled = false;
+                        _context.IsXMovementEnabled = false;
                     }
                     if(variable == "Y")
                     {
-                        IsYMovementEnabled = false;
+                        _context.IsYMovementEnabled = false;
 
                     }
                     if (variable == "Width")
                     {
-
+                        _context.IsWidthChangeEnabled = false;
                     }
                     if (variable == "Height")
                     {
-
+                        _context.IsHeightChangeEnabled = false;
                     }
                 }
             }
@@ -296,9 +296,9 @@ public class StandardWireframeEditor : WireframeEditor
         var cursor = InputLibrary.Cursor.Self;
         if (cursor.PrimaryPush)
         {
-            mHasChangedAnythingSinceLastPush = false;
+            _context.HasChangedAnythingSinceLastPush = false;
 
-            grabbedState.HandlePush();
+            _context.GrabbedState.HandlePush();
 
             mHasGrabbed = _selectionManager.HasSelection;
 
@@ -319,7 +319,7 @@ public class StandardWireframeEditor : WireframeEditor
     private void MoveInputHandlerDragActivity()
     {
         var cursor = InputLibrary.Cursor.Self;
-        if (cursor.PrimaryDown && grabbedState.HasMovedEnough)
+        if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
         {
             _moveInputHandler.HandleDrag();
         }

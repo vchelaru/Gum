@@ -90,7 +90,6 @@ public class EditorContext
         HotkeyManager hotkeyManager,
         IWireframeObjectManager wireframeObjectManager,
         Layer overlayLayer,
-        GrabbedState grabbedState,
         Color lineColor,
         Color textColor)
     {
@@ -105,7 +104,7 @@ public class EditorContext
         HotkeyManager = hotkeyManager;
         WireframeObjectManager = wireframeObjectManager;
         OverlayLayer = overlayLayer;
-        GrabbedState = grabbedState;
+        GrabbedState = new GrabbedState();
         LineColor = lineColor;
         TextColor = textColor;
     }

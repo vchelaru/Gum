@@ -30,33 +30,15 @@ public abstract class WireframeEditor
 {
     #region Fields/Properties
 
-    protected HotkeyManager _hotkeyManager { get; private set; }
-
-    private readonly SelectionManager _selectionManager;
-    private readonly ISetVariableLogic _setVariableLogic;
-    protected readonly ISelectedState _selectedState;
-    private readonly IElementCommands _elementCommands;
-    private readonly IUndoManager _undoManager;
-    protected readonly IGuiCommands _guiCommands;
-    private readonly IFileCommands _fileCommands;
-    private readonly WireframeObjectManager _wireframeObjectManager;
-    protected GrabbedState grabbedState = new GrabbedState();
-
     // Shared context and move handler for all wireframe editors
     protected readonly EditorContext _context;
     protected readonly MoveInputHandler _moveInputHandler;
 
-    protected bool mHasChangedAnythingSinceLastPush = false;
-
-    protected float aspectRatioOnGrab;
-
-    public bool IsXMovementEnabled { get; set; } = true;
-    public bool IsYMovementEnabled { get; set; } = true;
-    public bool IsWidthChangeEnabled { get; set; } = true;
-    public bool IsHeightChangeEnabled { get; set; } = true;
-
-
-    public bool RestrictToUnitValues { get; set; }
+    public bool RestrictToUnitValues
+    {
+        get => _context.RestrictToUnitValues;
+        set => _context.RestrictToUnitValues = value;
+    }
 
     #endregion
 
@@ -68,30 +50,19 @@ public abstract class WireframeEditor
         Color lineColor,
         Color textColor)
     {
-        _hotkeyManager = hotkeyManager;
-        _selectionManager = selectionManager;
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        _selectedState = selectedState;
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
-
         // Create shared EditorContext and MoveInputHandler
         _context = new EditorContext(
             selectedState,
             selectionManager,
-            _elementCommands,
-            _guiCommands,
-            _fileCommands,
-            _setVariableLogic,
-            _undoManager,
+            Locator.GetRequiredService<IElementCommands>(),
+            Locator.GetRequiredService<IGuiCommands>(),
+            Locator.GetRequiredService<IFileCommands>(),
+            Locator.GetRequiredService<ISetVariableLogic>(),
+            Locator.GetRequiredService<IUndoManager>(),
             Locator.GetRequiredService<IVariableInCategoryPropagationLogic>(),
             hotkeyManager,
             Locator.GetRequiredService<IWireframeObjectManager>(),
             layer,
-            grabbedState,
             lineColor,
             textColor);
 
@@ -104,20 +75,7 @@ public abstract class WireframeEditor
 
     public void UpdateAspectRatioForGrabbedIpso()
     {
-        if (_selectedState.SelectedInstance != null &&
-            _selectedState.SelectedIpso != null
-            )
-        {
-            var ipso = (GraphicalUiElement)_selectedState.SelectedIpso;
-
-            float width = ipso.GetAbsoluteWidth();
-            float height = ipso.GetAbsoluteHeight();
-
-            if (height != 0)
-            {
-                aspectRatioOnGrab = width / height;
-            }
-        }
+        _context.UpdateAspectRatioForGrabbedIpso();
     }
 
     public abstract void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers);
@@ -135,31 +93,31 @@ public abstract class WireframeEditor
 
     protected void DoEndOfSettingValuesLogic()
     {
-        var selectedElement = _selectedState.SelectedElement;
-        var stateSave = _selectedState.SelectedStateSave;
+        var selectedElement = _context.SelectedState.SelectedElement;
+        var stateSave = _context.SelectedState.SelectedStateSave;
         if (stateSave == null)
         {
             throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
         }
 
-        _fileCommands.TryAutoSaveElement(selectedElement);
+        _context.FileCommands.TryAutoSaveElement(selectedElement);
 
-        using var undoLock = _undoManager.RequestLock();
+        using var undoLock = _context.UndoManager.RequestLock();
 
-        _guiCommands.RefreshVariableValues();
+        _context.GuiCommands.RefreshVariableValues();
 
-        var element = _selectedState.SelectedElement;
+        var element = _context.SelectedState.SelectedElement;
 
         foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
         {
-            var oldValue = grabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
+            var oldValue = _context.GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
 
             if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
             {
                 var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
 
                 // should this be:
-                _setVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
+                _context.SetVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
                    oldValue,
                    instance,
                    element.DefaultState,
@@ -173,7 +131,7 @@ public abstract class WireframeEditor
 
         foreach (var possiblyChangedVariableList in stateSave.VariableLists)
         {
-            var oldValue = grabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
+            var oldValue = _context.GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
 
             if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
             {
@@ -182,7 +140,7 @@ public abstract class WireframeEditor
             }
         }
 
-        mHasChangedAnythingSinceLastPush = false;
+        _context.HasChangedAnythingSinceLastPush = false;
     }
 
     protected bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
