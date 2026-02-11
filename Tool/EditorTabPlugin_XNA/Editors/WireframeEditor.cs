@@ -15,12 +15,16 @@ using Gum.Managers;
 using System.Collections;
 using System;
 using Gum.PropertyGridHelpers;
-using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Commands;
 using Gum.Services;
 using Gum.ToolCommands;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Wireframe.Editors;
+using Gum.Wireframe.Editors.Handlers;
+using Gum.Wireframe.Editors.Visuals;
+using Gum.Input;
+using Color = System.Drawing.Color;
 
 namespace Gum.Wireframe;
 
@@ -28,386 +32,193 @@ public abstract class WireframeEditor
 {
     #region Fields/Properties
 
-    protected HotkeyManager _hotkeyManager { get; private set; }
+    // Shared context and move handler for all wireframe editors
+    protected readonly EditorContext _context;
+    protected readonly MoveInputHandler _moveInputHandler;
 
-    private readonly SelectionManager _selectionManager;
-    private readonly ISetVariableLogic _setVariableLogic;
-    protected readonly ISelectedState _selectedState;
-    private readonly IElementCommands _elementCommands;
-    private readonly IUndoManager _undoManager;
-    protected readonly IGuiCommands _guiCommands;
-    private readonly IFileCommands _fileCommands;
-    private readonly WireframeObjectManager _wireframeObjectManager;
-    protected GrabbedState grabbedState = new GrabbedState();
+    // Collections for handlers and visuals to enable unified Activity loop
+    protected readonly List<IInputHandler> _inputHandlers = new List<IInputHandler>();
+    protected readonly List<IEditorVisual> _visuals = new List<IEditorVisual>();
 
-    protected bool mHasChangedAnythingSinceLastPush = false;
-
-    protected float aspectRatioOnGrab;
-
-    public bool IsXMovementEnabled { get; set; } = true;
-    public bool IsYMovementEnabled { get; set; } = true;
-    public bool IsWidthChangeEnabled { get; set; } = true;
-    public bool IsHeightChangeEnabled { get; set; } = true;
-
-
-    public bool RestrictToUnitValues { get; set; }
+    public bool RestrictToUnitValues
+    {
+        get => _context.RestrictToUnitValues;
+        set => _context.RestrictToUnitValues = value;
+    }
 
     #endregion
 
     public WireframeEditor(
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        Layer layer,
+        Color lineColor,
+        Color textColor)
     {
-        _hotkeyManager = hotkeyManager;
-        _selectionManager = selectionManager;
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        _selectedState = selectedState;
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        // Create shared EditorContext and MoveInputHandler
+        _context = new EditorContext(
+            selectedState,
+            selectionManager,
+            Locator.GetRequiredService<IElementCommands>(),
+            Locator.GetRequiredService<IGuiCommands>(),
+            Locator.GetRequiredService<IFileCommands>(),
+            Locator.GetRequiredService<ISetVariableLogic>(),
+            Locator.GetRequiredService<IUndoManager>(),
+            Locator.GetRequiredService<IVariableInCategoryPropagationLogic>(),
+            hotkeyManager,
+            Locator.GetRequiredService<IWireframeObjectManager>(),
+            layer,
+            lineColor,
+            textColor);
+
+        _moveInputHandler = new MoveInputHandler(_context);
     }
 
-    public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
+    /// <summary>
+    /// Updates all visuals and handlers to reflect the current selection.
+    /// Override to add custom selection handling, but call base.UpdateToSelection() to ensure
+    /// visuals and handlers are updated.
+    /// </summary>
+    public virtual void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
+    {
+        // Update context's selected objects
+        _context.SelectedObjects.Clear();
+        _context.SelectedObjects.AddRange(selectedObjects);
 
-    public abstract bool HasCursorOver { get; }
+        // Update all visuals
+        foreach (var visual in _visuals)
+        {
+            visual.UpdateToSelection(selectedObjects);
+        }
+
+        // Notify all handlers of selection change
+        foreach (var handler in _inputHandlers)
+        {
+            handler.OnSelectionChanged();
+        }
+    }
+
+    public abstract bool HasCursorOverHandles { get; }
 
     public void UpdateAspectRatioForGrabbedIpso()
     {
-        if (_selectedState.SelectedInstance != null &&
-            _selectedState.SelectedIpso != null
-            )
-        {
-            var ipso = (GraphicalUiElement)_selectedState.SelectedIpso;
-
-            float width = ipso.GetAbsoluteWidth();
-            float height = ipso.GetAbsoluteHeight();
-
-            if (height != 0)
-            {
-                aspectRatioOnGrab = width / height;
-            }
-        }
+        _context.UpdateAspectRatioForGrabbedIpso();
     }
 
-    public abstract void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers);
+    /// <summary>
+    /// Main activity loop that processes input through registered handlers and updates visuals.
+    /// Derived classes can customize behavior by overriding ShouldProcessActivity and OnActivityComplete.
+    /// </summary>
+    public virtual void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
+    {
+        if (!ShouldProcessActivity(selectedObjects))
+        {
+            return;
+        }
 
-    public abstract System.Windows.Forms.Cursor GetWindowsCursorToShow(
-        System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt);
+        var cursor = InputLibrary.Cursor.Self;
+        var worldX = cursor.GetWorldX();
+        var worldY = cursor.GetWorldY();
 
-    public abstract void Destroy();
+        // Update hover state on all handlers
+        foreach (var handler in _inputHandlers)
+        {
+            handler.UpdateHover(worldX, worldY);
+        }
+
+        // Handle push - try handlers in priority order until one claims the input
+        if (cursor.PrimaryPush)
+        {
+            _context.HasChangedAnythingSinceLastPush = false;
+            _context.GrabbedState.HandlePush();
+
+            foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
+            {
+                if (handler.HandlePush(worldX, worldY))
+                {
+                    break; // Handler claimed the input
+                }
+            }
+        }
+
+        // Handle drag - only call on active handler
+        if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
+        {
+            var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
+            activeHandler?.HandleDrag();
+        }
+
+        // Handle release - call on active handler
+        if (cursor.PrimaryClick)
+        {
+            var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
+            activeHandler?.HandleRelease();
+        }
+
+        // Update all visuals
+        foreach (var visual in _visuals)
+        {
+            visual.Update();
+        }
+
+        // Allow derived classes to do custom post-processing
+        OnActivityComplete(selectedObjects);
+    }
+
+    /// <summary>
+    /// Determines whether activity processing should continue for the current frame.
+    /// Override to add custom conditions (e.g., checking selection state).
+    /// </summary>
+    protected virtual bool ShouldProcessActivity(ICollection<GraphicalUiElement> selectedObjects)
+    {
+        return selectedObjects.Count != 0;
+    }
+
+    /// <summary>
+    /// Called at the end of Activity after all handlers and visuals have been updated.
+    /// Override to add custom post-processing logic.
+    /// </summary>
+    protected virtual void OnActivityComplete(ICollection<GraphicalUiElement> selectedObjects)
+    {
+    }
+
+    /// <summary>
+    /// Gets the Windows Forms cursor to display based on current handler states.
+    /// Iterates through handlers by priority to find the first one that wants to change the cursor.
+    /// </summary>
+    public virtual System.Windows.Forms.Cursor GetWindowsCursorToShow(
+        System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
+    {
+        foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
+        {
+            var cursor = handler.GetCursorToShow(worldXAt, worldYAt);
+            if (cursor != null) return cursor;
+        }
+        return defaultCursor;
+    }
+
+    /// <summary>
+    /// Destroys all registered visuals and handlers.
+    /// Override to add custom cleanup, but call base.Destroy() to ensure visuals are cleaned up.
+    /// </summary>
+    public virtual void Destroy()
+    {
+        foreach (var visual in _visuals)
+        {
+            visual.Destroy();
+        }
+    }
 
     public virtual bool TryHandleDelete()
     {
+        foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
+        {
+            if (handler.TryHandleDelete())
+            {
+                return true;
+            }
+        }
         return false;
-    }
-
-    protected void ApplyCursorMovement(InputLibrary.Cursor cursor)
-    {
-        float xToMoveBy = IsXMovementEnabled
-            ? cursor.XChange / Renderer.Self.Camera.Zoom
-            : 0;
-        float yToMoveBy = IsYMovementEnabled
-            ? cursor.YChange / Renderer.Self.Camera.Zoom
-            : 0;
-
-        var vector2 = new Vector2(xToMoveBy, yToMoveBy);
-        var selectedObject = _wireframeObjectManager.GetSelectedRepresentation();
-        if (selectedObject?.Parent != null)
-        {
-            var parentRotationDegrees = selectedObject.Parent.GetAbsoluteRotation();
-            if (parentRotationDegrees != 0)
-            {
-                var parentRotation = MathHelper.ToRadians(parentRotationDegrees);
-
-                global::RenderingLibrary.Math.MathFunctions.RotateVector(ref vector2, parentRotation);
-
-                xToMoveBy = vector2.X;
-                yToMoveBy = vector2.Y;
-            }
-        }
-
-        grabbedState.AccumulatedXOffset += xToMoveBy;
-        grabbedState.AccumulatedYOffset += yToMoveBy;
-
-        var shouldSnapX = _selectionManager.SelectedGues.Any(item => item.XUnits.GetIsPixelBased());
-        var shouldSnapY = _selectionManager.SelectedGues.Any(item => item.YUnits.GetIsPixelBased());
-
-        var effectiveXToMoveBy = xToMoveBy;
-        var effectiveYToMoveBy = yToMoveBy;
-
-        if (shouldSnapX)
-        {
-            var accumulatedXAsInt = (int)grabbedState.AccumulatedXOffset;
-            effectiveXToMoveBy = 0;
-            if (accumulatedXAsInt != 0)
-            {
-                effectiveXToMoveBy = accumulatedXAsInt;
-                grabbedState.AccumulatedXOffset -= accumulatedXAsInt;
-            }
-        }
-        if (shouldSnapY)
-        {
-            var accumulatedYAsInt = (int)grabbedState.AccumulatedYOffset;
-            effectiveYToMoveBy = 0;
-            if (accumulatedYAsInt != 0)
-            {
-                effectiveYToMoveBy = accumulatedYAsInt;
-                grabbedState.AccumulatedYOffset -= accumulatedYAsInt;
-            }
-        }
-        
-        var didMove = _elementCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
-
-        bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressedInControl();
-
-
-        if (_selectedState.SelectedInstances.Count() == 0 &&
-            (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null))
-        {
-            if (isLockedToAxis)
-            {
-                var xOrY = grabbedState.AxisMovedFurthestAlong;
-
-                if (xOrY == XOrY.X)
-                {
-                    var gue = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
-
-                    gue.Y = grabbedState.ComponentPosition.Y;
-                }
-                else if (xOrY == XOrY.Y)
-                {
-
-                    var gue = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
-
-                    gue.X = grabbedState.ComponentPosition.X;
-                }
-            }
-        }
-        else
-        {
-            if (isLockedToAxis)
-            {
-                var selectedInstances = _selectedState.SelectedInstances;
-
-                foreach (InstanceSave instance in selectedInstances)
-                {
-                    // Update September 27, 2025
-                    // Only move this instance if
-                    // its parent is not one of the 
-                    // selected instances.
-
-                    var xOrY = grabbedState.AxisMovedFurthestAlong;
-
-                    if (xOrY == XOrY.X)
-                    {
-                        var gue = _wireframeObjectManager.GetRepresentation(instance);
-
-                        gue.Y = grabbedState.InstancePositions[instance].AbsoluteY;
-                    }
-                    else if (xOrY == XOrY.Y)
-                    {
-
-                        var gue = _wireframeObjectManager.GetRepresentation(instance);
-
-                        gue.X = grabbedState.InstancePositions[instance].AbsoluteX;
-                    }
-
-                }
-            }
-        }
-
-        if (didMove)
-        {
-            if (isLockedToAxis)
-            {
-                // December 3, 2024 
-                // Currently when the
-                // user moves snapped to
-                // an axis, the unsnapped
-                // value is displayed in the 
-                // UI. By calling ApplyAxisLockToSelectedState,
-                // the values do get snapped to the UI, but this
-                // causes the non-moved axis to snap back to the default
-                // value, so switching axes (if the cursor has moved nearly
-                // perfect diagonally), causes the object ot reset back to the
-                // origin. The value does get snapped back when the cursor is let
-                // go so we'll just deal with that problem for now.
-                //ApplyAxisLockToSelectedState();
-
-                //_guiCommands.RefreshPropertyGrid();
-            }
-            mHasChangedAnythingSinceLastPush = true;
-        }
-    }
-
-    protected void ApplyAxisLockToSelectedState()
-    {
-        var axis = grabbedState.AxisMovedFurthestAlong;
-
-        bool isElementSelected = _selectedState.SelectedInstances.Count() == 0 &&
-                 // check specifically for components or standard elements, since Screens can't be moved
-                 (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null);
-
-
-        if (axis == XOrY.X)
-        {
-            // If the X axis is the furthest-moved, set the Y values back to what they were.
-            if (isElementSelected)
-            {
-                _selectedState.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
-            }
-            else
-            {
-                foreach (var instance in _selectedState.SelectedInstances)
-                {
-                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].StateY, "float");
-                }
-            }
-        }
-        else if (axis == XOrY.Y)
-        {
-            // If the Y axis is the furthest-moved, set the X values back to what they were.
-            if (isElementSelected)
-            {
-                _selectedState.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
-            }
-            else
-            {
-                foreach (var instance in _selectedState.SelectedInstances)
-                {
-                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].StateX, "float");
-                }
-            }
-        }
-
-    }
-
-
-    protected void DoEndOfSettingValuesLogic()
-    {
-        var selectedElement = _selectedState.SelectedElement;
-        var stateSave = _selectedState.SelectedStateSave;
-        if (stateSave == null)
-        {
-            throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
-        }
-
-        _fileCommands.TryAutoSaveElement(selectedElement);
-
-        using var undoLock = _undoManager.RequestLock();
-
-        _guiCommands.RefreshVariableValues();
-
-        var element = _selectedState.SelectedElement;
-
-        foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
-        {
-            var oldValue = grabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
-
-                // should this be:
-                _setVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
-                   oldValue,
-                   instance,
-                   element.DefaultState,
-                   refresh: true,
-                   recordUndo: false,
-                   trySave: false);
-                // instead of this?
-                //PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
-            }
-        }
-
-        foreach (var possiblyChangedVariableList in stateSave.VariableLists)
-        {
-            var oldValue = grabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
-            }
-        }
-
-        mHasChangedAnythingSinceLastPush = false;
-    }
-
-    protected bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
-    {
-        var newValue = newStateSave.GetValue(variableName);
-        if (newValue == null && oldValue != null)
-        {
-            return true;
-        }
-        if (newValue != null && oldValue == null)
-        {
-            return true;
-        }
-        if (newValue == null && oldValue == null)
-        {
-            return false;
-        }
-        // neither are null
-        else
-        {
-            if (oldValue is float)
-            {
-                var oldFloat = (float)oldValue;
-                var newFloat = (float)newValue;
-
-                return oldFloat != newFloat;
-            }
-            else if (oldValue is string)
-            {
-                return (string)oldValue != (string)newValue;
-            }
-            else if (oldValue is bool)
-            {
-                return (bool)oldValue != (bool)newValue;
-            }
-            else if (oldValue is int)
-            {
-                return (int)oldValue != (int)newValue;
-            }
-            else if (oldValue is Vector2)
-            {
-                return (Vector2)oldValue != (Vector2)newValue;
-            }
-            else if (oldValue is IList oldList)
-            {
-                return AreListsSame(oldList, (IList)newValue);
-            }
-            else
-            {
-                return oldValue.Equals(newValue) == false;
-            }
-        }
-    }
-
-    private bool AreListsSame(IList oldList, IList newList)
-    {
-        if (oldList == null && newList == null)
-        {
-            return true;
-        }
-        if (oldList == null || newList == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < oldList.Count; i++)
-        {
-            if (oldList[i].Equals(newList[i]) == false)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 }

@@ -18,6 +18,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.RightsManagement;
 using System.Windows.Forms;
+using System.Windows.Input;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using WinCursor = System.Windows.Forms.Cursor;
@@ -79,7 +80,7 @@ public class SelectionManager
     private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
     private readonly HotkeyManager _hotkeyManager;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public bool IsOverBody
@@ -200,7 +201,7 @@ public class SelectionManager
         IDialogService dialogService,
         HotkeyManager hotkeyManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        WireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
@@ -281,6 +282,10 @@ public class SelectionManager
     /// to un-highlight anything if the cursor is outside of the window</param>
     void HighlightActivity(bool forceNoHighlight)
     {
+        if(InputLibrary.Cursor.Self.SecondaryPush)
+        {
+            int m = 3;
+        }
         if (!InputLibrary.Cursor.Self.PrimaryDownIgnoringIsInWindow)
         {
             // There is currently a known
@@ -317,7 +322,7 @@ public class SelectionManager
                 if (forceNoHighlight == false)
                 {
 
-                    if (WireframeEditor?.HasCursorOver == true)
+                    if (WireframeEditor?.HasCursorOverHandles == true)
                     {
                         representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                         IsOverBody = false;
@@ -392,6 +397,8 @@ public class SelectionManager
         {
             HighlightedIpso = null;
         }
+
+        System.Diagnostics.Debug.WriteLine(IsOverBody);
 
         highlightManager.UpdateHighlightObjects();
     }
@@ -564,7 +571,7 @@ public class SelectionManager
 
                         // hold on, even though this is a valid IPSO and the cursor is over it, we gotta see if
                         // it's an instance that is locked.  If so, we shouldn't select it!
-                        InstanceSave instanceSave = graphicalUiElement.Tag as InstanceSave;
+                        var instanceSave = graphicalUiElement.Tag as InstanceSave;
                         if (instanceSave == null || instanceSave.Locked == false)
                         {
                             ipsoOver = graphicalUiElement;
@@ -731,7 +738,7 @@ public class SelectionManager
             // If the SideOver is a non-None
             // value, that means that the object
             // is already selected
-            if (WireframeEditor?.HasCursorOver != true)
+            if (WireframeEditor?.HasCursorOverHandles != true)
             {
                 float x = Cursor.GetWorldX();
                 float y = Cursor.GetWorldY();
