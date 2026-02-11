@@ -111,8 +111,8 @@ public class StandardWireframeEditor : WireframeEditor
         _rotationHandleVisual = new RotationHandleVisual(_context, Color.Yellow);
         _rotationInputHandler = new RotationInputHandler(_context, _rotationHandleVisual);
 
-        widthDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Width);
-        heightDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Height);
+        widthDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Width, _resizeInputHandler);
+        heightDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Height, _resizeInputHandler);
     }
 
     public override void Destroy()
@@ -157,7 +157,8 @@ public class StandardWireframeEditor : WireframeEditor
             // MoveInputHandler handles body grabbing (push/drag/release via PushActivity/ClickActivity)
             MoveInputHandlerDragActivity();
 
-            UpdateDimensionDisplay();
+            widthDimensionDisplay.Update();
+            heightDimensionDisplay.Update();
 
             bool shouldSkip = selectedObjects.Any(item => item.Tag is ScreenSave);
 
@@ -229,39 +230,6 @@ public class StandardWireframeEditor : WireframeEditor
                     }
                 }
             }
-        }
-    }
-
-    private void UpdateDimensionDisplay()
-    {
-        var sideOver = _resizeInputHandler.SideOver;
-
-        var shouldShowHeight =
-            sideOver == ResizeSide.TopLeft ||
-            sideOver == ResizeSide.Top ||
-            sideOver == ResizeSide.TopRight ||
-            sideOver == ResizeSide.BottomLeft ||
-            sideOver == ResizeSide.Bottom ||
-            sideOver == ResizeSide.BottomRight;
-
-        var shouldShowWidth =
-            sideOver == ResizeSide.TopLeft ||
-            sideOver == ResizeSide.Left ||
-            sideOver == ResizeSide.BottomLeft ||
-            sideOver == ResizeSide.TopRight ||
-            sideOver == ResizeSide.Right ||
-            sideOver == ResizeSide.BottomRight;
-
-        widthDimensionDisplay.Visible = shouldShowWidth;
-        if(shouldShowWidth)
-        {
-            widthDimensionDisplay.Update();
-        }
-
-        heightDimensionDisplay.Visible = shouldShowHeight;
-        if(shouldShowHeight)
-        {
-            heightDimensionDisplay.Update();
         }
     }
 

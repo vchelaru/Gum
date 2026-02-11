@@ -1,6 +1,8 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services;
+using Gum.Wireframe;
+using Gum.Wireframe.Editors.Handlers;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -27,12 +29,14 @@ public class DimensionDisplayVisual : EditorVisualBase
     private readonly Line _middleLine;
     private readonly Text _dimensionDisplayText;
     private readonly IUiSettingsService _uiSettingsService;
+    private readonly ResizeInputHandler _resizeInputHandler;
 
     #endregion
 
-    public DimensionDisplayVisual(EditorContext context, WidthOrHeight dimensionType) : base(context)
+    public DimensionDisplayVisual(EditorContext context, WidthOrHeight dimensionType, ResizeInputHandler resizeInputHandler) : base(context)
     {
         _dimensionType = dimensionType;
+        _resizeInputHandler = resizeInputHandler;
         _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
 
         var systemManagers = SystemManagers.Default;
@@ -75,9 +79,44 @@ public class DimensionDisplayVisual : EditorVisualBase
 
     public override void Update()
     {
-        if (!Visible || Context.SelectedObjects.Count == 0) return;
+        if (Context.SelectedObjects.Count == 0)
+        {
+            Visible = false;
+            return;
+        }
 
-        UpdateDimensionDisplay(Context.SelectedObjects.First());
+        // Determine visibility based on which resize side is hovered
+        var sideOver = _resizeInputHandler.SideOver;
+        bool shouldBeVisible = ShouldShowForSide(sideOver);
+
+        Visible = shouldBeVisible;
+
+        if (shouldBeVisible)
+        {
+            UpdateDimensionDisplay(Context.SelectedObjects.First());
+        }
+    }
+
+    private bool ShouldShowForSide(ResizeSide sideOver)
+    {
+        if (_dimensionType == WidthOrHeight.Width)
+        {
+            return sideOver == ResizeSide.TopLeft ||
+                   sideOver == ResizeSide.Left ||
+                   sideOver == ResizeSide.BottomLeft ||
+                   sideOver == ResizeSide.TopRight ||
+                   sideOver == ResizeSide.Right ||
+                   sideOver == ResizeSide.BottomRight;
+        }
+        else // Height
+        {
+            return sideOver == ResizeSide.TopLeft ||
+                   sideOver == ResizeSide.Top ||
+                   sideOver == ResizeSide.TopRight ||
+                   sideOver == ResizeSide.BottomLeft ||
+                   sideOver == ResizeSide.Bottom ||
+                   sideOver == ResizeSide.BottomRight;
+        }
     }
 
     public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
