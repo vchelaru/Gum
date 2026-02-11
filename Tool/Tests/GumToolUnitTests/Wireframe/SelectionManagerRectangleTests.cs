@@ -3,8 +3,11 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
+using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -35,6 +38,9 @@ public class SelectionManagerRectangleTests : BaseTestClass
         SystemManagers.Default = new SystemManagers();
         SystemManagers.Default.Renderer = new Renderer();
         SystemManagers.Default.Renderer.AddLayer();
+        SystemManagers.Default.ShapeManager = new RenderingLibrary.Math.Geometry.ShapeManager();
+
+        SystemManagers.Default.TextManager = new TextManager();
 
         _mockSelectedState = new Mock<ISelectedState>();
         _mockWireframeManager = new Mock<IWireframeObjectManager>();
@@ -66,7 +72,11 @@ public class SelectionManagerRectangleTests : BaseTestClass
             Mock.Of<IVariableInCategoryPropagationLogic>(),
             _mockWireframeManager.Object,
             _projectManager.Object,
-            Mock.Of<IGuiCommands>());
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IElementCommands>(),
+            Mock.Of<IFileCommands>(),
+            Mock.Of<ISetVariableLogic>(),
+            Mock.Of<IUiSettingsService>());
 
         _layerService = new Mock<LayerService>();
 

@@ -183,11 +183,11 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
         Visible = true;
         if (mManagers != null)
         {
-            mLinePrimitive = new LinePrimitive(mManagers.Renderer.SinglePixelTexture);
+            mLinePrimitive = new LinePrimitive(mManagers.Renderer.TryGetSinglePixelTexture());
         }
         else
         {
-            mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
+            mLinePrimitive = new LinePrimitive(Renderer.Self.TryGetSinglePixelTexture());
         }
 
         mChildren = new ();

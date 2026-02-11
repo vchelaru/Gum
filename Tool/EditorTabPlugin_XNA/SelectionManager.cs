@@ -3,9 +3,11 @@ using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe.Editors;
@@ -87,6 +89,10 @@ public class SelectionManager
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IProjectManager _projectManager;
     private readonly IGuiCommands _guiCommands;
+    private readonly IElementCommands _elementCommands;
+    private readonly IFileCommands _fileCommands;
+    private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IUiSettingsService _uiSettingsService;
 
     public virtual bool IsOverBody
     {
@@ -207,8 +213,12 @@ public class SelectionManager
         IHotkeyManager hotkeyManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
-        IProjectManager projectManager, 
-        IGuiCommands guiCommands)
+        IProjectManager projectManager,
+        IGuiCommands guiCommands,
+        IElementCommands elementCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        IUiSettingsService uiSettingsService)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
@@ -219,6 +229,10 @@ public class SelectionManager
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _projectManager = projectManager;
         _guiCommands = guiCommands;
+        _elementCommands = elementCommands;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
+        _uiSettingsService = uiSettingsService;
     }
 
     public void Initialize(LayerService layerService)
@@ -803,13 +817,19 @@ public class SelectionManager
 
                     WireframeEditor = new StandardWireframeEditor(
                         _layerService.OverlayLayer,
-                        lineColor, 
+                        lineColor,
                         textColor,
                         _hotkeyManager,
                         this,
                         _selectedState,
+                        _elementCommands,
+                        _guiCommands,
+                        _fileCommands,
+                        _setVariableLogic,
+                        _undoManager,
                         _variableInCategoryPropagationLogic,
-                        _wireframeObjectManager);
+                        _wireframeObjectManager,
+                        _uiSettingsService);
                 }
             }
         }
@@ -839,7 +859,15 @@ public class SelectionManager
             _layerService.OverlayLayer,
             _hotkeyManager,
             this,
-            _selectedState);
+            _selectedState,
+            _elementCommands,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _undoManager,
+            _variableInCategoryPropagationLogic,
+            _wireframeObjectManager,
+            _uiSettingsService);
     }
 
     void SelectionActivity()

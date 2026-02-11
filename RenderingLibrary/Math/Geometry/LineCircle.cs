@@ -183,7 +183,7 @@ namespace RenderingLibrary.Math.Geometry
             }
             else
             {
-                mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
+                mLinePrimitive = new LinePrimitive(Renderer.Self?.TryGetSinglePixelTexture());
             }
 
             UpdatePoints();

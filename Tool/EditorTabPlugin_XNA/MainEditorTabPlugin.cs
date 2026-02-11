@@ -122,6 +122,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IUiSettingsService _uiSettingsService;
     private readonly ProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
@@ -167,26 +168,32 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
         HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
 
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
+        _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
+
         _selectionManager = new SelectionManager(
-            _selectedState, 
-            undoManager, 
-            _editingManager, 
-            dialogService, 
+            _selectedState,
+            undoManager,
+            _editingManager,
+            dialogService,
             hotkeyManager,
             _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
             ProjectManager.Self,
-            _guiCommands);
+            _guiCommands,
+            _elementCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _uiSettingsService);
 
         _screenshotService = new ScreenshotService(_selectionManager);
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _projectManager = ProjectManager.Self;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 

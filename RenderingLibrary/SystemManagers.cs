@@ -72,13 +72,15 @@ public partial class SystemManagers : ISystemManagers
     public ShapeManager ShapeManager
     {
         get;
-        private set;
+        // setter public for testing
+        set;
     }
 
     public TextManager TextManager
     {
         get;
-        private set;
+        // setter public or testing
+        set;
     }
 #endif
 
