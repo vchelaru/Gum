@@ -26,6 +26,18 @@
       "Bash(nuget list *)",
       "Bash(nuget restore *)",
       "Bash(nuget sources *)",
+      "Bash(cd *)",
+      "Bash(dir *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(Get-Content *)",
+      "Bash(Test-Path *)",
+      "Bash(Select-String *)",
+      "Bash(where *)",
+      "Bash(which *)",
+      "Bash(find *)",
+      "Bash(grep *)",
       "Read(**/*.cs)",
       "Read(**/*.csproj)",
       "Read(**/*.sln)",
@@ -116,7 +128,7 @@
     "defaultMode": "acceptEdits"
   },
   "attribution": {
-    "commit": "Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>",
+    "commit": "Co-Authored-By: Claude <noreply@anthropic.com>",
     "pr": "🤖 Generated with Claude Code"
   },
   "respectGitignore": true

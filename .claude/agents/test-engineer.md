@@ -51,8 +51,10 @@ public void MethodName_Scenario_ExpectedBehavior()
 **Guidelines:**
 - Follow AAA pattern (Arrange, Act, Assert)
 - One logical assertion per test
-- Make tests independent and isolated
+- Make tests independent and isolated — no shared mutable state between tests
 - Use descriptive test names that explain the scenario
 - Consider multi-platform testing needs
 - Mock external dependencies appropriately
 - Include both positive and negative test cases
+- Run the tests after writing them to confirm they pass
+- If an existing test is failing, understand why before modifying it — it might be catching a real bug
