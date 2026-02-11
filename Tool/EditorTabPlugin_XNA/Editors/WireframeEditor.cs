@@ -49,7 +49,7 @@ public abstract class WireframeEditor
     #endregion
 
     public WireframeEditor(
-        global::Gum.Managers.HotkeyManager hotkeyManager,
+        global::Gum.Managers.IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState,
         Layer layer,

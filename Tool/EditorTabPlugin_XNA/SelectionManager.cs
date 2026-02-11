@@ -79,10 +79,10 @@ public class SelectionManager
 
 
     private readonly ISelectedState _selectedState;
-    private readonly EditingManager _editingManager;
+    private readonly IEditingManager _editingManager;
     private readonly IUndoManager _undoManager;
     private readonly IDialogService _dialogService;
-    private readonly HotkeyManager _hotkeyManager;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
@@ -198,11 +198,11 @@ public class SelectionManager
 
     #region Methods
 
-    internal SelectionManager(ISelectedState selectedState, 
-        IUndoManager undoManager, 
-        EditingManager editingManager, 
+    public SelectionManager(ISelectedState selectedState,
+        IUndoManager undoManager,
+        IEditingManager editingManager,
         IDialogService dialogService,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager)
     {

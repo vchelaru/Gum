@@ -57,7 +57,7 @@ public class PolygonWireframeEditor : WireframeEditor
 
     public PolygonWireframeEditor(
         Layer layer,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState)
         : base(

@@ -148,7 +148,7 @@ public class KeyCombination
 }
 #endregion
 
-public class HotkeyManager
+public class HotkeyManager : IHotkeyManager
 {
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);

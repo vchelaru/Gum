@@ -19,7 +19,7 @@ public class RectangleSelector
 {
     #region Fields
 
-    private readonly HotkeyManager _hotkeyManager;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly SelectionManager _selectionManager;
     private readonly IGuiCommands _guiCommands;
@@ -48,7 +48,7 @@ public class RectangleSelector
     #endregion
 
     public RectangleSelector(
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         IWireframeObjectManager wireframeObjectManager,
         SelectionManager selectionManager,
         IGuiCommands guiCommands,

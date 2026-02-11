@@ -30,7 +30,7 @@ public class EditorContext
     public ISetVariableLogic SetVariableLogic { get; }
     public IUndoManager UndoManager { get; }
     public IVariableInCategoryPropagationLogic VariablePropagationLogic { get; }
-    public HotkeyManager HotkeyManager { get; }
+    public IHotkeyManager HotkeyManager { get; }
     public IWireframeObjectManager WireframeObjectManager { get; }
     public Layer OverlayLayer { get; }
 
@@ -88,7 +88,7 @@ public class EditorContext
         ISetVariableLogic setVariableLogic,
         IUndoManager undoManager,
         IVariableInCategoryPropagationLogic variablePropagationLogic,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         IWireframeObjectManager wireframeObjectManager,
         Layer overlayLayer,
         Color lineColor,
