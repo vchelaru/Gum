@@ -78,8 +78,6 @@ public class RectangleSelector
 
         if (shouldActivate)
         {
-            System.Diagnostics.Debug.WriteLine("RectangleSelector.HandlePush - Starting rectangle selection");
-
             _isActive = true;
             _hasMovedEnough = false;
             _startX = worldX;
@@ -110,7 +108,6 @@ public class RectangleSelector
             if (screenDragDistance >= MinimumDragDistance)
             {
                 _hasMovedEnough = true;
-                System.Diagnostics.Debug.WriteLine("RectangleSelector - Drag threshold reached, showing rectangle");
             }
         }
 
@@ -120,8 +117,6 @@ public class RectangleSelector
     public void HandleRelease()
     {
         if (!_isActive) return;
-
-        System.Diagnostics.Debug.WriteLine($"RectangleSelector.HandleRelease - HasMovedEnough={_hasMovedEnough}");
 
         if (!_hasMovedEnough)
         {
@@ -135,8 +130,6 @@ public class RectangleSelector
         {
             // Find all elements within the rectangle
             var elementsInBounds = GetElementsInRectangle();
-
-            System.Diagnostics.Debug.WriteLine($"RectangleSelector - Found {elementsInBounds.Count} elements in bounds");
 
             if (_isAdditive)
             {
@@ -172,8 +165,6 @@ public class RectangleSelector
             _selectionRectangle.Y = top;
             _selectionRectangle.Width = right - left;
             _selectionRectangle.Height = bottom - top;
-
-            System.Diagnostics.Debug.WriteLine($"RectangleSelector.Update - Rectangle at L={left:F1}, T={top:F1}, W={right - left:F1}, H={bottom - top:F1}");
         }
     }
 

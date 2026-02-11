@@ -232,8 +232,6 @@ public class SelectionManager
             this,
             guiCommands,
             overlayLayer);
-
-        System.Diagnostics.Debug.WriteLine("SelectionManager.Initialize - RectangleSelector created and initialized");
     }
 
     /// <summary>
@@ -849,9 +847,7 @@ public class SelectionManager
                 {
                     float worldX = Cursor.GetWorldX();
                     float worldY = Cursor.GetWorldY();
-                    System.Diagnostics.Debug.WriteLine($"SelectionActivity - PrimaryPush at ({worldX:F1}, {worldY:F1}), IsOverBody={IsOverBody}");
                     _rectangleSelector.HandlePush(worldX, worldY);
-                    System.Diagnostics.Debug.WriteLine($"SelectionActivity - After HandlePush, IsActive={_rectangleSelector.IsActive}");
                 }
 
                 if (Cursor.PrimaryDown && _rectangleSelector.IsActive)
@@ -871,13 +867,8 @@ public class SelectionManager
             {
                 if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
                 {
-                    System.Diagnostics.Debug.WriteLine("SelectionActivity - Running normal PushAndDoubleClickSelectionActivity");
                     PushAndDoubleClickSelectionActivity();
                 }
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("SelectionActivity - Skipping normal selection, rectangle selector is active");
             }
 
             //if (Cursor.PrimaryClick)
