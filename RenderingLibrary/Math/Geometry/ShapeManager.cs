@@ -42,7 +42,7 @@ namespace RenderingLibrary.Math.Geometry
             {
                 if (Managers == null)
                 {
-                    return Renderer.Self;
+                    return SystemManagers.Default?.Renderer;
                 }
                 else
                 {
@@ -77,7 +77,7 @@ namespace RenderingLibrary.Math.Geometry
             layer.Add(lineRectangle);
         }
 
-        public void Add(SolidRectangle solidRectangle, Layer layer = null)
+        public void Add(SolidRectangle solidRectangle, Layer? layer = null)
         {
             if (layer == null)
             {

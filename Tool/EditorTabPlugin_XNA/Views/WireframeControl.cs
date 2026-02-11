@@ -33,7 +33,7 @@ public class WireframeControl : GraphicsDeviceControl
     #region Fields
     
     private HotkeyManager _hotkeyManager;
-
+    private ProjectManager _projectManager;
     private SelectionManager _selectionManager;
     private DragDropManager _dragDropManager;
     LineRectangle mCanvasBounds;
@@ -134,11 +134,13 @@ public class WireframeControl : GraphicsDeviceControl
         HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         DragDropManager dragDropManager,
-        EditorViewModel editorViewModel)
+        EditorViewModel editorViewModel,
+        ProjectManager projectManager)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
         _hotkeyManager = hotkeyManager;
+        _projectManager = projectManager;
         try
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -313,7 +315,7 @@ public class WireframeControl : GraphicsDeviceControl
     public void UpdateCanvasBoundsToProject()
     {
 
-        var gumProject = ProjectManager.Self.GumProjectSave;
+        var gumProject = _projectManager.GumProjectSave;
         if (mCanvasBounds != null && gumProject != null)
         {
             mCanvasBounds.Width = GraphicalUiElement.CanvasWidth;

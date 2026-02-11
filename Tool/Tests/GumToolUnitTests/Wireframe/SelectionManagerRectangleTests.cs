@@ -1,11 +1,15 @@
+using Gum;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using Moq;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Collections.Generic;
@@ -22,13 +26,24 @@ public class SelectionManagerRectangleTests : BaseTestClass
     private readonly Mock<ISelectedState> _mockSelectedState;
     private readonly Mock<IWireframeObjectManager> _mockWireframeManager;
     private readonly SelectionManager _selectionManager;
+    private readonly Mock<LayerService> _layerService;
     private readonly List<InstanceSave> _selectedInstances;
+    private readonly Mock<IProjectManager> _projectManager;
 
     public SelectionManagerRectangleTests()
     {
+        SystemManagers.Default = new SystemManagers();
+        SystemManagers.Default.Renderer = new Renderer();
+        SystemManagers.Default.Renderer.AddLayer();
+
         _mockSelectedState = new Mock<ISelectedState>();
         _mockWireframeManager = new Mock<IWireframeObjectManager>();
         _selectedInstances = new List<InstanceSave>();
+
+        _projectManager = new Mock<IProjectManager>();
+        _projectManager
+            .Setup(x => x.GeneralSettingsFile)
+            .Returns(new Gum.Settings.GeneralSettingsFile ());
 
         // Setup SelectedInstances to return our test list
         _mockSelectedState.Setup(x => x.SelectedInstances).Returns(() => _selectedInstances);
@@ -49,7 +64,13 @@ public class SelectionManagerRectangleTests : BaseTestClass
             Mock.Of<IDialogService>(),
             Mock.Of<IHotkeyManager>(),
             Mock.Of<IVariableInCategoryPropagationLogic>(),
-            _mockWireframeManager.Object);
+            _mockWireframeManager.Object,
+            _projectManager.Object,
+            Mock.Of<IGuiCommands>());
+
+        _layerService = new Mock<LayerService>();
+
+        _selectionManager.Initialize(_layerService.Object);
     }
 
     #region DeselectAll Tests

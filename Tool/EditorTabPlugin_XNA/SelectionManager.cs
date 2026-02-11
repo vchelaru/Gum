@@ -85,8 +85,10 @@ public class SelectionManager
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
+    private readonly IProjectManager _projectManager;
+    private readonly IGuiCommands _guiCommands;
 
-    public bool IsOverBody
+    public virtual bool IsOverBody
     {
         get;
         set;
@@ -204,7 +206,9 @@ public class SelectionManager
         IDialogService dialogService,
         IHotkeyManager hotkeyManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IProjectManager projectManager, 
+        IGuiCommands guiCommands)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
@@ -213,6 +217,8 @@ public class SelectionManager
         _hotkeyManager = hotkeyManager;
         _wireframeObjectManager = wireframeObjectManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
+        _projectManager = projectManager;
+        _guiCommands = guiCommands;
     }
 
     public void Initialize(LayerService layerService)
@@ -225,12 +231,11 @@ public class SelectionManager
         highlightManager = new HighlightManager(overlayLayer);
 
         // Initialize rectangle selector for drag-to-select functionality
-        var guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _rectangleSelector = new RectangleSelector(
             _hotkeyManager,
             _wireframeObjectManager,
             this,
-            guiCommands,
+            _guiCommands,
             overlayLayer);
     }
 
@@ -292,7 +297,7 @@ public class SelectionManager
     /// <summary>
     /// Deselects all currently selected elements.
     /// </summary>
-    public void DeselectAll()
+    public virtual void DeselectAll()
     {
         // Clear the underlying state first (important for multiple selections)
         _selectedState.SelectedInstance = null;
@@ -788,17 +793,18 @@ public class SelectionManager
                         WireframeEditor.Destroy();
                     }
 
-                    var lineColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
-                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
-                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB);
+                    var lineColor = Color.FromArgb(255, _projectManager.GeneralSettingsFile.GuideLineColorR,
+                        _projectManager.GeneralSettingsFile.GuideLineColorG,
+                        _projectManager.GeneralSettingsFile.GuideLineColorB);
 
-                    var textColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
-                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
-                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB);
+                    var textColor = Color.FromArgb(255, _projectManager.GeneralSettingsFile.GuideTextColorR,
+                        _projectManager.GeneralSettingsFile.GuideTextColorG,
+                        _projectManager.GeneralSettingsFile.GuideTextColorB);
 
                     WireframeEditor = new StandardWireframeEditor(
                         _layerService.OverlayLayer,
-                        lineColor, textColor,
+                        lineColor, 
+                        textColor,
                         _hotkeyManager,
                         this,
                         _selectedState,

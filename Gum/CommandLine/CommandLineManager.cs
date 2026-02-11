@@ -19,7 +19,8 @@ namespace Gum.CommandLine
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IMessenger _messenger;
-        
+        private readonly ProjectManager _projectManager;
+
         #region Fields/Properties
 
         public string GlueProjectToLoad
@@ -45,6 +46,7 @@ namespace Gum.CommandLine
             _guiCommands = Locator.GetRequiredService<IGuiCommands>();
             _fileCommands = Locator.GetRequiredService<IFileCommands>();
             _messenger = Locator.GetRequiredService<IMessenger>();
+            _projectManager = ProjectManager.Self;
         }
 
         public async Task ReadCommandLine()
@@ -113,7 +115,7 @@ namespace Gum.CommandLine
             _fileCommands.LoadProject(gumxFile);
 
             // 3.
-            await _fontManager.CreateAllMissingFontFiles(ProjectManager.Self.GumProjectSave);
+            await _fontManager.CreateAllMissingFontFiles(_projectManager.GumProjectSave);
 
             // 4.
             _messenger.Send<CloseMainWindowMessage>();

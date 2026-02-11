@@ -100,7 +100,7 @@ public class KeyCombination
 
     }
 
-    public bool IsPressedInControl()
+    public virtual bool IsPressedInControl()
     {
         if (IsCtrlDown && (Control.ModifierKeys & Keys.Control) != Keys.Control) return false;
         if (IsShiftDown && (Control.ModifierKeys & Keys.Shift) != Keys.Shift) return false;
