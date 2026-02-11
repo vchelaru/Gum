@@ -21,7 +21,7 @@ public class RectangleSelector
 
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly SelectionManager _selectionManager;
+    private readonly ISelectionManager _selectionManager;
     private readonly IGuiCommands _guiCommands;
     private readonly Layer _overlayLayer;
 
@@ -50,7 +50,7 @@ public class RectangleSelector
     public RectangleSelector(
         IHotkeyManager hotkeyManager,
         IWireframeObjectManager wireframeObjectManager,
-        SelectionManager selectionManager,
+        ISelectionManager selectionManager,
         IGuiCommands guiCommands,
         Layer overlayLayer)
     {

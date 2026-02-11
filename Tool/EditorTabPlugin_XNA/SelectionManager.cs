@@ -28,7 +28,15 @@ using WinCursor = System.Windows.Forms.Cursor;
 
 namespace Gum.Wireframe;
 
-public class SelectionManager
+public interface ISelectionManager
+{
+    bool IsOverBody { get; set; }
+    void DeselectAll();
+    void ToggleSelection(GraphicalUiElement element);
+    void Select(IEnumerable<GraphicalUiElement> elements);
+}
+
+public class SelectionManager : ISelectionManager
 {
     #region GetFocusedControl interop implementation
 
@@ -537,8 +545,6 @@ public class SelectionManager
         {
             HighlightedIpso = null;
         }
-
-        System.Diagnostics.Debug.WriteLine(IsOverBody);
 
         highlightManager.UpdateHighlightObjects();
     }
