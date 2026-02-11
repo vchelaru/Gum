@@ -24,8 +24,11 @@ public class ListBoxVisualTests
 
         foreach (var child in children)
         {
-            child.HasEvents.ShouldBeFalse(
-                $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            if (child.Name != "ThumbContainer")
+            {
+                child.HasEvents.ShouldBeFalse(
+                    $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            }
         }
     }
 

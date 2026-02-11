@@ -17,11 +17,16 @@ public class ScrollViewerVisualTests
         List<ContainerRuntime> children = new();
         visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
 
+        // ThumbContainer is used by ScrollBar for clicking to change value
         foreach (var child in children)
         {
-            child.HasEvents.ShouldBeFalse(
-                $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            if (child.Name != "ThumbContainer")
+            {
+                child.HasEvents.ShouldBeFalse(
+                    $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            }
         }
+
     }
 
     [Fact]
@@ -35,11 +40,11 @@ public class ScrollViewerVisualTests
     }
 
     [Fact]
-    public void ThumbContainer_HasEvents_ShouldBeFalse()
+    public void ThumbContainer_HasEvents_ShouldBeTrue()
     {
         ScrollBar scrollBar = new();
         InteractiveGue thumbContainer = (InteractiveGue)scrollBar.Visual.Children.First(c => c.Name == "ThumbContainer");
-        thumbContainer.HasEvents.ShouldBeFalse();
+        thumbContainer.HasEvents.ShouldBeTrue("Because ThumbContainer is what is used for clicking to move the value");
 
     }
 }

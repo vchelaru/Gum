@@ -27,8 +27,12 @@ public class ScrollViewerTests : BaseTestClass
 
         foreach (var child in children)
         {
-            child.HasEvents.ShouldBeFalse(
-                $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            // ThumbContainer is used by ScrollBar for clicking to change value
+            if(child.Name != "ThumbContainer")
+            {
+                child.HasEvents.ShouldBeFalse(
+                    $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            }
         }
     }
 

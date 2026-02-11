@@ -67,7 +67,7 @@ public class DefaultScrollBarRuntime : InteractiveGue
             ThumbContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
             ThumbContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             ThumbContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
-            ThumbContainer.HasEvents = false;
+            ThumbContainer.HasEvents = true;
             this.Children.Add(ThumbContainer);
 
             trackSolidRectangle.Color = System.Drawing.Color.FromArgb(255, 130, 130, 130);
@@ -81,7 +81,7 @@ public class DefaultScrollBarRuntime : InteractiveGue
             TrackBackground.Y = 0f;
             TrackBackground.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             TrackBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
-            TrackBackground.HasEvents = true;
+            TrackBackground.HasEvents = false;
             ThumbContainer.Children.Add(TrackBackground);
 
             ThumbInstance.TextInstance.Text = String.Empty;
