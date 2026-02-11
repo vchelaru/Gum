@@ -36,13 +36,10 @@ public class StandardWireframeEditor : WireframeEditor
 
     ResizeHandles mResizeHandles;
     ResizeInputHandler _resizeInputHandler;
+    RotationInputHandler _rotationInputHandler;
 
     List<GraphicalUiElement> selectedObjects =
         new List<GraphicalUiElement>();
-
-    LineCircle rotationHandle;
-    bool isRotationHighlighted;
-    bool isRotationGrabbed;
 
     DimensionDisplay widthDimensionDisplay;
     DimensionDisplay heightDimensionDisplay;
@@ -73,7 +70,7 @@ public class StandardWireframeEditor : WireframeEditor
             {
                 return true;
             }
-            else if(isRotationHighlighted)
+            else if(_rotationInputHandler.HasCursorOver(worldX, worldY))
             {
                 return true;
             }
@@ -110,10 +107,9 @@ public class StandardWireframeEditor : WireframeEditor
 
         _resizeInputHandler = new ResizeInputHandler(_context, mResizeHandles);
 
-        rotationHandle = new LineCircle();
-        rotationHandle.Color = Color.Yellow;
+        var rotationHandle = new LineCircle();
         ShapeManager.Self.Add(rotationHandle, layer);
-        rotationHandle.Visible = false;
+        _rotationInputHandler = new RotationInputHandler(_context, rotationHandle);
 
         widthDimensionDisplay = new DimensionDisplay();
         widthDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
@@ -127,8 +123,7 @@ public class StandardWireframeEditor : WireframeEditor
     public override void Destroy()
     {
         mResizeHandles.Destroy();
-
-        ShapeManager.Self.Remove(rotationHandle);
+        _rotationInputHandler.Destroy();
 
         widthDimensionDisplay.Destroy();
         heightDimensionDisplay.Destroy();
@@ -145,8 +140,7 @@ public class StandardWireframeEditor : WireframeEditor
             float worldY = cursor.GetWorldY();
 
             _resizeInputHandler.UpdateHover(worldX, worldY);
-
-            RefreshRotationGrabbed();
+            _rotationInputHandler.UpdateHover(worldX, worldY);
 
             PushActivity();
 
@@ -158,10 +152,14 @@ public class StandardWireframeEditor : WireframeEditor
                 _resizeInputHandler.HandleDrag();
             }
 
+            // RotationInputHandler handles rotation dragging
+            if (cursor.PrimaryDown)
+            {
+                _rotationInputHandler.HandleDrag();
+            }
+
             // MoveInputHandler handles body grabbing (push/drag/release via PushActivity/ClickActivity)
             MoveInputHandlerDragActivity();
-
-            RotationHandleGrabbingActivity();
 
             UpdateDimensionDisplay();
 
@@ -175,7 +173,7 @@ public class StandardWireframeEditor : WireframeEditor
 
                 mResizeHandles.UpdateHandleSizes();
 
-                UpdateRotationHandlePosition();
+                _rotationInputHandler.UpdateHandleVisibilityAndPosition();
             }
         }
     }
@@ -274,129 +272,13 @@ public class StandardWireframeEditor : WireframeEditor
         }
     }
 
-    private void RotationHandleGrabbingActivity()
-    {
-        if(isRotationGrabbed)
-        {
-            var gue = selectedObjects.First();
-
-            var originX = gue.AbsoluteX;
-            var originY = gue.AbsoluteY;
-
-            var cursorX = InputLibrary.Cursor.Self.GetWorldX();
-            var cursorY = InputLibrary.Cursor.Self.GetWorldY();
-
-            var angleInRadians = (float)System.Math.Atan2(cursorY - originY, cursorX - originX);
-
-            var rotationValueDegrees =
-                -MathHelper.ToDegrees(angleInRadians);
-
-            if(_hotkeyManager.SnapRotationTo15Degrees.IsPressedInControl())
-            {
-                rotationValueDegrees = MathFunctions.RoundFloat(rotationValueDegrees, 15);
-            }
-
-            float parentRotation = 0;
-            if(gue.Parent != null)
-            {
-                parentRotation = gue.Parent.GetAbsoluteRotation();
-            }
-
-            gue.Rotation = rotationValueDegrees - parentRotation;
-
-            string nameWithInstance = "Rotation";
-
-            if(_selectedState.SelectedInstance != null)
-            {
-                nameWithInstance = _selectedState.SelectedInstance.Name + 
-                    "." + nameWithInstance;
-            }
-
-            _selectedState.SelectedStateSave.SetValue(nameWithInstance, rotationValueDegrees - parentRotation, 
-                _selectedState.SelectedInstance, "float");
-
-            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
-                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
-
-            _guiCommands.RefreshVariableValues();
-
-        }
-    }
-
-    private void RefreshRotationGrabbed()
-    {
-        var cursor = InputLibrary.Cursor.Self;
-        var worldX = cursor.GetWorldX();
-        var worldY = cursor.GetWorldY();
-
-        isRotationHighlighted = rotationHandle.HasCursorOver(worldX, worldY);
-    }
-
-    private void UpdateRotationHandlePosition()
-    {
-        GraphicalUiElement singleSelectedObject = null;
-        if(selectedObjects.Count == 1)
-        {
-            singleSelectedObject = selectedObjects[0];
-        }
-
-        if(singleSelectedObject == null)
-        {
-            // hide the rotation handles
-            rotationHandle.Visible = false;
-        }
-        else
-        {
-            rotationHandle.Visible = true;
-
-            // right side
-            float minimumOffset = 24 / Renderer.Self.Camera.Zoom;
-
-
-            float xOffset = 0;
-
-            if(singleSelectedObject.XOrigin == HorizontalAlignment.Left)
-            {
-                xOffset = singleSelectedObject.GetAbsoluteWidth() + minimumOffset;
-            }
-            else if (singleSelectedObject.XOrigin == HorizontalAlignment.Center)
-            {
-                xOffset = singleSelectedObject.GetAbsoluteWidth()/2.0f + minimumOffset;
-
-            }
-            else if (singleSelectedObject.XOrigin == HorizontalAlignment.Right)
-            {
-                xOffset = minimumOffset;
-            }
-
-            var offset = new Vector2(
-                xOffset,
-                0);
-
-            MathFunctions.RotateVector(
-                ref offset, -MathHelper.ToRadians(singleSelectedObject.GetAbsoluteRotation()));
-
-            rotationHandle.X = singleSelectedObject.AbsoluteX + offset.X;
-
-            // consider the Y
-            rotationHandle.Y = singleSelectedObject.AbsoluteY + offset.Y;
-
-            rotationHandle.Radius = 8 / Renderer.Self.Camera.Zoom;
-        }
-    }
-
     private void ClickActivity()
     {
         var cursor = InputLibrary.Cursor.Self;
 
         if (cursor.PrimaryDown == false)
         {
-            if(isRotationGrabbed)
-            {
-                DoEndOfSettingValuesLogic();
-            }
             mHasGrabbed = false;
-            isRotationGrabbed = false;
         }
 
         // Let handlers handle the release
@@ -404,6 +286,7 @@ public class StandardWireframeEditor : WireframeEditor
         {
             _moveInputHandler.HandleRelease();
             _resizeInputHandler.HandleRelease();
+            _rotationInputHandler.HandleRelease();
         }
     }
 
@@ -416,13 +299,6 @@ public class StandardWireframeEditor : WireframeEditor
         var cursor = InputLibrary.Cursor.Self;
         if (cursor.PrimaryPush)
         {
-            // do this first to get the rotation handles to update to the right size/position to prevent accidental clicks
-            UpdateRotationHandlePosition();
-
-            RefreshRotationGrabbed();
-
-            isRotationGrabbed = isRotationHighlighted;
-
             mHasChangedAnythingSinceLastPush = false;
 
             grabbedState.HandlePush();
@@ -438,6 +314,7 @@ public class StandardWireframeEditor : WireframeEditor
             var worldX = cursor.GetWorldX();
             var worldY = cursor.GetWorldY();
             _resizeInputHandler.HandlePush(worldX, worldY);
+            _rotationInputHandler.HandlePush(worldX, worldY);
             _moveInputHandler.HandlePush(worldX, worldY);
         }
     }
@@ -461,17 +338,19 @@ public class StandardWireframeEditor : WireframeEditor
         this.selectedObjects.Clear();
         this.selectedObjects.AddRange(selectedObjects);
 
+        _context.SelectedObjects.Clear();
+        _context.SelectedObjects.AddRange(selectedObjects);
+
         _resizeInputHandler.OnSelectionChanged();
+        _rotationInputHandler.OnSelectionChanged();
 
         if (selectedObjects.Count == 0 || selectedObjects.Any(item => item.Tag is ScreenSave))
         {
             mResizeHandles.Visible = false;
-            rotationHandle.Visible = false;
         }
         else
         {
             mResizeHandles.Visible = true;
-            rotationHandle.Visible = true;
             mResizeHandles.SetValuesFrom(selectedObjects);
             mResizeHandles.UpdateHandleSizes();
         }
@@ -485,6 +364,9 @@ public class StandardWireframeEditor : WireframeEditor
         System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
     {
         var cursorFromHandler = _resizeInputHandler.GetCursorToShow(worldXAt, worldYAt);
+        if (cursorFromHandler != null) return cursorFromHandler;
+
+        cursorFromHandler = _rotationInputHandler.GetCursorToShow(worldXAt, worldYAt);
         return cursorFromHandler ?? defaultCursor;
     }
 
