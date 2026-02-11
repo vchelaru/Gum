@@ -43,8 +43,8 @@ public class StandardWireframeEditor : WireframeEditor
     List<GraphicalUiElement> selectedObjects =
         new List<GraphicalUiElement>();
 
-    DimensionDisplay widthDimensionDisplay;
-    DimensionDisplay heightDimensionDisplay;
+    DimensionDisplayVisual widthDimensionDisplay;
+    DimensionDisplayVisual heightDimensionDisplay;
 
     bool mHasGrabbed = false;
     private readonly IElementCommands _elementCommands;
@@ -112,13 +112,8 @@ public class StandardWireframeEditor : WireframeEditor
         _rotationHandleVisual = new RotationHandleVisual(_context, Color.Yellow);
         _rotationInputHandler = new RotationInputHandler(_context, _rotationHandleVisual);
 
-        widthDimensionDisplay = new DimensionDisplay();
-        widthDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
-        widthDimensionDisplay.SetColor(lineColor, textColor);
-
-        heightDimensionDisplay = new DimensionDisplay();
-        heightDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
-        heightDimensionDisplay.SetColor(lineColor, textColor);
+        widthDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Width);
+        heightDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Height);
     }
 
     public override void Destroy()
@@ -261,16 +256,16 @@ public class StandardWireframeEditor : WireframeEditor
             sideOver == ResizeSide.Right ||
             sideOver == ResizeSide.BottomRight;
 
-        widthDimensionDisplay.SetVisible(shouldShowWidth);
+        widthDimensionDisplay.Visible = shouldShowWidth;
         if(shouldShowWidth)
         {
-            widthDimensionDisplay.Activity(selectedObjects[0], WidthOrHeight.Width);
+            widthDimensionDisplay.Update();
         }
 
-        heightDimensionDisplay.SetVisible(shouldShowHeight);
+        heightDimensionDisplay.Visible = shouldShowHeight;
         if(shouldShowHeight)
         {
-            heightDimensionDisplay.Activity(selectedObjects[0], WidthOrHeight.Height);
+            heightDimensionDisplay.Update();
         }
     }
 
