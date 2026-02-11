@@ -50,6 +50,7 @@ internal class DefaultMenuRuntime : InteractiveGue
             InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             InnerPanel.WrapsChildren = true;
             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            InnerPanel.HasEvents = false;
             this.Children.Add(InnerPanel);
 
             var menuCategory = new Gum.DataTypes.Variables.StateSaveCategory();

@@ -54,6 +54,7 @@ public class DefaultScrollViewerRuntime : InteractiveGue
             InnerPanel.Name = "InnerPanelInstance";
             ClipContainer.Name = "ClipContainerInstance";
             VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
+            ScrollAndClipContainer.Name = "ScrollAndClipContainer";
             //var HorizontalScrollBarInstance = new DefaultScrollBarRuntime();
             //HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
 
@@ -77,6 +78,7 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                 ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ScrollAndClipContainer.Height = 0;
                 ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ScrollAndClipContainer.HasEvents = false;
                 this.Children.Add(ScrollAndClipContainer);
 
                 {
@@ -95,7 +97,9 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                     ClipContainerContainer.Height = 0f;
                     ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                     ClipContainerContainer.Width = 1;
+                    ClipContainerContainer.HasEvents = false;
                     ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
+                    
                     ScrollAndClipContainer.Children.Add(ClipContainerContainer);
 
                     {
@@ -108,6 +112,7 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                         ClipContainer.Y = 2f;
                         ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                         ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
+                        ClipContainer.HasEvents = false;
                         ClipContainerContainer.Children.Add(ClipContainer);
 
                         {
@@ -116,6 +121,7 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                             InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                             InnerPanel.Width = 0f;
                             InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                            InnerPanel.HasEvents = false;
                             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
                             ClipContainer.Children.Add(InnerPanel);
                         }

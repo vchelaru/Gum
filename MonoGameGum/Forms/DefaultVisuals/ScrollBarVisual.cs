@@ -115,6 +115,7 @@ public class ScrollBarVisual : InteractiveGue
         ThumbContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
         ThumbContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         ThumbContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
+        ThumbContainer.HasEvents = true;
         this.AddChild(ThumbContainer);
 
         TrackInstance = new NineSliceRuntime();
@@ -132,6 +133,7 @@ public class ScrollBarVisual : InteractiveGue
         TrackInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         TrackInstance.Color = Styling.ActiveStyle.Colors.Gray;
         TrackInstance.Texture = uiSpriteSheetTexture;
+        TrackInstance.HasEvents = false;
         ThumbContainer.AddChild(TrackInstance);
 
         ThumbInstance = new ButtonVisual();

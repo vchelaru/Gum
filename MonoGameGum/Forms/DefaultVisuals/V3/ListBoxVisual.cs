@@ -129,6 +129,7 @@ public class ListBoxVisual : InteractiveGue
         ClipAndScrollContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         ClipAndScrollContainer.Height = 0f;
         ClipAndScrollContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ClipAndScrollContainer.HasEvents = false;
         this.AddChild(ClipAndScrollContainer);
 
         VerticalScrollBarInstance = new ScrollBarVisual();
@@ -153,6 +154,7 @@ public class ListBoxVisual : InteractiveGue
         ClipContainerParent.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
         ClipContainerParent.Height = 0f;
         ClipContainerParent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        ClipContainerParent.HasEvents = false;
         ClipAndScrollContainer.Children.Add(ClipContainerParent);
 
         ClipContainerInstance = new ContainerRuntime();
@@ -166,6 +168,7 @@ public class ListBoxVisual : InteractiveGue
         ClipContainerInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         ClipContainerInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         ClipContainerInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+        ClipContainerInstance.HasEvents = false;
         ClipContainerParent.Children.Add(ClipContainerInstance);
 
         InnerPanelInstance = new ContainerRuntime();
@@ -175,6 +178,7 @@ public class ListBoxVisual : InteractiveGue
         InnerPanelInstance.Height = 0f;
         InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        InnerPanelInstance.HasEvents = false;
         ClipContainerInstance.Children.Add(InnerPanelInstance);
 
         ListBoxCategory = new StateSaveCategory();

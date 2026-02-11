@@ -174,6 +174,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         ClipContainer.Name = "ClipContiner";
         ClipContainer.Dock(Gum.Wireframe.Dock.Fill);
         ClipContainer.ClipsChildren = true;
+        ClipContainer.HasEvents = false;
         this.AddChild(ClipContainer);
 
         SelectionInstance = new NineSliceRuntime();
