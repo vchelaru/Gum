@@ -100,7 +100,7 @@ public class KeyCombination
 
     }
 
-    public bool IsPressedInControl()
+    public virtual bool IsPressedInControl()
     {
         if (IsCtrlDown && (Control.ModifierKeys & Keys.Control) != Keys.Control) return false;
         if (IsShiftDown && (Control.ModifierKeys & Keys.Shift) != Keys.Shift) return false;
@@ -148,7 +148,7 @@ public class KeyCombination
 }
 #endregion
 
-public class HotkeyManager
+public class HotkeyManager : IHotkeyManager
 {
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);
@@ -180,6 +180,7 @@ public class HotkeyManager
     public KeyCombination LockMovementToAxis { get; private set; } = KeyCombination.Shift();
     public KeyCombination MaintainResizeAspectRatio { get; private set; } = KeyCombination.Shift();
     public KeyCombination SnapRotationTo15Degrees { get; private set; } = KeyCombination.Shift();
+    public KeyCombination MultiSelect { get; private set; } = KeyCombination.Shift();
     public KeyCombination ResizeFromCenter { get; private set; } = KeyCombination.Alt();
 
     public KeyCombination MoveCameraLeft { get; private set; } = KeyCombination.Ctrl(Keys.Left);

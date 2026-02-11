@@ -33,11 +33,13 @@ public class DimensionDisplayVisual : EditorVisualBase
 
     #endregion
 
-    public DimensionDisplayVisual(EditorContext context, WidthOrHeight dimensionType, ResizeInputHandler resizeInputHandler) : base(context)
+    public DimensionDisplayVisual(EditorContext context, 
+        WidthOrHeight dimensionType, 
+        ResizeInputHandler resizeInputHandler) : base(context)
     {
         _dimensionType = dimensionType;
         _resizeInputHandler = resizeInputHandler;
-        _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
+        _uiSettingsService = context.UiSettingsService;
 
         var systemManagers = SystemManagers.Default;
         var toolFontService = ToolFontService.Self;

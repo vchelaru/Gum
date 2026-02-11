@@ -24,7 +24,7 @@ public class GrabbedState
 {
 
     private readonly ISelectedState _selectedState;
-    private readonly WireframeObjectManager _wireframeObjectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
 
     public StateSave StateSave { get; private set; }
 
@@ -117,10 +117,11 @@ public class GrabbedState
         }
     }
 
-    public GrabbedState()
+    public GrabbedState(ISelectedState selectedState,
+        IWireframeObjectManager wireframeObjectManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
+        _selectedState = selectedState;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     public void HandlePush()

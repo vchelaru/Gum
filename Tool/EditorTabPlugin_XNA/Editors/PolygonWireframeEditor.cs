@@ -1,5 +1,14 @@
-﻿using Gum.Input;
+﻿using Gum.Commands;
+using Gum.Input;
+using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.PropertyGridHelpers;
+using Gum.Services;
+using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
+using Gum.Wireframe.Editors.Handlers;
+using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -7,11 +16,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Vector2 = System.Numerics.Vector2;
-using Gum.Managers;
-using Gum.Wireframe.Editors.Visuals;
-using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
-using Gum.Wireframe.Editors.Handlers;
 
 namespace Gum.Wireframe.Editors;
 
@@ -57,13 +61,29 @@ public class PolygonWireframeEditor : WireframeEditor
 
     public PolygonWireframeEditor(
         Layer layer,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        IElementCommands elementCommands,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        IUndoManager undoManager,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IWireframeObjectManager wireframeObjectManager,
+        IUiSettingsService uiSettingsService)
         : base(
               hotkeyManager,
               selectionManager,
               selectedState,
+              elementCommands,
+              guiCommands,
+              fileCommands,
+              setVariableLogic,
+              undoManager,
+              variableInCategoryPropagationLogic,
+              wireframeObjectManager,
+              uiSettingsService,
               layer,
               System.Drawing.Color.White,
               System.Drawing.Color.White)

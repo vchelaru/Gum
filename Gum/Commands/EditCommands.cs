@@ -37,6 +37,7 @@ public class EditCommands : IEditCommands
     private readonly ProjectCommands _projectCommands;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly PluginManager _pluginManager;
+    private readonly ProjectManager _projectManager;
     private readonly DeleteLogic _deleteLogic;
 
     public EditCommands(ISelectedState selectedState, 
@@ -61,6 +62,7 @@ public class EditCommands : IEditCommands
         _guiCommands = guiCommands;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _pluginManager = pluginManager;
+        _projectManager = ProjectManager.Self;
 
         _deleteLogic = deleteLogic;
     }
@@ -359,10 +361,10 @@ public class EditCommands : IEditCommands
             var behavior = new BehaviorSave();
             behavior.Name = name;
 
-            ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-            ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
-            ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            _projectManager.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
+            _projectManager.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            _projectManager.GumProjectSave.Behaviors.Add(behavior);
+            _projectManager.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             _pluginManager.BehaviorCreated(behavior);
 

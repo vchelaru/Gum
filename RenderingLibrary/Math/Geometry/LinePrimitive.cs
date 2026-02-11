@@ -65,7 +65,7 @@ namespace RenderingLibrary.Math.Geometry
         /// Creates a new primitive line object.
         /// </summary>
         /// <param name="singlePixelTexture">The texture to use when rendering the line.</param>
-        public LinePrimitive(Texture2D singlePixelTexture)
+        public LinePrimitive(Texture2D? singlePixelTexture)
         {
             // create pixels
             mTexture = singlePixelTexture;
@@ -158,7 +158,10 @@ namespace RenderingLibrary.Math.Geometry
         /// <param name="managers"></param>The system managers to use.  Can be null.</param>
         public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers)
         {
-            Render(spriteRenderer, managers, mTexture, .2f);
+            if(mTexture != null)
+            {
+                Render(spriteRenderer, managers, mTexture, .2f);
+            }
         }
 
         internal bool IsPointInside(float worldX, float worldY, System.Numerics.Matrix4x4 rotationMatrix)

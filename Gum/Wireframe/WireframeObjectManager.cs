@@ -579,4 +579,35 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
         return null;
     }
+
+    public IEnumerable<GraphicalUiElement> GetAllVisibleElements()
+    {
+        // Return all IPSOs that are visible and valid for selection
+        return AllIpsos.Where(ipso =>
+        {
+            // Skip null elements
+            if (ipso == null)
+                return false;
+
+            // Skip screens - they can't be selected
+            if (ipso.Tag is ScreenSave)
+                return false;
+
+            // Check if visible
+            try
+            {
+                if (ipso is IVisible visibleIpso)
+                {
+                    return visibleIpso.AbsoluteVisible;
+                }
+            }
+            catch
+            {
+                // If we can't determine visibility, include it
+                return true;
+            }
+
+            return true;
+        });
+    }
 }

@@ -30,9 +30,10 @@ public class EditorContext
     public ISetVariableLogic SetVariableLogic { get; }
     public IUndoManager UndoManager { get; }
     public IVariableInCategoryPropagationLogic VariablePropagationLogic { get; }
-    public HotkeyManager HotkeyManager { get; }
+    public IHotkeyManager HotkeyManager { get; }
     public IWireframeObjectManager WireframeObjectManager { get; }
     public Layer OverlayLayer { get; }
+    public IUiSettingsService UiSettingsService { get; }
 
     #endregion
 
@@ -88,12 +89,14 @@ public class EditorContext
         ISetVariableLogic setVariableLogic,
         IUndoManager undoManager,
         IVariableInCategoryPropagationLogic variablePropagationLogic,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         IWireframeObjectManager wireframeObjectManager,
+        IUiSettingsService uiSettingsService,
         Layer overlayLayer,
         Color lineColor,
         Color textColor)
     {
+        UiSettingsService = uiSettingsService;
         SelectedState = selectedState;
         SelectionManager = selectionManager;
         ElementCommands = elementCommands;
@@ -105,7 +108,7 @@ public class EditorContext
         HotkeyManager = hotkeyManager;
         WireframeObjectManager = wireframeObjectManager;
         OverlayLayer = overlayLayer;
-        GrabbedState = new GrabbedState();
+        GrabbedState = new GrabbedState(selectedState, wireframeObjectManager);
         LineColor = lineColor;
         TextColor = textColor;
     }

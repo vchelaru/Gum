@@ -84,20 +84,34 @@ public class StandardWireframeEditor : WireframeEditor
     public StandardWireframeEditor(Layer layer,
         Color lineColor,
         Color textColor,
-        global::Gum.Managers.HotkeyManager hotkeyManager,
+        global::Gum.Managers.IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState,
+        IElementCommands elementCommands,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        IUndoManager undoManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IUiSettingsService uiSettingsService)
         : base(
               hotkeyManager,
               selectionManager,
               selectedState,
+              elementCommands,
+              guiCommands,
+              fileCommands,
+              setVariableLogic,
+              undoManager,
+              variableInCategoryPropagationLogic,
+              wireframeObjectManager,
+              uiSettingsService,
               layer,
               lineColor,
               textColor)
     {
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;
         _selectionManager = selectionManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;

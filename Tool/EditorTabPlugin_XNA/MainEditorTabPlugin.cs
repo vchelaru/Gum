@@ -122,6 +122,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IUiSettingsService _uiSettingsService;
+    private readonly ProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
@@ -165,24 +167,34 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
         HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
+        _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
+
         _selectionManager = new SelectionManager(
-            _selectedState, 
-            undoManager, 
-            _editingManager, 
-            dialogService, 
+            _selectedState,
+            undoManager,
+            _editingManager,
+            dialogService,
             hotkeyManager,
             _variableInCategoryPropagationLogic,
-            _wireframeObjectManager);
+            _wireframeObjectManager,
+            ProjectManager.Self,
+            _guiCommands,
+            _elementCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _uiSettingsService);
 
         _screenshotService = new ScreenshotService(_selectionManager);
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
+        _projectManager = ProjectManager.Self;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
         _editorViewModel = new EditorViewModel(
@@ -325,7 +337,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     {
         if (rootGue.Component is Text text)
         {
-            text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
+            text.RenderBoundary = _projectManager.GeneralSettingsFile.ShowTextOutlines;
         }
         if (rootGue.Children != null)
         {
@@ -449,7 +461,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         if (propertyName == nameof(GumProjectSave.RestrictToUnitValues))
         {
             _selectionManager.RestrictToUnitValues =
-                ProjectManager.Self.GumProjectSave.RestrictToUnitValues;
+                _projectManager.GumProjectSave.RestrictToUnitValues;
         }
         else if (propertyName == nameof(GumProjectSave.SinglePixelTextureFile) ||
             propertyName == nameof(GumProjectSave.SinglePixelTextureTop) ||
@@ -669,7 +681,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             _hotkeyManager, 
             _selectionManager, 
             _dragDropManager,
-            _editorViewModel);
+            _editorViewModel,
+            _projectManager);
         var systemManagers = _wireframeControl.SystemManagers;
 
 
