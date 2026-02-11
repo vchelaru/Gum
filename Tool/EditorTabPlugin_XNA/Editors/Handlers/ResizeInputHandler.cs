@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -6,6 +7,7 @@ using System.Windows.Forms;
 using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Plugins;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -26,6 +28,12 @@ public class ResizeInputHandler : InputHandlerBase
     private readonly ResizeHandles _resizeHandles;
 
     public override int Priority => 90; // Higher than move, lower than rotation
+
+    /// <summary>
+    /// The resize side currently under the cursor (if any).
+    /// Used by visual components like dimension displays.
+    /// </summary>
+    public ResizeSide SideOver => _sideOver;
 
     public ResizeInputHandler(EditorContext context, ResizeHandles resizeHandles)
         : base(context)
@@ -586,6 +594,113 @@ public class ResizeInputHandler : InputHandlerBase
 
         Context.GuiCommands.RefreshVariableValues();
 
+        var element = Context.SelectedState.SelectedElement;
+
+        foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
+        {
+            var oldValue = Context.GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
+
+            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
+            {
+                var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
+
+                // should this be:
+                Context.SetVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
+                   oldValue,
+                   instance,
+                   element.DefaultState,
+                   refresh: true,
+                   recordUndo: false,
+                   trySave: false);
+                // instead of this?
+                //PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
+            }
+        }
+
+        foreach (var possiblyChangedVariableList in stateSave.VariableLists)
+        {
+            var oldValue = Context.GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
+
+            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
+            {
+                var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
+                PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
+            }
+        }
+
         Context.HasChangedAnythingSinceLastPush = false;
+    }
+
+    private bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
+    {
+        var newValue = newStateSave.GetValue(variableName);
+        if (newValue == null && oldValue != null)
+        {
+            return true;
+        }
+        if (newValue != null && oldValue == null)
+        {
+            return true;
+        }
+        if(oldValue == null && newValue == null)
+        {
+            return true;
+        }
+        // neither are null
+        else
+        {
+            if (oldValue is float)
+            {
+                var oldFloat = (float)oldValue;
+                var newFloat = (float)newValue;
+
+                return oldFloat != newFloat;
+            }
+            else if (oldValue is string)
+            {
+                return (string)oldValue != (string)newValue;
+            }
+            else if (oldValue is bool)
+            {
+                return (bool)oldValue != (bool)newValue;
+            }
+            else if (oldValue is int)
+            {
+                return (int)oldValue != (int)newValue;
+            }
+            else if (oldValue is Vector2)
+            {
+                return (Vector2)oldValue != (Vector2)newValue;
+            }
+            else if (oldValue is IList oldList)
+            {
+                return AreListsSame(oldList, (IList)newValue);
+            }
+            else
+            {
+                return oldValue.Equals(newValue) == false;
+            }
+        }
+    }
+
+    private bool AreListsSame(IList oldList, IList newList)
+    {
+        if (oldList == null && newList == null)
+        {
+            return true;
+        }
+        if (oldList == null || newList == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < oldList.Count; i++)
+        {
+            if (oldList[i].Equals(newList[i]) == false)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -132,48 +132,6 @@ public abstract class WireframeEditor
         return false;
     }
 
-    protected void ApplyAxisLockToSelectedState()
-    {
-        var axis = grabbedState.AxisMovedFurthestAlong;
-
-        bool isElementSelected = _selectedState.SelectedInstances.Count() == 0 &&
-                 // check specifically for components or standard elements, since Screens can't be moved
-                 (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null);
-
-
-        if (axis == XOrY.X)
-        {
-            // If the X axis is the furthest-moved, set the Y values back to what they were.
-            if (isElementSelected)
-            {
-                _selectedState.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
-            }
-            else
-            {
-                foreach (var instance in _selectedState.SelectedInstances)
-                {
-                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].StateY, "float");
-                }
-            }
-        }
-        else if (axis == XOrY.Y)
-        {
-            // If the Y axis is the furthest-moved, set the X values back to what they were.
-            if (isElementSelected)
-            {
-                _selectedState.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
-            }
-            else
-            {
-                foreach (var instance in _selectedState.SelectedInstances)
-                {
-                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].StateX, "float");
-                }
-            }
-        }
-
-    }
-
 
     protected void DoEndOfSettingValuesLogic()
     {
