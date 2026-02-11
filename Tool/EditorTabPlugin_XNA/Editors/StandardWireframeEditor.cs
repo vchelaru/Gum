@@ -46,7 +46,6 @@ public class StandardWireframeEditor : WireframeEditor
     DimensionDisplayVisual widthDimensionDisplay;
     DimensionDisplayVisual heightDimensionDisplay;
 
-    bool mHasGrabbed = false;
     private readonly IElementCommands _elementCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly SelectionManager _selectionManager;
@@ -82,16 +81,16 @@ public class StandardWireframeEditor : WireframeEditor
 
     #endregion
 
-    public StandardWireframeEditor(Layer layer, 
-        Color lineColor, 
-        Color textColor, 
+    public StandardWireframeEditor(Layer layer,
+        Color lineColor,
+        Color textColor,
         global::Gum.Managers.HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         ISelectedState selectedState,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager)
         : base(
-              hotkeyManager, 
+              hotkeyManager,
               selectionManager,
               selectedState,
               layer,
@@ -113,6 +112,17 @@ public class StandardWireframeEditor : WireframeEditor
 
         widthDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Width, _resizeInputHandler);
         heightDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Height, _resizeInputHandler);
+
+        // Register handlers and visuals with base class
+        // Handlers will be checked in priority order (Rotation=100, Resize=90, Move=80)
+        _inputHandlers.Add(_rotationInputHandler);
+        _inputHandlers.Add(_resizeInputHandler);
+        _inputHandlers.Add(_moveInputHandler); // From base class
+
+        _visuals.Add(_resizeHandlesVisual);
+        _visuals.Add(_rotationHandleVisual);
+        _visuals.Add(widthDimensionDisplay);
+        _visuals.Add(heightDimensionDisplay);
     }
 
     public override void Destroy()
@@ -127,48 +137,20 @@ public class StandardWireframeEditor : WireframeEditor
 
     #region Activity
 
-    public override void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
+    protected override bool ShouldProcessActivity(ICollection<GraphicalUiElement> selectedObjects)
     {
-        if (selectedObjects.Count != 0 && _context.SelectedState.SelectedStateSave != null && _context.SelectedState.CustomCurrentStateSave == null)
+        return selectedObjects.Count != 0
+            && _context.SelectedState.SelectedStateSave != null
+            && _context.SelectedState.CustomCurrentStateSave == null;
+    }
+
+    protected override void OnActivityComplete(ICollection<GraphicalUiElement> selectedObjects)
+    {
+        bool shouldSkip = selectedObjects.Any(item => item.Tag is ScreenSave);
+
+        if (!shouldSkip)
         {
-            var cursor = InputLibrary.Cursor.Self;
-            float worldX = cursor.GetWorldX();
-            float worldY = cursor.GetWorldY();
-
-            _resizeInputHandler.UpdateHover(worldX, worldY);
-            _rotationInputHandler.UpdateHover(worldX, worldY);
-
-            PushActivity();
-
-            ClickActivity();
-
-            // ResizeInputHandler handles resize dragging
-            if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
-            {
-                _resizeInputHandler.HandleDrag();
-            }
-
-            // RotationInputHandler handles rotation dragging
-            if (cursor.PrimaryDown)
-            {
-                _rotationInputHandler.HandleDrag();
-            }
-
-            // MoveInputHandler handles body grabbing (push/drag/release via PushActivity/ClickActivity)
-            MoveInputHandlerDragActivity();
-
-            widthDimensionDisplay.Update();
-            heightDimensionDisplay.Update();
-
-            bool shouldSkip = selectedObjects.Any(item => item.Tag is ScreenSave);
-
-            if (!shouldSkip)
-            {
-                UpdateLockedVariables(selectedObjects);
-
-                _resizeHandlesVisual.Update();
-                _rotationHandleVisual.Update();
-            }
+            UpdateLockedVariables(selectedObjects);
         }
     }
 
@@ -230,62 +212,6 @@ public class StandardWireframeEditor : WireframeEditor
                     }
                 }
             }
-        }
-    }
-
-    private void ClickActivity()
-    {
-        var cursor = InputLibrary.Cursor.Self;
-
-        if (cursor.PrimaryDown == false)
-        {
-            mHasGrabbed = false;
-        }
-
-        // Let handlers handle the release
-        if (cursor.PrimaryClick)
-        {
-            _moveInputHandler.HandleRelease();
-            _resizeInputHandler.HandleRelease();
-            _rotationInputHandler.HandleRelease();
-        }
-    }
-
-
-
-    private void PushActivity()
-    {
-        // The selected object is set in the SelectionManager
-
-        var cursor = InputLibrary.Cursor.Self;
-        if (cursor.PrimaryPush)
-        {
-            _context.HasChangedAnythingSinceLastPush = false;
-
-            _context.GrabbedState.HandlePush();
-
-            mHasGrabbed = _selectionManager.HasSelection;
-
-            if (mHasGrabbed)
-            {
-                UpdateAspectRatioForGrabbedIpso();
-            }
-
-            // Let handlers know about the push
-            var worldX = cursor.GetWorldX();
-            var worldY = cursor.GetWorldY();
-            _resizeInputHandler.HandlePush(worldX, worldY);
-            _rotationInputHandler.HandlePush(worldX, worldY);
-            _moveInputHandler.HandlePush(worldX, worldY);
-        }
-    }
-
-    private void MoveInputHandlerDragActivity()
-    {
-        var cursor = InputLibrary.Cursor.Self;
-        if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
-        {
-            _moveInputHandler.HandleDrag();
         }
     }
 

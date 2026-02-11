@@ -56,12 +56,12 @@ public class PolygonWireframeEditor : WireframeEditor
     #region Constructor/Update To
 
     public PolygonWireframeEditor(
-        Layer layer, 
-        HotkeyManager hotkeyManager, 
+        Layer layer,
+        HotkeyManager hotkeyManager,
         SelectionManager selectionManager,
-        ISelectedState selectedState) 
+        ISelectedState selectedState)
         : base(
-              hotkeyManager, 
+              hotkeyManager,
               selectionManager,
               selectedState,
               layer,
@@ -82,6 +82,16 @@ public class PolygonWireframeEditor : WireframeEditor
             _pointNodesVisual,
             _addPointSpriteVisual,
             _selectedPointHighlightVisual);
+
+        // Register handlers and visuals with base class
+        // Handlers will be checked in priority order (PolygonPoint=95, Move=80)
+        _inputHandlers.Add(_pointInputHandler);
+        _inputHandlers.Add(_moveInputHandler); // From base class
+
+        _visuals.Add(_pointNodesVisual);
+        _visuals.Add(_addPointSpriteVisual);
+        _visuals.Add(_selectedPointHighlightVisual);
+        _visuals.Add(_originDisplayVisual);
     }
 
     public override void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects)
@@ -107,90 +117,9 @@ public class PolygonWireframeEditor : WireframeEditor
 
     #region Activity Functions
 
-    public override void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
-    {
-        if (selectedObjects.Count != 0)
-        {
-            var cursor = InputLibrary.Cursor.Self;
-            var x = cursor.GetWorldX();
-            var y = cursor.GetWorldY();
-
-            // Handle input through the handler
-            if (cursor.PrimaryPush)
-            {
-                // First let the point handler try to handle the push
-                bool handledByPointHandler = _pointInputHandler.HandlePush(x, y);
-                
-                if (!handledByPointHandler)
-                {
-                    // If not handled by point handler, check for body grab
-                    if (IsOverPolygonBody(x, y))
-                    {
-                        _context.HasChangedAnythingSinceLastPush = false;
-                        _context.GrabbedState.HandlePush();
-                        _moveInputHandler.HandlePush(x, y);
-                    }
-                }
-            }
-
-            // Handle drag
-            if (cursor.PrimaryDown)
-            {
-                if (_pointInputHandler.IsActive)
-                {
-                    _pointInputHandler.HandleDrag();
-                }
-                else if (_context.GrabbedState.HasMovedEnough)
-                {
-                    // Body dragging - use base class MoveInputHandler
-                    _moveInputHandler.HandleDrag();
-                }
-            }
-
-            // Handle release
-            if (cursor.PrimaryClick)
-            {
-                if (_pointInputHandler.IsActive)
-                {
-                    _pointInputHandler.HandleRelease();
-                }
-                else
-                {
-                    // Let MoveInputHandler handle the release (axis lock, snapping, etc.)
-                    _moveInputHandler.HandleRelease();
-                }
-            }
-
-            // Update hover state
-            _pointInputHandler.UpdateHover(x, y);
-
-            // Update all visual components
-            _pointNodesVisual.Update();
-            _addPointSpriteVisual.Update();
-            _selectedPointHighlightVisual.Update();
-            _originDisplayVisual.Update();
-        }
-    }
-
-    private bool IsOverPolygonBody(float x, float y)
-    {
-        foreach (var gue in selectedPolygons)
-        {
-            var polygon = gue.RenderableComponent as LinePolygon;
-            if (polygon.IsPointInside(x, y))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Note: Activity is now handled by base class which iterates through registered handlers and visuals
 
     #endregion
-
-    public override bool TryHandleDelete()
-    {
-        return _pointInputHandler.TryHandleDelete();
-    }
 
     public override void Destroy()
     {
@@ -204,17 +133,17 @@ public class PolygonWireframeEditor : WireframeEditor
 
     public override Cursor GetWindowsCursorToShow(Cursor defaultCursor, float worldXAt, float worldYAt)
     {
-        // First check if handler has a cursor to show
+        // Check handlers in priority order
         var handlerCursor = _pointInputHandler.GetCursorToShow(worldXAt, worldYAt);
         if (handlerCursor != null)
         {
             return handlerCursor;
         }
 
-        // Check if over polygon body
-        if (IsOverPolygonBody(worldXAt, worldYAt))
+        handlerCursor = _moveInputHandler.GetCursorToShow(worldXAt, worldYAt);
+        if (handlerCursor != null)
         {
-            return System.Windows.Forms.Cursors.SizeAll;
+            return handlerCursor;
         }
 
         return defaultCursor;
