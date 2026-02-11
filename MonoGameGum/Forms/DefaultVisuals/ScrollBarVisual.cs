@@ -115,6 +115,7 @@ public class ScrollBarVisual : InteractiveGue
         ThumbContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
         ThumbContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
         ThumbContainer.YUnits = GeneralUnitType.PixelsFromMiddle;
+        ThumbContainer.HasEvents = false;
         this.AddChild(ThumbContainer);
 
         TrackInstance = new NineSliceRuntime();

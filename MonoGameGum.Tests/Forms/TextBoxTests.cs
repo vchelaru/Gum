@@ -17,11 +17,66 @@ namespace MonoGameGum.Tests.Forms;
 
 public class TextBoxTests : BaseTestClass
 {
+
     [Fact]
-    public void Visual_HasEvents_ShouldBeTrue()
+    public void CaretIndex_ShouldAdjustCaretPosition()
     {
-        TextBox sut = new();
-        sut.Visual.HasEvents.ShouldBeTrue();
+        TextBox textBox = new();
+        textBox.Text = "Hello";
+
+        GraphicalUiElement caret = 
+            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+
+        textBox.CaretIndex = 0;
+        float absolutePosition = caret.AbsoluteLeft;
+
+        textBox.CaretIndex = 2;
+        caret.AbsoluteLeft.ShouldBeGreaterThan(absolutePosition);
+        float positionAt2 = caret.AbsoluteLeft;
+
+        textBox.CaretIndex = 4;
+        caret.AbsoluteLeft.ShouldBeGreaterThan(positionAt2);
+
+        textBox.CaretIndex = 5;
+        float positionAt5 = caret.AbsoluteLeft;
+        textBox.CaretIndex = 6;
+        caret.AbsoluteLeft.ShouldBe(positionAt5);
+    }
+
+    [Fact]
+    public void CaretIndex_ShouldAdjustCaretPosition_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('\n');
+        textBox.HandleCharEntered('\n');
+
+        // give it focus so that the caret is visible:
+        textBox.IsFocused = true;
+
+        GraphicalUiElement caret =
+            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
+
+        textBox.CaretIndex = 0;
+        float absolutePosition = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 1;
+        caret.AbsoluteTop.ShouldBeGreaterThan(absolutePosition);
+        float positionAt1 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 2;
+        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt1);
+        float positionAt2 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 3;
+        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt2);
+        float positionAt3 = caret.AbsoluteTop;
+
+        textBox.CaretIndex = 4;
+        caret.AbsoluteTop.ShouldBe(positionAt3); // Should not move past the last line
     }
 
     [Fact]
@@ -30,17 +85,6 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         textBox.Visual.CallClick();
         textBox.IsFocused.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void IsFocused_ShouldRaiseLostFocus_IfIsFocusedSetToFalse()
-    {
-        TextBox textBox = new();
-        bool lostFocusRaised = false;
-        textBox.LostFocus += (s, e) => lostFocusRaised = true;
-        textBox.IsFocused = true;
-        textBox.IsFocused = false;
-        lostFocusRaised.ShouldBeTrue();
     }
 
     [Fact]
@@ -129,6 +173,26 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void asdf()
+    {
+        TextBox textBox = new();
+        DefaultTextBoxRuntime visual = (DefaultTextBoxRuntime)textBox.Visual;
+
+    }
+
+
+    [Fact]
+    public void IsFocused_ShouldRaiseLostFocus_IfIsFocusedSetToFalse()
+    {
+        TextBox textBox = new();
+        bool lostFocusRaised = false;
+        textBox.LostFocus += (s, e) => lostFocusRaised = true;
+        textBox.IsFocused = true;
+        textBox.IsFocused = false;
+        lostFocusRaised.ShouldBeTrue();
+    }
+
+    [Fact]
     public void TextBox_ShouldHaveSelectionInstance()
     {
         var textBox = new TextBox();
@@ -140,66 +204,15 @@ public class TextBoxTests : BaseTestClass
         selection.ShouldNotBeNull();
     }
 
+    #region Visual
     [Fact]
-    public void CaretIndex_ShouldAdjustCaretPosition()
+    public void Visual_HasEvents_ShouldBeTrue()
     {
-        TextBox textBox = new();
-        textBox.Text = "Hello";
-
-        GraphicalUiElement caret = 
-            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
-
-        textBox.CaretIndex = 0;
-        float absolutePosition = caret.AbsoluteLeft;
-
-        textBox.CaretIndex = 2;
-        caret.AbsoluteLeft.ShouldBeGreaterThan(absolutePosition);
-        float positionAt2 = caret.AbsoluteLeft;
-
-        textBox.CaretIndex = 4;
-        caret.AbsoluteLeft.ShouldBeGreaterThan(positionAt2);
-
-        textBox.CaretIndex = 5;
-        float positionAt5 = caret.AbsoluteLeft;
-        textBox.CaretIndex = 6;
-        caret.AbsoluteLeft.ShouldBe(positionAt5);
+        TextBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
     }
 
-    [Fact]
-    public void CaretIndex_ShouldAdjustCaretPosition_Multiline()
-    {
-        TextBox textBox = new();
-        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
-        textBox.AcceptsReturn = true;
-
-        textBox.HandleCharEntered('\n');
-        textBox.HandleCharEntered('\n');
-        textBox.HandleCharEntered('\n');
-
-        // give it focus so that the caret is visible:
-        textBox.IsFocused = true;
-
-        GraphicalUiElement caret =
-            (GraphicalUiElement)textBox.Visual.GetChildByNameRecursively("CaretInstance")!;
-
-        textBox.CaretIndex = 0;
-        float absolutePosition = caret.AbsoluteTop;
-
-        textBox.CaretIndex = 1;
-        caret.AbsoluteTop.ShouldBeGreaterThan(absolutePosition);
-        float positionAt1 = caret.AbsoluteTop;
-
-        textBox.CaretIndex = 2;
-        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt1);
-        float positionAt2 = caret.AbsoluteTop;
-
-        textBox.CaretIndex = 3;
-        caret.AbsoluteTop.ShouldBeGreaterThan(positionAt2);
-        float positionAt3 = caret.AbsoluteTop;
-
-        textBox.CaretIndex = 4;
-        caret.AbsoluteTop.ShouldBe(positionAt3); // Should not move past the last line
-    }
+    #endregion
 
     [Fact]
     public void TextWrapping_NoWrap_ShouldRenderCorrectlyWithAcceptsReturn()

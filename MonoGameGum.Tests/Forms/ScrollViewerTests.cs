@@ -1,6 +1,7 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
-using Gum.Forms.Controls;
+using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using Moq;
 using Shouldly;
@@ -14,6 +15,22 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class ScrollViewerTests : BaseTestClass
 {
+
+    [Fact]
+    public void Children_Containers_ShouldNotHaveEvents()
+    {
+        ScrollViewer scrollViewer = new();
+        InteractiveGue visual = scrollViewer.Visual;
+
+        List<ContainerRuntime> children = new();
+        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+
+        foreach (var child in children)
+        {
+            child.HasEvents.ShouldBeFalse(
+                $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+        }
+    }
 
     [Fact]
     public void DoItemsHaveFoucus_SetToFalse_ShouldRemoveFocusFromItems()

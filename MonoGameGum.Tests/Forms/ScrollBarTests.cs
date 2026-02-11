@@ -1,4 +1,5 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,15 @@ public class ScrollBarTests
     {
         ScrollBar sut = new();
         sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThumbContainer_HasEvents_ShouldBeFalse()
+    {
+        ScrollBar scrollBar = new();
+        InteractiveGue thumbContainer = (InteractiveGue)scrollBar.Visual.Children.First(c => c.Name == "ThumbContainer");
+        thumbContainer.HasEvents.ShouldBeFalse();
+
     }
 
     [Fact]

@@ -72,6 +72,7 @@ public class DefaultListBoxRuntime : InteractiveGue
             ClipContainer.Y = 2f;
             ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
             ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
+            ClipContainer.HasEvents = false;
             this.Children.Add(ClipContainer);
 
 
@@ -80,6 +81,7 @@ public class DefaultListBoxRuntime : InteractiveGue
             InnerPanel.Width = 0f;
             InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            InnerPanel.HasEvents = false;
             ClipContainer.Children.Add(InnerPanel);
 
 

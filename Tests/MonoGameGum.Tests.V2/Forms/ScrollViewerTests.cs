@@ -1,4 +1,6 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Wireframe;
+using MonoGameGum.GueDeriving;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -9,6 +11,22 @@ using System.Threading.Tasks;
 namespace MonoGameGum.Tests.V2.Forms;
 public class ScrollViewerTests
 {
+    [Fact]
+    public void Children_Containers_ShouldNotHaveEvents()
+    {
+        ScrollViewer scrollViewer = new();
+        InteractiveGue visual = scrollViewer.Visual;
+
+        List<ContainerRuntime> children = new();
+        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+
+        foreach (var child in children)
+        {
+            child.HasEvents.ShouldBeFalse(
+                $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+        }
+    }
+
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {
