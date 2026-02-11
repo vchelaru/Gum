@@ -12,6 +12,7 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Color = System.Drawing.Color;
 using HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment;
 using Gum.Input;
+using Gum.Wireframe.Editors.Visuals;
 
 
 namespace Gum.Wireframe.Editors.Handlers;
@@ -22,16 +23,14 @@ namespace Gum.Wireframe.Editors.Handlers;
 public class RotationInputHandler : InputHandlerBase
 {
     private bool _isHighlighted = false;
-    private readonly LineCircle _rotationHandle;
+    private readonly RotationHandleVisual _rotationHandleVisual;
 
     public override int Priority => 100; // Highest priority
 
-    public RotationInputHandler(EditorContext context, LineCircle rotationHandle)
+    public RotationInputHandler(EditorContext context, RotationHandleVisual rotationHandleVisual)
         : base(context)
     {
-        _rotationHandle = rotationHandle;
-        _rotationHandle.Color = Color.Yellow;
-        _rotationHandle.Visible = false;
+        _rotationHandleVisual = rotationHandleVisual;
     }
 
     public override bool HasCursorOver(float worldX, float worldY)
@@ -41,14 +40,12 @@ public class RotationInputHandler : InputHandlerBase
 
     public override Cursor? GetCursorToShow(float worldX, float worldY)
     {
-        // Could return a custom rotation cursor if available
-        return _isHighlighted ? System.Windows.Forms.Cursors.Cross : null;
+        return _isHighlighted ? System.Windows.Forms.Cursors.Hand : null;
     }
 
     public override void UpdateHover(float worldX, float worldY)
     {
-        _isHighlighted = _rotationHandle.Visible && _rotationHandle.HasCursorOver(worldX, worldY);
-        UpdateRotationHandlePosition();
+        _isHighlighted = _rotationHandleVisual.Handle.Visible && _rotationHandleVisual.Handle.HasCursorOver(worldX, worldY);
     }
 
     protected override void OnPush(float worldX, float worldY)
@@ -118,57 +115,7 @@ public class RotationInputHandler : InputHandlerBase
 
     public override void OnSelectionChanged()
     {
-        UpdateHandleVisibilityAndPosition();
-    }
-
-    public void UpdateHandleVisibilityAndPosition()
-    {
-        if (Context.SelectedObjects.Count != 1 || Context.SelectedObjects.Any(item => item.Tag is ScreenSave))
-        {
-            _rotationHandle.Visible = false;
-        }
-        else
-        {
-            _rotationHandle.Visible = true;
-            UpdateRotationHandlePosition();
-        }
-    }
-
-    private void UpdateRotationHandlePosition()
-    {
-        if (Context.SelectedObjects.Count != 1)
-        {
-            _rotationHandle.Visible = false;
-            return;
-        }
-
-        var singleSelectedObject = Context.SelectedObjects[0];
-        _rotationHandle.Visible = true;
-
-        float minimumOffset = 24 / Renderer.Self.Camera.Zoom;
-        float xOffset = 0;
-
-        if (singleSelectedObject.XOrigin == HorizontalAlignment.Left)
-        {
-            xOffset = singleSelectedObject.GetAbsoluteWidth() + minimumOffset;
-        }
-        else if (singleSelectedObject.XOrigin == HorizontalAlignment.Center)
-        {
-            xOffset = singleSelectedObject.GetAbsoluteWidth() / 2.0f + minimumOffset;
-        }
-        else if (singleSelectedObject.XOrigin == HorizontalAlignment.Right)
-        {
-            xOffset = minimumOffset;
-        }
-
-        var offset = new Vector2(xOffset, 0);
-        MathFunctions.RotateVector(
-            ref offset,
-            -MathHelper.ToRadians(singleSelectedObject.GetAbsoluteRotation()));
-
-        _rotationHandle.X = singleSelectedObject.AbsoluteX + offset.X;
-        _rotationHandle.Y = singleSelectedObject.AbsoluteY + offset.Y;
-        _rotationHandle.Radius = 8 / Renderer.Self.Camera.Zoom;
+        // Visual handles its own visibility and position updates
     }
 
     private void DoEndOfSettingValuesLogic()
@@ -191,6 +138,6 @@ public class RotationInputHandler : InputHandlerBase
 
     public void Destroy()
     {
-        ShapeManager.Self.Remove(_rotationHandle);
+        // Visual handles its own cleanup
     }
 }

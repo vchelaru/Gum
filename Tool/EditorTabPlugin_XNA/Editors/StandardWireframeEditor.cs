@@ -24,6 +24,7 @@ using Gum.Commands;
 using Gum.Undo;
 using Gum.Wireframe.Editors.Handlers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Wireframe.Editors.Visuals;
 
 namespace Gum.Wireframe.Editors;
 
@@ -37,6 +38,7 @@ public class StandardWireframeEditor : WireframeEditor
     ResizeHandles mResizeHandles;
     ResizeInputHandler _resizeInputHandler;
     RotationInputHandler _rotationInputHandler;
+    RotationHandleVisual _rotationHandleVisual;
 
     List<GraphicalUiElement> selectedObjects =
         new List<GraphicalUiElement>();
@@ -107,9 +109,8 @@ public class StandardWireframeEditor : WireframeEditor
 
         _resizeInputHandler = new ResizeInputHandler(_context, mResizeHandles);
 
-        var rotationHandle = new LineCircle();
-        ShapeManager.Self.Add(rotationHandle, layer);
-        _rotationInputHandler = new RotationInputHandler(_context, rotationHandle);
+        _rotationHandleVisual = new RotationHandleVisual(_context, Color.Yellow);
+        _rotationInputHandler = new RotationInputHandler(_context, _rotationHandleVisual);
 
         widthDimensionDisplay = new DimensionDisplay();
         widthDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
@@ -124,6 +125,7 @@ public class StandardWireframeEditor : WireframeEditor
     {
         mResizeHandles.Destroy();
         _rotationInputHandler.Destroy();
+        _rotationHandleVisual.Destroy();
 
         widthDimensionDisplay.Destroy();
         heightDimensionDisplay.Destroy();
@@ -173,7 +175,7 @@ public class StandardWireframeEditor : WireframeEditor
 
                 mResizeHandles.UpdateHandleSizes();
 
-                _rotationInputHandler.UpdateHandleVisibilityAndPosition();
+                _rotationHandleVisual.Update();
             }
         }
     }
@@ -343,6 +345,7 @@ public class StandardWireframeEditor : WireframeEditor
 
         _resizeInputHandler.OnSelectionChanged();
         _rotationInputHandler.OnSelectionChanged();
+        _rotationHandleVisual.UpdateToSelection(selectedObjects);
 
         if (selectedObjects.Count == 0 || selectedObjects.Any(item => item.Tag is ScreenSave))
         {
