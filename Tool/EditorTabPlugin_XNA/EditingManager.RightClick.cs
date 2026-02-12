@@ -22,12 +22,13 @@ public partial class EditingManager
     private void RightClickInitialize(ContextMenuStrip contextMenuStrip)
     {
         _viewModel = new RightClickViewModel(
-            _selectedState, 
+            _selectedState,
             _reorderLogic,
             ObjectFinder.Self,
             _elementCommands,
             _nameVerifier,
-            _setVariableLogic);
+            _setVariableLogic,
+            _circularReferenceManager);
         mContextMenuStrip = contextMenuStrip;
 
         contextMenuStrip.VisibleChanged += HandleVisibleChange;

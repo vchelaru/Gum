@@ -308,6 +308,16 @@ public partial class ElementTreeViewManager
                 mDeleteObject.Text = "Delete " + _selectedState.SelectedElement.ToString();
                 mMenuStrip.Items.Add(mDeleteObject);
 
+                // Add favorite toggle for components only
+                if (_selectedState.SelectedComponent != null)
+                {
+                    mMenuStrip.Items.Add("-");
+
+                    var isFavorite = FavoriteComponentManager.Self.IsFavorite(_selectedState.SelectedComponent);
+                    var favoriteText = isFavorite ? "Remove from Favorites" : "Add to Favorites";
+                    mMenuStrip.Items.Add(favoriteText, null, HandleToggleFavorite);
+                }
+
             }
             #endregion
 
@@ -403,6 +413,47 @@ public partial class ElementTreeViewManager
         var parentMenuItem = new ToolStripMenuItem(itemText);
         mMenuStrip.Items.Add(parentMenuItem);
 
+        // Add favorited components first
+        var favoritedComponents = FavoriteComponentManager.Self.GetFavoritedComponentsForCurrentProject();
+        var selectedElement = _selectedState.SelectedElement;
+        if (selectedElement != null)
+        {
+            favoritedComponents = favoritedComponents
+                .Where(c => _circularReferenceManager.CanTypeBeAddedToElement(selectedElement, c.Name))
+                .ToList();
+        }
+        if (favoritedComponents.Count > 0)
+        {
+            foreach (var component in favoritedComponents)
+            {
+                var menuItem = new ToolStripMenuItem(component.Name);
+                parentMenuItem.DropDownItems.Add(menuItem);
+
+                var componentName = component.Name;
+                menuItem.Click += (_, _) =>
+                {
+                    var selectedElement = _selectedState.SelectedElement;
+                    if (selectedElement != null)
+                    {
+                        var newInstanceElementType = ObjectFinder.Self.GetElementSave(componentName)!;
+                        var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
+
+                        var viewModel = new AddInstanceDialogViewModel(
+                            _selectedState,
+                            _nameVerifier,
+                            _elementCommands,
+                            _setVariableLogic);
+                        viewModel.TypeToCreate = componentName;
+                        viewModel.Value = name;
+                        viewModel.OnAffirmative();
+                    }
+                };
+            }
+
+            // Add separator after favorited components
+            parentMenuItem.DropDownItems.Add(new ToolStripSeparator());
+        }
+
         // Add child menu items for each type
         var types = new[] { "Sprite", "Text", "NineSlice", "ColoredRectangle", "Container" };
 
@@ -420,8 +471,8 @@ public partial class ElementTreeViewManager
                     var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
 
                     var viewModel = new AddInstanceDialogViewModel(
-                        _selectedState, 
-                        _nameVerifier, 
+                        _selectedState,
+                        _nameVerifier,
                         _elementCommands,
                         _setVariableLogic);
                     viewModel.TypeToCreate = type;
@@ -493,6 +544,22 @@ public partial class ElementTreeViewManager
     private void HandlePasteTopLevel(object? sender, EventArgs e)
     {
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top);
+    }
+
+    private void HandleToggleFavorite(object? sender, EventArgs e)
+    {
+        var component = _selectedState.SelectedComponent;
+        if (component == null) return;
+
+        var isFavorite = FavoriteComponentManager.Self.IsFavorite(component);
+        if (isFavorite)
+        {
+            FavoriteComponentManager.Self.RemoveFromFavorites(component);
+        }
+        else
+        {
+            FavoriteComponentManager.Self.AddToFavorites(component);
+        }
     }
 
     private void HandleViewReferences(object? sender, EventArgs e)

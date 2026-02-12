@@ -4,6 +4,7 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
+using Gum.Services;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.ViewModels;
@@ -22,6 +23,7 @@ public class RightClickViewModelTests
     private readonly Mock<IElementCommands> _elementCommands;
     private readonly Mock<INameVerifier> _nameVerifier;
     private readonly Mock<ISetVariableLogic> _setVariableLogic;
+    private readonly Mock<ICircularReferenceManager> _circularReferenceManager;
     private readonly RightClickViewModel _sut;
 
     public RightClickViewModelTests()
@@ -33,14 +35,15 @@ public class RightClickViewModelTests
         _elementCommands = new Mock<IElementCommands>();
         _nameVerifier = new Mock<INameVerifier>();
         _setVariableLogic = new Mock<ISetVariableLogic>();
-
+        _circularReferenceManager = new Mock<ICircularReferenceManager>();
         _sut = new RightClickViewModel(
             _selectedState.Object,
             _reorderLogic.Object,
             _objectFinder.Object,
             _elementCommands.Object,
             _nameVerifier.Object,
-            _setVariableLogic.Object);
+            _setVariableLogic.Object,
+            _circularReferenceManager.Object);
     }
 
     [Fact]
