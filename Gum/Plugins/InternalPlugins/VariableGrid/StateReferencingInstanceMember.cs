@@ -767,11 +767,9 @@ public class StateReferencingInstanceMember : InstanceMember
         {
             StoreLastOldValue(setPropertyArgs, instanceSave, elementSave);
 
-            // Pass null for variableType to match old behavior. The old code path resolved
-            // type via GetVariableFromThisOrBase (VariableSave, not VariableListSave), which
-            // returned null for list variables. Inside AssignVariableListSave, null defaults
-            // to "string", which is what existing serialized data expects.
-            mStateSave.SetValue(mVariableName, newValue);
+            var existingVariable = elementSave?.GetVariableListFromThisOrBase(Name);
+            var type = existingVariable?.Type ?? TryGetTypeFromVariableListSave().ToString();
+            mStateSave.SetValue(mVariableName, newValue, instanceSave, type);
 
             var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, setPropertyArgs.CommitType, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
 
