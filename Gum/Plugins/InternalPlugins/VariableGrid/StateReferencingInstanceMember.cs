@@ -1,7 +1,6 @@
 using CommonFormsAndControls;
 using ExCSS;
 using Gum.DataTypes;
-using Gum.DataTypes.ComponentModel;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
@@ -51,8 +50,12 @@ public class StateReferencingInstanceMember : InstanceMember
 
     public object LastOldFullCommitValue { get; private set; }
 
-    InstanceSavePropertyDescriptor mPropertyDescriptor;
-
+    Attribute[] _attributes;
+    TypeConverter _converter;
+    Type _componentType;
+    bool _isReadOnlyFromDescriptor;
+    bool _isAssignedByReference;
+    bool _isVariable;
 
     #endregion
 
@@ -67,9 +70,9 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         get
         {
-            if (mPropertyDescriptor != null)
+            if (_isVariable)
             {
-                return mPropertyDescriptor.IsReadOnly;
+                return _isReadOnlyFromDescriptor;
             }
             else
             {
@@ -82,11 +85,7 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         get
         {
-            if (mPropertyDescriptor != null)
-            {
-                return mPropertyDescriptor.Name;
-            }
-            else if (mVariableName.Contains('.'))
+            if (mVariableName.Contains('.'))
             {
                 return mVariableName.Substring(mVariableName.LastIndexOf('.') + 1);
             }
@@ -94,7 +93,6 @@ public class StateReferencingInstanceMember : InstanceMember
             {
                 return mVariableName;
             }
-
         }
     }
 
@@ -134,19 +132,15 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         get
         {
-            if (mPropertyDescriptor != null && mPropertyDescriptor.Converter != null &&
-                (mPropertyDescriptor.Converter is System.ComponentModel.BooleanConverter == false))
+            if (_converter != null && (_converter is BooleanConverter == false))
             {
-                var values = mPropertyDescriptor.Converter.GetStandardValues(null);
+                var values = _converter.GetStandardValues(null);
                 if (values != null)
                 {
                     List<object> toReturn = new List<object>();
-                    if (values != null)
+                    foreach (var item in values)
                     {
-                        foreach (var item in values)
-                        {
-                            toReturn.Add(item);
-                        }
+                        toReturn.Add(item);
                     }
                     return toReturn;
                 }
@@ -160,24 +154,15 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         get
         {
-            if (mPropertyDescriptor != null)
+            if (_attributes != null)
             {
-                var attributes = mPropertyDescriptor.Attributes;
-
-                if (attributes != null)
+                foreach (var attribute in _attributes)
                 {
-                    foreach (var attribute in attributes)
+                    if (attribute is EditorAttribute editorAttribute)
                     {
-                        if (attribute is EditorAttribute)
-                        {
-                            EditorAttribute editorAttribute = attribute as EditorAttribute;
-
-                            return editorAttribute.EditorTypeName.StartsWith("System.Windows.Forms.Design.FileNameEditor");
-                        }
+                        return editorAttribute.EditorTypeName.StartsWith("System.Windows.Forms.Design.FileNameEditor");
                     }
-                    //EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor))
                 }
-
             }
 
             return false;
@@ -197,7 +182,7 @@ public class StateReferencingInstanceMember : InstanceMember
                    CustomOptions.Count != 0 ||
                    // If this is a state, still show the combo box even if there are no
                    // available states to select from. Otherwise it's a confusing text box
-                   mPropertyDescriptor.Converter is Converters.AvailableStatesConverter;
+                   _converter is Converters.AvailableStatesConverter;
             }
             if (shouldBeComboBox)
             {
@@ -243,10 +228,16 @@ public class StateReferencingInstanceMember : InstanceMember
 
     #region Constructor/Initialization
 
-    public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd,
+    public StateReferencingInstanceMember(
+        Attribute[] attributes,
+        TypeConverter converter,
+        Type componentType,
+        bool isReadOnly,
+        bool isAssignedByReference,
+        bool isVariable,
         StateSave stateSave,
         StateSaveCategory stateSaveCategory,
-        string variableName, 
+        string variableName,
         InstanceSave instanceSave,
         IStateContainer stateListCategoryContainer,
         IUndoManager undoManager,
@@ -276,10 +267,15 @@ public class StateReferencingInstanceMember : InstanceMember
         InstanceSave = instanceSave;
         mStateSave = stateSave;
         mVariableName = variableName;
-        mPropertyDescriptor = ispd;
+        _attributes = attributes;
+        _converter = converter;
+        _componentType = componentType;
+        _isReadOnlyFromDescriptor = isReadOnly;
+        _isAssignedByReference = isAssignedByReference;
+        _isVariable = isVariable;
         ElementSave = stateListCategoryContainer as ElementSave;
 
-        if (ispd?.IsReadOnly == true)
+        if (isReadOnly)
         {
             // don't assign it (can't null it)
             //this.CustomSetEvent = null;
@@ -315,7 +311,7 @@ public class StateReferencingInstanceMember : InstanceMember
             DisplayName = RootVariableName;
         }
 
-        ModifyContextMenu(instanceSave, stateListCategoryContainer, ispd);
+        ModifyContextMenu(instanceSave, stateListCategoryContainer);
 
         VariableSave? standardVariable = null;
 
@@ -435,9 +431,9 @@ public class StateReferencingInstanceMember : InstanceMember
 
     #endregion
 
-    private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer, InstanceSavePropertyDescriptor ispd)
+    private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer)
     {
-        SupportsMakeDefault = this.mVariableName != "Name" && !ispd.IsAssignedByReference;
+        SupportsMakeDefault = this.mVariableName != "Name" && !_isAssignedByReference;
 
         TryAddExposeVariableMenuOptions(instanceSave);
 
@@ -636,7 +632,7 @@ public class StateReferencingInstanceMember : InstanceMember
         {
             return asInstanceForBehavior.BaseType;
         }
-        else if (mPropertyDescriptor != null)
+        else if (_isVariable)
         {
             var toReturn = GetValueStrictlyOnSelectedState(instance);
 
@@ -683,7 +679,7 @@ public class StateReferencingInstanceMember : InstanceMember
         var elementSave = instanceSave?.ParentContainer ?? gumElementOrInstanceSaveAsObject as ElementSave;
 
         object newValue = setPropertyArgs.Value;
-        if (mPropertyDescriptor != null)
+        if (_isVariable)
         {
             StoreLastOldValue(setPropertyArgs, instanceSave, elementSave);
             // <None> is a reserved 
@@ -769,9 +765,18 @@ public class StateReferencingInstanceMember : InstanceMember
         }
         else
         {
-            string? variableType = elementSave?.GetVariableListFromThisOrBase(Name)?.Type;
+            StoreLastOldValue(setPropertyArgs, instanceSave, elementSave);
 
-            mStateSave.SetValue(mVariableName, newValue, variableType);
+            var existingVariable = elementSave?.GetVariableListFromThisOrBase(Name);
+            var type = existingVariable?.Type ?? TryGetTypeFromVariableListSave().ToString();
+            mStateSave.SetValue(mVariableName, newValue, instanceSave, type);
+
+            var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, setPropertyArgs.CommitType, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+
+            if (response.Succeeded == false)
+            {
+                setPropertyArgs.IsAssignmentCancelled = true;
+            }
         }
     }
 
@@ -1114,41 +1119,23 @@ public class StateReferencingInstanceMember : InstanceMember
 
     private Type HandleCustomGetType(object instance)
     {
-        if (mPropertyDescriptor != null)
+        if (_componentType != null)
         {
-            Type toReturn;
-            var typeFromPropertyDescriptor = mPropertyDescriptor.PropertyType;
-            toReturn = typeFromPropertyDescriptor;
-
-            if (typeFromPropertyDescriptor == typeof(string))
+            if (_componentType == typeof(bool))
             {
-                // August 7, 2025
-                // If a variable sneaks
-                // in without a Type on it
-                // then this will default to 
-                // string. But maybe we can use
-                // ComponentType? This would be faster
-                // and shifts the responsibility to the 
-                // PropertyDescriptor.
-                //var typeFromVariable = GetTypeFromVariableRecursively();
-
-                //if (typeFromVariable != typeof(string))
-                //{
-                //    toReturn = typeFromVariable;
-                //}
-
-                // Can't we use the component type?
-                toReturn = mPropertyDescriptor.ComponentType;
-
-                if(toReturn == null)
-                {
-                    // January 10, 2026
-                    // it seems that List of points on polygon does not return its type properly, not sure if this is intended, but this fixes it:
-                    toReturn = GetTypeFromVariableRecursively();
-                }
+                return typeof(bool);
             }
-
-            return toReturn;
+            else
+            {
+                return _componentType;
+            }
+        }
+        else if (_isVariable)
+        {
+            // componentType can be null for state variables or other types not recognized by TypeManager.
+            // Fall back to GetTypeFromVariableRecursively, matching the old behavior where PropertyType
+            // was string and ComponentType was null.
+            return GetTypeFromVariableRecursively();
         }
         else
         {
