@@ -61,26 +61,113 @@ public class AvailableParentsTypeConverter : TypeConverter
 
                 var instanceComponent = ObjectFinder.Self.GetElementSave(instance) as ComponentSave;
 
-                var nameToAdd = instance.Name;
+                values.Add(instance.Name);
 
                 // we could go many levels deep here, but lets just do one level for now for performance:
                 if (instanceComponent != null)
                 {
-                    var defaultChildVariable = 
+                    var defaultChildVariable =
                         instanceComponent.DefaultState.Variables.Find(item => item.Name == "DefaultChildContainer");
 
                     if(defaultChildVariable?.Value is string asString && asString != string.Empty)
                     {
-                        nameToAdd += "." + asString;
+                        values.Add(instance.Name + "." + asString);
+                    }
+
+                    // Also add slot instances
+                    var allSlots = GetAllSlotInstancesRecursively(instanceComponent);
+                    foreach (var slotInstance in allSlots)
+                    {
+                        values.Add(instance.Name + "." + slotInstance.Name);
                     }
                 }
-
-                values.Add(nameToAdd);
             }
         }
 
 
         return new StandardValuesCollection(values);
 
+    }
+
+    private List<InstanceSave> GetAllSlotInstancesRecursively(ElementSave element)
+    {
+        var slots = new List<InstanceSave>();
+
+        if (element == null)
+        {
+            return slots;
+        }
+
+        // Get all instances from this element and its base elements
+        var allInstances = GetAllInstancesFromElementAndBase(element);
+
+        foreach (var instance in allInstances)
+        {
+            // Check if this instance is marked as IsSlot (checking recursively through base elements)
+            if (IsInstanceMarkedAsSlot(instance, element))
+            {
+                slots.Add(instance);
+            }
+        }
+
+        return slots;
+    }
+
+    private List<InstanceSave> GetAllInstancesFromElementAndBase(ElementSave element)
+    {
+        var instances = new List<InstanceSave>();
+
+        if (element == null)
+        {
+            return instances;
+        }
+
+        // Add instances from this element
+        instances.AddRange(element.Instances);
+
+        // Recursively add instances from base elements
+        if (!string.IsNullOrEmpty(element.BaseType))
+        {
+            var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+            if (baseElement != null)
+            {
+                instances.AddRange(GetAllInstancesFromElementAndBase(baseElement));
+            }
+        }
+
+        return instances;
+    }
+
+    private bool IsInstanceMarkedAsSlot(InstanceSave instance, ElementSave containerElement)
+    {
+        if (instance == null || containerElement == null)
+        {
+            return false;
+        }
+
+        // Check in the current element and all its base elements
+        var currentElement = containerElement;
+        while (currentElement != null)
+        {
+            // Find the instance in this element's instances
+            var instanceInCurrentElement = currentElement.Instances.FirstOrDefault(i => i.Name == instance.Name);
+
+            if (instanceInCurrentElement != null && instanceInCurrentElement.IsSlot)
+            {
+                return true;
+            }
+
+            // Move to base element
+            if (!string.IsNullOrEmpty(currentElement.BaseType))
+            {
+                currentElement = ObjectFinder.Self.GetElementSave(currentElement.BaseType);
+            }
+            else
+            {
+                currentElement = null;
+            }
+        }
+
+        return false;
     }
 }
