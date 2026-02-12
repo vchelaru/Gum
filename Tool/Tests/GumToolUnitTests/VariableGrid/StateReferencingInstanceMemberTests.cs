@@ -1,10 +1,10 @@
-﻿using Gum.DataTypes.ComponentModel;
-using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes.Variables;
 using Gum.PropertyGridHelpers;
 using Moq.AutoMock;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,7 +23,9 @@ public class StateReferencingInstanceMemberTests
     [Fact]
     public void SetValue_ShouldStoreLastValue()
     {
-        _mocker.Use<InstanceSavePropertyDescriptor>(new InstanceSavePropertyDescriptor("testVariableName", typeof(int), new Attribute[0]));
+        _mocker.Use<Attribute[]>(new Attribute[0]);
+        _mocker.Use<TypeConverter>((TypeConverter)null);
+        _mocker.Use<Type>(typeof(int));
         StateSave stateSave = new StateSave();
         stateSave.SetValue("testVariableName", 3);
         _mocker.Use<StateSave>(stateSave);

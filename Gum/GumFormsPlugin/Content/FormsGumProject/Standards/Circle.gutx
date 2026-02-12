@@ -81,7 +81,7 @@
     <Variable>
       <Type>float</Type>
       <Name>Radius</Name>
-      <Value xsi:type="xsd:float">16</Value>
+      <Value xsi:type="xsd:float">60</Value>
       <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
     </Variable>

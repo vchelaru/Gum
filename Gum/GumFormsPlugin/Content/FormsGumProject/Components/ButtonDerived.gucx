@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ButtonDerived</Name>
+  <BaseType>Controls/ButtonStandard</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>State</Type>
+      <Name>State</Name>
+      <Value xsi:type="xsd:string">Default</Value>
+      <Category>States and Visibility</Category>
+      <SetsValue>false</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>Background</Name>
+    <BaseType>NineSlice</BaseType>
+    <DefinedByBase>true</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>true</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>FocusedIndicator</Name>
+    <BaseType>NineSlice</BaseType>
+    <DefinedByBase>true</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ComponentSave>
