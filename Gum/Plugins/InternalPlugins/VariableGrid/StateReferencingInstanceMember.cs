@@ -55,6 +55,7 @@ public class StateReferencingInstanceMember : InstanceMember
     Type _componentType;
     bool _isReadOnlyFromDescriptor;
     bool _isAssignedByReference;
+    bool _isVariable;
 
     #endregion
 
@@ -69,7 +70,7 @@ public class StateReferencingInstanceMember : InstanceMember
     {
         get
         {
-            if (_componentType != null)
+            if (_isVariable)
             {
                 return _isReadOnlyFromDescriptor;
             }
@@ -233,6 +234,7 @@ public class StateReferencingInstanceMember : InstanceMember
         Type componentType,
         bool isReadOnly,
         bool isAssignedByReference,
+        bool isVariable,
         StateSave stateSave,
         StateSaveCategory stateSaveCategory,
         string variableName,
@@ -270,6 +272,7 @@ public class StateReferencingInstanceMember : InstanceMember
         _componentType = componentType;
         _isReadOnlyFromDescriptor = isReadOnly;
         _isAssignedByReference = isAssignedByReference;
+        _isVariable = isVariable;
         ElementSave = stateListCategoryContainer as ElementSave;
 
         if (isReadOnly)
@@ -629,7 +632,7 @@ public class StateReferencingInstanceMember : InstanceMember
         {
             return asInstanceForBehavior.BaseType;
         }
-        else if (_componentType != null)
+        else if (_isVariable)
         {
             var toReturn = GetValueStrictlyOnSelectedState(instance);
 
@@ -676,7 +679,7 @@ public class StateReferencingInstanceMember : InstanceMember
         var elementSave = instanceSave?.ParentContainer ?? gumElementOrInstanceSaveAsObject as ElementSave;
 
         object newValue = setPropertyArgs.Value;
-        if (_componentType != null)
+        if (_isVariable)
         {
             StoreLastOldValue(setPropertyArgs, instanceSave, elementSave);
             // <None> is a reserved 
@@ -1117,6 +1120,13 @@ public class StateReferencingInstanceMember : InstanceMember
             {
                 return _componentType;
             }
+        }
+        else if (_isVariable)
+        {
+            // componentType can be null for state variables or other types not recognized by TypeManager.
+            // Fall back to GetTypeFromVariableRecursively, matching the old behavior where PropertyType
+            // was string and ComponentType was null.
+            return GetTypeFromVariableRecursively();
         }
         else
         {
