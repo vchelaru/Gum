@@ -122,6 +122,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFileCommands _fileCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly IUiSettingsService _uiSettingsService;
+    private readonly ProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
     private readonly IOptionsMonitor<ThemeSettings> _themeSettings;
     private readonly FileLocations _fileLocations;
@@ -165,24 +167,34 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
         HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
+        _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
+
         _selectionManager = new SelectionManager(
-            _selectedState, 
-            undoManager, 
-            _editingManager, 
-            dialogService, 
+            _selectedState,
+            undoManager,
+            _editingManager,
+            dialogService,
             hotkeyManager,
             _variableInCategoryPropagationLogic,
-            _wireframeObjectManager);
+            _wireframeObjectManager,
+            ProjectManager.Self,
+            _guiCommands,
+            _elementCommands,
+            _fileCommands,
+            _setVariableLogic,
+            _uiSettingsService);
 
         _screenshotService = new ScreenshotService(_selectionManager);
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _hotkeyManager = hotkeyManager;
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
+        _projectManager = ProjectManager.Self;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
         _editorViewModel = new EditorViewModel(
@@ -325,7 +337,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     {
         if (rootGue.Component is Text text)
         {
-            text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
+            text.RenderBoundary = _projectManager.GeneralSettingsFile.ShowTextOutlines;
         }
         if (rootGue.Children != null)
         {
@@ -449,7 +461,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         if (propertyName == nameof(GumProjectSave.RestrictToUnitValues))
         {
             _selectionManager.RestrictToUnitValues =
-                ProjectManager.Self.GumProjectSave.RestrictToUnitValues;
+                _projectManager.GumProjectSave.RestrictToUnitValues;
         }
         else if (propertyName == nameof(GumProjectSave.SinglePixelTextureFile) ||
             propertyName == nameof(GumProjectSave.SinglePixelTextureTop) ||
@@ -494,7 +506,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeContextMenuStrip.Font = new Font("Segoe UI", fontSize);
     }
 
-    private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
+    private void HandleVariableSetLate(ElementSave? element, InstanceSave instance, string unqualifiedName, object oldValue)
     {
         /////////////////////////////Early Out//////////////////////////
         if(element == null)
@@ -504,12 +516,25 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         }
         ////////////////////////////End Early Out///////////////////////
 
-        if(instance != null)
+        var qualifiedName = unqualifiedName;
+        if (instance != null)
         {
             qualifiedName = instance.Name + "." + qualifiedName;
         }
 
-        var state = _selectedState.SelectedStateSave ?? element?.DefaultState;
+        var state = _selectedState.SelectedStateSave ?? element.DefaultState;
+
+        // This method could be called...
+        // 1. Directly on an element or instance when the user edits a value
+        // 2. Indirectly, as a result of a variable reference
+        // If it's (2), then that means the element that is being
+        // edited may not be the current element, and in that case
+        // we shouldn't use _selectedState.SelectedStateSave.
+        if(_selectedState.SelectedElements.Contains(element) == false)
+        {
+            state = element.DefaultState;
+        }
+
         var value = state.GetValue(qualifiedName);
 
         var areSame = value == null && oldValue == null;
@@ -560,7 +585,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
                 // this assumes that the object having its variable set is the selected instance. If we're setting
                 // an exposed variable, this is not the case - the object having its variable set is actually the instance.
                 //GraphicalUiElement gue = _wireframeObjectManager.GetSelectedRepresentation();
-                GraphicalUiElement gue = null;
+                GraphicalUiElement? gue = null;
                 if (instance != null)
                 {
                     gue = _wireframeObjectManager.GetRepresentation(instance);
@@ -575,7 +600,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
                 if (gue != null)
                 {
-                    VariableSave variable = null;
+                    VariableSave? variable = null;
                     if(element != null)
                     {
                         variable = ObjectFinder.Self.GetRootVariable(qualifiedName, element);
@@ -611,9 +636,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
                     handledByDirectSet = !disposedFile;
                 }
-                if (unqualifiedMember == "Text" && _localizationService.HasDatabase)
+                if (gue != null && value is string valueAsString && unqualifiedMember == "Text" && _localizationService.HasDatabase)
                 {
-                    _wireframeObjectManager.ApplyLocalization(gue, value as string);
+                    _wireframeObjectManager.ApplyLocalization(gue, valueAsString);
                 }
             }
 
@@ -656,7 +681,8 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             _hotkeyManager, 
             _selectionManager, 
             _dragDropManager,
-            _editorViewModel);
+            _editorViewModel,
+            _projectManager);
         var systemManagers = _wireframeControl.SystemManagers;
 
 

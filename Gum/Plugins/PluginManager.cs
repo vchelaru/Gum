@@ -302,59 +302,59 @@ public class PluginManager : IPluginManager
     public void StateAdd(StateSave stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave));
 
-    internal void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
+    public void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
         CallMethodOnPlugin(plugin => plugin.CallStateMovedToCategory(stateSave, newCategory, oldCategory));
 
-    internal void StateDelete(StateSave stateSave) =>
+    public void StateDelete(StateSave stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
 
-    internal void ReactToStateSaveSelected(StateSave? stateSave) =>
+    public void ReactToStateSaveSelected(StateSave? stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
 
-    internal void ReactToCustomStateSaveSelected(StateSave stateSave) =>
+    public void ReactToCustomStateSaveSelected(StateSave stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
 
-    internal void RefreshStateTreeView() =>
+    public void RefreshStateTreeView() =>
         CallMethodOnPlugin(plugin => plugin.CallRefreshStateTreeView());
 
     public void RefreshElementTreeView(IInstanceContainer? instanceContainer = null) =>
         CallMethodOnPlugin(plugin => plugin.CallRefreshElementTreeView(instanceContainer));
 
 
-    internal void CategoryRename(StateSaveCategory category, string oldName) =>
+    public void CategoryRename(StateSaveCategory category, string oldName) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName));
 
-    internal void CategoryAdd(StateSaveCategory category) =>
+    public void CategoryAdd(StateSaveCategory category) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category));
 
-    internal void CategoryDelete(StateSaveCategory category) =>
+    public void CategoryDelete(StateSaveCategory category) =>
         CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
-    internal void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
+    public void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
-    internal void VariableAdd(ElementSave elementSave, string variableName) =>
+    public void VariableAdd(ElementSave elementSave, string variableName) =>
         CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
 
-    internal void VariableDelete(ElementSave elementSave, string variableName) =>
+    public void VariableDelete(ElementSave elementSave, string variableName) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
-    public void VariableSet(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue)
+    public void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue)
     {
-        CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
-        CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, changedMember, oldValue), "VariableSet (Late)");
+        CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, unqualifiedChangedMemberName, oldValue));
+        CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue), "VariableSet (Late)");
     }
 
-    internal void VariableSelected(IStateContainer container, VariableSave variable) =>
+    public void VariableSelected(IStateContainer container, VariableSave variable) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
 
-    internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
+    public void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableRemovedFromCategory(variableName, category));
 
-    internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName) =>
+    public void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceRename(element, instanceSave, oldName));
             
-    internal void AfterUndo() =>
+    public void AfterUndo() =>
         CallMethodOnPlugin(plugin => plugin.CallAfterUndo());
 
     public List<Attribute> GetAttributesFor(VariableSave variableSave)
@@ -365,7 +365,7 @@ public class PluginManager : IPluginManager
     }
 
 
-    internal void ElementSelected(ElementSave? elementSave) =>
+    public void ElementSelected(ElementSave? elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
     internal void TreeNodeSelected(TreeNode? treeNode) =>

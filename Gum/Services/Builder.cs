@@ -100,6 +100,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<HotkeyManager>();
+        services.AddSingleton<IHotkeyManager>(provider => provider.GetRequiredService<HotkeyManager>());
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<INameVerifier, NameVerifier>();

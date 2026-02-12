@@ -49,6 +49,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
             var innerContainer = new ContainerRuntime();
             this.Children.Add(innerContainer);
             innerContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            innerContainer.HasEvents = false;
             innerContainer.Dock(Gum.Wireframe.Dock.SizeToChildren);
 
             TextInstance = new TextRuntime();

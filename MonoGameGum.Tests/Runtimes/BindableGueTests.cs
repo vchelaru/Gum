@@ -15,6 +15,83 @@ namespace MonoGameGum.Tests.Runtimes;
 public class BindableGueTests
 {
     [Fact]
+    public async Task BindingContext_ReAssignments_ShouldClearOldSubscriptions()
+    {
+        TestViewModel testViewModel = new();
+        ContainerRuntime parentContainer = new();
+        parentContainer.BindingContext = testViewModel;
+        parentContainer.SetBinding(nameof(parentContainer.X), nameof(testViewModel.IntPropertyOnVm));
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+        for (int i = 0; i < 10; i++)
+        {
+            ContainerRuntime child = new();
+            parentContainer.AddChild(child);
+            child.SetBinding(nameof(child.X), nameof(testViewModel.IntPropertyOnVm));
+
+            ContainerRuntime grandChild = new();
+            grandChild.SetBinding(nameof(grandChild.X), nameof(testViewModel.IntPropertyOnVm));
+            child.AddChild(grandChild);
+        }
+        testViewModel.GetPropertyChangeCount().ShouldBe(1 + 10 * 2);
+
+        TestViewModel secondViewModel = new TestViewModel();
+        parentContainer.BindingContext = secondViewModel;
+        
+        testViewModel.GetPropertyChangeCount().ShouldBe(0);
+        secondViewModel.GetPropertyChangeCount().ShouldBe(1 + 10*2);
+
+        parentContainer.BindingContext = null;
+
+        secondViewModel.GetPropertyChangeCount().ShouldBe(0);
+    }
+
+    [Fact]
+    public void BindingContext_ShouldNotSubscribe_IfNoBinding()
+    {
+        // arrange
+        ContainerRuntime container = new();
+        TestViewModel testViewModel = new();
+
+        // act
+        container.BindingContext = testViewModel;
+
+        // assert
+        testViewModel.GetPropertyChangeCount().ShouldBe(0);
+    }
+
+    [Fact]
+    public void BindingContext_ShouldSubscribe_IfBindingExistsBefore()
+    {
+        // arrange
+        ContainerRuntime container = new();
+        TestViewModel testViewModel = new();
+
+        container.SetBinding(nameof(container.X), nameof(testViewModel.IntPropertyOnVm));
+
+        // act
+        testViewModel.GetPropertyChangeCount().ShouldBe(0);
+        container.BindingContext = testViewModel;
+
+        // assert
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+    }
+
+    [Fact]
+    public void BindingContext_ShouldSubscribe_IfBindingIsSetAfter()
+    {
+        // arrange
+        ContainerRuntime container = new();
+        TestViewModel testViewModel = new();
+        container.BindingContext = testViewModel;
+        // act
+        testViewModel.GetPropertyChangeCount().ShouldBe(0);
+        container.SetBinding(nameof(container.X), nameof(testViewModel.IntPropertyOnVm));
+        // assert
+        testViewModel.GetPropertyChangeCount().ShouldBe(1);
+    }
+
+
+    [Fact]
     public async Task PushToViewModel_ShouldPushToViewModel()
     {
         BindableGueDerived sut = new();
@@ -48,16 +125,17 @@ public class BindableGueTests
 
         ContainerRuntime parentContainer = new();
         parentContainer.BindingContext = testViewModel;
-
+        parentContainer.SetBinding(nameof(parentContainer.X), nameof(testViewModel.IntPropertyOnVm));
         testViewModel.GetPropertyChangeCount().ShouldBe(1);
 
         for(int i = 0; i < 10; i++)
         {
             ContainerRuntime child = new();
             parentContainer.AddChild(child);
-
+            child.SetBinding(nameof(child.X), nameof(testViewModel.IntPropertyOnVm));
             ContainerRuntime grandChild = new();
             child.AddChild(grandChild);
+            grandChild.SetBinding(nameof(child.X), nameof(testViewModel.IntPropertyOnVm));
             testViewModel.GetPropertyChangeCount().ShouldBe(3);
 
             child.Parent = null;
@@ -72,6 +150,7 @@ public class BindableGueTests
 
         ContainerRuntime parentContainer = new();
         parentContainer.BindingContext = testViewModel;
+        parentContainer.SetBinding(nameof(parentContainer.X), nameof(testViewModel.IntPropertyOnVm));
 
         testViewModel.GetPropertyChangeCount().ShouldBe(1);
 
@@ -79,9 +158,11 @@ public class BindableGueTests
         {
             ContainerRuntime child = new();
             parentContainer.AddChild(child);
+            child.SetBinding(nameof(child.X), nameof(testViewModel.IntPropertyOnVm));
 
             ContainerRuntime grandChild = new();
             child.AddChild(grandChild);
+            grandChild.SetBinding(nameof(grandChild.X), nameof(testViewModel.IntPropertyOnVm));
         }
 
         testViewModel.GetPropertyChangeCount().ShouldBe(1 + 10*2);
@@ -91,32 +172,8 @@ public class BindableGueTests
         testViewModel.GetPropertyChangeCount().ShouldBe(1);
     }
 
-    [Fact]
-    public async Task BindingContext_ReAssignments_ShouldClearOldSubscriptions()
-    {
-        TestViewModel testViewModel = new();
-        ContainerRuntime parentContainer = new();
-        parentContainer.BindingContext = testViewModel;
-        testViewModel.GetPropertyChangeCount().ShouldBe(1);
-        for (int i = 0; i < 10; i++)
-        {
-            ContainerRuntime child = new();
-            parentContainer.AddChild(child);
-            ContainerRuntime grandChild = new();
-            child.AddChild(grandChild);
-        }
-        testViewModel.GetPropertyChangeCount().ShouldBe(1 + 10 * 2);
 
-        TestViewModel secondViewModel = new TestViewModel();
-        parentContainer.BindingContext = secondViewModel;
-        
-        testViewModel.GetPropertyChangeCount().ShouldBe(0);
-        secondViewModel.GetPropertyChangeCount().ShouldBe(1 + 10*2);
-
-        parentContainer.BindingContext = null;
-
-        secondViewModel.GetPropertyChangeCount().ShouldBe(0);
-    }
+    #region ViewModels
 
     class TestViewModel : ViewModel
     {
@@ -155,4 +212,6 @@ public class BindableGueTests
         }
 
     }
+
+    #endregion
 }

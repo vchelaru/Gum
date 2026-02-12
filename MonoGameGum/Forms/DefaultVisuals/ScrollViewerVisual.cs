@@ -111,6 +111,7 @@ public class ScrollViewerVisual : InteractiveGue
             ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             ScrollAndClipContainer.Height = 0;
             ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            ScrollAndClipContainer.HasEvents = false;
             this.AddChild(ScrollAndClipContainer);
 
             {
@@ -144,6 +145,7 @@ public class ScrollViewerVisual : InteractiveGue
                 ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ClipContainerContainer.Width = -24;
                 ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                ClipContainerContainer.HasEvents = false;
                 ScrollAndClipContainer.AddChild(ClipContainerContainer);
 
                 {
@@ -158,6 +160,7 @@ public class ScrollViewerVisual : InteractiveGue
                     ClipContainerInstance.Y = 2f;
                     ClipContainerInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                     ClipContainerInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+                    ClipContainerInstance.HasEvents = false;
                     ClipContainerContainer.AddChild(ClipContainerInstance);
 
                     {
@@ -168,6 +171,7 @@ public class ScrollViewerVisual : InteractiveGue
                         InnerPanelInstance.Width = 0f;
                         InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                         InnerPanelInstance.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+                        InnerPanelInstance.HasEvents = false;
                         ClipContainerInstance.AddChild(InnerPanelInstance);
                     }
                 }

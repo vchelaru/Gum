@@ -156,7 +156,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
 
         managers = managers ?? SystemManagers.Default;
 
-        mLinePrimitive = new LinePrimitive(managers.Renderer.SinglePixelTexture);
+        mLinePrimitive = new LinePrimitive(managers.Renderer.TryGetSinglePixelTexture());
 
         // todo - make it default to something - a rectangle?
     }

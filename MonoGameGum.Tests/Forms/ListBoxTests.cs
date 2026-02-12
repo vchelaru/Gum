@@ -2,6 +2,7 @@
 using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
 using MonoGameGum.Forms.DefaultVisuals;
+using MonoGameGum.GueDeriving;
 using Moq;
 using Shouldly;
 using System;
@@ -16,10 +17,22 @@ namespace MonoGameGum.Tests.Forms;
 public class ListBoxTests : BaseTestClass
 {
     [Fact]
-    public void Visual_HasEvents_ShouldBeTrue()
+    public void Children_Containers_ShouldNotHaveEvents()
     {
-        ListBox sut = new();
-        sut.Visual.HasEvents.ShouldBeTrue();
+        ListBox listBox = new();
+        InteractiveGue visual = listBox.Visual;
+
+        List<ContainerRuntime> children = new ();
+        visual.FillListWithChildrenByTypeRecursively<ContainerRuntime>(children);
+
+        foreach(var child in children)
+        {
+            if(child.Name != "ThumbContainer")
+            {
+                child.HasEvents.ShouldBeFalse(
+                    $"Because child {child.Name} with parent {child.Parent?.Name} should not be clickable, but it is so it eats events");
+            }
+        }
     }
 
     [Fact]
@@ -263,8 +276,6 @@ public class ListBoxTests : BaseTestClass
         }
     }
 
-
-
     [Fact]
     public void ListBoxItems_ShouldReflectBackingObjects_WhenRemoving()
     {
@@ -281,6 +292,15 @@ public class ListBoxTests : BaseTestClass
             listBoxItem.BindingContext.ShouldNotBe("Item 1");
         }
     }
+
+    #region Visual
+    [Fact]
+    public void Visual_HasEvents_ShouldBeTrue()
+    {
+        ListBox sut = new();
+        sut.Visual.HasEvents.ShouldBeTrue();
+    }
+    #endregion
 
     private static Mock<ICursor> SetupForPush()
     {

@@ -9,21 +9,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultVisuals
+namespace MonoGameGum.Forms.DefaultVisuals;
+
+public class DefaultTextBoxRuntime : DefaultTextBoxBaseRuntime
 {
-    public class DefaultTextBoxRuntime : DefaultTextBoxBaseRuntime
+    protected override string CategoryName => "TextBoxCategory";
+
+    public DefaultTextBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
     {
-        protected override string CategoryName => "TextBoxCategory";
-
-        public DefaultTextBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
+        this.HasEvents = true;
+        if (tryCreateFormsObject)
         {
-            this.HasEvents = true;
-            if (tryCreateFormsObject)
-            {
-                FormsControlAsObject = new TextBox(this);
-            }
+            FormsControlAsObject = new TextBox(this);
         }
-
-        public TextBox FormsControl => FormsControlAsObject as TextBox;
     }
+
+    public TextBox FormsControl => FormsControlAsObject as TextBox;
 }

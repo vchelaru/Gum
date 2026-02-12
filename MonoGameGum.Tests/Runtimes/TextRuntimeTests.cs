@@ -71,6 +71,17 @@ $"chars count=223\r\n";
 
     #endregion
 
+    #region Clone
+    [Fact]
+    public void Clone_ShouldCreateClonedText()
+    {
+        Text sut = new();
+        var clone = sut.Clone();
+        clone.ShouldNotBeNull();
+    }
+
+    #endregion
+
     #region GetStyledSubstrings
 
     [Fact]
@@ -233,6 +244,75 @@ $"chars count=223\r\n";
     {
         TextRuntime sut = new();
         sut.HasEvents.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region IsBold
+
+    [Fact]
+    public void IsBold_ShouldChangeFont_OnFontPropertiesSet()
+    {
+        // file name is:
+        // FontCache\Font18SomeFont_Italic_Bold.fnt
+        var italicBoldFont = new BitmapFont((Texture2D)null!, fontPattern);
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase: true, makeAbsolute: true);
+        loaderManager.AddDisposable(fileName, italicBoldFont);
+
+        TextRuntime sut = new();
+        sut.UseCustomFont = true;
+        // set up all the properties:
+        sut.FontSize = 18;
+        sut.Font = "SomeFont";
+        sut.IsItalic = true;
+
+        sut.UseCustomFont = false;
+
+        sut.IsBold = true;
+
+        sut.BitmapFont.ShouldBe(italicBoldFont);
+    }
+
+    #endregion
+
+    #region MaxWidth
+
+    [Fact]
+    public void MaxWidth_ShouldWrapText_IfTextExceedsMaxWidth()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Width = 0;
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        textRuntime.MaxWidth = 50; // Set a max width
+        textRuntime.Text = "a a a a a a a a a a a a a a a a a";
+
+        textRuntime.GetAbsoluteWidth().ShouldBeLessThanOrEqualTo(50);
+        var innerText = (Text)textRuntime.RenderableComponent;
+        innerText.WrappedText.Count.ShouldBeGreaterThan(1);
+        var lineCount = innerText.WrappedText.Count;
+
+        var absoluteHeight = textRuntime.GetAbsoluteHeight();
+        absoluteHeight.ShouldBe(lineCount * textRuntime.BitmapFont.LineHeightInPixels);
+    }
+
+    #endregion
+
+    #region PropertyChanged
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenTextChanges()
+    {
+        bool wasChanged = false;
+        TextRuntime textRuntime = new();
+        textRuntime.PropertyChanged += (_, _) =>
+        {
+            wasChanged = true;
+        };
+
+        textRuntime.Text = "Hello 1234";
+
+        wasChanged.ShouldBeTrue();
     }
 
     #endregion
@@ -450,81 +530,8 @@ $"chars count=223\r\n";
 
     #endregion
 
-    #region MaxWidth
+    #region UseCustomnFont
 
-    [Fact]
-    public void MaxWidth_ShouldWrapText_IfTextExceedsMaxWidth()
-    {
-        TextRuntime textRuntime = new();
-        textRuntime.Width = 0;
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        textRuntime.MaxWidth = 50; // Set a max width
-        textRuntime.Text = "a a a a a a a a a a a a a a a a a";
-
-        textRuntime.GetAbsoluteWidth().ShouldBeLessThanOrEqualTo(50);
-        var innerText = (Text)textRuntime.RenderableComponent;
-        innerText.WrappedText.Count.ShouldBeGreaterThan(1);
-        var lineCount = innerText.WrappedText.Count;
-
-        var absoluteHeight = textRuntime.GetAbsoluteHeight();
-        absoluteHeight.ShouldBe(lineCount * textRuntime.BitmapFont.LineHeightInPixels);
-    }
-
-    #endregion
-
-    #region Clone
-    [Fact]
-    public void Clone_ShouldCreateClonedText()
-    {
-        Text sut = new();
-        var clone = sut.Clone();
-        clone.ShouldNotBeNull();
-    }
-
-    #endregion
-
-    #region PropertyChanged
-
-    [Fact]
-    public void PropertyChanged_ShouldRaise_WhenTextChanges()
-    {
-        bool wasChanged = false;
-        TextRuntime textRuntime = new();
-        textRuntime.PropertyChanged += (_, _) =>
-        {
-            wasChanged = true;
-        };
-
-        textRuntime.Text = "Hello 1234";
-
-        wasChanged.ShouldBeTrue();
-    }
-
-    #endregion
-
-    [Fact]
-    public void IsBold_ShouldChangeFont_OnFontPropertiesSet()
-    {
-        // file name is:
-        // FontCache\Font18SomeFont_Italic_Bold.fnt
-        var italicBoldFont = new BitmapFont((Texture2D)null!, fontPattern);
-        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-        string fileName = FileManager.Standardize("FontCache\\Font18SomeFont_Italic_Bold.fnt", preserveCase: true, makeAbsolute: true);
-        loaderManager.AddDisposable(fileName, italicBoldFont);
-
-        TextRuntime sut = new();
-        sut.UseCustomFont = true;
-        // set up all the properties:
-        sut.FontSize = 18;
-        sut.Font = "SomeFont";
-        sut.IsItalic = true;
-
-        sut.UseCustomFont = false;
-
-        sut.IsBold = true;
-
-        sut.BitmapFont.ShouldBe(italicBoldFont);
-    }
 
     [Fact]
     public void UseCustomFont_ShouldChangeFont_OnFontPropertiesSet()
@@ -548,6 +555,8 @@ $"chars count=223\r\n";
 
         sut.BitmapFont.ShouldBe(italicBoldFont);
     }
+
+    #endregion
 
     [Fact]
     public void MaxNumberOfLetters_ShouldNotChangeDimensions()

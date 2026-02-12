@@ -69,8 +69,18 @@ public static class FrameworkElementExt
 
     public static void RemoveFromRoot(this FrameworkElement element)
     {
+        // suppress layouts when removing from root, this improves performance
+        var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+        if(!wasSuspended)
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+        }
         element.Visual.Parent = null;
         element.Visual.RemoveFromManagers();
+        if (!wasSuspended)
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
     }
 
     // Vic says: I started adding this but I don't like the implementation because

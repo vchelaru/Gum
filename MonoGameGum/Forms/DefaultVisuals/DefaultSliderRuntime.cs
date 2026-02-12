@@ -46,6 +46,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TrackInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
                 TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TrackInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+                TrackInstance.HasEvents = true;
 
                 NineSliceInstance.Color = new Microsoft.Xna.Framework.Color(70, 70, 70);
                 NineSliceInstance.Height = 8f;

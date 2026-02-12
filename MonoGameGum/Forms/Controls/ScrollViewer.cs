@@ -822,7 +822,7 @@ public class ScrollViewer :
         }
 
         // Set the values here:
-        SetVerticalSrollBarValuesFromVisuals();
+        SetVerticalScrollBarValuesFromVisuals();
 
         // Record the inner panel height before (possibly) changing the
         // scroll bar height...
@@ -851,10 +851,10 @@ public class ScrollViewer :
         if (didHeightChange)
         {
             // It changed, which can adjust the scroll bar height so let's adjust it again
-            SetVerticalSrollBarValuesFromVisuals();
+            SetVerticalScrollBarValuesFromVisuals();
         }
 
-        void SetVerticalSrollBarValuesFromVisuals()
+        void SetVerticalScrollBarValuesFromVisuals()
         {
             verticalScrollBar.Minimum = 0;
             verticalScrollBar.ViewportSize = clipContainer.GetAbsoluteHeight();

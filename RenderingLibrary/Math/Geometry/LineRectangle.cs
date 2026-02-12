@@ -216,14 +216,14 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         mChildren = new ();
 
         Visible = true;
-        Renderer renderer;
+        Renderer? renderer;
         if (mManagers != null)
         {
             renderer = mManagers.Renderer;
         }
         else
         {
-            renderer = Renderer.Self;
+            renderer = SystemManagers.Default?.Renderer;
         }
         mLinePrimitive = new LinePrimitive(renderer?.TryGetSinglePixelTexture());
         mLinePrimitive.Add(0, 0);

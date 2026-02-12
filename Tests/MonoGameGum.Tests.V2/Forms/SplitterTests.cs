@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace MonoGameGum.Tests.V2.Forms;
 public class SplitterTests
 {
+
     [Fact]
     public void Constructor_ShouldCreateV2Visual()
     {

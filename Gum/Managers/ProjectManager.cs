@@ -31,7 +31,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum;
 
-public class ProjectManager
+public class ProjectManager : IProjectManager
 {
     #region Fields
 

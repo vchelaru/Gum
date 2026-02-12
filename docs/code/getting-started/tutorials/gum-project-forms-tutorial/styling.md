@@ -14,7 +14,7 @@ This tutorial uses the DemoScreenGum page to check how styles appear in game. Yo
 
 Gum provides a way to modify your styling at every level, whether you want to change colors and fonts, or redo the structure of all of your components.
 
-Colors are perhaps the most obvious types of variables that might be changed. Gum includes a number of standard colors which are centrally located in a Styles component. We'll look at the Styles component a little later in this tutorial.
+We'll start by discussing color changes since they are commonly modified. Gum includes a number of standard colors which are centrally located in a Styles component, which will be covered in this tutorial.
 
 Font types and sizes are also common variables when changing styles. Gum also includes a centralized location for modifying fonts.
 
@@ -34,11 +34,11 @@ These colors are defined on ColoredRectangle instances. We can select one of the
 
 <figure><img src="../../../../.gitbook/assets/02_07 16 09.png" alt=""><figcaption><p>PrimaryLight colored rectangle</p></figcaption></figure>
 
-Notice that the rectangles are named based on their usage. Since gray, black, and white colors are so common, there are dedicated rectangles for those. Aside from those, each rectangle is named based on its usage. For example, the three primary rectangles (PrimaryLight, Primary, and PrimaryDark) indicate that their color is used as the main color throughout the Gum project.
+Notice that each rectangle in the Styles component is named based its usage. Since gray, black, and white colors are so common, there are dedicated rectangles for those. Aside from those, each rectangle is named based on its function. For example, the three primary rectangles (PrimaryLight, Primary, and PrimaryDark) indicate that their color is used as the main color throughout the Gum project.
 
-For example, notice that DemoScrenGum uses the Primary color on labels, radio buttons, and labels.
+By default DemoScreenGum uses the Primary color on labels, radio buttons, and labels.
 
-<figure><img src="../../../../.gitbook/assets/02_08 07 06.png" alt=""><figcaption><p>DemoScreenGum displaying the primary color throughout the UI</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_05 39 03.png" alt=""><figcaption><p>DemoScreenGum displaying the primary color throughout the UI</p></figcaption></figure>
 
 {% hint style="info" %}
 The outlines that are drawn by Gum can get in the way of viewing styles. You can disable this by selecting **Edit ->** Properties, then unchecking **Show Outlines**.
@@ -52,7 +52,7 @@ We can change the color values in the Styles component by selecting any of the r
 
 Now if we select our DemoScreenGum, notice that the UI has updated in response to these color changes.
 
-<figure><img src="../../../../.gitbook/assets/02_08 14 37.png" alt=""><figcaption><p>DemoScreenGum restyled orange</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_06 21 38.png" alt=""><figcaption><p>DemoScreenGum restyled orange</p></figcaption></figure>
 
 Of course, you are free to modify all other colors including the different shades of gray or the other colors like Success, Danger, and Warning.
 
@@ -92,13 +92,9 @@ By default it has a CaretInstance which uses the Primary color.
 
 <figure><img src="../../../../.gitbook/assets/02_18 05 06.png" alt=""><figcaption><p>CaretInstance uses the Primary color</p></figcaption></figure>
 
-Similarly, SelectionInstance uses the Accent color.
+We can change the color used by picking a different color in the dropdown. For example, we could change CaretInstance to use the Accent color.
 
-<figure><img src="../../../../.gitbook/assets/02_18 06 03.png" alt=""><figcaption><p>SelectionInstance uses the Accent color</p></figcaption></figure>
-
-We can change the color used by picking a different color in the dropdown. For example, we could change the selection to use the PrimaryLight color.
-
-<figure><img src="../../../../.gitbook/assets/02_18 06 56.png" alt=""><figcaption><p>SelectionInstance using the PrimaryLight color</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_06 25 11.png" alt=""><figcaption><p>SelectionInstance using the PrimaryLight color</p></figcaption></figure>
 
 ## Changing Colors in States
 
@@ -106,7 +102,11 @@ Some colors are applied depending on the state of the component. For example, th
 
 When making any styling edits, be sure to first check if the variable is modified by any states. If it is, then you must make your modifications on the non-default state.
 
-As mentioned above, to change the TextBox's background, you must first select one of the states within the TextBoxCategory. To see if a variable is modified in a state, click on the category to see which variables are modified. In this case, the TextBoxCategory modifies the following variables:
+We can tell if a color is modified by a state by looking for whether it has a color-related state that is assigned by a state. For example, the TextBox's Background is assigned through a state as is shown in the Variables tab:
+
+<figure><img src="../../../../.gitbook/assets/image (86).png" alt=""><figcaption></figcaption></figure>
+
+We can also check the categories to see which variables they assign by clicking on it in the States tab. In this case, the TextBoxCategory modifies the following variables:
 
 * Background.ColorCategoryState
 * FocusedIndicator.Visible
@@ -131,7 +131,7 @@ As a reminder be sure to always check if a variable is modified by any states. I
 
 The Styles component includes colors which cover the most common uses. Of course, as you are developing your project you may find that you need new colors which are not included in the Styles component. For example, the section above modified the TextBox to have a Black background. Instead, you might want to have a custom color for TextBoxes.
 
-When adding a new color, it can be done by adding the color to the Styles component, or by directly referencing the color in the TextBox. We will cover both approaches here; however, it is recommended that you add colors to the Styles componenent. Even though it is a little more work, it is very helpful to have all of your colors referenced in a single spot rather than spread out throughout your project.
+When adding a new color, it can be done by adding the color to the Styles component, or by directly referencing the color in the TextBox. We will cover both approaches here; however, it is recommended that you add colors to the Styles component. Even though it is a little more work, it is very helpful to have all of your colors referenced in a single spot rather than spread out throughout your project.
 
 ## Setting Color Directly on a Component
 
@@ -141,7 +141,7 @@ We will modify the variables on the TextBox again to show how to set the color d
 
 1. Select the TextBox Background instance
 2. Select the TextBoxCategory
-3.  Click the X button to remove the Background.ColorCategoryState from all contained states - this means that we now intend to directly set the color on the background rather than using one of the pre-made colors\\
+3.  Click the X button to remove the Background.ColorCategoryState from all contained states - this means that we now intend to directly set the color on the background rather than using one of the pre-made colors:
 
     <figure><img src="../../../../.gitbook/assets/03_05 44 52.png" alt=""><figcaption><p>Click X to remove the Background.ColorCategoryState variables</p></figcaption></figure>
 4. Select the Enabled state

@@ -105,6 +105,7 @@ public class SliderVisual : InteractiveGue
         TrackInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         TrackInstance.Height = 0f;
         TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        TrackInstance.HasEvents = true;
         this.AddChild(TrackInstance);
 
         TrackBackground = new NineSliceRuntime();
