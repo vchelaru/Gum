@@ -44,7 +44,12 @@ public class ResizeInputHandler : InputHandlerBase
 
     public override bool HasCursorOver(float worldX, float worldY)
     {
-        return _sideOver != ResizeSide.None;
+        if (!_resizeHandlesVisual.Visible)
+        {
+            return false;
+        }
+
+        return _resizeHandlesVisual.Handles.GetSideOver(worldX, worldY) != ResizeSide.None;
     }
 
     public override Cursor? GetCursorToShow(float worldX, float worldY)

@@ -35,7 +35,7 @@ public class RotationInputHandler : InputHandlerBase
 
     public override bool HasCursorOver(float worldX, float worldY)
     {
-        return _isHighlighted;
+        return _rotationHandleVisual.Handle.Visible && _rotationHandleVisual.Handle.HasCursorOver(worldX, worldY);
     }
 
     public override Cursor? GetCursorToShow(float worldX, float worldY)
