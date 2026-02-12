@@ -28,7 +28,8 @@ public partial class EditingManager
             _elementCommands,
             _nameVerifier,
             _setVariableLogic,
-            _circularReferenceManager);
+            _circularReferenceManager,
+            _favoriteComponentManager);
         mContextMenuStrip = contextMenuStrip;
 
         contextMenuStrip.VisibleChanged += HandleVisibleChange;

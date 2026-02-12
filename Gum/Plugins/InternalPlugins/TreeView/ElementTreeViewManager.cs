@@ -141,6 +141,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly HotkeyManager _hotkeyManager;
     private readonly ITabManager _tabManager;
     private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IFavoriteComponentManager _favoriteComponentManager;
 
     public const int TransparentImageIndex = 0;
     public const int FolderImageIndex = 1;
@@ -327,6 +328,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
         _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
+        _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
 

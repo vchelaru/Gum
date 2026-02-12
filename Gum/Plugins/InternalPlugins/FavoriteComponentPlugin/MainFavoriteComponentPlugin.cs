@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.Services;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.FavoriteComponentPlugin;
@@ -8,8 +9,11 @@ namespace Gum.Plugins.FavoriteComponentPlugin;
 [Export(typeof(PluginBase))]
 public class MainFavoriteComponentPlugin : InternalPlugin
 {
+    private IFavoriteComponentManager _favoriteComponentManager;
+
     public override void StartUp()
     {
+        _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
         this.ElementDelete += HandleElementDelete;
         this.ElementRename += HandleElementRename;
     }
@@ -18,7 +22,7 @@ public class MainFavoriteComponentPlugin : InternalPlugin
     {
         if (elementSave is ComponentSave component)
         {
-            FavoriteComponentManager.Self.HandleComponentDeleted(component);
+            _favoriteComponentManager.HandleComponentDeleted(component);
         }
     }
 
@@ -26,7 +30,7 @@ public class MainFavoriteComponentPlugin : InternalPlugin
     {
         if (elementSave is ComponentSave)
         {
-            FavoriteComponentManager.Self.HandleComponentRenamed(oldName, elementSave.Name);
+            _favoriteComponentManager.HandleComponentRenamed(oldName, elementSave.Name);
         }
     }
 }

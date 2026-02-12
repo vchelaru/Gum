@@ -23,6 +23,7 @@ public class RightClickViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IFavoriteComponentManager _favoriteComponentManager;
     ContextMenuItemViewModel? _moveInFrontOf;
 
     public RightClickViewModel(
@@ -32,7 +33,8 @@ public class RightClickViewModel
         IElementCommands elementCommands,
         INameVerifier nameVerifier,
         ISetVariableLogic setVariableLogic,
-        ICircularReferenceManager circularReferenceManager)
+        ICircularReferenceManager circularReferenceManager,
+        IFavoriteComponentManager favoriteComponentManager)
     {
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
@@ -41,6 +43,7 @@ public class RightClickViewModel
         _nameVerifier = nameVerifier;
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
+        _favoriteComponentManager = favoriteComponentManager;
     }
 
     public List<ContextMenuItemViewModel> GetMenuItems()
@@ -101,14 +104,9 @@ public class RightClickViewModel
         parentMenuItem.Text = itemText;
 
         // Add favorited components submenu
-        var favoritedComponents = FavoriteComponentManager.Self.GetFavoritedComponentsForCurrentProject();
-        var selectedElement = _selectedState.SelectedElement;
-        if (selectedElement != null)
-        {
-            favoritedComponents = favoritedComponents
-                .Where(c => _circularReferenceManager.CanTypeBeAddedToElement(selectedElement, c.Name))
-                .ToList();
-        }
+        var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
+            _selectedState.SelectedElement,
+            _circularReferenceManager);
         if (favoritedComponents.Count > 0)
         {
             var favoritesParent = new ContextMenuItemViewModel();

@@ -24,6 +24,7 @@ public class RightClickViewModelTests
     private readonly Mock<INameVerifier> _nameVerifier;
     private readonly Mock<ISetVariableLogic> _setVariableLogic;
     private readonly Mock<ICircularReferenceManager> _circularReferenceManager;
+    private readonly Mock<IFavoriteComponentManager> _favoriteComponentManager;
     private readonly RightClickViewModel _sut;
 
     public RightClickViewModelTests()
@@ -36,6 +37,13 @@ public class RightClickViewModelTests
         _nameVerifier = new Mock<INameVerifier>();
         _setVariableLogic = new Mock<ISetVariableLogic>();
         _circularReferenceManager = new Mock<ICircularReferenceManager>();
+        _favoriteComponentManager = new Mock<IFavoriteComponentManager>();
+
+        // Setup default return for GetFilteredFavoritedComponentsFor to return empty list
+        _favoriteComponentManager
+            .Setup(x => x.GetFilteredFavoritedComponentsFor(It.IsAny<ElementSave>(), It.IsAny<ICircularReferenceManager>()))
+            .Returns(new List<ComponentSave>());
+
         _sut = new RightClickViewModel(
             _selectedState.Object,
             _reorderLogic.Object,
@@ -43,7 +51,8 @@ public class RightClickViewModelTests
             _elementCommands.Object,
             _nameVerifier.Object,
             _setVariableLogic.Object,
-            _circularReferenceManager.Object);
+            _circularReferenceManager.Object,
+            _favoriteComponentManager.Object);
     }
 
     [Fact]

@@ -313,7 +313,7 @@ public partial class ElementTreeViewManager
                 {
                     mMenuStrip.Items.Add("-");
 
-                    var isFavorite = FavoriteComponentManager.Self.IsFavorite(_selectedState.SelectedComponent);
+                    var isFavorite = _favoriteComponentManager.IsFavorite(_selectedState.SelectedComponent);
                     var favoriteText = isFavorite ? "Remove from Favorites" : "Add to Favorites";
                     mMenuStrip.Items.Add(favoriteText, null, HandleToggleFavorite);
                 }
@@ -414,14 +414,9 @@ public partial class ElementTreeViewManager
         mMenuStrip.Items.Add(parentMenuItem);
 
         // Add favorited components first
-        var favoritedComponents = FavoriteComponentManager.Self.GetFavoritedComponentsForCurrentProject();
-        var selectedElement = _selectedState.SelectedElement;
-        if (selectedElement != null)
-        {
-            favoritedComponents = favoritedComponents
-                .Where(c => _circularReferenceManager.CanTypeBeAddedToElement(selectedElement, c.Name))
-                .ToList();
-        }
+        var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
+            _selectedState.SelectedElement,
+            _circularReferenceManager);
         if (favoritedComponents.Count > 0)
         {
             foreach (var component in favoritedComponents)
@@ -551,14 +546,14 @@ public partial class ElementTreeViewManager
         var component = _selectedState.SelectedComponent;
         if (component == null) return;
 
-        var isFavorite = FavoriteComponentManager.Self.IsFavorite(component);
+        var isFavorite = _favoriteComponentManager.IsFavorite(component);
         if (isFavorite)
         {
-            FavoriteComponentManager.Self.RemoveFromFavorites(component);
+            _favoriteComponentManager.RemoveFromFavorites(component);
         }
         else
         {
-            FavoriteComponentManager.Self.AddToFavorites(component);
+            _favoriteComponentManager.AddToFavorites(component);
         }
     }
 

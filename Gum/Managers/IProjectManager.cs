@@ -10,4 +10,5 @@ namespace Gum.Managers;
 public interface IProjectManager
 {
     GeneralSettingsFile GeneralSettingsFile { get; }
+    void SaveProject();
 }
