@@ -23,25 +23,25 @@ public class AvailableParentsTypeConverter : TypeConverter
     }
 
 
-    public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+    public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
     {
         return true;
     }
 
-    public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+    public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
     {
         return true;
     }
 
-    public AvailableParentsTypeConverter()
+    public AvailableParentsTypeConverter(ISelectedState selectedState)
     {
         ExcludeCurrentInstance = true;
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState ?? throw new ArgumentNullException(nameof(selectedState));
     }
 
 
 
-    public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+    public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
     {
         List<string> values = new();
 
@@ -66,6 +66,11 @@ public class AvailableParentsTypeConverter : TypeConverter
                 // we could go many levels deep here, but lets just do one level for now for performance:
                 if (instanceComponent != null)
                 {
+                    if (instanceComponent.DefaultState == null)
+                    {
+                        throw new InvalidOperationException($"Component '{instanceComponent.Name}' has a null DefaultState. All components must have a DefaultState.");
+                    }
+
                     var defaultChildVariable =
                         instanceComponent.DefaultState.Variables.Find(item => item.Name == "DefaultChildContainer");
 
@@ -152,9 +157,10 @@ public class AvailableParentsTypeConverter : TypeConverter
             // Find the instance in this element's instances
             var instanceInCurrentElement = currentElement.Instances.FirstOrDefault(i => i.Name == instance.Name);
 
-            if (instanceInCurrentElement != null && instanceInCurrentElement.IsSlot)
+            if (instanceInCurrentElement != null)
             {
-                return true;
+                // Return the IsSlot value from the most derived class (don't continue searching)
+                return instanceInCurrentElement.IsSlot;
             }
 
             // Move to base element
