@@ -885,9 +885,13 @@ public class SelectionManager : ISelectionManager
             {
                 if (Cursor.PrimaryPush)
                 {
-                    float worldX = Cursor.GetWorldX();
-                    float worldY = Cursor.GetWorldY();
-                    _rectangleSelector.HandlePush(worldX, worldY);
+                    // Don't activate rectangle selector if cursor is over handles
+                    if (WireframeEditor?.HasCursorOverHandles != true)
+                    {
+                        float worldX = Cursor.GetWorldX();
+                        float worldY = Cursor.GetWorldY();
+                        _rectangleSelector.HandlePush(worldX, worldY);
+                    }
                 }
 
                 if (Cursor.PrimaryDown && _rectangleSelector.IsActive)
