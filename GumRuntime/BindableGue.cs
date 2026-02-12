@@ -179,15 +179,16 @@ public class BindableGue : GraphicalUiElement
         }
     }
 
+    bool _isSubscribedToViewModelPropertyChanged = false;
     private void HandleBindingContextChangedInternal(object? oldContext, object? newContext)
     {
         if (oldContext is INotifyPropertyChanged oldViewModel)
         {
             UnsubscribeEventsOnOldViewModel(oldViewModel);
         }
-        if (newContext is INotifyPropertyChanged viewModel)
+        if (vmPropsToUiProps.Count > 0 && newContext is INotifyPropertyChanged viewModel)
         {
-            viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+            TrySubscribeToViewModelChanges(viewModel);
         }
 
         if (newContext != null)
@@ -217,16 +218,32 @@ public class BindableGue : GraphicalUiElement
         });
     }
 
+    private void TrySubscribeToViewModelChanges(INotifyPropertyChanged viewModel)
+    {
+        if(_isSubscribedToViewModelPropertyChanged == false)
+        {
+            viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+            _isSubscribedToViewModelPropertyChanged = true;
+        }
+    }
+
+    public static int PropertyUnsubscribeCallCount = 0;
+    public static int GetTypeCallCount = 0;
+
     private void UnsubscribeEventsOnOldViewModel(INotifyPropertyChanged oldViewModel)
     {
-        oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+        if(_isSubscribedToViewModelPropertyChanged)
+        {
+            oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+            _isSubscribedToViewModelPropertyChanged = false;
+        }
 
         foreach (var eventItem in vmEventsToUiMethods.Values)
         {
             var delegateToRemove = eventItem.Delegate;
 
             var foundEvent = oldViewModel.GetType().GetEvent(eventItem.VmProperty);
-
+            GetTypeCallCount++;
             foundEvent?.RemoveEventHandler(oldViewModel, delegateToRemove);
         }
     }
@@ -284,6 +301,12 @@ public class BindableGue : GraphicalUiElement
             if (BindingContext != null)
             {
                 UpdateToVmProperty(vmProperty);
+
+                // Do the if check here before an "is" check for faster early out
+                if(_isSubscribedToViewModelPropertyChanged == false && BindingContext is INotifyPropertyChanged notifyPropertyChanged)
+                {
+                    TrySubscribeToViewModelChanges(notifyPropertyChanged);
+                }
             }
         }
     }
