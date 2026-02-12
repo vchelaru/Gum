@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -109,7 +110,8 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
             }
             else if (variable.Type == "string" && variable.Name == "Parent")
             {
-                variable.CustomTypeConverter = new AvailableParentsTypeConverter();
+                var selectedState = Locator.GetRequiredService<ISelectedState>();
+                variable.CustomTypeConverter = new AvailableParentsTypeConverter(selectedState);
                 variable.PropertiesToSetOnDisplayer["IsEditable"] = true;
             }
             else if (variable.Type == "State" && variable.Name == "State")

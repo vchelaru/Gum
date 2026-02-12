@@ -672,6 +672,11 @@ public static class StateSaveExtensionMethods
                 instanceSave.Locked = (bool)value;
                 isReservedName = true;
             }
+            else if (variableName.EndsWith(".IsSlot"))
+            {
+                instanceSave.IsSlot = (bool)value;
+                isReservedName = true;
+            }
         }
         return isReservedName;
     }

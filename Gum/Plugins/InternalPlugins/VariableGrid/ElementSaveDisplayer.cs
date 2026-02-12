@@ -50,14 +50,15 @@ public class ElementSaveDisplayer
     #region PropertyData record
 
     private record PropertyData(
-        string Name,
+        string OriginalName,
         Type ComponentType,
         Attribute[] Attributes,
         TypeConverter Converter,
         string Category,
         bool IsReadOnly,
         bool IsAssignedByReference,
-        string Subtext);
+        string Subtext,
+        string? DisplayName = null);
 
     #endregion
 
@@ -98,7 +99,7 @@ public class ElementSaveDisplayer
         return propertyList;
     }
 
-    private void FillPropertyList(List<PropertyData> pdc, ElementSave instanceOwner,
+    private void FillPropertyList(List<PropertyData> propertyList, ElementSave instanceOwner,
         InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
     {
         var currentState = _selectedState.SelectedStateSave;
@@ -113,18 +114,23 @@ public class ElementSaveDisplayer
         bool isCustomType = (effectiveElementSave is StandardElementSave) == false;
         if (isCustomType || instanceSave != null)
         {
-            AddNameAndBaseTypeProperties(pdc, instanceOwner, instanceSave, isReadOnly: isDefault == false);
+            AddNameAndBaseTypeProperties(propertyList, instanceOwner, instanceSave, isReadOnly: isDefault == false);
         }
 
         if (instanceSave != null)
         {
-            pdc.Add(new PropertyData("Locked", typeof(bool), new Attribute[0], null, "", !isDefault, false, null));
+            propertyList.Add(new PropertyData("Locked", typeof(bool), new Attribute[0], null, "", !isDefault, false, null));
+
+            if (instanceOwner is ComponentSave)
+            {
+                propertyList.Add(new PropertyData("IsSlot", typeof(bool), new Attribute[0], null, "", !isDefault, false, null, DisplayName: "Is Slot"));
+            }
         }
 
         var shouldShowChildContainer = effectiveElementSave is ComponentSave && instanceSave == null;
         if (shouldShowChildContainer)
         {
-            pdc.Add(new PropertyData("DefaultChildContainer", typeof(string), new Attribute[0], new AvailableInstancesConverter(), "", !isDefault, false, null));
+            AddDefaultChildContainerProperty(propertyList, isDefault);
         }
         // we can't remove it here, because it might be added as a regular variable below...
 
@@ -137,7 +143,7 @@ public class ElementSaveDisplayer
 
         Dictionary<string, string> variablesSetThroughReference = GetVariablesSetThroughReferences(effectiveElementSave, currentState, variableListName);
 
-        HashSet<string> addedNames = new HashSet<string>(pdc.Select(p => p.Name));
+        HashSet<string> addedNames = new HashSet<string>(propertyList.Select(p => p.OriginalName));
 
         // if component
         if (instanceSave == null && effectiveElementSave as ComponentSave != null)
@@ -162,8 +168,8 @@ public class ElementSaveDisplayer
 
                     if(property != null)
                     {
-                        pdc.Add(property);
-                        addedNames.Add(property.Name);
+                        propertyList.Add(property);
+                        addedNames.Add(property.OriginalName);
                     }
                 }
             }
@@ -190,8 +196,8 @@ public class ElementSaveDisplayer
 
                 if (property != null)
                 {
-                    pdc.Add(property);
-                    addedNames.Add(property.Name);
+                    propertyList.Add(property);
+                    addedNames.Add(property.OriginalName);
                 }
             }
         }
@@ -201,7 +207,7 @@ public class ElementSaveDisplayer
         if(!shouldShowChildContainer)
         {
             string variableName = "DefaultChildContainer";
-            pdc.RemoveAll(item => item.Name == variableName);
+            propertyList.RemoveAll(item => item.OriginalName == variableName);
             addedNames.Remove(variableName);
         }
 
@@ -273,8 +279,8 @@ public class ElementSaveDisplayer
                 var property = CreatePropertyData(effectiveElementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, isSetByReference, subtext, addedNames);
                 if(property != null)
                 {
-                    pdc.Add(property);
-                    addedNames.Add(property.Name);
+                    propertyList.Add(property);
+                    addedNames.Add(property.OriginalName);
                 }
             }
         }
@@ -523,8 +529,8 @@ public class ElementSaveDisplayer
         }
 
         string variableName = instance != null
-            ? instance.Name + "." + propertyData.Name
-            : propertyData.Name;
+            ? instance.Name + "." + propertyData.OriginalName
+            : propertyData.OriginalName;
 
         // todo - eventually move these up to a constructor.
         var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
@@ -559,6 +565,12 @@ public class ElementSaveDisplayer
             _setVariableLogic,
             _wireframeObjectManager
             );
+
+        // Override the display name if specified in PropertyData
+        if (!string.IsNullOrEmpty(propertyData.DisplayName))
+        {
+            srim.DisplayName = propertyData.DisplayName;
+        }
 
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
@@ -810,6 +822,8 @@ public class ElementSaveDisplayer
                 name = defaultVariable.ExposedAsName;
             }
 
+
+
             var propertySubtext = _subtextLogic.GetDefaultSubtext(defaultVariable, subtext, name, elementSave, instanceSave);
 
             return new PropertyData(name, type, customAttributes, typeConverter, category, forceReadOnly, isAssignedByReference, propertySubtext);
@@ -817,6 +831,20 @@ public class ElementSaveDisplayer
         return null;
     }
 
+
+    private void AddDefaultChildContainerProperty(List<PropertyData> propertyList, bool isDefault)
+    {
+        propertyList.Add(new PropertyData(
+            "DefaultChildContainer",
+            typeof(string),
+            new Attribute[0],
+            new AvailableInstancesConverter(),
+            "",
+            !isDefault,
+            false,
+            null,
+            DisplayName: "Default Slot"));
+    }
 
     private void AddNameAndBaseTypeProperties(List<PropertyData> pdc, ElementSave? instanceOwner, InstanceSave instance, bool isReadOnly)
     {

@@ -207,6 +207,10 @@ public class StateSave
                 {
                     return instanceSave.Locked;
                 }
+                else if (variableName.EndsWith(".IsSlot"))
+                {
+                    return instanceSave.IsSlot;
+                }
             }
         }
 
