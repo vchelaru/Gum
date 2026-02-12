@@ -120,6 +120,11 @@ public class ElementSaveDisplayer
         if (instanceSave != null)
         {
             propertyList.Add(new PropertyData("Locked", typeof(bool), new Attribute[0], null, "", !isDefault, false, null));
+
+            if (instanceOwner is ComponentSave)
+            {
+                propertyList.Add(new PropertyData("IsSlot", typeof(bool), new Attribute[0], null, "", !isDefault, false, null, DisplayName: "Is Slot"));
+            }
         }
 
         var shouldShowChildContainer = effectiveElementSave is ComponentSave && instanceSave == null;

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(find:*)",
       "Bash(dotnet build:*)",
-      "Bash(git -C \"C:\\\\Users\\\\vchel\\\\Documents\\\\GitHub\\\\Gum\" diff --no-color Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs)"
+      "Bash(git -C \"C:\\\\Users\\\\vchel\\\\Documents\\\\GitHub\\\\Gum\" diff --no-color Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs)",
+      "Bash(git -C \"C:\\\\Users\\\\vchel\\\\Documents\\\\GitHub\\\\Gum\" diff --no-color -- GumDataTypes/InstanceSave.cs GumDataTypes/Variables/StateSave.cs Gum/DataTypes/StateSaveExtensionMethods.cs Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs)"
     ]
   }
 }

@@ -19,6 +19,16 @@ namespace Gum.DataTypes
             return Locked == true;
         }
 
+        public bool IsSlot
+        {
+            get;
+            set;
+        }
+        public bool ShouldSerializeIsSlot()
+        {
+            return IsSlot == true;
+        }
+
         /// <summary>
         /// The ElementSave which contains this instance.
         /// </summary>
