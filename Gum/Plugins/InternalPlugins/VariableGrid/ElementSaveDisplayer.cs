@@ -464,7 +464,7 @@ public class ElementSaveDisplayer
                     type,
                     false,
                     false,
-                    true,
+                    false,
                     stateSave,
                     stateSaveCategory,
                     variableName,
