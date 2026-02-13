@@ -52,8 +52,9 @@ public class GamePad
     public AnalogStick RightStick => mRightStick;
 
 
-    double[] mLastButtonPush = new double[26];
-    double[] mLastRepeatRate = new double[26];
+    // The Buttons enum uses bitfield values (powers of 2), so we need to map bit positions (0-30) to array indices
+    double[] mLastButtonPush = new double[31];
+    double[] mLastRepeatRate = new double[31];
 
     const float AnalogOnThreshold = .5f;
 
@@ -76,6 +77,15 @@ public class GamePad
 
         mLeftTrigger = new AnalogButton();
         mRightTrigger = new AnalogButton();
+    }
+
+    /// <summary>
+    /// Converts a Buttons enum value (which is a bitfield) to an array index based on bit position.
+    /// For example: DPadUp (0x1) -> index 0, DPadDown (0x2) -> index 1, DPadLeft (0x4) -> index 2, etc.
+    /// </summary>
+    private static int GetButtonIndex(Buttons button)
+    {
+        return System.Numerics.BitOperations.TrailingZeroCount((uint)button);
     }
 
     public bool ButtonDown(Buttons button)
@@ -400,18 +410,19 @@ public class GamePad
         // If this method is called multiple times per frame this line
         // of code guarantees that the user will get true every time until
         // the next TimeManager.Update (next frame).
-        // The very first frame of FRB would have CurrentTime == 0. 
+        // The very first frame of FRB would have CurrentTime == 0.
         // The repeat cannot happen on the first frame, so we check for that:
-        bool repeatedThisFrame = currentTime > 0 && mLastRepeatRate[(int)button] == currentTime;
+        int buttonIndex = GetButtonIndex(button);
+        bool repeatedThisFrame = currentTime > 0 && mLastRepeatRate[buttonIndex] == currentTime;
 
         if (repeatedThisFrame ||
             (
             ButtonDown(button) &&
-            currentTime - mLastButtonPush[(int)button] > timeAfterPush &&
-            currentTime - mLastRepeatRate[(int)button] > timeBetweenRepeating)
+            currentTime - mLastButtonPush[buttonIndex] > timeAfterPush &&
+            currentTime - mLastRepeatRate[buttonIndex] > timeBetweenRepeating)
             )
         {
-            mLastRepeatRate[(int)button] = currentTime;
+            mLastRepeatRate[buttonIndex] = currentTime;
             return true;
         }
 
@@ -458,14 +469,23 @@ public class GamePad
     private void UpdateLastButtonPushedValues(double currentTime)
     {
         // Set the last pushed and clear the ignored input
-
-        for (int i = 0; i < mLastButtonPush.Length; i++)
+        // We need to check each button bit position, not iterate 0-30
+        var buttonsToCheck = new[]
         {
-            //mButtonsIgnoredForThisFrame[i] = false;
+            Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
+            Buttons.Start, Buttons.Back, Buttons.LeftStick, Buttons.RightStick,
+            Buttons.LeftShoulder, Buttons.RightShoulder, Buttons.BigButton,
+            Buttons.A, Buttons.B, Buttons.X, Buttons.Y,
+            Buttons.LeftTrigger, Buttons.RightTrigger,
+            Buttons.LeftThumbstickUp, Buttons.LeftThumbstickDown, Buttons.LeftThumbstickLeft, Buttons.LeftThumbstickRight,
+            Buttons.RightThumbstickUp, Buttons.RightThumbstickDown, Buttons.RightThumbstickLeft, Buttons.RightThumbstickRight
+        };
 
-            if (ButtonPushed((Buttons)i))
+        foreach (var button in buttonsToCheck)
+        {
+            if (ButtonPushed(button))
             {
-                mLastButtonPush[i] = currentTime;
+                mLastButtonPush[GetButtonIndex(button)] = currentTime;
             }
         }
     }
