@@ -3,17 +3,33 @@ using MonoGameGum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MonoGameGum.Input;
 
 #region DPadDirection Enum
+/// <summary>
+/// Represents directional input for D-Pad and analog stick direction queries.
+/// </summary>
 public enum DPadDirection
 {
+    /// <summary>
+    /// Upward direction.
+    /// </summary>
     Up,
+    /// <summary>
+    /// Downward direction.
+    /// </summary>
     Down,
+    /// <summary>
+    /// Leftward direction.
+    /// </summary>
     Left,
+    /// <summary>
+    /// Rightward direction.
+    /// </summary>
     Right
 }
 #endregion
@@ -25,7 +41,14 @@ public class GamePad
     GamePadState mGamePadState = new GamePadState();
     GamePadState mLastGamePadState = new GamePadState();
 
+    /// <summary>
+    /// Returns whether the gamepad is currently connected.
+    /// </summary>
     public bool IsConnected => mGamePadState.IsConnected;
+
+    /// <summary>
+    /// Returns whether the gamepad was disconnected this frame (was connected last frame, but not connected this frame).
+    /// </summary>
     public bool WasDisconnectedThisFrame
     {
         get
@@ -52,8 +75,9 @@ public class GamePad
     public AnalogStick RightStick => mRightStick;
 
 
-    double[] mLastButtonPush = new double[26];
-    double[] mLastRepeatRate = new double[26];
+    // The Buttons enum uses bitfield values (powers of 2), so we need to map bit positions (0-30) to array indices
+    double[] mLastButtonPush = new double[31];
+    double[] mLastRepeatRate = new double[31];
 
     const float AnalogOnThreshold = .5f;
 
@@ -69,6 +93,9 @@ public class GamePad
 
     #endregion
 
+    /// <summary>
+    /// Creates a new GamePad instance with all inputs initialized to neutral/default states.
+    /// </summary>
     public GamePad()
     {
         mLeftStick = new AnalogStick();
@@ -78,6 +105,63 @@ public class GamePad
         mRightTrigger = new AnalogButton();
     }
 
+    /// <summary>
+    /// Converts a Buttons enum value (which is a bitfield) to an array index based on bit position.
+    /// For example: DPadUp (0x1) -> index 0, DPadDown (0x2) -> index 1, DPadLeft (0x4) -> index 2, etc.
+    /// </summary>
+    private static int GetButtonIndex(Buttons button)
+    {
+        return System.Numerics.BitOperations.TrailingZeroCount((uint)button);
+    }
+
+    /// <summary>
+    /// Clears all gamepad input state while preserving connection status.
+    /// This resets both current and previous states to prevent spurious button release events.
+    /// </summary>
+    public void Clear()
+    {
+        // Preserve connection state by keeping the current GamePadState's connection info
+        // but creating a neutral state with no inputs
+        var wasConnected = IsConnected;
+
+        // If we were connected, preserve the current state's packet number to maintain connection
+        // Otherwise use a default disconnected state
+        if (wasConnected)
+        {
+            // Create a neutral but connected state by preserving the packet number from current state
+            mGamePadState = new GamePadState(
+                Microsoft.Xna.Framework.Vector2.Zero,
+                Microsoft.Xna.Framework.Vector2.Zero, 
+                0, 
+                0, 
+                new Buttons[0]);
+        }
+        else
+        {
+            mGamePadState = new GamePadState();
+        }
+
+        // Set last state to match current to prevent spurious events
+        mLastGamePadState = mGamePadState;
+
+        Array.Clear(mLastButtonPush, 0, mLastButtonPush.Length);
+        Array.Clear(mLastRepeatRate, 0, mLastRepeatRate.Length);
+
+        currentTime = 0;
+
+        // Clear existing instances instead of creating new ones to preserve references
+        mLeftStick.Clear();
+        mRightStick.Clear();
+
+        mLeftTrigger.Clear();
+        mRightTrigger.Clear();
+    }
+
+    /// <summary>
+    /// Returns whether the specified button is currently pressed down.
+    /// </summary>
+    /// <param name="button">The button to check, including face buttons, shoulders, triggers, and DPad directions.</param>
+    /// <returns>True if the button is currently pressed, false otherwise.</returns>
     public bool ButtonDown(Buttons button)
     {
         //if (mButtonsIgnoredForThisFrame[(int)button] || InputManager.CurrentFrameInputSuspended)
@@ -179,6 +263,11 @@ public class GamePad
 
     }
 
+    /// <summary>
+    /// Returns whether the specified button was pushed this frame (pressed this frame but not pressed last frame).
+    /// </summary>
+    /// <param name="button">The button to check, including face buttons, shoulders, triggers, DPad directions, and thumbstick directions.</param>
+    /// <returns>True if the button was pushed this frame, false otherwise.</returns>
     public bool ButtonPushed(Buttons button)
     {
         //if (InputManager.mIgnorePushesThisFrame || mButtonsIgnoredForThisFrame[(int)button] || InputManager.CurrentFrameInputSuspended || ignoredNextPushes[(int)button])
@@ -285,6 +374,11 @@ public class GamePad
         return returnValue;
     }
 
+    /// <summary>
+    /// Returns whether the specified button was released this frame (released this frame but pressed last frame).
+    /// </summary>
+    /// <param name="button">The button to check, including face buttons, shoulders, triggers, and DPad directions.</param>
+    /// <returns>True if the button was released this frame, false otherwise.</returns>
     public bool ButtonReleased(Buttons button)
     {
         //if (mButtonsIgnoredForThisFrame[(int)button] || InputManager.CurrentFrameInputSuspended)
@@ -400,18 +494,19 @@ public class GamePad
         // If this method is called multiple times per frame this line
         // of code guarantees that the user will get true every time until
         // the next TimeManager.Update (next frame).
-        // The very first frame of FRB would have CurrentTime == 0. 
+        // The very first frame of FRB would have CurrentTime == 0.
         // The repeat cannot happen on the first frame, so we check for that:
-        bool repeatedThisFrame = currentTime > 0 && mLastRepeatRate[(int)button] == currentTime;
+        int buttonIndex = GetButtonIndex(button);
+        bool repeatedThisFrame = currentTime > 0 && mLastRepeatRate[buttonIndex] == currentTime;
 
         if (repeatedThisFrame ||
             (
             ButtonDown(button) &&
-            currentTime - mLastButtonPush[(int)button] > timeAfterPush &&
-            currentTime - mLastRepeatRate[(int)button] > timeBetweenRepeating)
+            currentTime - mLastButtonPush[buttonIndex] > timeAfterPush &&
+            currentTime - mLastRepeatRate[buttonIndex] > timeBetweenRepeating)
             )
         {
-            mLastRepeatRate[(int)button] = currentTime;
+            mLastRepeatRate[buttonIndex] = currentTime;
             return true;
         }
 
@@ -458,14 +553,23 @@ public class GamePad
     private void UpdateLastButtonPushedValues(double currentTime)
     {
         // Set the last pushed and clear the ignored input
-
-        for (int i = 0; i < mLastButtonPush.Length; i++)
+        // We need to check each button bit position, not iterate 0-30
+        var buttonsToCheck = new[]
         {
-            //mButtonsIgnoredForThisFrame[i] = false;
+            Buttons.DPadUp, Buttons.DPadDown, Buttons.DPadLeft, Buttons.DPadRight,
+            Buttons.Start, Buttons.Back, Buttons.LeftStick, Buttons.RightStick,
+            Buttons.LeftShoulder, Buttons.RightShoulder, Buttons.BigButton,
+            Buttons.A, Buttons.B, Buttons.X, Buttons.Y,
+            Buttons.LeftTrigger, Buttons.RightTrigger,
+            Buttons.LeftThumbstickUp, Buttons.LeftThumbstickDown, Buttons.LeftThumbstickLeft, Buttons.LeftThumbstickRight,
+            Buttons.RightThumbstickUp, Buttons.RightThumbstickDown, Buttons.RightThumbstickLeft, Buttons.RightThumbstickRight
+        };
 
-            if (ButtonPushed((Buttons)i))
+        foreach (var button in buttonsToCheck)
+        {
+            if (ButtonPushed(button))
             {
-                mLastButtonPush[i] = currentTime;
+                mLastButtonPush[GetButtonIndex(button)] = currentTime;
             }
         }
     }

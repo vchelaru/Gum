@@ -71,4 +71,16 @@ public class AnalogButton
         }
     }
 
+    /// <summary>
+    /// Clears all analog button state, resetting it to initial values.
+    /// This resets both current and previous states to prevent spurious push/release events.
+    /// </summary>
+    public void Clear()
+    {
+        mPosition = 0;
+        mLastPosition = 0;
+        lastIsDownDown = false;
+        mLastButtonPush = 0;
+    }
+
 }

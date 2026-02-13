@@ -255,6 +255,28 @@ public class AnalogStick
         //upAsButton.Update(System.Math.Max(0, mPosition.Y));
     }
 
+    /// <summary>
+    /// Clears all analog stick state, resetting it to initial values.
+    /// This resets both current and previous states to prevent spurious push/release events.
+    /// </summary>
+    public void Clear()
+    {
+        currentTime = 0;
+        mRawPosition = Vector2.Zero;
+        mPosition = Vector2.Zero;
+        mTimeAfterPush = DefaultTimeAfterPush;
+        mTimeBetweenRepeating = DefaultTimeBetweenRepeating;
+
+        Array.Clear(mLastDPadDown, 0, mLastDPadDown.Length);
+        Array.Clear(mCurrentDPadDown, 0, mCurrentDPadDown.Length);
+
+        for (int i = 0; i < mLastDPadPush.Length; i++)
+        {
+            mLastDPadPush[i] = -1;
+            mLastDPadRepeatRate[i] = -1;
+        }
+    }
+
     private void UpdateAccordingToPosition()
     {
         // Atan2 of (0,0) returns 0
