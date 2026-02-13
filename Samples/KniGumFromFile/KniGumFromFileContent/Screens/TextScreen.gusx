@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>TextScreen</Name>
   <State>
     <Name>Default</Name>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance.Children Layout</Name>
+      <Name>ContainerInstance.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -168,7 +168,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>NormalText2.Height Units</Name>
+      <Name>NormalText2.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -202,7 +202,7 @@ width.</Value>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>NormalText2.Width Units</Name>
+      <Name>NormalText2.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -250,7 +250,7 @@ width.</Value>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ToggleFontSizes.Height Units</Name>
+      <Name>ToggleFontSizes.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -274,7 +274,7 @@ width.</Value>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ToggleFontSizes.Width Units</Name>
+      <Name>ToggleFontSizes.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>

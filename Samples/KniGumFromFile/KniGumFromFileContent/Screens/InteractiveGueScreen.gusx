@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>InteractiveGueScreen</Name>
   <State>
     <Name>Default</Name>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance.Children Layout</Name>
+      <Name>ContainerInstance.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -111,7 +111,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>StandardButtonInstance3.Width Units</Name>
+      <Name>StandardButtonInstance3.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -123,13 +123,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>StandardButtonInstance3.X Origin</Name>
+      <Name>StandardButtonInstance3.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>StandardButtonInstance3.X Units</Name>
+      <Name>StandardButtonInstance3.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -147,7 +147,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>StandardButtonInstance4.Width Units</Name>
+      <Name>StandardButtonInstance4.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -159,13 +159,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>StandardButtonInstance4.X Origin</Name>
+      <Name>StandardButtonInstance4.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>StandardButtonInstance4.X Units</Name>
+      <Name>StandardButtonInstance4.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -183,7 +183,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>StandardButtonInstance5.Width Units</Name>
+      <Name>StandardButtonInstance5.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -195,13 +195,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>StandardButtonInstance5.X Origin</Name>
+      <Name>StandardButtonInstance5.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>StandardButtonInstance5.X Units</Name>
+      <Name>StandardButtonInstance5.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
