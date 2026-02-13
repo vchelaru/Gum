@@ -20,11 +20,11 @@ public class ScrollbarService
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly ProjectManager _projectManager;
 
-    public ScrollbarService()
+    public ScrollbarService(ProjectManager projectManager)
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _wireframeObjectManager = Locator.GetRequiredService<WireframeObjectManager>();
-        _projectManager = ProjectManager.Self;
+        _projectManager = projectManager;
     }
     
     public void HandleElementSelected(ElementSave obj)

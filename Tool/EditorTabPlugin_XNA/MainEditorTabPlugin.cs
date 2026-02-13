@@ -149,8 +149,9 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     public MainEditorTabPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        
-        _scrollbarService = new ScrollbarService();
+        _projectManager = ProjectManager.Self;
+
+        _scrollbarService = new ScrollbarService(_projectManager);
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
@@ -181,7 +182,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
             hotkeyManager,
             _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
-            ProjectManager.Self,
+            _projectManager,
             _guiCommands,
             _elementCommands,
             _fileCommands,
@@ -194,7 +195,6 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _hotkeyManager = hotkeyManager;
-        _projectManager = ProjectManager.Self;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
         _editorViewModel = new EditorViewModel(
@@ -746,7 +746,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         };
 
         // Apply FrameRate, but keep it within sane limits
-        float frameRate = Math.Max(Math.Min(ProjectManager.Self.GeneralSettingsFile.FrameRate, 60), 10);
+        float frameRate = Math.Max(Math.Min(_projectManager.GeneralSettingsFile.FrameRate, 60), 10);
         _wireframeControl.DesiredFramesPerSecond = frameRate;
 
         UpdateWireframeControlSizes();
