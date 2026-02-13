@@ -10,11 +10,26 @@ using System.Threading.Tasks;
 namespace MonoGameGum.Input;
 
 #region DPadDirection Enum
+/// <summary>
+/// Represents directional input for D-Pad and analog stick direction queries.
+/// </summary>
 public enum DPadDirection
 {
+    /// <summary>
+    /// Upward direction.
+    /// </summary>
     Up,
+    /// <summary>
+    /// Downward direction.
+    /// </summary>
     Down,
+    /// <summary>
+    /// Leftward direction.
+    /// </summary>
     Left,
+    /// <summary>
+    /// Rightward direction.
+    /// </summary>
     Right
 }
 #endregion
@@ -26,7 +41,14 @@ public class GamePad
     GamePadState mGamePadState = new GamePadState();
     GamePadState mLastGamePadState = new GamePadState();
 
+    /// <summary>
+    /// Returns whether the gamepad is currently connected.
+    /// </summary>
     public bool IsConnected => mGamePadState.IsConnected;
+
+    /// <summary>
+    /// Returns whether the gamepad was disconnected this frame (was connected last frame, but not connected this frame).
+    /// </summary>
     public bool WasDisconnectedThisFrame
     {
         get
@@ -71,6 +93,9 @@ public class GamePad
 
     #endregion
 
+    /// <summary>
+    /// Creates a new GamePad instance with all inputs initialized to neutral/default states.
+    /// </summary>
     public GamePad()
     {
         mLeftStick = new AnalogStick();
@@ -132,6 +157,11 @@ public class GamePad
         mRightTrigger.Clear();
     }
 
+    /// <summary>
+    /// Returns whether the specified button is currently pressed down.
+    /// </summary>
+    /// <param name="button">The button to check, including face buttons, shoulders, triggers, and DPad directions.</param>
+    /// <returns>True if the button is currently pressed, false otherwise.</returns>
     public bool ButtonDown(Buttons button)
     {
         //if (mButtonsIgnoredForThisFrame[(int)button] || InputManager.CurrentFrameInputSuspended)
@@ -233,6 +263,11 @@ public class GamePad
 
     }
 
+    /// <summary>
+    /// Returns whether the specified button was pushed this frame (pressed this frame but not pressed last frame).
+    /// </summary>
+    /// <param name="button">The button to check, including face buttons, shoulders, triggers, DPad directions, and thumbstick directions.</param>
+    /// <returns>True if the button was pushed this frame, false otherwise.</returns>
     public bool ButtonPushed(Buttons button)
     {
         //if (InputManager.mIgnorePushesThisFrame || mButtonsIgnoredForThisFrame[(int)button] || InputManager.CurrentFrameInputSuspended || ignoredNextPushes[(int)button])
@@ -339,6 +374,11 @@ public class GamePad
         return returnValue;
     }
 
+    /// <summary>
+    /// Returns whether the specified button was released this frame (released this frame but pressed last frame).
+    /// </summary>
+    /// <param name="button">The button to check, including face buttons, shoulders, triggers, and DPad directions.</param>
+    /// <returns>True if the button was released this frame, false otherwise.</returns>
     public bool ButtonReleased(Buttons button)
     {
         //if (mButtonsIgnoredForThisFrame[(int)button] || InputManager.CurrentFrameInputSuspended)
