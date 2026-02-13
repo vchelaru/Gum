@@ -50,7 +50,11 @@ public class GamePadTests
         var triggers = new GamePadTriggers(leftTrigger, rightTrigger);
         var thumbSticks = new GamePadThumbSticks(new Microsoft.Xna.Framework.Vector2(0, 0), new Microsoft.Xna.Framework.Vector2(0, 0));
 
-        return new GamePadState(thumbSticks, triggers, buttons, dpad);
+        // In MonoGame, the default constructor creates a disconnected state,
+        // while constructing with explicit values creates a connected state
+        return isConnected
+            ? new GamePadState(thumbSticks, triggers, buttons, dpad)
+            : new GamePadState();
     }
 
     #endregion
@@ -508,6 +512,145 @@ public class GamePadTests
 
         sut.Activity(CreateGamePadState(aPressed: true), 0.6);
         sut.ButtonRepeatRate(Buttons.A, timeAfterPush: 0.5, timeBetweenRepeating: 0.2).ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region Clear Tests
+
+    [Fact]
+    public void Clear_ShouldNotReportButtonRelease_WhenButtonWasPressedBeforeClear()
+    {
+        var sut = new GamePad();
+        // Press button A
+        sut.Activity(CreateGamePadState(aPressed: false), 0);
+        sut.Activity(CreateGamePadState(aPressed: true), 0.016);
+
+        // Clear the gamepad
+        sut.Clear();
+
+        // Update with no buttons pressed - should NOT report a release
+        sut.Activity(CreateGamePadState(aPressed: false), 0.032);
+
+        sut.ButtonReleased(Buttons.A).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldNotReportButtonPush_AfterClearing()
+    {
+        var sut = new GamePad();
+        sut.Activity(CreateGamePadState(aPressed: true), 0);
+
+        sut.Clear();
+
+        sut.Activity(CreateGamePadState(aPressed: false), 0.016);
+
+        sut.ButtonPushed(Buttons.A).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldPreserveAnalogStickReferences()
+    {
+        var sut = new GamePad();
+        var leftStickRef = sut.LeftStick;
+        var rightStickRef = sut.RightStick;
+
+        sut.Clear();
+
+        // References should remain the same
+        ReferenceEquals(sut.LeftStick, leftStickRef).ShouldBeTrue();
+        ReferenceEquals(sut.RightStick, rightStickRef).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Clear_ShouldResetAnalogSticks()
+    {
+        var sut = new GamePad();
+        var thumbSticks = new GamePadThumbSticks(
+            new Microsoft.Xna.Framework.Vector2(0.5f, 0.5f),
+            new Microsoft.Xna.Framework.Vector2(-0.5f, -0.5f));
+        var state = new GamePadState(thumbSticks, new GamePadTriggers(0, 0), new GamePadButtons(0), new GamePadDPad());
+        sut.Activity(state, 0);
+
+        sut.Clear();
+
+        // Sticks should be reset (non-null but in initial state)
+        sut.LeftStick.ShouldNotBeNull();
+        sut.RightStick.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Clear_ShouldResetButtonDown()
+    {
+        var sut = new GamePad();
+        sut.Activity(CreateGamePadState(aPressed: true), 0);
+
+        sut.Clear();
+
+        sut.ButtonDown(Buttons.A).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldResetButtonRepeatRate()
+    {
+        var sut = new GamePad();
+        sut.Activity(CreateGamePadState(aPressed: false), 0);
+        sut.Activity(CreateGamePadState(aPressed: true), 0.016);
+
+        sut.Clear();
+
+        sut.ButtonRepeatRate(Buttons.A).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldImmediatelyResetAllButtonStates_WithoutCallingActivity()
+    {
+        var sut = new GamePad();
+        // Press button A and trigger
+        sut.Activity(CreateGamePadState(aPressed: true, leftTrigger: 0.8f), 0);
+
+        // Clear without calling Activity
+        sut.Clear();
+
+        // All button queries should return false immediately
+        sut.ButtonDown(Buttons.A).ShouldBeFalse();
+        sut.ButtonPushed(Buttons.A).ShouldBeFalse();
+        sut.ButtonReleased(Buttons.A).ShouldBeFalse();
+        sut.ButtonDown(Buttons.LeftTrigger).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldPreserveConnectionState_WhenConnected()
+    {
+        var sut = new GamePad();
+        sut.Activity(CreateGamePadState(isConnected: true), 0);
+
+        sut.Clear();
+
+        sut.IsConnected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Clear_ShouldPreserveConnectionState_WhenDisconnected()
+    {
+        var sut = new GamePad();
+        sut.Activity(new GamePadState(), 0);
+
+        sut.Clear();
+
+        sut.IsConnected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldResetTriggers()
+    {
+        var sut = new GamePad();
+        sut.Activity(CreateGamePadState(leftTrigger: 0.8f, rightTrigger: 0.9f), 0);
+
+        sut.Clear();
+
+        sut.ButtonDown(Buttons.LeftTrigger).ShouldBeFalse();
+        sut.ButtonDown(Buttons.RightTrigger).ShouldBeFalse();
     }
 
     #endregion

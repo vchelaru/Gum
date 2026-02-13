@@ -3,6 +3,7 @@ using MonoGameGum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -86,6 +87,49 @@ public class GamePad
     private static int GetButtonIndex(Buttons button)
     {
         return System.Numerics.BitOperations.TrailingZeroCount((uint)button);
+    }
+
+    /// <summary>
+    /// Clears all gamepad input state while preserving connection status.
+    /// This resets both current and previous states to prevent spurious button release events.
+    /// </summary>
+    public void Clear()
+    {
+        // Preserve connection state by keeping the current GamePadState's connection info
+        // but creating a neutral state with no inputs
+        var wasConnected = IsConnected;
+
+        // If we were connected, preserve the current state's packet number to maintain connection
+        // Otherwise use a default disconnected state
+        if (wasConnected)
+        {
+            // Create a neutral but connected state by preserving the packet number from current state
+            mGamePadState = new GamePadState(
+                Microsoft.Xna.Framework.Vector2.Zero,
+                Microsoft.Xna.Framework.Vector2.Zero, 
+                0, 
+                0, 
+                new Buttons[0]);
+        }
+        else
+        {
+            mGamePadState = new GamePadState();
+        }
+
+        // Set last state to match current to prevent spurious events
+        mLastGamePadState = mGamePadState;
+
+        Array.Clear(mLastButtonPush, 0, mLastButtonPush.Length);
+        Array.Clear(mLastRepeatRate, 0, mLastRepeatRate.Length);
+
+        currentTime = 0;
+
+        // Clear existing instances instead of creating new ones to preserve references
+        mLeftStick.Clear();
+        mRightStick.Clear();
+
+        mLeftTrigger.Clear();
+        mRightTrigger.Clear();
     }
 
     public bool ButtonDown(Buttons button)
