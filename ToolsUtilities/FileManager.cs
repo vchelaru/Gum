@@ -1335,6 +1335,7 @@ namespace ToolsUtilities
             {
                 XmlWriterSettings settings = new XmlWriterSettings();
                 settings.Indent = true;
+                settings.Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false); // No BOM for web compatibility
                 using (var writer = XmlWriter.Create(fs, settings))
                 {
                     // for info on this, see
