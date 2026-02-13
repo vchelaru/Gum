@@ -69,7 +69,13 @@ public class KniGumFromFileGame : Game
         }
         catch(Exception e)
         {
-            int m = 3;
+            var errorInfo = e.ToString();
+            System.Diagnostics.Debug.WriteLine(e);
+            if(e.InnerException != null)
+            {
+                System.Diagnostics.Debug.WriteLine(e.InnerException);
+            }
+            System.Diagnostics.Debugger.Break();
         }
 
     }
@@ -223,8 +229,7 @@ public class KniGumFromFileGame : Game
 
     private void InitializeStartScreen()
     {
-        var exposedVariableInstance = currentScreenGue.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
-        exposedVariableInstance.SetProperty("Text", "I'm set in code");
+
     }
 
     private void InitializeZoomScreen()
