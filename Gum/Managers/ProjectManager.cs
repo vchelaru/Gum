@@ -41,13 +41,13 @@ public class ProjectManager : IProjectManager
 
     bool mHaveErrorsOccurredLoadingProject = false;
     
-    private readonly ISelectedState _selectedState;
-    private readonly IElementCommands _elementCommands;
-    private readonly IDialogService _dialogService;
-    private readonly IGuiCommands _guiCommands;
-    private readonly IFileCommands _fileCommands;
-    private readonly IMessenger _messenger;
-    private readonly FileWatchManager _fileWatchManager;
+    private ISelectedState _selectedState;
+    private IElementCommands _elementCommands;
+    private IDialogService _dialogService;
+    private IGuiCommands _guiCommands;
+    private IFileCommands _fileCommands;
+    private IMessenger _messenger;
+    private FileWatchManager _fileWatchManager;
 
     #endregion
 
@@ -87,13 +87,7 @@ public class ProjectManager : IProjectManager
 
     private ProjectManager()
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _messenger =  Locator.GetRequiredService<IMessenger>();
-        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
+
     }
 
     public void LoadSettings()
@@ -103,6 +97,13 @@ public class ProjectManager : IProjectManager
 
     public async Task Initialize()
     {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<IElementCommands>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _fileCommands = Locator.GetRequiredService<IFileCommands>();
+        _messenger =  Locator.GetRequiredService<IMessenger>();
+        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
 
         await CommandLineManager.Self.ReadCommandLine();
 

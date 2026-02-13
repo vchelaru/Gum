@@ -26,6 +26,7 @@ public class FileCommands : IFileCommands
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IOutputManager _outputManager;
+    private readonly ProjectManager _projectManager;
 
     public FileCommands(ISelectedState selectedState, 
         Lazy<IUndoManager> undoManager, 
@@ -42,6 +43,8 @@ public class FileCommands : IFileCommands
         _localizationService = localizationService;
         _fileWatchManager = fileWatchManager;
         _outputManager = outputManager;
+        _projectManager = ProjectManager.Self;
+
     }
 
     /// <summary>
@@ -105,7 +108,7 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveElement(ElementSave? elementSave)
     {
-        if (ProjectManager.Self.GeneralSettingsFile.AutoSave && elementSave != null)
+        if (_projectManager.GeneralSettingsFile.AutoSave && elementSave != null)
         {
             SaveElement(elementSave);
         }
@@ -113,7 +116,7 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveBehavior(BehaviorSave behavior)
     {
-        if(ProjectManager.Self.GeneralSettingsFile.AutoSave && behavior != null)
+        if(_projectManager.GeneralSettingsFile.AutoSave && behavior != null)
         {
             ForceSaveBehavior(behavior);
         }
@@ -142,7 +145,7 @@ public class FileCommands : IFileCommands
         _selectedState.SelectedStateCategorySave = null;
         _selectedState.SelectedStateSave = null;
 
-        ProjectManager.Self.CreateNewProject();
+        _projectManager.CreateNewProject();
 
         _guiCommands.RefreshStateTreeView();
         _guiCommands.RefreshVariables();
@@ -157,7 +160,7 @@ public class FileCommands : IFileCommands
     /// <returns>Whether a save occurred.</returns>
     public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
     {
-        if (ProjectManager.Self.GeneralSettingsFile.AutoSave && !ProjectManager.Self.HaveErrorsOccurredLoadingProject)
+        if (_projectManager.GeneralSettingsFile.AutoSave && !_projectManager.HaveErrorsOccurredLoadingProject)
         {
             ForceSaveProject(forceSaveContainedElements);
             return true;
@@ -167,13 +170,13 @@ public class FileCommands : IFileCommands
 
     public void ForceSaveProject(bool forceSaveContainedElements = false)
     {
-        if (ProjectManager.Self.HaveErrorsOccurredLoadingProject)
+        if (_projectManager.HaveErrorsOccurredLoadingProject)
         {
             _dialogService.ShowMessage("Cannot save project because of earlier errors");
             return;
         }
 
-        var succeeded = ProjectManager.Self.SaveProject(forceSaveContainedElements);
+        var succeeded = _projectManager.SaveProject(forceSaveContainedElements);
 
         if (string.IsNullOrEmpty(ProjectState.Self.GumProjectSave.FullFileName))
         {
@@ -252,11 +255,11 @@ public class FileCommands : IFileCommands
             //UndoManager.Self.RecordUndo();
 
             bool doesProjectNeedToSave = false;
-            bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
+            bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
 
             if (doesProjectNeedToSave)
             {
-                ProjectManager.Self.SaveProject();
+                _projectManager.SaveProject();
             }
 
             if (shouldSave)
@@ -319,7 +322,7 @@ public class FileCommands : IFileCommands
 
     public void LoadProject(string fileName)
     {
-        ProjectManager.Self.LoadProject(fileName);
+        _projectManager.LoadProject(fileName);
     }
 
     public FilePath GetFullFileName(ElementSave element)
@@ -365,11 +368,11 @@ public class FileCommands : IFileCommands
             _undoManager.Value.RecordUndo();
 
             bool doesProjectNeedToSave = false;
-            bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
+            bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
 
             if (doesProjectNeedToSave)
             {
-                ProjectManager.Self.SaveProject();
+                _projectManager.SaveProject();
             }
 
             if (shouldSave)
@@ -435,21 +438,21 @@ public class FileCommands : IFileCommands
         return GetFullPathXmlFile(behaviorSave, behaviorSave.Name);
     }
 
-    static string GetFullPathXmlFile(BehaviorSave behaviorSave, string behaviorName)
+    string GetFullPathXmlFile(BehaviorSave behaviorSave, string behaviorName)
     {
-        if (string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+        if (string.IsNullOrEmpty(_projectManager.GumProjectSave.FullFileName))
         {
             return null;
         }
 
-        string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
+        string directory = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
 
         return directory + BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
     }
 
     public void SaveGeneralSettings()
     {
-        var settings = ProjectManager.Self.GeneralSettingsFile;
+        var settings = _projectManager.GeneralSettingsFile;
         settings.Save();
     }
 
