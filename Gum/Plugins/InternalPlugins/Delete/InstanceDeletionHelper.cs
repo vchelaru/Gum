@@ -16,13 +16,13 @@ public class InstanceDeletionHelper
 {
     private readonly IDeleteLogic _deleteLogic;
     private readonly IGuiCommands _guiCommands;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IFileCommands _fileCommands;
 
     public InstanceDeletionHelper(
         IDeleteLogic deleteLogic,
         IGuiCommands guiCommands,
-        WireframeCommands wireframeCommands,
+        IWireframeCommands wireframeCommands,
         IFileCommands fileCommands)
     {
         _deleteLogic = deleteLogic;

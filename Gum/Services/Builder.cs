@@ -132,6 +132,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ISetVariableLogic, SetVariableLogic>();
 
         services.AddSingleton<WireframeCommands>();
+        services.AddSingleton<IWireframeCommands>(provider => provider.GetRequiredService<WireframeCommands>());
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<IEditCommands, EditCommands>();
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
