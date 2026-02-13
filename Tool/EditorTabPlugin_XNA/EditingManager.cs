@@ -26,6 +26,8 @@ public partial class EditingManager : IEditingManager
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
+    private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IFavoriteComponentManager _favoriteComponentManager;
 
     public EditingManager(
         WireframeObjectManager wireframeObjectManager,
@@ -40,6 +42,8 @@ public partial class EditingManager : IEditingManager
         _elementCommands = elementCommands;
         _nameVerifier = nameVerifier;
         _setVariableLogic = setVariableLogic;
+        _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
+        _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
     }
     #region Methods
 

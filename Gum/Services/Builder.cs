@@ -93,6 +93,8 @@ file static class ServiceCollectionExtensions
         // singletons
         services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<ICircularReferenceManager>(provider => provider.GetRequiredService<CircularReferenceManager>());
+        services.AddSingleton<FavoriteComponentManager>();
+        services.AddSingleton<IFavoriteComponentManager>(provider => provider.GetRequiredService<FavoriteComponentManager>());
         services.AddSingleton<CopyPasteLogic>();
         services.AddSingleton<ICopyPasteLogic>(provider => provider.GetRequiredService<CopyPasteLogic>());
         services.AddSingleton<DeleteLogic>();
