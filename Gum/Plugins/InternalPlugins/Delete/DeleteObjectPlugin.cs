@@ -65,14 +65,16 @@ public class DeleteObjectPlugin : InternalPlugin
 
     void HandleDeleteConfirm(Windows.DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
     {
+        // Collect all instances to delete in a batch
+        var instancesToDelete = new List<InstanceSave>();
+
         foreach (var deletedObject in deletedObjects)
         {
-
             var asInstance = deletedObject as InstanceSave;
 
             if (asInstance != null)
             {
-                PerformInstanceDeleteLogic(asInstance);
+                instancesToDelete.Add(asInstance);
             }
 
             if (deleteXmlCheckBox.IsChecked == true)
@@ -93,6 +95,12 @@ public class DeleteObjectPlugin : InternalPlugin
             }
         }
 
+        // Perform batch instance deletion
+        if (instancesToDelete.Count > 0)
+        {
+            PerformMultipleInstancesDeleteLogic(instancesToDelete);
+        }
+
         if (deleteOptionsWindow.MainStackPanel.Children.Contains(deleteXmlCheckBox))
         {
             deleteOptionsWindow.MainStackPanel.Children.Remove(deleteXmlCheckBox);
@@ -106,23 +114,28 @@ public class DeleteObjectPlugin : InternalPlugin
 
     private void PerformInstanceDeleteLogic(InstanceSave instance)
     {
+        PerformMultipleInstancesDeleteLogic(new[] { instance });
+    }
+
+    private void PerformMultipleInstancesDeleteLogic(IEnumerable<InstanceSave> instances)
+    {
+        var instancesList = instances.ToList();
+        if (instancesList.Count == 0)
+            return;
+
         var shouldDetachChildren = deleteJustParent.IsChecked == true;
         var shouldDeleteChildren = deleteAllContainedObjects.IsChecked == true;
 
-        var element = instance.ParentContainer;
+        // Use the first instance's parent container (all instances in a batch should have the same parent)
+        var element = instancesList.First().ParentContainer;
 
         if (shouldDetachChildren)
         {
-            _instanceDeletionHelper.DetachChildrenFromInstance(instance);
+            _instanceDeletionHelper.DetachChildrenFromInstances(instancesList);
         }
         if (shouldDeleteChildren)
         {
-            _instanceDeletionHelper.RecursivelyDeleteChildrenOf(instance);
-
-            // refresh the property grid, refresh the wireframe, save
-            _guiCommands.RefreshElementTreeView(element);
-            _wireframeCommands.Refresh();
-            _fileCommands.TryAutoSaveElement(element);
+            _instanceDeletionHelper.RecursivelyDeleteChildrenOfInstances(instancesList, element);
         }
     }
 
@@ -142,26 +155,27 @@ public class DeleteObjectPlugin : InternalPlugin
         bool alreadyAddedUiForInstances = false;
         bool alreadyAddedDeleteXmlCheckBox = false;
 
+        // Collect all instances to check if any have children
+        var instances = objectsToDelete.OfType<InstanceSave>()
+            .Where(instance => instance.ParentContainer != null)
+            .ToList();
+
+        if (!alreadyAddedUiForInstances && instances.Count > 0)
+        {
+            var anyHasChildren = _instanceDeletionHelper.AnyInstanceHasChildren(instances);
+
+            if (anyHasChildren)
+            {
+                deleteWindow.MainStackPanel.Children.Add(deleteGroupBox);
+
+                deleteJustParent.IsChecked = true;
+                deleteAllContainedObjects.IsChecked = false;
+                alreadyAddedUiForInstances = true;
+            }
+        }
+
         foreach (var objectToDelete in objectsToDelete)
         {
-            if (!alreadyAddedUiForInstances)
-            {
-                var objectAsInstance = objectToDelete as InstanceSave;
-                if (objectAsInstance?.ParentContainer != null)
-                {
-                    var hasChildren = _instanceDeletionHelper.InstanceHasChildren(objectAsInstance);
-
-                    if (hasChildren)
-                    {
-                        deleteWindow.MainStackPanel.Children.Add(deleteGroupBox);
-
-                        deleteJustParent.IsChecked = true;
-                        deleteAllContainedObjects.IsChecked = false;
-                        alreadyAddedUiForInstances = true;
-                    }
-                }
-
-            }
 
             var shouldAddDeleteXml = objectToDelete is not InstanceSave && !alreadyAddedDeleteXmlCheckBox;
 
