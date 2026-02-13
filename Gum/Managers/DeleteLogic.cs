@@ -22,7 +22,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Managers
 {
-    public class DeleteLogic
+    public class DeleteLogic : IDeleteLogic
     {
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;

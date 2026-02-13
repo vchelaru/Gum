@@ -100,6 +100,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<CopyPasteLogic>();
         services.AddSingleton<ICopyPasteLogic>(provider => provider.GetRequiredService<CopyPasteLogic>());
         services.AddSingleton<DeleteLogic>();
+        services.AddSingleton<IDeleteLogic>(provider => provider.GetRequiredService<DeleteLogic>());
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<FontManager>();
