@@ -12,7 +12,7 @@ namespace InputLibrary
         static Cursor mSelf;
 
 
-        MouseState mMouseState;
+        MouseState mMouseState = new MouseState();
         MouseState mLastFrameMouseState = new MouseState();
         Control mControl;
 
@@ -57,8 +57,15 @@ namespace InputLibrary
         {
             get
             {
-                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
-                return point.X;
+                if(mControl != null)
+                {
+                    System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
+                    return point.X;
+                }
+                else
+                {
+                    return mMouseState.X;
+                }
                 //return mMouseState.X;
             }
         }
@@ -70,9 +77,16 @@ namespace InputLibrary
         {
             get
             {
-                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
-                return point.Y;
+                if (mControl != null)
+                {
 
+                    System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
+                    return point.Y;
+                }
+                else
+                {
+                    return mMouseState.Y;
+                }
                 //return mMouseState.Y;
             }
         }

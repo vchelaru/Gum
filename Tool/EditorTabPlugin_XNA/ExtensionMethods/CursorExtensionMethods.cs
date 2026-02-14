@@ -11,14 +11,19 @@ public static class CursorExtensionMethods
         Renderer? renderer = null;
         if (managers == null)
         {
-            renderer = Renderer.Self;
+            renderer = SystemManagers.Default?.Renderer;
         }
         else
         {
             renderer = managers.Renderer;
         }
 
-        renderer.Camera.ScreenToWorld(cursor.X, cursor.Y, out float worldX, out float worldY);
+        float worldX = cursor.X;
+        float worldY = cursor.Y;
+        if(renderer?.Camera != null)
+        {
+            renderer.Camera.ScreenToWorld(cursor.X, cursor.Y, out worldX, out worldY);
+        }
 
         return worldX;
     }
@@ -28,15 +33,23 @@ public static class CursorExtensionMethods
         Renderer? renderer = null;
         if (managers == null)
         {
-            renderer = Renderer.Self;
+            renderer = SystemManagers.Default?.Renderer;
         }
         else
         {
             renderer = managers.Renderer;
         }
 
-        renderer.Camera.ScreenToWorld(cursor.X, cursor.Y, out float worldX, out float worldY);
+        if (renderer != null)
+        {
+            renderer.Camera.ScreenToWorld(cursor.X, cursor.Y, out float worldX, out float worldY);
+            return worldY;
+        }
+        else
+        {
+            return cursor.Y;
+        }
 
-        return worldY;
     }
+
 }

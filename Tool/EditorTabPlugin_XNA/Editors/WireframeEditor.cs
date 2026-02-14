@@ -110,6 +110,11 @@ public abstract class WireframeEditor
 
     public abstract bool HasCursorOverHandles { get; }
 
+    /// <summary>
+    /// Returns true if any input handler (resize, rotate, polygon points, etc.) is currently active/dragging.
+    /// </summary>
+    public bool IsAnyHandlerActive => _inputHandlers.Any(h => h.IsActive);
+
     public void UpdateAspectRatioForGrabbedIpso()
     {
         _context.UpdateAspectRatioForGrabbedIpso();

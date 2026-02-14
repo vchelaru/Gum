@@ -43,6 +43,8 @@ public class RectangleSelector
 
     public bool IsActive => _isActive;
 
+    public bool HasMovedEnough => _hasMovedEnough;
+
     public (float Left, float Top, float Right, float Bottom) Bounds { get; private set; }
 
     #endregion
@@ -72,27 +74,26 @@ public class RectangleSelector
 
     public void HandlePush(float worldX, float worldY)
     {
-        // Only activate if shift is held OR if not over any element body
-        // (SelectionManager.IsOverBody tells us if we're over a selected element)
-        bool shouldActivate = _hotkeyManager.MultiSelect.IsPressedInControl() || !_selectionManager.IsOverBody;
-
-        if (shouldActivate)
-        {
-            _isActive = true;
-            _hasMovedEnough = false;
-            _startX = worldX;
-            _startY = worldY;
-            _currentX = worldX;
-            _currentY = worldY;
-            _isAdditive = _hotkeyManager.MultiSelect.IsPressedInControl();
-
-            UpdateBounds();
-        }
+        // Store push position but don't activate yet - wait for drag
+        // This allows shift+click to work for multi-select without interfering
+        _startX = worldX;
+        _startY = worldY;
+        _currentX = worldX;
+        _currentY = worldY;
+        _isAdditive = _hotkeyManager.MultiSelect.IsPressedInControl();
+        _hasMovedEnough = false;
     }
 
-    public void HandleDrag()
+    public void HandleDrag(bool isHandlerActive = false)
     {
-        if (!_isActive) return;
+        // Don't activate if any input handler is active (resize, rotate, polygon points, etc.)
+        if (isHandlerActive) return;
+
+        // Activate rectangle selector only when dragging
+        // Check conditions: shift held OR not over element body
+        bool shouldActivate = _hotkeyManager.MultiSelect.IsPressedInControl() || !_selectionManager.IsOverBody;
+
+        if (!shouldActivate) return;
 
         var cursor = InputLibrary.Cursor.Self;
         _currentX = cursor.GetWorldX();
@@ -101,13 +102,19 @@ public class RectangleSelector
         // Check if moved enough to consider it a drag
         if (!_hasMovedEnough)
         {
+            var zoom = 1f;
+            if(SystemManagers.Default?.Renderer != null)
+            {
+                zoom = SystemManagers.Default.Renderer.Camera.Zoom;
+            }
             var screenDragDistance = System.Math.Sqrt(
-                System.Math.Pow((_currentX - _startX) * Renderer.Self.Camera.Zoom, 2) +
-                System.Math.Pow((_currentY - _startY) * Renderer.Self.Camera.Zoom, 2));
+                System.Math.Pow((_currentX - _startX) * zoom, 2) +
+                System.Math.Pow((_currentY - _startY) * zoom, 2));
 
             if (screenDragDistance >= MinimumDragDistance)
             {
                 _hasMovedEnough = true;
+                _isActive = true; // Activate only when drag threshold is reached
             }
         }
 
@@ -116,47 +123,43 @@ public class RectangleSelector
 
     public void HandleRelease()
     {
-        if (!_isActive) return;
-
-        if (!_hasMovedEnough)
+        if (!_isActive)
         {
-            // No drag occurred - treat as a click to deselect all (unless shift held)
-            if (!_isAdditive)
+            // Rectangle selector was never activated (no drag occurred)
+            // Reset state and let normal click handling take over
+            _hasMovedEnough = false;
+            return;
+        }
+
+        // Find all elements within the rectangle
+        var elementsInBounds = GetElementsInRectangle();
+
+        if (_isAdditive)
+        {
+            // Add/toggle selection
+            foreach (var element in elementsInBounds)
             {
-                _selectionManager.DeselectAll();
+                _selectionManager.ToggleSelection(element);
             }
         }
         else
         {
-            // Find all elements within the rectangle
-            var elementsInBounds = GetElementsInRectangle();
-
-            if (_isAdditive)
-            {
-                // Add/toggle selection
-                foreach (var element in elementsInBounds)
-                {
-                    _selectionManager.ToggleSelection(element);
-                }
-            }
-            else
-            {
-                // Replace selection
-                _selectionManager.Select(elementsInBounds);
-            }
-
-            // Refresh UI
-            _guiCommands.RefreshVariables();
+            // Replace selection
+            _selectionManager.Select(elementsInBounds);
         }
+
+        // Refresh UI
+        _guiCommands.RefreshVariables();
 
         _isActive = false;
         _hasMovedEnough = false;
     }
 
-    public void Update()
+    public void Update(bool isHandlerActive = false)
     {
         // Update visual visibility
-        _selectionRectangle.Visible = _isActive && _hasMovedEnough;
+        // Don't show if a handler is active (even if rectangle selector thinks it's active)
+        _selectionRectangle.Visible = _isActive && _hasMovedEnough && !isHandlerActive;
 
         if (_selectionRectangle.Visible)
         {
