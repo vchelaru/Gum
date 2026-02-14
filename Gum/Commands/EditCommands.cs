@@ -38,7 +38,7 @@ public class EditCommands : IEditCommands
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly PluginManager _pluginManager;
     private readonly ProjectManager _projectManager;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
 
     public EditCommands(ISelectedState selectedState, 
         INameVerifier nameVerifier,
@@ -50,7 +50,7 @@ public class EditCommands : IEditCommands
         IGuiCommands guiCommands,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         PluginManager pluginManager, 
-        DeleteLogic deleteLogic)
+        IDeleteLogic deleteLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
