@@ -679,7 +679,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         screen.Instances.Add(instance2);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(screen);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();

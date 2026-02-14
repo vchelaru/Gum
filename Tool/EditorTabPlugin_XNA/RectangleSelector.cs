@@ -102,9 +102,14 @@ public class RectangleSelector
         // Check if moved enough to consider it a drag
         if (!_hasMovedEnough)
         {
+            var zoom = 1f;
+            if(SystemManagers.Default?.Renderer != null)
+            {
+                zoom = SystemManagers.Default.Renderer.Camera.Zoom;
+            }
             var screenDragDistance = System.Math.Sqrt(
-                System.Math.Pow((_currentX - _startX) * Renderer.Self.Camera.Zoom, 2) +
-                System.Math.Pow((_currentY - _startY) * Renderer.Self.Camera.Zoom, 2));
+                System.Math.Pow((_currentX - _startX) * zoom, 2) +
+                System.Math.Pow((_currentY - _startY) * zoom, 2));
 
             if (screenDragDistance >= MinimumDragDistance)
             {
