@@ -238,14 +238,14 @@ public class HotkeyManager : IHotkeyManager
     #region App Wide Keys
 
 
-    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
+    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true)
     {
         Action? match = (e.Key, Keyboard.Modifiers) switch
         {
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
-            _ when ZoomDirection() is { } dir => () => _uiSettingsService.BaseFontSize += dir,
+            _ when ZoomDirection() is { } dir && enableEntireAppZoom => () => _uiSettingsService.BaseFontSize += dir,
             _ => null
         };
 
@@ -404,9 +404,9 @@ public class HotkeyManager : IHotkeyManager
 
     #region Wireframe Control
 
-    public void HandleKeyDownWireframe(KeyEventArgs e)
+    public void HandleEditorKeyDown(KeyEventArgs e)
     {
-        if (PreviewKeyDownAppWide(e.ToWpf()))
+        if (PreviewKeyDownAppWide(e.ToWpf(), enableEntireAppZoom: false))
         {
             e.Handled = true;
             return;

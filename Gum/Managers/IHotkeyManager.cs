@@ -40,9 +40,9 @@ public interface IHotkeyManager
     KeyCombination ZoomCameraOutAlternative { get; }
     KeyCombination Rename { get; }
 
-    bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e);
+    bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableFontZoom = true);
     void HandleKeyDownElementTreeView(System.Windows.Forms.KeyEventArgs e);
-    void HandleKeyDownWireframe(System.Windows.Forms.KeyEventArgs e);
+    void HandleEditorKeyDown(System.Windows.Forms.KeyEventArgs e);
     void HandleKeyUpWireframe(System.Windows.Forms.KeyEventArgs e);
     bool ProcessCmdKeyWireframe(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData);
 }

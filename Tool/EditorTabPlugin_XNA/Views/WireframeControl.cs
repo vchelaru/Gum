@@ -101,7 +101,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     void HandleKeyDown(object? sender, KeyEventArgs e)
     {
-        _hotkeyManager.HandleKeyDownWireframe(e);
+        _hotkeyManager.HandleEditorKeyDown(e);
         _cameraController.HandleKeyPress(e);
     }
 
