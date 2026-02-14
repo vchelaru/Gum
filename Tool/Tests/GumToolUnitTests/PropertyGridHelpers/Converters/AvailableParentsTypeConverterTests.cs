@@ -241,7 +241,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -274,7 +274,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -314,7 +314,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -404,7 +404,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -449,7 +449,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -494,7 +494,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -548,7 +548,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance3);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -586,7 +586,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder with empty project
         var project = new GumProjectSave();
@@ -648,7 +648,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -734,7 +734,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -783,7 +783,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -825,7 +825,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();
@@ -862,7 +862,7 @@ public class AvailableParentsTypeConverterTests : BaseTestClass
         parentElement.Instances.Add(instance);
 
         _selectedStateMock.Setup(x => x.SelectedElement).Returns(parentElement);
-        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave)null);
+        _selectedStateMock.Setup(x => x.SelectedInstance).Returns((InstanceSave?)null);
 
         // Setup ObjectFinder
         var project = new GumProjectSave();

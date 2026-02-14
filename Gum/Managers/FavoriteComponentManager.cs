@@ -62,7 +62,7 @@ public class FavoriteComponentManager : IFavoriteComponentManager
 
     public void HandleComponentDeleted(ComponentSave component)
     {
-        if (component == null) return;
+        System.Diagnostics.Debug.Assert(component != null, "Component cannot be null when handling deletion.");
 
         var project = ObjectFinder.Self.GumProjectSave;
         if (project?.FavoriteComponents == null) return;
@@ -98,8 +98,7 @@ public class FavoriteComponentManager : IFavoriteComponentManager
 
     public void RemoveFromFavorites(ComponentSave component)
     {
-        if (component == null) return;
-
+        System.Diagnostics.Debug.Assert(component != null, "Component cannot be null when removing from favorites.");
         var project = ObjectFinder.Self.GumProjectSave;
         if (project?.FavoriteComponents == null) return;
 

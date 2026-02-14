@@ -29,7 +29,7 @@ namespace Gum.DataTypes
             }
         }
 
-        public string BaseType
+        public string? BaseType
         {
             get;
             set;

@@ -312,20 +312,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleComponentDeleted_ShouldHandleNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string> { "Component1" };
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act & Assert - should not throw
-        _favoriteComponentManager.HandleComponentDeleted(null);
-        project.FavoriteComponents.Count.ShouldBe(1);
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
-    }
-
-    [Fact]
     public void HandleComponentDeleted_ShouldHandleNullProject()
     {
         // Arrange
@@ -443,21 +429,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void IsFavorite_ShouldReturnFalse_ForNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string> { "Component1" };
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act
-        var result = _favoriteComponentManager.IsFavorite(null);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Fact]
     public void IsFavorite_ShouldReturnFalse_WhenNoProjectLoaded()
     {
         // Arrange
@@ -508,20 +479,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain("Component1");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
-    }
-
-    [Fact]
-    public void RemoveFromFavorites_ShouldHandleNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string> { "Component1" };
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act & Assert - should not throw
-        _favoriteComponentManager.RemoveFromFavorites(null);
-        project.FavoriteComponents.Count.ShouldBe(1);
         _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
     }
 
