@@ -280,6 +280,8 @@ public class GumProjectSave
 
     public GumProjectSave()
     {
+        FavoriteComponents = new List<string>();
+
         ShowOutlines = true;
         ShowCanvasOutline = true;
         ShowRuler = true;

@@ -35,7 +35,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
         #region Fields / Properties
         private ToolFontService _toolFontService;
         private ToolLayerService _toolLayerService;
-        private readonly HotkeyManager _hotkeyManager;
+        private readonly IHotkeyManager _hotkeyManager;
         GraphicsDeviceControl mControl;
         SystemManagers mManagers;
         Cursor mCursor;
@@ -221,7 +221,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
             ToolFontService toolFontService, 
             ToolLayerService toolLayerService, 
             LayerService layerService,
-            HotkeyManager hotkeyManager)
+            IHotkeyManager hotkeyManager)
         {
             _toolFontService = toolFontService;
             _toolLayerService = toolLayerService;

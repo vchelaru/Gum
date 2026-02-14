@@ -196,6 +196,9 @@ public class HotkeyManager : IHotkeyManager
 
     public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
+    // If adding any new keys here, modify HotkeyViewModel
+
+
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
@@ -205,10 +208,9 @@ public class HotkeyManager : IHotkeyManager
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IUndoManager _undoManager;
-    private readonly DeleteLogic _deleteLogic;
+    private readonly IDeleteLogic _deleteLogic;
     private readonly IReorderLogic _reorderLogic;
 
-    // If adding any new keys here, modify HotkeyViewModel
 
     public HotkeyManager(IGuiCommands guiCommands, 
         ISelectedState selectedState, 
@@ -219,7 +221,7 @@ public class HotkeyManager : IHotkeyManager
         IUiSettingsService uiSettingsService,
         ICopyPasteLogic copyPasteLogic,
         IUndoManager undoManager,
-        DeleteLogic deleteLogic,
+        IDeleteLogic deleteLogic,
         IReorderLogic reorderLogic)
     {
         _copyPasteLogic = copyPasteLogic;
@@ -238,14 +240,14 @@ public class HotkeyManager : IHotkeyManager
     #region App Wide Keys
 
 
-    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
+    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true)
     {
         Action? match = (e.Key, Keyboard.Modifiers) switch
         {
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
-            _ when ZoomDirection() is { } dir => () => _uiSettingsService.BaseFontSize += dir,
+            _ when ZoomDirection() is { } dir && enableEntireAppZoom => () => _uiSettingsService.BaseFontSize += dir,
             _ => null
         };
 
@@ -404,9 +406,9 @@ public class HotkeyManager : IHotkeyManager
 
     #region Wireframe Control
 
-    public void HandleKeyDownWireframe(KeyEventArgs e)
+    public void HandleEditorKeyDown(KeyEventArgs e)
     {
-        if (PreviewKeyDownAppWide(e.ToWpf()))
+        if (PreviewKeyDownAppWide(e.ToWpf(), enableEntireAppZoom: false))
         {
             e.Handled = true;
             return;

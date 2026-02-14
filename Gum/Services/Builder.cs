@@ -93,19 +93,15 @@ file static class ServiceCollectionExtensions
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 
         // singletons
-        services.AddSingleton<CircularReferenceManager>();
-        services.AddSingleton<ICircularReferenceManager>(provider => provider.GetRequiredService<CircularReferenceManager>());
-        services.AddSingleton<FavoriteComponentManager>();
-        services.AddSingleton<IFavoriteComponentManager>(provider => provider.GetRequiredService<FavoriteComponentManager>());
-        services.AddSingleton<CopyPasteLogic>();
-        services.AddSingleton<ICopyPasteLogic>(provider => provider.GetRequiredService<CopyPasteLogic>());
+        services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();
+        services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
+        services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
         services.AddSingleton<DeleteLogic>();
         services.AddSingleton<IDeleteLogic>(provider => provider.GetRequiredService<DeleteLogic>());
         services.AddSingleton<FileLocations>();
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<FontManager>();
-        services.AddSingleton<HotkeyManager>();
-        services.AddSingleton<IHotkeyManager>(provider => provider.GetRequiredService<HotkeyManager>());
+        services.AddSingleton<IHotkeyManager, HotkeyManager>();
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<INameVerifier, NameVerifier>();

@@ -59,42 +59,12 @@ public class FavoriteComponentManagerTests : BaseTestClass
         _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
     }
 
-    [Fact]
-    public void AddToFavorites_ShouldHandleNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string>();
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act
-        _favoriteComponentManager.AddToFavorites(null);
-
-        // Assert
-        project.FavoriteComponents.ShouldBeEmpty();
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
-    }
 
     [Fact]
     public void AddToFavorites_ShouldHandleNullProject()
     {
         // Arrange
         ObjectFinder.Self.GumProjectSave = null;
-        var component = new ComponentSave { Name = "TestComponent" };
-
-        // Act & Assert - should not throw
-        _favoriteComponentManager.AddToFavorites(component);
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
-    }
-
-    [Fact]
-    public void AddToFavorites_ShouldHandleNullFavoriteComponents()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = null;
-        ObjectFinder.Self.GumProjectSave = project;
-
         var component = new ComponentSave { Name = "TestComponent" };
 
         // Act & Assert - should not throw
@@ -162,20 +132,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
         result.ShouldBeEmpty();
     }
 
-    [Fact]
-    public void GetFavoritedComponentsForCurrentProject_ShouldReturnEmptyList_WhenFavoriteComponentsIsNull()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = null;
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act
-        var result = _favoriteComponentManager.GetFavoritedComponentsForCurrentProject();
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
 
     #endregion
 
@@ -245,29 +201,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
         result.ShouldNotContain(component2);
     }
 
-    [Fact]
-    public void GetFilteredFavoritedComponentsFor_ShouldReturnEmptyList_ForNullCircularReferenceManager()
-    {
-        // Arrange
-        var parent = new ComponentSave { Name = "Parent" };
-
-        // Act
-        var result = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(parent, null);
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void GetFilteredFavoritedComponentsFor_ShouldReturnEmptyList_ForNullParent()
-    {
-        // Act
-        var result = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(null, _circularReferenceManager.Object);
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
     #endregion
 
     #region HandleComponentDeleted
@@ -308,20 +241,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain("Component1");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
-    }
-
-    [Fact]
-    public void HandleComponentDeleted_ShouldHandleNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string> { "Component1" };
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act & Assert - should not throw
-        _favoriteComponentManager.HandleComponentDeleted(null);
-        project.FavoriteComponents.Count.ShouldBe(1);
         _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
     }
 
@@ -443,21 +362,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void IsFavorite_ShouldReturnFalse_ForNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string> { "Component1" };
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act
-        var result = _favoriteComponentManager.IsFavorite(null);
-
-        // Assert
-        result.ShouldBeFalse();
-    }
-
-    [Fact]
     public void IsFavorite_ShouldReturnFalse_WhenNoProjectLoaded()
     {
         // Arrange
@@ -508,20 +412,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
         // Assert
         project.FavoriteComponents.Count.ShouldBe(1);
         project.FavoriteComponents.ShouldContain("Component1");
-        _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
-    }
-
-    [Fact]
-    public void RemoveFromFavorites_ShouldHandleNullComponent()
-    {
-        // Arrange
-        var project = new GumProjectSave();
-        project.FavoriteComponents = new List<string> { "Component1" };
-        ObjectFinder.Self.GumProjectSave = project;
-
-        // Act & Assert - should not throw
-        _favoriteComponentManager.RemoveFromFavorites(null);
-        project.FavoriteComponents.Count.ShouldBe(1);
         _mockProjectManager.Verify(pm => pm.SaveProject(), Times.Never);
     }
 

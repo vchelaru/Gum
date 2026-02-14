@@ -41,7 +41,7 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         MenuStripManager menuStripManager,
         IGuiCommands guiCommands,
         IMessenger messenger,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         IWritableOptions<LayoutSettings> layoutSettings
         )
     {

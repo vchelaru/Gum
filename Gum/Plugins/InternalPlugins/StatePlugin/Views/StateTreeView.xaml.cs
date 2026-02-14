@@ -28,7 +28,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
         #region Services
 
         private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
-        private readonly HotkeyManager _hotkeyManager;
+        private readonly IHotkeyManager _hotkeyManager;
         private readonly ISelectedState _selectedState;
         private readonly ICopyPasteLogic _copyPasteLogic;
 
@@ -47,7 +47,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
 
         public StateTreeView(StateTreeViewModel viewModel, 
             StateTreeViewRightClickService stateTreeViewRightClickService,
-            HotkeyManager hotkeyManager, 
+            IHotkeyManager hotkeyManager, 
             ISelectedState selectedState,
             ICopyPasteLogic copyPasteLogic)
         {

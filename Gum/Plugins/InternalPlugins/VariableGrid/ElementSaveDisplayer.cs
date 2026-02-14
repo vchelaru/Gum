@@ -453,7 +453,7 @@ public class ElementSaveDisplayer
                 // todo - eventually move these up to a constructor.
                 var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
                 var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
-                var _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+                var _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
                 var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
                 var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
                 var _fileCommands = Locator.GetRequiredService<IFileCommands>();
@@ -535,7 +535,7 @@ public class ElementSaveDisplayer
         // todo - eventually move these up to a constructor.
         var _editVariableService = Locator.GetRequiredService<IEditVariableService>();
         var _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
-        var _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        var _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
         var _deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
         var _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         var _fileCommands = Locator.GetRequiredService<IFileCommands>();

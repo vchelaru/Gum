@@ -52,7 +52,7 @@ public class StateReferencingInstanceMemberTests
             _mocker.Get<IUndoManager>(),
             _mocker.Get<IEditVariableService>(),
             _mocker.Get<IExposeVariableService>(),
-            _mocker.Get<HotkeyManager>(),
+            _mocker.Get<IHotkeyManager>(),
             _mocker.Get<IDeleteVariableService>(),
             _mocker.Get<ISelectedState>(),
             _mocker.Get<IGuiCommands>(),

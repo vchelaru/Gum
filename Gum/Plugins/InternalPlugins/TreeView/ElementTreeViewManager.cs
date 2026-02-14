@@ -138,7 +138,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
-    private readonly HotkeyManager _hotkeyManager;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly ITabManager _tabManager;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
@@ -315,7 +315,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
         _tabManager = Locator.GetRequiredService<ITabManager>();
         _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
         _messenger = Locator.GetRequiredService<IMessenger>();
