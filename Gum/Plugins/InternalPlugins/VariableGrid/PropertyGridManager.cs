@@ -418,22 +418,40 @@ public partial class PropertyGridManager
                         {
                             foreach (MultiSelectInstanceMember member in gridCategory.Members)
                             {
-                                member.CustomSetPropertyEvent += (sender, args) =>
-                                {
-                                    //do just one undo:
-                                    _undoManager.RecordUndo();
+                                IDisposable? undoLock = null;
 
-                                    // and loop through all instances and refrehs:
+                                member.BeforeMultiSet += (args) =>
+                                {
+                                    // Only lock for Full commits to avoid locking during intermediate changes (like dragging sliders)
+                                    if (args.CommitType == SetPropertyCommitType.Full)
+                                    {
+                                        undoLock = _undoManager.RequestLock();
+                                    }
+                                };
+
+                                member.AfterMultiSet += (args) =>
+                                {
+                                    // Dispose lock if it was created
+                                    if (undoLock != null)
+                                    {
+                                        undoLock.Dispose();
+                                        undoLock = null;
+                                    }
+
+                                    // Record undo after all values have been set
+                                    if (args.CommitType == SetPropertyCommitType.Full)
+                                    {
+                                        _undoManager.RecordUndo();
+                                    }
+
+                                    // Loop through all instances and refresh
                                     foreach (var item in member.InstanceMembers)
                                     {
                                         if (item is StateReferencingInstanceMember srim)
                                         {
                                             srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, args.CommitType);
-
                                         }
-                                        //RefreshInResponseToVariableChange()
                                     }
-                                    //StateReferencingInstanceMember.NotifyVariableLogic(owner, )
                                 };
                             }
                         }
@@ -480,7 +498,7 @@ public partial class PropertyGridManager
     {
         foreach(var category in categories)
         {
-            category.Members.RemoveAll(item => item.DisplayName == "Name" || item.DisplayName == "Base Type");
+            category.Members.RemoveAll(item => item.DisplayName == "Name" );
         }
     }
 

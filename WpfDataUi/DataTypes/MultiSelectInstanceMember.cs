@@ -6,8 +6,24 @@ namespace WpfDataUi.DataTypes
 {
     public class MultiSelectInstanceMember : InstanceMember
     {
-        public override bool IsDefault 
-        { 
+        #region Events
+
+        /// <summary>
+        /// Raised before setting values on multiple instances. Allows subscribers to prepare for the multi-set operation,
+        /// such as requesting undo locks.
+        /// </summary>
+        public event Action<SetPropertyArgs> BeforeMultiSet;
+
+        /// <summary>
+        /// Raised after setting values on multiple instances. Allows subscribers to clean up after the multi-set operation,
+        /// such as disposing undo locks and recording undo.
+        /// </summary>
+        public event Action<SetPropertyArgs> AfterMultiSet;
+
+        #endregion
+
+        public override bool IsDefault
+        {
             get => InstanceMembers.All(item => item.IsDefault); 
 
             set
@@ -87,11 +103,15 @@ namespace WpfDataUi.DataTypes
 
         private void HandleCustomSetEvent(object owner, SetPropertyArgs value)
         {
+            BeforeMultiSet?.Invoke(value);
+
             foreach(var innerMember in InstanceMembers)
             {
                 //innerMember.Value = value;
                 innerMember.SetValue(value.Value, value.CommitType);
             }
+
+            AfterMultiSet?.Invoke(value);
         }
 
         private object HandleCustomGetEvent(object owner)
