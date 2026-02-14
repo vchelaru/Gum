@@ -55,11 +55,11 @@ public class DeleteObjectPlugin : InternalPlugin
         deleteGroupBox.Content = stackPanel;
 
         deleteJustParent = new RadioButton();
-        deleteJustParent.Content = "Delete only parent";
+        deleteJustParent.Content = "Delete only parent(s)";
         stackPanel.Children.Add(deleteJustParent);
 
         deleteAllContainedObjects = new RadioButton();
-        deleteAllContainedObjects.Content = "Delete all children";
+        deleteAllContainedObjects.Content = "Delete parent and children";
         stackPanel.Children.Add(deleteAllContainedObjects);
     }
 

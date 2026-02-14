@@ -34,7 +34,7 @@ public class InstanceDeletionHelper
     /// <summary>
     /// Checks if an instance has any child instances (instances that have this instance as their parent).
     /// </summary>
-    public bool InstanceHasChildren(InstanceSave instance)
+    public bool InstanceHasChildren(InstanceSave? instance)
     {
         if (instance?.ParentContainer == null)
             return false;
@@ -63,7 +63,7 @@ public class InstanceDeletionHelper
     /// <summary>
     /// Returns all direct children of the specified instance (instances that have this instance as their parent).
     /// </summary>
-    public InstanceSave[] GetChildrenOf(InstanceSave instance)
+    public InstanceSave[] GetChildrenOf(InstanceSave? instance)
     {
         if (instance?.ParentContainer == null)
             return System.Array.Empty<InstanceSave>();
@@ -105,7 +105,7 @@ public class InstanceDeletionHelper
     /// Detaches all children from the specified instance by removing parent references,
     /// but does not delete the children themselves.
     /// </summary>
-    public void DetachChildrenFromInstance(InstanceSave instance)
+    public void DetachChildrenFromInstance(InstanceSave? instance)
     {
         if (instance?.ParentContainer == null)
             return;
@@ -116,29 +116,29 @@ public class InstanceDeletionHelper
     /// <summary>
     /// Recursively deletes all children of the specified instance, starting from the bottom of the hierarchy.
     /// </summary>
-    public void RecursivelyDeleteChildrenOf(InstanceSave instance)
+    public void RecursivelyDeleteChildrenOf(InstanceSave? instance)
     {
         if (instance?.ParentContainer == null)
             return;
 
         var childrenOfInstance = GetChildrenOf(instance);
+        var parentContainer = instance.ParentContainer;
 
         foreach (var child in childrenOfInstance)
         {
             // we want to do this bottom up, so go recursively first.
             RecursivelyDeleteChildrenOf(child);
-        }
 
-        // This may have been removed by the main Delete command. If so, then no need
-        // to do a full removal, just remove parent references:
-        var parentContainer = instance.ParentContainer;
-        if (parentContainer.Instances.Contains(instance))
-        {
-            _deleteLogic.RemoveInstance(instance, parentContainer);
-        }
-        else
-        {
-            _deleteLogic.RemoveParentReferencesToInstance(instance, parentContainer);
+            // This child may have been removed by the main Delete command. If so, then no need
+            // to do a full removal, just remove parent references:
+            if (parentContainer.Instances.Contains(child))
+            {
+                _deleteLogic.RemoveInstance(child, parentContainer);
+            }
+            else
+            {
+                _deleteLogic.RemoveParentReferencesToInstance(child, parentContainer);
+            }
         }
     }
 
