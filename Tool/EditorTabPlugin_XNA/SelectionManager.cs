@@ -894,12 +894,14 @@ public class SelectionManager : ISelectionManager
                     }
                 }
 
-                if (Cursor.PrimaryDown && _rectangleSelector.IsActive)
+                if (Cursor.PrimaryDown)
                 {
-                    _rectangleSelector.HandleDrag();
+                    // Check if any handler is actively being dragged (not just if cursor is over a handle)
+                    bool isHandlerActive = WireframeEditor?.IsAnyHandlerActive == true;
+                    _rectangleSelector.HandleDrag(isHandlerActive);
                 }
 
-                if (Cursor.PrimaryClick && _rectangleSelector.IsActive)
+                if (Cursor.PrimaryClick)
                 {
                     _rectangleSelector.HandleRelease();
                 }
