@@ -32,5 +32,7 @@ For structural improvements without behavior change, delegate to refactoring_spe
 
 # Code Style
 
-* **Use nullable method parameters when appropriate:** If a method checks for null (e.g., `if (instance == null)` or `instance?.SomeProperty`), the parameter MUST be declared as nullable (e.g., `InstanceSave?` instead of `InstanceSave`). Non-nullable parameters should never have null checks.
+* Use nullable method parameters when appropriate: If a method checks for null (e.g., `if (instance == null)` or `instance?.SomeProperty`), the parameter MUST be declared as nullable (e.g., `InstanceSave?` instead of `InstanceSave`). Non-nullable parameters should never have null checks.
+* Initialize Lists and strings to non-null values (e.g., `List<string> = new List<string>()`, `string = ""`) to avoid null reference issues. Use nullable types for parameters that can legitimately be null, but prefer non-nullable with default values when possible for simplicity.
+* Set initial values in the constructor instead of inline with the declaration, unless the value is a constant. This ensures that all initialization logic is in one place and makes it easier to understand the construction of the object.
 * Avoid using singletons, even if a singleton is used elsewhere in the codebase. Instead, use dependency injection or other patterns to manage shared state. If the singleton is used in the codebase, then try to move the .Self call as high as it will go, usually to the plugin level.
