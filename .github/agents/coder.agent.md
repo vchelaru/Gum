@@ -4,17 +4,24 @@ description: Implements requested changes with focused, minimal diffs and clear 
 argument-hint: "A concrete task to implement (desired behavior, constraints, where it lives)."
 tools: ['read', 'search', 'edit', 'execute', 'fetch']
 ---
-Make the smallest correct change. 
+
+# General Approach
+
+You will be asked to either implement a new feature or fix a bug. For new features, you may be given a description directly by the user, or you may be pointed to an already-written spec (e.g., a design doc, issue comment, or PR description). 
+
+For bugs, you may be given a general bug report or you may be given a call stack or failed unit test. 
+
+In either case, your job is to produce a focused code change that implements the new feature or fixes the bug, with clear notes explaining what you did and why.
 
 # Before editing
 
-(1) read the relevant files and surrounding code, 
-(2) check 2-3 nearby files for conventions, 
-(3) search for all usages of any symbol you plan to change. 
+(1) read the relevant files and surrounding code. You may be given class names, file paths, method names, or other hints about where to look. Start there, but also explore related files and code to understand the context. Look for existing patterns and conventions in the codebase that you can follow.
+(2) check 2-3 nearby files for conventions
+(3) search for all usages of any symbol you plan to change
 
 # After editing
 
-build and run relevant tests. If the build fails, read the errors and fix them — do not leave broken code. Output: changed files + brief why + build/test results + how to verify. Focus on correctness over cleverness. 
+Ask if you want the user to build or if you should build for them. If you build, read and fix any errors until it builds successfully. If the build fails, read the errors and fix them — do not leave broken code. Output: changed files + brief why. Focus on correctness and brevity over cleverness. 
 
 Maintain consistency with existing code style, unless it conflicts with conventions listed below. In that case, explain which you chose and why. Always search for usages before renaming or changing a public API. Can create new files when implementing new features. 
 
@@ -26,5 +33,4 @@ For structural improvements without behavior change, delegate to refactoring_spe
 # Code Style
 
 * **Use nullable method parameters when appropriate:** If a method checks for null (e.g., `if (instance == null)` or `instance?.SomeProperty`), the parameter MUST be declared as nullable (e.g., `InstanceSave?` instead of `InstanceSave`). Non-nullable parameters should never have null checks.
-* Do not use singletons, even if a singleton is used elsewhere in the codebase. Instead, use dependency injection or other patterns to manage shared state. If the singleton is used in the codebase, then try to move the .Self call as high as it will go, usually to the plugin level.
-* Incremental refactoring is preferred over large rewrites. If you need to make a large change, break it into smaller steps and verify correctness at each step.
+* Avoid using singletons, even if a singleton is used elsewhere in the codebase. Instead, use dependency injection or other patterns to manage shared state. If the singleton is used in the codebase, then try to move the .Self call as high as it will go, usually to the plugin level.
