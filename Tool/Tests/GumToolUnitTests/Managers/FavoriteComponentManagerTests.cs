@@ -201,29 +201,6 @@ public class FavoriteComponentManagerTests : BaseTestClass
         result.ShouldNotContain(component2);
     }
 
-    [Fact]
-    public void GetFilteredFavoritedComponentsFor_ShouldReturnEmptyList_ForNullCircularReferenceManager()
-    {
-        // Arrange
-        var parent = new ComponentSave { Name = "Parent" };
-
-        // Act
-        var result = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(parent, null);
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void GetFilteredFavoritedComponentsFor_ShouldReturnEmptyList_ForNullParent()
-    {
-        // Act
-        var result = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(null, _circularReferenceManager.Object);
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
     #endregion
 
     #region HandleComponentDeleted

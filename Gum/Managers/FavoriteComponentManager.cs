@@ -49,11 +49,6 @@ public class FavoriteComponentManager : IFavoriteComponentManager
 
     public List<ComponentSave> GetFilteredFavoritedComponentsFor(ElementSave parent, ICircularReferenceManager circularReferenceManager)
     {
-        if (parent == null || circularReferenceManager == null)
-        {
-            return new List<ComponentSave>();
-        }
-
         var favorites = GetFavoritedComponentsForCurrentProject();
         return favorites
             .Where(c => circularReferenceManager.CanTypeBeAddedToElement(parent, c.Name))

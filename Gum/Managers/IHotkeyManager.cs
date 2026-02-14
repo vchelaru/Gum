@@ -40,7 +40,7 @@ public interface IHotkeyManager
     KeyCombination ZoomCameraOutAlternative { get; }
     KeyCombination Rename { get; }
 
-    bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableFontZoom = true);
+    bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true);
     void HandleKeyDownElementTreeView(System.Windows.Forms.KeyEventArgs e);
     void HandleEditorKeyDown(System.Windows.Forms.KeyEventArgs e);
     void HandleKeyUpWireframe(System.Windows.Forms.KeyEventArgs e);
