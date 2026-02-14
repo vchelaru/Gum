@@ -18,7 +18,7 @@ public partial class StateTreeViewManager
     static StateTreeViewManager mSelf;
 
     StateTreeViewRightClickService _stateTreeViewRightClickService;
-    HotkeyManager _hotkeyManager;
+    IHotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
 
     #endregion
@@ -46,7 +46,7 @@ public partial class StateTreeViewManager
 
     public void Initialize(
         StateTreeViewRightClickService stateTreeViewRightClickService,
-        HotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager)
     {
         _stateTreeViewRightClickService = stateTreeViewRightClickService;
         _hotkeyManager = hotkeyManager;

@@ -32,7 +32,7 @@ public class WireframeControl : GraphicsDeviceControl
 {
     #region Fields
     
-    private HotkeyManager _hotkeyManager;
+    private IHotkeyManager _hotkeyManager;
     private ProjectManager _projectManager;
     private SelectionManager _selectionManager;
     private DragDropManager _dragDropManager;
@@ -131,7 +131,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     public void Initialize(
         Panel wireframeParentPanel,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         DragDropManager dragDropManager,
         EditorViewModel editorViewModel,

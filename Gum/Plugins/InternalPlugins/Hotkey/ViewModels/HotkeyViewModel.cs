@@ -10,11 +10,11 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 {
     class HotkeyViewModel : ViewModel
     {
-        private HotkeyManager _hotkeyManager;
+        private IHotkeyManager _hotkeyManager;
 
         public List<HotkeyItemViewModel> Items { get; set; } = new List<HotkeyItemViewModel>();
 
-        public HotkeyViewModel(HotkeyManager hotkeyManager)
+        public HotkeyViewModel(IHotkeyManager hotkeyManager)
         {
             _hotkeyManager = hotkeyManager;
 

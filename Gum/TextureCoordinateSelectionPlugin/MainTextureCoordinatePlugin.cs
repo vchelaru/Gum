@@ -72,7 +72,7 @@ public class MainTextureCoordinatePlugin : PluginBase
             Locator.GetRequiredService<IFileCommands>(),
             Locator.GetRequiredService<ISetVariableLogic>(),
             Locator.GetRequiredService<ITabManager>(),
-            Locator.GetRequiredService<HotkeyManager>(),
+            Locator.GetRequiredService<IHotkeyManager>(),
             new ScrollBarLogicWpf(),
             _viewModel);
     }

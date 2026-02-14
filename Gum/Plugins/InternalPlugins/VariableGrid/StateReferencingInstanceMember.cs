@@ -33,7 +33,7 @@ public class StateReferencingInstanceMember : InstanceMember
     #region Fields
 
     ObjectFinder _objectFinder;
-    private readonly HotkeyManager _hotkeyManager;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly IUndoManager _undoManager;
     private readonly IDeleteVariableService _deleteVariableLogic;
     private readonly IGuiCommands _guiCommands;
@@ -243,7 +243,7 @@ public class StateReferencingInstanceMember : InstanceMember
         IUndoManager undoManager,
         IEditVariableService editVariableService,
         IExposeVariableService exposeVariableService,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         IDeleteVariableService deleteVariableService,
         ISelectedState selectedState,
         IGuiCommands guiCommands,

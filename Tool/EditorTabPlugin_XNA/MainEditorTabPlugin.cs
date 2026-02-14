@@ -120,7 +120,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly HotkeyManager _hotkeyManager;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly ProjectManager _projectManager;
@@ -167,7 +167,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
         IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
-        HotkeyManager hotkeyManager = Locator.GetRequiredService<HotkeyManager>();
+        IHotkeyManager hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
 
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _fileCommands = Locator.GetRequiredService<IFileCommands>();

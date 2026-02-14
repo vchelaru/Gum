@@ -20,10 +20,10 @@ public class CameraController
     System.Drawing.Point mLastMouseLocation;
 
     public event Action? CameraChanged;
-    HotkeyManager _hotkeyManager;
+    IHotkeyManager _hotkeyManager;
 
     public void Initialize(Camera camera, 
-        EditorViewModel viewModel, int defaultWidth, int defaultHeight, HotkeyManager hotkeyManager)
+        EditorViewModel viewModel, int defaultWidth, int defaultHeight, IHotkeyManager hotkeyManager)
     {
         _hotkeyManager = hotkeyManager;
         _editorViewModel = viewModel;

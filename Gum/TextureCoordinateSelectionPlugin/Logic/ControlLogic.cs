@@ -44,7 +44,7 @@ public class ControlLogic
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
-    private readonly HotkeyManager _hotkeyManager;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly ScrollBarLogicWpf _scrollBarLogic;
 
     LineRectangle textureOutlineRectangle = null;
@@ -86,7 +86,7 @@ public class ControlLogic
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
         ITabManager tabManager,
-        HotkeyManager hotkeyManager,
+        IHotkeyManager hotkeyManager,
         ScrollBarLogicWpf scrollBarLogic,
         MainControlViewModel mainControlViewModel)
     {
