@@ -1,4 +1,7 @@
-﻿using Gum.DataTypes;
+﻿#if MONOGAME || KNI || XNA4 || FNA
+#define XNALIKE
+#endif
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Renderables;
@@ -14,11 +17,26 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaylibGum.Renderables;
+#if GUM
+using Gum.Services;
+using Gum.ToolStates;
+#endif
 
-public static class CustomSetPropertyOnRenderable
+
+
+#if RAYLIB
+namespace RaylibGum.Renderables;
+#else
+namespace Gum.Wireframe;
+#endif
+
+public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
+
+#if GUM
+    private static readonly FontManager _fontManager;
+#endif
 
     public static event Action<string>? PropertyAssignmentError;
 
@@ -44,9 +62,9 @@ public static class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
         }
-        else if (renderableIpso is Sprite)
+        else if (renderableIpso is Sprite renderableSprite)
         {
-            handled = TrySetPropertyOnSprite(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, value);
         }
         else if (renderableIpso is NineSlice)
         {
@@ -199,10 +217,11 @@ public static class CustomSetPropertyOnRenderable
         }
     }
 
-    private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    private static bool TrySetPropertyOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
-        var sprite = renderableIpso as Sprite;
+
+        SpriteRuntime? asSpriteRuntime = graphicalUiElement as SpriteRuntime;
 
         switch (propertyName)
         {

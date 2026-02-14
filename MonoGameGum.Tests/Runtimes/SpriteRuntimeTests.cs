@@ -166,6 +166,35 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void SetProperty_RenderTargetTextureSource_CanAssignStringDirectReferenceAndNull()
+    {
+        // Arrange
+        var parent = new ContainerRuntime();
+        var sut = new SpriteRuntime { Name = "TestSprite" };
+        var renderTarget = new SpriteRuntime { Name = "RenderTarget" };
+
+        parent.Children.Add(sut);
+        parent.Children.Add(renderTarget);
+
+        // Act & Assert - Assign by string
+        sut.SetProperty(nameof(SpriteRuntime.RenderTargetTextureSource), "RenderTarget");
+        sut.RenderTargetTextureSource.ShouldNotBeNull();
+        sut.RenderTargetTextureSource.ShouldBe(renderTarget);
+
+        // Act & Assert - Assign by direct reference
+        var directReference = new SpriteRuntime { Name = "Direct" };
+        parent.Children.Add(directReference);
+
+        sut.SetProperty(nameof(SpriteRuntime.RenderTargetTextureSource), directReference);
+        sut.RenderTargetTextureSource.ShouldNotBeNull();
+        sut.RenderTargetTextureSource.ShouldBe(directReference);
+
+        // Act & Assert - Assign null
+        sut.SetProperty(nameof(SpriteRuntime.RenderTargetTextureSource), null);
+        sut.RenderTargetTextureSource.ShouldBeNull();
+    }
+
+    [Fact]
     public void SourceRectangle_AssignsTextureValues()
     {
         SpriteRuntime sut = new();
