@@ -39,3 +39,6 @@ Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/EventExport/gum_event
 dist/
 /.claude
 **/settings.local.json
+
+# Windows NUL file artifact (created by incorrect output redirection)
+nul
