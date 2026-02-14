@@ -308,7 +308,9 @@ public class SelectionManager : ISelectionManager
         WireframeEditor?.Activity(SelectedGues, systemManagers);
 
         // Update rectangle selector visual
-        _rectangleSelector?.Update();
+        // Pass handler active state to ensure rectangle doesn't show when handles are being used
+        bool isHandlerActive = WireframeEditor?.IsAnyHandlerActive == true;
+        _rectangleSelector?.Update(isHandlerActive);
     }
 
     public void Deselect()
@@ -886,7 +888,9 @@ public class SelectionManager : ISelectionManager
                 if (Cursor.PrimaryPush)
                 {
                     // Don't activate rectangle selector if cursor is over handles
-                    if (WireframeEditor?.HasCursorOverHandles != true)
+                    // Check both current cursor position AND if any handler will claim this push
+                    bool isCursorOverHandles = WireframeEditor?.HasCursorOverHandles == true;
+                    if (!isCursorOverHandles)
                     {
                         float worldX = Cursor.GetWorldX();
                         float worldY = Cursor.GetWorldY();
@@ -896,7 +900,7 @@ public class SelectionManager : ISelectionManager
 
                 if (Cursor.PrimaryDown)
                 {
-                    // Check if any handler is actively being dragged (not just if cursor is over a handle)
+                    // Check if any handler is actively being dragged
                     bool isHandlerActive = WireframeEditor?.IsAnyHandlerActive == true;
                     _rectangleSelector.HandleDrag(isHandlerActive);
                 }

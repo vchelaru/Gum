@@ -52,63 +52,34 @@ public class RectangleSelectorTests : BaseTestClass
     #region HandlePush Tests
 
     [Fact]
-    public void HandlePush_ShouldActivate_WhenNotOverBodyAndShiftNotHeld()
+    public void HandlePush_ShouldNotActivateImmediately_EvenWhenShiftHeld()
     {
-        // Arrange
-        SetShiftPressed(false);
-        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-
-        // Act
-        _rectangleSelector.HandlePush(100f, 50f);
-
-        // Assert
-        _rectangleSelector.IsActive.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void HandlePush_ShouldActivate_WhenShiftIsHeldRegardlessOfBody()
-    {
-        // Arrange
+        // Arrange - Even with shift held, push should not activate
         SetShiftPressed(true);
-        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(true); // Even over body
-
-        // Act
-        _rectangleSelector.HandlePush(100f, 50f);
-
-        // Assert
-        _rectangleSelector.IsActive.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void HandlePush_ShouldNotActivate_WhenOverBodyAndShiftNotHeld()
-    {
-        // Arrange
-        SetShiftPressed(false);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(true);
 
         // Act
         _rectangleSelector.HandlePush(100f, 50f);
 
-        // Assert
+        // Assert - Activation only happens on drag, not on push
         _rectangleSelector.IsActive.ShouldBeFalse();
+        _rectangleSelector.HasMovedEnough.ShouldBeFalse();
     }
 
     [Fact]
-    public void HandlePush_ShouldSetStartPosition_WhenActivated()
+    public void HandlePush_ShouldNotActivateImmediately_RegardlessOfConditions()
     {
-        // Arrange
+        // Arrange - Test with conditions that would normally trigger activation
         SetShiftPressed(false);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
 
         // Act
-        _rectangleSelector.HandlePush(123.45f, 67.89f);
+        _rectangleSelector.HandlePush(100f, 50f);
 
-        // Assert
-        var bounds = _rectangleSelector.Bounds;
-        bounds.Left.ShouldBe(123.45f);
-        bounds.Top.ShouldBe(67.89f);
-        bounds.Right.ShouldBe(123.45f);
-        bounds.Bottom.ShouldBe(67.89f);
+        // Assert - HandlePush should NOT activate (activation happens on drag)
+        // This allows shift+click multi-select to work
+        _rectangleSelector.IsActive.ShouldBeFalse();
+        _rectangleSelector.HasMovedEnough.ShouldBeFalse();
     }
 
     #endregion
@@ -145,56 +116,38 @@ public class RectangleSelectorTests : BaseTestClass
     #region HandleRelease Tests
 
     [Fact]
-    public void HandleRelease_ShouldCallDeselectAll_WhenNoMovementAndShiftNotHeld()
+    public void HandleRelease_ShouldDoNothing_WhenNeverActivated()
     {
-        // Arrange
+        // Arrange - Push but don't drag (selector never activates)
         SetShiftPressed(false);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-
-        // Activate the selector
         _rectangleSelector.HandlePush(100f, 100f);
-
-        // Don't drag (no HandleDrag calls = no movement)
+        // No HandleDrag call = selector never activates
 
         // Act
         _rectangleSelector.HandleRelease();
 
-        // Assert
-        _mockSelectionManager.Verify(x => x.DeselectAll(), Times.Once);
+        // Assert - Should not call any selection methods
+        _mockSelectionManager.Verify(x => x.Select(It.IsAny<System.Collections.Generic.IEnumerable<GraphicalUiElement>>()), Times.Never);
+        _mockSelectionManager.Verify(x => x.ToggleSelection(It.IsAny<GraphicalUiElement>()), Times.Never);
         _rectangleSelector.IsActive.ShouldBeFalse();
     }
 
     [Fact]
-    public void HandleRelease_ShouldNotCallDeselectAll_WhenNoMovementButShiftHeld()
+    public void HandleRelease_ShouldRemainInactive_WhenWasNeverActivated()
     {
-        // Arrange
+        // Arrange - Simulate shift+click scenario (push + release, no drag)
         SetShiftPressed(true);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-
-        // Activate the selector with shift held
         _rectangleSelector.HandlePush(100f, 100f);
+        // No drag = no activation
 
         // Act
         _rectangleSelector.HandleRelease();
 
-        // Assert
-        _mockSelectionManager.Verify(x => x.DeselectAll(), Times.Never);
+        // Assert - Selector should remain inactive
         _rectangleSelector.IsActive.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void HandleRelease_ShouldDeactivate_AfterRelease()
-    {
-        // Arrange
-        SetShiftPressed(false);
-        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-        _rectangleSelector.HandlePush(100f, 100f);
-
-        // Act
-        _rectangleSelector.HandleRelease();
-
-        // Assert
-        _rectangleSelector.IsActive.ShouldBeFalse();
+        _rectangleSelector.HasMovedEnough.ShouldBeFalse();
     }
 
     #endregion
@@ -226,32 +179,6 @@ public class RectangleSelectorTests : BaseTestClass
 
         // Assert
         cursor.ShouldBeNull();
-    }
-
-    #endregion
-
-    #region Bounds Tests
-
-    [Fact]
-    public void HandlePush_ShouldCalculateBoundsCorrectly_ForRightwardDrag()
-    {
-        // Arrange
-        SetShiftPressed(false);
-        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-
-        // Act - Simulate dragging right and down
-        _rectangleSelector.HandlePush(10f, 20f);
-
-        // Note: Normally HandleDrag would update position, but we can't easily test that
-        // without mocking the static Cursor. The bounds calculation logic is tested
-        // by verifying the initial state is correct.
-
-        // Assert
-        var bounds = _rectangleSelector.Bounds;
-        bounds.Left.ShouldBe(10f);
-        bounds.Right.ShouldBe(10f);
-        bounds.Top.ShouldBe(20f);
-        bounds.Bottom.ShouldBe(20f);
     }
 
     #endregion

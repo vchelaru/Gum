@@ -155,10 +155,11 @@ public class RectangleSelector
         _hasMovedEnough = false;
     }
 
-    public void Update()
+    public void Update(bool isHandlerActive = false)
     {
         // Update visual visibility
-        _selectionRectangle.Visible = _isActive && _hasMovedEnough;
+        // Don't show if a handler is active (even if rectangle selector thinks it's active)
+        _selectionRectangle.Visible = _isActive && _hasMovedEnough && !isHandlerActive;
 
         if (_selectionRectangle.Visible)
         {
