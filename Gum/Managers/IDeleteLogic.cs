@@ -4,18 +4,17 @@ using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
 using System.Collections.Generic;
 
-namespace Gum.Managers
+namespace Gum.Managers;
+
+public interface IDeleteLogic
 {
-    public interface IDeleteLogic
-    {
-        void HandleDeleteCommand();
-        void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer);
-        List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave);
-        void Remove(StateSave stateSave);
-        void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
-        void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
-        void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
-        void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
-        void DeleteFolder(ITreeNode treeNode);
-    }
+    void HandleDeleteCommand();
+    void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer);
+    List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave);
+    void Remove(StateSave stateSave);
+    void RemoveInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
+    void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom);
+    void RemoveInstances(List<InstanceSave> instances, ElementSave elementToRemoveFrom);
+    void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom);
+    void DeleteFolder(ITreeNode treeNode);
 }
