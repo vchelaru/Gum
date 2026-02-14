@@ -25,12 +25,14 @@ public class DeleteObjectPlugin : InternalPlugin
     private readonly IElementCommands _elementCommands;
     private readonly WireframeCommands _wireframeCommands;
     private readonly DeleteLogic _deleteLogic;
+    private readonly InstanceDeletionHelper _instanceDeletionHelper;
 
     public DeleteObjectPlugin()
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _deleteLogic = Locator.GetRequiredService<DeleteLogic>();
+        _instanceDeletionHelper = new InstanceDeletionHelper(_deleteLogic, _guiCommands, _wireframeCommands, _fileCommands);
     }
 
     public override void StartUp()
@@ -53,24 +55,26 @@ public class DeleteObjectPlugin : InternalPlugin
         deleteGroupBox.Content = stackPanel;
 
         deleteJustParent = new RadioButton();
-        deleteJustParent.Content = "Delete only parent";
+        deleteJustParent.Content = "Delete only parent(s)";
         stackPanel.Children.Add(deleteJustParent);
 
         deleteAllContainedObjects = new RadioButton();
-        deleteAllContainedObjects.Content = "Delete all children";
+        deleteAllContainedObjects.Content = "Delete parent and children";
         stackPanel.Children.Add(deleteAllContainedObjects);
     }
 
     void HandleDeleteConfirm(Windows.DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
     {
+        // Collect all instances to delete in a batch
+        var instancesToDelete = new List<InstanceSave>();
+
         foreach (var deletedObject in deletedObjects)
         {
-
             var asInstance = deletedObject as InstanceSave;
 
             if (asInstance != null)
             {
-                PerformInstanceDeleteLogic(asInstance);
+                instancesToDelete.Add(asInstance);
             }
 
             if (deleteXmlCheckBox.IsChecked == true)
@@ -91,6 +95,12 @@ public class DeleteObjectPlugin : InternalPlugin
             }
         }
 
+        // Perform batch instance deletion
+        if (instancesToDelete.Count > 0)
+        {
+            PerformMultipleInstancesDeleteLogic(instancesToDelete);
+        }
+
         if (deleteOptionsWindow.MainStackPanel.Children.Contains(deleteXmlCheckBox))
         {
             deleteOptionsWindow.MainStackPanel.Children.Remove(deleteXmlCheckBox);
@@ -104,105 +114,40 @@ public class DeleteObjectPlugin : InternalPlugin
 
     private void PerformInstanceDeleteLogic(InstanceSave instance)
     {
+        PerformMultipleInstancesDeleteLogic(new[] { instance });
+    }
+
+    private void PerformMultipleInstancesDeleteLogic(IEnumerable<InstanceSave> instances)
+    {
+        var instancesList = instances.ToList();
+        if (instancesList.Count == 0)
+            return;
+
         var shouldDetachChildren = deleteJustParent.IsChecked == true;
         var shouldDeleteChildren = deleteAllContainedObjects.IsChecked == true;
 
-        var element = instance.ParentContainer;
+        // Use the first instance's parent container (all instances in a batch should have the same parent)
+        var element = instancesList.First().ParentContainer;
 
         if (shouldDetachChildren)
         {
-            _deleteLogic.RemoveParentReferencesToInstance(instance, element);
+            _instanceDeletionHelper.DetachChildrenFromInstances(instancesList);
         }
         if (shouldDeleteChildren)
         {
-            RecursivelyDeleteChildrenOf(instance);
-
-            // refresh the property grid, refresh the wireframe, save
-            _guiCommands.RefreshElementTreeView(element);
-            _wireframeCommands.Refresh();
-            _fileCommands.TryAutoSaveElement(element);
+            _instanceDeletionHelper.RecursivelyDeleteChildrenOfInstances(instancesList, element);
         }
-    }
-
-    private void RecursivelyDeleteChildrenOf(InstanceSave instance)
-    {
-        var childrenOfInstance = GetChildrenOf(instance);
-
-        foreach (var child in childrenOfInstance)
-        {
-            // we want to do this bottom up, so go recursively first.:
-            RecursivelyDeleteChildrenOf(child);
-
-        }
-
-        // This may have been removed by the main Delete command. If so, then no need
-        // to do a full removal, just remove parent references:
-        var parentContainer = instance.ParentContainer;
-        if (parentContainer.Instances.Contains(instance))
-        {
-            _deleteLogic.RemoveInstance(instance, parentContainer);
-        }
-        else
-        {
-            _deleteLogic.RemoveParentReferencesToInstance(instance, parentContainer);
-        }
-    }
-
-    private InstanceSave[] GetChildrenOf(InstanceSave instance)
-    {
-        var container = instance.ParentContainer;
-
-        var defaultState = container?.DefaultState;
-
-        var variablesUsingInstanceAsparent = defaultState.Variables
-            .Where(item =>
-                item.Value is string asString &&
-                (asString == instance.Name || asString.StartsWith(instance.Name + ".")) &&
-                item.SetsValue &&
-                item.GetRootName() == "Parent");
-
-        var instanceNames = variablesUsingInstanceAsparent
-            .Select(item => item.SourceObject)
-            .Distinct()
-            .ToArray();
-
-        List<InstanceSave> instanceSaveList = new List<InstanceSave>();
-
-        foreach (var instanceName in instanceNames)
-        {
-            var childInstance = container.GetInstance(instanceName);
-
-            if (childInstance != null)
-            {
-                instanceSaveList.Add(childInstance);
-            }
-        }
-
-        return instanceSaveList.ToArray();
     }
 
     public FilePath GetFileNameForObject(object deletedObject)
     {
-        if (deletedObject is ElementSave)
+        return deletedObject switch
         {
-            ElementSave asElement = deletedObject as ElementSave;
-
-            return asElement.GetFullPathXmlFile();
-        }
-        else if (deletedObject is BehaviorSave)
-        {
-            var asBehaviorSave = deletedObject as BehaviorSave;
-
-            return _fileCommands.GetFullPathXmlFile(asBehaviorSave);
-        }
-        else if (deletedObject is InstanceSave)
-        {
-            return null;
-        }
-        else
-        {
-            throw new NotImplementedException();
-        }
+            ElementSave elementSave => elementSave.GetFullPathXmlFile(),
+            BehaviorSave behaviorSave => _fileCommands.GetFullPathXmlFile(behaviorSave),
+            InstanceSave => null,
+            _ => throw new NotImplementedException($"Unsupported object type: {deletedObject?.GetType().Name}")
+        };
     }
 
     void HandleDeleteOptionsShow(Windows.DeleteOptionsWindow deleteWindow, Array objectsToDelete)
@@ -210,36 +155,27 @@ public class DeleteObjectPlugin : InternalPlugin
         bool alreadyAddedUiForInstances = false;
         bool alreadyAddedDeleteXmlCheckBox = false;
 
+        // Collect all instances to check if any have children
+        var instances = objectsToDelete.OfType<InstanceSave>()
+            .Where(instance => instance.ParentContainer != null)
+            .ToList();
+
+        if (!alreadyAddedUiForInstances && instances.Count > 0)
+        {
+            var anyHasChildren = _instanceDeletionHelper.AnyInstanceHasChildren(instances);
+
+            if (anyHasChildren)
+            {
+                deleteWindow.MainStackPanel.Children.Add(deleteGroupBox);
+
+                deleteJustParent.IsChecked = true;
+                deleteAllContainedObjects.IsChecked = false;
+                alreadyAddedUiForInstances = true;
+            }
+        }
+
         foreach (var objectToDelete in objectsToDelete)
         {
-            if (!alreadyAddedUiForInstances)
-            {
-                var objectAsInstance = objectToDelete as InstanceSave;
-                if (objectAsInstance?.ParentContainer != null)
-                {
-                    var parentContainer = objectAsInstance.ParentContainer;
-
-                    var allVariables = parentContainer.AllStates.SelectMany(item => item.Variables);
-                    var instanceName = objectAsInstance.Name;
-
-                    var anyVariableSetsParentToThis = allVariables.Any(item =>
-                        item.SetsValue &&
-                        item.Value != null &&
-                        item.Value is string asString &&
-                        (asString == instanceName || asString.StartsWith(instanceName + ".")) &&
-                        item.GetRootName() == "Parent");
-
-                    if (anyVariableSetsParentToThis)
-                    {
-                        deleteWindow.MainStackPanel.Children.Add(deleteGroupBox);
-
-                        deleteJustParent.IsChecked = true;
-                        deleteAllContainedObjects.IsChecked = false;
-                        alreadyAddedUiForInstances = true;
-                    }
-                }
-
-            }
 
             var shouldAddDeleteXml = objectToDelete is not InstanceSave && !alreadyAddedDeleteXmlCheckBox;
 
@@ -249,7 +185,7 @@ public class DeleteObjectPlugin : InternalPlugin
                 if(objectToDelete is ElementSave elementSave)
                 {
                     var numberOfMatches = ObjectFinder.Self.GumProjectSave?.AllElements.Count(item => item.Name == elementSave.Name) ?? 0;
-                    // If there are more than 1 match, we don't want to delete XML files because we don't want to remove the base file if 
+                    // If there are more than 1 match, we don't want to delete XML files because we don't want to remove the base file if
                     // duplicates were somehow added to the .gumx.
                     // it's possible the user has multiple components selected, and wants to delete both, but that's an edge case that adds complexity
                     // so I'm not going to worry about that.

@@ -3,7 +3,7 @@ using Gum.Wireframe;
 
 namespace Gum.Commands;
 
-public class WireframeCommands
+public class WireframeCommands : IWireframeCommands
 {
     private readonly WireframeObjectManager _wireframeObjectManager;
     public WireframeCommands(WireframeObjectManager wireframeObjectManager)

@@ -22,7 +22,7 @@ using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Managers
 {
-    public class DeleteLogic
+    public class DeleteLogic : IDeleteLogic
     {
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
@@ -273,61 +273,80 @@ namespace Gum.Managers
 
         private void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
         {
-
             var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToArray();
             var instancesFromBase = instances.Except(deletableInstances).ToArray();
 
-            if (deletableInstances.Any() && instancesFromBase.Any())
+            if (instancesFromBase.Any())
             {
-                // has both
-                string message = "Are you sure you'd like to delete the following:";
-                foreach (var instance in deletableInstances)
+                // Show warning about instances from base
+                string message;
+                if (deletableInstances.Any())
                 {
-                    message += "\n" + instance.Name;
-                }
-
-                message += "\n\nThe following instances will not be deleted because they are defined in a base object:";
-                foreach (var instance in instancesFromBase)
-                {
-                    message += "\n" + instance.Name;
-                }
-
-                if (_dialogService.ShowYesNoMessage(message, "Delete instances?"))
-                {
-                    ElementSave selectedElement = _selectedState.SelectedElement;
+                    // has both
+                    message = "The following instances will be deleted:";
                     foreach (var instance in deletableInstances)
                     {
-                        RemoveInstance(instance, selectedElement);
+                        message += "\n" + instance.Name;
                     }
 
-                    RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
+                    message += "\n\nThe following instances will NOT be deleted because they are defined in a base object:";
+                    foreach (var instance in instancesFromBase)
+                    {
+                        message += "\n" + instance.Name;
+                    }
                 }
-            }
-            else if (instancesFromBase.Any())
-            {
-                // only from base
-                var message = "All selected instances are defined in a base object, so cannot be deleted";
+                else
+                {
+                    // only from base
+                    message = "All selected instances are defined in a base object, so cannot be deleted";
+                    _dialogService.ShowMessage(message);
+                    return;
+                }
 
+                // Show the message as part of the delete dialog by appending to the dialog later
+                // For now, show the warning separately if there are mixed instances
                 _dialogService.ShowMessage(message);
             }
-            else
-            {
-                // all can be deleted
-                string message = "Are you sure you'd like to delete the following:";
-                foreach (var instance in instances)
-                {
-                    message += "\n" + instance.Name;
-                }
 
-                if (_dialogService.ShowYesNoMessage(message, "Delete instances?"))
+            if (deletableInstances.Any())
+            {
+                DeleteOptionsWindow optionsWindow = null;
+                var result = ShowDeleteDialog(deletableInstances, out optionsWindow);
+
+                if (result == true)
                 {
                     ElementSave selectedElement = _selectedState.SelectedElement;
 
                     // Just in case the argument is a reference to the selected instances:
-                    var instancesToRemove = instances.ToList();
+                    var instancesToRemove = deletableInstances.ToList();
 
-                    RemoveInstances(instancesToRemove, selectedElement);
+                    // Remove instances from collection and their owned variables,
+                    // but DO NOT remove parent references yet - let the plugin handle that
+                    foreach (var instance in instancesToRemove)
+                    {
+                        selectedElement.Instances.Remove(instance);
+                        selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
+                    }
 
+                    // Remove variables owned by the instances
+                    foreach (var state in selectedElement.AllStates)
+                    {
+                        foreach (var instance in instancesToRemove)
+                        {
+                            state.Variables.RemoveAll(item => item.SourceObject == instance.Name);
+                            state.VariableLists.RemoveAll(item => item.SourceObject == instance.Name);
+                        }
+                    }
+
+                    // Let plugin handle children deletion (this will call RemoveParentReferencesToInstance as needed)
+                    PluginManager.Self.DeleteConfirm(optionsWindow, deletableInstances);
+
+                    // Clear selection
+                    var newSelection = _selectedState.SelectedInstances.ToList()
+                        .Except(instancesToRemove);
+                    _selectedState.SelectedInstances = newSelection;
+
+                    // Then refresh and save
                     RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
                 }
             }
@@ -658,10 +677,11 @@ namespace Gum.Managers
                         // is gone, so the variable should be removed too.
                         stateSave.Variables.RemoveAt(i);
                     }
-                    else if (variable.GetRootName() == "Parent" && variable.Value as string == instanceToRemove.Name)
+                    else if (variable.GetRootName() == "Parent" && variable.Value is string valueAsString &&
+                             (valueAsString == instanceToRemove.Name || valueAsString.StartsWith(instanceToRemove.Name + ".")))
                     {
-                        // This is a variable that assigns the Parent to the removed object. Since the object is
-                        // gone, the parent value shouldn't be assigned anymore.
+                        // This is a variable that assigns the Parent to the removed object (or a dotted reference like "Parent.Container").
+                        // Since the object is gone, the parent value shouldn't be assigned anymore.
                         stateSave.Variables.RemoveAt(i);
                     }
                 }
