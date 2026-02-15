@@ -4,6 +4,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,32 +15,60 @@ using Gum.Services;
 using Gum.Settings;
 
 namespace EditorTabPlugin_XNA.Services;
-internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
+internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>, IDisposable
 {
+    private const int BackgroundSolidSize = 8192 * 4;
+    private const int BackgroundSpriteSize = 8192 * 2;
+    private const int CheckerboardRepeatCount = 256 * 2;
+
     private readonly WireframeCommands _wireframeCommands;
     private readonly IMessenger _messenger;
-    
-    Sprite BackgroundSprite;
-    SolidRectangle BackgroundSolidColor;
+    private readonly IThemingService _themingService;
 
-    public BackgroundSpriteService()
+    private Sprite _backgroundSprite;
+    private SolidRectangle _backgroundSolidColor;
+
+    public BackgroundSpriteService(
+        WireframeCommands wireframeCommands,
+        IMessenger messenger,
+        IThemingService themingService)
     {
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _messenger = Locator.GetRequiredService<IMessenger>();
+        _wireframeCommands = wireframeCommands;
+        _messenger = messenger;
+        _themingService = themingService;
         _messenger.RegisterAll(this);
     }
 
     public void Initialize(SystemManagers systemManagers)
     {
-        BackgroundSolidColor = new SolidRectangle();
-        BackgroundSolidColor.Name = "Background Solid Color";
-        BackgroundSolidColor.Width = 8192*4;
-        BackgroundSolidColor.Height = 8192*4;
-        BackgroundSolidColor.X = -BackgroundSolidColor.Width / 2.0f;
-        BackgroundSolidColor.Y = -BackgroundSolidColor.Height / 2.0f;
-        systemManagers.ShapeManager.Add(BackgroundSolidColor);
+        _backgroundSolidColor = new SolidRectangle();
+        _backgroundSolidColor.Name = "Background Solid Color";
+        _backgroundSolidColor.Width = BackgroundSolidSize;
+        _backgroundSolidColor.Height = BackgroundSolidSize;
+        _backgroundSolidColor.X = -_backgroundSolidColor.Width / 2.0f;
+        _backgroundSolidColor.Y = -_backgroundSolidColor.Height / 2.0f;
+        systemManagers.ShapeManager.Add(_backgroundSolidColor);
 
-        // Create the Texture2D here
+        Texture2D texture = CreateCheckerboardTexture(systemManagers);
+
+        _backgroundSprite = new Sprite(texture);
+        _backgroundSprite.Name = "Background checkerboard Sprite";
+        _backgroundSprite.Wrap = true;
+        _backgroundSprite.Width = BackgroundSpriteSize;
+        _backgroundSprite.Height = BackgroundSpriteSize;
+        _backgroundSprite.X = -_backgroundSprite.Width / 2;
+        _backgroundSprite.Y = -_backgroundSprite.Height / 2;
+        _backgroundSprite.SourceRectangle =
+            new System.Drawing.Rectangle(0, 0, CheckerboardRepeatCount * texture.Width, CheckerboardRepeatCount * texture.Height);
+
+        systemManagers.SpriteManager.Add(_backgroundSprite);
+
+        var themeSettings = _themingService.EffectiveSettings;
+        ApplyThemingSettings(themeSettings);
+    }
+
+    private Texture2D CreateCheckerboardTexture(SystemManagers systemManagers)
+    {
         ImageData imageData = new ImageData(2, 2, systemManagers);
 
         Microsoft.Xna.Framework.Color opaqueColor = Microsoft.Xna.Framework.Color.White;
@@ -53,7 +82,6 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
                 if (isDark)
                 {
                     imageData.SetPixel(x, y, transparent);
-
                 }
                 else
                 {
@@ -62,43 +90,33 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>
             }
         }
 
-        Texture2D texture = imageData.ToTexture2D(false);
+        Texture2D texture = imageData.ToTexture2D(generateMipmaps: false);
         texture.Name = "Background Checkerboard";
 
-        BackgroundSprite = new Sprite(texture);
-        BackgroundSprite.Name = "Background checkerboard Sprite";
-        BackgroundSprite.Wrap = true;
-        BackgroundSprite.Width = 8192*2;
-        BackgroundSprite.Height = 8192*2;
-        BackgroundSprite.X = -BackgroundSprite.Width/2;
-        BackgroundSprite.Y = -BackgroundSprite.Height/2;
-        BackgroundSprite.Color = System.Drawing.Color.FromArgb(255, 150, 150, 150);
-
-        BackgroundSprite.Wrap = true;
-        int timesToRepeat = 256*2;
-        BackgroundSprite.SourceRectangle =
-            new System.Drawing.Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
-
-        systemManagers.SpriteManager.Add(BackgroundSprite);
-
-        var themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
-        ApplyThemingSettings(themeSettings);
+        return texture;
     }
 
     public void Activity()
     {
-        BackgroundSprite.Visible =
-                _wireframeCommands.IsBackgroundGridVisible;
+        Debug.Assert(_backgroundSprite != null, "BackgroundSpriteService.Initialize must be called before Activity");
+        Debug.Assert(_backgroundSolidColor != null, "BackgroundSpriteService.Initialize must be called before Activity");
+
+        _backgroundSprite.Visible = _wireframeCommands.IsBackgroundGridVisible;
     }
 
     private void ApplyThemingSettings(IEffectiveThemeSettings settings)
     {
-        BackgroundSolidColor.Color = settings.CheckerA;
-        BackgroundSprite.Color = settings.CheckerB;
+        _backgroundSolidColor.Color = settings.CheckerA;
+        _backgroundSprite.Color = settings.CheckerB;
     }
     
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
         ApplyThemingSettings(message.settings);
+    }
+
+    public void Dispose()
+    {
+        _messenger.UnregisterAll(this);
     }
 }

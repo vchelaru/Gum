@@ -173,6 +173,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
         _fileCommands = Locator.GetRequiredService<IFileCommands>();
         _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
         _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
 
         _selectionManager = new SelectionManager(
             _selectedState,
@@ -191,9 +192,10 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _singlePixelTextureService = new SinglePixelTextureService();
-        _backgroundSpriteService = new BackgroundSpriteService();
+        _backgroundSpriteService = new BackgroundSpriteService(_wireframeCommands, 
+            Locator.GetRequiredService<IMessenger>(), 
+            Locator.GetRequiredService<IThemingService>());
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _hotkeyManager = hotkeyManager;
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
