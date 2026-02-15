@@ -8,20 +8,11 @@ namespace Gum.ToolStates;
 
 public class ProjectState
 {
-    static ProjectState mSelf = new ProjectState();
     private IProjectManager _projectManager;
 
-    public static ProjectState Self
+    public ProjectState(IProjectManager projectManager)
     {
-        get
-        {
-            return mSelf;
-        }
-    }
-
-    private ProjectState()
-    {
-        _projectManager = Locator.GetRequiredService<IProjectManager>();
+        _projectManager = projectManager;
     }
 
     public GumProjectSave GumProjectSave => _projectManager.GumProjectSave;

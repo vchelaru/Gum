@@ -88,7 +88,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<TypeManager>(TypeManager.Self);
         services.AddSingleton<ProjectManager>(ProjectManager.Self);
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
-        services.AddSingleton<ProjectState>(provider => ProjectState.Self);
+        services.AddSingleton<ProjectState>();
         // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.
         //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 
@@ -116,8 +116,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<MainOutputViewModel>();
 
         // WireframeObjectManager concrete class is needed for Initialize() call in Program.cs (two-stage initialization)
-        services.AddSingleton<WireframeObjectManager>();
-        services.AddSingleton<IWireframeObjectManager>(provider => provider.GetRequiredService<WireframeObjectManager>());
+        services.AddSingleton<IWireframeObjectManager, WireframeObjectManager>();
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());

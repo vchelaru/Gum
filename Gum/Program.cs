@@ -111,7 +111,7 @@ namespace Gum
 
             ElementTreeViewManager.Self.Initialize();
 
-            services.GetRequiredService<WireframeObjectManager>().Initialize();
+            (services.GetRequiredService<IWireframeObjectManager>() as WireframeObjectManager).Initialize();
             // This has to be initialized very early because other things depend on it.
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
