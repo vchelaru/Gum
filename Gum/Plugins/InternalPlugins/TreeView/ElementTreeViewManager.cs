@@ -2393,7 +2393,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         collapseAllButton = new System.Windows.Controls.Button
         {
-            Content = "Collapse All",
+            Content = new PackIcon
+            {
+                Kind = PackIconKind.UnfoldLessHorizontal,
+                Height = 14
+            },
             Margin = new Thickness(0, 0, 4, 0),
             Padding = new Thickness(8, 2, 8, 2),
             ToolTip = "Collapse all nodes in the tree"
@@ -2402,7 +2406,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         collapseToElementButton = new System.Windows.Controls.Button
         {
-            Content = "Collapse to Element",
+            Content = new PackIcon
+            {
+                Kind = PackIconKind.FileTree,
+                Height = 14
+            },
             Margin = new Thickness(0, 0, 4, 0),
             Padding = new Thickness(8, 2, 8, 2),
             ToolTip = "Collapse to element level (preserves folder expansion state)"
