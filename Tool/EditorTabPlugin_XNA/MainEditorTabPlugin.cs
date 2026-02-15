@@ -116,7 +116,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
     private readonly SelectionManager _selectionManager;
     private readonly IElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
-    private BackgroundSpriteService _backgroundSpriteService;
+    private BackgroundManager _backgroundManager;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IFileCommands _fileCommands;
@@ -192,7 +192,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _singlePixelTextureService = new SinglePixelTextureService();
-        _backgroundSpriteService = new BackgroundSpriteService(_wireframeCommands, 
+        _backgroundManager = new BackgroundManager(_wireframeCommands, 
             Locator.GetRequiredService<IMessenger>(), 
             Locator.GetRequiredService<IThemingService>());
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
@@ -702,7 +702,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _editingManager.Initialize(_wireframeContextMenuStrip);
 
-        _backgroundSpriteService.Initialize(_wireframeControl.SystemManagers);
+        _backgroundManager.Initialize(_wireframeControl.SystemManagers);
 
         _scrollbarService.HandleXnaInitialized();
 
@@ -1019,7 +1019,7 @@ internal class MainEditorTabPlugin : InternalPlugin, IRecipient<UiBaseFontSizeCh
 
         _wireframeControl.XnaUpdate += () =>
         {
-            _backgroundSpriteService.Activity();
+            _backgroundManager.Activity();
             _wireframeObjectManager.Activity();
             ToolLayerService.Self.Activity();
         };

@@ -15,7 +15,7 @@ using Gum.Services;
 using Gum.Settings;
 
 namespace EditorTabPlugin_XNA.Services;
-internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>, IDisposable
+internal class BackgroundManager : IRecipient<ThemeChangedMessage>, IDisposable
 {
     private const int BackgroundSolidSize = 8192 * 4;
     private const int BackgroundSpriteSize = 8192 * 2;
@@ -28,7 +28,7 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>, IDispo
     private Sprite _backgroundSprite;
     private SolidRectangle _backgroundSolidColor;
 
-    public BackgroundSpriteService(
+    public BackgroundManager(
         WireframeCommands wireframeCommands,
         IMessenger messenger,
         IThemingService themingService)
@@ -98,8 +98,8 @@ internal class BackgroundSpriteService : IRecipient<ThemeChangedMessage>, IDispo
 
     public void Activity()
     {
-        Debug.Assert(_backgroundSprite != null, "BackgroundSpriteService.Initialize must be called before Activity");
-        Debug.Assert(_backgroundSolidColor != null, "BackgroundSpriteService.Initialize must be called before Activity");
+        Debug.Assert(_backgroundSprite != null, "BackgroundManager.Initialize must be called before Activity");
+        Debug.Assert(_backgroundSolidColor != null, "BackgroundManager.Initialize must be called before Activity");
 
         _backgroundSprite.Visible = _wireframeCommands.IsBackgroundGridVisible;
     }

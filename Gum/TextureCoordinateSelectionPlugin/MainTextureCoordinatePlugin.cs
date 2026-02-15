@@ -82,7 +82,9 @@ public class MainTextureCoordinatePlugin : PluginBase
         if (textureCoordinatePluginTab is not null)
         {
             RemoveTab(textureCoordinatePluginTab);
-        };
+        }
+
+        _controlLogic?.Dispose();
 
         return true;
     }
@@ -165,7 +167,7 @@ public class MainTextureCoordinatePlugin : PluginBase
 
     private void RefreshControl()
     {
-        Texture2D textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
+        Texture2D? textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
 
         _controlLogic.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
     }
@@ -183,26 +185,23 @@ public class MainTextureCoordinatePlugin : PluginBase
 
 
 
-    private Texture2D GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
+    private Texture2D? GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
     {
         var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
         isNineslice = false;
         customFrameTextureCoordinateWidth = null;
-        Texture2D textureToAssign = null;
+        Texture2D? textureToAssign = null;
 
         if (graphicalUiElement != null)
         {
             var containedRenderable = graphicalUiElement.RenderableComponent;
 
-            if (containedRenderable is Sprite)
+            if (containedRenderable is Sprite asSprite)
             {
-                var sprite = containedRenderable as Sprite;
-
-                textureToAssign = sprite.Texture;
+                textureToAssign = asSprite.Texture;
             }
-            else if (containedRenderable is NineSlice)
+            else if (containedRenderable is NineSlice nineSlice)
             {
-                var nineSlice = containedRenderable as NineSlice;
                 isNineslice = true;
                 customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
                 var isUsingSameTextures =

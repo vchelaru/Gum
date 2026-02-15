@@ -36,7 +36,7 @@ public enum RefreshType
 
 #endregion
 
-public class ControlLogic
+public class ControlLogic : IDisposable
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
@@ -46,6 +46,7 @@ public class ControlLogic
     private readonly ITabManager _tabManager;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ScrollBarLogicWpf _scrollBarLogic;
+    private readonly BackgroundManager _backgroundManager;
     private readonly LineGridManager _lineGridManager;
     private readonly NineSliceGuideManager _nineSliceGuideManager;
     private readonly TextureOutlineManager _textureOutlineManager;
@@ -94,6 +95,7 @@ public class ControlLogic
 
         ViewModel = mainControlViewModel;
 
+        _backgroundManager = new BackgroundManager();
         _lineGridManager = new LineGridManager();
         _nineSliceGuideManager = new NineSliceGuideManager();
         _textureOutlineManager = new TextureOutlineManager();
@@ -138,6 +140,7 @@ public class ControlLogic
 
         ViewModel.PropertyChanged += HandleViewModelPropertyChanged;
 
+        _backgroundManager.Initialize(SystemManagers);
         _lineGridManager.Initialize(SystemManagers);
         _nineSliceGuideManager.Initialize(SystemManagers);
         _textureOutlineManager.Initialize(SystemManagers);
@@ -242,7 +245,7 @@ public class ControlLogic
         }
     }
 
-    internal void Refresh(Texture2D textureToAssign, bool showNineSliceGuides, float? customFrameTextureCoordinateWidth)
+    internal void Refresh(Texture2D? textureToAssign, bool showNineSliceGuides, float? customFrameTextureCoordinateWidth)
     {
         mainControl.InnerControl.CurrentTexture = textureToAssign;
 
@@ -544,5 +547,10 @@ public class ControlLogic
             UpdateScrollBarsToTexture();
         }
 
+    }
+
+    public void Dispose()
+    {
+        _backgroundManager?.Dispose();
     }
 }
