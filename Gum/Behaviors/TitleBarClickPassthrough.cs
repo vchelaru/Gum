@@ -64,13 +64,27 @@ public static class TitleBarClickPassthrough
     private static void OnPreviewMouseRightButtonUp(object? sender, MouseButtonEventArgs e)
     {
         if (sender is not UIElement el) return;
+
+        // Check if the element or any of its children have a ContextMenu
+        // If so, let the context menu show instead of the system menu
+        var target = e.OriginalSource as DependencyObject;
+        while (target != null)
+        {
+            if (target is FrameworkElement fe && fe.ContextMenu != null)
+            {
+                // Don't handle - let the element's context menu show
+                return;
+            }
+            target = System.Windows.Media.VisualTreeHelper.GetParent(target);
+        }
+
         var win = Window.GetWindow(el);
         if (win is null) return;
 
         // 1) Cursor in physical pixels
         var ptPx = NativeCursor.GetScreenPixels();
 
-        // 2) Convert pixels -> DIPs using this window’s transform (per-monitor DPI safe)
+        // 2) Convert pixels -> DIPs using this window's transform (per-monitor DPI safe)
         var src = PresentationSource.FromVisual(win);
         if (src?.CompositionTarget is not null)
         {
@@ -83,7 +97,7 @@ public static class TitleBarClickPassthrough
             return;
         }
 
-        // Fallback (rare): use WPF’s own conversion path
+        // Fallback (rare): use WPF's own conversion path
         var posInWin = e.GetPosition(win);
         var ptScreenDip = win.PointToScreen(posInWin);
         SystemCommands.ShowSystemMenu(win, ptScreenDip);
