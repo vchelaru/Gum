@@ -528,6 +528,76 @@ $"chars count=223\r\n";
         text.WrappedText[3].ShouldNotBeEmpty("jkl");
     }
 
+    [Fact]
+    public void WrappedText_ShouldPreferZeroWidthSpace_WhenBreakingMidWord()
+    {
+        // bypassing TextRuntime to test this directly:
+        var text = new Text();
+        text.Width = 86; 
+        Text.IsMidWordLineBreakEnabled = true;
+
+        // Create a long word with zero-width space at a preferred break point
+        // "abcde\u200Bfghijklmno" - the zero-width space is after 'e'
+        text.RawText = "abcde\u200Bfghijklmno";
+
+        // Should break at the zero-width space position
+        text.WrappedText.Count.ShouldBe(2);
+        text.WrappedText[0].ShouldBe("abcde");
+        text.WrappedText[1].ShouldBe("fghijklmno");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldRemoveZeroWidthSpace_WhenBreakingAtIt()
+    {
+        var text = new Text();
+        text.Width = 50;
+        Text.IsMidWordLineBreakEnabled = true;
+
+        text.RawText = "abc\u200Bdef";
+
+        // The zero-width space should be removed from output
+        text.WrappedText.Count.ShouldBe(2);
+        text.WrappedText[0].ShouldBe("abc");
+        text.WrappedText[1].ShouldBe("def");
+
+        // Neither line should contain the zero-width space character
+        text.WrappedText[0].ShouldNotContain("\u200B");
+        text.WrappedText[1].ShouldNotContain("\u200B");
+    }
+
+    [Fact]
+    public void WrappedText_ShouldIgnoreZeroWidthSpace_IfItExceedsWrappingWidth()
+    {
+        var text = new Text();
+        text.Width = 40; // Only fits about 4 characters
+        Text.IsMidWordLineBreakEnabled = true;
+
+        // Zero-width space is at position 7, but line can only fit 4 chars
+        // Should break at regular position instead
+        text.RawText = "abcdefg\u200Bhijklmnop";
+
+        text.WrappedText.Count.ShouldBeGreaterThan(2);
+        // First line should be less than the zero-width space position
+        text.WrappedText[0].Length.ShouldBeLessThan(7);
+    }
+
+    [Fact]
+    public void WrappedText_ShouldHandleMultipleZeroWidthSpaces_InSameWord()
+    {
+        var text = new Text();
+        text.Width = 55; // Enough for about 5 characters
+        Text.IsMidWordLineBreakEnabled = true;
+
+        // Multiple zero-width spaces: "abc\u200Bdef\u200Bghi"
+        // Should prefer the last one before exceeding width
+        text.RawText = "abc\u200Bdef\u200Bghijklmno";
+
+        text.WrappedText.Count.ShouldBe(4);
+        // Should break at second zero-width space (after "def")
+        text.WrappedText[0].ShouldBe("abc");
+        text.WrappedText[1].ShouldBe("def");
+    }
+
     #endregion
 
     #region UseCustomnFont
