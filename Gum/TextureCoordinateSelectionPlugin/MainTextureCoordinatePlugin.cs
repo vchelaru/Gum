@@ -62,7 +62,7 @@ public class MainTextureCoordinatePlugin : PluginBase
         _viewModel = new (
             ProjectManager.Self,
             Locator.GetRequiredService<IFileCommands>(),
-            Locator.GetRequiredService<FileWatchManager>(),
+            Locator.GetRequiredService<IFileWatchManager>(),
             Locator.GetRequiredService<IGuiCommands>());
 
         _controlLogic = new ControlLogic(

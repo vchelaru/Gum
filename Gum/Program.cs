@@ -142,7 +142,7 @@ namespace Gum
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
 
-            var fileWatchManager = Locator.GetRequiredService<FileWatchManager>(); 
+            var fileWatchManager = Locator.GetRequiredService<IFileWatchManager>(); 
 
             fileWatchTimer.Tick += () =>
             {

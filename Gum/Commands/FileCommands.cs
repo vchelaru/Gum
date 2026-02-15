@@ -20,7 +20,7 @@ namespace Gum.Commands;
 public class FileCommands : IFileCommands
 {
     private readonly LocalizationService _localizationService;
-    private readonly FileWatchManager _fileWatchManager;
+    private readonly IFileWatchManager _fileWatchManager;
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IUndoManager> _undoManager;
     private readonly IDialogService _dialogService;
@@ -28,13 +28,13 @@ public class FileCommands : IFileCommands
     private readonly IOutputManager _outputManager;
     private readonly ProjectManager _projectManager;
 
-    public FileCommands(ISelectedState selectedState, 
-        Lazy<IUndoManager> undoManager, 
+    public FileCommands(ISelectedState selectedState,
+        Lazy<IUndoManager> undoManager,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         LocalizationService localizationService,
         IOutputManager outputManager,
-        FileWatchManager fileWatchManager)
+        IFileWatchManager fileWatchManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;

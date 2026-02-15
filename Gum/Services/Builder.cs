@@ -120,6 +120,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IWireframeObjectManager>(provider => provider.GetRequiredService<WireframeObjectManager>());
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchManager>();
+        services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
         services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
 

@@ -50,7 +50,7 @@ public class MainControlViewModel : ViewModel
 
     private ProjectManager _projectManager;
     private readonly IFileCommands _fileCommands;
-    private readonly FileWatchManager _fileWatchManager;
+    private readonly IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
 
     [DependsOn(nameof(IsSnapToGridChecked))]
@@ -61,7 +61,7 @@ public class MainControlViewModel : ViewModel
     public MainControlViewModel(
         ProjectManager projectManager,
         IFileCommands fileCommands,
-        FileWatchManager fileWatchManager,
+        IFileWatchManager fileWatchManager,
         IGuiCommands guiCommands)
     {
         SelectedSnapToGridValue = 16;

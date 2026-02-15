@@ -11,14 +11,14 @@ namespace Gum.Logic.FileWatch;
 
 public class FileWatchLogic
 {
-    FileWatchManager _fileWatchManager;
+    IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
     public FileWatchLogic()
     {
-        _fileWatchManager = Locator.GetRequiredService<FileWatchManager>();
+        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
     }
 
