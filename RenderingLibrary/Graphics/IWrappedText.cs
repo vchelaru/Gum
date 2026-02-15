@@ -168,7 +168,7 @@ public static class IWrappedTextExtensions
                     currentLine = String.Empty;
                 }
                 // we don't have a line started, but we have a word that is too
-                // long. if we're not using ellipses, then we should measure the 
+                // long. if we're not using ellipses, then we should measure the
                 // string, add what we can, and go to the next line:
                 else if (textInstance.IsMidWordLineBreakEnabled)
                 {
@@ -180,19 +180,43 @@ public static class IWrappedTextExtensions
                     }
                     else
                     {
+                        // Track zero-width space positions as preferred break points for mid-word wrapping.
+                        // When a line needs to wrap mid-word, we prefer breaking at zero-width space (\u200B)
+                        // positions if they exist, as they indicate logical break points in the text.
+                        int? preferredBreakIndex = null;
+                        float? preferredBreakWidth = null;
+
                         for (int i = 1; i < currentWord.Length; i++)
                         {
                             var substring = currentWord.Substring(0, i + 1);
                             float substringLength = textInstance.MeasureString(substring);
 
+                            // Check if there's a zero-width space at this position that could be a preferred break point
+                            if (i < currentWord.Length && currentWord[i] == '\u200B' && substringLength < wrappingWidth)
+                            {
+                                preferredBreakIndex = i;
+                                preferredBreakWidth = substringLength;
+                            }
+
                             if (substringLength >= wrappingWidth)
                             {
                                 string stringToAdd = string.Empty;
 
+                                // If we have a preferred break point (zero-width space) before this position, use it
+                                if (preferredBreakIndex.HasValue)
+                                {
+                                    // Break at the zero-width space position
+                                    stringToAdd = currentWord.Substring(0, preferredBreakIndex.Value);
+                                    lines.Add(stringToAdd);
 
+                                    // Skip the zero-width space character when continuing
+                                    currentWord = remainingWordsToProcess[0].Substring(preferredBreakIndex.Value + 1);
+                                    remainingWordsToProcess[0] = currentWord;
+                                    break;
+                                }
                                 // word fits perfectly in the line, so add
                                 // the substring
-                                if (substringLength == wrappingWidth)
+                                else if (substringLength == wrappingWidth)
                                 {
                                     // add this word to the lines, and subtract what was added
                                     // from the current word:
