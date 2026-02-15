@@ -24,7 +24,7 @@ public class Sprite : SpriteBatchRenderableBase,
     ICloneable,
     IRenderTargetTextureReferencer
 {
-    #region Fields
+    #region Fields / Properties
 
 
     static Texture2D? mInvalidTexture;
@@ -174,9 +174,7 @@ public class Sprite : SpriteBatchRenderableBase,
 
     Texture2D mTexture;
 
-    #endregion
 
-    #region Properties
 
     // todo:  Anim sizing
 

@@ -59,10 +59,10 @@ public class BasicShapes
         InitializeStyling();
 
         // Uncomment this to see forms controls:
-        CreateFormsControls();
+        //CreateFormsControls();
 
         // Uncomment this to see normal runtime objects;
-        //CreateRuntimes();
+        CreateRuntimes();
 
         // Main game loop
         while (!WindowShouldClose())
@@ -142,6 +142,24 @@ public class BasicShapes
 
         textRuntime.HorizontalAlignment = HorizontalAlignment.Left;
         textRuntime.VerticalAlignment = VerticalAlignment.Top;
+
+        StackPanel leftPanel = new();
+        leftPanel.AddToRoot();
+
+
+        var spriteRuntime = new SpriteRuntime();
+        leftPanel.AddChild(spriteRuntime);
+        spriteRuntime.SourceFileName = "resources\\gum-logo-normal-64.png";
+
+        var flippedSprite = new SpriteRuntime();
+        leftPanel.AddChild(flippedSprite);
+        flippedSprite.FlipHorizontal = true;
+        flippedSprite.SourceFileName = "resources\\gum-logo-normal-64.png";
+
+        var flippedVerticalSprite = new SpriteRuntime();
+        leftPanel.AddChild(flippedVerticalSprite);
+        flippedVerticalSprite.FlipVertical = true;
+        flippedVerticalSprite.SourceFileName = "resources\\gum-logo-normal-64.png";
 
     }
 

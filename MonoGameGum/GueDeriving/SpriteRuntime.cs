@@ -16,14 +16,14 @@ namespace MonoGameGum.GueDeriving;
 public class SpriteRuntime : global::Gum.Wireframe.BindableGue, IRenderTargetTextureReferencer
 {
     #region Contained Sprite
-    RenderingLibrary.Graphics.Sprite mContainedSprite;
-    RenderingLibrary.Graphics.Sprite ContainedSprite
+    Sprite mContainedSprite;
+    Sprite ContainedSprite
     {
         get
         {
             if (mContainedSprite == null)
             {
-                mContainedSprite = this.RenderableComponent as RenderingLibrary.Graphics.Sprite;
+                mContainedSprite = (Sprite)this.RenderableComponent;
             }
             return mContainedSprite;
         }

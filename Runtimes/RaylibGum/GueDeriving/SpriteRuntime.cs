@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace Gum.GueDeriving;
 public class SpriteRuntime : BindableGue
 {
+    #region Contained Sprite
     Sprite mContainedSprite;
     Sprite ContainedSprite
     {
@@ -18,11 +19,13 @@ public class SpriteRuntime : BindableGue
         {
             if (mContainedSprite == null)
             {
-                mContainedSprite = this.RenderableComponent as Sprite;
+                mContainedSprite = (Sprite)this.RenderableComponent;
             }
             return mContainedSprite;
         }
     }
+
+    #endregion
 
     public Color Color
     {
@@ -53,6 +56,28 @@ public class SpriteRuntime : BindableGue
         set => ContainedSprite.Texture = value;
     }
 
+    public bool FlipVertical
+    {
+        get => ContainedSprite.FlipVertical;
+        set
+        {
+            ContainedSprite.FlipVertical = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    public string SourceFileName
+    {
+        set
+        {
+            base.SetProperty("SourceFile", value);
+            // todo:
+            //if (ContainedSprite.UpdateToCurrentAnimationFrame())
+            //{
+            //    UpdateTextureValuesFrom(ContainedSprite);
+            //}
+        }
+    }
 
     public SpriteRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
