@@ -608,7 +608,7 @@ public class CodeGenerator
         else
         {
             inheritance = element.BaseType;
-            if (inheritance.Contains("/") == true)
+            if (inheritance?.Contains("/") == true)
             {
                 inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
             }
@@ -5279,7 +5279,7 @@ public class CodeGenerator
             }
 
             var baseHasMain = baseElement != null &&
-                projectSettings.BaseTypesNotCodeGenerated?.Contains(element.BaseType) != true &&
+                projectSettings.BaseTypesNotCodeGenerated?.Contains(element.BaseType!) != true &&
                 GetIfShouldAddMainLayout(baseElement, projectSettings);
             if (!baseHasMain)
             {

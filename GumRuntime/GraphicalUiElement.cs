@@ -4037,7 +4037,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (whatToStackAfter != null)
             {
                 var effectiveParent = this.EffectiveParentGue;
-                switch (effectiveParent.ChildrenLayout)
+                switch (effectiveParent!.ChildrenLayout)
                 {
                     case Gum.Managers.ChildrenLayout.TopToBottomStack:
 
@@ -4073,8 +4073,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             float cellWidth, cellHeight;
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
 
-            unitOffsetX += cellWidth * xIndex + Parent.StackSpacing * (xIndex);
-            unitOffsetY += cellHeight * yIndex + Parent.StackSpacing * (yIndex );
+            unitOffsetX += cellWidth * xIndex + Parent!.StackSpacing * (xIndex);
+            unitOffsetY += cellHeight * yIndex + Parent!.StackSpacing * (yIndex );
         }
     }
 

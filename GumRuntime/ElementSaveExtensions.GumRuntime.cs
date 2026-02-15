@@ -53,7 +53,7 @@ namespace GumRuntime
 
 
 
-        public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
+        public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string? genericType = null)
         {
 #if FULL_DIAGNOSTICS
             if (elementSave == null)
@@ -169,7 +169,7 @@ namespace GumRuntime
 
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, 
             ISystemManagers systemManagers,
-            bool addToManagers, string genericType = null)
+            bool addToManagers, string? genericType = null)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
 

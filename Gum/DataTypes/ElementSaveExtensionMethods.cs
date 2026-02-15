@@ -15,8 +15,11 @@ namespace Gum.DataTypes
             set;
         }
 
-        public int Compare(VariableSave x, VariableSave y)
+        public int Compare(VariableSave? x, VariableSave? y)
         {
+            System.Diagnostics.Debug.Assert(x != null, "x should not be null");
+            System.Diagnostics.Debug.Assert(y != null, "y should not be null");
+
             int indexOfX = IndexOfByName(ListOrderToMatch, x.Name);
             int indexOfY = IndexOfByName(ListOrderToMatch, y.Name);
 

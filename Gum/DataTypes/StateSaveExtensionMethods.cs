@@ -518,7 +518,7 @@ public static class StateSaveExtensionMethods
     /// <param name="instanceSave">The instance modified by the variable.</param>
     /// <param name="variableType">The type of the variable. If this is a VariableList, then the type of the items inside the list (like int)</param>
     public static void SetValue(this StateSave stateSave, string variableName, object value,
-        InstanceSave? instanceSave = null, string variableType = null)
+        InstanceSave? instanceSave = null, string? variableType = null)
     {
         bool isReservedName = TrySetReservedValues(stateSave, variableName, value, instanceSave);
 

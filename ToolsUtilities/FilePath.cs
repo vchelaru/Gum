@@ -90,7 +90,7 @@ namespace ToolsUtilities
             Extension = FileManager.GetExtension(Original);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is FilePath)
             {
@@ -98,9 +98,9 @@ namespace ToolsUtilities
                 return path != null &&
                        Standardized == path.Standardized;
             }
-            else if (obj is string)
+            else if (obj is string asString)
             {
-                var path = new FilePath(obj as string);
+                var path = new FilePath(asString);
                 return path != null &&
                        Standardized == path.Standardized;
             }
@@ -110,7 +110,7 @@ namespace ToolsUtilities
             }
         }
 
-        public FilePath GetDirectoryContainingThis()
+        public FilePath? GetDirectoryContainingThis()
         {
             var directoryAsString = FileManager.GetDirectory(this.StandardizedCaseSensitive);
             if(string.IsNullOrEmpty(directoryAsString))

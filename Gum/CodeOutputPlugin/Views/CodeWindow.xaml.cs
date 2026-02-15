@@ -47,8 +47,8 @@ public partial class CodeWindow : UserControl
         get => codeOutputElementSettings;
         set
         {
+            System.Diagnostics.Debug.Assert(value != null, "CodeOutputElementSettings should not be set to null when setting the property grid's instance");
             codeOutputElementSettings = value;
-
             DataGrid.Instance = codeOutputElementSettings;
 
             FullRefreshDataGrid();

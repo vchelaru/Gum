@@ -80,7 +80,7 @@ namespace StateAnimationPlugin.Managers
 
                     var newDirectory = newFile.GetDirectoryContainingThis();
 
-                    if(System.IO.Directory.Exists(newDirectory.FullPath) == false)
+                    if(newDirectory != null && System.IO.Directory.Exists(newDirectory.FullPath) == false)
                     {
                         System.IO.Directory.CreateDirectory(newDirectory.FullPath);
                     }

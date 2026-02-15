@@ -48,7 +48,7 @@ public class StateReferencingInstanceMemberTests
             null,
             "testVariableName",
             null,
-            null,
+            _mocker.Get<IStateContainer>(),
             _mocker.Get<IUndoManager>(),
             _mocker.Get<IEditVariableService>(),
             _mocker.Get<IExposeVariableService>(),
